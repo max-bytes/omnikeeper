@@ -9,6 +9,17 @@ CREATE TYPE attributestate AS ENUM (
 
 ALTER TYPE attributestate OWNER TO postgres;
 
+
+
+CREATE TABLE public.changeset
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    "timestamp" timestamp with time zone NOT NULL,
+    CONSTRAINT changeset_pkey PRIMARY KEY (id)
+);
+
+ALTER TABLE public.changeset
+    OWNER to postgres;
 --
 -- TOC entry 202 (class 1259 OID 16394)
 -- Name: ci; Type: TABLE; Schema: public; Owner: postgres
@@ -52,7 +63,8 @@ CREATE TABLE public.attribute (
     value text NOT NULL,
     activation_time timestamp with time zone NOT NULL,
     layer_id bigint NOT NULL,
-    state public.attributestate DEFAULT 'new'::public.attributestate NOT NULL
+    state public.attributestate DEFAULT 'new'::public.attributestate NOT NULL,
+    changeset_id bigint NOT NULL
 );
 
 
@@ -139,6 +151,9 @@ ALTER TABLE ONLY public.attribute
     ADD CONSTRAINT f_anchor FOREIGN KEY (ci_id) REFERENCES public.ci(id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID;
 
 
+ALTER TABLE public.attribute
+    ADD CONSTRAINT f_changeset FOREIGN KEY (changeset_id) REFERENCES public.changeset (id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID;
+
 --
 -- TOC entry 2713 (class 2606 OID 16423)
 -- Name: attribute f_layer; Type: FK CONSTRAINT; Schema: public; Owner: postgres
@@ -146,3 +161,7 @@ ALTER TABLE ONLY public.attribute
 
 ALTER TABLE ONLY public.attribute
     ADD CONSTRAINT f_layer FOREIGN KEY (layer_id) REFERENCES public.layer(id) NOT VALID;
+
+CREATE INDEX
+    ON public.attribute USING btree
+    (ci_id ASC NULLS LAST)

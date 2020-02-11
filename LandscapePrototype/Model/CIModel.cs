@@ -122,10 +122,8 @@ namespace LandscapePrototype.Model
             }
         }
 
-        public bool RemoveAttribute(string name, long layerID, string ciIdentity, NpgsqlConnection conn)
+        public bool RemoveAttribute(string name, long layerID, string ciIdentity, long changesetID, NpgsqlConnection conn)
         {
-            using var trans = conn.BeginTransaction();
-
             var currentAttribute = GetAttribute(name, layerID, ciIdentity, true, conn);
             var ciID = GetCIIDFromIdentity(ciIdentity, conn);
 
@@ -140,8 +138,8 @@ namespace LandscapePrototype.Model
                 return true;
             }
 
-            using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, activation_time, layer_id, state) 
-                VALUES (@name, @ci_id, @type, @value, now(), @layer_id, @state)", conn);
+            using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, activation_time, layer_id, state, changeset_id) 
+                VALUES (@name, @ci_id, @type, @value, now(), @layer_id, @state, @changeset_id)", conn);
             var (strType, strValue) = AttributeValueBuilder.GetTypeAndValueString(currentAttribute.Value);
 
             command.Parameters.AddWithValue("name", name);
@@ -150,18 +148,15 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("value", strValue);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", AttributeState.Removed);
+            command.Parameters.AddWithValue("changeset_id", changesetID);
 
             var numInserted = command.ExecuteNonQuery();
-
-            trans.Commit();
 
             return numInserted == 1;
         }
 
-        public bool InsertAttribute(string name, IAttributeValue value, long layerID, string ciIdentity, NpgsqlConnection conn)
+        public bool InsertAttribute(string name, IAttributeValue value, long layerID, string ciIdentity, long changesetID, NpgsqlConnection conn)
         {
-            using var trans = conn.BeginTransaction();
-
             var currentAttribute = GetAttribute(name, layerID, ciIdentity, true, conn);
             var ciID = GetCIIDFromIdentity(ciIdentity, conn);
 
@@ -180,8 +175,8 @@ namespace LandscapePrototype.Model
 
             // TODO: handle equality case, also think about what should happen if a different user inserts the same data?
 
-            using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, activation_time, layer_id, state) 
-                VALUES (@name, @ci_id, @type, @value, now(), @layer_id, @state)", conn);
+            using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, activation_time, layer_id, state, changeset_id) 
+                VALUES (@name, @ci_id, @type, @value, now(), @layer_id, @state, @changeset_id)", conn);
             var (strType, strValue) = AttributeValueBuilder.GetTypeAndValueString(value);
 
             command.Parameters.AddWithValue("name", name);
@@ -190,33 +185,35 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("value", strValue);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", state);
+            command.Parameters.AddWithValue("changeset_id", changesetID);
 
             var numInserted = command.ExecuteNonQuery();
-
-            trans.Commit();
 
             return numInserted == 1;
         }
 
         public long CreateLayer(string name, NpgsqlConnection conn)
         {
-            using var trans = conn.BeginTransaction();
             using var command = new NpgsqlCommand(@"INSERT INTO layer (name) VALUES (@name) returning id", conn);
             command.Parameters.AddWithValue("name", name);
             var id = (long)command.ExecuteScalar();
-            trans.Commit();
             return id;
         }
 
-
         public long CreateCI(string identity, NpgsqlConnection conn)
         {
-            using var trans = conn.BeginTransaction();
             using var command = new NpgsqlCommand(@"INSERT INTO ci (identity) 
                     VALUES (@identity) returning id", conn);
             command.Parameters.AddWithValue("identity", identity);
             var id = (long)command.ExecuteScalar();
-            trans.Commit();
+            return id;
+        }
+
+        public long CreateChangeset(NpgsqlConnection conn)
+        {
+            using var command = new NpgsqlCommand(@"INSERT INTO changeset (timestamp) 
+                    VALUES (now()) returning id", conn);
+            var id = (long)command.ExecuteScalar();
             return id;
         }
     }

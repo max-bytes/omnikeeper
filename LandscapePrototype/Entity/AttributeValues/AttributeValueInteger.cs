@@ -20,6 +20,11 @@ namespace LandscapePrototype.Entity.AttributeValues
 
         public string Value2String() => Value.ToString();
 
+        public override string ToString()
+        {
+            return $"AV-Integer: {Value}";
+        }
+
         public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueInteger);
         public bool Equals([AllowNull] AttributeValueInteger other) => Value == other.Value;
         public override int GetHashCode() => Value.GetHashCode();
