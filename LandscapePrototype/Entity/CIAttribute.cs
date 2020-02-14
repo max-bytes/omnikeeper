@@ -13,11 +13,11 @@ namespace LandscapePrototype
         public string Name { get; private set; }
         public long CIID { get; private set; }
         public IAttributeValue Value { get; private set; }
-        public DateTime ActivationTime { get; private set; }
+        public DateTimeOffset ActivationTime { get; private set; }
         public long LayerID { get; private set; }
         public AttributeState State { get; private set; }
 
-        public static CIAttribute Build(string name, long CIID, IAttributeValue value, DateTime acticationTime, long layerID, AttributeState state)
+        public static CIAttribute Build(string name, long CIID, IAttributeValue value, DateTimeOffset acticationTime, long layerID, AttributeState state)
         {
             var o = new CIAttribute();
             o.Name = name;

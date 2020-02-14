@@ -1,4 +1,6 @@
-﻿using LandscapePrototype.Entity.AttributeValues;
+﻿using LandscapePrototype.Entity;
+using LandscapePrototype.Entity.AttributeValues;
+using Microsoft.Extensions.Configuration;
 using Npgsql;
 using NpgsqlTypes;
 using System;
@@ -10,17 +12,48 @@ namespace LandscapePrototype.Model
 {
     public class CIModel
     {
-        public NpgsqlConnection CreateOpenConnection(string dbName)
+        private readonly NpgsqlConnection conn;
+
+        public CIModel(NpgsqlConnection connection)
         {
-            NpgsqlConnection conn = new NpgsqlConnection($"Server=127.0.0.1;User Id=postgres; Password=postgres;Database={dbName};");
-            conn.Open();
-            conn.TypeMapper.MapEnum<AttributeState>("attributestate");
-            return conn;
+            conn = connection;
         }
 
-        public IEnumerable<CIAttribute> GetMergedAttributes(string ciIdentity, bool includeRemoved, NpgsqlConnection conn)
+        //public NpgsqlConnection CreateOpenConnection(string dbName)
+        //{
+        //    NpgsqlConnection conn = new NpgsqlConnection($"Server=127.0.0.1;User Id=postgres; Password=postgres;Database={dbName};");
+        //    conn.Open();
+        //    conn.TypeMapper.MapEnum<AttributeState>("attributestate");
+        //    return conn;
+        //}
+
+        public CI GetCI(string ciIdentity, LayerSet layers)
+        {
+            var attributes = GetMergedAttributes(ciIdentity, false, layers);
+            return CI.Build(attributes);
+        }
+
+        public IEnumerable<CIAttribute> GetMergedAttributes(string ciIdentity, bool includeRemoved, LayerSet layers)
         {
             var ret = new List<CIAttribute>();
+
+            using var c1 = new NpgsqlCommand(@"
+                CREATE TEMPORARY TABLE IF NOT EXISTS temp_layerset
+               (
+                    id bigint,
+                    ""order"" int
+               )", conn);
+            c1.ExecuteNonQuery();
+            new NpgsqlCommand(@"TRUNCATE TABLE temp_layerset", conn).ExecuteNonQuery();
+
+            var order = 0;
+            foreach (var layerID in layers)
+            {
+                using var c2 = new NpgsqlCommand(@"INSERT INTO temp_layerset (id, ""order"") VALUES (@id, @order)", conn);
+                c2.Parameters.AddWithValue("id", layerID);
+                c2.Parameters.AddWithValue("order", order++);
+                c2.ExecuteScalar();
+            }
 
             using (var command = new NpgsqlCommand(@"
             select distinct
@@ -31,10 +64,12 @@ namespace LandscapePrototype.Model
             last_value(a.activation_time) over wnd as last_activation_time,
             last_value(a.layer_id) over wnd as last_layer_id,
             last_value(a.state) over wnd as last_state
-                from ""attribute"" a inner join ci c ON a.ci_id = c.id
+                from ""attribute"" a 
+                inner join ci c ON a.ci_id = c.id
+                inner join temp_layerset ls ON a.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
                 where a.activation_time <= now() and c.identity = @ci_identity
             WINDOW wnd AS(
-                PARTITION by a.name, a.ci_id ORDER BY a.activation_time, a.layer_id-- TODO: sort by layer priority, not by layer id
+                PARTITION by a.name, a.ci_id ORDER BY ls.order DESC, a.activation_time ASC  -- sort by layer order, then by activation time
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
             ", conn))
             {
@@ -62,7 +97,7 @@ namespace LandscapePrototype.Model
             return ret;
         }
 
-        private IEnumerable<CIAttribute> GetAttributes(string ciIdentity, long layerID, bool includeRemoved, NpgsqlConnection conn)
+        private IEnumerable<CIAttribute> GetAttributes(string ciIdentity, long layerID, bool includeRemoved)
         {
             var ret = new List<CIAttribute>();
 
@@ -106,15 +141,15 @@ namespace LandscapePrototype.Model
             return ret;
         }
 
-        public CIAttribute GetAttribute(string name, long layerID, string ciIdentity, bool includeRemoved, NpgsqlConnection conn)
+        public CIAttribute GetAttribute(string name, long layerID, string ciIdentity, bool includeRemoved)
         {
-            var attributes = GetAttributes(ciIdentity, layerID, includeRemoved, conn);
+            var attributes = GetAttributes(ciIdentity, layerID, includeRemoved);
             return attributes.FirstOrDefault(a => a.Name == name);
         }
 
-        private long GetCIIDFromIdentity(string ciIdentity, NpgsqlConnection conn)
+        private long GetCIIDFromIdentity(string ciIdentity)
         {
-            using (var command = new NpgsqlCommand(@"select id from ci where identity = @identity LIMIT 1", conn)) 
+            using (var command = new NpgsqlCommand(@"select id from ci where identity = @identity LIMIT 1")) 
             {
                 command.Parameters.AddWithValue("identity", ciIdentity);
                 var s = command.ExecuteScalar();
@@ -122,10 +157,10 @@ namespace LandscapePrototype.Model
             }
         }
 
-        public bool RemoveAttribute(string name, long layerID, string ciIdentity, long changesetID, NpgsqlConnection conn)
+        public bool RemoveAttribute(string name, long layerID, string ciIdentity, long changesetID)
         {
-            var currentAttribute = GetAttribute(name, layerID, ciIdentity, true, conn);
-            var ciID = GetCIIDFromIdentity(ciIdentity, conn);
+            var currentAttribute = GetAttribute(name, layerID, ciIdentity, true);
+            var ciID = GetCIIDFromIdentity(ciIdentity);
 
             if (currentAttribute == null)
             {
@@ -155,25 +190,25 @@ namespace LandscapePrototype.Model
             return numInserted == 1;
         }
 
-        public bool InsertAttribute(string name, IAttributeValue value, long layerID, string ciIdentity, long changesetID, NpgsqlConnection conn)
+        public bool InsertAttribute(string name, IAttributeValue value, long layerID, string ciIdentity, long changesetID)
         {
-            var currentAttribute = GetAttribute(name, layerID, ciIdentity, true, conn);
-            var ciID = GetCIIDFromIdentity(ciIdentity, conn);
+            var currentAttribute = GetAttribute(name, layerID, ciIdentity, true);
+            var ciID = GetCIIDFromIdentity(ciIdentity);
 
             var state = AttributeState.New; // TODO
-            var equalValue = false;
             if (currentAttribute != null)
             {
-                if (currentAttribute.Equals(value))
-                {
-                    equalValue = true;
-                } else if (currentAttribute.State == AttributeState.Removed)
+                if (currentAttribute.State == AttributeState.Removed)
                     state = AttributeState.Renewed;
                 else
                     state = AttributeState.Changed;
             }
 
-            // TODO: handle equality case, also think about what should happen if a different user inserts the same data?
+            // handle equality case, also think about what should happen if a different user inserts the same data
+            //var equalValue = false;
+            if (currentAttribute != null && currentAttribute.Value.Equals(value)) // TODO: check other things, like user
+                return true;
+
 
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, activation_time, layer_id, state, changeset_id) 
                 VALUES (@name, @ci_id, @type, @value, now(), @layer_id, @state, @changeset_id)", conn);
@@ -192,7 +227,7 @@ namespace LandscapePrototype.Model
             return numInserted == 1;
         }
 
-        public long CreateLayer(string name, NpgsqlConnection conn)
+        public long CreateLayer(string name)
         {
             using var command = new NpgsqlCommand(@"INSERT INTO layer (name) VALUES (@name) returning id", conn);
             command.Parameters.AddWithValue("name", name);
@@ -200,7 +235,7 @@ namespace LandscapePrototype.Model
             return id;
         }
 
-        public long CreateCI(string identity, NpgsqlConnection conn)
+        public long CreateCI(string identity)
         {
             using var command = new NpgsqlCommand(@"INSERT INTO ci (identity) 
                     VALUES (@identity) returning id", conn);
@@ -209,10 +244,9 @@ namespace LandscapePrototype.Model
             return id;
         }
 
-        public long CreateChangeset(NpgsqlConnection conn)
+        public long CreateChangeset()
         {
-            using var command = new NpgsqlCommand(@"INSERT INTO changeset (timestamp) 
-                    VALUES (now()) returning id", conn);
+            using var command = new NpgsqlCommand(@"INSERT INTO changeset (timestamp) VALUES (now()) returning id", conn);
             var id = (long)command.ExecuteScalar();
             return id;
         }

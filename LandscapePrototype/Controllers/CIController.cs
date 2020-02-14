@@ -14,10 +14,12 @@ namespace LandscapePrototype.Controllers
     public class CIController : ControllerBase
     {
         private readonly ILogger<CIController> _logger;
+        private readonly CIModel _ciModel;
 
-        public CIController(ILogger<CIController> logger)
+        public CIController(ILogger<CIController> logger, CIModel ciModel)
         {
             _logger = logger;
+            _ciModel = ciModel;
         }
 
         private string dbName = "landscape_prototype";
@@ -25,13 +27,8 @@ namespace LandscapePrototype.Controllers
         [HttpGet]
         public IEnumerable<CIAttribute> Get()
         {
-            var model = new CIModel();
-
-            using (var conn = model.CreateOpenConnection(dbName))
-            {
-                var attributes = model.GetMergedAttributes("H123", true, conn);
-                return attributes;
-            }
+            var attributes = _ciModel.GetMergedAttributes("H123", true, new LayerSet(new long[] { }));
+            return attributes;
         }
     }
 }
