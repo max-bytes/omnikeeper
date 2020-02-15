@@ -25,9 +25,9 @@ namespace LandscapePrototype.Controllers
         private string dbName = "landscape_prototype";
 
         [HttpGet]
-        public IEnumerable<CIAttribute> Get()
+        public async Task<IEnumerable<CIAttribute>> Get()
         {
-            var attributes = _ciModel.GetMergedAttributes("H123", true, new LayerSet(new long[] { }));
+            var attributes = await _ciModel.GetMergedAttributes("H123", true, new LayerSet(new long[] { }));
             return attributes;
         }
     }

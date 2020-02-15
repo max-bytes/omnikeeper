@@ -9,7 +9,7 @@ namespace LandscapePrototype.Entity.GraphQL
 {
     public class LandscapeSchema : Schema
     {
-        public LandscapeSchema(IDependencyResolver resolver)
+        public LandscapeSchema(IDependencyResolver resolver) : base(resolver)
         {
             Query = resolver.Resolve<LandscapeQuery>();
         }

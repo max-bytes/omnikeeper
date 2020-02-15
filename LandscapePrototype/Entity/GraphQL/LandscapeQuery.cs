@@ -1,9 +1,6 @@
 ﻿using GraphQL.Types;
 using LandscapePrototype.Model;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace LandscapePrototype.Entity.GraphQL
 {
@@ -27,13 +24,12 @@ namespace LandscapePrototype.Entity.GraphQL
                 {
                     var ciIdentity = context.GetArgument<string>("identity");
                     var layerStrings = context.GetArgument<string[]>("layers");
-
                     var layers = layerModel.BuildLayerSet(layerStrings);
 
                     var ci = ciModel.GetCI(ciIdentity, layers);
 
                     return new List<CI>() { ci };
-            });
+                });
         }
     }
 }

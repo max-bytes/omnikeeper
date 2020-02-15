@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace LandscapePrototype.Model
 {
@@ -19,65 +20,54 @@ namespace LandscapePrototype.Model
             conn = connection;
         }
 
-        //public NpgsqlConnection CreateOpenConnection(string dbName)
-        //{
-        //    NpgsqlConnection conn = new NpgsqlConnection($"Server=127.0.0.1;User Id=postgres; Password=postgres;Database={dbName};");
-        //    conn.Open();
-        //    conn.TypeMapper.MapEnum<AttributeState>("attributestate");
-        //    return conn;
-        //}
-
         public CI GetCI(string ciIdentity, LayerSet layers)
         {
-            var attributes = GetMergedAttributes(ciIdentity, false, layers);
-            return CI.Build(attributes);
+            var attributes = GetMergedAttributes(ciIdentity, false, layers).GetAwaiter().GetResult();
+            return CI.Build(ciIdentity, attributes);
         }
 
-        public IEnumerable<CIAttribute> GetMergedAttributes(string ciIdentity, bool includeRemoved, LayerSet layers)
+        public async Task<IEnumerable<CIAttribute>> GetMergedAttributes(string ciIdentity, bool includeRemoved, LayerSet layers)
         {
             var ret = new List<CIAttribute>();
 
-            using var c1 = new NpgsqlCommand(@"
-                CREATE TEMPORARY TABLE IF NOT EXISTS temp_layerset
-               (
-                    id bigint,
-                    ""order"" int
-               )", conn);
-            c1.ExecuteNonQuery();
-            new NpgsqlCommand(@"TRUNCATE TABLE temp_layerset", conn).ExecuteNonQuery();
-
-            var order = 0;
-            foreach (var layerID in layers)
-            {
-                using var c2 = new NpgsqlCommand(@"INSERT INTO temp_layerset (id, ""order"") VALUES (@id, @order)", conn);
-                c2.Parameters.AddWithValue("id", layerID);
-                c2.Parameters.AddWithValue("order", order++);
-                c2.ExecuteScalar();
-            }
+            await LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn);
 
             using (var command = new NpgsqlCommand(@"
             select distinct
-            last_value(a.name) over wnd as last_name,
-            last_value(a.ci_id) over wnd as last_ci_id,
-            last_value(a.type) over wnd as last_type,
-            last_value(a.value) over wnd as ""last_value"",
-            last_value(a.activation_time) over wnd as last_activation_time,
-            last_value(a.layer_id) over wnd as last_layer_id,
-            last_value(a.state) over wnd as last_state
-                from ""attribute"" a 
+            last_value(inn.last_name) over wndOut,
+            last_value(inn.last_ci_id) over wndOut,
+            last_value(inn.last_type) over wndOut,
+            last_value(inn.last_value) over wndOut,
+            last_value(inn.last_activation_time) over wndOut,
+            last_value(inn.last_layer_id) over wndOut,
+            last_value(inn.last_state) over wndOut
+            from(
+                select distinct
+                last_value(a.name) over wnd as last_name,
+                last_value(a.ci_id) over wnd as last_ci_id,
+                last_value(a.type) over wnd as last_type,
+                last_value(a.value) over wnd as ""last_value"",
+                last_value(a.activation_time) over wnd as last_activation_time,
+                last_value(a.layer_id) over wnd as last_layer_id,
+                last_value(a.state) over wnd as last_state
+                from ""attribute"" a
                 inner join ci c ON a.ci_id = c.id
-                inner join temp_layerset ls ON a.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
-                where a.activation_time <= now() and c.identity = @ci_identity
-            WINDOW wnd AS(
-                PARTITION by a.name, a.ci_id ORDER BY ls.order DESC, a.activation_time ASC  -- sort by layer order, then by activation time
+                WHERE a.activation_time <= now() and c.identity = @ci_identity
+                WINDOW wnd AS(PARTITION by a.name, a.ci_id, a.layer_id ORDER BY a.activation_time ASC-- sort by activation time
+                    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+            ) inn
+            inner join temp_layerset ls ON inn.last_layer_id = ls.id-- inner join to only keep rows that are in the selected layers
+            where inn.last_state != ALL(@excluded_states) -- remove entries from layers which' last item is deleted
+            WINDOW wndOut AS(PARTITION by inn.last_name, inn.last_ci_id ORDER BY ls.order DESC-- sort by layer order
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
             ", conn))
             {
                 command.Parameters.AddWithValue("ci_identity", ciIdentity);
-                using var dr = command.ExecuteReader();
+                var excludedStates = (includeRemoved) ? new AttributeState[] { } : new AttributeState[] { AttributeState.Removed };
+                command.Parameters.AddWithValue("excluded_states", excludedStates);
+                using var dr = await command.ExecuteReaderAsync();
 
-                // Output rows
-                while (dr.Read())
+                while (await dr.ReadAsync())
                 {
                     var name = dr.GetString(0);
                     var CIID = dr.GetInt64(1);
@@ -90,76 +80,67 @@ namespace LandscapePrototype.Model
 
                     var att = CIAttribute.Build(name, CIID, av, activationTime, layerID, state);
 
-                    if (includeRemoved || att.State != AttributeState.Removed)
-                        ret.Add(att);
+                    ret.Add(att);
                 }
             }
             return ret;
         }
 
-        private IEnumerable<CIAttribute> GetAttributes(string ciIdentity, long layerID, bool includeRemoved)
+        public CIAttribute GetAttribute(string name, long layerID, string ciIdentity)
         {
-            var ret = new List<CIAttribute>();
-
             using (var command = new NpgsqlCommand(@"
             select distinct
-            last_value(a.name) over wnd as last_name,
             last_value(a.ci_id) over wnd as last_ci_id,
             last_value(a.type) over wnd as last_type,
             last_value(a.value) over wnd as ""last_value"",
             last_value(a.activation_time) over wnd as last_activation_time,
-            last_value(a.layer_id) over wnd as last_layer_id,
             last_value(a.state) over wnd as last_state
                 from ""attribute"" a inner join ci c ON a.ci_id = c.id
-                where a.activation_time <= now() and c.identity = @ci_identity and a.layer_id = @layer_id
+                where a.activation_time <= now() and c.identity = @ci_identity and a.layer_id = @layer_id and a.name = @name
             WINDOW wnd AS(
                 PARTITION by a.name, a.ci_id ORDER BY a.activation_time
-                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) 
+            LIMIT 1
             ", conn))
             {
                 command.Parameters.AddWithValue("ci_identity", ciIdentity);
                 command.Parameters.AddWithValue("layer_id", layerID);
+                command.Parameters.AddWithValue("name", name);
                 using var dr = command.ExecuteReader();
 
-                // Output rows
-                while (dr.Read())
-                {
-                    var name = dr.GetString(0);
-                    var CIID = dr.GetInt64(1);
-                    var type = dr.GetString(2);
-                    var value = dr.GetString(3);
-                    var av = AttributeValueBuilder.Build(type, value);
-                    var activationTime = dr.GetTimeStamp(4).ToDateTime();
-                    var _layerID = dr.GetInt64(5);
-                    var state = dr.GetFieldValue<AttributeState>(6);
-                    var att = CIAttribute.Build(name, CIID, av, activationTime, layerID, state);
+                if (!dr.Read())
+                    return null;
 
-                    if (includeRemoved || att.State != AttributeState.Removed)
-                        ret.Add(att);
-                }
+                var CIID = dr.GetInt64(0);
+                var type = dr.GetString(1);
+                var value = dr.GetString(2);
+                var av = AttributeValueBuilder.Build(type, value);
+                var activationTime = dr.GetTimeStamp(3).ToDateTime();
+                var state = dr.GetFieldValue<AttributeState>(4);
+                var att = CIAttribute.Build(name, CIID, av, activationTime, layerID, state);
+                return att;
             }
-            return ret;
         }
 
-        public CIAttribute GetAttribute(string name, long layerID, string ciIdentity, bool includeRemoved)
-        {
-            var attributes = GetAttributes(ciIdentity, layerID, includeRemoved);
-            return attributes.FirstOrDefault(a => a.Name == name);
-        }
-
+        // TODO: having both of these suck! maybe combine id and identity, or use identity for (almost) everything
         private long GetCIIDFromIdentity(string ciIdentity)
         {
-            using (var command = new NpgsqlCommand(@"select id from ci where identity = @identity LIMIT 1")) 
-            {
-                command.Parameters.AddWithValue("identity", ciIdentity);
-                var s = command.ExecuteScalar();
-                return (long)s;
-            }
+            using var command = new NpgsqlCommand(@"select id from ci where identity = @identity LIMIT 1", conn);
+            command.Parameters.AddWithValue("identity", ciIdentity);
+            var s = command.ExecuteScalar();
+            return (long)s;
+        }
+        public string GetIdentityFromCIID(long ciid)
+        {
+            using var command = new NpgsqlCommand(@"select identity from ci where id = @id LIMIT 1", conn);
+            command.Parameters.AddWithValue("id", ciid);
+            var s = command.ExecuteScalar();
+            return (string)s;
         }
 
         public bool RemoveAttribute(string name, long layerID, string ciIdentity, long changesetID)
         {
-            var currentAttribute = GetAttribute(name, layerID, ciIdentity, true);
+            var currentAttribute = GetAttribute(name, layerID, ciIdentity);
             var ciID = GetCIIDFromIdentity(ciIdentity);
 
             if (currentAttribute == null)
@@ -192,7 +173,7 @@ namespace LandscapePrototype.Model
 
         public bool InsertAttribute(string name, IAttributeValue value, long layerID, string ciIdentity, long changesetID)
         {
-            var currentAttribute = GetAttribute(name, layerID, ciIdentity, true);
+            var currentAttribute = GetAttribute(name, layerID, ciIdentity);
             var ciID = GetCIIDFromIdentity(ciIdentity);
 
             var state = AttributeState.New; // TODO

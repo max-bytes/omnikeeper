@@ -28,14 +28,14 @@ namespace Tests.Integration
 
             TestDBSetup.Setup();
             var dbcb = new DBConnectionBuilder();
-            var conn = dbcb.Build(TestDBSetup.dbName);
+            using var conn = dbcb.Build(TestDBSetup.dbName, false, true);
             var model = new CIModel(conn);
 
             var random = new Random(3);
 
-            var numCIs = 5000;
+            var numCIs = 500;
             var numLayers = 2;
-            var numAttributeInserts = 60000;
+            var numAttributeInserts = 6000;
             var numAttributeNames = 50;
 
             ciNames = Enumerable.Range(0, numCIs).Select(i =>
@@ -81,7 +81,7 @@ namespace Tests.Integration
         public void TestSelectOnBigDatabase()
         {
             var dbcb = new DBConnectionBuilder();
-            var conn = dbcb.Build(TestDBSetup.dbName);
+            using var conn = dbcb.Build(TestDBSetup.dbName, false, true);
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
 

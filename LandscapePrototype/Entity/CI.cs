@@ -7,12 +7,16 @@ namespace LandscapePrototype.Entity
 {
     public class CI
     {
+        public string Identity { get; private set; }
         public CIAttribute[] Attributes { get; private set; }
 
-        public static CI Build(IEnumerable<CIAttribute> attributes)
+        public static CI Build(string CIIdentity, IEnumerable<CIAttribute> attributes)
         {
-            var r = new CI();
-            r.Attributes = attributes.ToArray();
+            var r = new CI
+            {
+                Identity = CIIdentity,
+                Attributes = attributes.ToArray()
+            };
             return r;
         }
     }

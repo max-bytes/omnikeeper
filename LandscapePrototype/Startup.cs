@@ -35,7 +35,7 @@ namespace LandscapePrototype
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddScoped<IDependencyResolver>(x => new FuncDependencyResolver(x.GetRequiredService));
+            services.AddScoped<IDependencyResolver>(x => new FuncDependencyResolver(x.GetRequiredService)); // graphql needs this
 
             services.AddControllers().AddJsonOptions(options =>
             {
@@ -50,13 +50,17 @@ namespace LandscapePrototype
 
             services.AddScoped<CIModel>();
             services.AddScoped<LayerModel>();
+            services.AddScoped<RelationModel>();
+
+            services.AddScoped<CIType>();
+            services.AddScoped<RelationType>();
+            services.AddScoped<LandscapeSchema>();
 
             services.Configure<IISServerOptions>(options =>
             {
                 options.AllowSynchronousIO = true;
             });
 
-            services.AddScoped<LandscapeSchema>();
 
             services.AddGraphQL(x =>
             {
@@ -70,7 +74,6 @@ namespace LandscapePrototype
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-
             app.UseGraphQL<LandscapeSchema>();
 
             if (env.IsDevelopment())
@@ -90,8 +93,6 @@ namespace LandscapePrototype
             {
                 endpoints.MapControllers();
             });
-
-            
         }
     }
 }

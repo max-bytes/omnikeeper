@@ -5,9 +5,15 @@ CREATE TYPE attributestate AS ENUM (
     'removed',
     'renewed'
 );
-
-
 ALTER TYPE attributestate OWNER TO postgres;
+
+CREATE TYPE relationstate AS ENUM (
+    'new',
+    'removed',
+    'renewed'
+);
+ALTER TYPE relationstate OWNER TO postgres;
+
 
 
 
@@ -20,34 +26,36 @@ CREATE TABLE public.changeset
 
 ALTER TABLE public.changeset
     OWNER to postgres;
+
+    
+CREATE TABLE public.relation
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    from_ci_id bigint NOT NULL,
+    to_ci_id bigint NOT NULL,
+    "predicate" text NOT NULL,
+    activation_time timestamp with time zone NOT NULL,
+    changeset_id bigint NOT NULL,
+    layer_id bigint NOT NULL,
+    state public.relationstate DEFAULT 'new'::public.relationstate NOT NULL,
+    CONSTRAINT relation_pkey PRIMARY KEY (id)
+);
+
+ALTER TABLE public.relation
+    OWNER to postgres;
 --
 -- TOC entry 202 (class 1259 OID 16394)
 -- Name: ci; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.ci (
-    id bigint NOT NULL,
-    identity text NOT NULL
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    identity text NOT NULL,
+    CONSTRAINT ci_pkey PRIMARY KEY (id)
 );
-
-ALTER TABLE public.ci
-    ADD CONSTRAINT u_identity UNIQUE ("identity");
 
 ALTER TABLE public.ci OWNER TO postgres;
 
---
--- TOC entry 205 (class 1259 OID 16428)
--- Name: anchor_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-ALTER TABLE public.ci ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.anchor_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
 
 
 --
@@ -115,13 +123,8 @@ ALTER TABLE public.layer ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 );
 
 
---
--- TOC entry 2707 (class 2606 OID 16401)
--- Name: ci anchor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.ci
-    ADD CONSTRAINT anchor_pkey PRIMARY KEY (id);
+ALTER TABLE public.ci
+    ADD CONSTRAINT u_identity UNIQUE ("identity");
 
 
 --
@@ -162,6 +165,21 @@ ALTER TABLE public.attribute
 ALTER TABLE ONLY public.attribute
     ADD CONSTRAINT f_layer FOREIGN KEY (layer_id) REFERENCES public.layer(id) NOT VALID;
 
+    
+    ALTER TABLE ONLY public.relation
+        ADD CONSTRAINT f_from_id FOREIGN KEY (from_ci_id) REFERENCES public.ci(id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID,
+        ADD CONSTRAINT f_to_ci FOREIGN KEY (to_ci_id) REFERENCES public.ci(id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID,
+        ADD CONSTRAINT f_changeset FOREIGN KEY (changeset_id) REFERENCES public.changeset (id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID,
+        ADD CONSTRAINT f_layer FOREIGN KEY (layer_id) REFERENCES public.layer(id) NOT VALID;
+
 CREATE INDEX
     ON public.attribute USING btree
-    (ci_id ASC NULLS LAST)
+    (ci_id ASC NULLS LAST);
+
+
+CREATE INDEX
+    ON public.relation USING btree
+    (from_ci_id ASC NULLS LAST);
+CREATE INDEX
+    ON public.relation USING btree
+    (to_ci_id ASC NULLS LAST);
