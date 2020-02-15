@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Linq.Dynamic.Core;
 
 namespace LandscapePrototype.Entity.GraphQL
 {
@@ -14,25 +15,35 @@ namespace LandscapePrototype.Entity.GraphQL
         {
             Field(x => x.Identity);
             Field(x => x.Attributes, type: typeof(ListGraphType<CIAttributeType>));
-            Field<ListGraphType<RelatedCIType>>("related",
+            FieldAsync<ListGraphType<RelatedCIType>>("related",
             arguments: new QueryArguments(new List<QueryArgument>
             {
-                new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
-                {
-                    Name = "layers"
-                },
+                new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                new QueryArgument<StringGraphType> { Name = "where" },
             }),
-            resolve: (context) =>
+            resolve: async (context) =>
             {
                 var CIIdentity = context.Source.Identity;
                 var layerStrings = context.GetArgument<string[]>("layers");
-                var layers = layerModel.BuildLayerSet(layerStrings);
-                var relations = relationModel.GetMergedRelations(CIIdentity, false, layers, RelationModel.IncludeRelationDirections.Forward);
-                return relations.Select(r =>
+                var layers = await layerModel.BuildLayerSet(layerStrings);
+                var relations = await relationModel.GetMergedRelations(CIIdentity, false, layers, RelationModel.IncludeRelationDirections.Forward);
+                var r = await Task.WhenAll(relations.Select(async r =>
                 {
-                    var CIIdentity = ciModel.GetIdentityFromCIID(r.ToCIID);
-                    return RelatedCI.Build(r, ciModel.GetCI(CIIdentity, layers));
-                });
+                    var CIIdentity = await ciModel.GetIdentityFromCIID(r.ToCIID);
+                    return RelatedCI.Build(r, await ciModel.GetCI(CIIdentity, layers));
+                }));
+
+                var wStr = context.GetArgument<string>("where"); // TODO: develop further
+                if (wStr != null)
+                    try
+                    {
+                        r = r.AsQueryable().Where(wStr).ToArray();
+                    } catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                return r;
             });
         }
     }

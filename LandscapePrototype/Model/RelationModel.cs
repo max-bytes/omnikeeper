@@ -20,14 +20,14 @@ namespace LandscapePrototype.Model
             Forward, Backward, Both
         }
 
-        public IEnumerable<Relation> GetMergedRelations(string ciIdentity, bool includeRemoved, LayerSet layers, IncludeRelationDirections ird)
+        public async Task<IEnumerable<Relation>> GetMergedRelations(string ciIdentity, bool includeRemoved, LayerSet layers, IncludeRelationDirections ird)
         {
             if (ird != IncludeRelationDirections.Forward)
                 throw new NotImplementedException(); // TODO: implement
 
             var ret = new List<Relation>();
 
-            LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn).GetAwaiter().GetResult(); ;
+            await LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn);
 
             using (var command = new NpgsqlCommand(@"
             select distinct
@@ -84,7 +84,7 @@ namespace LandscapePrototype.Model
         }
 
 
-        public Relation GetRelation(long fromCIID, long toCIID, string predicate, long layerID)
+        public async Task<Relation> GetRelation(long fromCIID, long toCIID, string predicate, long layerID)
         {
             using (var command = new NpgsqlCommand(@"select activation_time, state, changeset_id from relation 
                 where from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id AND predicate = @predicate AND layer_id = @layer_id LIMIT 1", conn))
@@ -93,8 +93,8 @@ namespace LandscapePrototype.Model
                 command.Parameters.AddWithValue("to_ci_id", toCIID);
                 command.Parameters.AddWithValue("predicate", predicate);
                 command.Parameters.AddWithValue("layer_id", layerID);
-                using var dr = command.ExecuteReader();
-                if (!dr.Read())
+                using var dr = await command.ExecuteReaderAsync();
+                if (!await dr.ReadAsync())
                     return null;
 
                 var activationTime = dr.GetTimeStamp(0).ToDateTime();
@@ -105,9 +105,9 @@ namespace LandscapePrototype.Model
             }
         }
 
-        public bool RemoveRelation(long fromCIID, long toCIID, string predicate, long layerID, long changesetID)
+        public async Task<bool> RemoveRelation(long fromCIID, long toCIID, string predicate, long layerID, long changesetID)
         {
-            var currentRelation = GetRelation(fromCIID, toCIID, predicate, layerID);
+            var currentRelation = await GetRelation(fromCIID, toCIID, predicate, layerID);
 
             if (currentRelation == null)
             {
@@ -130,13 +130,13 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("state", RelationState.Removed);
             command.Parameters.AddWithValue("changeset_id", changesetID);
 
-            var numInserted = command.ExecuteNonQuery();
+            var numInserted = await command.ExecuteNonQueryAsync();
             return numInserted == 1;
         }
 
-        public bool InsertRelation(long fromCIID, long toCIID, string predicate, long layerID, long changesetID)
+        public async Task<bool> InsertRelation(long fromCIID, long toCIID, string predicate, long layerID, long changesetID)
         {
-            var currentRelation = GetRelation(fromCIID, toCIID, predicate, layerID);
+            var currentRelation = await GetRelation(fromCIID, toCIID, predicate, layerID);
 
             var state = RelationState.New;
             if (currentRelation != null)
@@ -160,7 +160,7 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("state", state);
             command.Parameters.AddWithValue("changeset_id", changesetID);
 
-            var numInserted = command.ExecuteNonQuery();
+            var numInserted = await command.ExecuteNonQueryAsync();
 
             return numInserted == 1;
         }

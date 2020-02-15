@@ -8,7 +8,7 @@ namespace LandscapePrototype.Entity.GraphQL
     {
         public LandscapeQuery(CIModel ciModel, LayerModel layerModel)
         {
-            Field<ListGraphType<CIType>>("ci",
+            FieldAsync<ListGraphType<CIType>>("ci",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {
                     new QueryArgument<NonNullGraphType<StringGraphType>>
@@ -20,13 +20,13 @@ namespace LandscapePrototype.Entity.GraphQL
                         Name = "layers"
                     },
                 }),
-                resolve: context =>
+                resolve: async context =>
                 {
                     var ciIdentity = context.GetArgument<string>("identity");
                     var layerStrings = context.GetArgument<string[]>("layers");
-                    var layers = layerModel.BuildLayerSet(layerStrings);
+                    var layers = await layerModel.BuildLayerSet(layerStrings);
 
-                    var ci = ciModel.GetCI(ciIdentity, layers);
+                    var ci = await ciModel.GetCI(ciIdentity, layers);
 
                     return new List<CI>() { ci };
                 });

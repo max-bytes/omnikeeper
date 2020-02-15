@@ -20,9 +20,9 @@ namespace LandscapePrototype.Model
             conn = connection;
         }
 
-        public CI GetCI(string ciIdentity, LayerSet layers)
+        public async Task<CI> GetCI(string ciIdentity, LayerSet layers)
         {
-            var attributes = GetMergedAttributes(ciIdentity, false, layers).GetAwaiter().GetResult();
+            var attributes = await GetMergedAttributes(ciIdentity, false, layers);
             return CI.Build(ciIdentity, attributes);
         }
 
@@ -65,9 +65,9 @@ namespace LandscapePrototype.Model
                 command.Parameters.AddWithValue("ci_identity", ciIdentity);
                 var excludedStates = (includeRemoved) ? new AttributeState[] { } : new AttributeState[] { AttributeState.Removed };
                 command.Parameters.AddWithValue("excluded_states", excludedStates);
-                using var dr = await command.ExecuteReaderAsync();
+                using var dr = command.ExecuteReader();
 
-                while (await dr.ReadAsync())
+                while (dr.Read())
                 {
                     var name = dr.GetString(0);
                     var CIID = dr.GetInt64(1);
@@ -86,7 +86,7 @@ namespace LandscapePrototype.Model
             return ret;
         }
 
-        public CIAttribute GetAttribute(string name, long layerID, string ciIdentity)
+        public async Task<CIAttribute> GetAttribute(string name, long layerID, string ciIdentity)
         {
             using (var command = new NpgsqlCommand(@"
             select distinct
@@ -106,9 +106,9 @@ namespace LandscapePrototype.Model
                 command.Parameters.AddWithValue("ci_identity", ciIdentity);
                 command.Parameters.AddWithValue("layer_id", layerID);
                 command.Parameters.AddWithValue("name", name);
-                using var dr = command.ExecuteReader();
+                using var dr = await command.ExecuteReaderAsync();
 
-                if (!dr.Read())
+                if (!await dr.ReadAsync())
                     return null;
 
                 var CIID = dr.GetInt64(0);
@@ -123,25 +123,25 @@ namespace LandscapePrototype.Model
         }
 
         // TODO: having both of these suck! maybe combine id and identity, or use identity for (almost) everything
-        private long GetCIIDFromIdentity(string ciIdentity)
+        private async Task<long> GetCIIDFromIdentity(string ciIdentity)
         {
             using var command = new NpgsqlCommand(@"select id from ci where identity = @identity LIMIT 1", conn);
             command.Parameters.AddWithValue("identity", ciIdentity);
-            var s = command.ExecuteScalar();
+            var s = await command.ExecuteScalarAsync();
             return (long)s;
         }
-        public string GetIdentityFromCIID(long ciid)
+        public async Task<string> GetIdentityFromCIID(long ciid)
         {
             using var command = new NpgsqlCommand(@"select identity from ci where id = @id LIMIT 1", conn);
             command.Parameters.AddWithValue("id", ciid);
-            var s = command.ExecuteScalar();
+            var s = await command.ExecuteScalarAsync();
             return (string)s;
         }
 
-        public bool RemoveAttribute(string name, long layerID, string ciIdentity, long changesetID)
+        public async Task<bool> RemoveAttribute(string name, long layerID, string ciIdentity, long changesetID)
         {
-            var currentAttribute = GetAttribute(name, layerID, ciIdentity);
-            var ciID = GetCIIDFromIdentity(ciIdentity);
+            var currentAttribute = await GetAttribute(name, layerID, ciIdentity);
+            var ciID = await GetCIIDFromIdentity(ciIdentity);
 
             if (currentAttribute == null)
             {
@@ -166,15 +166,15 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("state", AttributeState.Removed);
             command.Parameters.AddWithValue("changeset_id", changesetID);
 
-            var numInserted = command.ExecuteNonQuery();
+            var numInserted = await command.ExecuteNonQueryAsync();
 
             return numInserted == 1;
         }
 
-        public bool InsertAttribute(string name, IAttributeValue value, long layerID, string ciIdentity, long changesetID)
+        public async Task<bool> InsertAttribute(string name, IAttributeValue value, long layerID, string ciIdentity, long changesetID)
         {
-            var currentAttribute = GetAttribute(name, layerID, ciIdentity);
-            var ciID = GetCIIDFromIdentity(ciIdentity);
+            var currentAttribute = await GetAttribute(name, layerID, ciIdentity);
+            var ciID = await GetCIIDFromIdentity(ciIdentity);
 
             var state = AttributeState.New; // TODO
             if (currentAttribute != null)
@@ -203,32 +203,23 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("state", state);
             command.Parameters.AddWithValue("changeset_id", changesetID);
 
-            var numInserted = command.ExecuteNonQuery();
+            var numInserted = await command.ExecuteNonQueryAsync();
 
             return numInserted == 1;
         }
 
-        public long CreateLayer(string name)
+        public async Task<long> CreateCI(string identity)
         {
-            using var command = new NpgsqlCommand(@"INSERT INTO layer (name) VALUES (@name) returning id", conn);
-            command.Parameters.AddWithValue("name", name);
-            var id = (long)command.ExecuteScalar();
-            return id;
-        }
-
-        public long CreateCI(string identity)
-        {
-            using var command = new NpgsqlCommand(@"INSERT INTO ci (identity) 
-                    VALUES (@identity) returning id", conn);
+            using var command = new NpgsqlCommand(@"INSERT INTO ci (identity) VALUES (@identity) returning id", conn);
             command.Parameters.AddWithValue("identity", identity);
-            var id = (long)command.ExecuteScalar();
+            var id = (long)await command.ExecuteScalarAsync();
             return id;
         }
 
-        public long CreateChangeset()
+        public async Task<long> CreateChangeset()
         {
             using var command = new NpgsqlCommand(@"INSERT INTO changeset (timestamp) VALUES (now()) returning id", conn);
-            var id = (long)command.ExecuteScalar();
+            var id = (long)await command.ExecuteScalarAsync();
             return id;
         }
     }

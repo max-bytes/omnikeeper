@@ -15,18 +15,25 @@ namespace LandscapePrototype.Model
             conn = connection;
         }
 
-        // TODO: performance improvements(?)
-        public LayerSet BuildLayerSet(string[] layerNames)
+        public async Task<long> CreateLayer(string name)
         {
-            var layerIDs = layerNames.Select(ln =>
+            using var command = new NpgsqlCommand(@"INSERT INTO layer (name) VALUES (@name) returning id", conn);
+            command.Parameters.AddWithValue("name", name);
+            var id = (long)await command.ExecuteScalarAsync();
+            return id;
+        }
+
+        // TODO: performance improvements(?)
+        public async Task<LayerSet> BuildLayerSet(string[] layerNames)
+        {
+            var layerIDs = new List<long>();
+            foreach(var ln in layerNames)
             {
-                using (var command = new NpgsqlCommand(@"select id from layer where name = @name LIMIT 1", conn))
-                {
-                    command.Parameters.AddWithValue("name", ln);
-                    var s = command.ExecuteScalar();
-                    return (long)s;
-                }
-            });
+                using var command = new NpgsqlCommand(@"select id from layer where name = @name LIMIT 1", conn);
+                command.Parameters.AddWithValue("name", ln);
+                var s = await command.ExecuteScalarAsync();
+                layerIDs.Add((long)s);
+            }
             return new LayerSet(layerIDs.ToArray());
         }
     }

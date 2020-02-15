@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Tests.Integration
 {
@@ -21,7 +22,7 @@ namespace Tests.Integration
         private List<string> layerNames;
 
         [SetUp]
-        public void Setup()
+        public async Task Setup()
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -30,6 +31,7 @@ namespace Tests.Integration
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(TestDBSetup.dbName, false, true);
             var model = new CIModel(conn);
+            var layerModel = new LayerModel(conn);
 
             var random = new Random(3);
 
@@ -50,17 +52,17 @@ namespace Tests.Integration
                 return identity;
             }).ToList();
 
-            var changesetID = model.CreateChangeset();
+            var changesetID = await model.CreateChangeset();
 
             Console.WriteLine(ciNames.Count());
             var cis = ciNames.Select(identity =>
             {
-                return (model.CreateCI(identity), identity);
+                return (model.CreateCI(identity).GetAwaiter().GetResult(), identity);
             }).ToList();
 
             var layerIDs = layerNames.Select(identity =>
             {
-                return model.CreateLayer(identity);
+                return layerModel.CreateLayer(identity).GetAwaiter().GetResult();
             }).ToList();
 
             var attributeNames = Enumerable.Range(0, numAttributeNames).Select(i => "A" + RandomString.Generate(32)).ToList();
@@ -85,7 +87,7 @@ namespace Tests.Integration
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
 
-            var layerset = layerModel.BuildLayerSet(layerNames.ToArray());
+            var layerset = layerModel.BuildLayerSet(layerNames.ToArray()).GetAwaiter().GetResult();
 
             var timer = new Stopwatch();
             timer.Start();
