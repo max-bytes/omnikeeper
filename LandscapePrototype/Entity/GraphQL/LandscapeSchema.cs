@@ -1,5 +1,6 @@
 ﻿using GraphQL;
 using GraphQL.Types;
+using GraphQL.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +10,10 @@ namespace LandscapePrototype.Entity.GraphQL
 {
     public class LandscapeSchema : Schema
     {
-        public LandscapeSchema(IDependencyResolver resolver) : base(resolver)
+        public LandscapeSchema(IServiceProvider provider) : base(provider)
         {
-            Query = resolver.Resolve<LandscapeQuery>();
+            Query = provider.GetRequiredService<LandscapeQuery>();
+            Mutation = provider.GetRequiredService<CIMutation>();
         }
     }
 }

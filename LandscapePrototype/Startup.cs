@@ -35,7 +35,7 @@ namespace LandscapePrototype
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddScoped<IDependencyResolver>(x => new FuncDependencyResolver(x.GetRequiredService)); // graphql needs this
+            services.AddScoped<IServiceProvider>(x => new FuncServiceProvider(x.GetRequiredService)); // graphql needs this
 
             services.AddControllers().AddJsonOptions(options =>
             {

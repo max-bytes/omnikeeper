@@ -38,7 +38,8 @@ namespace LandscapePrototype.Entity.GraphQL
                     try
                     {
                         r = r.AsQueryable().Where(wStr).ToArray();
-                    } catch (Exception e)
+                    }
+                    catch (Exception e)
                     {
                         Console.WriteLine(e);
                     }
@@ -86,6 +87,15 @@ namespace LandscapePrototype.Entity.GraphQL
         public AttributeValueTextType()
         {
             Field(x => x.Value);
+        }
+    }
+
+    public class CIInputType : InputObjectGraphType
+    {
+        public CIInputType()
+        {
+            Name = "CIInput";
+            Field<NonNullGraphType<StringGraphType>>(nameof(CI.Identity));
         }
     }
 }
