@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Tests.Integration
 {
-    class TestDBSetup
+    class DBSetup
     {
         private static string GetFilename(string testDataFolder)
         {
@@ -31,17 +31,22 @@ namespace Tests.Integration
 
         public static void Setup()
         {
+            _Setup(dbName);
+        }
+
+        public static void _Setup(string _dbName)
+        {
             // re-create db
             NpgsqlConnection conn = new NpgsqlConnection("Server=127.0.0.1;User Id=postgres; Password=postgres;Pooling=false");
             conn.Open();
-            var sqlCreateDB = LoadFile("createDB.sql", dbName);
+            var sqlCreateDB = LoadFile("createDB.sql", _dbName);
             new NpgsqlCommand(sqlCreateDB, conn).ExecuteNonQuery();
             conn.Close();
 
             // setup schema
-            NpgsqlConnection conn2 = new NpgsqlConnection($"Server=127.0.0.1;User Id=postgres; Password=postgres;Database={dbName};Pooling=false");
+            NpgsqlConnection conn2 = new NpgsqlConnection($"Server=127.0.0.1;User Id=postgres; Password=postgres;Database={_dbName};Pooling=false");
             conn2.Open();
-            var sqlCreateSchema = LoadFile("createSchema.sql", dbName);
+            var sqlCreateSchema = LoadFile("createSchema.sql", _dbName);
             new NpgsqlCommand(sqlCreateSchema, conn2).ExecuteNonQuery();
             conn2.Close();
         }

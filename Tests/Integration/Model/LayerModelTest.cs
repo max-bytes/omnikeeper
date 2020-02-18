@@ -13,21 +13,21 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Tests.Integration
+namespace Tests.Integration.Model
 {
     class LayerModelTest
     {
         [SetUp]
         public void Setup()
         {
-            TestDBSetup.Setup();
+            DBSetup.Setup();
         }
 
         [Test]
         public async Task TestBasics()
         {
             var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(TestDBSetup.dbName, false, true);
+            using var conn = dbcb.Build(DBSetup.dbName, false, true);
             var layerModel = new LayerModel(conn);
 
             var layerNames = Enumerable.Range(0, 100).Select(i => $"l{i}");

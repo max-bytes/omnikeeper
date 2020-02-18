@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Tests.Integration
+namespace Tests.Integration.Model
 {
     class RandomString
     {

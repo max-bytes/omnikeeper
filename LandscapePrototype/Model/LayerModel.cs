@@ -36,5 +36,13 @@ namespace LandscapePrototype.Model
             }
             return new LayerSet(layerIDs.ToArray());
         }
+
+        public async Task<long> GetLayerID(string layerName)
+        {
+            using var command = new NpgsqlCommand(@"select id from layer where name = @name LIMIT 1", conn);
+            command.Parameters.AddWithValue("name", layerName);
+            var s = await command.ExecuteScalarAsync();
+            return (long)s;
+        }
     }
 }

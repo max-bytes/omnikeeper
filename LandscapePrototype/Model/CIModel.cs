@@ -40,7 +40,8 @@ namespace LandscapePrototype.Model
             last_value(inn.last_value) over wndOut,
             last_value(inn.last_activation_time) over wndOut,
             last_value(inn.last_layer_id) over wndOut,
-            last_value(inn.last_state) over wndOut
+            last_value(inn.last_state) over wndOut,
+            last_value(inn.last_changeset_id) over wndOut
             from(
                 select distinct
                 last_value(a.name) over wnd as last_name,
@@ -49,7 +50,8 @@ namespace LandscapePrototype.Model
                 last_value(a.value) over wnd as ""last_value"",
                 last_value(a.activation_time) over wnd as last_activation_time,
                 last_value(a.layer_id) over wnd as last_layer_id,
-                last_value(a.state) over wnd as last_state
+                last_value(a.state) over wnd as last_state,
+                last_value(a.changeset_id) over wnd as last_changeset_id
                 from ""attribute"" a
                 inner join ci c ON a.ci_id = c.id
                 WHERE a.activation_time <= now() and c.identity = @ci_identity
@@ -77,8 +79,9 @@ namespace LandscapePrototype.Model
                     var activationTime = dr.GetTimeStamp(4).ToDateTime();
                     var layerID = dr.GetInt64(5);
                     var state = dr.GetFieldValue<AttributeState>(6);
+                    var changesetID = dr.GetInt64(7);
 
-                    var att = CIAttribute.Build(name, CIID, av, activationTime, layerID, state);
+                    var att = CIAttribute.Build(name, CIID, av, activationTime, layerID, state, changesetID);
 
                     ret.Add(att);
                 }
@@ -86,7 +89,7 @@ namespace LandscapePrototype.Model
             return ret;
         }
 
-        public async Task<CIAttribute> GetAttribute(string name, long layerID, string ciIdentity)
+        public async Task<CIAttribute> GetAttribute(string name, long layerID, long ciid)
         {
             using (var command = new NpgsqlCommand(@"
             select distinct
@@ -94,16 +97,17 @@ namespace LandscapePrototype.Model
             last_value(a.type) over wnd as last_type,
             last_value(a.value) over wnd as ""last_value"",
             last_value(a.activation_time) over wnd as last_activation_time,
-            last_value(a.state) over wnd as last_state
+            last_value(a.state) over wnd as last_state,
+            last_value(a.changeset_id) over wnd as last_changeset_id
                 from ""attribute"" a inner join ci c ON a.ci_id = c.id
-                where a.activation_time <= now() and c.identity = @ci_identity and a.layer_id = @layer_id and a.name = @name
+                where a.activation_time <= now() and c.id = @ci_id and a.layer_id = @layer_id and a.name = @name
             WINDOW wnd AS(
                 PARTITION by a.name, a.ci_id ORDER BY a.activation_time
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) 
             LIMIT 1
             ", conn))
             {
-                command.Parameters.AddWithValue("ci_identity", ciIdentity);
+                command.Parameters.AddWithValue("ci_id", ciid);
                 command.Parameters.AddWithValue("layer_id", layerID);
                 command.Parameters.AddWithValue("name", name);
                 using var dr = await command.ExecuteReaderAsync();
@@ -117,13 +121,14 @@ namespace LandscapePrototype.Model
                 var av = AttributeValueBuilder.Build(type, value);
                 var activationTime = dr.GetTimeStamp(3).ToDateTime();
                 var state = dr.GetFieldValue<AttributeState>(4);
-                var att = CIAttribute.Build(name, CIID, av, activationTime, layerID, state);
+                var changesetID = dr.GetInt64(5);
+                var att = CIAttribute.Build(name, CIID, av, activationTime, layerID, state, changesetID);
                 return att;
             }
         }
 
         // TODO: having both of these suck! maybe combine id and identity, or use identity for (almost) everything
-        private async Task<long> GetCIIDFromIdentity(string ciIdentity)
+        public async Task<long> GetCIIDFromIdentity(string ciIdentity)
         {
             using var command = new NpgsqlCommand(@"select id from ci where identity = @identity LIMIT 1", conn);
             command.Parameters.AddWithValue("identity", ciIdentity);
@@ -138,10 +143,9 @@ namespace LandscapePrototype.Model
             return (string)s;
         }
 
-        public async Task<bool> RemoveAttribute(string name, long layerID, string ciIdentity, long changesetID)
+        public async Task<bool> RemoveAttribute(string name, long layerID, long ciid, long changesetID)
         {
-            var currentAttribute = await GetAttribute(name, layerID, ciIdentity);
-            var ciID = await GetCIIDFromIdentity(ciIdentity);
+            var currentAttribute = await GetAttribute(name, layerID, ciid);
 
             if (currentAttribute == null)
             {
@@ -159,7 +163,7 @@ namespace LandscapePrototype.Model
             var (strType, strValue) = AttributeValueBuilder.GetTypeAndValueString(currentAttribute.Value);
 
             command.Parameters.AddWithValue("name", name);
-            command.Parameters.AddWithValue("ci_id", ciID);
+            command.Parameters.AddWithValue("ci_id", ciid);
             command.Parameters.AddWithValue("type", strType);
             command.Parameters.AddWithValue("value", strValue);
             command.Parameters.AddWithValue("layer_id", layerID);
@@ -171,10 +175,9 @@ namespace LandscapePrototype.Model
             return numInserted == 1;
         }
 
-        public async Task<bool> InsertAttribute(string name, IAttributeValue value, long layerID, string ciIdentity, long changesetID)
+        public async Task<bool> InsertAttribute(string name, IAttributeValue value, long layerID, long ciid, long changesetID)
         {
-            var currentAttribute = await GetAttribute(name, layerID, ciIdentity);
-            var ciID = await GetCIIDFromIdentity(ciIdentity);
+            var currentAttribute = await GetAttribute(name, layerID, ciid);
 
             var state = AttributeState.New; // TODO
             if (currentAttribute != null)
@@ -196,7 +199,7 @@ namespace LandscapePrototype.Model
             var (strType, strValue) = AttributeValueBuilder.GetTypeAndValueString(value);
 
             command.Parameters.AddWithValue("name", name);
-            command.Parameters.AddWithValue("ci_id", ciID);
+            command.Parameters.AddWithValue("ci_id", ciid);
             command.Parameters.AddWithValue("type", strType);
             command.Parameters.AddWithValue("value", strValue);
             command.Parameters.AddWithValue("layer_id", layerID);

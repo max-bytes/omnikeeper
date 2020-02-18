@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LandscapePrototype.Entity.GraphQL;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,8 +12,18 @@ namespace LandscapePrototype.Entity.AttributeValues
         public abstract int GetHashCode();
     }
 
+    public class AttributeValueGeneric
+    {
+        public string Type { get; private set; }
+        public string Value { get; private set; }
+    }
+
     public static class AttributeValueBuilder
     {
+        public static IAttributeValue Build(AttributeValueGeneric generic)
+        {
+            return Build(generic.Type, generic.Value);
+        }
         public static IAttributeValue Build(string type, string value)
         {
             switch (type)

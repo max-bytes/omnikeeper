@@ -19,18 +19,6 @@ namespace LandscapePrototype.Entity.GraphQL
             Field(x => x.Predicate);
             Field(x => x.State, type: typeof(RelationStateType));
             Field(x => x.ChangesetID);
-            //FieldAsync<CIType>("to",
-            //arguments: new QueryArguments(new List<QueryArgument>
-            //{
-            //    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
-            //}),
-            //resolve: async (context) =>
-            //{
-            //    var CIIdentity = ciModel.GetIdentityFromCIID(context.Source.ToCIID);
-            //    var layerStrings = context.GetArgument<string[]>("layers");
-            //    var layers = await layerModel.BuildLayerSet(layerStrings);
-            //    return await ciModel.GetCI(CIIdentity, layers);
-            //});
         }
     }
 

@@ -89,13 +89,4 @@ namespace LandscapePrototype.Entity.GraphQL
             Field(x => x.Value);
         }
     }
-
-    public class CIInputType : InputObjectGraphType
-    {
-        public CIInputType()
-        {
-            Name = "CIInput";
-            Field<NonNullGraphType<StringGraphType>>(nameof(CI.Identity));
-        }
-    }
 }

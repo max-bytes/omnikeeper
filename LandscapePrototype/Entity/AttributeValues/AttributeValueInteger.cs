@@ -12,9 +12,16 @@ namespace LandscapePrototype.Entity.AttributeValues
 
         internal static IAttributeValue Build(string value)
         {
-            var n = new AttributeValueInteger();
             long.TryParse(value, out var v);
-            n.Value = v;
+            return Build(v);
+        }
+
+        public static IAttributeValue Build(long value)
+        {
+            var n = new AttributeValueInteger
+            {
+                Value = value
+            };
             return n;
         }
 

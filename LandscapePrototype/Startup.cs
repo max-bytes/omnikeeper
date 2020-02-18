@@ -51,11 +51,12 @@ namespace LandscapePrototype
             services.AddScoped<CIModel>();
             services.AddScoped<LayerModel>();
             services.AddScoped<RelationModel>();
+            services.AddScoped<LandscapeUserContext>();
 
             services.AddScoped<CIType>();
             services.AddScoped<RelationType>();
             services.AddScoped<LandscapeSchema>();
-
+            
             services.Configure<IISServerOptions>(options =>
             {
                 options.AllowSynchronousIO = true;
@@ -66,7 +67,8 @@ namespace LandscapePrototype
             {
                 x.ExposeExceptions = CurrentEnvironment.IsDevelopment(); //set true only in development mode. make it switchable.
             })
-            .AddGraphTypes(ServiceLifetime.Scoped);
+            .AddGraphTypes(ServiceLifetime.Scoped)
+            .AddUserContextBuilder<LandscapeUserContext>((httpContext) => new LandscapeUserContext());
         }
 
         private IWebHostEnvironment CurrentEnvironment { get; set; }

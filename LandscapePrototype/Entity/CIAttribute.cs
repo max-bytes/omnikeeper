@@ -16,8 +16,9 @@ namespace LandscapePrototype
         public DateTimeOffset ActivationTime { get; private set; }
         public long LayerID { get; private set; }
         public AttributeState State { get; private set; }
+        public long ChangesetID { get; private set; }
 
-        public static CIAttribute Build(string name, long CIID, IAttributeValue value, DateTimeOffset acticationTime, long layerID, AttributeState state)
+        public static CIAttribute Build(string name, long CIID, IAttributeValue value, DateTimeOffset acticationTime, long layerID, AttributeState state, long changesetID)
         {
             var o = new CIAttribute();
             o.Name = name;
@@ -26,6 +27,7 @@ namespace LandscapePrototype
             o.ActivationTime = acticationTime;
             o.LayerID = layerID;
             o.State = state;
+            o.ChangesetID = changesetID;
             return o;
         }
     }

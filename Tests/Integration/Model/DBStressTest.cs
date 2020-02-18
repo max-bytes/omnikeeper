@@ -14,7 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Tests.Integration
+namespace Tests.Integration.Model
 {
     class DBStressTest
     {
@@ -27,9 +27,9 @@ namespace Tests.Integration
             var timer = new Stopwatch();
             timer.Start();
 
-            TestDBSetup.Setup();
+            DBSetup.Setup();
             var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(TestDBSetup.dbName, false, true);
+            using var conn = dbcb.Build(DBSetup.dbName, false, true);
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
 
@@ -71,8 +71,8 @@ namespace Tests.Integration
                 var name = attributeNames.GetRandom(random);
                 var value = AttributeValueText.Build("V" + RandomString.Generate(8));
                 var layer = layerIDs.GetRandom(random);
-                var ci = cis.GetRandom(random).identity;
-                return model.InsertAttribute(name, value, layer, ci, changesetID);
+                var ciid = cis.GetRandom(random).Item1;
+                return model.InsertAttribute(name, value, layer, ciid, changesetID);
             }).ToList();
 
             timer.Stop();
@@ -83,7 +83,7 @@ namespace Tests.Integration
         public void TestSelectOnBigDatabase()
         {
             var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(TestDBSetup.dbName, false, true);
+            using var conn = dbcb.Build(DBSetup.dbName, false, true);
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
 

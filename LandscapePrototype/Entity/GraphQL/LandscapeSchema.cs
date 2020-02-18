@@ -13,7 +13,7 @@ namespace LandscapePrototype.Entity.GraphQL
         public LandscapeSchema(IServiceProvider provider) : base(provider)
         {
             Query = provider.GetRequiredService<LandscapeQuery>();
-            Mutation = provider.GetRequiredService<CIMutation>();
+            Mutation = provider.GetRequiredService<LandscapeMutation>();
         }
     }
 }
