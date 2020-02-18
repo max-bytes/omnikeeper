@@ -25,12 +25,12 @@ namespace LandscapePrototype.Entity.GraphQL
             {
                 var CIIdentity = context.Source.Identity;
                 var layerStrings = context.GetArgument<string[]>("layers");
-                var layers = await layerModel.BuildLayerSet(layerStrings);
+                var layers = await layerModel.BuildLayerSet(layerStrings, null);
                 var relations = await relationModel.GetMergedRelations(CIIdentity, false, layers, RelationModel.IncludeRelationDirections.Forward);
                 var r = await Task.WhenAll(relations.Select(async r =>
                 {
-                    var CIIdentity = await ciModel.GetIdentityFromCIID(r.ToCIID);
-                    return RelatedCI.Build(r, await ciModel.GetCI(CIIdentity, layers));
+                    var CIIdentity = await ciModel.GetIdentityFromCIID(r.ToCIID, null);
+                    return RelatedCI.Build(r, await ciModel.GetCI(CIIdentity, layers, null));
                 }));
 
                 var wStr = context.GetArgument<string>("where"); // TODO: develop further

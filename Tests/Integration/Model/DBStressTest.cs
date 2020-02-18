@@ -30,53 +30,60 @@ namespace Tests.Integration.Model
             DBSetup.Setup();
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var model = new CIModel(conn);
-            var layerModel = new LayerModel(conn);
 
-            var random = new Random(3);
-
-            var numCIs = 500;
-            var numLayers = 2;
-            var numAttributeInserts = 6000;
-            var numAttributeNames = 50;
-
-            ciNames = Enumerable.Range(0, numCIs).Select(i =>
+            using (var trans = conn.BeginTransaction())
             {
-                var identity = "CI" + RandomString.Generate(8);
-                return identity;
-            }).ToList();
+                var model = new CIModel(conn);
+                var layerModel = new LayerModel(conn);
 
-            layerNames = Enumerable.Range(0, numLayers).Select(i =>
-            {
-                var identity = "L" + RandomString.Generate(8);
-                return identity;
-            }).ToList();
+                var random = new Random(3);
 
-            var changesetID = await model.CreateChangeset();
+                var numCIs = 500;
+                var numLayers = 2;
+                var numAttributeInserts = 6000;
+                var numAttributeNames = 50;
 
-            Console.WriteLine(ciNames.Count());
-            var cis = ciNames.Select(identity =>
-            {
-                return (model.CreateCI(identity).GetAwaiter().GetResult(), identity);
-            }).ToList();
+                ciNames = Enumerable.Range(0, numCIs).Select(i =>
+                {
+                    var identity = "CI" + RandomString.Generate(8);
+                    return identity;
+                }).ToList();
 
-            var layerIDs = layerNames.Select(identity =>
-            {
-                return layerModel.CreateLayer(identity).GetAwaiter().GetResult();
-            }).ToList();
+                layerNames = Enumerable.Range(0, numLayers).Select(i =>
+                {
+                    var identity = "L" + RandomString.Generate(8);
+                    return identity;
+                }).ToList();
 
-            var attributeNames = Enumerable.Range(0, numAttributeNames).Select(i => "A" + RandomString.Generate(32)).ToList();
-            var attributes = Enumerable.Range(0, numAttributeInserts).Select(i =>
-            {
-                var name = attributeNames.GetRandom(random);
-                var value = AttributeValueText.Build("V" + RandomString.Generate(8));
-                var layer = layerIDs.GetRandom(random);
-                var ciid = cis.GetRandom(random).Item1;
-                return model.InsertAttribute(name, value, layer, ciid, changesetID);
-            }).ToList();
+                var changesetID = await model.CreateChangeset(trans);
 
-            timer.Stop();
-            Console.WriteLine($"Elapsed time: {timer.ElapsedMilliseconds / 1000f}");
+                //Console.WriteLine(ciNames.Count());
+                var cis = ciNames.Select(identity =>
+                {
+                    return (model.CreateCI(identity, trans).GetAwaiter().GetResult(), identity);
+                }).ToList();
+
+                var layerIDs = layerNames.Select(identity =>
+                {
+                    return layerModel.CreateLayer(identity, trans).GetAwaiter().GetResult();
+                }).ToList();
+
+                var attributeNames = Enumerable.Range(0, numAttributeNames).Select(i => "A" + RandomString.Generate(32)).ToList();
+                var attributes = Enumerable.Range(0, numAttributeInserts).Select(i =>
+                {
+                    var name = attributeNames.GetRandom(random);
+                    var value = AttributeValueText.Build("V" + RandomString.Generate(8));
+                    var layer = layerIDs.GetRandom(random);
+                    var ciid = cis.GetRandom(random).Item1;
+                    return model.InsertAttribute(name, value, layer, ciid, changesetID, trans).GetAwaiter().GetResult();
+                }).ToList();
+
+                await trans.CommitAsync();
+
+                timer.Stop();
+                Console.WriteLine($"Elapsed time: {timer.ElapsedMilliseconds / 1000f}");
+
+            }
         }
 
         [Test]
@@ -84,16 +91,17 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            using var trans = conn.BeginTransaction();
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
 
-            var layerset = layerModel.BuildLayerSet(layerNames.ToArray()).GetAwaiter().GetResult();
+            var layerset = layerModel.BuildLayerSet(layerNames.ToArray(), trans).GetAwaiter().GetResult();
 
             var timer = new Stopwatch();
             timer.Start();
             foreach (var ciName in ciNames)
             {
-                var a1 = model.GetMergedAttributes(ciName, false, layerset);
+                var a1 = model.GetMergedAttributes(ciName, false, layerset, trans);
 
                 //Console.WriteLine($"{ciName} count: {a1.Count()}");
                 //foreach (var aa in a1)

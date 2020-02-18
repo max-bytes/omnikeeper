@@ -50,11 +50,13 @@ namespace Tests.Integration.GraphQL
         {
             var ciModel = Services.Get<CIModel>();
             var layerModel = Services.Get<LayerModel>();
-            var ciid1 = await ciModel.CreateCI("H123");
-            var layerID1 = await layerModel.CreateLayer("layer_1");
-            var layerID2 = await layerModel.CreateLayer("layer_2");
-            var changesetID = await ciModel.CreateChangeset();
-            await ciModel.InsertAttribute("a1", AttributeValueInteger.Build(3), layerID1, ciid1, changesetID);
+            using var trans = Services.Get<NpgsqlConnection>().BeginTransaction();
+            var ciid1 = await ciModel.CreateCI("H123", trans);
+            var layerID1 = await layerModel.CreateLayer("layer_1", trans);
+            var layerID2 = await layerModel.CreateLayer("layer_2", trans);
+            var changesetID = await ciModel.CreateChangeset(trans);
+            await ciModel.InsertAttribute("a1", AttributeValueInteger.Build(3), layerID1, ciid1, changesetID, trans);
+            trans.Commit();
 
             string query = @"
                 query text($ciIdentity: String!, $layers: [String]!) {

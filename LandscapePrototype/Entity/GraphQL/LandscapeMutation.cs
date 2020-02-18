@@ -27,16 +27,16 @@ namespace LandscapePrototype.Entity.GraphQL
                   // TODO: add transaction to model
                   using var transaction = await conn.BeginTransactionAsync();
 
-                  var changesetID = await ciModel.CreateChangeset();
+                  var changesetID = await ciModel.CreateChangeset(transaction);
 
                   foreach (var layer in layers)
                   {
-                      await layerModel.CreateLayer(layer.Name);
+                      await layerModel.CreateLayer(layer.Name, transaction);
                   }
 
                   foreach (var ci in cis)
                   {
-                      await ciModel.CreateCI(ci.Identity); // TODO: add changeset
+                      await ciModel.CreateCI(ci.Identity, transaction); // TODO: add changeset
                   }
 
                   var groupedAttributes = attributes.GroupBy(a => a.CI);
@@ -45,15 +45,15 @@ namespace LandscapePrototype.Entity.GraphQL
                   {
                       // look for ciid
                       var ciIdentity = attributeGroup.Key;
-                      var ciid = await ciModel.GetCIIDFromIdentity(ciIdentity);
+                      var ciid = await ciModel.GetCIIDFromIdentity(ciIdentity, transaction);
                       foreach (var attribute in attributeGroup)
                       {
                           // look for layer
-                          var layerID = await layerModel.GetLayerID(attribute.Layer);
+                          var layerID = await layerModel.GetLayerID(attribute.Layer, transaction);
 
                           var nonGenericAttributeValue = AttributeValueBuilder.Build(attribute.Value);
 
-                          await ciModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, layerID, ciid, changesetID);
+                          await ciModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, layerID, ciid, changesetID, transaction);
                       }
                   }
 

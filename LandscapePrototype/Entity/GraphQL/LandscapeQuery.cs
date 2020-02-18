@@ -24,9 +24,9 @@ namespace LandscapePrototype.Entity.GraphQL
                 {
                     var ciIdentity = context.GetArgument<string>("identity");
                     var layerStrings = context.GetArgument<string[]>("layers");
-                    var layers = await layerModel.BuildLayerSet(layerStrings);
+                    var layers = await layerModel.BuildLayerSet(layerStrings, null);
 
-                    var ci = await ciModel.GetCI(ciIdentity, layers);
+                    var ci = await ciModel.GetCI(ciIdentity, layers, null);
 
                     return new List<CI>() { ci };
                 });

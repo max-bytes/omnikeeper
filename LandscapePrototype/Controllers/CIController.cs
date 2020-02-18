@@ -6,6 +6,7 @@ using LandscapePrototype.Entity.AttributeValues;
 using LandscapePrototype.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace LandscapePrototype.Controllers
 {
@@ -15,11 +16,13 @@ namespace LandscapePrototype.Controllers
     {
         private readonly ILogger<CIController> _logger;
         private readonly CIModel _ciModel;
+        private readonly NpgsqlConnection _conn;
 
-        public CIController(ILogger<CIController> logger, CIModel ciModel)
+        public CIController(ILogger<CIController> logger, CIModel ciModel, NpgsqlConnection conn)
         {
             _logger = logger;
             _ciModel = ciModel;
+            _conn = conn;
         }
 
         private string dbName = "landscape_prototype";
@@ -27,7 +30,7 @@ namespace LandscapePrototype.Controllers
         [HttpGet]
         public async Task<IEnumerable<CIAttribute>> Get()
         {
-            var attributes = await _ciModel.GetMergedAttributes("H123", true, new LayerSet(new long[] { }));
+            var attributes = await _ciModel.GetMergedAttributes("H123", true, new LayerSet(new long[] { }), null);
             return attributes;
         }
     }

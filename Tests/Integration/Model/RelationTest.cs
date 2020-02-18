@@ -28,17 +28,18 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            using var trans = conn.BeginTransaction();
             var ciModel = new CIModel(conn);
             var relationModel = new RelationModel(conn);
             var layerModel = new LayerModel(conn);
 
-            var changesetID = await ciModel.CreateChangeset();
+            var changesetID = await ciModel.CreateChangeset(trans);
 
-            var ciid1 = await ciModel.CreateCI("H123");
-            var ciid2 = await ciModel.CreateCI("H456");
-            var ciid3 = await ciModel.CreateCI("H789");
+            var ciid1 = await ciModel.CreateCI("H123", trans);
+            var ciid2 = await ciModel.CreateCI("H456", trans);
+            var ciid3 = await ciModel.CreateCI("H789", trans);
 
-            var layerID1 = await layerModel.CreateLayer("l1");
+            var layerID1 = await layerModel.CreateLayer("l1", trans);
             var layerset = new LayerSet(new long[] { layerID1 });
 
             // test single relation
@@ -77,17 +78,18 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            using var trans = conn.BeginTransaction();
             var ciModel = new CIModel(conn);
             var relationModel = new RelationModel(conn);
             var layerModel = new LayerModel(conn);
 
-            var changesetID = await ciModel.CreateChangeset();
+            var changesetID = await ciModel.CreateChangeset(trans);
 
-            var ciid1 = await ciModel.CreateCI("H123");
-            var ciid2 = await ciModel.CreateCI("H456");
+            var ciid1 = await ciModel.CreateCI("H123", trans);
+            var ciid2 = await ciModel.CreateCI("H456", trans);
 
-            var layerID1 = await layerModel.CreateLayer("l1");
-            var layerID2 = await layerModel.CreateLayer("l2");
+            var layerID1 = await layerModel.CreateLayer("l1", trans);
+            var layerID2 = await layerModel.CreateLayer("l2", trans);
             var layerset = new LayerSet(new long[] { layerID2, layerID1 });
 
             Assert.IsTrue(await relationModel.InsertRelation(ciid1, ciid2, "r1", layerID1, changesetID));
@@ -103,17 +105,18 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            using var trans = conn.BeginTransaction();
             var ciModel = new CIModel(conn);
             var relationModel = new RelationModel(conn);
             var layerModel = new LayerModel(conn);
 
-            var changesetID = await ciModel.CreateChangeset();
+            var changesetID = await ciModel.CreateChangeset(trans);
 
-            var ciid1 = await ciModel.CreateCI("H123");
-            var ciid2 = await ciModel.CreateCI("H456");
+            var ciid1 = await ciModel.CreateCI("H123", trans);
+            var ciid2 = await ciModel.CreateCI("H456", trans);
 
-            var layerID1 = await layerModel.CreateLayer("l1");
-            var layerID2 = await layerModel.CreateLayer("l2");
+            var layerID1 = await layerModel.CreateLayer("l1", trans);
+            var layerID2 = await layerModel.CreateLayer("l2", trans);
             var layerset = new LayerSet(new long[] { layerID2, layerID1 });
 
             Assert.IsTrue(await relationModel.InsertRelation(ciid1, ciid2, "r1", layerID1, changesetID));
