@@ -66,8 +66,10 @@ namespace Tests.Integration.Model
                 var layerID1 = await layerModel.CreateLayer("l1", trans);
                 var layerset = await layerModel.BuildLayerSet(new string[] { "l1" }, trans);
 
-                Assert.IsTrue(await model.InsertAttribute("a1", AttributeValueText.Build("text1"), layerID1, ciid1, changesetID, trans));
-                Assert.IsTrue(await model.InsertAttribute("a1", AttributeValueText.Build("text2"), layerID1, ciid1, changesetID, trans));
+                var i1 = await model.InsertAttribute("a1", AttributeValueText.Build("text1"), layerID1, ciid1, changesetID, trans);
+                Assert.AreEqual("a1", i1.Name);
+                var i2 = await model.InsertAttribute("a1", AttributeValueText.Build("text2"), layerID1, ciid1, changesetID, trans);
+                Assert.AreEqual("a1", i2.Name);
 
                 var a1 = await model.GetMergedAttributes("H123", false, layerset, trans);
                 Assert.AreEqual(1, a1.Count());
@@ -79,7 +81,9 @@ namespace Tests.Integration.Model
                 Assert.AreEqual(AttributeValueText.Build("text2"), aa1.Value);
                 Assert.AreEqual(changesetID, aa1.ChangesetID);
 
-                Assert.IsTrue(await model.RemoveAttribute("a1", layerID1, ciid1, changesetID, trans));
+                var r1 = await model.RemoveAttribute("a1", layerID1, ciid1, changesetID, trans);
+                Assert.AreEqual("a1", r1.Name);
+                Assert.AreEqual(AttributeState.Removed, r1.State);
 
                 var a2 = await model.GetMergedAttributes("H123", false, layerset, trans);
                 Assert.AreEqual(0, a2.Count());
@@ -88,7 +92,8 @@ namespace Tests.Integration.Model
                 var aa3 = a3.First();
                 Assert.AreEqual(AttributeState.Removed, aa3.State);
 
-                Assert.IsTrue(await model.InsertAttribute("a1", AttributeValueText.Build("text3"), layerID1, ciid1, changesetID, trans));
+                var i3 = await model.InsertAttribute("a1", AttributeValueText.Build("text3"), layerID1, ciid1, changesetID, trans);
+                Assert.AreEqual("a1", i3.Name);
 
                 var a4 = await model.GetMergedAttributes("H123", false, layerset, trans);
                 Assert.AreEqual(1, a4.Count());

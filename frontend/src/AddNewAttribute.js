@@ -1,0 +1,94 @@
+import React, { useState } from "react";
+import PropTypes from 'prop-types'
+import {Mutation} from '@apollo/react-components';
+import { withApollo } from 'react-apollo';
+import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
+import Col from 'react-bootstrap/Col';
+import { mutations } from './mutations'
+import { AttributeTypes, attribute2InputType, attributeID2Object } from './attributeTypes'
+import { Row } from "react-bootstrap";
+
+function AddNewAttribute(props) {
+
+  let initialAttribute = {name: '', type: AttributeTypes.find(at => at.id === 'text').id, value: ''};
+  const [selectedLayer, setSelectedLayer] = useState(undefined);
+  const [newAttribute, setNewAttribute] = useState(initialAttribute);
+  
+  let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
+
+  let addButtons = <div>Add Attribute to Layer: {props.layers.map(layer => {
+    return <Button key={layer.name} style={{backgroundColor: layer.color, borderColor: layer.color, color: '#111'}} className={"mx-1"}
+    onClick={() => {if (selectedLayer === layer) setSelectedLayer(undefined); else setSelectedLayer(layer);}}>{layer.name}</Button>;
+  })}</div>;
+
+  
+
+  let addAttribute = <span></span>;
+  if (selectedLayer) {
+    addAttribute = <div>
+      <Mutation mutation={mutations.INSERT_CI_ATTRIBUTE}>
+            {insertCIAttribute => (
+              <div style={{backgroundColor: selectedLayer.color, borderColor: selectedLayer.color}} className={"p-2"}>
+                <Form onSubmit={e => {
+                    e.preventDefault();
+                    insertCIAttribute({ variables: { layers: visibleLayers, ciIdentity: props.ciIdentity, name: newAttribute.name, layerID: selectedLayer.id, value: {
+                      type: newAttribute.type,
+                      value: newAttribute.value
+                    } } }).then(d => {
+                      setSelectedLayer(undefined);
+                      setNewAttribute(initialAttribute);
+                    });
+                  }}>
+                        <Form.Group as={Row} controlId="name">
+                          <Form.Label column>Name</Form.Label>
+                          <Col sm={10}>
+                            <Form.Control type="text" placeholder="Enter name" value={newAttribute.name} onChange={e => setNewAttribute({...newAttribute, name: e.target.value})} />
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row} controlId="value">
+                          <Form.Label column>Type</Form.Label>
+                          <Col sm={10}>
+                          <Form.Control as="select" value={newAttribute.type} onChange={e => {
+                            // we'll clear the value, to be safe, TODO: better value migration between types
+                            setNewAttribute({...newAttribute, type: e.target.value, value: ''});
+                          }}>
+                            {AttributeTypes.map(at => {
+                              return <option key={at.id} value={at.id}>{at.name}</option>;
+                            })}
+                          </Form.Control>
+                          </Col>
+                        </Form.Group>
+                        <Form.Group as={Row} controlId="value">
+                          <Form.Label column>Value</Form.Label>
+                          <Col sm={10}>
+                            <Form.Control type={attribute2InputType(attributeID2Object(newAttribute.type))} placeholder="Enter value" value={newAttribute.value} onChange={e => setNewAttribute({...newAttribute, value: e.target.value})} />                        
+                          </Col>
+                        </Form.Group>
+                    <Button variant="primary" type="submit">Insert</Button>
+                </Form>
+              </div>
+            )}
+          </Mutation>
+    </div>;
+  }
+
+  return <div className={"m-2"}>
+    {addButtons}
+    {addAttribute}
+    </div>;
+}
+
+AddNewAttribute.propTypes = {
+  ciIdentity: PropTypes.string.isRequired,
+  layers: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      name: PropTypes.string.isRequired,
+      visibility: PropTypes.bool.isRequired,
+      color: PropTypes.string.isRequired
+    }).isRequired
+  ).isRequired
+}
+
+export default withApollo(AddNewAttribute);

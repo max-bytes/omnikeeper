@@ -20,14 +20,14 @@ namespace LandscapePrototype.Model
             Forward, Backward, Both
         }
 
-        public async Task<IEnumerable<Relation>> GetMergedRelations(string ciIdentity, bool includeRemoved, LayerSet layers, IncludeRelationDirections ird)
+        public async Task<IEnumerable<Relation>> GetMergedRelations(string ciIdentity, bool includeRemoved, LayerSet layers, IncludeRelationDirections ird, NpgsqlTransaction trans)
         {
             if (ird != IncludeRelationDirections.Forward)
                 throw new NotImplementedException(); // TODO: implement
 
             var ret = new List<Relation>();
 
-            await LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn);
+            await LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn, trans);
 
             using (var command = new NpgsqlCommand(@"
             select distinct
@@ -58,14 +58,14 @@ namespace LandscapePrototype.Model
             where inn.last_state != ALL(@excluded_states) -- remove entries from layers which' last item is deleted
             WINDOW wndOut AS(PARTITION by inn.last_from_ci_id, inn.last_to_ci_id, inn.last_predicate ORDER BY ls.order DESC -- sort by layer order
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
-            ", conn))
+            ", conn, trans))
             {
                 command.Parameters.AddWithValue("from_ci_identity", ciIdentity);
                 var excludedStates = (includeRemoved) ? new RelationState[] { } : new RelationState[] { RelationState.Removed };
                 command.Parameters.AddWithValue("excluded_states", excludedStates);
-                using var dr = command.ExecuteReader();
+                using var dr = await command.ExecuteReaderAsync();
 
-                while (dr.Read())
+                while (await dr.ReadAsync())
                 {
                     var fromCIID = dr.GetInt64(0);
                     var toCIID = dr.GetInt64(1);
@@ -84,10 +84,10 @@ namespace LandscapePrototype.Model
         }
 
 
-        public async Task<Relation> GetRelation(long fromCIID, long toCIID, string predicate, long layerID)
+        public async Task<Relation> GetRelation(long fromCIID, long toCIID, string predicate, long layerID, NpgsqlTransaction trans)
         {
             using (var command = new NpgsqlCommand(@"select activation_time, state, changeset_id from relation 
-                where from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id AND predicate = @predicate AND layer_id = @layer_id LIMIT 1", conn))
+                where from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id AND predicate = @predicate AND layer_id = @layer_id LIMIT 1", conn, trans))
             {
                 command.Parameters.AddWithValue("from_ci_id", fromCIID);
                 command.Parameters.AddWithValue("to_ci_id", toCIID);
@@ -105,9 +105,9 @@ namespace LandscapePrototype.Model
             }
         }
 
-        public async Task<bool> RemoveRelation(long fromCIID, long toCIID, string predicate, long layerID, long changesetID)
+        public async Task<bool> RemoveRelation(long fromCIID, long toCIID, string predicate, long layerID, long changesetID, NpgsqlTransaction trans)
         {
-            var currentRelation = await GetRelation(fromCIID, toCIID, predicate, layerID);
+            var currentRelation = await GetRelation(fromCIID, toCIID, predicate, layerID, trans);
 
             if (currentRelation == null)
             {
@@ -121,7 +121,7 @@ namespace LandscapePrototype.Model
             }
 
             using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate, activation_time, layer_id, state, changeset_id) 
-                VALUES (@from_ci_id, @to_ci_id, @predicate, now(), @layer_id, @state, @changeset_id)", conn);
+                VALUES (@from_ci_id, @to_ci_id, @predicate, now(), @layer_id, @state, @changeset_id)", conn, trans);
 
             command.Parameters.AddWithValue("from_ci_id", fromCIID);
             command.Parameters.AddWithValue("to_ci_id", toCIID);
@@ -134,9 +134,9 @@ namespace LandscapePrototype.Model
             return numInserted == 1;
         }
 
-        public async Task<bool> InsertRelation(long fromCIID, long toCIID, string predicate, long layerID, long changesetID)
+        public async Task<Relation> InsertRelation(long fromCIID, long toCIID, string predicate, long layerID, long changesetID, NpgsqlTransaction trans)
         {
-            var currentRelation = await GetRelation(fromCIID, toCIID, predicate, layerID);
+            var currentRelation = await GetRelation(fromCIID, toCIID, predicate, layerID, trans);
 
             var state = RelationState.New;
             if (currentRelation != null)
@@ -146,12 +146,12 @@ namespace LandscapePrototype.Model
                 else
                 {
                     // same predicate already exists and is present // TODO: think about different user inserting
-                    return true;
+                    return currentRelation;
                 }
             }
 
             using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate, activation_time, layer_id, state, changeset_id) 
-                VALUES (@from_ci_id, @to_ci_id, @predicate, now(), @layer_id, @state, @changeset_id)", conn);
+                VALUES (@from_ci_id, @to_ci_id, @predicate, now(), @layer_id, @state, @changeset_id) returning activation_time", conn, trans);
 
             command.Parameters.AddWithValue("from_ci_id", fromCIID);
             command.Parameters.AddWithValue("to_ci_id", toCIID);
@@ -160,9 +160,9 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("state", state);
             command.Parameters.AddWithValue("changeset_id", changesetID);
 
-            var numInserted = await command.ExecuteNonQueryAsync();
 
-            return numInserted == 1;
+            var activationTime = (DateTime)await command.ExecuteScalarAsync();
+            return Relation.Build(fromCIID, toCIID, predicate, activationTime, layerID, state, changesetID);
         }
     }
 }

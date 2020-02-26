@@ -22,15 +22,74 @@ namespace LandscapePrototype.Model
 
         public async Task<CI> GetCI(string ciIdentity, LayerSet layers, NpgsqlTransaction trans)
         {
+            using var command = new NpgsqlCommand(@"select id from ci where identity = @identity LIMIT 1", conn, trans);
+            command.Parameters.AddWithValue("identity", ciIdentity);
+            var ciid = -1L;
+            using (var s = await command.ExecuteReaderAsync())
+            {
+                await s.ReadAsync();
+                ciid = s.GetInt64(0);
+            }
             var attributes = await GetMergedAttributes(ciIdentity, false, layers, trans);
-            return CI.Build(ciIdentity, attributes);
+            return CI.Build(ciid, ciIdentity, layers, attributes);
+        }
+
+        //public async Task<IEnumerable<CI>> GetCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans)
+        //{
+        //    using var command = new NpgsqlCommand(@"select id,identity from ci", conn, trans);
+        //    var tmp = new List<(long, string)>();
+        //    using (var s = await command.ExecuteReaderAsync())
+        //    {
+        //        while (await s.ReadAsync())
+        //        {
+        //            var ciid = s.GetInt64(0);
+        //            var identity = s.GetString(1);
+        //            tmp.Add((ciid, identity));
+        //        }
+        //    }
+
+        //    var ret = new List<CI>();
+        //    foreach (var t in tmp)
+        //    {
+        //        // TODO: performance improvements
+        //        var attributes = await GetMergedAttributes(t.Item2, false, layers, trans);
+        //        if (includeEmptyCIs || attributes.Count() > 0)
+        //            ret.Add(CI.Build(t.Item1, t.Item2, layers, attributes));
+        //    }
+        //    return ret;
+        //}
+
+        public async Task<IEnumerable<CI>> GetCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, IEnumerable<long> CIIDs = null)
+        {
+                using var command = (CIIDs == null) ? new NpgsqlCommand(@"select id,identity from ci", conn, trans) : new NpgsqlCommand(@"select id,identity from ci where id = ANY(@ci_ids)", conn, trans);
+            if (CIIDs != null)
+                command.Parameters.AddWithValue("ci_ids", CIIDs.ToArray());
+            var tmp = new List<(long, string)>();
+            using (var s = await command.ExecuteReaderAsync())
+            {
+                while (await s.ReadAsync())
+                {
+                    var ciid = s.GetInt64(0);
+                    var identity = s.GetString(1);
+                    tmp.Add((ciid, identity));
+                }
+            }
+            var ret = new List<CI>();
+            foreach (var t in tmp)
+            {
+                // TODO: performance improvements
+                var attributes = await GetMergedAttributes(t.Item2, false, layers, trans);
+                if (includeEmptyCIs || attributes.Count() > 0)
+                    ret.Add(CI.Build(t.Item1, t.Item2, layers, attributes));
+            }
+            return ret;
         }
 
         public async Task<IEnumerable<CIAttribute>> GetMergedAttributes(string ciIdentity, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans)
         {
             var ret = new List<CIAttribute>();
 
-            await LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn);
+            await LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn, trans);
 
             using (var command = new NpgsqlCommand(@"
             select distinct
@@ -39,9 +98,9 @@ namespace LandscapePrototype.Model
             last_value(inn.last_type) over wndOut,
             last_value(inn.last_value) over wndOut,
             last_value(inn.last_activation_time) over wndOut,
-            last_value(inn.last_layer_id) over wndOut,
             last_value(inn.last_state) over wndOut,
-            last_value(inn.last_changeset_id) over wndOut
+            last_value(inn.last_changeset_id) over wndOut,
+            array_agg(inn.last_layer_id) over wndOut
             from(
                 select distinct
                 last_value(a.name) over wnd as last_name,
@@ -77,11 +136,11 @@ namespace LandscapePrototype.Model
                     var value = dr.GetString(3);
                     var av = AttributeValueBuilder.Build(type, value);
                     var activationTime = dr.GetTimeStamp(4).ToDateTime();
-                    var layerID = dr.GetInt64(5);
-                    var state = dr.GetFieldValue<AttributeState>(6);
-                    var changesetID = dr.GetInt64(7);
+                    var state = dr.GetFieldValue<AttributeState>(5);
+                    var changesetID = dr.GetInt64(6);
+                    var layerStack = (long[])dr[7];
 
-                    var att = CIAttribute.Build(name, CIID, av, activationTime, layerID, state, changesetID);
+                    var att = CIAttribute.Build(name, CIID, av, activationTime, layerStack, state, changesetID);
 
                     ret.Add(att);
                 }
@@ -122,7 +181,7 @@ namespace LandscapePrototype.Model
                 var activationTime = dr.GetTimeStamp(3).ToDateTime();
                 var state = dr.GetFieldValue<AttributeState>(4);
                 var changesetID = dr.GetInt64(5);
-                var att = CIAttribute.Build(name, CIID, av, activationTime, layerID, state, changesetID);
+                var att = CIAttribute.Build(name, CIID, av, activationTime, new long[] { layerID }, state, changesetID);
                 return att;
             }
         }
@@ -143,23 +202,23 @@ namespace LandscapePrototype.Model
             return (string)s;
         }
 
-        public async Task<bool> RemoveAttribute(string name, long layerID, long ciid, long changesetID, NpgsqlTransaction trans)
+        public async Task<CIAttribute> RemoveAttribute(string name, long layerID, long ciid, long changesetID, NpgsqlTransaction trans)
         {
             var currentAttribute = await GetAttribute(name, layerID, ciid, trans);
 
             if (currentAttribute == null)
             {
                 // attribute does not exist
-                return false; 
+                throw new Exception("Trying to remove attribute that does not exist");
             }
             if (currentAttribute.State == AttributeState.Removed)
             {
                 // the attribute is already removed, no-op(?)
-                return true;
+                return currentAttribute;
             }
 
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, activation_time, layer_id, state, changeset_id) 
-                VALUES (@name, @ci_id, @type, @value, now(), @layer_id, @state, @changeset_id)", conn, trans);
+                VALUES (@name, @ci_id, @type, @value, now(), @layer_id, @state, @changeset_id) returning activation_time", conn, trans);
             var (strType, strValue) = AttributeValueBuilder.GetTypeAndValueString(currentAttribute.Value);
 
             command.Parameters.AddWithValue("name", name);
@@ -170,12 +229,13 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("state", AttributeState.Removed);
             command.Parameters.AddWithValue("changeset_id", changesetID);
 
-            var numInserted = await command.ExecuteNonQueryAsync();
+            var layerStack = new long[] { layerID }; // TODO: calculate proper layerstack(?)
 
-            return numInserted == 1;
+            var activationTime = (DateTime)await command.ExecuteScalarAsync();
+            return CIAttribute.Build(name, ciid, currentAttribute.Value, activationTime, layerStack, AttributeState.Removed, changesetID);
         }
 
-        public async Task<bool> InsertAttribute(string name, IAttributeValue value, long layerID, long ciid, long changesetID, NpgsqlTransaction trans)
+        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, long ciid, long changesetID, NpgsqlTransaction trans)
         {
             var currentAttribute = await GetAttribute(name, layerID, ciid, trans);
 
@@ -190,12 +250,11 @@ namespace LandscapePrototype.Model
 
             // handle equality case, also think about what should happen if a different user inserts the same data
             //var equalValue = false;
-            if (currentAttribute != null && currentAttribute.Value.Equals(value)) // TODO: check other things, like user
-                return true;
-
+            if (currentAttribute != null && currentAttribute.State != AttributeState.Removed && currentAttribute.Value.Equals(value)) // TODO: check other things, like user
+                return currentAttribute;
 
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, activation_time, layer_id, state, changeset_id) 
-                VALUES (@name, @ci_id, @type, @value, now(), @layer_id, @state, @changeset_id)", conn, trans);
+                VALUES (@name, @ci_id, @type, @value, now(), @layer_id, @state, @changeset_id) returning activation_time", conn, trans);
             var (strType, strValue) = AttributeValueBuilder.GetTypeAndValueString(value);
 
             command.Parameters.AddWithValue("name", name);
@@ -206,9 +265,10 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("state", state);
             command.Parameters.AddWithValue("changeset_id", changesetID);
 
-            var numInserted = await command.ExecuteNonQueryAsync();
+            var layerStack = new long[] { layerID }; // TODO: calculate proper layerstack(?)
 
-            return numInserted == 1;
+            var activationTime = (DateTime)await command.ExecuteScalarAsync();
+            return CIAttribute.Build(name, ciid, value, activationTime, layerStack, state, changesetID);
         }
 
         public async Task<long> CreateCI(string identity, NpgsqlTransaction trans)

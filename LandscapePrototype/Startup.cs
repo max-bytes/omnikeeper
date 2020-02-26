@@ -37,12 +37,19 @@ namespace LandscapePrototype
         {
             services.AddScoped<IServiceProvider>(x => new FuncServiceProvider(x.GetRequiredService)); // graphql needs this
 
+            services.AddCors(options => options.AddPolicy("AllowAllOrigins", builder =>
+               builder.WithOrigins("http://localhost:3000")
+               .AllowCredentials()
+                .AllowAnyMethod()
+                .AllowAnyHeader())
+            );
+
             services.AddControllers().AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.Converters.Add(new AttributeValueConverter());
             });
 
-            services.AddSingleton((sp) =>
+            services.AddTransient((sp) =>
             {
                 var dbcb = new DBConnectionBuilder();
                 return dbcb.Build("landscape_prototype");
@@ -69,6 +76,8 @@ namespace LandscapePrototype
             })
             .AddGraphTypes(ServiceLifetime.Scoped)
             .AddUserContextBuilder<LandscapeUserContext>((httpContext) => new LandscapeUserContext());
+
+            services.AddSingleton<IDocumentExecuter, MyDocumentExecutor>(); // custom document executor that does serial queries, required by postgres
         }
 
         private IWebHostEnvironment CurrentEnvironment { get; set; }
@@ -76,7 +85,11 @@ namespace LandscapePrototype
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseCors("AllowAllOrigins");
+
             app.UseGraphQL<LandscapeSchema>();
+
+            app.UseStaticFiles();
 
             if (env.IsDevelopment())
             {
@@ -89,7 +102,7 @@ namespace LandscapePrototype
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

@@ -10,7 +10,7 @@ namespace LandscapePrototype.Entity.GraphQL
 {
     public class RelationType : ObjectGraphType<Relation>
     {
-        public RelationType(CIModel ciModel, LayerModel layerModel)
+        public RelationType()
         {
             Field(x => x.ActivationTime);
             Field(x => x.FromCIID);

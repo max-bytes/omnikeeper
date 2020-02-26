@@ -23,7 +23,6 @@ namespace LandscapePrototype.Entity.GraphQL
     {
         public string Name { get; private set; }
     }
-
     public class CreateLayerInputType : InputObjectGraphType<CreateLayerInput>
     {
         public CreateLayerInputType()
@@ -36,18 +35,33 @@ namespace LandscapePrototype.Entity.GraphQL
     {
         public string CI { get; private set; }
         public string Name { get; private set; }
-        public string Layer { get; private set; }
+        public long LayerID { get; private set; }
         public AttributeValueGeneric Value { get; private set; }
     }
-
     public class InsertCIAttributeInputType : InputObjectGraphType<InsertCIAttributeInput>
     {
         public InsertCIAttributeInputType()
         {
-            Field(x => x.CI);
+            Field("ci", x => x.CI);
             Field(x => x.Name);
-            Field(x => x.Layer);
+            Field(x => x.LayerID);
             Field(x => x.Value, type: typeof(AttributeValueGenericType));
+        }
+    }
+
+    public class RemoveCIAttributeInput
+    {
+        public string CI { get; private set; }
+        public string Name { get; private set; }
+        public long LayerID { get; private set; }
+    }
+    public class RemoveCIAttributeInputType : InputObjectGraphType<RemoveCIAttributeInput>
+    {
+        public RemoveCIAttributeInputType()
+        {
+            Field("ci", x => x.CI);
+            Field(x => x.Name);
+            Field(x => x.LayerID);
         }
     }
 
@@ -57,6 +71,24 @@ namespace LandscapePrototype.Entity.GraphQL
         {
             Field(x => x.Type);
             Field(x => x.Value);
+        }
+    }
+
+    public class InsertRelationInput { 
+        public long FromCIID { get; private set; }
+        public long ToCIID { get; private set; }
+        public string Predicate { get; private set; }
+        public long LayerID { get; private set; }
+    }
+
+    public class InsertRelationInputType : InputObjectGraphType<InsertRelationInput>
+    {
+        public InsertRelationInputType()
+        {
+            Field(x => x.FromCIID);
+            Field(x => x.ToCIID);
+            Field(x => x.Predicate);
+            Field(x => x.LayerID);
         }
     }
 }
