@@ -30,5 +30,12 @@ export const queries = {
         color @client
       }
     }
-  `
+    `,
+    Changesets: gql`
+        query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciid: Long, $layers:[String]!) {
+            changesets(from: $from, to:$to, ciid:$ciid, layers: $layers) {
+                id
+                timestamp
+            }
+        }`
 };

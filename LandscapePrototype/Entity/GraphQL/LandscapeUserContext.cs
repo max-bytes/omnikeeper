@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LandscapePrototype.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,7 +10,29 @@ namespace LandscapePrototype.Entity.GraphQL
     {
         public LandscapeUserContext()
         {
-            //Add("MutationContext", "test");
+        }
+
+        public DateTimeOffset TimeThreshold {
+            get
+            {
+                return (DateTimeOffset)this["TimeThreshold"];
+            }
+            set
+            {
+                Add("TimeThreshold", value);
+            }
+        }
+
+        public LayerSet LayerSet
+        {
+            get
+            {
+                return (LayerSet)this["LayerSet"];
+            }
+            set
+            {
+                Add("LayerSet", value);
+            }
         }
     }
 }

@@ -20,7 +20,7 @@ namespace LandscapePrototype.Model
             conn = connection;
         }
 
-        public async Task<CI> GetCI(string ciIdentity, LayerSet layers, NpgsqlTransaction trans)
+        public async Task<CI> GetCI(string ciIdentity, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null)
         {
             using var command = new NpgsqlCommand(@"select id from ci where identity = @identity LIMIT 1", conn, trans);
             command.Parameters.AddWithValue("identity", ciIdentity);
@@ -30,7 +30,7 @@ namespace LandscapePrototype.Model
                 await s.ReadAsync();
                 ciid = s.GetInt64(0);
             }
-            var attributes = await GetMergedAttributes(ciIdentity, false, layers, trans);
+            var attributes = await GetMergedAttributes(ciIdentity, false, layers, trans, timeThreshold);
             return CI.Build(ciid, ciIdentity, layers, attributes);
         }
 
@@ -59,7 +59,7 @@ namespace LandscapePrototype.Model
         //    return ret;
         //}
 
-        public async Task<IEnumerable<CI>> GetCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, IEnumerable<long> CIIDs = null)
+        public async Task<IEnumerable<CI>> GetCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null, IEnumerable<long> CIIDs = null)
         {
                 using var command = (CIIDs == null) ? new NpgsqlCommand(@"select id,identity from ci", conn, trans) : new NpgsqlCommand(@"select id,identity from ci where id = ANY(@ci_ids)", conn, trans);
             if (CIIDs != null)
@@ -78,14 +78,14 @@ namespace LandscapePrototype.Model
             foreach (var t in tmp)
             {
                 // TODO: performance improvements
-                var attributes = await GetMergedAttributes(t.Item2, false, layers, trans);
+                var attributes = await GetMergedAttributes(t.Item2, false, layers, trans, timeThreshold);
                 if (includeEmptyCIs || attributes.Count() > 0)
                     ret.Add(CI.Build(t.Item1, t.Item2, layers, attributes));
             }
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetMergedAttributes(string ciIdentity, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans)
+        public async Task<IEnumerable<CIAttribute>> GetMergedAttributes(string ciIdentity, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null)
         {
             var ret = new List<CIAttribute>();
 
@@ -113,7 +113,7 @@ namespace LandscapePrototype.Model
                 last_value(a.changeset_id) over wnd as last_changeset_id
                 from ""attribute"" a
                 inner join ci c ON a.ci_id = c.id
-                WHERE a.activation_time <= now() and c.identity = @ci_identity
+                WHERE a.activation_time <= @time_threshold and c.identity = @ci_identity
                 WINDOW wnd AS(PARTITION by a.name, a.ci_id, a.layer_id ORDER BY a.activation_time ASC-- sort by activation time
                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
             ) inn
@@ -126,6 +126,8 @@ namespace LandscapePrototype.Model
                 command.Parameters.AddWithValue("ci_identity", ciIdentity);
                 var excludedStates = (includeRemoved) ? new AttributeState[] { } : new AttributeState[] { AttributeState.Removed };
                 command.Parameters.AddWithValue("excluded_states", excludedStates);
+                var finalTimeThreshold = timeThreshold ?? DateTimeOffset.Now;
+                command.Parameters.AddWithValue("time_threshold", finalTimeThreshold);
                 using var dr = command.ExecuteReader();
 
                 while (dr.Read())
@@ -148,7 +150,7 @@ namespace LandscapePrototype.Model
             return ret;
         }
 
-        public async Task<CIAttribute> GetAttribute(string name, long layerID, long ciid, NpgsqlTransaction trans)
+        public async Task<CIAttribute> GetAttribute(string name, long layerID, long ciid, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null)
         {
             using (var command = new NpgsqlCommand(@"
             select distinct
@@ -159,7 +161,7 @@ namespace LandscapePrototype.Model
             last_value(a.state) over wnd as last_state,
             last_value(a.changeset_id) over wnd as last_changeset_id
                 from ""attribute"" a inner join ci c ON a.ci_id = c.id
-                where a.activation_time <= now() and c.id = @ci_id and a.layer_id = @layer_id and a.name = @name
+                where a.activation_time <= @time_threshold and c.id = @ci_id and a.layer_id = @layer_id and a.name = @name
             WINDOW wnd AS(
                 PARTITION by a.name, a.ci_id ORDER BY a.activation_time
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) 
@@ -169,6 +171,9 @@ namespace LandscapePrototype.Model
                 command.Parameters.AddWithValue("ci_id", ciid);
                 command.Parameters.AddWithValue("layer_id", layerID);
                 command.Parameters.AddWithValue("name", name);
+                var finalTimeThreshold = timeThreshold ?? DateTimeOffset.Now;
+                command.Parameters.AddWithValue("time_threshold", finalTimeThreshold);
+                
                 using var dr = await command.ExecuteReaderAsync();
 
                 if (!await dr.ReadAsync())
@@ -275,13 +280,6 @@ namespace LandscapePrototype.Model
         {
             using var command = new NpgsqlCommand(@"INSERT INTO ci (identity) VALUES (@identity) returning id", conn, trans);
             command.Parameters.AddWithValue("identity", identity);
-            var id = (long)await command.ExecuteScalarAsync();
-            return id;
-        }
-
-        public async Task<long> CreateChangeset(NpgsqlTransaction trans)
-        {
-            using var command = new NpgsqlCommand(@"INSERT INTO changeset (timestamp) VALUES (now()) returning id", conn, trans);
             var id = (long)await command.ExecuteScalarAsync();
             return id;
         }

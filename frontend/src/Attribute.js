@@ -9,6 +9,9 @@ import { attributeTypename2Object, attribute2InputType } from './attributeTypes'
 import LayerStackIcons from "./LayerStackIcons";
 
 function Attribute(props) {
+
+  var {ciIdentity, layers, attribute, ...rest} = props;
+
   const [value, setValue] = useState(props.attribute.value.value);
   React.useEffect(() => setValue(props.attribute.value.value), [props.attribute.value.value])
 
@@ -66,7 +69,7 @@ function Attribute(props) {
 
 
   return (
-    <div key={props.attribute.name} style={{margin: "5px"}}>
+    <div key={props.attribute.name} style={{margin: "5px"}} {...rest}>
       {input}
     </div>
   );

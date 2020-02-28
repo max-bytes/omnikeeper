@@ -20,7 +20,7 @@ namespace LandscapePrototype.Model
             Forward, Backward, Both
         }
 
-        public async Task<IEnumerable<Relation>> GetMergedRelations(string ciIdentity, bool includeRemoved, LayerSet layers, IncludeRelationDirections ird, NpgsqlTransaction trans)
+        public async Task<IEnumerable<Relation>> GetMergedRelations(string ciIdentity, bool includeRemoved, LayerSet layers, IncludeRelationDirections ird, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null)
         {
             if (ird != IncludeRelationDirections.Forward)
                 throw new NotImplementedException(); // TODO: implement
@@ -49,7 +49,7 @@ namespace LandscapePrototype.Model
                 last_value(r.changeset_id) over wnd as last_changeset_id
                     from relation r
                     inner join ci c ON r.from_ci_id = c.id
-                    where r.activation_time <= now() and c.identity = @from_ci_identity
+                    where r.activation_time <= @time_threshold and c.identity = @from_ci_identity
                 WINDOW wnd AS(
                     PARTITION by r.from_ci_id, r.to_ci_id, r.predicate, r.layer_id ORDER BY r.activation_time ASC  -- sort by activation time
                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
@@ -63,6 +63,8 @@ namespace LandscapePrototype.Model
                 command.Parameters.AddWithValue("from_ci_identity", ciIdentity);
                 var excludedStates = (includeRemoved) ? new RelationState[] { } : new RelationState[] { RelationState.Removed };
                 command.Parameters.AddWithValue("excluded_states", excludedStates);
+                var finalTimeThreshold = timeThreshold ?? DateTimeOffset.Now;
+                command.Parameters.AddWithValue("time_threshold", finalTimeThreshold);
                 using var dr = await command.ExecuteReaderAsync();
 
                 while (await dr.ReadAsync())
@@ -84,10 +86,11 @@ namespace LandscapePrototype.Model
         }
 
 
-        public async Task<Relation> GetRelation(long fromCIID, long toCIID, string predicate, long layerID, NpgsqlTransaction trans)
+        private async Task<Relation> GetRelation(long fromCIID, long toCIID, string predicate, long layerID, NpgsqlTransaction trans)
         {
+            // TODO timestamp related selection + time_threshold (see getCI() in CIModel)
             using (var command = new NpgsqlCommand(@"select activation_time, state, changeset_id from relation 
-                where from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id AND predicate = @predicate AND layer_id = @layer_id LIMIT 1", conn, trans))
+                WHERE from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id AND predicate = @predicate AND layer_id = @layer_id LIMIT 1", conn, trans))
             {
                 command.Parameters.AddWithValue("from_ci_id", fromCIID);
                 command.Parameters.AddWithValue("to_ci_id", toCIID);

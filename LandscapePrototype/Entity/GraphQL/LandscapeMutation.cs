@@ -10,7 +10,7 @@ namespace LandscapePrototype.Entity.GraphQL
 {
     public class LandscapeMutation : ObjectGraphType
     {
-        public LandscapeMutation(CIModel ciModel, LayerModel layerModel, RelationModel relationModel, NpgsqlConnection conn)
+        public LandscapeMutation(CIModel ciModel, LayerModel layerModel, RelationModel relationModel, ChangesetModel changesetModel, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutate",
               arguments: new QueryArguments(
@@ -30,10 +30,13 @@ namespace LandscapePrototype.Entity.GraphQL
                   var removeAttributes = context.GetArgument("RemoveAttributes", new List<RemoveCIAttributeInput>());
                   var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>());
 
-                  // TODO: add transaction to model
                   using var transaction = await conn.BeginTransactionAsync();
 
-                  var changesetID = await ciModel.CreateChangeset(transaction);
+                  var userContext = context.UserContext as LandscapeUserContext;
+                  userContext.LayerSet = await layerModel.BuildLayerSet(layers, transaction);
+                  userContext.TimeThreshold = DateTimeOffset.Now;
+
+                  var changesetID = await changesetModel.CreateChangeset(transaction);
 
                   foreach (var layer in createLayers)
                   {
@@ -84,8 +87,7 @@ namespace LandscapePrototype.Entity.GraphQL
                   .Concat(insertedAttributes.Select(i => i.CIID))
                   .Concat(insertedRelations.SelectMany(i => new long[] { i.FromCIID, i.ToCIID }))
                   .Distinct();
-                  var layerSet = await layerModel.BuildLayerSet(layers, transaction);
-                  var affectedCIs = await ciModel.GetCIs(layerSet, true, transaction, affectedCIIDs);
+                  var affectedCIs = await ciModel.GetCIs(userContext.LayerSet, true, transaction, null, affectedCIIDs);
 
                   await transaction.CommitAsync();
 

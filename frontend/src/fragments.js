@@ -35,7 +35,7 @@ export const Fragments = {
         identity
         id
         layerhash
-        related(layers: $layers) {
+        related {
             relation {
                 predicate
             }

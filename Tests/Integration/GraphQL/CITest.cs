@@ -30,6 +30,7 @@ namespace Tests.Integration.GraphQL
             Services.Register<RelationModel>();
             Services.Register<RelatedCIType>();
             Services.Register<RelationType>();
+            Services.Register<ChangesetModel>();
             Services.Singleton(() =>
             {
                 var dbcb = new DBConnectionBuilder();
@@ -50,11 +51,12 @@ namespace Tests.Integration.GraphQL
         {
             var ciModel = Services.Get<CIModel>();
             var layerModel = Services.Get<LayerModel>();
+            var changesetModel = Services.Get<ChangesetModel>();
             using var trans = Services.Get<NpgsqlConnection>().BeginTransaction();
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var layerID1 = await layerModel.CreateLayer("layer_1", trans);
             var layerID2 = await layerModel.CreateLayer("layer_2", trans);
-            var changesetID = await ciModel.CreateChangeset(trans);
+            var changesetID = await changesetModel.CreateChangeset(trans);
             await ciModel.InsertAttribute("a1", AttributeValueInteger.Build(3), layerID1, ciid1, changesetID, trans);
             trans.Commit();
 
@@ -86,24 +88,22 @@ namespace Tests.Integration.GraphQL
             });
 
             var expected = @"{
-                ""ci"": [
-                  {
-                    ""attributes"": [
-                      {
-                        ""name"": ""a1"",
-                        ""state"": ""NEW"",
-                        ""layerID"": 1,
-                        ""value"": {
-                          ""__typename"": ""AttributeValueIntegerType"",
-                          ""valueInteger"": 3
+                  ""ci"":{
+                     ""attributes"":[
+                        {
+                           ""name"":""a1"",
+                           ""state"":""NEW"",
+                           ""layerID"":1,
+                           ""value"":{
+                              ""__typename"":""AttributeValueIntegerType"",
+                              ""valueInteger"":3
+                           }
                         }
-                      }
-                    ]
+                     ]
                   }
-                ]
-              }";
+                }";
 
-            AssertQuerySuccess(query, expected, inputs);
+            AssertQuerySuccess(query, expected, inputs, userContext: new LandscapeUserContext());
         }
     }
 }

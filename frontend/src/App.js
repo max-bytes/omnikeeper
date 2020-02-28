@@ -74,6 +74,8 @@ function App() {
         return null;
       },
       changeLayerSortOrder: (_root, variables, { cache, getCacheKey }) => {
+        // TODO: proper re-sorting
+
         const id = getCacheKey({ __typename: 'LayerType', id: variables.id })
         const fragment = gql`
           fragment layer on LayerType {
@@ -86,7 +88,12 @@ function App() {
         var newSortOrder = layer.sort + sortOrderChange;
 
         var { layers } = cache.readQuery({query: queries.Layers});
-        layers.filter(l => l.sort === newSortOrder && l.id !== variables.id).forEach(l => {
+        var pushedLayers = layers.filter(l => l.sort === newSortOrder && l.id !== variables.id);
+
+        if (pushedLayers.length === 0)
+          return null;
+
+        pushedLayers.forEach(l => {
           const d = { ...l, sort: l.sort - sortOrderChange }; 
           var cacheKey = getCacheKey({ __typename: 'LayerType', id: l.id });
           // console.log("Moving layer " + l.id + " (" + cacheKey +  ") from sort " + l.sort + " to sort " + d.sort);

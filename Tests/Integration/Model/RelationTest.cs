@@ -29,11 +29,12 @@ namespace Tests.Integration.Model
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             using var trans = conn.BeginTransaction();
+            var changesetModel = new ChangesetModel(conn);
             var ciModel = new CIModel(conn);
             var relationModel = new RelationModel(conn);
             var layerModel = new LayerModel(conn);
 
-            var changesetID = await ciModel.CreateChangeset(trans);
+            var changesetID = await changesetModel.CreateChangeset(trans);
 
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var ciid2 = await ciModel.CreateCI("H456", trans);
@@ -82,11 +83,12 @@ namespace Tests.Integration.Model
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             using var trans = conn.BeginTransaction();
+            var changesetModel = new ChangesetModel(conn);
             var ciModel = new CIModel(conn);
             var relationModel = new RelationModel(conn);
             var layerModel = new LayerModel(conn);
 
-            var changesetID = await ciModel.CreateChangeset(trans);
+            var changesetID = await changesetModel.CreateChangeset(trans);
 
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var ciid2 = await ciModel.CreateCI("H456", trans);
@@ -113,9 +115,10 @@ namespace Tests.Integration.Model
             using var trans = conn.BeginTransaction();
             var ciModel = new CIModel(conn);
             var relationModel = new RelationModel(conn);
+            var changesetModel = new ChangesetModel(conn);
             var layerModel = new LayerModel(conn);
 
-            var changesetID = await ciModel.CreateChangeset(trans);
+            var changesetID = await changesetModel.CreateChangeset(trans);
 
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var ciid2 = await ciModel.CreateCI("H456", trans);

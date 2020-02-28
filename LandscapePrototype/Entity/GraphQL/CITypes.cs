@@ -20,22 +20,28 @@ namespace LandscapePrototype.Entity.GraphQL
             FieldAsync<ListGraphType<RelatedCIType>>("related",
             arguments: new QueryArguments(new List<QueryArgument>
             {
-                new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                //new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                 new QueryArgument<StringGraphType> { Name = "where" },
             }),
             resolve: async (context) =>
             {
-                var CIIdentity = context.Source.Identity;
-                var layerStrings = context.GetArgument<string[]>("layers");
-                var layers = await layerModel.BuildLayerSet(layerStrings, null);
-                var relations = await relationModel.GetMergedRelations(CIIdentity, false, layers, RelationModel.IncludeRelationDirections.Forward, null);
+                var userContext = context.UserContext as LandscapeUserContext;
+                var layerset = userContext.LayerSet;
+                if (layerset == null)
+                    throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!"); 
+                
+
+                 var CIIdentity = context.Source.Identity;
+                //var layerStrings = context.GetArgument<string[]>("layers");
+                //var layers = await layerModel.BuildLayerSet(layerStrings, null);
+                var relations = await relationModel.GetMergedRelations(CIIdentity, false, layerset, RelationModel.IncludeRelationDirections.Forward, null, userContext.TimeThreshold);
 
                 var relatedCIs = new List<RelatedCI>();
                 
                 foreach(var r in relations)
                 {
-                    var realtedCIIdentity = await ciModel.GetIdentityFromCIID(r.ToCIID, null);
-                    relatedCIs.Add(RelatedCI.Build(r, await ciModel.GetCI(realtedCIIdentity, layers, null)));
+                    var relatedCIIdentity = await ciModel.GetIdentityFromCIID(r.ToCIID, null);
+                    relatedCIs.Add(RelatedCI.Build(r, await ciModel.GetCI(relatedCIIdentity, layerset, null, userContext.TimeThreshold)));
                 }
 
                 var wStr = context.GetArgument<string>("where"); // TODO: develop further

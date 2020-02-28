@@ -33,6 +33,7 @@ namespace Tests.Integration.Model
 
             using (var trans = conn.BeginTransaction())
             {
+                var changesetModel = new ChangesetModel(conn);
                 var model = new CIModel(conn);
                 var layerModel = new LayerModel(conn);
 
@@ -55,7 +56,7 @@ namespace Tests.Integration.Model
                     return identity;
                 }).ToList();
 
-                var changesetID = await model.CreateChangeset(trans);
+                var changesetID = await changesetModel.CreateChangeset(trans);
 
                 //Console.WriteLine(ciNames.Count());
                 var cis = ciNames.Select(identity =>

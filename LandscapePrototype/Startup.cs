@@ -58,6 +58,7 @@ namespace LandscapePrototype
             services.AddScoped<CIModel>();
             services.AddScoped<LayerModel>();
             services.AddScoped<RelationModel>();
+            services.AddScoped<ChangesetModel>();
             services.AddScoped<LandscapeUserContext>();
 
             services.AddScoped<CIType>();

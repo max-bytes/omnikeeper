@@ -35,16 +35,12 @@ function Layers(props) {
         </Mutation>
         <Mutation mutation={CHANGE_LAYER_SORT_ORDER} variables={{ id: layer.id, change: 1 }}>
           {changeLayerSortOrder => (
-            <Button size="sm" variant="link" onClick={changeLayerSortOrder}>
-              up
-            </Button>
+            <Button size="sm" variant="link" onClick={changeLayerSortOrder}>up</Button>
           )}
         </Mutation>
         <Mutation mutation={CHANGE_LAYER_SORT_ORDER} variables={{ id: layer.id, change: -1 }}>
           {changeLayerSortOrder => (
-            <Button size="sm" variant="link" onClick={changeLayerSortOrder}>
-              down
-            </Button>
+            <Button size="sm" variant="link" onClick={changeLayerSortOrder}>down</Button>
           )}
         </Mutation>
 

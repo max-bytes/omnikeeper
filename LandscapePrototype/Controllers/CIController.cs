@@ -30,8 +30,9 @@ namespace LandscapePrototype.Controllers
         [HttpGet]
         public async Task<IEnumerable<CIAttribute>> Get()
         {
-            var attributes = await _ciModel.GetMergedAttributes("H123", true, new LayerSet(new long[] { }), null);
-            return attributes;
+            //var attributes = await _ciModel.GetMergedAttributes("H123", true, new LayerSet(new long[] { }), null);
+
+            return null;
         }
     }
 }
