@@ -9,13 +9,15 @@ namespace LandscapePrototype.Entity
     {
         public Relation Relation { get; private set; }
         public CI CI { get; private set; }
+        public bool IsForward { get; private set; }
 
-        public static RelatedCI Build(Relation relation, CI ci)
+        public static RelatedCI Build(Relation relation, CI ci, bool isForward)
         {
             var r = new RelatedCI
             {
                 Relation = relation,
-                CI = ci
+                CI = ci,
+                IsForward = isForward
             };
             return r;
         }

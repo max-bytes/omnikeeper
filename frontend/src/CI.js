@@ -4,7 +4,9 @@ import Attribute from './Attribute';
 import RelatedCI from './RelatedCI';
 import {Row, Col} from 'react-bootstrap';
 import AddNewAttribute from './AddNewAttribute';
+import AddNewRelation from './AddNewRelation';
 import { Flipper, Flipped } from 'react-flip-toolkit'
+import { Tab } from 'semantic-ui-react'
 
 function CI(props) {
 
@@ -26,7 +28,6 @@ function CI(props) {
         anim.addEventListener("cancel", () => resolve());
     });
   }
-
   async function onAppear(el) {
       await animate(el, [
           {opacity: 0},
@@ -46,39 +47,66 @@ function CI(props) {
       onComplete();
   }
 
+  var sortedAttributes = [...props.ci.attributes];
+  sortedAttributes.sort((a,b) => {
+    return a.name.localeCompare(b.name);
+  });
+  
+  var sortedRelatedCIs = [...props.ci.related];
+  sortedRelatedCIs.sort((a,b) => {
+    const predicateCompare = a.relation.predicate.localeCompare(b.relation.predicate);
+    if (predicateCompare !== 0)
+      return predicateCompare;
+    return a.ci.identity.localeCompare(b.ci.identity);
+  });
 
-    return (<div key={props.ci.identity} style={{border: "1px solid black", margin: "10px 10px", padding: "0px 5px"}}>
-      <h3>CI {props.ci.identity}</h3>
+  const panes = [
+    { menuItem: 'Attributes', render: () => <Tab.Pane>
       <Row>
         <Col>
-        <b>Relations:</b>
-        {props.ci.related.map(r => (
-          <RelatedCI related={r} key={r.relation.predicate}></RelatedCI>
-        ))}
+          <AddNewAttribute isEditable={props.isEditable} layers={props.layers} ciIdentity={props.ci.identity}></AddNewAttribute>
         </Col>
       </Row>
       <Row>
         <Col>
-        <b>Attributes:</b>
-        <Flipper flipKey={props.ci.attributes.map(a => a.layerstackIDs).join(' ')}>
-          {props.ci.attributes.map(a => (
+        <Flipper flipKey={sortedAttributes.map(a => a.layerStackIDs).join(' ')}>
+          {sortedAttributes.map(a => (
             <Flipped key={a.name} flipId={a.name} onAppear={onAppear} onExit={onExit}>
-              <Attribute attribute={a} ciIdentity={props.ci.identity} layers={props.layers}></Attribute>
+              <Attribute attribute={a} ciIdentity={props.ci.identity} layers={props.layers} isEditable={props.isEditable}></Attribute>
             </Flipped>
           ))}
         </Flipper>
         </Col>
       </Row>
+    </Tab.Pane> },
+    { menuItem: 'Relations', render: () => <Tab.Pane>
       <Row>
         <Col>
-          <AddNewAttribute layers={props.layers} ciIdentity={props.ci.identity}></AddNewAttribute>
+          <AddNewRelation isEditable={props.isEditable} layers={props.layers} ciIdentity={props.ci.identity}></AddNewRelation>
         </Col>
       </Row>
-    </div>
-  );
+      <Row>
+        <Col>
+          <Flipper flipKey={sortedRelatedCIs.map(r => r.relation.layerStackIDs).join(' ')}>
+            {sortedRelatedCIs.map(r => (
+              <Flipped key={r.relation.id} flipId={r.relation.predicate} onAppear={onAppear} onExit={onExit}>
+                <RelatedCI related={r} ciIdentity={props.ci.identity} layers={props.layers} isEditable={props.isEditable}></RelatedCI>
+              </Flipped>
+            ))}
+          </Flipper>
+        </Col>
+      </Row>
+    </Tab.Pane> },
+  ]
+
+  return (<div style={{margin: "10px 10px"}}>
+    <h3>CI {props.ci.identity}</h3>
+    <Tab panes={panes} />
+  </div>);
 }
 
 CI.propTypes = {
+  isEditable: PropTypes.bool.isRequired,
   layers: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.number.isRequired,
@@ -87,7 +115,6 @@ CI.propTypes = {
     }).isRequired
   ).isRequired,
   ci: PropTypes.shape({
-    id: PropTypes.number.isRequired,
     identity: PropTypes.string.isRequired,
     attributes: PropTypes.arrayOf(
       PropTypes.shape({

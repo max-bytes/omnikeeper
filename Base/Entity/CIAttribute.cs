@@ -1,3 +1,4 @@
+
 using LandscapePrototype.Entity.AttributeValues;
 using System;
 
@@ -10,22 +11,22 @@ namespace LandscapePrototype
 
     public class CIAttribute
     {
+        public long ID { get; private set; }
         public string Name { get; private set; }
-        public long CIID { get; private set; }
+        public string CIID { get; private set; }
         public IAttributeValue Value { get; private set; }
-        public DateTimeOffset ActivationTime { get; private set; }
         public long LayerID { get => LayerStackIDs[^1]; }
         public long[] LayerStackIDs { get; private set; }
         public AttributeState State { get; private set; }
         public long ChangesetID { get; private set; }
 
-        public static CIAttribute Build(string name, long CIID, IAttributeValue value, DateTimeOffset acticationTime, long[] layerStackIDs, AttributeState state, long changesetID)
+        public static CIAttribute Build(long id, string name, string CIID, IAttributeValue value, long[] layerStackIDs, AttributeState state, long changesetID)
         {
             var o = new CIAttribute();
+            o.ID = id;
             o.Name = name;
             o.CIID = CIID;
             o.Value = value;
-            o.ActivationTime = acticationTime;
             o.LayerStackIDs = layerStackIDs;
             o.State = state;
             o.ChangesetID = changesetID;

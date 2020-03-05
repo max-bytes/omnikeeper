@@ -14,13 +14,12 @@ namespace LandscapePrototype.Entity.GraphQL
         public CIType(RelationModel relationModel, CIModel ciModel, LayerModel layerModel)
         {
             Field(x => x.Identity);
-            Field("id", x => x.ID);
             Field("layerhash", x => x.Layers.LayerHash);
+            Field(x => x.AtTime);
             Field(x => x.Attributes, type: typeof(ListGraphType<CIAttributeType>));
             FieldAsync<ListGraphType<RelatedCIType>>("related",
             arguments: new QueryArguments(new List<QueryArgument>
             {
-                //new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                 new QueryArgument<StringGraphType> { Name = "where" },
             }),
             resolve: async (context) =>
@@ -30,18 +29,20 @@ namespace LandscapePrototype.Entity.GraphQL
                 if (layerset == null)
                     throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!"); 
                 
-
                  var CIIdentity = context.Source.Identity;
                 //var layerStrings = context.GetArgument<string[]>("layers");
                 //var layers = await layerModel.BuildLayerSet(layerStrings, null);
-                var relations = await relationModel.GetMergedRelations(CIIdentity, false, layerset, RelationModel.IncludeRelationDirections.Forward, null, userContext.TimeThreshold);
+                var relations = await relationModel.GetMergedRelations(CIIdentity, false, layerset, RelationModel.IncludeRelationDirections.Both, userContext.Transaction, userContext.TimeThreshold);
 
                 var relatedCIs = new List<RelatedCI>();
                 
+                // TODO: performance improvements, use getCIs instead of loop of getCI
                 foreach(var r in relations)
                 {
-                    var relatedCIIdentity = await ciModel.GetIdentityFromCIID(r.ToCIID, null);
-                    relatedCIs.Add(RelatedCI.Build(r, await ciModel.GetCI(relatedCIIdentity, layerset, null, userContext.TimeThreshold)));
+                    //var relatedCIIdentity = await ciModel.GetIdentityFromCIID(r.ToCIID, null);
+                    var isForwardRelation = r.FromCIID == CIIdentity;
+                    var relatedCIID = (isForwardRelation) ? r.ToCIID : r.FromCIID;
+                    relatedCIs.Add(RelatedCI.Build(r, await ciModel.GetCI(relatedCIID, layerset, userContext.Transaction, userContext.TimeThreshold), isForwardRelation));
                 }
 
                 var wStr = context.GetArgument<string>("where"); // TODO: develop further
@@ -64,7 +65,7 @@ namespace LandscapePrototype.Entity.GraphQL
     {
         public CIAttributeType(LayerModel layerModel)
         {
-            Field(x => x.ActivationTime);
+            Field("id", x => x.ID);
             Field("ciid", x => x.CIID);
             Field(x => x.LayerID);
             Field(x => x.LayerStackIDs);
@@ -72,23 +73,12 @@ namespace LandscapePrototype.Entity.GraphQL
             Field(x => x.State, type: typeof(AttributeStateType));
             Field(x => x.Value, type: typeof(AttributeValueType));
 
-            FieldAsync<LayerType>("layer",
+            FieldAsync<ListGraphType<LayerType>>("layerStack",
             resolve: async (context) =>
             {
-                var layerID = context.Source.LayerID;
-                var layer = await layerModel.GetLayer(layerID, null);
-                return layer;
-            });
-
-            FieldAsync<ListGraphType<LayerType>>("layerstack",
-            resolve: async (context) =>
-            {
-                // TODO: performance improvements
+                var userContext = context.UserContext as LandscapeUserContext;
                 var layerstackIDs = context.Source.LayerStackIDs;
-                var layers = new List<Layer>();
-                foreach(var id in layerstackIDs)
-                    layers.Add(await layerModel.GetLayer(id, null));
-                return layers;
+                return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
             });
         }
     }

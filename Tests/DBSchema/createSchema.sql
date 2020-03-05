@@ -31,10 +31,9 @@ ALTER TABLE public.changeset
 CREATE TABLE public.relation
 (
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
-    from_ci_id bigint NOT NULL,
-    to_ci_id bigint NOT NULL,
+    from_ci_id text NOT NULL,
+    to_ci_id text NOT NULL,
     "predicate" text NOT NULL,
-    activation_time timestamp with time zone NOT NULL,
     changeset_id bigint NOT NULL,
     layer_id bigint NOT NULL,
     state public.relationstate DEFAULT 'new'::public.relationstate NOT NULL,
@@ -49,8 +48,8 @@ ALTER TABLE public.relation
 --
 
 CREATE TABLE public.ci (
-    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
-    identity text NOT NULL,
+    internal_id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    id text NOT NULL,
     CONSTRAINT ci_pkey PRIMARY KEY (id)
 );
 
@@ -66,10 +65,9 @@ ALTER TABLE public.ci OWNER TO postgres;
 CREATE TABLE public.attribute (
     id bigint NOT NULL,
     name text NOT NULL,
-    ci_id bigint NOT NULL,
+    ci_id text NOT NULL,
     type character varying NOT NULL,
     value text NOT NULL,
-    activation_time timestamp with time zone NOT NULL,
     layer_id bigint NOT NULL,
     state public.attributestate DEFAULT 'new'::public.attributestate NOT NULL,
     changeset_id bigint NOT NULL
@@ -124,7 +122,7 @@ ALTER TABLE public.layer ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 ALTER TABLE public.ci
-    ADD CONSTRAINT u_identity UNIQUE ("identity");
+    ADD CONSTRAINT u_id UNIQUE ("id");
 
 
 --

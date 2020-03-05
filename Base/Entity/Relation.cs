@@ -10,22 +10,23 @@ namespace LandscapePrototype
 
     public class Relation
     {
-        public long FromCIID { get; private set; }
-        public long ToCIID { get; private set; }
+        public long ID { get; private set; }
+        public string FromCIID { get; private set; }
+        public string ToCIID { get; private set; }
         public string Predicate { get; private set; }
-        public DateTimeOffset ActivationTime { get; private set; }
-        public long LayerID { get; private set; }
+        public long LayerID { get => LayerStackIDs[^1]; }
+        public long[] LayerStackIDs { get; private set; }
         public RelationState State { get; private set; }
         public long ChangesetID { get; private set; }
 
-        public static Relation Build(long fromCIID, long toCIID, string predicate, DateTimeOffset acticationTime, long layerID, RelationState state, long changesetID)
+        public static Relation Build(long id, string fromCIID, string toCIID, string predicate, long[] layerStackIDs, RelationState state, long changesetID)
         {
             var o = new Relation();
+            o.ID = id;
             o.FromCIID = fromCIID;
             o.ToCIID = toCIID;
             o.Predicate = predicate;
-            o.ActivationTime = acticationTime;
-            o.LayerID = layerID;
+            o.LayerStackIDs = layerStackIDs;
             o.State = state;
             o.ChangesetID = changesetID;
             return o;

@@ -1,4 +1,5 @@
 ﻿using LandscapePrototype.Model;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +16,9 @@ namespace LandscapePrototype.Entity.GraphQL
         public DateTimeOffset TimeThreshold {
             get
             {
-                return (DateTimeOffset)this["TimeThreshold"];
+                TryGetValue("TimeThreshold", out var ls);
+                if (ls == null) return default;
+                return (DateTimeOffset)ls;
             }
             set
             {
@@ -23,11 +26,27 @@ namespace LandscapePrototype.Entity.GraphQL
             }
         }
 
+        public NpgsqlTransaction Transaction
+        {
+            get
+            {
+                TryGetValue("Transaction", out var t);
+                if (t == null) return default;
+                return (NpgsqlTransaction)t;
+            }
+            set
+            {
+                Add("Transaction", value);
+            }
+        }
+
         public LayerSet LayerSet
         {
             get
             {
-                return (LayerSet)this["LayerSet"];
+                TryGetValue("LayerSet", out var ls);
+                if (ls == null) return null;
+                return (LayerSet)ls;
             }
             set
             {

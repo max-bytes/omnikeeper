@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
+using Landscape.Base;
+using Landscape.Base.Model;
 using LandscapePrototype.Entity.Converters;
 using LandscapePrototype.Entity.GraphQL;
 using LandscapePrototype.Model;
@@ -18,7 +21,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NetCore.AutoRegisterDi;
 using Npgsql;
+using Plugin;
 
 namespace LandscapePrototype
 {
@@ -36,6 +41,15 @@ namespace LandscapePrototype
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddScoped<IServiceProvider>(x => new FuncServiceProvider(x.GetRequiredService)); // graphql needs this
+
+            var testAssembly = Assembly.LoadFrom(@"C:\Users\Maximilian Csuk\Projects\Landscape\TestPlugin\bin\Debug\netstandard2.1\TestPlugin.dll");
+
+            services.RegisterAssemblyPublicNonGenericClasses(testAssembly)
+                .Where(a => {
+                    return true;// a.GetInterfaces().Contains(typeof(ILandscapePluginRegistry));
+                    })
+                .AsPublicImplementedInterfaces(ServiceLifetime.Scoped);
+            services.AddSingleton<IPluginRegistry, PluginRegistry>();
 
             services.AddCors(options => options.AddPolicy("AllowAllOrigins", builder =>
                builder.WithOrigins("http://localhost:3000")
@@ -55,9 +69,13 @@ namespace LandscapePrototype
                 return dbcb.Build("landscape_prototype");
             });
 
+            services.AddScoped<ICIModel, CIModel>();
             services.AddScoped<CIModel>();
+
+            services.AddScoped<ILayerModel, LayerModel>();
             services.AddScoped<LayerModel>();
             services.AddScoped<RelationModel>();
+            services.AddScoped<IChangesetModel, ChangesetModel>();
             services.AddScoped<ChangesetModel>();
             services.AddScoped<LandscapeUserContext>();
 
@@ -69,7 +87,6 @@ namespace LandscapePrototype
             {
                 options.AllowSynchronousIO = true;
             });
-
 
             services.AddGraphQL(x =>
             {
@@ -84,8 +101,11 @@ namespace LandscapePrototype
         private IWebHostEnvironment CurrentEnvironment { get; set; }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public async void Configure(IApplicationBuilder app, IWebHostEnvironment env, IEnumerable<IComputeLayerBrain> computeLayers, IPluginRegistry pluginRegistry)
         {
+            pluginRegistry.RegisterComputeLayerBrains(computeLayers);
+
+
             app.UseCors("AllowAllOrigins");
 
             app.UseGraphQL<LandscapeSchema>();
@@ -109,6 +129,8 @@ namespace LandscapePrototype
             {
                 endpoints.MapControllers();
             });
+
+            //computeLayers.First().Run().GetAwaiter().GetResult();
         }
     }
 }

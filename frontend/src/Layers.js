@@ -1,50 +1,42 @@
-import { gql } from '@apollo/client';
+import { mutations } from './mutations'
 import React from 'react';
-import {Mutation} from '@apollo/react-components';
-import Button from 'react-bootstrap/Button';
 import PropTypes from 'prop-types'
 import LayerIcon from './LayerIcon';
+import { useMutation } from '@apollo/react-hooks';
+import { Icon } from 'semantic-ui-react'
+import { Button } from 'semantic-ui-react'
+import { Flipper, Flipped } from 'react-flip-toolkit'
 
 function Layers(props) {
 
-  const TOGGLE_LAYER_VISIBILITY = gql`
-    mutation ToggleLayerVisibility($id: Int!) {
-      toggleLayerVisibility(id: $id) @client
-    }
-  `;
+  // TODO: loading
+  const [toggleLayerVisibility, { loading }] = useMutation(mutations.TOGGLE_LAYER_VISIBILITY);
+  const [changeLayerSortOrder, { loadingSO }] = useMutation(mutations.CHANGE_LAYER_SORT_ORDER);
 
-  const CHANGE_LAYER_SORT_ORDER = gql`
-    mutation ChangeLayerSortOrder($id: Int!, $change: Int!) {
-      changeLayerSortOrder(id: $id, change: $change) @client
-    }
-  `;
-
-
-  return (<ul style={{listStyle: 'none', paddingLeft: '0px', marginBottom: '0px', margin: '5px'}}>
+  return (<ul style={{listStyle: 'none', paddingLeft: '0px', marginBottom: '0px'}}>
+    <Flipper flipKey={props.layers.map(a => a.id + ";" + a.visibility).join(' ')}>
     {props.layers.map(layer => (
-    <li key={layer.id}>
-      <LayerIcon layer={layer}></LayerIcon>
-        {layer.name}&nbsp;{layer.visibility ? 'visible' : 'hidden'}
-        &nbsp;
-        <Mutation mutation={TOGGLE_LAYER_VISIBILITY} variables={{ id: layer.id }}>
-          {toggleLayerVisibility => (
-            <Button size="sm" variant="link" onClick={toggleLayerVisibility}>
-              {layer.visibility ? 'hide' : 'show'}
-            </Button>
-          )}
-        </Mutation>
-        <Mutation mutation={CHANGE_LAYER_SORT_ORDER} variables={{ id: layer.id, change: 1 }}>
-          {changeLayerSortOrder => (
-            <Button size="sm" variant="link" onClick={changeLayerSortOrder}>up</Button>
-          )}
-        </Mutation>
-        <Mutation mutation={CHANGE_LAYER_SORT_ORDER} variables={{ id: layer.id, change: -1 }}>
-          {changeLayerSortOrder => (
-            <Button size="sm" variant="link" onClick={changeLayerSortOrder}>down</Button>
-          )}
-        </Mutation>
-
-    </li>))}
+      <Flipped key={layer.id} flipId={layer.id}>
+        <li style={{paddingBottom: '5px', display: 'flex'}}>
+          <LayerIcon layer={layer}></LayerIcon>
+            <span style={{flexGrow: 1}}>
+              <span style={((layer.visibility) ? {} : {color: '#ccc'})}>{layer.name}</span>
+            </span>
+            &nbsp;&nbsp;
+              <Button basic size='mini' compact onClick={() => toggleLayerVisibility({variables: { id: layer.id }})}>
+                <Icon fitted name={((layer.visibility) ? 'eye' : 'eye slash')} />
+              </Button>
+            <Button.Group basic size='mini'>
+              <Button compact onClick={() => changeLayerSortOrder({variables: { id: layer.id, change: 1 }})}>
+                <Icon fitted name='arrow alternate circle up' />
+              </Button>
+              <Button compact onClick={() => changeLayerSortOrder({variables: { id: layer.id, change: -1 }})}>
+                <Icon fitted name='arrow alternate circle down' />
+              </Button>
+            </Button.Group>
+        </li>
+      </Flipped>))}
+    </Flipper>
     </ul>);
 }
 

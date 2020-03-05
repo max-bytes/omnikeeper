@@ -19,7 +19,8 @@ namespace LandscapePrototype.Entity.GraphQL
                 new QueryArgument<ListGraphType<CreateCIInputType>> { Name = "CreateCIs" },
                 new QueryArgument<ListGraphType<InsertCIAttributeInputType>> { Name = "InsertAttributes" },
                 new QueryArgument<ListGraphType<RemoveCIAttributeInputType>> { Name = "RemoveAttributes" },
-                new QueryArgument<ListGraphType<InsertRelationInputType>> { Name = "InsertRelations" }
+                new QueryArgument<ListGraphType<InsertRelationInputType>> { Name = "InsertRelations" },
+                new QueryArgument<ListGraphType<RemoveRelationInputType>> { Name = "RemoveRelations" }
               ),
               resolve: async context =>
               {
@@ -29,21 +30,24 @@ namespace LandscapePrototype.Entity.GraphQL
                   var insertAttributes = context.GetArgument("InsertAttributes", new List<InsertCIAttributeInput>());
                   var removeAttributes = context.GetArgument("RemoveAttributes", new List<RemoveCIAttributeInput>());
                   var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>());
-
-                  using var transaction = await conn.BeginTransactionAsync();
+                  var removeRelations = context.GetArgument("RemoveRelations", new List<RemoveRelationInput>());
 
                   var userContext = context.UserContext as LandscapeUserContext;
-                  userContext.LayerSet = await layerModel.BuildLayerSet(layers, transaction);
-                  userContext.TimeThreshold = DateTimeOffset.Now;
 
-                  var changesetID = await changesetModel.CreateChangeset(transaction);
+                  using var transaction = await conn.BeginTransactionAsync();
+                  userContext.Transaction = transaction;
+
+                  var changeset = await changesetModel.CreateChangeset(transaction);
+
+                  userContext.LayerSet = await layerModel.BuildLayerSet(layers, transaction);
+                  userContext.TimeThreshold = changeset.Timestamp;
 
                   foreach (var layer in createLayers)
                   {
                       await layerModel.CreateLayer(layer.Name, transaction);
                   }
 
-                  var createdCIIDs = new List<long>();
+                  var createdCIIDs = new List<string>();
                   foreach (var ci in createCIs)
                   {
                       createdCIIDs.Add(await ciModel.CreateCI(ci.Identity, transaction)); // TODO: add changeset
@@ -55,12 +59,12 @@ namespace LandscapePrototype.Entity.GraphQL
                   {
                       // look for ciid
                       var ciIdentity = attributeGroup.Key;
-                      var ciid = await ciModel.GetCIIDFromIdentity(ciIdentity, transaction);
+                      //var ciid = await ciModel.GetCIIDFromIdentity(ciIdentity, transaction);
                       foreach (var attribute in attributeGroup)
                       {
                           var nonGenericAttributeValue = AttributeValueBuilder.Build(attribute.Value);
 
-                          insertedAttributes.Add(await ciModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, attribute.LayerID, ciid, changesetID, transaction));
+                          insertedAttributes.Add(await ciModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, attribute.LayerID, ciIdentity, changeset.ID, transaction));
                       }
                   }
 
@@ -70,24 +74,31 @@ namespace LandscapePrototype.Entity.GraphQL
                   {
                       // look for ciid
                       var ciIdentity = attributeGroup.Key;
-                      var ciid = await ciModel.GetCIIDFromIdentity(ciIdentity, transaction);
                       foreach (var attribute in attributeGroup) {
-                          removedAttributes.Add(await ciModel.RemoveAttribute(attribute.Name, attribute.LayerID, ciid, changesetID, transaction));
+                          removedAttributes.Add(await ciModel.RemoveAttribute(attribute.Name, attribute.LayerID, ciIdentity, changeset.ID, transaction));
                       }
                   }
 
                   var insertedRelations = new List<Relation>();
                   foreach(var insertRelation in insertRelations)
                   {
-                      insertedRelations.Add(await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.Predicate, insertRelation.LayerID, changesetID, transaction));
+                      insertedRelations.Add(await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.Predicate, insertRelation.LayerID, changeset.ID, transaction));
+                  }
+
+
+                  var removedRelations = new List<Relation>();
+                  foreach (var removeRelation in removeRelations)
+                  {
+                      removedRelations.Add(await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.Predicate, removeRelation.LayerID, changeset.ID, transaction));
                   }
 
                   var affectedCIIDs = createdCIIDs
                   .Concat(removedAttributes.Select(r => r.CIID))
                   .Concat(insertedAttributes.Select(i => i.CIID))
-                  .Concat(insertedRelations.SelectMany(i => new long[] { i.FromCIID, i.ToCIID }))
+                  .Concat(insertedRelations.SelectMany(i => new string[] { i.FromCIID, i.ToCIID }))
+                  .Concat(removedRelations.SelectMany(i => new string[] { i.FromCIID, i.ToCIID }))
                   .Distinct();
-                  var affectedCIs = await ciModel.GetCIs(userContext.LayerSet, true, transaction, null, affectedCIIDs);
+                  var affectedCIs = await ciModel.GetCIs(userContext.LayerSet, true, transaction, changeset.Timestamp, affectedCIIDs);
 
                   await transaction.CommitAsync();
 

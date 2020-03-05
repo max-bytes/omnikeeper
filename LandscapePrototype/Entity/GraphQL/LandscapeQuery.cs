@@ -1,4 +1,5 @@
 ﻿using GraphQL.Types;
+using Landscape.Base;
 using LandscapePrototype.Model;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ namespace LandscapePrototype.Entity.GraphQL
     {
         public LandscapeQuery(CIModel ciModel, LayerModel layerModel, ChangesetModel changesetModel)
         {
+
             FieldAsync<CIType>("ci",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {
@@ -31,13 +33,8 @@ namespace LandscapePrototype.Entity.GraphQL
 
                     var ciIdentity = context.GetArgument<string>("identity");
                     var layerStrings = context.GetArgument<string[]>("layers");
-                    try
-                    {
-                        userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, null);
-                    }catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                    }
+                    var ls = await layerModel.BuildLayerSet(layerStrings, null);
+                    userContext.LayerSet = ls;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
 
                     var ci = await ciModel.GetCI(ciIdentity, userContext.LayerSet, null, userContext.TimeThreshold);
@@ -48,7 +45,7 @@ namespace LandscapePrototype.Entity.GraphQL
             FieldAsync<ListGraphType<CIType>>("cis",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
+                    new QueryArgument<ListGraphType<StringGraphType>>
                     {
                         Name = "layers"
                     },
@@ -56,16 +53,23 @@ namespace LandscapePrototype.Entity.GraphQL
                     {
                         Name = "timeThreshold"
                     },
+                    new QueryArgument<BooleanGraphType>
+                    {
+                        Name = "includeEmpty"
+                    },
                 }),
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as LandscapeUserContext;
 
                     var layerStrings = context.GetArgument<string[]>("layers");
-                    userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, null);
+                    var layerSet = (layerStrings != null) ? await layerModel.BuildLayerSet(layerStrings, null) : await layerModel.BuildLayerSet(null);
+                    userContext.LayerSet = layerSet;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
 
-                    var cis = await ciModel.GetCIs(userContext.LayerSet, false, null, userContext.TimeThreshold);
+                    var includeEmpty = context.GetArgument<bool>("includeEmpty", false);
+
+                    var cis = await ciModel.GetCIs(userContext.LayerSet, includeEmpty, null, userContext.TimeThreshold);
                     return cis;
                 });
 
@@ -108,7 +112,7 @@ namespace LandscapePrototype.Entity.GraphQL
                     {
                         Name = "to"
                     },
-                    new QueryArgument<LongGraphType>
+                    new QueryArgument<StringGraphType>
                     {
                         Name = "ciid"
                     }
@@ -121,8 +125,8 @@ namespace LandscapePrototype.Entity.GraphQL
 
                     var from = context.GetArgument<DateTimeOffset>("from");
                     var to = context.GetArgument<DateTimeOffset>("to");
-                    var ciid = context.GetArgument<long?>("ciid");
-                    return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, ciid, null);
+                    var ciid = context.GetArgument<string>("ciid");
+                    return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, RelationModel.IncludeRelationDirections.Both, ciid, null);
                 });
         }
     }

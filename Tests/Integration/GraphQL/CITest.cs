@@ -56,8 +56,8 @@ namespace Tests.Integration.GraphQL
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var layerID1 = await layerModel.CreateLayer("layer_1", trans);
             var layerID2 = await layerModel.CreateLayer("layer_2", trans);
-            var changesetID = await changesetModel.CreateChangeset(trans);
-            await ciModel.InsertAttribute("a1", AttributeValueInteger.Build(3), layerID1, ciid1, changesetID, trans);
+            var changeset = await changesetModel.CreateChangeset(trans);
+            await ciModel.InsertAttribute("a1", AttributeValueInteger.Build(3), layerID1, ciid1, changeset.ID, trans);
             trans.Commit();
 
             string query = @"

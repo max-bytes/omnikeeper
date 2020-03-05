@@ -37,26 +37,27 @@ namespace Tests.Integration.Model
                 var model = new CIModel(conn);
                 var layerModel = new LayerModel(conn);
 
-                var random = new Random(3);
-
                 var numCIs = 500;
                 var numLayers = 2;
                 var numAttributeInserts = 6000;
                 var numAttributeNames = 50;
 
+                var random = new Random(3);
+
                 ciNames = Enumerable.Range(0, numCIs).Select(i =>
                 {
-                    var identity = "CI" + RandomString.Generate(8);
+                    var identity = "CI" + RandomString.Generate(8, random);
                     return identity;
                 }).ToList();
 
                 layerNames = Enumerable.Range(0, numLayers).Select(i =>
                 {
-                    var identity = "L" + RandomString.Generate(8);
+                    var identity = "L" + RandomString.Generate(8, random);
                     return identity;
                 }).ToList();
 
-                var changesetID = await changesetModel.CreateChangeset(trans);
+                var changeset = await changesetModel.CreateChangeset(trans);
+
 
                 //Console.WriteLine(ciNames.Count());
                 var cis = ciNames.Select(identity =>
@@ -69,14 +70,14 @@ namespace Tests.Integration.Model
                     return layerModel.CreateLayer(identity, trans).GetAwaiter().GetResult();
                 }).ToList();
 
-                var attributeNames = Enumerable.Range(0, numAttributeNames).Select(i => "A" + RandomString.Generate(32)).ToList();
+                var attributeNames = Enumerable.Range(0, numAttributeNames).Select(i => "A" + RandomString.Generate(32, random)).ToList();
                 var attributes = Enumerable.Range(0, numAttributeInserts).Select(i =>
                 {
                     var name = attributeNames.GetRandom(random);
-                    var value = AttributeValueText.Build("V" + RandomString.Generate(8));
+                    var value = AttributeValueText.Build("V" + RandomString.Generate(8, random));
                     var layer = layerIDs.GetRandom(random);
                     var ciid = cis.GetRandom(random).Item1;
-                    return model.InsertAttribute(name, value, layer, ciid, changesetID, trans).GetAwaiter().GetResult();
+                    return model.InsertAttribute(name, value, layer, ciid, changeset.ID, trans).GetAwaiter().GetResult();
                 }).ToList();
 
                 await trans.CommitAsync();
@@ -102,7 +103,7 @@ namespace Tests.Integration.Model
             timer.Start();
             foreach (var ciName in ciNames)
             {
-                var a1 = model.GetMergedAttributes(ciName, false, layerset, trans);
+                var a1 = model.GetMergedAttributes(ciName, false, layerset, trans, DateTimeOffset.Now);
 
                 //Console.WriteLine($"{ciName} count: {a1.Count()}");
                 //foreach (var aa in a1)

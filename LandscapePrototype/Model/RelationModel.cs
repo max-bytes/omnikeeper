@@ -22,36 +22,50 @@ namespace LandscapePrototype.Model
 
         public async Task<IEnumerable<Relation>> GetMergedRelations(string ciIdentity, bool includeRemoved, LayerSet layers, IncludeRelationDirections ird, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null)
         {
-            if (ird != IncludeRelationDirections.Forward)
-                throw new NotImplementedException(); // TODO: implement
-
             var ret = new List<Relation>();
 
             await LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn, trans);
 
-            using (var command = new NpgsqlCommand(@"
+            string irdClause;
+            switch (ird)
+            {
+                case IncludeRelationDirections.Forward:
+                    irdClause = "(r.from_ci_id = @ci_identity)";
+                    break;
+                case IncludeRelationDirections.Backward:
+                    irdClause = "(r.to_ci_id = @ci_identity)";
+                    break;
+                case IncludeRelationDirections.Both:
+                    irdClause = "(r.from_ci_id = @ci_identity OR r.to_ci_id = @ci_identity)";
+                    break;
+                default:
+                    irdClause = "unused";
+                    break;
+            }
+
+            using (var command = new NpgsqlCommand($@"
             select distinct
+            last_value(inn.last_id) over wndOut,
             last_value(inn.last_from_ci_id) over wndOut,
             last_value(inn.last_to_ci_id) over wndOut,
             last_value(inn.last_predicate) over wndOut,
-            last_value(inn.last_activation_time) over wndOut,
-            last_value(inn.last_layer_id) over wndOut,
+            array_agg(inn.last_layer_id) over wndOut,
             last_value(inn.last_state) over wndOut,
             last_value(inn.last_changeset_id) over wndOut
             FROM (
                 select distinct
+                last_value(r.id) over wnd as last_id,
                 last_value(r.from_ci_id) over wnd as last_from_ci_id,
                 last_value(r.to_ci_id) over wnd as last_to_ci_id,
                 last_value(r.predicate) over wnd as last_predicate,
-                last_value(r.activation_time) over wnd as last_activation_time,
                 last_value(r.layer_id) over wnd as last_layer_id,
                 last_value(r.state) over wnd as last_state,
                 last_value(r.changeset_id) over wnd as last_changeset_id
                     from relation r
-                    inner join ci c ON r.from_ci_id = c.id
-                    where r.activation_time <= @time_threshold and c.identity = @from_ci_identity
+                    inner join changeset c on c.id = r.changeset_id
+                    where c.timestamp <= @time_threshold and ({irdClause})
                 WINDOW wnd AS(
-                    PARTITION by r.from_ci_id, r.to_ci_id, r.predicate, r.layer_id ORDER BY r.activation_time ASC  -- sort by activation time
+                    PARTITION by r.from_ci_id, r.to_ci_id, r.predicate, r.layer_id ORDER BY c.timestamp ASC  -- sort by timestamp
                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
             ) inn
             inner join temp_layerset ls ON inn.last_layer_id = ls.id -- inner join to only keep rows that are in the selected layers
@@ -60,7 +74,7 @@ namespace LandscapePrototype.Model
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
             ", conn, trans))
             {
-                command.Parameters.AddWithValue("from_ci_identity", ciIdentity);
+                command.Parameters.AddWithValue("ci_identity", ciIdentity);
                 var excludedStates = (includeRemoved) ? new RelationState[] { } : new RelationState[] { RelationState.Removed };
                 command.Parameters.AddWithValue("excluded_states", excludedStates);
                 var finalTimeThreshold = timeThreshold ?? DateTimeOffset.Now;
@@ -69,15 +83,15 @@ namespace LandscapePrototype.Model
 
                 while (await dr.ReadAsync())
                 {
-                    var fromCIID = dr.GetInt64(0);
-                    var toCIID = dr.GetInt64(1);
-                    var predicate = dr.GetString(2);
-                    var activationTime = dr.GetTimeStamp(3).ToDateTime();
-                    var layerID = dr.GetInt64(4);
+                    var id = dr.GetInt64(0);
+                    var fromCIID = dr.GetString(1);
+                    var toCIID = dr.GetString(2);
+                    var predicate = dr.GetString(3);
+                    var layerStack = (long[])dr[4];
                     var state = dr.GetFieldValue<RelationState>(5);
                     var changesetID = dr.GetInt64(6);
 
-                    var relation = Relation.Build(fromCIID, toCIID, predicate, activationTime, layerID, state, changesetID);
+                    var relation = Relation.Build(id, fromCIID, toCIID, predicate, layerStack, state, changesetID);
 
                     ret.Add(relation);
                 }
@@ -86,10 +100,10 @@ namespace LandscapePrototype.Model
         }
 
 
-        private async Task<Relation> GetRelation(long fromCIID, long toCIID, string predicate, long layerID, NpgsqlTransaction trans)
+        private async Task<Relation> GetRelation(string fromCIID, string toCIID, string predicate, long layerID, NpgsqlTransaction trans)
         {
             // TODO timestamp related selection + time_threshold (see getCI() in CIModel)
-            using (var command = new NpgsqlCommand(@"select activation_time, state, changeset_id from relation 
+            using (var command = new NpgsqlCommand(@"select id, state, changeset_id from relation 
                 WHERE from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id AND predicate = @predicate AND layer_id = @layer_id LIMIT 1", conn, trans))
             {
                 command.Parameters.AddWithValue("from_ci_id", fromCIID);
@@ -100,31 +114,31 @@ namespace LandscapePrototype.Model
                 if (!await dr.ReadAsync())
                     return null;
 
-                var activationTime = dr.GetTimeStamp(0).ToDateTime();
+                var id = dr.GetInt64(0);
                 var state = dr.GetFieldValue<RelationState>(1);
                 var changesetID = dr.GetInt64(2);
 
-                return Relation.Build(fromCIID, toCIID, predicate, activationTime, layerID, state, changesetID);
+                return Relation.Build(id, fromCIID, toCIID, predicate, new long[] { layerID }, state, changesetID);
             }
         }
 
-        public async Task<bool> RemoveRelation(long fromCIID, long toCIID, string predicate, long layerID, long changesetID, NpgsqlTransaction trans)
+        public async Task<Relation> RemoveRelation(string fromCIID, string toCIID, string predicate, long layerID, long changesetID, NpgsqlTransaction trans)
         {
             var currentRelation = await GetRelation(fromCIID, toCIID, predicate, layerID, trans);
 
             if (currentRelation == null)
             {
                 // relation does not exist
-                return false;
+                throw new Exception("Trying to remove relation that does not exist");
             }
             if (currentRelation.State == RelationState.Removed)
             {
                 // the relation is already removed, no-op(?)
-                return true;
+                return currentRelation;
             }
 
-            using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate, activation_time, layer_id, state, changeset_id) 
-                VALUES (@from_ci_id, @to_ci_id, @predicate, now(), @layer_id, @state, @changeset_id)", conn, trans);
+            using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate, layer_id, state, changeset_id) 
+                VALUES (@from_ci_id, @to_ci_id, @predicate, @layer_id, @state, @changeset_id) returning id", conn, trans);
 
             command.Parameters.AddWithValue("from_ci_id", fromCIID);
             command.Parameters.AddWithValue("to_ci_id", toCIID);
@@ -133,11 +147,13 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("state", RelationState.Removed);
             command.Parameters.AddWithValue("changeset_id", changesetID);
 
-            var numInserted = await command.ExecuteNonQueryAsync();
-            return numInserted == 1;
+            var layerStack = new long[] { layerID }; // TODO: calculate proper layerstack(?)
+
+            var id = (long)await command.ExecuteScalarAsync();
+            return Relation.Build(id, fromCIID, toCIID, predicate, layerStack, RelationState.Removed, changesetID);
         }
 
-        public async Task<Relation> InsertRelation(long fromCIID, long toCIID, string predicate, long layerID, long changesetID, NpgsqlTransaction trans)
+        public async Task<Relation> InsertRelation(string fromCIID, string toCIID, string predicate, long layerID, long changesetID, NpgsqlTransaction trans)
         {
             var currentRelation = await GetRelation(fromCIID, toCIID, predicate, layerID, trans);
 
@@ -153,8 +169,8 @@ namespace LandscapePrototype.Model
                 }
             }
 
-            using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate, activation_time, layer_id, state, changeset_id) 
-                VALUES (@from_ci_id, @to_ci_id, @predicate, now(), @layer_id, @state, @changeset_id) returning activation_time", conn, trans);
+            using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate, layer_id, state, changeset_id) 
+                VALUES (@from_ci_id, @to_ci_id, @predicate, @layer_id, @state, @changeset_id) returning id", conn, trans);
 
             command.Parameters.AddWithValue("from_ci_id", fromCIID);
             command.Parameters.AddWithValue("to_ci_id", toCIID);
@@ -163,9 +179,10 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("state", state);
             command.Parameters.AddWithValue("changeset_id", changesetID);
 
+            var layerStack = new long[] { layerID }; // TODO: calculate proper layerstack(?)
 
-            var activationTime = (DateTime)await command.ExecuteScalarAsync();
-            return Relation.Build(fromCIID, toCIID, predicate, activationTime, layerID, state, changesetID);
+            var id = (long)await command.ExecuteScalarAsync();
+            return Relation.Build(id, fromCIID, toCIID, predicate, layerStack, state, changesetID);
         }
     }
 }

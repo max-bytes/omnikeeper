@@ -4,6 +4,7 @@ import CI from './CI';
 import PropTypes from 'prop-types'
 import { queries } from './queries'
 import LoadingOverlay from 'react-loading-overlay'
+import {Container} from 'react-bootstrap';
 
 function MainAreaCI(props) {
     let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
@@ -11,11 +12,15 @@ function MainAreaCI(props) {
     // TODO: identity variable
 
     const { loading: loadingCI, error: errorCI, data: dataCI } = useQuery(queries.CI, {
-      variables: { identity: 'Habc', layers: visibleLayers }
+      variables: { identity: props.ciid, layers: visibleLayers, timeThreshold: props.currentTime.time }
     });
 
+    const isEditable = props.currentTime.isLatest;
+
     if (dataCI) return (<LoadingOverlay active={loadingCI} spinner>
-        <CI ci={dataCI.ci} layers={props.layers}></CI>
+        <Container fluid>
+          <CI ci={dataCI.ci} layers={props.layers} isEditable={isEditable} ></CI>
+        </Container>
       </LoadingOverlay>);
     else if (loadingCI) return <LoadingOverlay spinner text='Loading your content...'></LoadingOverlay>;
     else if (errorCI) return <p>Error: {JSON.stringify(errorCI, null, 2) }}</p>;
@@ -23,6 +28,11 @@ function MainAreaCI(props) {
 }
 
 MainAreaCI.propTypes = {
+    currentTime: PropTypes.shape({
+      time: PropTypes.string,
+      isLatest: PropTypes.bool.isRequired
+    }),
+    ciid: PropTypes.string.isRequired,
     layers: PropTypes.arrayOf(
       PropTypes.shape({
         id: PropTypes.number.isRequired,

@@ -3,16 +3,11 @@ import gql from 'graphql-tag';
 export const Fragments = {
   attribute: gql`
     fragment FullAttribute on CIAttributeType {
+        id
         name
         layerID
-        layer {
-            id
-            name
-            visibility @client
-            color @client
-        }
         layerStackIDs
-        layerstack {
+        layerStack {
             id
             name
             visibility @client
@@ -33,19 +28,38 @@ export const Fragments = {
   ci: gql`
     fragment FullCI on CIType {
         identity
-        id
         layerhash
+        atTime
         related {
             relation {
-                predicate
+                ...FullRelation
             }
             ci {
                 identity
+                layerhash
+                atTime
             }
+            isForward
         }
         attributes {
             ...FullAttribute
         }
     }
-  `
+  `,
+  relation: gql`
+    fragment FullRelation on RelationType {
+        id
+        fromCIID
+        toCIID
+        predicate
+        layerID
+        layerStackIDs
+        layerStack {
+            id
+            name
+            visibility @client
+            color @client
+        }
+    }
+  `,
 };

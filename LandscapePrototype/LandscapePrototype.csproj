@@ -8,8 +8,12 @@
     <PackageReference Include="GraphQL" Version="3.0.0-preview-1352" />
     <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="3.5.0-alpha0027" />
     <PackageReference Include="GraphQL.Server.Ui.Playground" Version="3.4.0" />
-    <PackageReference Include="Npgsql" Version="4.1.3" />
+    <PackageReference Include="NetCore.AutoRegisterDi" Version="1.1.0" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.20" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Base\Landscape.Base.csproj" />
   </ItemGroup>
 
 

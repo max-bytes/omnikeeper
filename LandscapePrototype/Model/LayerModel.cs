@@ -1,4 +1,5 @@
-﻿using LandscapePrototype.Entity;
+﻿using Landscape.Base.Model;
+using LandscapePrototype.Entity;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LandscapePrototype.Model
 {
-    public class LayerModel
+    public class LayerModel : ILayerModel
     {
         private readonly NpgsqlConnection conn;
 
@@ -38,13 +39,17 @@ namespace LandscapePrototype.Model
             return new LayerSet(layerIDs.ToArray());
         }
 
-        //public async Task<long> GetLayerID(string layerName, NpgsqlTransaction trans)
-        //{
-        //    using var command = new NpgsqlCommand(@"select id from layer where name = @name LIMIT 1", conn, trans);
-        //    command.Parameters.AddWithValue("name", layerName);
-        //    var s = await command.ExecuteScalarAsync();
-        //    return (long)s;
-        //}
+        public async Task<LayerSet> BuildLayerSet(NpgsqlTransaction trans)
+        {
+            var layerIDs = new List<long>();
+            using var command = new NpgsqlCommand(@"select id from layer", conn, trans);
+            using var reader = await command.ExecuteReaderAsync();
+            while(await reader.ReadAsync())
+            {
+                layerIDs.Add(reader.GetInt64(0));
+            }
+            return new LayerSet(layerIDs.ToArray());
+        }
 
         public async Task<Layer> GetLayer(long layerID, NpgsqlTransaction trans)
         {
@@ -55,21 +60,29 @@ namespace LandscapePrototype.Model
             var name = r.GetString(0);
             return Layer.Build(name, layerID);
         }
-        //public Layer GetLayer(long layerID, NpgsqlTransaction trans)
-        //{
-        //    using var command = new NpgsqlCommand(@"select name from layer where id = @id LIMIT 1", conn, trans);
-        //    command.Parameters.AddWithValue("id", layerID);
-        //    using var r = command.ExecuteReader();
-        //    r.Read();
-        //    var name = r.GetString(0);
-        //    return Layer.Build(name, layerID);
-        //}
+
+
+        public async Task<IEnumerable<Layer>> GetLayers(long[] layerIDs, NpgsqlTransaction trans)
+        {
+            var layers = new List<Layer>();
+            using var command = new NpgsqlCommand(@"select id, name from layer where id = ANY(@layer_ids)", conn, trans);
+            command.Parameters.AddWithValue("layer_ids", layerIDs);
+            using var r = await command.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+            {
+                var id = r.GetInt64(0);
+                var name = r.GetString(1);
+                layers.Add(Layer.Build(name, id));
+            }
+
+            // HACK: wonky re-sorting of layers according to input layerIDs
+            return layerIDs.Select(id => layers.Find(l => l.ID == id));
+        }
 
         public async Task<IEnumerable<Layer>> GetLayers(NpgsqlTransaction trans)
         {
             var layers = new List<Layer>();
             using var command = new NpgsqlCommand(@"select id, name from layer", conn, trans);
-
             using var r = await command.ExecuteReaderAsync();
             while(await r.ReadAsync())
             {

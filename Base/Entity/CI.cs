@@ -1,4 +1,5 @@
-﻿using LandscapePrototype.Model;
+﻿
+using LandscapePrototype.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,16 +10,16 @@ namespace LandscapePrototype.Entity
     public class CI
     {
         public string Identity { get; private set; }
-        public long ID { get; private set; }
         public CIAttribute[] Attributes { get; private set; }
         public LayerSet Layers { get; private set; }
+        public DateTimeOffset AtTime { get; private set; }
 
-        public static CI Build(long id, string CIIdentity, LayerSet layers, IEnumerable<CIAttribute> attributes)
+        public static CI Build(string CIIdentity, LayerSet layers, DateTimeOffset atTime, IEnumerable<CIAttribute> attributes)
         {
             var r = new CI
             {
                 Layers = layers,
-                ID = id,
+                AtTime = atTime,
                 Identity = CIIdentity,
                 Attributes = attributes.ToArray()
             };

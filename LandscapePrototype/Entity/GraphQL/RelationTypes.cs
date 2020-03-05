@@ -10,15 +10,24 @@ namespace LandscapePrototype.Entity.GraphQL
 {
     public class RelationType : ObjectGraphType<Relation>
     {
-        public RelationType()
+        public RelationType(LayerModel layerModel)
         {
-            Field(x => x.ActivationTime);
+            Field("id", x => x.ID);
             Field(x => x.FromCIID);
             Field(x => x.ToCIID);
             Field(x => x.LayerID);
+            Field(x => x.LayerStackIDs);
             Field(x => x.Predicate);
             Field(x => x.State, type: typeof(RelationStateType));
             Field(x => x.ChangesetID);
+
+            FieldAsync<ListGraphType<LayerType>>("layerStack",
+            resolve: async (context) =>
+            {
+                var userContext = context.UserContext as LandscapeUserContext;
+                var layerstackIDs = context.Source.LayerStackIDs;
+                return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
+            });
         }
     }
 
@@ -32,6 +41,7 @@ namespace LandscapePrototype.Entity.GraphQL
         {
             Field(x => x.Relation, type: typeof(RelationType));
             Field("ci", x => x.CI, type: typeof(CIType));
+            Field(x => x.IsForward);
         }
     }
 

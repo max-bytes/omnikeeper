@@ -4,6 +4,7 @@ import { ApolloProvider, ApolloClient, HttpLink, InMemoryCache,gql,defaultDataId
 import { ApolloProvider as ApolloHooksProvider } from '@apollo/react-hooks'
 import Explorer from './Explorer';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'semantic-ui-css/semantic.min.css'
 import { queries } from './queries'
 
 
@@ -45,8 +46,13 @@ function App() {
     type LocalState {
       layerSortingAndVisibility: LayerSortingAndVisibility!
     }
+    type SelectedTimeThreshold {
+      time: DateTimeOffset!
+      isLatest: Bool!
+    }
     extend type Query {
       localState: LocalState!
+      selectedTimeThreshold: SelectedTimeThreshold! 
     }
     extend type Mutation {
       updateLayerSortingAndVisibility(layers: [LayerSortingAndVisibility]!): [LayerSortingAndVisibility]!
@@ -56,11 +62,20 @@ function App() {
       color: String!
     }
   `;
-
   var initalLayerSort = 0;
 
   const resolvers = {
     Mutation: {
+      setSelectedTimeThreshold: (_root, variables, { cache, getCacheKey }) => {
+        cache.writeQuery({query: queries.SelectedTimeThreshold, data: {
+          selectedTimeThreshold: { time: variables.newTimeThreshold, isLatest: variables.isLatest }
+        } });
+        return null;
+      },
+      setSelectedCI: (_root, variables, { cache, getCacheKey }) => {
+        cache.writeQuery({query: queries.SelectedCI, data: {selectedCI: variables.newSelectedCI } });
+        return null;
+      },
       toggleLayerVisibility: (_root, variables, { cache, getCacheKey }) => {
         const id = getCacheKey({ __typename: 'LayerType', id: variables.id })
         const fragment = gql`
@@ -74,8 +89,6 @@ function App() {
         return null;
       },
       changeLayerSortOrder: (_root, variables, { cache, getCacheKey }) => {
-        // TODO: proper re-sorting
-
         const id = getCacheKey({ __typename: 'LayerType', id: variables.id })
         const fragment = gql`
           fragment layer on LayerType {
@@ -126,8 +139,10 @@ function App() {
 var cache = new InMemoryCache({
   dataIdFromObject: object => {
     switch (object.__typename) {
-      case 'CIType': return `CIType:${object.identity}:${object.layerhash}`; 
-      case 'CIAttributeType': return `CIAttributeType:${object.name}:${object.layerID}:ls${object.layerStackIDs.join(',')}`;
+      case 'CIType': return `CIType:${object.identity}:${object.layerhash}:${object.atTime}`; 
+      case 'CIAttributeType': return `CIAttributeType:${object.id}:ls${object.layerStackIDs.join(',')}`;
+      case 'RelationType': return `RelationType:${object.id}:ls${object.layerStackIDs.join(',')}`;
+      case 'RelatedCIType': return `RelatedCIType:${object.relation.id}:f-${object.isForward}:ls${object.relation.layerStackIDs.join(',')}`;
       default: return defaultDataIdFromObject(object);
     }
   }
@@ -144,13 +159,11 @@ const client = new ApolloClient({
 
 var initialState = {
   data: {
-    localState: {
-        layerSortingAndVisibility: [{
-          id: 0,
-          sort: 1,
-          visibility: true
-        }],
+    selectedTimeThreshold: {
+      time: null,
+      isLatest: true
     },
+    selectedCI: "H76597978", // TODO
     '__typename': 'LocalState!'
   }
 };

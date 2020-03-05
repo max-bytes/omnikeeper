@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import PropTypes from 'prop-types'
-import {Mutation} from '@apollo/react-components';
+import { useMutation } from '@apollo/react-hooks';
 import { withApollo } from 'react-apollo';
 import Form from 'react-bootstrap/Form';
 import { mutations } from './mutations'
@@ -10,62 +10,69 @@ import LayerStackIcons from "./LayerStackIcons";
 
 function Attribute(props) {
 
-  var {ciIdentity, layers, attribute, ...rest} = props;
+  var {ciIdentity, layers, attribute, isEditable, ...rest} = props;
 
   const [value, setValue] = useState(props.attribute.value.value);
   React.useEffect(() => setValue(props.attribute.value.value), [props.attribute.value.value])
 
   let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
 
-  let removeButton = (
-    <Mutation mutation={mutations.REMOVE_CI_ATTRIBUTE} 
-    refetchQueries={['ci', 'cis']}
-    update={(cache, data) => {
-    /* HACK: find a better way to deal with cache invalidation! We would like to invalidate the affected CIs, which 
-    translates to multiple entries in the cache, because each CI can be cached multiple times for each layerhash
+  // TODO: loading
+  const [insertCIAttribute, { loading }] = useMutation(mutations.INSERT_CI_ATTRIBUTE, { refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true });
+  const [removeCIAttribute, { _ }] = useMutation(mutations.REMOVE_CI_ATTRIBUTE, { 
+    refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true,
+    update: (cache, data) => {
+      /* HACK: find a better way to deal with cache invalidation! We would like to invalidate the affected CIs, which 
+      translates to multiple entries in the cache, because each CI can be cached multiple times for each layerhash
       */
       data.data.mutate.affectedCIs.forEach(ci => {
         var id = props.client.cache.identify(ci);
         console.log("Evicting: " + id);
         cache.evict(id);
       });
-    }}>
-            {removeCIAttribute => (
-                  <Button variant="danger" onClick={e => {
-                    e.preventDefault();
-                    removeCIAttribute({ variables: { layers: visibleLayers, ciIdentity: props.ciIdentity, name: props.attribute.name, layerID: props.attribute.layerID } });
-                  }}>Remove</Button>
-            )}
-          </Mutation>
-  );
+    }
+  });
+  const [setSelectedTimeThreshold, { loadingTime }] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
-  let input = (<span>{value}</span>);
-  // switch (props.attribute.value.__typename) {
-  //   case attributeID2Object('text').typename:
-      input = (
-          <Mutation mutation={mutations.INSERT_CI_ATTRIBUTE}>
-            {insertCIAttribute => (
-                <Form inline onSubmit={e => {
-                    e.preventDefault();
-                    insertCIAttribute({ variables: { layers: visibleLayers, ciIdentity: props.ciIdentity, name: props.attribute.name, layerID: props.attribute.layerID, value: {
-                      type: attributeTypename2Object(props.attribute.value.__typename).id,
-                      value: value
-                    } } });
-                  }} >
-                    <LayerStackIcons layerStack={props.attribute.layerstack}></LayerStackIcons>
-                    <Form.Group controlId={`value:${props.attribute.name}`} style={{flexGrow: 1}}>
-                      <Form.Label className={"pr-1"} style={{flexBasis: '160px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{props.attribute.name}:</Form.Label>
-                        <Form.Control style={{flexGrow: 1}} type={attribute2InputType(attributeTypename2Object(props.attribute.value.__typename))} placeholder="Enter value" value={value} onChange={e => setValue(e.target.value)} />
-                        <Button type="submit" className={'mx-1'} disabled={props.attribute.value.value === value}>Update</Button>
-                        {removeButton}
-                      </Form.Group>
-                </Form>
-            )}
-          </Mutation>
-      );
-    //   break;
-    // default:
-  // }
+  let input;
+
+  if (isEditable) {
+
+    let removeButton = (
+      <Button variant="danger" onClick={e => {
+        e.preventDefault();
+        removeCIAttribute({ variables: { layers: visibleLayers, ciIdentity: props.ciIdentity, name: props.attribute.name, layerID: props.attribute.layerID } })
+        .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
+      }}>Remove</Button>
+    );
+    
+    input = (
+      <Form inline onSubmit={e => {
+          e.preventDefault();
+          insertCIAttribute({ variables: { layers: visibleLayers, ciIdentity: props.ciIdentity, name: props.attribute.name, layerID: props.attribute.layerID, value: {
+            type: attributeTypename2Object(props.attribute.value.__typename).id,
+            value: value
+          } } })
+          .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
+        }} >
+          <LayerStackIcons layerStack={props.attribute.layerStack}></LayerStackIcons>
+          <Form.Group controlId={`value:${props.attribute.name}`} style={{flexGrow: 1}}>
+            <Form.Label className={"pr-1"} style={{flexBasis: '160px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{props.attribute.name}:</Form.Label>
+              <Form.Control style={{flexGrow: 1}} type={attribute2InputType(attributeTypename2Object(props.attribute.value.__typename))} placeholder="Enter value" value={value} onChange={e => setValue(e.target.value)} />
+              <Button type="submit" className={'mx-1'} disabled={props.attribute.value.value === value}>Update</Button>
+              {removeButton}
+            </Form.Group>
+      </Form>
+    );
+  } else {
+    input = (<Form inline>
+      <LayerStackIcons layerStack={props.attribute.layerStack}></LayerStackIcons>
+      <Form.Group controlId={`value:${props.attribute.name}`} style={{flexGrow: 1}}>
+        <Form.Label className={"pr-1"} style={{flexBasis: '160px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{props.attribute.name}:</Form.Label>
+        <Form.Control style={{flexGrow: 1}} type={attribute2InputType(attributeTypename2Object(props.attribute.value.__typename))} placeholder="Enter value" value={value} readOnly />
+      </Form.Group>
+    </Form>);
+  }
 
 
   return (
@@ -76,6 +83,7 @@ function Attribute(props) {
 }
 
 Attribute.propTypes = {
+  isEditable: PropTypes.bool.isRequired,
   ciIdentity: PropTypes.string.isRequired,
   layers: PropTypes.arrayOf(
     PropTypes.shape({

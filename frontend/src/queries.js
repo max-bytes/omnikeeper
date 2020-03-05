@@ -11,14 +11,24 @@ export const queries = {
         ${Fragments.ci}
         ${Fragments.attribute}
     `,
+    CIList: gql`
+        query ciList {
+            cis(includeEmpty: true) {
+                identity
+                layerhash
+                atTime
+            }
+        }
+    `,
     CI: gql`
-        query ci($identity: String!, $layers: [String]!) {
-            ci(identity: $identity, layers: $layers) {
+        query ci($identity: String!, $layers: [String]!, $timeThreshold: DateTimeOffset) {
+            ci(identity: $identity, layers: $layers, timeThreshold: $timeThreshold) {
                 ...FullCI
             }
         }
         ${Fragments.ci}
         ${Fragments.attribute}
+        ${Fragments.relation}
     `,
     Layers: gql`
     {
@@ -32,10 +42,20 @@ export const queries = {
     }
     `,
     Changesets: gql`
-        query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciid: Long, $layers:[String]!) {
+        query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciid: String, $layers:[String]!) {
             changesets(from: $from, to:$to, ciid:$ciid, layers: $layers) {
                 id
                 timestamp
             }
-        }`
+        }`,
+    SelectedTimeThreshold: gql`
+        query SelectedTimeThreshold {
+            selectedTimeThreshold @client
+          }
+      `,
+    SelectedCI: gql`
+        query SelectedCI {
+            selectedCI @client
+        }
+    `
 };
