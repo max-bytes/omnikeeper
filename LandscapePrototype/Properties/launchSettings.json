@@ -9,15 +9,15 @@
     }
   },
   "profiles": {
-    "IIS Express": {
+    "Rest API": {
         "commandName": "IISExpress",
         "launchBrowser": true,
-        "launchUrl": "ui/playground",
+        "launchUrl": "ci",
         "environmentVariables": {
             "ASPNETCORE_ENVIRONMENT": "Development"
         }
     },
-    "LandscapePrototype": {
+    "GraphQL Playground": {
         "commandName": "Project",
         "launchBrowser": true,
         "launchUrl": "ui/playground",

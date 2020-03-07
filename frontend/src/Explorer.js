@@ -1,29 +1,46 @@
 import { useQuery } from '@apollo/client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Layers from './Layers';
 import MainAreaCI from './MainAreaCI';
 import { queries } from './queries'
 import Timeline from './Timeline';
+import { useKeycloak } from '@react-keycloak/web'
+import {usePromise } from 'use-promise'
 
 function Explorer() {
+  const { keycloak } = useKeycloak()
   const { error: errorLayers, data: dataLayers } = useQuery(queries.Layers);
   const { error: errorTime, data: dataTime } = useQuery(queries.SelectedTimeThreshold);
   const { error: errorCI, data: dataCI } = useQuery(queries.SelectedCI);
+  const [ userProfile, setUserProfile ] = useState(undefined);
 
-    if (dataLayers && dataTime && dataCI) {
-      // sort based on order
-      let sortedLayers = dataLayers.layers.concat();
-      sortedLayers.sort((a,b) => {
-        var o = b.sort - a.sort;
-        if (o === 0) return ('' + a.name).localeCompare(b.name);
-        return o;
-      });
+  useEffect(() => {
+    keycloak.loadUserProfile().then(profile => {
+      setUserProfile(profile);
+    })
+  }, [keycloak])
 
-      var ciid = dataCI.selectedCI;
+  if (dataLayers && dataTime && dataCI && userProfile) {
+    // sort based on order
+    let sortedLayers = dataLayers.layers.concat();
+    sortedLayers.sort((a,b) => {
+      var o = b.sort - a.sort;
+      if (o === 0) return ('' + a.name).localeCompare(b.name);
+      return o;
+    });
+
+    var ciid = dataCI.selectedCI;
+      
+
+    const logoutButton = (<div style={{display: 'flex', margin: '5px'}}>
+        <span style={{flexGrow: 1}}>Logged in as user {userProfile.username} </span>
+        <button type="button" onClick={() => keycloak.logout()}>Logout</button>
+      </div>);
 
     return (
       <div>
         <div className="left">
+          {logoutButton}
           <div className={"layers"}>
             <h5>Layers</h5>
             <Layers layers={sortedLayers}></Layers>
@@ -38,7 +55,9 @@ function Explorer() {
         </div>
       </div>);
     } else {
-      if (errorLayers) return <p>Error: {errorLayers}</p>;
+      if (errorLayers) {
+        return <p>Error: {errorLayers}</p>;
+      }
       else if (errorTime) return <p>Error: {errorTime}</p>;
       else if (errorCI) return <p>Error: {errorCI}</p>;
       else return <p>?</p>;

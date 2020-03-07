@@ -6,6 +6,29 @@ import Explorer from './Explorer';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'semantic-ui-css/semantic.min.css'
 import { queries } from './queries'
+import Keycloak from 'keycloak-js'
+import { KeycloakProvider } from '@react-keycloak/web'
+import {PrivateRoute} from './PrivateRoute'
+import LoginPage from './LoginPage'
+import { HashRouter as Router, Redirect, Route, Switch, BrowserRouter  } from 'react-router-dom'
+import DebugRouter from './DebugRouter';
+
+const keycloak = new Keycloak({
+  "realm": "landscape",
+  "url": "http://localhost:8080/auth/",
+  "ssl-required": "none",
+  "resource": "landscape",
+  "clientId": "landscape",
+  "public-client": true,
+  "verify-token-audience": true,
+  "use-resource-role-mappings": true,
+  "confidential-port": 0,
+  "enable-cors": true
+})
+
+const keycloakProviderInitConfig = {
+  // onLoad: 'check-sso'
+}
 
 
 let toHSL = function(string, opts) {
@@ -151,7 +174,7 @@ var cache = new InMemoryCache({
 const client = new ApolloClient({
   cache,
   link: new HttpLink({
-      uri: 'https://localhost:44378/graphql',
+      uri: 'https://localhost:44378/graphql-debug',
     }),
   typeDefs: typeDefs,
   resolvers: resolvers
@@ -170,13 +193,21 @@ var initialState = {
 cache.writeData(initialState);
 
   return (
-      <ApolloProvider client={client}>
-        <ApolloHooksProvider client={client}>
-          <div className="App">
-            <Explorer></Explorer>
-          </div>
-        </ApolloHooksProvider>
-      </ApolloProvider>
+    <KeycloakProvider keycloak={keycloak} initConfig={keycloakProviderInitConfig}>
+        <ApolloProvider client={client}>
+          <ApolloHooksProvider client={client}>
+              <BrowserRouter>
+                  <Switch>
+                    <Route path="/login" component={LoginPage} />
+                    <PrivateRoute path="/ex" component={Explorer} />
+                    <Route path="*">
+                      <Redirect to="/ex" />
+                    </Route>
+                  </Switch>
+              </BrowserRouter>
+          </ApolloHooksProvider>
+        </ApolloProvider>
+      </KeycloakProvider>
   );
 }
 
