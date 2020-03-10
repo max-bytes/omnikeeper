@@ -5,8 +5,8 @@ import { withApollo } from 'react-apollo';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
-import { mutations } from './mutations'
-import { AttributeTypes, attribute2InputType, attributeID2Object } from './attributeTypes'
+import { mutations } from '../graphql/mutations'
+import { AttributeTypes, attribute2InputType, attributeID2Object } from '../utils/attributeTypes'
 import { Row } from "react-bootstrap";
 
 function AddNewAttribute(props) {
@@ -24,8 +24,8 @@ function AddNewAttribute(props) {
   })}</div>;
 
   // TODO: loading
-  const [insertCIAttribute, { loading }] = useMutation(mutations.INSERT_CI_ATTRIBUTE, { refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true });
-  const [setSelectedTimeThreshold, { _ }] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
+  const [insertCIAttribute] = useMutation(mutations.INSERT_CI_ATTRIBUTE, { refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true });
+  const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
   let addAttribute = <span></span>;
   if (selectedLayer) {

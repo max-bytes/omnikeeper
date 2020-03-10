@@ -71,7 +71,7 @@ namespace LandscapePrototype.Controllers
                 options.Schema = _schema;
                 options.Query = query.Query;
                 options.Inputs = inputs;
-                options.UserContext = new LandscapeUserContext();
+                options.UserContext = new LandscapeUserContext(HttpContext);
                 options.ValidationRules = DocumentValidator.CoreRules.Concat(_validationRules).ToList();
             });
 

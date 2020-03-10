@@ -6,8 +6,8 @@ import { withApollo } from 'react-apollo';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
-import { mutations } from './mutations'
-import { queries } from './queries'
+import { mutations } from '../graphql/mutations'
+import { queries } from '../graphql/queries'
 import { Row } from "react-bootstrap";
 import { Dropdown } from 'semantic-ui-react';
 
@@ -26,9 +26,9 @@ function AddNewRelation(props) {
   })}</div>;
 
   // TODO: loading
-  const { loading: loadingCIs, error: errorCIs, data: dataCIs } = useQuery(queries.CIList);
-  const [insertRelation, { loading }] = useMutation(mutations.INSERT_RELATION, { refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true });
-  const [setSelectedTimeThreshold, { _ }] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
+  const { data: dataCIs } = useQuery(queries.CIList);
+  const [insertRelation] = useMutation(mutations.INSERT_RELATION, { refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true });
+  const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
   
   let addRelation = <span></span>;

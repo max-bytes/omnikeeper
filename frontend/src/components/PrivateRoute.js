@@ -2,8 +2,10 @@ import React from 'react'
 import { Route, Redirect } from 'react-router-dom'
 import { useKeycloak } from '@react-keycloak/web'
 
-export function PrivateRoute({ component: Component, ...rest }) {
+export function PrivateRoute(props) {
   // console.log("private route");
+
+  const { children, ...rest} = props;
 
   const [keycloak, initialized] = useKeycloak()
 
@@ -12,14 +14,14 @@ export function PrivateRoute({ component: Component, ...rest }) {
   return (
     <Route
       {...rest}
-      render={props => {
-        return keycloak.authenticated ? (
-          <Component {...props} />
-        ) : (
+      render={pprops => {
+        return keycloak.authenticated ? 
+          props.children
+         : (
           <Redirect
             to={{
               pathname: '/login',
-              state: { from: props.location }
+              state: { from: pprops.location }
             }}
           />
         );

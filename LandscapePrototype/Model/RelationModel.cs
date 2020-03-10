@@ -1,4 +1,6 @@
-﻿using Npgsql;
+﻿using Landscape.Base.Model;
+using LandscapePrototype.Entity;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LandscapePrototype.Model
 {
-    public class RelationModel
+    public class RelationModel : IRelationModel
     {
         private readonly NpgsqlConnection conn;
 
@@ -20,30 +22,21 @@ namespace LandscapePrototype.Model
             Forward, Backward, Both
         }
 
-        public async Task<IEnumerable<Relation>> GetMergedRelations(string ciIdentity, bool includeRemoved, LayerSet layers, IncludeRelationDirections ird, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null)
+        private NpgsqlCommand CreateMergedRelationCommand(string ciIdentity, bool includeRemoved, IncludeRelationDirections ird, string additionalWhereClause, NpgsqlTransaction trans, DateTimeOffset? timeThreshold)
         {
-            var ret = new List<Relation>();
-
-            await LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn, trans);
-
-            string irdClause;
-            switch (ird)
-            {
-                case IncludeRelationDirections.Forward:
-                    irdClause = "(r.from_ci_id = @ci_identity)";
-                    break;
-                case IncludeRelationDirections.Backward:
-                    irdClause = "(r.to_ci_id = @ci_identity)";
-                    break;
-                case IncludeRelationDirections.Both:
-                    irdClause = "(r.from_ci_id = @ci_identity OR r.to_ci_id = @ci_identity)";
-                    break;
-                default:
-                    irdClause = "unused";
-                    break;
-            }
-
-            using (var command = new NpgsqlCommand($@"
+            var innerWhereClauses = new List<string>();
+            if (ciIdentity != null)
+                innerWhereClauses.Add(ird switch
+                {
+                    IncludeRelationDirections.Forward => "(r.from_ci_id = @ci_identity)",
+                    IncludeRelationDirections.Backward => "(r.to_ci_id = @ci_identity)",
+                    IncludeRelationDirections.Both => "(r.from_ci_id = @ci_identity OR r.to_ci_id = @ci_identity)",
+                    _ => "unused, should not happen, error otherwise",
+                });
+            if (additionalWhereClause != null)
+                innerWhereClauses.Add(additionalWhereClause);
+            var innerWhereClause = String.Join(" AND ", innerWhereClauses);
+            var query = $@"
             select distinct
             last_value(inn.last_id) over wndOut,
             last_value(inn.last_from_ci_id) over wndOut,
@@ -63,7 +56,7 @@ namespace LandscapePrototype.Model
                 last_value(r.changeset_id) over wnd as last_changeset_id
                     from relation r
                     inner join changeset c on c.id = r.changeset_id
-                    where c.timestamp <= @time_threshold and ({irdClause})
+                    where c.timestamp <= @time_threshold and ({innerWhereClause})
                 WINDOW wnd AS(
                     PARTITION by r.from_ci_id, r.to_ci_id, r.predicate, r.layer_id ORDER BY c.timestamp ASC  -- sort by timestamp
                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
@@ -72,13 +65,26 @@ namespace LandscapePrototype.Model
             where inn.last_state != ALL(@excluded_states) -- remove entries from layers which' last item is deleted
             WINDOW wndOut AS(PARTITION by inn.last_from_ci_id, inn.last_to_ci_id, inn.last_predicate ORDER BY ls.order DESC -- sort by layer order
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
-            ", conn, trans))
-            {
+            ";
+
+            var command = new NpgsqlCommand(query, conn, trans);
+            if (ciIdentity != null)
                 command.Parameters.AddWithValue("ci_identity", ciIdentity);
-                var excludedStates = (includeRemoved) ? new RelationState[] { } : new RelationState[] { RelationState.Removed };
-                command.Parameters.AddWithValue("excluded_states", excludedStates);
-                var finalTimeThreshold = timeThreshold ?? DateTimeOffset.Now;
-                command.Parameters.AddWithValue("time_threshold", finalTimeThreshold);
+            var excludedStates = (includeRemoved) ? new RelationState[] { } : new RelationState[] { RelationState.Removed };
+            command.Parameters.AddWithValue("excluded_states", excludedStates);
+            var finalTimeThreshold = timeThreshold ?? DateTimeOffset.Now;
+            command.Parameters.AddWithValue("time_threshold", finalTimeThreshold);
+            return command;
+        }
+
+        public async Task<IEnumerable<Relation>> GetMergedRelations(string ciIdentity, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null)
+        {
+            var ret = new List<Relation>();
+
+            await LayerSet.CreateLayerSetTempTable(layerset, "temp_layerset", conn, trans);
+
+            using (var command = CreateMergedRelationCommand(ciIdentity, includeRemoved, ird, null, trans, timeThreshold))
+            {
                 using var dr = await command.ExecuteReaderAsync();
 
                 while (await dr.ReadAsync())
@@ -120,6 +126,34 @@ namespace LandscapePrototype.Model
 
                 return Relation.Build(id, fromCIID, toCIID, predicate, new long[] { layerID }, state, changesetID);
             }
+        }
+
+        public async Task<IEnumerable<Relation>> GetRelationsWithPredicate(LayerSet layerset, bool includeRemoved, string predicate, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null)
+        {
+            var ret = new List<Relation>();
+
+            await LayerSet.CreateLayerSetTempTable(layerset, "temp_layerset", conn, trans);
+
+            using (var command = CreateMergedRelationCommand(null, includeRemoved, IncludeRelationDirections.Both, $"r.predicate = '{predicate}'", trans, timeThreshold))
+            {
+                using var dr = await command.ExecuteReaderAsync();
+
+                while (await dr.ReadAsync())
+                {
+                    var id = dr.GetInt64(0);
+                    var fromCIID = dr.GetString(1);
+                    var toCIID = dr.GetString(2);
+                    var predicateOut = dr.GetString(3);
+                    var layerStack = (long[])dr[4];
+                    var state = dr.GetFieldValue<RelationState>(5);
+                    var changesetID = dr.GetInt64(6);
+
+                    var relation = Relation.Build(id, fromCIID, toCIID, predicateOut, layerStack, state, changesetID);
+
+                    ret.Add(relation);
+                }
+            }
+            return ret;
         }
 
         public async Task<Relation> RemoveRelation(string fromCIID, string toCIID, string predicate, long layerID, long changesetID, NpgsqlTransaction trans)

@@ -10,6 +10,6 @@ namespace Landscape.Base.Model
 {
     public interface IChangesetModel
     {
-        Task<Changeset> CreateChangeset(NpgsqlTransaction trans);
+        Task<Changeset> CreateChangeset(string username, NpgsqlTransaction trans);
     }
 }

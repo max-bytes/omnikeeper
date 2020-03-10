@@ -31,6 +31,8 @@ namespace Tests.Integration.Model
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
 
+            var username = "testUser";
+
             using (var trans = conn.BeginTransaction())
             {
                 var changesetModel = new ChangesetModel(conn);
@@ -56,7 +58,7 @@ namespace Tests.Integration.Model
                     return identity;
                 }).ToList();
 
-                var changeset = await changesetModel.CreateChangeset(trans);
+                var changeset = await changesetModel.CreateChangeset(username, trans);
 
 
                 //Console.WriteLine(ciNames.Count());

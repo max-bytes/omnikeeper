@@ -35,7 +35,10 @@ using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using NetCore.AutoRegisterDi;
 using Npgsql;
-using Plugin;
+using Hangfire;
+using Hangfire.PostgreSql;
+using Hangfire.AspNetCore;
+using Hangfire.Console;
 
 namespace LandscapePrototype
 {
@@ -54,14 +57,13 @@ namespace LandscapePrototype
         {
             services.AddScoped<IServiceProvider>(x => new FuncServiceProvider(x.GetRequiredService)); // graphql needs this
 
+            // add plugins
             var testAssembly = Assembly.LoadFrom(@"C:\Users\Maximilian Csuk\Projects\Landscape\TestPlugin\bin\Debug\netstandard2.1\TestPlugin.dll");
-
             services.RegisterAssemblyPublicNonGenericClasses(testAssembly)
                 .Where(a => {
                     return true;// a.GetInterfaces().Contains(typeof(ILandscapePluginRegistry));
                     })
                 .AsPublicImplementedInterfaces(ServiceLifetime.Scoped);
-            services.AddSingleton<IPluginRegistry, PluginRegistry>();
 
             services.AddCors(options => options.AddPolicy("AllowAllOrigins", builder =>
                builder.WithOrigins("http://localhost:3000")
@@ -70,28 +72,24 @@ namespace LandscapePrototype
                 .AllowAnyHeader())
             );
 
-            //.AddJsonOptions(options =>
-            // {
-            //     options.JsonSerializerOptions.Converters.Add(new AttributeValueConverter());
-            //     options.JsonSerializerOptions.MaxDepth = 64; // graphql output can be big, allow big jsons
-            // })
             services.AddControllers().AddNewtonsoftJson();
 
-            services.AddTransient((sp) =>
+            services.AddScoped((sp) =>
             {
                 var dbcb = new DBConnectionBuilder();
                 return dbcb.Build("landscape_prototype");
             });
 
+            // TODO: remove AddScoped<Model>(), only use AddScoped<IModel, Model>()
             services.AddScoped<ICIModel, CIModel>();
             services.AddScoped<CIModel>();
 
             services.AddScoped<ILayerModel, LayerModel>();
             services.AddScoped<LayerModel>();
+            services.AddScoped<IRelationModel, RelationModel>();
             services.AddScoped<RelationModel>();
             services.AddScoped<IChangesetModel, ChangesetModel>();
             services.AddScoped<ChangesetModel>();
-            services.AddScoped<LandscapeUserContext>();
 
             services.AddScoped<CIType>();
             services.AddScoped<RelationType>();
@@ -106,8 +104,7 @@ namespace LandscapePrototype
             {
                 x.ExposeExceptions = CurrentEnvironment.IsDevelopment(); //set true only in development mode. make it switchable.
             })
-            .AddGraphTypes(ServiceLifetime.Scoped)
-            .AddUserContextBuilder<LandscapeUserContext>((httpContext) => new LandscapeUserContext());
+            .AddGraphTypes(ServiceLifetime.Scoped);
 
             services.AddSingleton<IDocumentExecuter, MyDocumentExecutor>(); // custom document executor that does serial queries, required by postgres
 
@@ -128,11 +125,11 @@ namespace LandscapePrototype
                 options.RequireHttpsMetadata = false;
                 options.Events = new JwtBearerEvents()
                 {
-                    OnForbidden = c =>
-                    {
-                        Console.WriteLine(c);
-                        return c.Response.WriteAsync("blub");
-                    },
+                    //OnForbidden = c =>
+                    //{
+                    //    Console.WriteLine(c);
+                    //    return c.Response.WriteAsync("blub");
+                    //},
                     //OnAuthenticationFailed = c =>
                     //{
                     //    c.NoResult();
@@ -156,19 +153,21 @@ namespace LandscapePrototype
                 //policy.RequireClaim("member_of", "[accounting]")); //this claim value is an array. Any suggestions how to extract just single role? This still works.
             });
 
-            //services.AddGraphQLAuth();
+            services.AddScoped<CLBRunner>();
+            services.AddHangfire(config =>
+            {
+                config.UsePostgreSqlStorage(Configuration.GetConnectionString("HangfireConnection"));
+                //config.UseConsole();
+            });
+
         }
 
         private IWebHostEnvironment CurrentEnvironment { get; set; }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IEnumerable<IComputeLayerBrain> computeLayers, IPluginRegistry pluginRegistry)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory)
         {
-            pluginRegistry.RegisterComputeLayerBrains(computeLayers);
-
             app.UseCors("AllowAllOrigins");
-
-            //app.UseGraphQL<LandscapeSchema>();
 
             app.UseStaticFiles();
 
@@ -178,7 +177,7 @@ namespace LandscapePrototype
 
                 app.UseGraphQLPlayground(new GraphQLPlaygroundOptions()); //to explorer API navigate https://*DOMAIN*/ui/playground
 
-                IdentityModelEventSource.ShowPII = true;
+                IdentityModelEventSource.ShowPII = true; // to show more debugging information
             }
 
             app.UseHttpsRedirection();
@@ -193,37 +192,33 @@ namespace LandscapePrototype
                 endpoints.MapControllers();
             });
 
-            // TODO: make run in cron
-            computeLayers.First().Run().GetAwaiter().GetResult();
+
+            // Configure hangfire to use the new JobActivator we defined.
+            GlobalConfiguration.Configuration.UseConsole().UseActivator(new AspNetCoreJobActivator(serviceScopeFactory));
+            app.UseHangfireServer();
+            app.UseHangfireDashboard();
+
+            RecurringJob.AddOrUpdate<CLBRunner>(runner => runner.Run(), Cron.Minutely);
+        }
+    }
+
+    public class CLBRunner
+    {
+        public CLBRunner(IEnumerable<IComputeLayerBrain> computeLayerBrains)
+        {
+            ComputeLayerBrains = computeLayerBrains;
         }
 
-        //public static void UseGraphQLWithAuth(this IApplicationBuilder app)
-        //{
-        //    var settings = new GraphQLSettings
-        //    {
-        //        BuildUserContext = ctx =>
-        //        {
-        //            var userContext = new GraphQLUserContext
-        //            {
-        //                User = ctx.User
-        //            };
+        public void Run()
+        {
+            Console.WriteLine("Running CLBRunner");
+            foreach (var clb in ComputeLayerBrains)
+            {
+                var settings = new CLBSettings("Monitoring"); // TODO
+                clb.RunSync(settings);
+            }
+        }
 
-        //            return Task.FromResult(userContext);
-        //        }
-        //    };
-
-        //    var rules = app.ApplicationServices.GetServices<IValidationRule>();
-        //    settings.ValidationRules.AddRange(rules);
-
-        //    app.UseMiddleware<GraphQLMiddleware>(settings);
-        //}
-
-
-        //public class GraphQLSettings
-        //{
-        //    public Func<HttpContext, Task<object>> BuildUserContext { get; set; }
-        //    public object Root { get; set; }
-        //    public List<IValidationRule> ValidationRules { get; } = new List<IValidationRule>();
-        //}
+        private IEnumerable<IComputeLayerBrain> ComputeLayerBrains { get; }
     }
 }

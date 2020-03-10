@@ -45,6 +45,7 @@ export const queries = {
         query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciid: String, $layers:[String]!) {
             changesets(from: $from, to:$to, ciid:$ciid, layers: $layers) {
                 id
+                username
                 timestamp
             }
         }`,
@@ -53,9 +54,9 @@ export const queries = {
             selectedTimeThreshold @client
           }
       `,
-    SelectedCI: gql`
-        query SelectedCI {
-            selectedCI @client
-        }
-    `
+    // SelectedCI: gql`
+    //     query SelectedCI {
+    //         selectedCI @client
+    //     }
+    // `
 };

@@ -2,7 +2,7 @@ import { useQuery } from '@apollo/client';
 import React from 'react';
 import CI from './CI';
 import PropTypes from 'prop-types'
-import { queries } from './queries'
+import { queries } from '../graphql/queries'
 import LoadingOverlay from 'react-loading-overlay'
 import {Container} from 'react-bootstrap';
 

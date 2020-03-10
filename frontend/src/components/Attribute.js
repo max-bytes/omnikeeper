@@ -3,9 +3,9 @@ import PropTypes from 'prop-types'
 import { useMutation } from '@apollo/react-hooks';
 import { withApollo } from 'react-apollo';
 import Form from 'react-bootstrap/Form';
-import { mutations } from './mutations'
+import { mutations } from '../graphql/mutations'
 import Button from 'react-bootstrap/Button';
-import { attributeTypename2Object, attribute2InputType } from './attributeTypes'
+import { attributeTypename2Object, attribute2InputType } from '../utils/attributeTypes'
 import LayerStackIcons from "./LayerStackIcons";
 
 function Attribute(props) {
@@ -18,8 +18,8 @@ function Attribute(props) {
   let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
 
   // TODO: loading
-  const [insertCIAttribute, { loading }] = useMutation(mutations.INSERT_CI_ATTRIBUTE, { refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true });
-  const [removeCIAttribute, { _ }] = useMutation(mutations.REMOVE_CI_ATTRIBUTE, { 
+  const [insertCIAttribute] = useMutation(mutations.INSERT_CI_ATTRIBUTE, { refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true });
+  const [removeCIAttribute] = useMutation(mutations.REMOVE_CI_ATTRIBUTE, { 
     refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true,
     update: (cache, data) => {
       /* HACK: find a better way to deal with cache invalidation! We would like to invalidate the affected CIs, which 
@@ -32,7 +32,7 @@ function Attribute(props) {
       });
     }
   });
-  const [setSelectedTimeThreshold, { loadingTime }] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
+  const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
   let input;
 

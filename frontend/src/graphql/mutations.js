@@ -88,9 +88,9 @@ ${Fragments.ci}
   }
   `,
   
-  SET_SELECTED_CI: gql`
-  mutation SetSelectedCI($newSelectedCI: string) {
-    setSelectedCI(newSelectedCI: $newSelectedCI) @client
-  }
-  `
+  // SET_SELECTED_CI: gql`
+  // mutation SetSelectedCI($newSelectedCI: string) {
+  //   setSelectedCI(newSelectedCI: $newSelectedCI) @client
+  // }
+  // `
 };

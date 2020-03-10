@@ -1,4 +1,5 @@
 ﻿using LandscapePrototype;
+using LandscapePrototype.Entity;
 using LandscapePrototype.Entity.AttributeValues;
 using LandscapePrototype.Model;
 using LandscapePrototype.Utils;
@@ -15,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {
-    class RelationTest
+    class RelationModelTest
     {
         [SetUp]
         public void Setup()
@@ -33,8 +34,9 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(conn);
             var relationModel = new RelationModel(conn);
             var layerModel = new LayerModel(conn);
+            var username = "testUser";
 
-            var changeset = await changesetModel.CreateChangeset(trans);
+            var changeset = await changesetModel.CreateChangeset(username, trans);
 
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var ciid2 = await ciModel.CreateCI("H456", trans);
@@ -74,7 +76,7 @@ namespace Tests.Integration.Model
             Assert.AreEqual(ciid3, rr2.ToCIID);
             Assert.AreEqual(layerID1, rr2.LayerID);
             Assert.AreEqual(RelationState.New, rr2.State);
-            Assert.AreEqual(changeset, rr2.ChangesetID);
+            Assert.AreEqual(changeset.ID, rr2.ChangesetID);
         }
 
         [Test]
@@ -87,8 +89,9 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(conn);
             var relationModel = new RelationModel(conn);
             var layerModel = new LayerModel(conn);
+            var username = "testUser";
 
-            var changeset = await changesetModel.CreateChangeset(trans);
+            var changeset = await changesetModel.CreateChangeset(username, trans);
 
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var ciid2 = await ciModel.CreateCI("H456", trans);
@@ -107,6 +110,41 @@ namespace Tests.Integration.Model
             Assert.AreEqual(layerID2, rr1.LayerID);
         }
 
+
+        [Test]
+        public async Task TestGetRelationsByPredicate()
+        {
+            var dbcb = new DBConnectionBuilder();
+            using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            using var trans = conn.BeginTransaction();
+            var changesetModel = new ChangesetModel(conn);
+            var ciModel = new CIModel(conn);
+            var relationModel = new RelationModel(conn);
+            var layerModel = new LayerModel(conn);
+            var username = "testUser";
+
+            var changeset = await changesetModel.CreateChangeset(username, trans);
+
+            var ciid1 = await ciModel.CreateCI("H123", trans);
+            var ciid2 = await ciModel.CreateCI("H456", trans);
+            var ciid3 = await ciModel.CreateCI("H789", trans);
+
+            var layerID1 = await layerModel.CreateLayer("l1", trans);
+            var layerset = new LayerSet(new long[] { layerID1 });
+
+            var i1 = await relationModel.InsertRelation(ciid1, ciid2, "r1", layerID1, changeset.ID, trans);
+            var i2 = await relationModel.InsertRelation(ciid1, ciid2, "r2", layerID1, changeset.ID, trans);
+            var i3 = await relationModel.InsertRelation(ciid2, ciid3, "r1", layerID1, changeset.ID, trans);
+            var i4 = await relationModel.InsertRelation(ciid3, ciid1, "r2", layerID1, changeset.ID, trans);
+
+            var r1 = await relationModel.GetRelationsWithPredicate(layerset, false, "r1", trans);
+            Assert.AreEqual(2, r1.Count());
+            Assert.IsFalse(r1.Any(r => r.Predicate == "r2"));
+            var r2 = await relationModel.GetRelationsWithPredicate(layerset, false, "r2", trans);
+            Assert.AreEqual(2, r2.Count());
+            Assert.IsFalse(r2.Any(r => r.Predicate == "r1"));
+        }
+
         [Test]
         public async Task TestRemoveShowsLayerBelow()
         {
@@ -117,8 +155,9 @@ namespace Tests.Integration.Model
             var relationModel = new RelationModel(conn);
             var changesetModel = new ChangesetModel(conn);
             var layerModel = new LayerModel(conn);
+            var username = "testUser";
 
-            var changeset = await changesetModel.CreateChangeset(trans);
+            var changeset = await changesetModel.CreateChangeset(username, trans);
 
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var ciid2 = await ciModel.CreateCI("H456", trans);

@@ -33,6 +33,7 @@ namespace Tests.DBInit
 
             var random = new Random(3);
 
+            var initUser = "init-user";
             var numRegularCIs = 200;
             var numRegularRelations = 500;
             var regularTypeNames = new[] { "Host Linux", "Host Windows", "Application" };
@@ -55,12 +56,13 @@ namespace Tests.DBInit
             }
 
             long cmdbLayerID;
-            long monitoringLayerID;
+            long monitoringDefinitionsLayerID;
             using (var trans = conn.BeginTransaction())
             {
                 cmdbLayerID = await layerModel.CreateLayer("CMDB", trans);
                 await layerModel.CreateLayer("Inventory Scan", trans);
-                monitoringLayerID = await layerModel.CreateLayer("Monitoring", trans);
+                monitoringDefinitionsLayerID = await layerModel.CreateLayer("Monitoring Definitions", trans);
+                await layerModel.CreateLayer("Monitoring", "TestPlugin.CLBMonitoring", trans);
                 trans.Commit();
             }
 
@@ -69,7 +71,7 @@ namespace Tests.DBInit
             {
                 using (var trans = conn.BeginTransaction())
                 {
-                    var changeset = await changesetModel.CreateChangeset(trans);
+                    var changeset = await changesetModel.CreateChangeset(initUser, trans);
                     var type = regularTypeNames.GetRandom(random);
                     await ciModel.InsertAttribute("__type", AttributeValueText.Build(type), cmdbLayerID, ciid, changeset.ID, trans);
                     trans.Commit();
@@ -79,7 +81,7 @@ namespace Tests.DBInit
                 for (int i = 0; i < numAttributeChanges; i++)
                 {
                     using var trans = conn.BeginTransaction();
-                    var changeset = await changesetModel.CreateChangeset(trans);
+                    var changeset = await changesetModel.CreateChangeset(initUser, trans);
                     var name = regularAttributeNames.GetRandom(random);
                     var value = regularAttributeValues.GetRandom(random);
                     await ciModel.InsertAttribute(name, AttributeValueText.Build(value), cmdbLayerID, ciid, changeset.ID, trans);
@@ -92,7 +94,7 @@ namespace Tests.DBInit
             for (var i = 0;i < numRegularRelations;i++)
             {
                 using var trans = conn.BeginTransaction();
-                var changeset = await changesetModel.CreateChangeset(trans);
+                var changeset = await changesetModel.CreateChangeset(initUser, trans);
                 var ciid1 = regularCiids.GetRandom(random);
                 var ciid2 = regularCiids.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
                 var predicate = regularRelationNames.GetRandom(random);
@@ -106,10 +108,13 @@ namespace Tests.DBInit
                 await ciModel.CreateCI("MON_MODULE_HOST", null);
                 await ciModel.CreateCI("MON_MODULE_HOST_WINDOWS", null);
                 await ciModel.CreateCI("MON_MODULE_HOST_LINUX", null);
-                var changeset = await changesetModel.CreateChangeset(trans);
-                await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringLayerID, "MON_MODULE_HOST", changeset.ID, trans);
-                await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
-                await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
+                var changeset = await changesetModel.CreateChangeset(initUser, trans);
+                await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
+                await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
+                await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
+                await ciModel.InsertAttribute("monitoring.commands.check_host_cmd", AttributeValueText.Build("check_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
+                await ciModel.InsertAttribute("monitoring.commands.check_windows_host_cmd", AttributeValueText.Build("check_windows_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
+                await ciModel.InsertAttribute("monitoring.commands.check_linux_host_cmd", AttributeValueText.Build("check_linux_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
                 trans.Commit();
             }
 
@@ -118,18 +123,18 @@ namespace Tests.DBInit
             foreach(var ci in windowsHosts)
             {
                 using var trans = conn.BeginTransaction();
-                var changeset = await changesetModel.CreateChangeset(trans);
-                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST", "is monitored via", monitoringLayerID, changeset.ID, trans);
-                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_WINDOWS", "is monitored via", monitoringLayerID, changeset.ID, trans);
+                var changeset = await changesetModel.CreateChangeset(initUser, trans);
+                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST", "is monitored via", monitoringDefinitionsLayerID, changeset.ID, trans);
+                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_WINDOWS", "is monitored via", monitoringDefinitionsLayerID, changeset.ID, trans);
                 trans.Commit();
             }
             var linuxHosts = await ciModel.GetCIsWithType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, DateTimeOffset.Now, "Host Linux");
             foreach (var ci in linuxHosts)
             {
                 using var trans = conn.BeginTransaction();
-                var changeset = await changesetModel.CreateChangeset(trans);
-                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST", "is monitored via", monitoringLayerID, changeset.ID, trans);
-                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_LINUX", "is monitored via", monitoringLayerID, changeset.ID, trans);
+                var changeset = await changesetModel.CreateChangeset(initUser, trans);
+                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST", "is monitored via", monitoringDefinitionsLayerID, changeset.ID, trans);
+                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_LINUX", "is monitored via", monitoringDefinitionsLayerID, changeset.ID, trans);
                 trans.Commit();
             }
         }

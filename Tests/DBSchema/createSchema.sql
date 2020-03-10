@@ -21,6 +21,7 @@ CREATE TABLE public.changeset
 (
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
     "timestamp" timestamp with time zone NOT NULL,
+    username text NOT NULL,
     CONSTRAINT changeset_pkey PRIMARY KEY (id)
 );
 
@@ -66,7 +67,7 @@ CREATE TABLE public.attribute (
     id bigint NOT NULL,
     name text NOT NULL,
     ci_id text NOT NULL,
-    type character varying NOT NULL,
+    type text NOT NULL,
     value text NOT NULL,
     layer_id bigint NOT NULL,
     state public.attributestate DEFAULT 'new'::public.attributestate NOT NULL,
@@ -98,7 +99,8 @@ ALTER TABLE public.attribute ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 CREATE TABLE public.layer (
     id bigint NOT NULL,
-    name character varying NOT NULL
+    name text NOT NULL,
+    computeLayerBrain text
 );
 
 ALTER TABLE public.layer

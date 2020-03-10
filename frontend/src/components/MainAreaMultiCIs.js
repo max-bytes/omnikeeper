@@ -2,7 +2,7 @@ import { useQuery } from '@apollo/client';
 import React from 'react';
 import CIs from './CIs';
 import PropTypes from 'prop-types'
-import { queries } from './queries'
+import { queries } from '../graphql/queries'
 
 
 function MainAreaMultiCIs(props) {

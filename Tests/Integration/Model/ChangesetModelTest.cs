@@ -32,6 +32,7 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(conn);
             var relationModel = new RelationModel(conn);
             var layerModel = new LayerModel(conn);
+            var username = "testUser";
 
             using var trans = conn.BeginTransaction();
             var ciid1 = await ciModel.CreateCI("H123", trans);
@@ -44,21 +45,21 @@ namespace Tests.Integration.Model
             using var trans2 = conn.BeginTransaction();
             var layerID1 = await layerModel.CreateLayer("l1", trans2);
             var layerset = new LayerSet(new long[] { layerID1 });
-            var changeset1 = await changesetModel.CreateChangeset(trans2);
+            var changeset1 = await changesetModel.CreateChangeset(username, trans2);
             await ciModel.InsertAttribute("a1", AttributeValueText.Build("textL1"), layerID1, ciid2, changeset1.ID, trans2);
             trans2.Commit();
 
             Thread.Sleep(500);
 
             using var trans3 = conn.BeginTransaction();
-            var changeset2 = await changesetModel.CreateChangeset(trans3);
+            var changeset2 = await changesetModel.CreateChangeset(username, trans3);
             await ciModel.InsertAttribute("a2", AttributeValueText.Build("textL1"), layerID1, ciid3, changeset2.ID, trans3);
             trans3.Commit();
 
             var t2 = DateTimeOffset.Now;
 
             using var trans4 = conn.BeginTransaction();
-            var changeset3 = await changesetModel.CreateChangeset(trans4);
+            var changeset3 = await changesetModel.CreateChangeset(username, trans4);
             await ciModel.InsertAttribute("a3", AttributeValueText.Build("textL1"), layerID1, ciid3, changeset3.ID, trans4);
             trans4.Commit();
 
@@ -82,6 +83,7 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(conn);
             var relationModel = new RelationModel(conn);
             var layerModel = new LayerModel(conn);
+            var username = "testUser";
 
             using var trans = conn.BeginTransaction();
             var ciid1 = await ciModel.CreateCI("H123", trans);
@@ -93,16 +95,15 @@ namespace Tests.Integration.Model
             using var trans2 = conn.BeginTransaction();
             var layerID1 = await layerModel.CreateLayer("l1", trans2);
             var layerset = new LayerSet(new long[] { layerID1 });
-            var changeset1 = await changesetModel.CreateChangeset(trans2);
+            var changeset1 = await changesetModel.CreateChangeset(username, trans2);
             await relationModel.InsertRelation("H123", "H456", "relation_1", layerID1, changeset1.ID, trans2);
             trans2.Commit();
 
             Thread.Sleep(500);
             var t2 = DateTimeOffset.Now;
 
-
             using var trans3 = conn.BeginTransaction();
-            var changeset2 = await changesetModel.CreateChangeset(trans3);
+            var changeset2 = await changesetModel.CreateChangeset(username, trans3);
             await relationModel.InsertRelation("H456", "H123", "relation_2", layerID1, changeset2.ID, trans3);
             trans3.Commit();
 

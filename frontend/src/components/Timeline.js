@@ -1,11 +1,12 @@
 import { useQuery } from '@apollo/client';
 import React from 'react';
 import PropTypes from 'prop-types'
-import { queries } from './queries'
+import { queries } from '../graphql/queries'
 import LoadingOverlay from 'react-loading-overlay'
 import { Button } from 'react-bootstrap';
-import { mutations } from './mutations';
+import { mutations } from '../graphql/mutations';
 import { useMutation } from '@apollo/react-hooks';
+import moment from 'moment'
 
 function Timeline(props) {
     // let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
@@ -20,7 +21,7 @@ function Timeline(props) {
     });
 
     // TODO: loading
-    const [setSelectedTimeThreshold, { _ }] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
+    const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
   
     if (data) {
       var changesets = [...data.changesets].reverse();
@@ -48,12 +49,14 @@ function Timeline(props) {
       const latestChangeset = changesets.find(e => true);
 
       return (<LoadingOverlay active={loading} spinner>
-        {changesets.map((cs, index) => {
+        {changesets.map((cs) => {
+
+          const label = `${moment(cs.timestamp).format('YYYY-MM-DD HH:mm:ss')} (${cs.username})`;
           if (activeChangeset === cs) {
-            return (<Button variant="link" size="sm" disabled key={cs.id}>{cs.timestamp} &gt;</Button>);
+            return (<Button variant="link" size="sm" disabled key={cs.id}>{label} &gt;</Button>);
           }
           const isLatest = latestChangeset === cs;
-          return <Button key={cs.id} variant="link" size="sm" onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: (isLatest) ? null : cs.timestamp, isLatest: isLatest }})}>{cs.timestamp}</Button>
+          return <Button key={cs.id} variant="link" size="sm" onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: (isLatest) ? null : cs.timestamp, isLatest: isLatest }})}>{label}</Button>
         })}
       </LoadingOverlay>);
     } else if (loading) return <LoadingOverlay spinner text='Loading your content...'></LoadingOverlay>;

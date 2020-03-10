@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using LandscapePrototype.Entity;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;

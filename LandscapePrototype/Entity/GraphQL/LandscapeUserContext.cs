@@ -1,16 +1,31 @@
 ﻿using LandscapePrototype.Model;
+using Microsoft.AspNetCore.Http;
 using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace LandscapePrototype.Entity.GraphQL
 {
     public class LandscapeUserContext : Dictionary<string, object>
     {
-        public LandscapeUserContext()
+        private readonly HttpContext httpContext;
+
+        public LandscapeUserContext(HttpContext httpContext)
         {
+            this.httpContext = httpContext;
+        }
+
+        public string Username
+        {
+            get
+            {
+                // TODO: check if this works or is a hack, with a magic string
+                var s = httpContext.User.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
+                if (s == null)
+                    return "Unknown user";
+                return s;
+            }
         }
 
         public DateTimeOffset TimeThreshold {

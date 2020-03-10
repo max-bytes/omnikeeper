@@ -18,19 +18,20 @@ namespace LandscapePrototype.Model
             conn = connection;
         }
 
-        public async Task<Changeset> CreateChangeset(NpgsqlTransaction trans)
+        public async Task<Changeset> CreateChangeset(string username, NpgsqlTransaction trans)
         {
-            using var command = new NpgsqlCommand(@"INSERT INTO changeset (timestamp) VALUES (now()) returning id, timestamp", conn, trans);
+            using var command = new NpgsqlCommand(@"INSERT INTO changeset (timestamp, username) VALUES (now(), @username) returning id, timestamp", conn, trans);
+            command.Parameters.AddWithValue("username", username);
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
             var id = reader.GetInt64(0);
             var timestamp = reader.GetDateTime(1);
-            return Changeset.Build(id, timestamp);
+            return Changeset.Build(id, username, timestamp);
         }
 
         public async Task<Changeset> GetChangeset(long id, NpgsqlTransaction trans)
         {
-            using var command = new NpgsqlCommand(@"SELECT timestamp FROM changeset WHERE id = @id", conn, trans);
+            using var command = new NpgsqlCommand(@"SELECT timestamp, username FROM changeset WHERE id = @id", conn, trans);
 
             command.Parameters.AddWithValue("id", id);
             using var dr = await command.ExecuteReaderAsync();
@@ -40,14 +41,15 @@ namespace LandscapePrototype.Model
                 return null;
 
             var timestamp = dr.GetTimeStamp(0).ToDateTime();
-            return Changeset.Build(id, timestamp);
+            var username = dr.GetString(1);
+            return Changeset.Build(id, username, timestamp);
         }
 
         // if ciid != null, returns all changesets affecting this CI, both via attributes OR relations
         // sorted by timestamp
         public async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IncludeRelationDirections ird, string ciid, NpgsqlTransaction trans)
         {
-            var queryAttributes = @"SELECT distinct c.id, c.timestamp FROM changeset c 
+            var queryAttributes = @"SELECT distinct c.id, c.username, c.timestamp FROM changeset c 
                 INNER JOIN attribute a ON a.changeset_id = c.id 
                 INNER JOIN ci ci ON a.ci_id = ci.id
                 WHERE c.timestamp >= @from AND c.timestamp <= @to AND a.layer_id = ANY(@layer_ids)";
@@ -69,7 +71,7 @@ namespace LandscapePrototype.Model
                     irdClause = "unused";
                     break;
             }
-            var queryRelations = $@"SELECT distinct c.id, c.timestamp FROM changeset c 
+            var queryRelations = $@"SELECT distinct c.id, c.username, c.timestamp FROM changeset c 
                 INNER JOIN relation r ON r.changeset_id = c.id 
                 INNER JOIN ci ci ON ({irdClause})
                 WHERE c.timestamp >= @from AND c.timestamp <= @to AND r.layer_id = ANY(@layer_ids)";
@@ -89,8 +91,9 @@ namespace LandscapePrototype.Model
             while (await dr.ReadAsync())
             {
                 var id = dr.GetInt64(0);
-                var timestamp = dr.GetTimeStamp(1).ToDateTime();
-                var c = Changeset.Build(id, timestamp);
+                var username = dr.GetString(1);
+                var timestamp = dr.GetTimeStamp(2).ToDateTime();
+                var c = Changeset.Build(id, username, timestamp);
                 ret.Add(c);
             }
             return ret.OrderBy(x => x.Timestamp);

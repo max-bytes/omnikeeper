@@ -13,6 +13,7 @@ namespace LandscapePrototype.Entity.GraphQL
         public ChangesetType()
         {
             Field(x => x.Timestamp);
+            Field(x => x.Username);
             Field("id", x => x.ID);
         }
     }

@@ -1,4 +1,4 @@
-import { mutations } from './mutations'
+import { mutations } from '../graphql/mutations'
 import React from 'react';
 import PropTypes from 'prop-types'
 import LayerIcon from './LayerIcon';
@@ -10,8 +10,8 @@ import { Flipper, Flipped } from 'react-flip-toolkit'
 function Layers(props) {
 
   // TODO: loading
-  const [toggleLayerVisibility, { loading }] = useMutation(mutations.TOGGLE_LAYER_VISIBILITY);
-  const [changeLayerSortOrder, { loadingSO }] = useMutation(mutations.CHANGE_LAYER_SORT_ORDER);
+  const [toggleLayerVisibility] = useMutation(mutations.TOGGLE_LAYER_VISIBILITY);
+  const [changeLayerSortOrder] = useMutation(mutations.CHANGE_LAYER_SORT_ORDER);
 
   return (<ul style={{listStyle: 'none', paddingLeft: '0px', marginBottom: '0px'}}>
     <Flipper flipKey={props.layers.map(a => a.id + ";" + a.visibility).join(' ')}>

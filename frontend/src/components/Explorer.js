@@ -2,25 +2,30 @@ import { useQuery } from '@apollo/client';
 import React, { useEffect, useState } from 'react';
 import Layers from './Layers';
 import MainAreaCI from './MainAreaCI';
-import { queries } from './queries'
+import { queries } from '../graphql/queries'
 import Timeline from './Timeline';
 import { useKeycloak } from '@react-keycloak/web'
-import {usePromise } from 'use-promise'
+import { useParams } from 'react-router-dom'
 
-function Explorer() {
-  const { keycloak } = useKeycloak()
+function Explorer(props) {
+  // const { search } = useLocation();
+  // let params = new URLSearchParams(search);
+  // var ciid = params.get('ciid');
+  const { ciid } = useParams();
+
+  const [ keycloak, keycloakInitialized ] = useKeycloak()
   const { error: errorLayers, data: dataLayers } = useQuery(queries.Layers);
   const { error: errorTime, data: dataTime } = useQuery(queries.SelectedTimeThreshold);
-  const { error: errorCI, data: dataCI } = useQuery(queries.SelectedCI);
+  // const { error: errorCI, data: dataCI } = useQuery(queries.SelectedCI);
   const [ userProfile, setUserProfile ] = useState(undefined);
 
   useEffect(() => {
     keycloak.loadUserProfile().then(profile => {
       setUserProfile(profile);
     })
-  }, [keycloak])
+  }, [keycloak, keycloakInitialized])
 
-  if (dataLayers && dataTime && dataCI && userProfile) {
+  if (dataLayers && dataTime && userProfile) {
     // sort based on order
     let sortedLayers = dataLayers.layers.concat();
     sortedLayers.sort((a,b) => {
@@ -29,9 +34,8 @@ function Explorer() {
       return o;
     });
 
-    var ciid = dataCI.selectedCI;
+    // var ciid = dataCI.selectedCI;
       
-
     const logoutButton = (<div style={{display: 'flex', margin: '5px'}}>
         <span style={{flexGrow: 1}}>Logged in as user {userProfile.username} </span>
         <button type="button" onClick={() => keycloak.logout()}>Logout</button>
@@ -53,16 +57,17 @@ function Explorer() {
         <div className="center">
           <MainAreaCI layers={sortedLayers} ciid={ciid} currentTime={dataTime.selectedTimeThreshold}></MainAreaCI>
         </div>
-      </div>);
-    } else {
-      if (errorLayers) {
-        return <p>Error: {errorLayers}</p>;
-      }
-      else if (errorTime) return <p>Error: {errorTime}</p>;
-      else if (errorCI) return <p>Error: {errorCI}</p>;
-      else return <p>?</p>;
-      
+      </div>
+    );
+  } else {
+    if (errorLayers) {
+      return <p>Error: {errorLayers}</p>;
     }
+    else if (errorTime) return <p>Error: {errorTime}</p>;
+    // else if (errorCI) return <p>Error: {errorCI}</p>;
+    else return <p>Loading</p>;
+    
+  }
 }
 
 export default Explorer;

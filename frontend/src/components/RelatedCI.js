@@ -1,18 +1,19 @@
 import React from "react";
 import { withApollo } from 'react-apollo';
 import { Button } from 'react-bootstrap';
-import { mutations } from './mutations';
+import { mutations } from '../graphql/mutations';
 import { useMutation } from '@apollo/react-hooks';
 import LayerStackIcons from "./LayerStackIcons";
 import Form from 'react-bootstrap/Form';
+import { Link  } from 'react-router-dom'
 
 function RelatedCI(props) {
 
   let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
 
   // TODO: loading
-  const [setSelectedCI, { loading }] = useMutation(mutations.SET_SELECTED_CI);
-  const [removeRelation, { _ }] = useMutation(mutations.REMOVE_RELATION, { 
+  // const [setSelectedCI] = useMutation(mutations.SET_SELECTED_CI);
+  const [removeRelation] = useMutation(mutations.REMOVE_RELATION, { 
     refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true,
     update: (cache, data) => {
       /* HACK: find a better way to deal with cache invalidation! We would like to invalidate the affected CIs, which 
@@ -25,9 +26,10 @@ function RelatedCI(props) {
       });
     }
   });
-  const [setSelectedTimeThreshold, { loadingTime }] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
+  const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
-  const otherCIButton = <a href="#" onClick={() => setSelectedCI({variables: { newSelectedCI: props.related.ci.identity }})}>{props.related.ci.identity}</a>;
+  // const otherCIButton = <Button variant="link" onClick={() => setSelectedCI({variables: { newSelectedCI: props.related.ci.identity }})}>{props.related.ci.identity}</Button>;
+  const otherCIButton = <Link to={"/explorer/" + props.related.ci.identity}>{props.related.ci.identity}</Link>;
 
   let written;
   if (props.related.isForward) {
@@ -38,7 +40,7 @@ function RelatedCI(props) {
 
   return (
     <div style={{margin: "5px"}}>
-      <Form inline>
+      <Form inline onSubmit={e => e.preventDefault()}>
         <LayerStackIcons layerStack={props.related.relation.layerStack}></LayerStackIcons>
         <Form.Group controlId={`value:${props.related.relation.predicate}`} style={{flexGrow: 1}}>
           <Form.Label className={"pr-1"} style={{flexBasis: '400px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{written}</Form.Label>

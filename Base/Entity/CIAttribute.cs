@@ -2,7 +2,7 @@
 using LandscapePrototype.Entity.AttributeValues;
 using System;
 
-namespace LandscapePrototype
+namespace LandscapePrototype.Entity
 {
     public enum AttributeState
     {
