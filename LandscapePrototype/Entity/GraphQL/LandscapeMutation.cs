@@ -37,7 +37,7 @@ namespace LandscapePrototype.Entity.GraphQL
                   using var transaction = await conn.BeginTransactionAsync();
                   userContext.Transaction = transaction;
 
-                  var changeset = await changesetModel.CreateChangeset(userContext.Username, transaction);
+                  var changeset = await changesetModel.CreateChangeset(userContext.User.ID, transaction);
 
                   userContext.LayerSet = await layerModel.BuildLayerSet(layers, transaction);
                   userContext.TimeThreshold = changeset.Timestamp;

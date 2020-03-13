@@ -13,13 +13,15 @@ namespace Landscape.Base
     public abstract class CLBBase : IComputeLayerBrain
     {
         protected readonly ICIModel ciModel;
+        protected readonly IUserModel userModel;
         protected readonly IChangesetModel changesetModel;
         protected readonly ILayerModel layerModel;
         protected readonly NpgsqlConnection conn;
 
-        public CLBBase(ICIModel ciModel, ILayerModel layerModel, IChangesetModel changesetModel, NpgsqlConnection conn)
+        public CLBBase(ICIModel ciModel, ILayerModel layerModel, IChangesetModel changesetModel, IUserModel userModel, NpgsqlConnection conn)
         {
             this.ciModel = ciModel;
+            this.userModel = userModel;
             this.changesetModel = changesetModel;
             this.conn = conn;
             this.layerModel = layerModel;
@@ -39,7 +41,9 @@ namespace Landscape.Base
                 var layerSet = await layerModel.BuildLayerSet(new[] { Settings.LayerName }, trans);
                 var layerID = layerSet.LayerIDs.First(); // TODO: better way to get layerID from name -> dedicated function
                 var username = Name; // HACK: make username the same as CLB name
-                var changeset = await changesetModel.CreateChangeset(username, trans);
+                var guid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1"); // TODO
+                var user = await userModel.CreateOrUpdateFetchUser(username, guid, trans);
+                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
 
                 var errorHandler = new CLBErrorHandler(trans, Name, layerID, changeset.ID, ciModel);
 

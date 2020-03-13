@@ -45,7 +45,9 @@ export const queries = {
         query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciid: String, $layers:[String]!) {
             changesets(from: $from, to:$to, ciid:$ciid, layers: $layers) {
                 id
-                username
+                user {
+                    username
+                }
                 timestamp
             }
         }`,

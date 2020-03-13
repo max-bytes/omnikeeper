@@ -9,23 +9,11 @@ namespace LandscapePrototype.Entity.GraphQL
 {
     public class LandscapeUserContext : Dictionary<string, object>
     {
-        private readonly HttpContext httpContext;
+        public User User { get; private set; }
 
-        public LandscapeUserContext(HttpContext httpContext)
+        public LandscapeUserContext(User user)
         {
-            this.httpContext = httpContext;
-        }
-
-        public string Username
-        {
-            get
-            {
-                // TODO: check if this works or is a hack, with a magic string
-                var s = httpContext.User.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
-                if (s == null)
-                    return "Unknown user";
-                return s;
-            }
+            User = user;
         }
 
         public DateTimeOffset TimeThreshold {

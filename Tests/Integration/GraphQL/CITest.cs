@@ -27,6 +27,7 @@ namespace Tests.Integration.GraphQL
             Services.Register<LandscapeQuery>();
             Services.Register<CIType>();
             Services.Register<CIModel>();
+            Services.Register<UserModel>();
             Services.Register<LayerModel>();
             Services.Register<RelationModel>();
             Services.Register<RelatedCIType>();
@@ -51,14 +52,17 @@ namespace Tests.Integration.GraphQL
         public async Task Test()
         {
             var username = "testUser";
+            var userGUID = new Guid("7dc848b7-881d-4785-9f25-985e9b6f2715");
             var ciModel = Services.Get<CIModel>();
             var layerModel = Services.Get<LayerModel>();
             var changesetModel = Services.Get<ChangesetModel>();
+            var userModel = Services.Get<UserModel>();
             using var trans = Services.Get<NpgsqlConnection>().BeginTransaction();
+            var user = await userModel.CreateOrUpdateFetchUser(username, userGUID, trans);
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var layerID1 = await layerModel.CreateLayer("layer_1", trans);
             var layerID2 = await layerModel.CreateLayer("layer_2", trans);
-            var changeset = await changesetModel.CreateChangeset(username, trans);
+            var changeset = await changesetModel.CreateChangeset(user.ID, trans);
             await ciModel.InsertAttribute("a1", AttributeValueInteger.Build(3), layerID1, ciid1, changeset.ID, trans);
             trans.Commit();
 
@@ -106,7 +110,7 @@ namespace Tests.Integration.GraphQL
                 }";
 
             var httpContext = new DefaultHttpContext();// new HttpContext(new HttpRequest(null, "http://tempuri.org", null), new HttpResponse(null));
-            AssertQuerySuccess(query, expected, inputs, userContext: new LandscapeUserContext(httpContext));
+            AssertQuerySuccess(query, expected, inputs, userContext: new LandscapeUserContext(user));
         }
     }
 }

@@ -1,10 +1,14 @@
-﻿using Microsoft.DotNet.InternalAbstractions;
+﻿using Landscape.Base.Model;
+using LandscapePrototype.Controllers;
+using LandscapePrototype.Entity;
+using Microsoft.DotNet.InternalAbstractions;
 using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Tests.Integration
 {
@@ -39,16 +43,22 @@ namespace Tests.Integration
             // re-create db
             NpgsqlConnection conn = new NpgsqlConnection("Server=127.0.0.1;User Id=postgres; Password=postgres;Pooling=false");
             conn.Open();
-            var sqlCreateDB = LoadFile("createDB.sql", _dbName);
+            var sqlCreateDB = LoadFile("createDB.psql", _dbName);
             new NpgsqlCommand(sqlCreateDB, conn).ExecuteNonQuery();
             conn.Close();
 
             // setup schema
             NpgsqlConnection conn2 = new NpgsqlConnection($"Server=127.0.0.1;User Id=postgres; Password=postgres;Database={_dbName};Pooling=false");
             conn2.Open();
-            var sqlCreateSchema = LoadFile("createSchema.sql", _dbName);
+            var sqlCreateSchema = LoadFile("createSchema.psql", _dbName);
             new NpgsqlCommand(sqlCreateSchema, conn2).ExecuteNonQuery();
             conn2.Close();
+        }
+
+        public static async Task<User> SetupUser(IUserModel userModel, string username = "test-user", Guid? userGUID = null)
+        {
+            var guid = userGUID ?? new Guid("2544f9a7-cc17-4cba-8052-f88656cf1ef1");
+            return await userModel.CreateOrUpdateFetchUser(username, guid, null);
         }
     }
 }

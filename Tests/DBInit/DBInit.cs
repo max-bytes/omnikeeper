@@ -1,4 +1,5 @@
-﻿using LandscapePrototype.Entity.AttributeValues;
+﻿using LandscapePrototype.Entity;
+using LandscapePrototype.Entity.AttributeValues;
 using LandscapePrototype.Model;
 using LandscapePrototype.Utils;
 using Npgsql;
@@ -15,7 +16,7 @@ using Tests.Integration.Model;
 namespace Tests.DBInit
 {
     [Explicit]
-    //[Ignore("Only manual")]
+    [Ignore("Only manual")]
     class DBInit
     {
 
@@ -30,11 +31,11 @@ namespace Tests.DBInit
             var ciModel = new CIModel(conn);
             var changesetModel = new ChangesetModel(conn);
             var layerModel = new LayerModel(conn);
+            var userModel = new UserModel(conn);
             var relationModel = new RelationModel(conn);
 
             var random = new Random(3);
 
-            var initUser = "init-user";
             var numRegularCIs = 1;
             var numRegularRelations = 0;
             int numAttributesTo = 0;
@@ -43,6 +44,8 @@ namespace Tests.DBInit
             var regularRelationNames = new[] { "is part of", "runs on", "is attached to" };
             var regularAttributeNames = new[] { "att_1", "att_2", "att_3", "att_4", "att_5", "att_6", "att_7", "att_8", "att_9" };
             var regularAttributeValues = new[] { "foo", "bar", "blub", "bla", "this", "are", "all", "values" };
+
+            var user = await DBSetup.SetupUser(userModel, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
 
             var regularCiids = Enumerable.Range(0, numRegularCIs).Select(i =>
             {
@@ -74,7 +77,7 @@ namespace Tests.DBInit
             {
                 using (var trans = conn.BeginTransaction())
                 {
-                    var changeset = await changesetModel.CreateChangeset(initUser, trans);
+                    var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                     var type = regularTypeNames.GetRandom(random);
                     await ciModel.InsertAttribute("__type", AttributeValueText.Build(type), cmdbLayerID, ciid, changeset.ID, trans);
                     trans.Commit();
@@ -84,7 +87,7 @@ namespace Tests.DBInit
                 for (int i = 0; i < numAttributeChanges; i++)
                 {
                     using var trans = conn.BeginTransaction();
-                    var changeset = await changesetModel.CreateChangeset(initUser, trans);
+                    var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                     var name = regularAttributeNames.GetRandom(random);
                     var value = regularAttributeValues.GetRandom(random);
                     await ciModel.InsertAttribute(name, AttributeValueText.Build(value), cmdbLayerID, ciid, changeset.ID, trans);
@@ -97,7 +100,7 @@ namespace Tests.DBInit
             for (var i = 0;i < numRegularRelations;i++)
             {
                 using var trans = conn.BeginTransaction();
-                var changeset = await changesetModel.CreateChangeset(initUser, trans);
+                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 var ciid1 = regularCiids.GetRandom(random);
                 var ciid2 = regularCiids.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
                 var predicate = regularRelationNames.GetRandom(random);
@@ -111,7 +114,7 @@ namespace Tests.DBInit
                 await ciModel.CreateCI("MON_MODULE_HOST", null);
                 await ciModel.CreateCI("MON_MODULE_HOST_WINDOWS", null);
                 await ciModel.CreateCI("MON_MODULE_HOST_LINUX", null);
-                var changeset = await changesetModel.CreateChangeset(initUser, trans);
+                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
                 await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
                 await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
@@ -126,7 +129,7 @@ namespace Tests.DBInit
             foreach(var ci in windowsHosts)
             {
                 using var trans = conn.BeginTransaction();
-                var changeset = await changesetModel.CreateChangeset(initUser, trans);
+                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST", "is monitored via", monitoringDefinitionsLayerID, changeset.ID, trans);
                 await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_WINDOWS", "is monitored via", monitoringDefinitionsLayerID, changeset.ID, trans);
                 trans.Commit();
@@ -135,7 +138,7 @@ namespace Tests.DBInit
             foreach (var ci in linuxHosts)
             {
                 using var trans = conn.BeginTransaction();
-                var changeset = await changesetModel.CreateChangeset(initUser, trans);
+                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST", "is monitored via", monitoringDefinitionsLayerID, changeset.ID, trans);
                 await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_LINUX", "is monitored via", monitoringDefinitionsLayerID, changeset.ID, trans);
                 trans.Commit();

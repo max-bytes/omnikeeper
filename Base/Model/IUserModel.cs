@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace Landscape.Base.Model
 {
-    public interface IChangesetModel
+    public interface IUserModel
     {
-        Task<Changeset> CreateChangeset(long userID, NpgsqlTransaction trans);
+        Task<User> CreateOrUpdateFetchUser(string username, Guid uuid, NpgsqlTransaction trans);
     }
 }

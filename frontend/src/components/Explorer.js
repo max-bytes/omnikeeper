@@ -50,7 +50,6 @@ function Explorer(props) {
             <Layers layers={sortedLayers}></Layers>
           </div>
           <div className={"timeline"}>
-            <h5>Timeline</h5>
             <Timeline layers={sortedLayers} ciid={ciid} currentTime={dataTime.selectedTimeThreshold}></Timeline>
           </div>
         </div>

@@ -42,10 +42,10 @@ namespace Tests.Integration.Model
             var model = new CIModel(conn);
             var changesetModel = new ChangesetModel(conn);
             var layerModel = new LayerModel(conn);
-            var username = "testUser";
+            var user = await DBSetup.SetupUser(new UserModel(conn));
             using (var trans = conn.BeginTransaction())
             {
-                var changesetID = await changesetModel.CreateChangeset(username, trans);
+                var changesetID = await changesetModel.CreateChangeset(user.ID, trans);
                 var ciid1 = await model.CreateCI("H123", trans);
                 Assert.AreEqual("H123", ciid1);
                 Assert.ThrowsAsync<PostgresException>(async () => await model.CreateCI("H123", trans)); // cannot add same identity twice
@@ -64,7 +64,7 @@ namespace Tests.Integration.Model
 
             using (var trans = conn.BeginTransaction())
             {
-                var changeset = await changesetModel.CreateChangeset(username, trans);
+                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 var ciid1 = await model.CreateCI("H123", trans);
                 var layerID1 = await layerModel.CreateLayer("l1", trans);
                 var layerset = await layerModel.BuildLayerSet(new string[] { "l1" }, trans);
@@ -114,7 +114,7 @@ namespace Tests.Integration.Model
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
             using var trans = conn.BeginTransaction();
-            var username = "testUser";
+            var user = await DBSetup.SetupUser(new UserModel(conn));
 
             var ciid1 = await model.CreateCI("H123", trans);
             var layerID1 = await layerModel.CreateLayer("l1", trans);
@@ -125,7 +125,7 @@ namespace Tests.Integration.Model
             var layerset3 = new LayerSet(new long[] { layerID1, layerID2 });
             var layerset4 = new LayerSet(new long[] { layerID2, layerID1 });
 
-            var changeset = await changesetModel.CreateChangeset(username, trans);
+            var changeset = await changesetModel.CreateChangeset(user.ID, trans);
             await model.InsertAttribute("a1", AttributeValueText.Build("textL1"), layerID1, ciid1, changeset.ID, trans);
             await model.InsertAttribute("a1", AttributeValueText.Build("textL2"), layerID2, ciid1, changeset.ID, trans);
 
@@ -153,17 +153,17 @@ namespace Tests.Integration.Model
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
             using var trans = conn.BeginTransaction();
-            var username = "testUser";
+            var user = await DBSetup.SetupUser(new UserModel(conn));
 
             var ciid1 = await model.CreateCI("H123", trans);
             var layerID1 = await layerModel.CreateLayer("l1", trans);
 
             var layerset1 = new LayerSet(new long[] { layerID1 });
 
-            var changeset1 = await changesetModel.CreateChangeset(username, trans);
+            var changeset1 = await changesetModel.CreateChangeset(user.ID, trans);
             await model.InsertAttribute("a1", AttributeValueText.Build("textL1"), layerID1, ciid1, changeset1.ID, trans);
 
-            var changeset2 = await changesetModel.CreateChangeset(username, trans);
+            var changeset2 = await changesetModel.CreateChangeset(user.ID, trans);
             await model.InsertAttribute("a1", AttributeValueText.Build("textL1"), layerID1, ciid1, changeset2.ID, trans);
 
             var a1 = await model.GetMergedAttributes("H123", false, layerset1, trans, DateTimeOffset.Now);
@@ -178,7 +178,7 @@ namespace Tests.Integration.Model
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
             using var trans = conn.BeginTransaction();
-            var username = "testUser";
+            var user = await DBSetup.SetupUser(new UserModel(conn));
 
             var ciid1 = await model.CreateCI("H123", trans);
             var layerID1 = await layerModel.CreateLayer("l1", trans);
@@ -186,13 +186,13 @@ namespace Tests.Integration.Model
 
             var layerset1 = new LayerSet(new long[] { layerID2, layerID1 });
 
-            var changeset1 = await changesetModel.CreateChangeset(username, trans);
+            var changeset1 = await changesetModel.CreateChangeset(user.ID, trans);
             await model.InsertAttribute("a1", AttributeValueText.Build("textL1"), layerID1, ciid1, changeset1.ID, trans);
 
-            var changeset2 = await changesetModel.CreateChangeset(username, trans);
+            var changeset2 = await changesetModel.CreateChangeset(user.ID, trans);
             await model.InsertAttribute("a1", AttributeValueText.Build("textL2"), layerID2, ciid1, changeset2.ID, trans);
 
-            var changeset3 = await changesetModel.CreateChangeset(username, trans);
+            var changeset3 = await changesetModel.CreateChangeset(user.ID, trans);
             await model.RemoveAttribute("a1", layerID2, ciid1, changeset3.ID, trans);
 
             var a1 = await model.GetMergedAttributes("H123", false, layerset1, trans, DateTimeOffset.Now);
@@ -207,7 +207,7 @@ namespace Tests.Integration.Model
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
             using var trans = conn.BeginTransaction();
-            var username = "testUser";
+            var user = await DBSetup.SetupUser(new UserModel(conn));
 
             var ciid1 = await model.CreateCI("H123", trans);
             var ciid2 = await model.CreateCI("H456", trans);
@@ -216,14 +216,14 @@ namespace Tests.Integration.Model
 
             var layerset1 = new LayerSet(new long[] { layerID2, layerID1 });
 
-            var changeset1 = await changesetModel.CreateChangeset(username, trans);
+            var changeset1 = await changesetModel.CreateChangeset(user.ID, trans);
             await model.InsertAttribute("a1", AttributeValueText.Build("textL1"), layerID1, ciid1, changeset1.ID, trans);
             await model.InsertAttribute("a2", AttributeValueText.Build("textL1"), layerID1, ciid1, changeset1.ID, trans);
 
-            var changeset2 = await changesetModel.CreateChangeset(username, trans);
+            var changeset2 = await changesetModel.CreateChangeset(user.ID, trans);
             await model.InsertAttribute("a1", AttributeValueText.Build("textL2"), layerID2, ciid1, changeset2.ID, trans);
 
-            var changeset3 = await changesetModel.CreateChangeset(username, trans);
+            var changeset3 = await changesetModel.CreateChangeset(user.ID, trans);
             await model.InsertAttribute("a1", AttributeValueText.Build("textL2"), layerID2, ciid2, changeset2.ID, trans);
             await model.InsertAttribute("a3", AttributeValueText.Build("textL2"), layerID2, ciid2, changeset2.ID, trans);
 

@@ -42,6 +42,8 @@ namespace LandscapePrototype.Model
                 using var command = new NpgsqlCommand(@"select id from layer where name = @name LIMIT 1", conn, trans);
                 command.Parameters.AddWithValue("name", ln);
                 var s = await command.ExecuteScalarAsync();
+                if (s == null)
+                    throw new Exception(@$"Could not find layer with name ""{ln}""");
                 layerIDs.Add((long)s);
             }
             return new LayerSet(layerIDs.ToArray());

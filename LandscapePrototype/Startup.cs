@@ -83,7 +83,8 @@ namespace LandscapePrototype
             // TODO: remove AddScoped<Model>(), only use AddScoped<IModel, Model>()
             services.AddScoped<ICIModel, CIModel>();
             services.AddScoped<CIModel>();
-
+            services.AddScoped<IUserModel, UserModel>();
+            services.AddScoped<UserModel>();
             services.AddScoped<ILayerModel, LayerModel>();
             services.AddScoped<LayerModel>();
             services.AddScoped<IRelationModel, RelationModel>();

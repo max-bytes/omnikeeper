@@ -17,8 +17,8 @@ namespace TestPlugin
     {
         private readonly IRelationModel relationModel;
 
-        public CLBMonitoring(ICIModel ciModel, ILayerModel layerModel, IRelationModel relationModel, IChangesetModel changesetModel, NpgsqlConnection conn) 
-            : base(ciModel, layerModel, changesetModel, conn)
+        public CLBMonitoring(ICIModel ciModel, ILayerModel layerModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserModel userModel, NpgsqlConnection conn) 
+            : base(ciModel, layerModel, changesetModel, userModel, conn)
         {
             this.relationModel = relationModel;
         }

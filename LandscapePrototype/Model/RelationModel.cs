@@ -106,16 +106,28 @@ namespace LandscapePrototype.Model
         }
 
 
-        private async Task<Relation> GetRelation(string fromCIID, string toCIID, string predicate, long layerID, NpgsqlTransaction trans)
+        private async Task<Relation> GetMergedRelation(string fromCIID, string toCIID, string predicate, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
             // TODO timestamp related selection + time_threshold (see getCI() in CIModel)
-            using (var command = new NpgsqlCommand(@"select id, state, changeset_id from relation 
-                WHERE from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id AND predicate = @predicate AND layer_id = @layer_id LIMIT 1", conn, trans))
+            //using (var command = new NpgsqlCommand(@"select id, state, changeset_id from relation 
+            //    WHERE from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id AND predicate = @predicate AND layer_id = @layer_id LIMIT 1", conn, trans))
+            using (var command = new NpgsqlCommand(@"select distinct
+            last_value(a.id) over wnd as last_id,
+            last_value(a.state) over wnd as last_state,
+            last_value(a.changeset_id) over wnd as last_changeset_id
+                from relation a
+                inner join changeset c on c.id = a.changeset_id
+                where c.timestamp <= @time_threshold and a.from_ci_id = @from_ci_id AND a.to_ci_id = @to_ci_id and a.layer_id = @layer_id and a.predicate = @predicate
+            WINDOW wnd AS(
+                PARTITION by a.predicate, a.from_ci_id, a.to_ci_id ORDER BY c.timestamp
+                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+            LIMIT 1", conn, trans))
             {
                 command.Parameters.AddWithValue("from_ci_id", fromCIID);
                 command.Parameters.AddWithValue("to_ci_id", toCIID);
                 command.Parameters.AddWithValue("predicate", predicate);
                 command.Parameters.AddWithValue("layer_id", layerID);
+                command.Parameters.AddWithValue("time_threshold", atTime);
                 using var dr = await command.ExecuteReaderAsync();
                 if (!await dr.ReadAsync())
                     return null;
@@ -158,7 +170,7 @@ namespace LandscapePrototype.Model
 
         public async Task<Relation> RemoveRelation(string fromCIID, string toCIID, string predicate, long layerID, long changesetID, NpgsqlTransaction trans)
         {
-            var currentRelation = await GetRelation(fromCIID, toCIID, predicate, layerID, trans);
+            var currentRelation = await GetMergedRelation(fromCIID, toCIID, predicate, layerID, trans, DateTimeOffset.Now);
 
             if (currentRelation == null)
             {
@@ -189,7 +201,7 @@ namespace LandscapePrototype.Model
 
         public async Task<Relation> InsertRelation(string fromCIID, string toCIID, string predicate, long layerID, long changesetID, NpgsqlTransaction trans)
         {
-            var currentRelation = await GetRelation(fromCIID, toCIID, predicate, layerID, trans);
+            var currentRelation = await GetMergedRelation(fromCIID, toCIID, predicate, layerID, trans, DateTimeOffset.Now);
 
             var state = RelationState.New;
             if (currentRelation != null)

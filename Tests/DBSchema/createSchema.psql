@@ -1,4 +1,16 @@
-﻿
+﻿CREATE TABLE public."user"
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    keycloak_id uuid NOT NULL,
+    "timestamp" timestamp with time zone NOT NULL,
+    username text NOT NULL,
+    PRIMARY KEY (id)
+);
+
+ALTER TABLE public."user"
+    OWNER to postgres;
+
+
 CREATE TYPE attributestate AS ENUM (
     'new',
     'changed',
@@ -21,7 +33,7 @@ CREATE TABLE public.changeset
 (
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
     "timestamp" timestamp with time zone NOT NULL,
-    username text NOT NULL,
+    user_id bigint NOT NULL,
     CONSTRAINT changeset_pkey PRIMARY KEY (id)
 );
 
@@ -157,6 +169,8 @@ ALTER TABLE ONLY public.attribute
 ALTER TABLE public.attribute
     ADD CONSTRAINT f_changeset FOREIGN KEY (changeset_id) REFERENCES public.changeset (id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID;
 
+ALTER TABLE public.changeset
+    ADD CONSTRAINT f_user FOREIGN KEY (user_id) REFERENCES public."user" (id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID;
 --
 -- TOC entry 2713 (class 2606 OID 16423)
 -- Name: attribute f_layer; Type: FK CONSTRAINT; Schema: public; Owner: postgres

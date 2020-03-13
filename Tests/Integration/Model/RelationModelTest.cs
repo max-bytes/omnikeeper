@@ -34,9 +34,9 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(conn);
             var relationModel = new RelationModel(conn);
             var layerModel = new LayerModel(conn);
-            var username = "testUser";
+            var user = await DBSetup.SetupUser(new UserModel(conn));
 
-            var changeset = await changesetModel.CreateChangeset(username, trans);
+            var changeset = await changesetModel.CreateChangeset(user.ID, trans);
 
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var ciid2 = await ciModel.CreateCI("H456", trans);
@@ -89,9 +89,9 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(conn);
             var relationModel = new RelationModel(conn);
             var layerModel = new LayerModel(conn);
-            var username = "testUser";
+            var user = await DBSetup.SetupUser(new UserModel(conn));
 
-            var changeset = await changesetModel.CreateChangeset(username, trans);
+            var changeset = await changesetModel.CreateChangeset(user.ID, trans);
 
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var ciid2 = await ciModel.CreateCI("H456", trans);
@@ -121,9 +121,9 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(conn);
             var relationModel = new RelationModel(conn);
             var layerModel = new LayerModel(conn);
-            var username = "testUser";
+            var user = await DBSetup.SetupUser(new UserModel(conn));
 
-            var changeset = await changesetModel.CreateChangeset(username, trans);
+            var changeset = await changesetModel.CreateChangeset(user.ID, trans);
 
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var ciid2 = await ciModel.CreateCI("H456", trans);
@@ -155,9 +155,9 @@ namespace Tests.Integration.Model
             var relationModel = new RelationModel(conn);
             var changesetModel = new ChangesetModel(conn);
             var layerModel = new LayerModel(conn);
-            var username = "testUser";
+            var user = await DBSetup.SetupUser(new UserModel(conn));
 
-            var changeset = await changesetModel.CreateChangeset(username, trans);
+            var changeset = await changesetModel.CreateChangeset(user.ID, trans);
 
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var ciid2 = await ciModel.CreateCI("H456", trans);
@@ -177,6 +177,13 @@ namespace Tests.Integration.Model
             Assert.AreEqual(1, r1.Count());
             var rr1 = r1.First();
             Assert.AreEqual(layerID1, rr1.LayerID);
+
+            // add relation again
+            await relationModel.InsertRelation(ciid1, ciid2, "r1", layerID2, changeset.ID, trans);
+            var r2 = await relationModel.GetMergedRelations("H123", false, layerset, RelationModel.IncludeRelationDirections.Forward, trans);
+            Assert.AreEqual(1, r2.Count());
+            var rr2 = r2.First();
+            Assert.AreEqual(layerID2, rr2.LayerID);
         }
     }
 }

@@ -170,7 +170,7 @@ namespace LandscapePrototype.Model
             return ret;
         }
 
-        public async Task<CIAttribute> GetAttribute(string name, long layerID, string ciid, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<CIAttribute> GetMergedAttribute(string name, long layerID, string ciid, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
             using var command = new NpgsqlCommand(@"
             select distinct
@@ -211,7 +211,7 @@ namespace LandscapePrototype.Model
 
         public async Task<CIAttribute> RemoveAttribute(string name, long layerID, string ciid, long changesetID, NpgsqlTransaction trans)
         {
-            var currentAttribute = await GetAttribute(name, layerID, ciid, trans, DateTimeOffset.Now);
+            var currentAttribute = await GetMergedAttribute(name, layerID, ciid, trans, DateTimeOffset.Now);
 
             if (currentAttribute == null)
             {
@@ -246,7 +246,7 @@ namespace LandscapePrototype.Model
 
         public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, string ciid, long changesetID, NpgsqlTransaction trans)
         {
-            var currentAttribute = await GetAttribute(name, layerID, ciid, trans, DateTimeOffset.Now);
+            var currentAttribute = await GetMergedAttribute(name, layerID, ciid, trans, DateTimeOffset.Now);
 
             var state = AttributeState.New; // TODO
             if (currentAttribute != null)
