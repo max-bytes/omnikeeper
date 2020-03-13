@@ -18,6 +18,7 @@ namespace Tests.DBInit
     //[Ignore("Only manual")]
     class DBInit
     {
+
         [Test]
         public async Task Run()
         {
@@ -34,9 +35,11 @@ namespace Tests.DBInit
             var random = new Random(3);
 
             var initUser = "init-user";
-            var numRegularCIs = 200;
-            var numRegularRelations = 500;
-            var regularTypeNames = new[] { "Host Linux", "Host Windows", "Application" };
+            var numRegularCIs = 1;
+            var numRegularRelations = 0;
+            int numAttributesTo = 0;
+            int numAttributesFrom = 0;
+        var regularTypeNames = new[] { "Host Linux", "Host Windows", "Application" };
             var regularRelationNames = new[] { "is part of", "runs on", "is attached to" };
             var regularAttributeNames = new[] { "att_1", "att_2", "att_3", "att_4", "att_5", "att_6", "att_7", "att_8", "att_9" };
             var regularAttributeValues = new[] { "foo", "bar", "blub", "bla", "this", "are", "all", "values" };
@@ -77,7 +80,7 @@ namespace Tests.DBInit
                     trans.Commit();
                 }
 
-                var numAttributeChanges = random.Next(5, 50);
+                var numAttributeChanges = random.Next(numAttributesFrom, numAttributesTo);
                 for (int i = 0; i < numAttributeChanges; i++)
                 {
                     using var trans = conn.BeginTransaction();

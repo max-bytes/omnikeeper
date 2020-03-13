@@ -1,6 +1,7 @@
 ﻿using DotLiquid;
 using Landscape.Base;
 using Landscape.Base.Model;
+using Landscape.Base.Templating;
 using LandscapePrototype.Entity;
 using LandscapePrototype.Entity.AttributeValues;
 using LandscapePrototype.Model;
@@ -26,57 +27,37 @@ namespace TestPlugin
         {
             var layerSetMonitoringDefinitionsOnly = await layerModel.BuildLayerSet(new[] { "Monitoring Definitions" }, trans);
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
-            //var monitoringCheckModules = await ciModel.GetCIsWithType(layerSet, trans, DateTimeOffset.Now, "Monitoring Check Module");
-            //foreach(var mcm in monitoringCheckModules)
-            //{
-            //    await ciModel.InsertAttribute("monitored CIs", AttributeValueText.Build("foo yeah"), layerID, mcm.Identity, changeset.ID, trans);
-            //}
 
             var allMonitoredByRelations = await relationModel.GetRelationsWithPredicate(layerSetMonitoringDefinitionsOnly, false, "is monitored via", trans);
 
-            foreach(var p in allMonitoredByRelations)
+            foreach (var p in allMonitoredByRelations)
             {
                 var monitoringModuleCI = await ciModel.GetCI(p.ToCIID, layerSetMonitoringDefinitionsOnly, trans, DateTimeOffset.Now);
                 if (!monitoringModuleCI.IsOfType("Monitoring Check Module"))
                 {
-                    // TODO: error handling
                     await errorHandler.LogError(monitoringModuleCI.Identity, "error", "Expected this CI to be of type \"Monitoring Check Module\"");
                     continue;
                 }
 
                 var monitoredCI = await ciModel.GetCI(p.FromCIID, layerSetAll, trans, DateTimeOffset.Now);
-
                 var monitoringCommands = monitoringModuleCI.GetAttributesInGroup("monitoring.commands");
 
-                // TODO: more variables
-                var variables = Hash.FromDictionary(new Dictionary<string, object>()
-                {
-                    { "ciid", monitoredCI.Identity }
-                });
+                // add/collect variables
+                var variables = new Dictionary<string, object>() { { "target", VariableService.CreateVariablesFromCI(monitoredCI) } };
 
                 foreach (var mca in monitoringCommands)
                 {
-                    // template parsing
-                    Template template;
-                    try
-                    {
-                        var command = mca.Value.Value2String();
-                        template = Template.Parse(command);
-                    }
-                    catch (DotLiquid.Exceptions.LiquidException e)
-                    {
-                        await errorHandler.LogError(mca.CIID, "error", $"Error parsing command: {e.Message}");
-                        continue;
-                    }
-
-                    // templat rendering
+                    // template parsing and rendering
                     string finalCommand;
                     try
                     {
-                        finalCommand = template.Render(variables);
-                    } catch (DotLiquid.Exceptions.LiquidException e)
+                        var command = mca.Value.Value2String();
+                        Template template = Template.Parse(command);
+                        finalCommand = template.Render(Hash.FromDictionary(variables));
+                    }
+                    catch (Exception e)
                     {
-                        await errorHandler.LogError(mca.CIID, "error", $"Error rendering command: {e.Message}");
+                        await errorHandler.LogError(mca.CIID, "error", $"Error parsing or rendering command: {e.Message}");
                         continue;
                     }
 

@@ -1,8 +1,10 @@
 ﻿using Landscape.Base.Model;
+using LandscapePrototype.Entity;
 using LandscapePrototype.Entity.AttributeValues;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,6 +18,8 @@ namespace Landscape.Base
         private readonly long changesetID;
         private readonly ICIModel ciModel;
 
+        private IList<CIAttribute> writtenErrors = new List<CIAttribute>();
+
         public CLBErrorHandler(NpgsqlTransaction trans, string clbName, long clbLayerID, long changesetID, ICIModel ciModel)
         {
             this.trans = trans;
@@ -25,14 +29,28 @@ namespace Landscape.Base
             this.ciModel = ciModel;
         }
 
+        private string AttributeNamePrefix => $"__error.clb.{clbName}";
+
+        // gets all attributes starting with AttributeNamePrefix that are NOT created through this errorHandler instance and remove them
         public async Task RemoveOutdatedErrors()
         {
-            // TODO: get all attributes starting with clbName that are NOT created through this errorHandler instance and remove them
+            var allAttributes = await ciModel.FindAttributesByName($"{AttributeNamePrefix}%", clbLayerID, trans, DateTimeOffset.Now);
+
+            var attributesToRemove = allAttributes.Where(a =>
+            {
+                return !writtenErrors.Any(we => we.ID == a.ID);
+            });
+
+            foreach(var remove in attributesToRemove)
+            {
+                await ciModel.RemoveAttribute(remove.Name, clbLayerID, remove.CIID, changesetID, trans);
+            }
         }
 
         public async Task LogError(string ciid, string name, string message)
         {
-            await ciModel.InsertAttribute($"errors.clb.{clbName}.{name}", AttributeValueText.Build(message), clbLayerID, ciid, changesetID, trans);
+            var a = await ciModel.InsertAttribute($"{AttributeNamePrefix}.{name}", AttributeValueText.Build(message), clbLayerID, ciid, changesetID, trans);
+            writtenErrors.Add(a);
         }
     }
 }

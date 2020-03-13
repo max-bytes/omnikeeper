@@ -16,5 +16,7 @@ namespace Landscape.Base.Model
         Task<IEnumerable<CI>> GetCIsWithType(LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime, string type);
         Task<IEnumerable<CI>> GetCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, DateTimeOffset atTime, IEnumerable<string> CIIDs = null);
         Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, string ciid, long changesetID, NpgsqlTransaction trans);
+        Task<CIAttribute> RemoveAttribute(string name, long layerID, string ciid, long changesetID, NpgsqlTransaction trans);
+        Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime);
     }
 }

@@ -15,3 +15,14 @@ WINDOW wnd AS (
    PARTITION by a.name, a.ci_id, a.layer_id ORDER BY a.activation_time
 	ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
  )
+ 
+ 
+ CREATE TABLE public.changeset
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1),
+    "timestamp" timestamp with time zone NOT NULL,
+    PRIMARY KEY (id)
+);
+
+ALTER TABLE public.changeset
+    OWNER to postgres;

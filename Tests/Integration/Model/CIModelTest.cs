@@ -199,5 +199,45 @@ namespace Tests.Integration.Model
             Assert.AreEqual(1, a1.Count()); // layerID1 shines through deleted
             Assert.AreEqual(AttributeValueText.Build("textL1"), a1.First().Value);
         }
+
+        [Test]
+        public async Task TestFindAttributesByName()
+        {
+            var changesetModel = new ChangesetModel(conn);
+            var model = new CIModel(conn);
+            var layerModel = new LayerModel(conn);
+            using var trans = conn.BeginTransaction();
+            var username = "testUser";
+
+            var ciid1 = await model.CreateCI("H123", trans);
+            var ciid2 = await model.CreateCI("H456", trans);
+            var layerID1 = await layerModel.CreateLayer("l1", trans);
+            var layerID2 = await layerModel.CreateLayer("l2", trans);
+
+            var layerset1 = new LayerSet(new long[] { layerID2, layerID1 });
+
+            var changeset1 = await changesetModel.CreateChangeset(username, trans);
+            await model.InsertAttribute("a1", AttributeValueText.Build("textL1"), layerID1, ciid1, changeset1.ID, trans);
+            await model.InsertAttribute("a2", AttributeValueText.Build("textL1"), layerID1, ciid1, changeset1.ID, trans);
+
+            var changeset2 = await changesetModel.CreateChangeset(username, trans);
+            await model.InsertAttribute("a1", AttributeValueText.Build("textL2"), layerID2, ciid1, changeset2.ID, trans);
+
+            var changeset3 = await changesetModel.CreateChangeset(username, trans);
+            await model.InsertAttribute("a1", AttributeValueText.Build("textL2"), layerID2, ciid2, changeset2.ID, trans);
+            await model.InsertAttribute("a3", AttributeValueText.Build("textL2"), layerID2, ciid2, changeset2.ID, trans);
+
+            var a1 = await model.FindAttributesByName("a%", layerID1, trans, DateTimeOffset.Now);
+            Assert.AreEqual(2, a1.Count());
+
+            var a2 = await model.FindAttributesByName("a2", layerID1, trans, DateTimeOffset.Now);
+            Assert.AreEqual(1, a2.Count());
+
+            var a3 = await model.FindAttributesByName("%3", layerID2, trans, DateTimeOffset.Now);
+            Assert.AreEqual(1, a3.Count());
+
+            var a4 = await model.FindAttributesByName("%3", layerID1, trans, DateTimeOffset.Now);
+            Assert.AreEqual(0, a4.Count());
+        }
     }
 }

@@ -127,9 +127,52 @@ namespace LandscapePrototype.Model
             return ret;
         }
 
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime)
+        {
+            var ret = new List<CIAttribute>();
+
+            using var command = new NpgsqlCommand(@"
+            select distinct
+            last_value(a.id) over wnd as last_id,
+            last_value(a.name) over wnd as last_name,
+            last_value(a.ci_id) over wnd as last_ci_id,
+            last_value(a.type) over wnd as last_type,
+            last_value(a.value) over wnd as ""last_value"",
+            last_value(a.state) over wnd as last_state,
+            last_value(a.changeset_id) over wnd as last_changeset_id
+                from ""attribute"" a
+                inner join changeset c on c.id = a.changeset_id
+                where c.timestamp <= @time_threshold and a.layer_id = @layer_id and a.name LIKE @like_name
+            WINDOW wnd AS(
+                PARTITION by a.name, a.ci_id ORDER BY c.timestamp
+                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) 
+            ", conn, trans);
+            command.Parameters.AddWithValue("layer_id", layerID);
+            command.Parameters.AddWithValue("like_name", like);
+            command.Parameters.AddWithValue("time_threshold", atTime);
+
+            using var dr = await command.ExecuteReaderAsync();
+            while (dr.Read())
+            {
+                var id = dr.GetInt64(0);
+                var name = dr.GetString(1);
+                var CIID = dr.GetString(2);
+                var type = dr.GetString(3);
+                var value = dr.GetString(4);
+                var av = AttributeValueBuilder.Build(type, value);
+                var state = dr.GetFieldValue<AttributeState>(5);
+                var changesetID = dr.GetInt64(6);
+
+                var att = CIAttribute.Build(id, name, CIID, av, new long[] { layerID }, state, changesetID);
+
+                ret.Add(att);
+            }
+            return ret;
+        }
+
         public async Task<CIAttribute> GetAttribute(string name, long layerID, string ciid, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
-            using (var command = new NpgsqlCommand(@"
+            using var command = new NpgsqlCommand(@"
             select distinct
             last_value(a.id) over wnd as last_id,
             last_value(a.ci_id) over wnd as last_ci_id,
@@ -144,45 +187,27 @@ namespace LandscapePrototype.Model
                 PARTITION by a.name, a.ci_id ORDER BY c.timestamp
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) 
             LIMIT 1
-            ", conn, trans))
-            {
-                command.Parameters.AddWithValue("ci_id", ciid);
-                command.Parameters.AddWithValue("layer_id", layerID);
-                command.Parameters.AddWithValue("name", name);
-                command.Parameters.AddWithValue("time_threshold", atTime);
-                
-                using var dr = await command.ExecuteReaderAsync();
+            ", conn, trans);
+            command.Parameters.AddWithValue("ci_id", ciid);
+            command.Parameters.AddWithValue("layer_id", layerID);
+            command.Parameters.AddWithValue("name", name);
+            command.Parameters.AddWithValue("time_threshold", atTime);
 
-                if (!await dr.ReadAsync())
-                    return null;
+            using var dr = await command.ExecuteReaderAsync();
 
-                var id = dr.GetInt64(0);
-                var CIID = dr.GetString(1);
-                var type = dr.GetString(2);
-                var value = dr.GetString(3);
-                var av = AttributeValueBuilder.Build(type, value);
-                var state = dr.GetFieldValue<AttributeState>(4);
-                var changesetID = dr.GetInt64(5);
-                var att = CIAttribute.Build(id, name, CIID, av, new long[] { layerID }, state, changesetID);
-                return att;
-            }
+            if (!await dr.ReadAsync())
+                return null;
+
+            var id = dr.GetInt64(0);
+            var CIID = dr.GetString(1);
+            var type = dr.GetString(2);
+            var value = dr.GetString(3);
+            var av = AttributeValueBuilder.Build(type, value);
+            var state = dr.GetFieldValue<AttributeState>(4);
+            var changesetID = dr.GetInt64(5);
+            var att = CIAttribute.Build(id, name, CIID, av, new long[] { layerID }, state, changesetID);
+            return att;
         }
-
-        // TODO: having both of these suck! maybe combine id and identity, or use identity for (almost) everything
-        //public async Task<long> GetCIIDFromIdentity(string ciIdentity, NpgsqlTransaction trans)
-        //{
-        //    using var command = new NpgsqlCommand(@"select id from ci where identity = @identity LIMIT 1", conn, trans);
-        //    command.Parameters.AddWithValue("identity", ciIdentity);
-        //    var s = await command.ExecuteScalarAsync();
-        //    return (long)s;
-        //}
-        //public async Task<string> GetIdentityFromCIID(long ciid, NpgsqlTransaction trans)
-        //{
-        //    using var command = new NpgsqlCommand(@"select identity from ci where id = @id LIMIT 1", conn, trans);
-        //    command.Parameters.AddWithValue("id", ciid);
-        //    var s = await command.ExecuteScalarAsync();
-        //    return (string)s;
-        //}
 
         public async Task<CIAttribute> RemoveAttribute(string name, long layerID, string ciid, long changesetID, NpgsqlTransaction trans)
         {

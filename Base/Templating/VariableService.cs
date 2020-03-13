@@ -1,0 +1,53 @@
+﻿using LandscapePrototype.Entity;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Landscape.Base.Templating
+{
+    public static class VariableService
+    {
+        // transform dots in variable name into corresponding object structure
+        private static void AddNested(Dictionary<string, object> dict, string key, string value)
+        {
+            // TODO: remove all characters that are not alphanumeric characters or underscores
+            // then remove all variables whose key is non-valid (empty parts, ...)
+
+            var splits = key.Split(".");
+            var d = dict;
+            for (int i = 0; i < splits.Length; i++)
+            {
+                if (!d.ContainsKey(splits[i]))
+                    d.Add(splits[i], new Dictionary<string, object>());
+
+                // what if a key is both a full key and a prefixed-key
+                // such as:
+                // foo.bar = value1
+                // foo.bar.xyz = value2
+                // solution:
+                // foo.bar.value = value1
+                // foo.bar.xyz.value = value2
+                // HACK: change string to dictionary and add string to dictionary
+                var dod = d[splits[i]];
+                if (dod is string)
+                {
+                    var d0 = dod as string;
+                    var nd = new Dictionary<string, object>() { { "", d0 } };
+                    d[splits[i]] = nd;
+                    dod = nd;
+                }
+
+                d = dod as Dictionary<string, object>;
+            }
+            d.Add("value", value);
+        }
+
+        public static Dictionary<string, object> CreateVariablesFromCI(CI ci)
+        {
+            var targetVariables = new Dictionary<string, object>() { { "ciid", ci.Identity } };
+            foreach (var monitoredCIAttribute in ci.Attributes)
+                AddNested(targetVariables, $"{monitoredCIAttribute.Name}", monitoredCIAttribute.Value.Value2String());
+            return targetVariables;
+        }
+    }
+}
