@@ -7,6 +7,7 @@ import { Form, Row, Col, Button } from 'react-bootstrap';
 import { Button as SemanticButton, Icon } from 'semantic-ui-react'
 import { mutations } from '../graphql/mutations';
 import { useMutation } from '@apollo/react-hooks';
+import UserTypeIcon from './UserTypeIcon';
 import moment from 'moment'
 
 function Timeline(props) {
@@ -75,7 +76,8 @@ function Timeline(props) {
           <LoadingOverlay active={loadingChangesets} spinner>
           {changesets.map((cs) => {
 
-            const label = `${moment(cs.timestamp).format('YYYY-MM-DD HH:mm:ss')} (${cs.user.username})`;
+            const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.username}</span> : '';
+            const label = <span>{moment(cs.timestamp).format('YYYY-MM-DD HH:mm:ss')} - {userLabel}</span>;
             if (activeChangeset === cs) {
               return (<Button variant="link" size="sm" disabled key={cs.id}>{label} &gt;</Button>);
             }

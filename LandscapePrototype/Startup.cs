@@ -92,6 +92,8 @@ namespace LandscapePrototype
             services.AddScoped<IChangesetModel, ChangesetModel>();
             services.AddScoped<ChangesetModel>();
 
+            services.AddScoped<PredicateModel>();
+
             services.AddScoped<CIType>();
             services.AddScoped<RelationType>();
             services.AddScoped<ISchema, LandscapeSchema>();

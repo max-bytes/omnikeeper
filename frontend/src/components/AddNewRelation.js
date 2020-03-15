@@ -13,7 +13,7 @@ import { Dropdown } from 'semantic-ui-react';
 
 function AddNewRelation(props) {
 
-  let initialRelation = {predicate: '', toCIID: null };
+  let initialRelation = {predicateID: null, toCIID: null };
   const [selectedLayer, setSelectedLayer] = useState(undefined);
   const [newRelation, setNewRelation] = useState(initialRelation);
   React.useEffect(() => { if (!props.isEditable) setSelectedLayer(undefined); }, [props.isEditable]);
@@ -27,21 +27,25 @@ function AddNewRelation(props) {
 
   // TODO: loading
   const { data: dataCIs } = useQuery(queries.CIList);
+  const { data: dataPredicates } = useQuery(queries.PredicateList);
   const [insertRelation] = useMutation(mutations.INSERT_RELATION, { refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true });
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
   
   let addRelation = <span></span>;
-  if (selectedLayer && dataCIs) {
+  if (selectedLayer && dataCIs && dataPredicates) {
     var ciList = dataCIs.cis.map(d => {
       return { key: d.identity, value: d.identity, text: d.identity };
+    });
+    var predicateList = dataPredicates.predicates.map(d => {
+      return { key: d.id, value: d.id, text: d.wordingFrom };
     });
 
     addRelation = 
       <div style={{backgroundColor: selectedLayer.color, borderColor: selectedLayer.color}} className={"p-2"}>
         <Form onSubmit={e => {
             e.preventDefault();
-            insertRelation({ variables: { layers: visibleLayers, fromCIID: props.ciIdentity, toCIID: newRelation.toCIID, predicate: newRelation.predicate, layerID: selectedLayer.id} }).then(d => {
+            insertRelation({ variables: { layers: visibleLayers, fromCIID: props.ciIdentity, toCIID: newRelation.toCIID, predicateID: newRelation.predicateID, layerID: selectedLayer.id} }).then(d => {
               setSelectedLayer(undefined);
               setNewRelation(initialRelation);
               setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }});
@@ -50,7 +54,16 @@ function AddNewRelation(props) {
             <Form.Group as={Row} controlId="name">
               <Form.Label column>Predicate</Form.Label>
               <Col sm={10}>
-                <Form.Control type="text" placeholder="Enter predicate" value={newRelation.predicate} onChange={e => setNewRelation({...newRelation, predicate: e.target.value})} />
+                {/* <Form.Control type="text" placeholder="Enter predicate" value={newRelation.predicate} onChange={e => setNewRelation({...newRelation, predicate: e.target.value})} /> */}
+                <Dropdown
+                  value={newRelation.predicateID}
+                  placeholder='Select Predicate'
+                  onChange={(_, data) => setNewRelation({...newRelation, predicateID: data.value})}
+                  fluid
+                  search
+                  selection
+                  options={predicateList}
+                />
               </Col>
             </Form.Group>
 

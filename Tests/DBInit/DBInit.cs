@@ -16,7 +16,7 @@ using Tests.Integration.Model;
 namespace Tests.DBInit
 {
     [Explicit]
-    [Ignore("Only manual")]
+    //[Ignore("Only manual")]
     class DBInit
     {
 
@@ -29,10 +29,11 @@ namespace Tests.DBInit
             using var conn = dbcb.Build("landscape_prototype", false, true);
 
             var ciModel = new CIModel(conn);
-            var changesetModel = new ChangesetModel(conn);
-            var layerModel = new LayerModel(conn);
             var userModel = new UserModel(conn);
-            var relationModel = new RelationModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn);
+            var layerModel = new LayerModel(conn);
+            var predicateModel = new PredicateModel(conn);
+            var relationModel = new RelationModel(predicateModel, conn);
 
             var random = new Random(3);
 
@@ -40,8 +41,13 @@ namespace Tests.DBInit
             var numRegularRelations = 0;
             int numAttributesTo = 0;
             int numAttributesFrom = 0;
-        var regularTypeNames = new[] { "Host Linux", "Host Windows", "Application" };
-            var regularRelationNames = new[] { "is part of", "runs on", "is attached to" };
+            var regularTypeNames = new[] { "Host Linux", "Host Windows", "Application" };
+            //var regularRelationNames = new[] { "is part of", "runs on", "is attached to" };
+            var predicates = new[] { 
+                Predicate.Build("is_part_of", "is part of", "has part"), 
+                Predicate.Build("runs_on", "runs on", "is running"),
+                Predicate.Build("is_attached_to", "is attached to", "has attachment"),
+                Predicate.Build("is_monitored_via", "is monitored via", "monitors") };
             var regularAttributeNames = new[] { "att_1", "att_2", "att_3", "att_4", "att_5", "att_6", "att_7", "att_8", "att_9" };
             var regularAttributeValues = new[] { "foo", "bar", "blub", "bla", "this", "are", "all", "values" };
 
@@ -57,6 +63,14 @@ namespace Tests.DBInit
             {
                 foreach(var ciid in regularCiids)
                     await ciModel.CreateCI(ciid, trans);
+
+                trans.Commit();
+            }
+
+            using (var trans = conn.BeginTransaction())
+            {
+                foreach (var predicate in predicates)
+                    await predicateModel.CreatePredicate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, trans);
 
                 trans.Commit();
             }
@@ -103,8 +117,8 @@ namespace Tests.DBInit
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 var ciid1 = regularCiids.GetRandom(random);
                 var ciid2 = regularCiids.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
-                var predicate = regularRelationNames.GetRandom(random);
-                await relationModel.InsertRelation(ciid1, ciid2, predicate, cmdbLayerID, changeset.ID, trans);
+                var predicate = predicates.GetRandom(random);
+                await relationModel.InsertRelation(ciid1, ciid2, predicate.ID, cmdbLayerID, changeset.ID, trans);
                 trans.Commit();
             }
 
@@ -130,8 +144,8 @@ namespace Tests.DBInit
             {
                 using var trans = conn.BeginTransaction();
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST", "is monitored via", monitoringDefinitionsLayerID, changeset.ID, trans);
-                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_WINDOWS", "is monitored via", monitoringDefinitionsLayerID, changeset.ID, trans);
+                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST", "is_monitored_via", monitoringDefinitionsLayerID, changeset.ID, trans);
+                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_WINDOWS", "is_monitored_via", monitoringDefinitionsLayerID, changeset.ID, trans);
                 trans.Commit();
             }
             var linuxHosts = await ciModel.GetCIsWithType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, DateTimeOffset.Now, "Host Linux");
@@ -139,8 +153,8 @@ namespace Tests.DBInit
             {
                 using var trans = conn.BeginTransaction();
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST", "is monitored via", monitoringDefinitionsLayerID, changeset.ID, trans);
-                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_LINUX", "is monitored via", monitoringDefinitionsLayerID, changeset.ID, trans);
+                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST", "is_monitored_via", monitoringDefinitionsLayerID, changeset.ID, trans);
+                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_LINUX", "is_monitored_via", monitoringDefinitionsLayerID, changeset.ID, trans);
                 trans.Commit();
             }
         }

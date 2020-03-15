@@ -93,14 +93,21 @@ namespace LandscapePrototype.Controllers
             // TODO: check if this works or is a hack, with a magic string
             var username = claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
             var guidString = claims.FirstOrDefault(c => c.Type == "id")?.Value;
+            var groups = claims.Where(c => c.Type == "groups").Select(c => c.Value).ToArray();
+
+            var usertype = Entity.UserType.Unknown;
+            if (groups.Contains("/humans"))
+                usertype = Entity.UserType.Human;
+            else if (groups.Contains("/robots"))
+                usertype = Entity.UserType.Robot;
 
             if (username == null)
             {
                 var anonymouseGuid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef2"); // TODO: load from claims
-                return Entity.User.Build(-1L, anonymouseGuid, "anonymous", DateTimeOffset.Now);
+                return Entity.User.Build(-1L, anonymouseGuid, "anonymous", Entity.UserType.Unknown, DateTimeOffset.Now);
             }
             var guid = new Guid(guidString); 
-            return await _userModel.CreateOrUpdateFetchUser(username, guid, null);
+            return await _userModel.CreateOrUpdateFetchUser(username, guid, usertype, null);
         }
     }
 }

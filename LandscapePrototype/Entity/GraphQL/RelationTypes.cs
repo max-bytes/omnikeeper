@@ -17,7 +17,7 @@ namespace LandscapePrototype.Entity.GraphQL
             Field(x => x.ToCIID);
             Field(x => x.LayerID);
             Field(x => x.LayerStackIDs);
-            Field(x => x.Predicate);
+            Field(x => x.Predicate, type: typeof(PredicateType));
             Field(x => x.State, type: typeof(RelationStateType));
             Field(x => x.ChangesetID);
 

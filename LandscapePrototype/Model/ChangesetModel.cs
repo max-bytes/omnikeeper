@@ -12,26 +12,33 @@ namespace LandscapePrototype.Model
     public class ChangesetModel : IChangesetModel
     {
         private readonly NpgsqlConnection conn;
+        private readonly UserModel userModel;
 
-        public ChangesetModel(NpgsqlConnection connection)
+        public ChangesetModel(UserModel userModel, NpgsqlConnection connection)
         {
             conn = connection;
+            this.userModel = userModel;
         }
 
         public async Task<Changeset> CreateChangeset(long userID, NpgsqlTransaction trans)
         {
+            var user = await userModel.GetUser(userID, trans);
+            if (user == null)
+                return null;
             using var command = new NpgsqlCommand(@"INSERT INTO changeset (timestamp, user_id) VALUES (now(), @user_id) returning id, timestamp", conn, trans);
             command.Parameters.AddWithValue("user_id", userID);
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
             var id = reader.GetInt64(0);
             var timestamp = reader.GetDateTime(1);
-            return Changeset.Build(id, userID, timestamp);
+            return Changeset.Build(id, user, timestamp);
         }
 
         public async Task<Changeset> GetChangeset(long id, NpgsqlTransaction trans)
         {
-            using var command = new NpgsqlCommand(@"SELECT timestamp, user_id FROM changeset WHERE id = @id", conn, trans);
+            using var command = new NpgsqlCommand(@"SELECT c.timestamp, c.user_id, u.username, u.keycloak_id, u.type, u.timestamp FROM changeset c
+                LEFT JOIN ""user"" u ON c.user_id = u.id
+                WHERE c.id = @id", conn, trans);
 
             command.Parameters.AddWithValue("id", id);
             using var dr = await command.ExecuteReaderAsync();
@@ -41,16 +48,23 @@ namespace LandscapePrototype.Model
 
             var timestamp = dr.GetTimeStamp(0).ToDateTime();
             var userID = dr.GetInt64(1);
-            return Changeset.Build(id, userID, timestamp);
+            var username = dr.GetString(2);
+            var userUUID = dr.GetGuid(3);
+            var userType = dr.GetFieldValue<UserType>(4);
+            var userTimestamp = dr.GetTimeStamp(5).ToDateTime();
+
+            var user = User.Build(userID, userUUID, username, userType, userTimestamp);
+            return Changeset.Build(id, user, timestamp);
         }
 
         // if ciid != null, returns all changesets affecting this CI, both via attributes OR relations
         // sorted by timestamp
         public async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IncludeRelationDirections ird, string ciid, NpgsqlTransaction trans)
         {
-            var queryAttributes = @"SELECT distinct c.id, c.user_id, c.timestamp FROM changeset c 
+            var queryAttributes = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 INNER JOIN attribute a ON a.changeset_id = c.id 
                 INNER JOIN ci ci ON a.ci_id = ci.id
+                LEFT JOIN ""user"" u ON c.user_id = u.id
                 WHERE c.timestamp >= @from AND c.timestamp <= @to AND a.layer_id = ANY(@layer_ids)";
             if (ciid != null) queryAttributes += " AND ci.id = @ciid"; // TODO: performance improvements when ciid === null, ci join unnecessary then
 
@@ -70,9 +84,10 @@ namespace LandscapePrototype.Model
                     irdClause = "unused";
                     break;
             }
-            var queryRelations = $@"SELECT distinct c.id, c.user_id, c.timestamp FROM changeset c 
+            var queryRelations = $@"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 INNER JOIN relation r ON r.changeset_id = c.id 
                 INNER JOIN ci ci ON ({irdClause})
+                LEFT JOIN ""user"" u ON c.user_id = u.id
                 WHERE c.timestamp >= @from AND c.timestamp <= @to AND r.layer_id = ANY(@layer_ids)";
             if (ciid != null) queryRelations += " AND ci.id = @ciid"; // TODO: performance improvements when ciid === null, ci join unnecessary then
 
@@ -92,7 +107,14 @@ namespace LandscapePrototype.Model
                 var id = dr.GetInt64(0);
                 var userID = dr.GetInt64(1);
                 var timestamp = dr.GetTimeStamp(2).ToDateTime();
-                var c = Changeset.Build(id, userID, timestamp);
+
+                var username = dr.GetString(3);
+                var userUUID = dr.GetGuid(4);
+                var userType = dr.GetFieldValue<UserType>(5);
+                var userTimestamp = dr.GetTimeStamp(6).ToDateTime();
+
+                var user = User.Build(userID, userUUID, username, userType, userTimestamp);
+                var c = Changeset.Build(id, user, timestamp);
                 ret.Add(c);
             }
             return ret.OrderBy(x => x.Timestamp);

@@ -36,12 +36,12 @@ export const mutations = {
   `,
 
   INSERT_RELATION: gql`
-  mutation InsertRelation($layers: [String]!, $fromCIID: String!, $toCIID: String!, $predicate: String!, $layerID: Long!) {
+  mutation InsertRelation($layers: [String]!, $fromCIID: String!, $toCIID: String!, $predicateID: String!, $layerID: Long!) {
     mutate(layers: $layers, insertRelations: [
       {
         fromCIID: $fromCIID,
         toCIID: $toCIID,
-        predicate: $predicate,
+        predicateID: $predicateID,
         layerID: $layerID
       }
     ]) {
@@ -51,12 +51,12 @@ export const mutations = {
 `,
 
 REMOVE_RELATION: gql`
-mutation RemoveRelation($layers: [String]!, $fromCIID: String!, $toCIID: String!, $predicate: String!, $layerID: Long!) {
+mutation RemoveRelation($layers: [String]!, $fromCIID: String!, $toCIID: String!, $predicateID: String!, $layerID: Long!) {
   mutate(layers: $layers, removeRelations: [
     {
       fromCIID: $fromCIID,
       toCIID: $toCIID,
-      predicate: $predicate,
+      predicateID: $predicateID,
       layerID: $layerID
     }
   ]) {

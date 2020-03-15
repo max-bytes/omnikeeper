@@ -11,6 +11,6 @@ namespace Landscape.Base.Model
 {
     public interface IRelationModel
     {
-        Task<IEnumerable<Relation>> GetRelationsWithPredicate(LayerSet layerset, bool includeRemoved, string predicate, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null);
+        Task<IEnumerable<Relation>> GetRelationsWithPredicateID(LayerSet layerset, bool includeRemoved, string predicate, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null);
     }
 }

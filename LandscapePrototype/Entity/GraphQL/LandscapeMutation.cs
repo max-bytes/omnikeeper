@@ -82,14 +82,14 @@ namespace LandscapePrototype.Entity.GraphQL
                   var insertedRelations = new List<Relation>();
                   foreach(var insertRelation in insertRelations)
                   {
-                      insertedRelations.Add(await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.Predicate, insertRelation.LayerID, changeset.ID, transaction));
+                      insertedRelations.Add(await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.LayerID, changeset.ID, transaction));
                   }
 
 
                   var removedRelations = new List<Relation>();
                   foreach (var removeRelation in removeRelations)
                   {
-                      removedRelations.Add(await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.Predicate, removeRelation.LayerID, changeset.ID, transaction));
+                      removedRelations.Add(await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, removeRelation.LayerID, changeset.ID, transaction));
                   }
 
                   var affectedCIIDs = createdCIIDs

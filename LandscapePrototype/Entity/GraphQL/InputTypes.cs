@@ -77,7 +77,7 @@ namespace LandscapePrototype.Entity.GraphQL
     public class InsertRelationInput { 
         public string FromCIID { get; private set; }
         public string ToCIID { get; private set; }
-        public string Predicate { get; private set; }
+        public string PredicateID { get; private set; }
         public long LayerID { get; private set; }
     }
 
@@ -87,7 +87,7 @@ namespace LandscapePrototype.Entity.GraphQL
         {
             Field(x => x.FromCIID);
             Field(x => x.ToCIID);
-            Field(x => x.Predicate);
+            Field(x => x.PredicateID);
             Field(x => x.LayerID);
         }
     }
@@ -96,7 +96,7 @@ namespace LandscapePrototype.Entity.GraphQL
     {
         public string FromCIID { get; private set; }
         public string ToCIID { get; private set; }
-        public string Predicate { get; private set; }
+        public string PredicateID { get; private set; }
         public long LayerID { get; private set; }
     }
     public class RemoveRelationInputType : InputObjectGraphType<RemoveRelationInput>
@@ -105,7 +105,7 @@ namespace LandscapePrototype.Entity.GraphQL
         {
             Field(x => x.FromCIID);
             Field(x => x.ToCIID);
-            Field(x => x.Predicate);
+            Field(x => x.PredicateID);
             Field(x => x.LayerID);
         }
     }

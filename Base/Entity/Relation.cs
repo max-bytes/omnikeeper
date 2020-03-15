@@ -13,13 +13,14 @@ namespace LandscapePrototype.Entity
         public long ID { get; private set; }
         public string FromCIID { get; private set; }
         public string ToCIID { get; private set; }
-        public string Predicate { get; private set; }
+        public string PredicateID { get => Predicate.ID; }
+        public Predicate Predicate { get; private set; }
         public long LayerID { get => LayerStackIDs[^1]; }
         public long[] LayerStackIDs { get; private set; }
         public RelationState State { get; private set; }
         public long ChangesetID { get; private set; }
 
-        public static Relation Build(long id, string fromCIID, string toCIID, string predicate, long[] layerStackIDs, RelationState state, long changesetID)
+        public static Relation Build(long id, string fromCIID, string toCIID, Predicate predicate, long[] layerStackIDs, RelationState state, long changesetID)
         {
             var o = new Relation();
             o.ID = id;

@@ -10,6 +10,6 @@ namespace Landscape.Base.Model
 {
     public interface IUserModel
     {
-        Task<User> CreateOrUpdateFetchUser(string username, Guid uuid, NpgsqlTransaction trans);
+        Task<User> CreateOrUpdateFetchUser(string username, Guid uuid, UserType type, NpgsqlTransaction trans);
     }
 }

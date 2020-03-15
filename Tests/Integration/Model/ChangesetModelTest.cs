@@ -28,11 +28,13 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var changesetModel = new ChangesetModel(conn);
+            var userModel = new UserModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn);
             var ciModel = new CIModel(conn);
-            var relationModel = new RelationModel(conn);
+            var predicateModel = new PredicateModel(conn);
+            var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
-            var user = await DBSetup.SetupUser(new UserModel(conn));
+            var user = await DBSetup.SetupUser(userModel);
 
             using var trans = conn.BeginTransaction();
             var ciid1 = await ciModel.CreateCI("H123", trans);
@@ -79,15 +81,19 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var changesetModel = new ChangesetModel(conn);
+            var userModel = new UserModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn);
             var ciModel = new CIModel(conn);
-            var relationModel = new RelationModel(conn);
+            var predicateModel = new PredicateModel(conn);
+            var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
-            var user = await DBSetup.SetupUser(new UserModel(conn));
+            var user = await DBSetup.SetupUser(userModel);
 
             using var trans = conn.BeginTransaction();
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var ciid2 = await ciModel.CreateCI("H456", trans);
+            var predicate1 = await predicateModel.CreatePredicate("predicate_1", "", "", trans);
+            var predicate2 = await predicateModel.CreatePredicate("predicate_2", "", "", trans);
             trans.Commit();
 
             var t1 = DateTimeOffset.Now;
@@ -96,7 +102,7 @@ namespace Tests.Integration.Model
             var layerID1 = await layerModel.CreateLayer("l1", trans2);
             var layerset = new LayerSet(new long[] { layerID1 });
             var changeset1 = await changesetModel.CreateChangeset(user.ID, trans2);
-            await relationModel.InsertRelation("H123", "H456", "relation_1", layerID1, changeset1.ID, trans2);
+            await relationModel.InsertRelation("H123", "H456", predicate1, layerID1, changeset1.ID, trans2);
             trans2.Commit();
 
             Thread.Sleep(500);
@@ -104,7 +110,7 @@ namespace Tests.Integration.Model
 
             using var trans3 = conn.BeginTransaction();
             var changeset2 = await changesetModel.CreateChangeset(user.ID, trans3);
-            await relationModel.InsertRelation("H456", "H123", "relation_2", layerID1, changeset2.ID, trans3);
+            await relationModel.InsertRelation("H456", "H123", predicate2, layerID1, changeset2.ID, trans3);
             trans3.Commit();
 
             Thread.Sleep(500);

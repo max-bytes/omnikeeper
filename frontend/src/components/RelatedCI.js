@@ -6,13 +6,13 @@ import { useMutation } from '@apollo/react-hooks';
 import LayerStackIcons from "./LayerStackIcons";
 import Form from 'react-bootstrap/Form';
 import { Link  } from 'react-router-dom'
+import ChangesetPopup from "./ChangesetPopup";
 
 function RelatedCI(props) {
 
   let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
 
   // TODO: loading
-  // const [setSelectedCI] = useMutation(mutations.SET_SELECTED_CI);
   const [removeRelation] = useMutation(mutations.REMOVE_RELATION, { 
     refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true,
     update: (cache, data) => {
@@ -33,23 +33,29 @@ function RelatedCI(props) {
 
   let written;
   if (props.related.isForward) {
-    written = <span>{`This CI "${props.related.relation.predicate}`}" {otherCIButton}</span>;
+    written = <span>{`This CI "${props.related.relation.predicate.wordingFrom}" `}{otherCIButton}</span>;
   } else {
-    written = <span>{otherCIButton} "{`${props.related.relation.predicate}" this CI`}</span>;
+    written = <span>{`This CI "${props.related.relation.predicate.wordingTo}" `}{otherCIButton}</span>;
+  }
+
+  let removeButton;
+  if (props.isEditable) {
+    removeButton = <Button variant="danger" onClick={e => {
+      e.preventDefault();
+      removeRelation({ variables: { layers: visibleLayers, fromCIID: props.related.relation.fromCIID, toCIID: props.related.relation.toCIID, predicateID: props.related.relation.predicate.id, layerID: props.related.relation.layerID } })
+      .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
+    }}>Remove</Button>;
   }
 
   return (
     <div style={{margin: "5px"}}>
       <Form inline onSubmit={e => e.preventDefault()}>
         <LayerStackIcons layerStack={props.related.relation.layerStack}></LayerStackIcons>
-        <Form.Group controlId={`value:${props.related.relation.predicate}`} style={{flexGrow: 1}}>
+        <ChangesetPopup changesetID={props.related.relation.changesetID} />
+        <Form.Group controlId={`value:${props.related.relation.predicate.id}`} style={{flexGrow: 1}}>
           <Form.Label className={"pr-1"} style={{flexBasis: '400px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{written}</Form.Label>
           
-          <Button variant="danger" onClick={e => {
-            e.preventDefault();
-            removeRelation({ variables: { layers: visibleLayers, fromCIID: props.related.relation.fromCIID, toCIID: props.related.relation.toCIID, predicate: props.related.relation.predicate, layerID: props.related.relation.layerID } })
-            .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
-          }}>Remove</Button>
+          {removeButton}
         </Form.Group>
       </Form>
     </div>

@@ -8,31 +8,36 @@ using System.Threading.Tasks;
 
 namespace LandscapePrototype.Entity.GraphQL
 {
-    public class UserType : ObjectGraphType<User>
+    public class UserTypeType : EnumerationGraphType<Entity.UserType>
     {
-        public UserType()
+    }
+
+    public class UserTypeGQL : ObjectGraphType<User>
+    {
+        public UserTypeGQL()
         {
             Field("id", x => x.ID);
             Field(x => x.Username);
             Field(x => x.Timestamp);
+            Field("type", x => x.UserType, type: typeof(UserTypeType));
         }
     }
 
     public class ChangesetType : ObjectGraphType<Changeset>
     {
-        public ChangesetType(UserModel userModel)
+        public ChangesetType()
         {
             Field(x => x.Timestamp);
-            Field(x => x.UserID);
+            Field(x => x.User, type: typeof(UserTypeGQL));
             Field("id", x => x.ID);
-            FieldAsync<UserType>("user",
-            resolve: async (context) =>
-            {
-                var userContext = context.UserContext as LandscapeUserContext;
-                var userID = context.Source.UserID;
-                var user = await userModel.GetUser(userID, userContext.Transaction);
-                return user;
-            });
+            //FieldAsync<UserTypeGQL>("user",
+            //    resolve: async (context) =>
+            //    { // TODO: refactor to have user be part of changeset -> no 1+N
+            //        var userContext = context.UserContext as LandscapeUserContext;
+            //        var userID = context.Source.UserID;
+            //        var user = await userModel.GetUser(userID, userContext.Transaction);
+            //        return user;
+            //    });
         }
     }
 

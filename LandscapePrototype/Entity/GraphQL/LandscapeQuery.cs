@@ -10,7 +10,7 @@ namespace LandscapePrototype.Entity.GraphQL
 {
     public class LandscapeQuery : ObjectGraphType
     {
-        public LandscapeQuery(CIModel ciModel, LayerModel layerModel, ChangesetModel changesetModel)
+        public LandscapeQuery(CIModel ciModel, LayerModel layerModel, PredicateModel predicateModel, ChangesetModel changesetModel)
         {
 
             FieldAsync<CIType>("ci",
@@ -73,6 +73,15 @@ namespace LandscapePrototype.Entity.GraphQL
 
                     var cis = await ciModel.GetCIs(userContext.LayerSet, includeEmpty, null, userContext.TimeThreshold);
                     return cis;
+                });
+
+            FieldAsync<ListGraphType<PredicateType>>("predicates",
+                resolve: async context =>
+                {
+                    var userContext = context.UserContext as LandscapeUserContext;
+                    userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
+
+                    return (await predicateModel.GetPredicates(null, userContext.TimeThreshold)).Values;
                 });
 
 

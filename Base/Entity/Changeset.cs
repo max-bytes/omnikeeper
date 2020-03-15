@@ -9,15 +9,15 @@ namespace LandscapePrototype.Entity
     public class Changeset
     {
         public long ID { get; private set; }
-        public long UserID { get; private set; }
         public DateTimeOffset Timestamp { get; private set; }
+        public User User { get; private set; }
 
-        public static Changeset Build(long id, long userID, DateTimeOffset timestamp)
+        public static Changeset Build(long id, User user, DateTimeOffset timestamp)
         {
             var c = new Changeset
             {
                 ID = id,
-                UserID = userID,
+                User = user,
                 Timestamp = timestamp
             };
             return c;

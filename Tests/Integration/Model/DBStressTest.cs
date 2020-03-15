@@ -30,11 +30,12 @@ namespace Tests.Integration.Model
             DBSetup.Setup();
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var user = await DBSetup.SetupUser(new UserModel(conn));
+            var userModel = new UserModel(conn);
+            var user = await DBSetup.SetupUser(userModel);
 
             using (var trans = conn.BeginTransaction())
             {
-                var changesetModel = new ChangesetModel(conn);
+                var changesetModel = new ChangesetModel(userModel, conn);
                 var model = new CIModel(conn);
                 var layerModel = new LayerModel(conn);
 

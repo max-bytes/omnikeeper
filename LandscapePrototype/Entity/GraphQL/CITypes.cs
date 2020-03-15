@@ -69,6 +69,7 @@ namespace LandscapePrototype.Entity.GraphQL
             Field("ciid", x => x.CIID);
             Field(x => x.LayerID);
             Field(x => x.LayerStackIDs);
+            Field(x => x.ChangesetID);
             Field(x => x.Name);
             Field(x => x.State, type: typeof(AttributeStateType));
             Field(x => x.Value, type: typeof(AttributeValueType));

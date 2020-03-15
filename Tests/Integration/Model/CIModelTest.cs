@@ -40,9 +40,10 @@ namespace Tests.Integration.Model
         public async Task TestAddingUpdatingRemovingAndRenewingOfAttributes()
         {
             var model = new CIModel(conn);
-            var changesetModel = new ChangesetModel(conn);
+            var userModel = new UserModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn);
             var layerModel = new LayerModel(conn);
-            var user = await DBSetup.SetupUser(new UserModel(conn));
+            var user = await DBSetup.SetupUser(userModel);
             using (var trans = conn.BeginTransaction())
             {
                 var changesetID = await changesetModel.CreateChangeset(user.ID, trans);
@@ -110,11 +111,12 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestLayerSets()
         {
-            var changesetModel = new ChangesetModel(conn);
+            var userModel = new UserModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn);
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
             using var trans = conn.BeginTransaction();
-            var user = await DBSetup.SetupUser(new UserModel(conn));
+            var user = await DBSetup.SetupUser(userModel);
 
             var ciid1 = await model.CreateCI("H123", trans);
             var layerID1 = await layerModel.CreateLayer("l1", trans);
@@ -149,11 +151,12 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestEqualValueInserts()
         {
-            var changesetModel = new ChangesetModel(conn);
+            var userModel = new UserModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn);
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
             using var trans = conn.BeginTransaction();
-            var user = await DBSetup.SetupUser(new UserModel(conn));
+            var user = await DBSetup.SetupUser(userModel);
 
             var ciid1 = await model.CreateCI("H123", trans);
             var layerID1 = await layerModel.CreateLayer("l1", trans);
@@ -174,11 +177,12 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestRemoveShowsLayerBelow()
         {
-            var changesetModel = new ChangesetModel(conn);
+            var userModel = new UserModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn);
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
             using var trans = conn.BeginTransaction();
-            var user = await DBSetup.SetupUser(new UserModel(conn));
+            var user = await DBSetup.SetupUser(userModel);
 
             var ciid1 = await model.CreateCI("H123", trans);
             var layerID1 = await layerModel.CreateLayer("l1", trans);
@@ -203,11 +207,12 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestFindAttributesByName()
         {
-            var changesetModel = new ChangesetModel(conn);
+            var userModel = new UserModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn);
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
             using var trans = conn.BeginTransaction();
-            var user = await DBSetup.SetupUser(new UserModel(conn));
+            var user = await DBSetup.SetupUser(userModel);
 
             var ciid1 = await model.CreateCI("H123", trans);
             var ciid2 = await model.CreateCI("H456", trans);

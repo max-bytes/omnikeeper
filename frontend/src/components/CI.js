@@ -13,7 +13,7 @@ function CI(props) {
 
   var sortedRelatedCIs = [...props.ci.related];
   sortedRelatedCIs.sort((a,b) => {
-    const predicateCompare = a.relation.predicate.localeCompare(b.relation.predicate);
+    const predicateCompare = a.relation.predicate.id.localeCompare(b.relation.predicate.id);
     if (predicateCompare !== 0)
       return predicateCompare;
     return a.ci.identity.localeCompare(b.ci.identity);
@@ -44,7 +44,7 @@ function CI(props) {
         <Col>
           <Flipper flipKey={sortedRelatedCIs.map(r => r.relation.layerStackIDs).join(' ')}>
             {sortedRelatedCIs.map(r => (
-              <Flipped key={r.relation.id} flipId={r.relation.predicate} onAppear={onAppear} onExit={onExit}>
+              <Flipped key={r.relation.id} flipId={r.relation.predicateID} onAppear={onAppear} onExit={onExit}>
                 <RelatedCI related={r} ciIdentity={props.ci.identity} layers={props.layers} isEditable={props.isEditable}></RelatedCI>
               </Flipped>
             ))}

@@ -8,6 +8,7 @@ import Col from 'react-bootstrap/Col';
 import { mutations } from '../graphql/mutations'
 import { AttributeTypes, attribute2InputType, attributeID2Object } from '../utils/attributeTypes'
 import { Row } from "react-bootstrap";
+import { Dropdown } from 'semantic-ui-react'
 
 function AddNewAttribute(props) {
 
@@ -45,14 +46,13 @@ function AddNewAttribute(props) {
             <Form.Group as={Row} controlId="type">
               <Form.Label column>Type</Form.Label>
               <Col sm={10}>
-              <Form.Control as="select" value={newAttribute.type} onChange={e => {
-                // we'll clear the value, to be safe, TODO: better value migration between types
-                setNewAttribute({...newAttribute, type: e.target.value, value: ''});
-              }}>
-                {AttributeTypes.map(at => {
-                  return <option key={at.id} value={at.id}>{at.name}</option>;
-                })}
-              </Form.Control>
+                <Dropdown placeholder='Select attribute type' fluid search selection value={newAttribute.type}
+                  onChange={(e, data) => {
+                    // we'll clear the value, to be safe, TODO: better value migration between types
+                    setNewAttribute({...newAttribute, type: data.value, value: ''});
+                  }}
+                  options={AttributeTypes.map(at => { return {key: at.id, value: at.id, text: at.name }; })}
+                />
               </Col>
             </Form.Group>
             <Form.Group as={Row} controlId="name">

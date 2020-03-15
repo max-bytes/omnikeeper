@@ -27,8 +27,8 @@ namespace TestPlugin
         {
             var layerSetMonitoringDefinitionsOnly = await layerModel.BuildLayerSet(new[] { "Monitoring Definitions" }, trans);
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
-
-            var allMonitoredByRelations = await relationModel.GetRelationsWithPredicate(layerSetMonitoringDefinitionsOnly, false, "is monitored via", trans);
+            
+            var allMonitoredByRelations = await relationModel.GetRelationsWithPredicateID(layerSetMonitoringDefinitionsOnly, false, "is_monitored_via", trans);
 
             foreach (var p in allMonitoredByRelations)
             {

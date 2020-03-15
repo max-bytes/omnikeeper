@@ -55,10 +55,10 @@ namespace Tests.Integration
             conn2.Close();
         }
 
-        public static async Task<User> SetupUser(IUserModel userModel, string username = "test-user", Guid? userGUID = null)
+        public static async Task<User> SetupUser(IUserModel userModel, string username = "test-user", Guid? userGUID = null, UserType type = UserType.Robot)
         {
             var guid = userGUID ?? new Guid("2544f9a7-cc17-4cba-8052-f88656cf1ef1");
-            return await userModel.CreateOrUpdateFetchUser(username, guid, null);
+            return await userModel.CreateOrUpdateFetchUser(username, guid, type, null);
         }
     }
 }

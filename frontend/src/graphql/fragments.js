@@ -6,6 +6,7 @@ export const Fragments = {
         id
         name
         layerID
+        changesetID
         layerStackIDs
         layerStack {
             id
@@ -51,9 +52,14 @@ export const Fragments = {
         id
         fromCIID
         toCIID
-        predicate
+        predicate {
+            id,
+            wordingFrom
+            wordingTo
+        }
         layerID
         layerStackIDs
+        changesetID
         layerStack {
             id
             name

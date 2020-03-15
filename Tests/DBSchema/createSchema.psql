@@ -1,15 +1,4 @@
-﻿CREATE TABLE public."user"
-(
-    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
-    keycloak_id uuid NOT NULL,
-    "timestamp" timestamp with time zone NOT NULL,
-    username text NOT NULL,
-    PRIMARY KEY (id)
-);
-
-ALTER TABLE public."user"
-    OWNER to postgres;
-
+﻿
 
 CREATE TYPE attributestate AS ENUM (
     'new',
@@ -26,7 +15,36 @@ CREATE TYPE relationstate AS ENUM (
 );
 ALTER TYPE relationstate OWNER TO postgres;
 
+CREATE TYPE usertype AS ENUM (
+    'human',
+    'robot',
+    'unknown'
+);
+ALTER TYPE usertype OWNER TO postgres;
 
+
+CREATE TABLE public.predicate_wording
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    predicate_id text NOT NULL,
+    wording_from text NOT NULL,
+    wording_to text NOT NULL,
+    "timestamp" timestamp with time zone NOT NULL,
+    CONSTRAINT predicate_wording_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public."user"
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    keycloak_id uuid NOT NULL,
+    "timestamp" timestamp with time zone NOT NULL,
+    "type" public.usertype DEFAULT 'unknown'::public.usertype NOT NULL,
+    username text NOT NULL,
+    PRIMARY KEY (id)
+);
+
+ALTER TABLE public."user"
+    OWNER to postgres;
 
 
 CREATE TABLE public.changeset
@@ -46,7 +64,7 @@ CREATE TABLE public.relation
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
     from_ci_id text NOT NULL,
     to_ci_id text NOT NULL,
-    "predicate" text NOT NULL,
+    predicate_id text NOT NULL,
     changeset_id bigint NOT NULL,
     layer_id bigint NOT NULL,
     state public.relationstate DEFAULT 'new'::public.relationstate NOT NULL,
@@ -103,6 +121,14 @@ ALTER TABLE public.attribute ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     CACHE 1
 );
 
+CREATE TABLE public.predicate
+(
+    internal_id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    id text NOT NULL,
+    CONSTRAINT u_predicate_id UNIQUE (id)
+);
+
+ALTER TABLE public.predicate OWNER to postgres;
 
 --
 -- TOC entry 204 (class 1259 OID 16415)
@@ -171,20 +197,20 @@ ALTER TABLE public.attribute
 
 ALTER TABLE public.changeset
     ADD CONSTRAINT f_user FOREIGN KEY (user_id) REFERENCES public."user" (id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID;
---
--- TOC entry 2713 (class 2606 OID 16423)
--- Name: attribute f_layer; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
 
 ALTER TABLE ONLY public.attribute
     ADD CONSTRAINT f_layer FOREIGN KEY (layer_id) REFERENCES public.layer(id) NOT VALID;
 
     
-    ALTER TABLE ONLY public.relation
-        ADD CONSTRAINT f_from_id FOREIGN KEY (from_ci_id) REFERENCES public.ci(id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID,
-        ADD CONSTRAINT f_to_ci FOREIGN KEY (to_ci_id) REFERENCES public.ci(id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID,
-        ADD CONSTRAINT f_changeset FOREIGN KEY (changeset_id) REFERENCES public.changeset (id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID,
-        ADD CONSTRAINT f_layer FOREIGN KEY (layer_id) REFERENCES public.layer(id) NOT VALID;
+ALTER TABLE ONLY public.relation
+    ADD CONSTRAINT f_from_id FOREIGN KEY (from_ci_id) REFERENCES public.ci(id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID,
+    ADD CONSTRAINT f_to_ci FOREIGN KEY (to_ci_id) REFERENCES public.ci(id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID,
+    ADD CONSTRAINT f_predicate FOREIGN KEY (predicate_id) REFERENCES public.predicate(id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID,
+    ADD CONSTRAINT f_changeset FOREIGN KEY (changeset_id) REFERENCES public.changeset (id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID,
+    ADD CONSTRAINT f_layer FOREIGN KEY (layer_id) REFERENCES public.layer(id) NOT VALID;
+
+ALTER TABLE ONLY public.predicate_wording
+    ADD CONSTRAINT f_predicate_wording FOREIGN KEY (predicate_id) REFERENCES public.predicate(id) ON UPDATE RESTRICT ON DELETE RESTRICT NOT VALID;
 
 CREATE INDEX
     ON public.attribute USING btree

@@ -42,7 +42,7 @@ namespace Landscape.Base
                 var layerID = layerSet.LayerIDs.First(); // TODO: better way to get layerID from name -> dedicated function
                 var username = Name; // HACK: make username the same as CLB name
                 var guid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1"); // TODO
-                var user = await userModel.CreateOrUpdateFetchUser(username, guid, trans);
+                var user = await userModel.CreateOrUpdateFetchUser(username, guid, UserType.Robot, trans);
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
 
                 var errorHandler = new CLBErrorHandler(trans, Name, layerID, changeset.ID, ciModel);

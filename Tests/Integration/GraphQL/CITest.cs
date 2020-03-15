@@ -58,7 +58,7 @@ namespace Tests.Integration.GraphQL
             var changesetModel = Services.Get<ChangesetModel>();
             var userModel = Services.Get<UserModel>();
             using var trans = Services.Get<NpgsqlConnection>().BeginTransaction();
-            var user = await userModel.CreateOrUpdateFetchUser(username, userGUID, trans);
+            var user = await userModel.CreateOrUpdateFetchUser(username, userGUID, LandscapePrototype.Entity.UserType.Robot, trans);
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var layerID1 = await layerModel.CreateLayer("layer_1", trans);
             var layerID2 = await layerModel.CreateLayer("layer_2", trans);

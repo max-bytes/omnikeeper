@@ -11,12 +11,23 @@ export const queries = {
         ${Fragments.ci}
         ${Fragments.attribute}
     `,
+
+    // TODO: use different - more performant - variant of cis
     CIList: gql`
         query ciList {
             cis(includeEmpty: true) {
                 identity
                 layerhash
                 atTime
+            }
+        }
+    `,
+    PredicateList: gql`
+        query predicateList {
+            predicates {
+                id
+                wordingFrom
+                wordingTo
             }
         }
     `,
@@ -47,18 +58,25 @@ export const queries = {
                 id
                 user {
                     username
+                    type
                 }
                 timestamp
+            }
+        }`,
+    Changeset: gql`
+        query changeset($id: Long!) {
+            changeset(id: $id) {
+                id
+                timestamp
+                user {
+                    username
+                    type
+                }
             }
         }`,
     SelectedTimeThreshold: gql`
         query SelectedTimeThreshold {
             selectedTimeThreshold @client
           }
-      `,
-    // SelectedCI: gql`
-    //     query SelectedCI {
-    //         selectedCI @client
-    //     }
-    // `
+      `
 };
