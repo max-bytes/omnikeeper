@@ -9,6 +9,14 @@ using System.Linq.Dynamic.Core;
 
 namespace LandscapePrototype.Entity.GraphQL
 {
+    public class CITypeType : ObjectGraphType<Entity.CIType>
+    {
+        public CITypeType()
+        {
+            Field("id", x => x.ID);
+        }
+    }
+
     public class CIType : ObjectGraphType<CI>
     {
         public CIType(RelationModel relationModel, CIModel ciModel, LayerModel layerModel)
@@ -16,6 +24,7 @@ namespace LandscapePrototype.Entity.GraphQL
             Field(x => x.Identity);
             Field("layerhash", x => x.Layers.LayerHash);
             Field(x => x.AtTime);
+            Field(x => x.Type, type: typeof(CITypeType));
             Field(x => x.Attributes, type: typeof(ListGraphType<CIAttributeType>));
             FieldAsync<ListGraphType<RelatedCIType>>("related",
             arguments: new QueryArguments(new List<QueryArgument>

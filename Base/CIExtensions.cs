@@ -9,10 +9,10 @@ namespace Landscape.Base
 {
     public static class CIExtensions
     {
-        public static bool IsOfType(this CI ci, string type)
-        {
-            return ci.Attributes.FirstOrDefault(a => a.Name == "__type" && a.Value.Value2String() == type) != null;
-        }
+        //public static bool IsOfType(this CI ci, string type)
+        //{
+        //    return ci.Attributes.FirstOrDefault(a => a.Name == "__type" && a.Value.Value2String() == type) != null;
+        //}
 
         public static IEnumerable<CIAttribute> GetAttributesInGroup(this CI ci, string groupName)
         {

@@ -74,7 +74,6 @@ namespace LandscapePrototype.Entity.GraphQL
                     var cis = await ciModel.GetCIs(userContext.LayerSet, includeEmpty, null, userContext.TimeThreshold);
                     return cis;
                 });
-
             FieldAsync<ListGraphType<PredicateType>>("predicates",
                 resolve: async context =>
                 {
@@ -83,8 +82,14 @@ namespace LandscapePrototype.Entity.GraphQL
 
                     return (await predicateModel.GetPredicates(null, userContext.TimeThreshold)).Values;
                 });
+            FieldAsync<ListGraphType<CITypeType>>("citypes",
+                resolve: async context =>
+                {
+                    var userContext = context.UserContext as LandscapeUserContext;
+                    userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
 
-
+                    return (await predicateModel.GetPredicates(null, userContext.TimeThreshold)).Values;
+                });
             FieldAsync<ListGraphType<LayerType>>("layers",
                 resolve: async context =>
                 {

@@ -22,20 +22,59 @@ namespace LandscapePrototype.Model
             conn = connection;
         }
 
-        public async Task<CI> GetCI(string ciIdentity, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<CI> GetCI(string ciid, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
-            var attributes = await GetMergedAttributes(ciIdentity, false, layers, trans, atTime);
-            return CI.Build(ciIdentity, layers, atTime, attributes);
+            var type = await GetTypeOfCI(ciid, trans, atTime);
+            var attributes = await GetMergedAttributes(ciid, false, layers, trans, atTime);
+            return CI.Build(ciid, type, layers, atTime, attributes);
         }
 
-        public async Task<IEnumerable<CI>> GetCIsWithType(LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime, string type)
+        public async Task<CIType> GetTypeOfCI(string ciid, NpgsqlTransaction trans, DateTimeOffset? atTime)
         {
-            var cis = await GetCIs(layers, false, trans, atTime);
-            return cis.Where(ci =>
-            {
-                var typeAttribute = ci.Attributes.FirstOrDefault(attribute => attribute.Name == "__type");
-                return typeAttribute != null && typeAttribute.Value.Value2String() == type; // TODO: is this a good comparison?
-            });
+            using var command = new NpgsqlCommand(@"SELECT 
+                    last_value(ct.id) over wnd
+                FROM citype_assignment cta
+                INNER JOIN citype ct ON ct.id = cta.citype_id AND cta.timestamp <= @atTime AND cta.ci_id = @ci_id
+                WINDOW wnd AS(
+                    PARTITION by cta.ci_id ORDER BY cta.timestamp
+                    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+                LIMIT 1
+            ", conn, trans);
+            var finalTimeThreshold = atTime ?? DateTimeOffset.Now;
+            command.Parameters.AddWithValue("atTime", finalTimeThreshold);
+            command.Parameters.AddWithValue("ci_id", ciid);
+
+            using var dr = await command.ExecuteReaderAsync();
+
+            if (!await dr.ReadAsync())
+                return null;
+
+            var type = dr.GetString(0);
+            return CIType.Build(type);
+        }
+
+        public async Task<CIType> GetCIType(string typeID, NpgsqlTransaction trans)
+        {
+            using var command = new NpgsqlCommand(@"SELECT id FROM citype WHERE id = @citype_id LIMIT 1", conn, trans);
+            command.Parameters.AddWithValue("citype_id", typeID);
+
+            using var dr = await command.ExecuteReaderAsync();
+
+            if (!await dr.ReadAsync())
+                return null;
+
+            var typeIDOut = dr.GetString(0);
+            return CIType.Build(typeIDOut);
+        }
+
+        public async Task<IEnumerable<CI>> GetCIsWithType(LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime, string typeID)
+        {
+            var cis = await GetCIs(layers, true, trans, atTime);
+            return cis.Where(ci => ci.Type.ID == typeID);
+            //{
+            //    var typeAttribute = ci.Attributes.FirstOrDefault(attribute => attribute.Name == "__type");
+            //    return typeAttribute != null && typeAttribute.Value.Value2String() == typeID; // TOsDO: is this a good comparison?
+            //});
         }
 
         public async Task<IEnumerable<CI>> GetCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, DateTimeOffset atTime, IEnumerable<string> CIIDs = null)
@@ -56,9 +95,10 @@ namespace LandscapePrototype.Model
             foreach (var identity in tmp)
             {
                 // TODO: performance improvements
+                var type = await GetTypeOfCI(identity, trans, atTime);
                 var attributes = await GetMergedAttributes(identity, false, layers, trans, atTime);
                 if (includeEmptyCIs || attributes.Count() > 0)
-                    ret.Add(CI.Build(identity, layers, atTime, attributes));
+                    ret.Add(CI.Build(identity, type, layers, atTime, attributes));
             }
             return ret;
         }
@@ -244,6 +284,16 @@ namespace LandscapePrototype.Model
             return CIAttribute.Build(id, name, ciid, currentAttribute.Value, layerStack, AttributeState.Removed, changesetID);
         }
 
+        public async Task<bool> SetCIType(string ciid, string typeID, NpgsqlTransaction trans)
+        {
+            using var command = new NpgsqlCommand(@"INSERT INTO citype_assignment (ci_id, citype_id, timestamp) VALUES
+                (@ci_id, @citype_id, NOW())", conn, trans);
+            command.Parameters.AddWithValue("ci_id", ciid);
+            command.Parameters.AddWithValue("citype_id", typeID);
+            await command.ExecuteNonQueryAsync();
+            return true;
+        }
+
         public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, string ciid, long changesetID, NpgsqlTransaction trans)
         {
             var currentAttribute = await GetMergedAttribute(name, layerID, ciid, trans, DateTimeOffset.Now);
@@ -287,6 +337,27 @@ namespace LandscapePrototype.Model
             using var command = new NpgsqlCommand(@"INSERT INTO ci (id) VALUES (@id)", conn, trans);
             command.Parameters.AddWithValue("id", identity);
             await command.ExecuteNonQueryAsync();
+            return identity;
+        }
+
+        public async Task<string> CreateCIType(string typeID, NpgsqlTransaction trans)
+        {
+            using var command = new NpgsqlCommand(@"INSERT INTO citype (id) VALUES (@id)", conn, trans);
+            command.Parameters.AddWithValue("id", typeID);
+            var r = await command.ExecuteNonQueryAsync();
+            return typeID;
+        }
+
+        public async Task<string> CreateCIWithType(string identity, string typeID, NpgsqlTransaction trans)
+        {
+            var ciType = await GetCIType(typeID, trans);
+            if (ciType == null) throw new Exception($"Could not find CI-Type {typeID}");
+            using var command = new NpgsqlCommand(@"INSERT INTO ci (id) VALUES (@id)", conn, trans);
+            command.Parameters.AddWithValue("id", identity);
+            await command.ExecuteNonQueryAsync();
+
+            await SetCIType(identity, typeID, trans);
+
             return identity;
         }
     }

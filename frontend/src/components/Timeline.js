@@ -63,16 +63,12 @@ function Timeline(props) {
 
       return (
         <div>
-          <Row className={"my-1"}>
-            <Col className={["d-flex", "align-items-center"]}>
-              <h5>Timeline</h5>
-            </Col>
-            <Col className={["flex-grow-0", "mr-1"]}>
-              <Form inline onSubmit={e => e.preventDefault()}>
-                {refreshButton}
-              </Form>
-            </Col>
-          </Row>
+          <div className={"d-flex align-items-center"}>
+            <h5 className={"flex-grow-1 my-0"}>Timeline</h5>
+            <Form inline onSubmit={e => e.preventDefault()}>
+              {refreshButton}
+            </Form>
+          </div>
           <LoadingOverlay active={loadingChangesets} spinner>
           {changesets.map((cs) => {
 

@@ -244,5 +244,56 @@ namespace Tests.Integration.Model
             var a4 = await model.FindAttributesByName("%3", layerID1, trans, DateTimeOffset.Now);
             Assert.AreEqual(0, a4.Count());
         }
+
+
+        [Test]
+        public async Task TestCITypes()
+        {
+            var model = new CIModel(conn);
+            var userModel = new UserModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn);
+            var layerModel = new LayerModel(conn);
+            var user = await DBSetup.SetupUser(userModel);
+            using (var trans = conn.BeginTransaction())
+            {
+                // test setting and getting of citype
+                var ciTypeID1 = await model.CreateCIType("T1", trans);
+                Assert.AreEqual("T1", (await model.GetCIType("T1", trans)).ID);
+
+                // test CI creation
+                var ciid1 = await model.CreateCIWithType("H123", ciTypeID1, trans);
+                Assert.AreEqual("H123", ciid1);
+                var ciType = await model.GetTypeOfCI("H123", trans, null);
+                Assert.AreEqual("T1", ciType.ID);
+
+                trans.Commit();
+            }
+
+            using (var trans = conn.BeginTransaction())
+            {
+                Assert.ThrowsAsync<Exception>(async () => await model.CreateCIWithType("H456", "T-Nonexisting", trans));
+            }
+
+            using (var trans = conn.BeginTransaction())
+            {
+                // test overriding of type
+                var ciTypeID2 = await model.CreateCIType("T2", trans);
+                await model.SetCIType("H123", "T2", trans);
+                var ciType = await model.GetTypeOfCI("H123", trans, null);
+                Assert.AreEqual("T2", ciType.ID);
+                trans.Commit();
+            }
+
+            using (var trans = conn.BeginTransaction())
+            {
+                // test getting by ci type
+                var layerID1 = await layerModel.CreateLayer("l1", trans);
+                var layerset1 = new LayerSet(new long[] { layerID1 });
+                var ciid2 = await model.CreateCIWithType("H456", "T1", trans);
+                var ciid3 = await model.CreateCIWithType("H789", "T2", trans);
+                Assert.AreEqual(1, (await model.GetCIsWithType(layerset1, trans, DateTimeOffset.Now, "T1")).Count());
+                Assert.AreEqual(2, (await model.GetCIsWithType(layerset1, trans, DateTimeOffset.Now, "T2")).Count());
+            }
+        }
     }
 }

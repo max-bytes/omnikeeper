@@ -31,6 +31,9 @@ export const Fragments = {
         identity
         layerhash
         atTime
+        type {
+            id
+        }
         related {
             relation {
                 ...FullRelation

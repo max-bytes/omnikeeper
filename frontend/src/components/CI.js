@@ -55,7 +55,7 @@ function CI(props) {
   ]
 
   return (<div style={{margin: "10px 10px"}}>
-    <h3>CI {props.ci.identity}</h3>
+    <h3>CI {props.ci.identity} - type: {props.ci.type.id}</h3>
     <Tab activeIndex={selectedTab} onTabChange={(e, {activeIndex}) => setSelectedTab(activeIndex)} panes={panes} />
   </div>);
 }
@@ -71,6 +71,9 @@ CI.propTypes = {
   ).isRequired,
   ci: PropTypes.shape({
     identity: PropTypes.string.isRequired,
+    type: PropTypes.shape({
+      id: PropTypes.string.isRequired
+    }).isRequired,
     attributes: PropTypes.arrayOf(
       PropTypes.shape({
         name: PropTypes.string.isRequired,

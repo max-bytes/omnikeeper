@@ -33,7 +33,7 @@ namespace TestPlugin
             foreach (var p in allMonitoredByRelations)
             {
                 var monitoringModuleCI = await ciModel.GetCI(p.ToCIID, layerSetMonitoringDefinitionsOnly, trans, DateTimeOffset.Now);
-                if (!monitoringModuleCI.IsOfType("Monitoring Check Module"))
+                if (monitoringModuleCI.Type.ID != "Monitoring Check Module")
                 {
                     await errorHandler.LogError(monitoringModuleCI.Identity, "error", "Expected this CI to be of type \"Monitoring Check Module\"");
                     continue;

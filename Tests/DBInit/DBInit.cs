@@ -41,7 +41,9 @@ namespace Tests.DBInit
             var numRegularRelations = 0;
             int numAttributesTo = 0;
             int numAttributesFrom = 0;
-            var regularTypeNames = new[] { "Host Linux", "Host Windows", "Application" };
+            var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
+
+
             //var regularRelationNames = new[] { "is part of", "runs on", "is attached to" };
             var predicates = new[] { 
                 Predicate.Build("is_part_of", "is part of", "has part"), 
@@ -61,8 +63,16 @@ namespace Tests.DBInit
 
             using (var trans = conn.BeginTransaction())
             {
+                foreach (var ciType in regularTypeIDs)
+                    await ciModel.CreateCIType(ciType, trans);
+                await ciModel.CreateCIType("Monitoring Check Module", trans);
+                trans.Commit();
+            }
+
+            using (var trans = conn.BeginTransaction())
+            {
                 foreach(var ciid in regularCiids)
-                    await ciModel.CreateCI(ciid, trans);
+                    await ciModel.CreateCIWithType(ciid, regularTypeIDs.GetRandom(random), trans);
 
                 trans.Commit();
             }
@@ -89,13 +99,13 @@ namespace Tests.DBInit
             // regular attributes
             foreach(var ciid in regularCiids)
             {
-                using (var trans = conn.BeginTransaction())
-                {
-                    var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                    var type = regularTypeNames.GetRandom(random);
-                    await ciModel.InsertAttribute("__type", AttributeValueText.Build(type), cmdbLayerID, ciid, changeset.ID, trans);
-                    trans.Commit();
-                }
+                //using (var trans = conn.BeginTransaction())
+                //{
+                //    var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                //    var type = regularTypeNames.GetRandom(random);
+                //    await ciModel.InsertAttribute("__type", AttributeValueText.Build(type), cmdbLayerID, ciid, changeset.ID, trans);
+                //    trans.Commit();
+                //}
 
                 var numAttributeChanges = random.Next(numAttributesFrom, numAttributesTo);
                 for (int i = 0; i < numAttributeChanges; i++)
@@ -125,13 +135,13 @@ namespace Tests.DBInit
             // build monitoring things
             using (var trans = conn.BeginTransaction())
             {
-                await ciModel.CreateCI("MON_MODULE_HOST", null);
-                await ciModel.CreateCI("MON_MODULE_HOST_WINDOWS", null);
-                await ciModel.CreateCI("MON_MODULE_HOST_LINUX", null);
+                await ciModel.CreateCIWithType("MON_MODULE_HOST", "Monitoring Check Module", null);
+                await ciModel.CreateCIWithType("MON_MODULE_HOST_WINDOWS", "Monitoring Check Module", null);
+                await ciModel.CreateCIWithType("MON_MODULE_HOST_LINUX", "Monitoring Check Module", null);
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
-                await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
-                await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
+                //await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
+                //await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
+                //await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
                 await ciModel.InsertAttribute("monitoring.commands.check_host_cmd", AttributeValueText.Build("check_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
                 await ciModel.InsertAttribute("monitoring.commands.check_windows_host_cmd", AttributeValueText.Build("check_windows_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
                 await ciModel.InsertAttribute("monitoring.commands.check_linux_host_cmd", AttributeValueText.Build("check_linux_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
