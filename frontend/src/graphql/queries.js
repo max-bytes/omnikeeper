@@ -12,14 +12,9 @@ export const queries = {
         ${Fragments.attribute}
     `,
 
-    // TODO: use different - more performant - variant of cis
     CIList: gql`
         query ciList {
-            cis(includeEmpty: true) {
-                identity
-                layerhash
-                atTime
-            }
+            ciids
         }
     `,
     PredicateList: gql`

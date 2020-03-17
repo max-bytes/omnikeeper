@@ -34,8 +34,8 @@ function AddNewRelation(props) {
   
   let addRelation = <span></span>;
   if (selectedLayer && dataCIs && dataPredicates) {
-    var ciList = dataCIs.cis.map(d => {
-      return { key: d.identity, value: d.identity, text: d.identity };
+    var ciList = dataCIs.ciids.map(d => {
+      return { key: d, value: d, text: d };
     });
     var predicateList = dataPredicates.predicates.map(d => {
       return { key: d.id, value: d.id, text: d.wordingFrom };

@@ -44,14 +44,21 @@ namespace LandscapePrototype.Entity.GraphQL
                 var relations = await relationModel.GetMergedRelations(CIIdentity, false, layerset, RelationModel.IncludeRelationDirections.Both, userContext.Transaction, userContext.TimeThreshold);
 
                 var relatedCIs = new List<RelatedCI>();
-                
-                // TODO: performance improvements, use getCIs instead of loop of getCI
+
+                var relatedCIIDs = relations.Select(r =>
+                {
+                    var isForwardRelation = r.FromCIID == CIIdentity;
+                    var relatedCIID = (isForwardRelation) ? r.ToCIID : r.FromCIID;
+                    return relatedCIID;
+                });
+
+                var CIs = (await ciModel.GetFullCIs(layerset, true, userContext.Transaction, userContext.TimeThreshold, relatedCIIDs)).ToDictionary(ci => ci.Identity);
                 foreach(var r in relations)
                 {
                     //var relatedCIIdentity = await ciModel.GetIdentityFromCIID(r.ToCIID, null);
                     var isForwardRelation = r.FromCIID == CIIdentity;
                     var relatedCIID = (isForwardRelation) ? r.ToCIID : r.FromCIID;
-                    relatedCIs.Add(RelatedCI.Build(r, await ciModel.GetFullCI(relatedCIID, layerset, userContext.Transaction, userContext.TimeThreshold), isForwardRelation));
+                    relatedCIs.Add(RelatedCI.Build(r, CIs[relatedCIID], isForwardRelation));
                 }
 
                 var wStr = context.GetArgument<string>("where"); // TODO: develop further

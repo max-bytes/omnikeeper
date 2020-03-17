@@ -44,6 +44,13 @@ namespace LandscapePrototype.Entity.GraphQL
                     return ci;
                 });
 
+            FieldAsync<ListGraphType<StringGraphType>>("ciids",
+                resolve: async context =>
+                {
+                    var ciids = await ciModel.GetCIIDs(null);
+                    return ciids;
+                });
+
             FieldAsync<ListGraphType<CIType>>("cis",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {

@@ -39,3 +39,14 @@ body {
     flex:1;
     overflow:auto;
 }
+
+
+.ui.search.CISearch>.results .result {
+  padding: 0px;
+}
+
+.ui.search.CISearch>.results .result a {
+  display: inline-block;
+  padding: .85714286em 1.14285714em;
+  width: 100%;
+}

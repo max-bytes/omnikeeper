@@ -30,14 +30,13 @@ function SearchCI(props) {
     };
 
     const re = new RegExp(RegExp.escape(value), 'i');
-    const isMatch = (result) => re.test(result.identity);
+    const isMatch = (result) => re.test(result);
 
     setState({
       isLoading: false,
       value,
-      results: dataCIs.cis.filter(isMatch).map(d => {
-        var nd = {...d, title: d.identity };
-        delete nd.atTime;
+      results: dataCIs.ciids.filter(isMatch).map(d => {
+        var nd = { identity: d, title: d };
         return nd;
       })
     });
@@ -49,7 +48,7 @@ function SearchCI(props) {
   return (
     <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
       <div style={{display: 'flex', justifyContent: 'center', marginTop: '50px'}}>
-        <Search size="huge"
+        <Search size="huge" className={"CISearch"}
           minCharacters={0}
             loading={state.isLoading}
             onResultSelect={handleResultSelect}

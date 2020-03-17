@@ -201,7 +201,7 @@ namespace LandscapePrototype
             app.UseHangfireServer();
             app.UseHangfireDashboard();
 
-            RecurringJob.AddOrUpdate<CLBRunner>(runner => runner.Run(), "*/15 * * * * *");
+            RecurringJob.AddOrUpdate<CLBRunner>(runner => runner.Run(), Cron.Daily);// "*/15 * * * * *");
         }
     }
 
