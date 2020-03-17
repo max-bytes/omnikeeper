@@ -8,8 +8,8 @@ import { onAppear, onExit } from '../utils/animation';
 
 function AttributeList(props) {
   // TODO: does not work with nested groups yet
-  const nestedAttributes = _.groupBy(props.attributes, (attribute) => {
-    const splits = attribute.name.split('.');
+  const nestedAttributes = _.groupBy(props.attributes, (mergedAttribute) => {
+    const splits = mergedAttribute.attribute.name.split('.');
     if (splits.length <= 1) return "";
     else return splits.slice(0, -1).join(".");
   });
@@ -20,7 +20,7 @@ function AttributeList(props) {
   const attributeAccordionItems = _.map(nestedAttributes, (na, key) => {
     var sortedAttributes = [...na];
     sortedAttributes.sort((a,b) => {
-      return a.name.localeCompare(b.name);
+      return a.attribute.name.localeCompare(b.attribute.name);
     });
 
     const title = (key === "") ? "__uncategorized" : key;
@@ -41,7 +41,7 @@ function AttributeList(props) {
       <Accordion.Content active={active}>
         <Flipper flipKey={sortedAttributes.map(a => a.layerStackIDs).join(' ')}>
           {sortedAttributes.map(a => (
-            <Flipped key={a.name} flipId={a.name} onAppear={onAppear} onExit={onExit}>
+            <Flipped key={a.attribute.name} flipId={a.attribute.name} onAppear={onAppear} onExit={onExit}>
               <Attribute attribute={a} ciIdentity={props.ciIdentity} layers={props.layers} isEditable={props.isEditable}></Attribute>
             </Flipped>
           ))}
@@ -71,19 +71,20 @@ AttributeList.propTypes = {
     ).isRequired,
     ciIdentity: PropTypes.string.isRequired,
     attributes: PropTypes.arrayOf(
-        PropTypes.shape({
-        name: PropTypes.string.isRequired,
-        layerID: PropTypes.number.isRequired,
-        state: PropTypes.string.isRequired,
-        value: PropTypes.shape({
-            __typename: PropTypes.string.isRequired,
-            value: PropTypes.oneOfType([
-            PropTypes.string,
-            PropTypes.number,
-            PropTypes.bool
-            ]).isRequired
+      PropTypes.shape({
+        attribute: PropTypes.shape({
+          name: PropTypes.string.isRequired,
+          state: PropTypes.string.isRequired,
+          value: PropTypes.shape({
+              __typename: PropTypes.string.isRequired,
+              value: PropTypes.oneOfType([
+              PropTypes.string,
+              PropTypes.number,
+              PropTypes.bool
+              ]).isRequired
+          })
         })
-        })
+      })
     ).isRequired
 }
 

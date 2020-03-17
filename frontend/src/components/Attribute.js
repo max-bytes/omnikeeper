@@ -13,8 +13,8 @@ function Attribute(props) {
 
   var {ciIdentity, layers, attribute, isEditable, ...rest} = props;
 
-  const [value, setValue] = useState(props.attribute.value.value);
-  React.useEffect(() => setValue(props.attribute.value.value), [props.attribute.value.value])
+  const [value, setValue] = useState(attribute.attribute.value.value);
+  React.useEffect(() => setValue(attribute.attribute.value.value), [attribute.attribute.value.value])
 
   let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
 
@@ -37,12 +37,14 @@ function Attribute(props) {
 
   let input;
 
+  const layerID = props.attribute.layerStackIDs[props.attribute.layerStackIDs.length - 1];
+
   if (isEditable) {
 
     let removeButton = (
       <Button variant="danger" onClick={e => {
         e.preventDefault();
-        removeCIAttribute({ variables: { layers: visibleLayers, ciIdentity: props.ciIdentity, name: props.attribute.name, layerID: props.attribute.layerID } })
+        removeCIAttribute({ variables: { layers: visibleLayers, ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID } })
         .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
       }}>Remove</Button>
     );
@@ -50,36 +52,36 @@ function Attribute(props) {
     input = (
       <Form inline onSubmit={e => {
           e.preventDefault();
-          insertCIAttribute({ variables: { layers: visibleLayers, ciIdentity: props.ciIdentity, name: props.attribute.name, layerID: props.attribute.layerID, value: {
-            type: attributeTypename2Object(props.attribute.value.__typename).id,
+          insertCIAttribute({ variables: { layers: visibleLayers, ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID: layerID, value: {
+            type: attributeTypename2Object(attribute.attribute.value.__typename).id,
             value: value
           } } })
           .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
         }} >
-          <LayerStackIcons layerStack={props.attribute.layerStack}></LayerStackIcons>
-          <ChangesetPopup changesetID={props.attribute.changesetID} />
-          <Form.Group controlId={`value:${props.attribute.name}`} style={{flexGrow: 1}}>
-            <Form.Label className={"pr-1"} style={{flexBasis: '160px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{props.attribute.name}:</Form.Label>
-            <Form.Control style={{flexGrow: 1}} type={attribute2InputType(attributeTypename2Object(props.attribute.value.__typename))} placeholder="Enter value" value={value} onChange={e => setValue(e.target.value)} />
-            <Button type="submit" className={'mx-1'} disabled={props.attribute.value.value === value}>Update</Button>
+          <LayerStackIcons layerStack={attribute.layerStack}></LayerStackIcons>
+          <ChangesetPopup changesetID={attribute.attribute.changesetID} />
+          <Form.Group controlId={`value:${attribute.attribute.name}`} style={{flexGrow: 1}}>
+            <Form.Label className={"pr-1"} style={{flexBasis: '160px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{attribute.attribute.name}:</Form.Label>
+            <Form.Control style={{flexGrow: 1}} type={attribute2InputType(attributeTypename2Object(attribute.attribute.value.__typename))} placeholder="Enter value" value={value} onChange={e => setValue(e.target.value)} />
+            <Button type="submit" className={'mx-1'} disabled={attribute.attribute.value.value === value}>Update</Button>
             {removeButton}
           </Form.Group>
       </Form>
     );
   } else {
     input = (<Form inline>
-      <LayerStackIcons layerStack={props.attribute.layerStack}></LayerStackIcons>
-      <ChangesetPopup changesetID={props.attribute.changesetID} />
-      <Form.Group controlId={`value:${props.attribute.name}`} style={{flexGrow: 1}}>
-        <Form.Label className={"pr-1"} style={{flexBasis: '160px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{props.attribute.name}:</Form.Label>
-        <Form.Control style={{flexGrow: 1}} type={attribute2InputType(attributeTypename2Object(props.attribute.value.__typename))} placeholder="Enter value" value={value} readOnly />
+      <LayerStackIcons layerStack={attribute.layerStack}></LayerStackIcons>
+      <ChangesetPopup changesetID={attribute.attribute.changesetID} />
+      <Form.Group controlId={`value:${attribute.attribute.name}`} style={{flexGrow: 1}}>
+        <Form.Label className={"pr-1"} style={{flexBasis: '160px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{attribute.attribute.name}:</Form.Label>
+        <Form.Control style={{flexGrow: 1}} type={attribute2InputType(attributeTypename2Object(attribute.attribute.value.__typename))} placeholder="Enter value" value={value} readOnly />
       </Form.Group>
     </Form>);
   }
 
 
   return (
-    <div key={props.attribute.name} style={{margin: "5px"}} {...rest}>
+    <div key={attribute.attribute.name} style={{margin: "5px"}} {...rest}>
       {input}
     </div>
   );
@@ -96,19 +98,17 @@ Attribute.propTypes = {
     }).isRequired
   ).isRequired,
   attribute: PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      layerID: PropTypes.number.isRequired,
-      layer: PropTypes.shape({
-        color: PropTypes.string.isRequired
-      }),
-      state: PropTypes.string.isRequired,
-      value: PropTypes.shape({
-        __typename: PropTypes.string.isRequired,
-        value: PropTypes.oneOfType([
-          PropTypes.string,
-          PropTypes.number,
-          PropTypes.bool
-        ]).isRequired
+      attribute: PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        state: PropTypes.string.isRequired,
+        value: PropTypes.shape({
+          __typename: PropTypes.string.isRequired,
+          value: PropTypes.oneOfType([
+            PropTypes.string,
+            PropTypes.number,
+            PropTypes.bool
+          ]).isRequired
+        })
       })
     }).isRequired
 }

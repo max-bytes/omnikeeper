@@ -25,7 +25,7 @@ namespace LandscapePrototype.Entity.GraphQL
             Field("layerhash", x => x.Layers.LayerHash);
             Field(x => x.AtTime);
             Field(x => x.Type, type: typeof(CITypeType));
-            Field(x => x.Attributes, type: typeof(ListGraphType<CIAttributeType>));
+            Field(x => x.Attributes, type: typeof(ListGraphType<MergedCIAttributeType>));
             FieldAsync<ListGraphType<RelatedCIType>>("related",
             arguments: new QueryArguments(new List<QueryArgument>
             {
@@ -77,18 +77,12 @@ namespace LandscapePrototype.Entity.GraphQL
         }
     }
 
-    public class CIAttributeType : ObjectGraphType<CIAttribute>
+    public class MergedCIAttributeType : ObjectGraphType<MergedCIAttribute>
     {
-        public CIAttributeType(LayerModel layerModel)
+        public MergedCIAttributeType(LayerModel layerModel)
         {
-            Field("id", x => x.ID);
-            Field("ciid", x => x.CIID);
-            Field(x => x.LayerID);
             Field(x => x.LayerStackIDs);
-            Field(x => x.ChangesetID);
-            Field(x => x.Name);
-            Field(x => x.State, type: typeof(AttributeStateType));
-            Field(x => x.Value, type: typeof(AttributeValueType));
+            Field(x => x.Attribute, type: typeof(CIAttributeType));
 
             FieldAsync<ListGraphType<LayerType>>("layerStack",
             resolve: async (context) =>
@@ -97,6 +91,29 @@ namespace LandscapePrototype.Entity.GraphQL
                 var layerstackIDs = context.Source.LayerStackIDs;
                 return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
             });
+        }
+    }
+
+    public class CIAttributeType : ObjectGraphType<CIAttribute>
+    {
+        public CIAttributeType(LayerModel layerModel)
+        {
+            Field("id", x => x.ID);
+            Field("ciid", x => x.CIID);
+            //Field(x => x.LayerID);
+            //Field(x => x.LayerStackIDs);
+            Field(x => x.ChangesetID);
+            Field(x => x.Name);
+            Field(x => x.State, type: typeof(AttributeStateType));
+            Field(x => x.Value, type: typeof(AttributeValueType));
+
+            //FieldAsync<ListGraphType<LayerType>>("layerStack",
+            //resolve: async (context) =>
+            //{
+            //    var userContext = context.UserContext as LandscapeUserContext;
+            //    var layerstackIDs = context.Source.LayerStackIDs;
+            //    return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
+            //});
         }
     }
 

@@ -40,27 +40,27 @@ function ApolloWrapper({ component: Component, ...rest }) {
 
     const typeDefs = gql`
         type LayerSortingAndVisibility {
-        id: Int!
-        sort: Int!
-        visibility: Bool!
+            id: Int!
+            sort: Int!
+            visibility: Bool!
         }
         type LocalState {
-        layerSortingAndVisibility: LayerSortingAndVisibility!
+            layerSortingAndVisibility: LayerSortingAndVisibility!
         }
         type SelectedTimeThreshold {
-        time: DateTimeOffset!
-        isLatest: Bool!
+            time: DateTimeOffset!
+            isLatest: Bool!
         }
         extend type Query {
-        localState: LocalState!
-        selectedTimeThreshold: SelectedTimeThreshold! 
+            localState: LocalState!
+            selectedTimeThreshold: SelectedTimeThreshold! 
         }
         extend type Mutation {
-        updateLayerSortingAndVisibility(layers: [LayerSortingAndVisibility]!): [LayerSortingAndVisibility]!
+            updateLayerSortingAndVisibility(layers: [LayerSortingAndVisibility]!): [LayerSortingAndVisibility]!
         }
         extend type LayerType {
-        visibility: Bool!
-        color: String!
+            visibility: Bool!
+            color: String!
         }
     `;
     var initalLayerSort = 0;
@@ -141,7 +141,8 @@ function ApolloWrapper({ component: Component, ...rest }) {
         dataIdFromObject: object => {
             switch (object.__typename) {
             case 'CIType': return `CIType:${object.identity}:${object.layerhash}:${object.atTime}`; 
-            case 'CIAttributeType': return `CIAttributeType:${object.id}:ls${object.layerStackIDs.join(',')}`;
+            case 'MergedCIAttributeType': return `MergedCIAttributeType:${object.attribute.id}:ls${object.layerStackIDs.join(',')}`;
+            case 'CIAttributeType': return `CIAttributeType:${object.id}}`;
             case 'RelationType': return `RelationType:${object.id}:ls${object.layerStackIDs.join(',')}`;
             case 'RelatedCIType': return `RelatedCIType:${object.relation.id}:f-${object.isForward}:ls${object.relation.layerStackIDs.join(',')}`;
             default: return defaultDataIdFromObject(object);

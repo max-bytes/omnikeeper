@@ -144,11 +144,11 @@ namespace LandscapePrototype.Model
             if (CIIDs == null) CIIDs = await GetCIIDs(trans);
             var attributes = await GetMergedAttributes(CIIDs, false, layers, trans, atTime);
 
-            var groupedAttributes = attributes.GroupBy(a => a.CIID).ToDictionary(a => a.Key, a => a.ToList());
+            var groupedAttributes = attributes.GroupBy(a => a.Attribute.CIID).ToDictionary(a => a.Key, a => a.ToList());
 
             if (includeEmptyCIs)
             {
-                var emptyCIs = CIIDs.Except(groupedAttributes.Select(a => a.Key)).ToDictionary(a => a, a => new List<CIAttribute>());
+                var emptyCIs = CIIDs.Except(groupedAttributes.Select(a => a.Key)).ToDictionary(a => a, a => new List<MergedCIAttribute>());
                 groupedAttributes = groupedAttributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
             }
 
@@ -161,15 +161,14 @@ namespace LandscapePrototype.Model
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetMergedAttributes(string ciIdentity, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<IEnumerable<MergedCIAttribute>> GetMergedAttributes(string ciIdentity, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
             return await GetMergedAttributes(new string[] { ciIdentity }, includeRemoved, layers, trans, atTime);
         }
 
-        // TODO: make MergedCIAttribute its own type
-        public async Task<IEnumerable<CIAttribute>> GetMergedAttributes(IEnumerable<string> ciIdentities, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<IEnumerable<MergedCIAttribute>> GetMergedAttributes(IEnumerable<string> ciIdentities, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
-            var ret = new List<CIAttribute>();
+            var ret = new List<MergedCIAttribute>();
 
             var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn, trans);
 
@@ -223,7 +222,7 @@ namespace LandscapePrototype.Model
                     var changesetID = dr.GetInt64(6);
                     var layerStack = (long[])dr[7];
 
-                    var att = CIAttribute.Build(id, name, CIID, av, layerStack, state, changesetID);
+                    var att = MergedCIAttribute.Build(CIAttribute.Build(id, name, CIID, av, state, changesetID), layerStack);
 
                     ret.Add(att);
                 }
@@ -269,7 +268,7 @@ namespace LandscapePrototype.Model
 
                 if (state != AttributeState.Removed || includeRemoved)
                 {
-                    var att = CIAttribute.Build(id, name, CIID, av, new long[] { layerID }, state, changesetID);
+                    var att = CIAttribute.Build(id, name, CIID, av, state, changesetID);
                     ret.Add(att);
                 }
             }
@@ -311,7 +310,7 @@ namespace LandscapePrototype.Model
             var av = AttributeValueBuilder.Build(type, value);
             var state = dr.GetFieldValue<AttributeState>(4);
             var changesetID = dr.GetInt64(5);
-            var att = CIAttribute.Build(id, name, CIID, av, new long[] { layerID }, state, changesetID);
+            var att = CIAttribute.Build(id, name, CIID, av, state, changesetID);
             return att;
         }
 
@@ -342,12 +341,10 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("state", AttributeState.Removed);
             command.Parameters.AddWithValue("changeset_id", changesetID);
 
-            var layerStack = new long[] { layerID }; // TODO: calculate proper layerstack(?)
-
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
             var id = reader.GetInt64(0);
-            return CIAttribute.Build(id, name, ciid, currentAttribute.Value, layerStack, AttributeState.Removed, changesetID);
+            return CIAttribute.Build(id, name, ciid, currentAttribute.Value, AttributeState.Removed, changesetID);
         }
 
         public async Task<bool> SetCIType(string ciid, string typeID, NpgsqlTransaction trans)
@@ -390,12 +387,10 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("state", state);
             command.Parameters.AddWithValue("changeset_id", changesetID);
 
-            var layerStack = new long[] { layerID }; // TODO: calculate proper layerstack(?)
-
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
             var id = reader.GetInt64(0);
-            return CIAttribute.Build(id, name, ciid, value, layerStack, state, changesetID);
+            return CIAttribute.Build(id, name, ciid, value, state, changesetID);
         }
 
         public async Task<bool> BulkReplaceAttributes(BulkCIAttributeData data, long changesetID, NpgsqlTransaction trans)

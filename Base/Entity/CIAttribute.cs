@@ -9,14 +9,29 @@ namespace LandscapePrototype.Entity
         New, Changed, Removed, Renewed
     }
 
+    public class MergedCIAttribute
+    {
+        public CIAttribute Attribute { get; private set; }
+        public long[] LayerStackIDs { get; private set; }
+
+        public static MergedCIAttribute Build(CIAttribute attribute, long[] layerStackIDs)
+        {
+            return new MergedCIAttribute
+            {
+                Attribute = attribute,
+                LayerStackIDs = layerStackIDs
+            };
+        }
+    }
+
     public class CIAttribute
     {
         public long ID { get; private set; }
         public string Name { get; private set; }
         public string CIID { get; private set; }
         public IAttributeValue Value { get; private set; }
-        public long LayerID { get => LayerStackIDs[^1]; }
-        public long[] LayerStackIDs { get; private set; }
+        //public long LayerID { get => LayerStackIDs[^1]; }
+        //public long[] LayerStackIDs { get; private set; }
         public AttributeState State { get; private set; }
         public long ChangesetID { get; private set; }
 
@@ -25,7 +40,7 @@ namespace LandscapePrototype.Entity
         public static string CreateInformationHash(string name, string ciid) => name + "_" + ciid;
 
 
-        public static CIAttribute Build(long id, string name, string CIID, IAttributeValue value, long[] layerStackIDs, AttributeState state, long changesetID)
+        public static CIAttribute Build(long id, string name, string CIID, IAttributeValue value, AttributeState state, long changesetID)
         {
             return new CIAttribute
             {
@@ -33,7 +48,7 @@ namespace LandscapePrototype.Entity
                 Name = name,
                 CIID = CIID,
                 Value = value,
-                LayerStackIDs = layerStackIDs,
+                //LayerStackIDs = layerStackIDs,
                 State = state,
                 ChangesetID = changesetID
             };

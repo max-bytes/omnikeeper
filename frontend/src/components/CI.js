@@ -76,16 +76,17 @@ CI.propTypes = {
     }).isRequired,
     attributes: PropTypes.arrayOf(
       PropTypes.shape({
-        name: PropTypes.string.isRequired,
-        layerID: PropTypes.number.isRequired,
-        state: PropTypes.string.isRequired,
-        value: PropTypes.shape({
-          __typename: PropTypes.string.isRequired,
-          value: PropTypes.oneOfType([
-            PropTypes.string,
-            PropTypes.number,
-            PropTypes.bool
-          ]).isRequired
+        attribute: PropTypes.shape({
+          name: PropTypes.string.isRequired,
+          state: PropTypes.string.isRequired,
+          value: PropTypes.shape({
+            __typename: PropTypes.string.isRequired,
+            value: PropTypes.oneOfType([
+              PropTypes.string,
+              PropTypes.number,
+              PropTypes.bool
+            ]).isRequired
+          })
         })
       })
     )

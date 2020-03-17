@@ -63,17 +63,17 @@ namespace TestPlugin
                     string finalCommand;
                     try
                     {
-                        var command = mca.Value.Value2String();
+                        var command = mca.Attribute.Value.Value2String();
                         Template template = Template.Parse(command);
                         finalCommand = template.Render(Hash.FromDictionary(variables));
                     }
                     catch (Exception e)
                     {
-                        await errorHandler.LogError(mca.CIID, "error", $"Error parsing or rendering command: {e.Message}");
+                        await errorHandler.LogError(mca.Attribute.CIID, "error", $"Error parsing or rendering command: {e.Message}");
                         continue;
                     }
                     monitoringCommandFragments.Add(
-                        BulkCIAttributeDataFragment.Build(BulkCIAttributeDataFragment.StripPrefix(mca.Name, "monitoring.commands"),
+                        BulkCIAttributeDataFragment.Build(BulkCIAttributeDataFragment.StripPrefix(mca.Attribute.Name, "monitoring.commands"),
                         AttributeValueText.Build(finalCommand), p.FromCIID)
                     );
                 }

@@ -9,6 +9,7 @@ export const queries = {
             }
         }
         ${Fragments.ci}
+        ${Fragments.mergedAttribute}
         ${Fragments.attribute}
     `,
 
@@ -40,6 +41,7 @@ export const queries = {
             }
         }
         ${Fragments.ci}
+        ${Fragments.mergedAttribute}
         ${Fragments.attribute}
         ${Fragments.relation}
     `,

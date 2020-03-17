@@ -30,6 +30,7 @@ export const mutations = {
         }
       }
     }
+    ${Fragments.mergedAttribute}
     ${Fragments.attribute}
     ${Fragments.relation}
     ${Fragments.ci}
@@ -65,6 +66,7 @@ mutation RemoveRelation($layers: [String]!, $fromCIID: String!, $toCIID: String!
     }
   }
 }
+${Fragments.mergedAttribute}
 ${Fragments.attribute}
 ${Fragments.relation}
 ${Fragments.ci}

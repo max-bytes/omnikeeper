@@ -1,12 +1,11 @@
 import gql from 'graphql-tag';
 
 export const Fragments = {
-  attribute: gql`
-    fragment FullAttribute on CIAttributeType {
-        id
-        name
-        layerID
-        changesetID
+  mergedAttribute: gql`
+    fragment FullMergedAttribute on MergedCIAttributeType {
+        attribute {
+            ...FullAttribute
+        }
         layerStackIDs
         layerStack {
             id
@@ -14,6 +13,14 @@ export const Fragments = {
             visibility @client
             color @client
         }
+    }
+  `,
+
+  attribute: gql`
+    fragment FullAttribute on CIAttributeType {
+        id
+        name
+        changesetID
         state
         value {
             __typename
@@ -46,7 +53,7 @@ export const Fragments = {
             isForward
         }
         attributes {
-            ...FullAttribute
+            ...FullMergedAttribute
         }
     }
   `,
