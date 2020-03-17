@@ -32,13 +32,19 @@ namespace TestPlugin
 
             // prepare list of all monitored cis
             var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.FromCIID).Distinct();
-            var monitoredCIs = (await ciModel.GetFullCIs(layerSetAll, true, trans, DateTimeOffset.Now, monitoredCIIDs)).ToDictionary(ci => ci.Identity);
+            var monitoredCIs = (await ciModel.GetFullCIs(layerSetAll, true, trans, DateTimeOffset.Now, monitoredCIIDs))
+                .ToDictionary(ci => ci.Identity);
+
+            // prepare list of all monitoring modules
+            var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.ToCIID).Distinct();
+            var monitoringModuleCIs = (await ciModel.GetFullCIs(layerSetMonitoringDefinitionsOnly, false, trans, DateTimeOffset.Now, monitoringModuleCIIDs))
+                .ToDictionary(ci => ci.Identity);
 
             // find and parse commands, insert into monitored CIs
             var monitoringCommandFragments = new List<BulkCIAttributeDataFragment>();
             foreach (var p in allHasMonitoringModuleRelations)
             {
-                var monitoringModuleCI = await ciModel.GetFullCI(p.ToCIID, layerSetMonitoringDefinitionsOnly, trans, DateTimeOffset.Now);
+                var monitoringModuleCI = monitoringModuleCIs[p.ToCIID];
                 if (monitoringModuleCI.Type.ID != "Monitoring Check Module")
                 {
                     await errorHandler.LogError(monitoringModuleCI.Identity, "error", "Expected this CI to be of type \"Monitoring Check Module\"");
