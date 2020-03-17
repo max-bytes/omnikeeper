@@ -18,7 +18,7 @@ namespace Landscape.Base
         private readonly long changesetID;
         private readonly ICIModel ciModel;
 
-        private IList<CIAttribute> writtenErrors = new List<CIAttribute>();
+        private readonly IList<CIAttribute> writtenErrors = new List<CIAttribute>();
 
         public CLBErrorHandler(NpgsqlTransaction trans, string clbName, long clbLayerID, long changesetID, ICIModel ciModel)
         {
@@ -32,9 +32,10 @@ namespace Landscape.Base
         private string AttributeNamePrefix => $"__error.clb.{clbName}";
 
         // gets all attributes starting with AttributeNamePrefix that are NOT created through this errorHandler instance and remove them
+        // TODO: rewrite into using bulk replace?
         public async Task RemoveOutdatedErrors()
         {
-            var allAttributes = await ciModel.FindAttributesByName($"{AttributeNamePrefix}%", clbLayerID, trans, DateTimeOffset.Now);
+            var allAttributes = await ciModel.FindAttributesByName($"{AttributeNamePrefix}%", false, clbLayerID, trans, DateTimeOffset.Now);
 
             var attributesToRemove = allAttributes.Where(a =>
             {

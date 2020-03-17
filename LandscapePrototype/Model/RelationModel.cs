@@ -24,8 +24,12 @@ namespace LandscapePrototype.Model
             Forward, Backward, Both
         }
 
-        private NpgsqlCommand CreateMergedRelationCommand(string ciIdentity, bool includeRemoved, IncludeRelationDirections ird, string additionalWhereClause, NpgsqlTransaction trans, DateTimeOffset? timeThreshold)
+        // TODO: make MergedRelation its own type
+        // TODO: make it work with list of ciIdentities
+        private async Task<NpgsqlCommand> CreateMergedRelationCommand(string ciIdentity, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, string additionalWhereClause, NpgsqlTransaction trans, DateTimeOffset? timeThreshold)
         {
+            var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layerset, "temp_layerset", conn, trans);
+
             var innerWhereClauses = new List<string>();
             if (ciIdentity != null)
                 innerWhereClauses.Add(ird switch
@@ -63,7 +67,7 @@ namespace LandscapePrototype.Model
                     PARTITION by r.from_ci_id, r.to_ci_id, r.predicate_id, r.layer_id ORDER BY c.timestamp ASC  -- sort by timestamp
                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
             ) inn
-            inner join temp_layerset ls ON inn.last_layer_id = ls.id -- inner join to only keep rows that are in the selected layers
+            inner join {tempLayersetTableName} ls ON inn.last_layer_id = ls.id -- inner join to only keep rows that are in the selected layers
             where inn.last_state != ALL(@excluded_states) -- remove entries from layers which' last item is deleted
             WINDOW wndOut AS(PARTITION by inn.last_from_ci_id, inn.last_to_ci_id, inn.last_predicate_id ORDER BY ls.order DESC -- sort by layer order
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
@@ -83,11 +87,9 @@ namespace LandscapePrototype.Model
         {
             var ret = new List<Relation>();
 
-            await LayerSet.CreateLayerSetTempTable(layerset, "temp_layerset", conn, trans);
-
             var predicates = await predicateModel.GetPredicates(trans, timeThreshold); // TODO: caching?
 
-            using (var command = CreateMergedRelationCommand(ciIdentity, includeRemoved, ird, null, trans, timeThreshold))
+            using (var command = await CreateMergedRelationCommand(ciIdentity, includeRemoved, layerset, ird, null, trans, timeThreshold))
             {
                 using var dr = await command.ExecuteReaderAsync();
 
@@ -150,11 +152,9 @@ namespace LandscapePrototype.Model
         {
             var ret = new List<Relation>();
 
-            await LayerSet.CreateLayerSetTempTable(layerset, "temp_layerset", conn, trans);
-
             var predicates = await predicateModel.GetPredicates(trans, timeThreshold); // TODO: caching?
 
-            using (var command = CreateMergedRelationCommand(null, includeRemoved, IncludeRelationDirections.Both, $"r.predicate_id = '{predicateID}'", trans, timeThreshold))
+            using (var command = await CreateMergedRelationCommand(null, includeRemoved, layerset, IncludeRelationDirections.Both, $"r.predicate_id = '{predicateID}'", trans, timeThreshold))
             {
                 using var dr = await command.ExecuteReaderAsync();
 
@@ -247,6 +247,55 @@ namespace LandscapePrototype.Model
 
             var id = (long)await command.ExecuteScalarAsync();
             return Relation.Build(id, fromCIID, toCIID, predicate, layerStack, state, changesetID);
+        }
+
+        public async Task<bool> BulkReplaceRelations(BulkRelationData data, long changesetID, NpgsqlTransaction trans)
+        {
+            var predicates = await predicateModel.GetPredicates(trans, DateTimeOffset.Now); // TODO: caching?
+
+            var layerSet = new LayerSet(data.LayerID);
+            var outdatedRelations = (await GetRelationsWithPredicateID(layerSet, false, data.PredicateID, trans))
+                .ToDictionary(r => r.InformationHash);
+
+            // TODO: use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
+            foreach (var ciidPair in data.FromToCIIDPairs)
+            {
+                var informationHash = Relation.CreateInformationHash(ciidPair.Item1, ciidPair.Item2, data.PredicateID);
+                // remove the current relation from the list of relations to remove
+                outdatedRelations.Remove(informationHash, out var currentRelation);
+
+                var state = RelationState.New;
+                if (currentRelation != null)
+                {
+                    if (currentRelation.State == RelationState.Removed)
+                        state = RelationState.Renewed;
+                    else // same predicate already exists and is present, go to next pair
+                        continue;
+                }
+
+                using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id) 
+                    VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id) returning id", conn, trans);
+
+                command.Parameters.AddWithValue("from_ci_id", ciidPair.Item1);
+                command.Parameters.AddWithValue("to_ci_id", ciidPair.Item2);
+                command.Parameters.AddWithValue("predicate_id", data.PredicateID);
+                command.Parameters.AddWithValue("layer_id", data.LayerID);
+                command.Parameters.AddWithValue("state", state);
+                command.Parameters.AddWithValue("changeset_id", changesetID);
+
+                //var layerStack = new long[] { data.LayerID }; // TODO: calculate proper layerstack(?)
+
+                //var predicate = predicates[data.PredicateID];
+
+                var id = (long)await command.ExecuteScalarAsync();
+                //Relation.Build(id, ciidPair.Item1, ciidPair.Item2, predicate, layerStack, state, changesetID);
+            }
+
+            // remove outdated 
+            foreach(var outdatedRelation in outdatedRelations.Values)
+                await RemoveRelation(outdatedRelation.FromCIID, outdatedRelation.ToCIID, data.PredicateID, data.LayerID, changesetID, trans);
+
+            return true;
         }
     }
 }

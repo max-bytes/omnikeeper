@@ -36,4 +36,23 @@ namespace LandscapePrototype.Entity.GraphQL
             Field(x => x.AffectedCIs, type: typeof(ListGraphType<CIType>));
         }
     }
+
+    public class CreateCIsReturn
+    {
+        public IEnumerable<string> CIIDs { get; private set; }
+        public static CreateCIsReturn Build(IEnumerable<string> ciids)
+        {
+            return new CreateCIsReturn()
+            {
+                CIIDs = ciids
+            };
+        }
+    }
+    public class CreateCIsReturnType : ObjectGraphType<CreateCIsReturn>
+    {
+        public CreateCIsReturnType()
+        {
+            Field(x => x.CIIDs, type: typeof(ListGraphType<StringGraphType>));
+        }
+    }
 }

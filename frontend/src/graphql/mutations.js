@@ -70,6 +70,19 @@ ${Fragments.relation}
 ${Fragments.ci}
 `,
 
+CREATE_CI: gql`
+    mutation CreateCI($ciIdentity: String!, $typeID: String!) {
+      createCIs(cis: [
+        {
+          identity: $ciIdentity
+          typeID: $typeID
+        }
+      ]) {
+        __typename
+      }
+    }
+  `,
+
   TOGGLE_LAYER_VISIBILITY: gql`
   mutation ToggleLayerVisibility($id: Int!) {
     toggleLayerVisibility(id: $id) @client

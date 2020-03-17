@@ -229,19 +229,19 @@ namespace Tests.Integration.Model
             await model.InsertAttribute("a1", AttributeValueText.Build("textL2"), layerID2, ciid1, changeset2.ID, trans);
 
             var changeset3 = await changesetModel.CreateChangeset(user.ID, trans);
-            await model.InsertAttribute("a1", AttributeValueText.Build("textL2"), layerID2, ciid2, changeset2.ID, trans);
-            await model.InsertAttribute("a3", AttributeValueText.Build("textL2"), layerID2, ciid2, changeset2.ID, trans);
+            await model.InsertAttribute("a1", AttributeValueText.Build("textL2"), layerID2, ciid2, changeset3.ID, trans);
+            await model.InsertAttribute("a3", AttributeValueText.Build("textL2"), layerID2, ciid2, changeset3.ID, trans);
 
-            var a1 = await model.FindAttributesByName("a%", layerID1, trans, DateTimeOffset.Now);
+            var a1 = await model.FindAttributesByName("a%", false, layerID1, trans, DateTimeOffset.Now);
             Assert.AreEqual(2, a1.Count());
 
-            var a2 = await model.FindAttributesByName("a2", layerID1, trans, DateTimeOffset.Now);
+            var a2 = await model.FindAttributesByName("a2", false, layerID1, trans, DateTimeOffset.Now);
             Assert.AreEqual(1, a2.Count());
 
-            var a3 = await model.FindAttributesByName("%3", layerID2, trans, DateTimeOffset.Now);
+            var a3 = await model.FindAttributesByName("%3", false, layerID2, trans, DateTimeOffset.Now);
             Assert.AreEqual(1, a3.Count());
 
-            var a4 = await model.FindAttributesByName("%3", layerID1, trans, DateTimeOffset.Now);
+            var a4 = await model.FindAttributesByName("%3", false, layerID1, trans, DateTimeOffset.Now);
             Assert.AreEqual(0, a4.Count());
         }
 
@@ -291,9 +291,51 @@ namespace Tests.Integration.Model
                 var layerset1 = new LayerSet(new long[] { layerID1 });
                 var ciid2 = await model.CreateCIWithType("H456", "T1", trans);
                 var ciid3 = await model.CreateCIWithType("H789", "T2", trans);
-                Assert.AreEqual(1, (await model.GetCIsWithType(layerset1, trans, DateTimeOffset.Now, "T1")).Count());
-                Assert.AreEqual(2, (await model.GetCIsWithType(layerset1, trans, DateTimeOffset.Now, "T2")).Count());
+                Assert.AreEqual(1, (await model.GetFullCIsWithType(layerset1, trans, DateTimeOffset.Now, "T1")).Count());
+                Assert.AreEqual(2, (await model.GetFullCIsWithType(layerset1, trans, DateTimeOffset.Now, "T2")).Count());
             }
+        }
+
+        [Test]
+        public async Task TestBulkReplace()
+        {
+            var userModel = new UserModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn);
+            var model = new CIModel(conn);
+            var layerModel = new LayerModel(conn);
+            using var trans = conn.BeginTransaction();
+            var user = await DBSetup.SetupUser(userModel);
+
+            var ciid1 = await model.CreateCI("H123", trans);
+            var ciid2 = await model.CreateCI("H456", trans);
+            var layerID1 = await layerModel.CreateLayer("l1", trans);
+
+            var layerset1 = new LayerSet(new long[] { layerID1 });
+
+            var changeset1 = await changesetModel.CreateChangeset(user.ID, trans);
+            await model.InsertAttribute("prefix1.a1", AttributeValueText.Build("textL1"), layerID1, ciid1, changeset1.ID, trans);
+            await model.InsertAttribute("prefix1.a2", AttributeValueText.Build("textL1"), layerID1, ciid1, changeset1.ID, trans);
+
+            var changeset2 = await changesetModel.CreateChangeset(user.ID, trans);
+            await model.InsertAttribute("prefix1.a1", AttributeValueText.Build("textL2"), layerID1, ciid2, changeset2.ID, trans);
+            await model.InsertAttribute("prefix2.a1", AttributeValueText.Build("textL2"), layerID1, ciid2, changeset2.ID, trans);
+            await model.InsertAttribute("prefix1.a3", AttributeValueText.Build("textL2"), layerID1, ciid2, changeset2.ID, trans);
+
+            trans.Commit();
+
+            using var trans2 = conn.BeginTransaction();
+            var changeset3 = await changesetModel.CreateChangeset(user.ID, trans2);
+            await model.BulkReplaceAttributes(BulkCIAttributeData.Build("prefix1", layerID1, new BulkCIAttributeDataFragment[] {
+                BulkCIAttributeDataFragment.Build("a1", AttributeValueText.Build("textNew"), ciid1),
+                BulkCIAttributeDataFragment.Build("a4", AttributeValueText.Build("textNew"), ciid2),
+                BulkCIAttributeDataFragment.Build("a2", AttributeValueText.Build("textNew"), ciid2),
+            }), changeset3.ID, trans2);
+
+            var a1 = await model.FindAttributesByName("prefix1%", false, layerID1, trans2, DateTimeOffset.Now);
+            Assert.AreEqual(3, a1.Count());
+            Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a2").Count());
+            var a2 = await model.FindAttributesByName("prefix2%", false, layerID1, trans2, DateTimeOffset.Now);
+            Assert.AreEqual(1, a2.Count());
         }
     }
 }

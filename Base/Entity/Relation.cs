@@ -20,17 +20,39 @@ namespace LandscapePrototype.Entity
         public RelationState State { get; private set; }
         public long ChangesetID { get; private set; }
 
+        // information hash: 
+        public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);
+        public static string CreateInformationHash(string fromCIID, string toCIID, string predicateID) => fromCIID + "_" + toCIID + "_" + predicateID;
+
         public static Relation Build(long id, string fromCIID, string toCIID, Predicate predicate, long[] layerStackIDs, RelationState state, long changesetID)
         {
-            var o = new Relation();
-            o.ID = id;
-            o.FromCIID = fromCIID;
-            o.ToCIID = toCIID;
-            o.Predicate = predicate;
-            o.LayerStackIDs = layerStackIDs;
-            o.State = state;
-            o.ChangesetID = changesetID;
-            return o;
+            return new Relation
+            {
+                ID = id,
+                FromCIID = fromCIID,
+                ToCIID = toCIID,
+                Predicate = predicate,
+                LayerStackIDs = layerStackIDs,
+                State = state,
+                ChangesetID = changesetID
+            };
+        }
+    }
+
+    public class BulkRelationData
+    {
+        public string PredicateID { get; private set; }
+        public long LayerID { get; private set; }
+        public (string, string)[] FromToCIIDPairs { get; private set; } // TODO: create and refactor into BulkRelationDataFragment
+
+        public static BulkRelationData Build(string predicateID, long layerID, (string, string)[] fromToCIIDPairs)
+        {
+            return new BulkRelationData()
+            {
+                PredicateID = predicateID,
+                LayerID = layerID,
+                FromToCIIDPairs = fromToCIIDPairs
+            };
         }
     }
 }

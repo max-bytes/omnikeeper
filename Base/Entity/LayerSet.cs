@@ -21,7 +21,7 @@ namespace LandscapePrototype.Model
             }
         }
 
-        public LayerSet(long[] layerIDs)
+        public LayerSet(params long[] layerIDs)
         {
             LayerIDs = layerIDs;
         }
@@ -30,25 +30,33 @@ namespace LandscapePrototype.Model
 
         IEnumerator IEnumerable.GetEnumerator() => LayerIDs.GetEnumerator();
 
-        public static async Task CreateLayerSetTempTable(LayerSet layers, string tablename, NpgsqlConnection conn, NpgsqlTransaction trans)
+        public static async Task<string> CreateLayerSetTempTable(LayerSet layers, string tablePrefix, NpgsqlConnection conn, NpgsqlTransaction trans)
         {
-            using var c1 = new NpgsqlCommand(@$"
-                CREATE TEMPORARY TABLE IF NOT EXISTS {tablename}
-               (
-                    id bigint,
-                    ""order"" int
-               )", conn, trans);
-            await c1.ExecuteNonQueryAsync();
-            await new NpgsqlCommand(@$"TRUNCATE TABLE {tablename}", conn, trans).ExecuteNonQueryAsync();
+            var fullTableName = $"{tablePrefix}_{layers.LayerHash}";
 
-            var order = 0;
-            foreach (var layerID in layers)
+            using var cCheck = new NpgsqlCommand(@$"SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema like 'pg_temp_%' AND table_name = LOWER('{fullTableName}') )", conn, trans);
+            var exists = (bool)await cCheck.ExecuteScalarAsync();
+            if (!exists)
             {
-                using var c2 = new NpgsqlCommand(@$"INSERT INTO {tablename} (id, ""order"") VALUES (@id, @order)", conn, trans);
-                c2.Parameters.AddWithValue("id", layerID);
-                c2.Parameters.AddWithValue("order", order++);
-                await c2.ExecuteScalarAsync();
+                using var c1 = new NpgsqlCommand(@$"
+                    CREATE TEMPORARY TABLE {fullTableName}
+                   (
+                        id bigint,
+                        ""order"" int
+                   )", conn, trans);
+                await c1.ExecuteNonQueryAsync();
+                //await new NpgsqlCommand(@$"TRUNCATE TABLE {tablePrefix}", conn, trans).ExecuteNonQueryAsync();
+
+                var order = 0;
+                foreach (var layerID in layers)
+                {
+                    using var c2 = new NpgsqlCommand(@$"INSERT INTO {fullTableName} (id, ""order"") VALUES (@id, @order)", conn, trans);
+                    c2.Parameters.AddWithValue("id", layerID);
+                    c2.Parameters.AddWithValue("order", order++);
+                    await c2.ExecuteScalarAsync();
+                }
             }
+            return fullTableName;
         }
     }
 }

@@ -20,17 +20,60 @@ namespace LandscapePrototype.Entity
         public AttributeState State { get; private set; }
         public long ChangesetID { get; private set; }
 
+        // information hash: 
+        public string InformationHash => CreateInformationHash(Name, CIID);
+        public static string CreateInformationHash(string name, string ciid) => name + "_" + ciid;
+
+
         public static CIAttribute Build(long id, string name, string CIID, IAttributeValue value, long[] layerStackIDs, AttributeState state, long changesetID)
         {
-            var o = new CIAttribute();
-            o.ID = id;
-            o.Name = name;
-            o.CIID = CIID;
-            o.Value = value;
-            o.LayerStackIDs = layerStackIDs;
-            o.State = state;
-            o.ChangesetID = changesetID;
-            return o;
+            return new CIAttribute
+            {
+                ID = id,
+                Name = name,
+                CIID = CIID,
+                Value = value,
+                LayerStackIDs = layerStackIDs,
+                State = state,
+                ChangesetID = changesetID
+            };
+        }
+    }
+
+    public class BulkCIAttributeDataFragment
+    {
+        private string Name {  get; set; }
+        public string FullName(string prefix) => $"{prefix}.{Name}";
+        public IAttributeValue Value { get; private set; }
+        public string CIID { get; private set; }
+
+        public static string StripPrefix(string fullName, string prefix) => fullName.Replace($"{prefix}.", "");
+
+        public static BulkCIAttributeDataFragment Build(string name, IAttributeValue value, string ciid)
+        {
+            return new BulkCIAttributeDataFragment()
+            {
+                Name = name,
+                Value = value,
+                CIID = ciid
+            };
+        }
+    }
+
+    public class BulkCIAttributeData
+    {
+        public string NamePrefix { get; private set; }
+        public long LayerID { get; private set; }
+        public BulkCIAttributeDataFragment[] Fragments { get; private set; }
+
+        public static BulkCIAttributeData Build(string namePrefix, long layerID, BulkCIAttributeDataFragment[] fragments)
+        {
+            return new BulkCIAttributeData()
+            {
+                NamePrefix = namePrefix,
+                LayerID = layerID,
+                Fragments = fragments
+            };
         }
     }
 }

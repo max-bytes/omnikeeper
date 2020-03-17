@@ -43,31 +43,31 @@ function AddNewAttribute(props) {
               setSelectedTimeThreshold({ variables:{ newTimeThreshold: null, isLatest: true }});
             });
           }}>
-            <Form.Group as={Row} controlId="type">
-              <Form.Label column>Type</Form.Label>
-              <Col sm={10}>
-                <Dropdown placeholder='Select attribute type' fluid search selection value={newAttribute.type}
-                  onChange={(e, data) => {
-                    // we'll clear the value, to be safe, TODO: better value migration between types
-                    setNewAttribute({...newAttribute, type: data.value, value: ''});
-                  }}
-                  options={AttributeTypes.map(at => { return {key: at.id, value: at.id, text: at.name }; })}
-                />
-              </Col>
-            </Form.Group>
-            <Form.Group as={Row} controlId="name">
-              <Form.Label column>Name</Form.Label>
-              <Col sm={10}>
-                <Form.Control type="text" placeholder="Enter name" value={newAttribute.name} onChange={e => setNewAttribute({...newAttribute, name: e.target.value})} />
-              </Col>
-            </Form.Group>
-            <Form.Group as={Row} controlId="value">
-              <Form.Label column>Value</Form.Label>
-              <Col sm={10}>
-                <Form.Control type={attribute2InputType(attributeID2Object(newAttribute.type))} placeholder="Enter value" value={newAttribute.value} onChange={e => setNewAttribute({...newAttribute, value: e.target.value})} />                        
-              </Col>
-            </Form.Group>
-            <Button variant="primary" type="submit">Insert</Button>
+          <Form.Group as={Row} controlId="type">
+            <Form.Label column>Type</Form.Label>
+            <Col sm={10}>
+              <Dropdown placeholder='Select attribute type' fluid search selection value={newAttribute.type}
+                onChange={(e, data) => {
+                  // we'll clear the value, to be safe, TODO: better value migration between types
+                  setNewAttribute({...newAttribute, type: data.value, value: ''});
+                }}
+                options={AttributeTypes.map(at => { return {key: at.id, value: at.id, text: at.name }; })}
+              />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row} controlId="name">
+            <Form.Label column>Name</Form.Label>
+            <Col sm={10}>
+              <Form.Control type="text" placeholder="Enter name" value={newAttribute.name} onChange={e => setNewAttribute({...newAttribute, name: e.target.value})} />
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row} controlId="value">
+            <Form.Label column>Value</Form.Label>
+            <Col sm={10}>
+              <Form.Control type={attribute2InputType(attributeID2Object(newAttribute.type))} placeholder="Enter value" value={newAttribute.value} onChange={e => setNewAttribute({...newAttribute, value: e.target.value})} />                        
+            </Col>
+          </Form.Group>
+          <Button variant="primary" type="submit">Insert</Button>
         </Form>
       </div>;
   }

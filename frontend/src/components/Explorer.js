@@ -1,31 +1,18 @@
 import { useQuery } from '@apollo/client';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Layers from './Layers';
 import MainAreaCI from './MainAreaCI';
 import { queries } from '../graphql/queries'
 import Timeline from './Timeline';
-import { useKeycloak } from '@react-keycloak/web'
 import { useParams } from 'react-router-dom'
 
 function Explorer(props) {
-  // const { search } = useLocation();
-  // let params = new URLSearchParams(search);
-  // var ciid = params.get('ciid');
   const { ciid } = useParams();
 
-  const [ keycloak, keycloakInitialized ] = useKeycloak()
   const { error: errorLayers, data: dataLayers } = useQuery(queries.Layers);
   const { error: errorTime, data: dataTime } = useQuery(queries.SelectedTimeThreshold);
-  // const { error: errorCI, data: dataCI } = useQuery(queries.SelectedCI);
-  const [ userProfile, setUserProfile ] = useState(undefined);
 
-  useEffect(() => {
-    keycloak.loadUserProfile().then(profile => {
-      setUserProfile(profile);
-    })
-  }, [keycloak, keycloakInitialized])
-
-  if (dataLayers && dataTime && userProfile) {
+  if (dataLayers && dataTime) {
     // sort based on order
     let sortedLayers = dataLayers.layers.concat();
     sortedLayers.sort((a,b) => {
@@ -34,17 +21,9 @@ function Explorer(props) {
       return o;
     });
 
-    // var ciid = dataCI.selectedCI;
-      
-    const logoutButton = (<div style={{display: 'flex', margin: '5px'}}>
-        <span style={{flexGrow: 1}}>Logged in as user {userProfile.username} </span>
-        <button type="button" onClick={() => keycloak.logout()}>Logout</button>
-      </div>);
-
     return (
-      <div>
+      <div style={{position: 'relative'}}>
         <div className="left">
-          {logoutButton}
           <div className={"layers"}>
             <h5>Layers</h5>
             <Layers layers={sortedLayers}></Layers>

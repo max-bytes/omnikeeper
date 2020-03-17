@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types'
 import { queries } from '../graphql/queries'
 import LoadingOverlay from 'react-loading-overlay'
-import { Form, Row, Col, Button } from 'react-bootstrap';
+import { Form, Button } from 'react-bootstrap';
 import { Button as SemanticButton, Icon } from 'semantic-ui-react'
 import { mutations } from '../graphql/mutations';
 import { useMutation } from '@apollo/react-hooks';
@@ -57,7 +57,7 @@ function Timeline(props) {
         setRefetchingChangesets(true);
         refetchChangesets()
         .then(() => {
-          setSelectedTimeThreshold({variables: { newTimeThreshold: moment(), isLatest: true }});
+          setSelectedTimeThreshold({variables: { newTimeThreshold: moment().format('YYYY-MM-DD HH:mm:ss'), isLatest: true }});
         }).finally(() => setRefetchingChangesets(false));
       }}><Icon loading={refetchingChangesets} fitted name={'sync'} /></SemanticButton>)
 

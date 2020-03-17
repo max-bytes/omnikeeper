@@ -51,7 +51,7 @@ namespace LandscapePrototype.Entity.GraphQL
                     //var relatedCIIdentity = await ciModel.GetIdentityFromCIID(r.ToCIID, null);
                     var isForwardRelation = r.FromCIID == CIIdentity;
                     var relatedCIID = (isForwardRelation) ? r.ToCIID : r.FromCIID;
-                    relatedCIs.Add(RelatedCI.Build(r, await ciModel.GetCI(relatedCIID, layerset, userContext.Transaction, userContext.TimeThreshold), isForwardRelation));
+                    relatedCIs.Add(RelatedCI.Build(r, await ciModel.GetFullCI(relatedCIID, layerset, userContext.Transaction, userContext.TimeThreshold), isForwardRelation));
                 }
 
                 var wStr = context.GetArgument<string>("where"); // TODO: develop further

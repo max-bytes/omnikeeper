@@ -10,12 +10,14 @@ namespace LandscapePrototype.Entity.GraphQL
     public class CreateCIInput
     {
         public string Identity { get; private set; }
+        public string TypeID { get; private set; }
     }
     public class CreateCIInputType : InputObjectGraphType<CreateCIInput>
     {
         public CreateCIInputType()
         {
             Field(x => x.Identity);
+            Field(x => x.TypeID);
         }
     }
 

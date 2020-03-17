@@ -31,6 +31,13 @@ export const queries = {
             }
         }
     `,
+    CITypeList: gql`
+        query citypes {
+            citypes {
+                id
+            }
+        }
+    `,
     CI: gql`
         query ci($identity: String!, $layers: [String]!, $timeThreshold: DateTimeOffset) {
             ci(identity: $identity, layers: $layers, timeThreshold: $timeThreshold) {

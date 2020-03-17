@@ -98,11 +98,34 @@ namespace LandscapePrototype.Entity.GraphQL
                   .Concat(insertedRelations.SelectMany(i => new string[] { i.FromCIID, i.ToCIID }))
                   .Concat(removedRelations.SelectMany(i => new string[] { i.FromCIID, i.ToCIID }))
                   .Distinct();
-                  var affectedCIs = await ciModel.GetCIs(userContext.LayerSet, true, transaction, changeset.Timestamp, affectedCIIDs);
+                  var affectedCIs = await ciModel.GetFullCIs(userContext.LayerSet, true, transaction, changeset.Timestamp, affectedCIIDs);
 
                   await transaction.CommitAsync();
 
                   return MutateReturn.Build(insertedAttributes, removedAttributes, insertedRelations, affectedCIs);
+              });
+
+            FieldAsync<CreateCIsReturnType>("createCIs",
+              arguments: new QueryArguments(
+                new QueryArgument<ListGraphType<CreateCIInputType>> { Name = "cis" }
+              ),
+              resolve: async context =>
+              {
+                  var createCIs = context.GetArgument("cis", new List<CreateCIInput>());
+
+                  var userContext = context.UserContext as LandscapeUserContext;
+
+                  using var transaction = await conn.BeginTransactionAsync();
+                  userContext.Transaction = transaction;
+
+                  var createdCIIDs = new List<string>();
+                  foreach (var ci in createCIs)
+                  {
+                      createdCIIDs.Add(await ciModel.CreateCIWithType(ci.Identity, ci.TypeID, transaction)); // TODO: add changeset
+                  }
+                  await transaction.CommitAsync();
+
+                  return CreateCIsReturn.Build(createdCIIDs);
               });
         }
     }

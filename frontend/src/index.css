@@ -10,7 +10,7 @@ body {
 .left {
   bottom: 0;
     min-width: 100px;
-    position: fixed;
+    position: relative;
     top: 0;
     width: 320px;
     z-index: 1;

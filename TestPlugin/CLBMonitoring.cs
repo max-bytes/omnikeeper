@@ -28,18 +28,24 @@ namespace TestPlugin
             var layerSetMonitoringDefinitionsOnly = await layerModel.BuildLayerSet(new[] { "Monitoring Definitions" }, trans);
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
             
-            var allMonitoredByRelations = await relationModel.GetRelationsWithPredicateID(layerSetMonitoringDefinitionsOnly, false, "is_monitored_via", trans);
+            var allHasMonitoringModuleRelations = await relationModel.GetRelationsWithPredicateID(layerSetMonitoringDefinitionsOnly, false, "has_monitoring_module", trans);
 
-            foreach (var p in allMonitoredByRelations)
+            // prepare list of all monitored cis
+            var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.FromCIID).Distinct();
+            var monitoredCIs = (await ciModel.GetFullCIs(layerSetAll, true, trans, DateTimeOffset.Now, monitoredCIIDs)).ToDictionary(ci => ci.Identity);
+
+            // find and parse commands, insert into monitored CIs
+            var monitoringCommandFragments = new List<BulkCIAttributeDataFragment>();
+            foreach (var p in allHasMonitoringModuleRelations)
             {
-                var monitoringModuleCI = await ciModel.GetCI(p.ToCIID, layerSetMonitoringDefinitionsOnly, trans, DateTimeOffset.Now);
+                var monitoringModuleCI = await ciModel.GetFullCI(p.ToCIID, layerSetMonitoringDefinitionsOnly, trans, DateTimeOffset.Now);
                 if (monitoringModuleCI.Type.ID != "Monitoring Check Module")
                 {
                     await errorHandler.LogError(monitoringModuleCI.Identity, "error", "Expected this CI to be of type \"Monitoring Check Module\"");
                     continue;
                 }
 
-                var monitoredCI = await ciModel.GetCI(p.FromCIID, layerSetAll, trans, DateTimeOffset.Now);
+                var monitoredCI = monitoredCIs[p.FromCIID];
                 var monitoringCommands = monitoringModuleCI.GetAttributesInGroup("monitoring.commands");
 
                 // add/collect variables
@@ -60,10 +66,21 @@ namespace TestPlugin
                         await errorHandler.LogError(mca.CIID, "error", $"Error parsing or rendering command: {e.Message}");
                         continue;
                     }
-
-                    await ciModel.InsertAttribute(mca.Name, AttributeValueText.Build(finalCommand), layerID, p.FromCIID, changeset.ID, trans);
+                    monitoringCommandFragments.Add(
+                        BulkCIAttributeDataFragment.Build(BulkCIAttributeDataFragment.StripPrefix(mca.Name, "monitoring.commands"),
+                        AttributeValueText.Build(finalCommand), p.FromCIID)
+                    );
                 }
             }
+            await ciModel.BulkReplaceAttributes(BulkCIAttributeData.Build("monitoring.commands", layerID, monitoringCommandFragments.ToArray()), changeset.ID, trans);
+
+            // assign monitored cis to naemon instances
+            var monitoredByCIIDPairs = new List<(string, string)>();
+            var naemonInstances = await ciModel.GetFullCIsWithType(layerSetMonitoringDefinitionsOnly, trans, DateTimeOffset.Now, "Naemon Instance");
+            foreach (var naemonInstance in naemonInstances)
+                foreach (var monitoredCI in monitoredCIs)
+                    monitoredByCIIDPairs.Add((monitoredCI.Value.Identity, naemonInstance.Identity));
+            await relationModel.BulkReplaceRelations(BulkRelationData.Build("is_monitored_by", layerID, monitoredByCIIDPairs.ToArray()), changeset.ID, trans);
 
             trans.Commit();
 

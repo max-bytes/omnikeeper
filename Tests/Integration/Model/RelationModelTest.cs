@@ -209,5 +209,49 @@ namespace Tests.Integration.Model
             var rr2 = r2.First();
             Assert.AreEqual(layerID2, rr2.LayerID);
         }
+
+
+        [Test]
+        public async Task TestBulkReplace()
+        {
+            var dbcb = new DBConnectionBuilder();
+            using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            var userModel = new UserModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn);
+            var ciModel = new CIModel(conn);
+            var predicateModel = new PredicateModel(conn);
+            var relationModel = new RelationModel(predicateModel, conn);
+            var layerModel = new LayerModel(conn);
+            var user = await DBSetup.SetupUser(userModel);
+
+            using var trans = conn.BeginTransaction();
+            var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+
+            var ciid1 = await ciModel.CreateCI("H123", trans);
+            var ciid2 = await ciModel.CreateCI("H456", trans);
+            var ciid3 = await ciModel.CreateCI("H789", trans);
+            var predicateID1 = await predicateModel.CreatePredicate("predicate_1", "", "", trans);
+
+            var layerID1 = await layerModel.CreateLayer("l1", trans);
+            var layerset = new LayerSet(new long[] { layerID1 });
+
+            var i1 = await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layerID1, changeset.ID, trans);
+            var i2 = await relationModel.InsertRelation(ciid2, ciid3, predicateID1, layerID1, changeset.ID, trans);
+            var i3 = await relationModel.InsertRelation(ciid1, ciid3, predicateID1, layerID1, changeset.ID, trans);
+            trans.Commit();
+
+            // test bulk replace
+            using var trans2 = conn.BeginTransaction();
+            var changeset2 = await changesetModel.CreateChangeset(user.ID, trans2);
+            await relationModel.BulkReplaceRelations(BulkRelationData.Build(predicateID1, layerID1, new (string, string)[] {
+                    (ciid1, ciid2),
+                    (ciid2, ciid1),
+                    (ciid3, ciid2),
+                    (ciid3, ciid1)
+                }), changeset2.ID, trans2);
+
+            var r1 = await relationModel.GetRelationsWithPredicateID(layerset, false, predicateID1, trans2);
+            Assert.AreEqual(4, r1.Count());
+        }
     }
 }

@@ -79,10 +79,13 @@ namespace LandscapePrototype.Controllers
                 options.Inputs = inputs;
                 options.UserContext = new LandscapeUserContext(user);
                 options.ValidationRules = DocumentValidator.CoreRules.Concat(_validationRules).ToList();
+                options.ExposeExceptions = _env.IsDevelopment();
             });
 
-            if (result.Errors?.Count > 0)
-                return BadRequest(result);
+            //if (result.Errors?.Count > 0)
+            //{
+            //    return BadRequest(result);
+            //}
 
             return Ok(result);
         }

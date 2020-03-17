@@ -37,19 +37,22 @@ namespace Tests.DBInit
 
             var random = new Random(3);
 
-            var numRegularCIs = 1;
-            var numRegularRelations = 0;
-            int numAttributesTo = 0;
-            int numAttributesFrom = 0;
+            var numRegularCIs = 1000;
+            var numRegularRelations = 2000;
+            int numAttributesPerCIFrom = 10;
+            int numAttributesPerCITo = 30;
             var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
 
 
-            //var regularRelationNames = new[] { "is part of", "runs on", "is attached to" };
-            var predicates = new[] { 
+            var regularPredicates = new[] { 
                 Predicate.Build("is_part_of", "is part of", "has part"), 
                 Predicate.Build("runs_on", "runs on", "is running"),
                 Predicate.Build("is_attached_to", "is attached to", "has attachment"),
-                Predicate.Build("is_monitored_via", "is monitored via", "monitors") };
+            };
+            var monitoringPredicates = new[] {
+                Predicate.Build("has_monitoring_module", "has monitoring module", "is assigned to"),
+                Predicate.Build("is_monitored_by", "is monitored by", "monitors")
+            };
             var regularAttributeNames = new[] { "att_1", "att_2", "att_3", "att_4", "att_5", "att_6", "att_7", "att_8", "att_9" };
             var regularAttributeValues = new[] { "foo", "bar", "blub", "bla", "this", "are", "all", "values" };
 
@@ -66,6 +69,7 @@ namespace Tests.DBInit
                 foreach (var ciType in regularTypeIDs)
                     await ciModel.CreateCIType(ciType, trans);
                 await ciModel.CreateCIType("Monitoring Check Module", trans);
+                await ciModel.CreateCIType("Naemon Instance", trans);
                 trans.Commit();
             }
 
@@ -79,7 +83,7 @@ namespace Tests.DBInit
 
             using (var trans = conn.BeginTransaction())
             {
-                foreach (var predicate in predicates)
+                foreach (var predicate in regularPredicates.Concat(monitoringPredicates))
                     await predicateModel.CreatePredicate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, trans);
 
                 trans.Commit();
@@ -99,15 +103,7 @@ namespace Tests.DBInit
             // regular attributes
             foreach(var ciid in regularCiids)
             {
-                //using (var trans = conn.BeginTransaction())
-                //{
-                //    var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                //    var type = regularTypeNames.GetRandom(random);
-                //    await ciModel.InsertAttribute("__type", AttributeValueText.Build(type), cmdbLayerID, ciid, changeset.ID, trans);
-                //    trans.Commit();
-                //}
-
-                var numAttributeChanges = random.Next(numAttributesFrom, numAttributesTo);
+                var numAttributeChanges = random.Next(numAttributesPerCIFrom, numAttributesPerCITo);
                 for (int i = 0; i < numAttributeChanges; i++)
                 {
                     using var trans = conn.BeginTransaction();
@@ -127,7 +123,7 @@ namespace Tests.DBInit
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 var ciid1 = regularCiids.GetRandom(random);
                 var ciid2 = regularCiids.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
-                var predicate = predicates.GetRandom(random);
+                var predicate = regularPredicates.GetRandom(random);
                 await relationModel.InsertRelation(ciid1, ciid2, predicate.ID, cmdbLayerID, changeset.ID, trans);
                 trans.Commit();
             }
@@ -135,6 +131,9 @@ namespace Tests.DBInit
             // build monitoring things
             using (var trans = conn.BeginTransaction())
             {
+                await ciModel.CreateCIWithType("MON_NAEMON01", "Naemon Instance", null);
+                await ciModel.CreateCIWithType("MON_NAEMON02", "Naemon Instance", null);
+
                 await ciModel.CreateCIWithType("MON_MODULE_HOST", "Monitoring Check Module", null);
                 await ciModel.CreateCIWithType("MON_MODULE_HOST_WINDOWS", "Monitoring Check Module", null);
                 await ciModel.CreateCIWithType("MON_MODULE_HOST_LINUX", "Monitoring Check Module", null);
@@ -149,22 +148,22 @@ namespace Tests.DBInit
             }
 
 
-            var windowsHosts = await ciModel.GetCIsWithType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, DateTimeOffset.Now, "Host Windows");
+            var windowsHosts = await ciModel.GetFullCIsWithType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, DateTimeOffset.Now, "Host Windows");
             foreach(var ci in windowsHosts)
             {
                 using var trans = conn.BeginTransaction();
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST", "is_monitored_via", monitoringDefinitionsLayerID, changeset.ID, trans);
-                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_WINDOWS", "is_monitored_via", monitoringDefinitionsLayerID, changeset.ID, trans);
+                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST", "has_monitoring_module", monitoringDefinitionsLayerID, changeset.ID, trans);
+                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_WINDOWS", "has_monitoring_module", monitoringDefinitionsLayerID, changeset.ID, trans);
                 trans.Commit();
             }
-            var linuxHosts = await ciModel.GetCIsWithType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, DateTimeOffset.Now, "Host Linux");
+            var linuxHosts = await ciModel.GetFullCIsWithType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, DateTimeOffset.Now, "Host Linux");
             foreach (var ci in linuxHosts)
             {
                 using var trans = conn.BeginTransaction();
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST", "is_monitored_via", monitoringDefinitionsLayerID, changeset.ID, trans);
-                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_LINUX", "is_monitored_via", monitoringDefinitionsLayerID, changeset.ID, trans);
+                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST", "has_monitoring_module", monitoringDefinitionsLayerID, changeset.ID, trans);
+                await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_LINUX", "has_monitoring_module", monitoringDefinitionsLayerID, changeset.ID, trans);
                 trans.Commit();
             }
         }
