@@ -71,7 +71,7 @@ namespace LandscapePrototype.Entity.GraphQL
     {
         public AttributeValueGenericType()
         {
-            Field(x => x.Type);
+            Field(x => x.Type, type: typeof(AttributeValueTypeType));
             Field(x => x.Value);
         }
     }

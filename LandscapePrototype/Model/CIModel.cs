@@ -215,7 +215,7 @@ namespace LandscapePrototype.Model
                     var id = dr.GetInt64(0);
                     var name = dr.GetString(1);
                     var CIID = dr.GetString(2);
-                    var type = dr.GetString(3);
+                    var type = dr.GetFieldValue<AttributeValueType>(3);
                     var value = dr.GetString(4);
                     var av = AttributeValueBuilder.Build(type, value);
                     var state = dr.GetFieldValue<AttributeState>(5);
@@ -260,7 +260,7 @@ namespace LandscapePrototype.Model
                 var id = dr.GetInt64(0);
                 var name = dr.GetString(1);
                 var CIID = dr.GetString(2);
-                var type = dr.GetString(3);
+                var type = dr.GetFieldValue<AttributeValueType>(3);
                 var value = dr.GetString(4);
                 var av = AttributeValueBuilder.Build(type, value);
                 var state = dr.GetFieldValue<AttributeState>(5);
@@ -305,7 +305,7 @@ namespace LandscapePrototype.Model
 
             var id = dr.GetInt64(0);
             var CIID = dr.GetString(1);
-            var type = dr.GetString(2);
+            var type = dr.GetFieldValue<AttributeValueType>(2);
             var value = dr.GetString(3);
             var av = AttributeValueBuilder.Build(type, value);
             var state = dr.GetFieldValue<AttributeState>(4);

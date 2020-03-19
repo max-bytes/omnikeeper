@@ -2,6 +2,12 @@
 
 namespace LandscapePrototype.Entity.AttributeValues
 {
+
+    public enum AttributeValueType
+    {
+        Text, Integer
+    }
+
     public interface IAttributeValue : IEquatable<IAttributeValue>
     {
         public abstract string Value2String();
@@ -10,7 +16,7 @@ namespace LandscapePrototype.Entity.AttributeValues
 
     public class AttributeValueGeneric
     {
-        public string Type { get; private set; }
+        public AttributeValueType Type { get; private set; }
         public string Value { get; private set; }
     }
 
@@ -20,29 +26,29 @@ namespace LandscapePrototype.Entity.AttributeValues
         {
             return Build(generic.Type, generic.Value);
         }
-        public static IAttributeValue Build(string type, string value)
+        public static IAttributeValue Build(AttributeValueType type, string value)
         {
             return type switch
             {
-                "text" => AttributeValueText.Build(value),
-                "integer" => AttributeValueInteger.Build(value),
+                AttributeValueType.Text => AttributeValueText.Build(value),
+                AttributeValueType.Integer => AttributeValueInteger.Build(value),
                 _ => throw new Exception($"Unknown type {type} encountered"),
             };
         }
 
-        public static string GetTypeString(IAttributeValue av)
+        public static AttributeValueType GetType(IAttributeValue av)
         {
             return av switch
             {
-                AttributeValueText _ => "text",
-                AttributeValueInteger _ => "integer",
+                AttributeValueText _ => AttributeValueType.Text,
+                AttributeValueInteger _ => AttributeValueType.Integer,
                 _ => throw new Exception($"Unknown AttributeValue {av} encountered"),
             };
         }
 
-        public static (string, string) GetTypeAndValueString(IAttributeValue av)
+        public static (AttributeValueType, string) GetTypeAndValueString(IAttributeValue av)
         {
-            return (GetTypeString(av), av.Value2String());
+            return (GetType(av), av.Value2String());
         }
     }
 }

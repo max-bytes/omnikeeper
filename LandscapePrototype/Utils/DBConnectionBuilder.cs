@@ -1,4 +1,5 @@
 ﻿using LandscapePrototype.Entity;
+using LandscapePrototype.Entity.AttributeValues;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ namespace LandscapePrototype.Utils
             if (reloadTypes) conn.ReloadTypes(); // HACK, see https://github.com/npgsql/npgsql/issues/2366
             conn.TypeMapper.MapEnum<AttributeState>("attributestate");
             conn.TypeMapper.MapEnum<RelationState>("relationstate");
+            conn.TypeMapper.MapEnum<AttributeValueType>("attributevaluetype");
             conn.TypeMapper.MapEnum<UserType>("usertype");
             return conn;
         }

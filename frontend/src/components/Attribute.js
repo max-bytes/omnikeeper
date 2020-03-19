@@ -62,7 +62,7 @@ function Attribute(props) {
           <ChangesetPopup changesetID={attribute.attribute.changesetID} />
           <Form.Group controlId={`value:${attribute.attribute.name}`} style={{flexGrow: 1}}>
             <Form.Label className={"pr-1"} style={{flexBasis: '160px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{attribute.attribute.name}:</Form.Label>
-            <Form.Control as="textarea" rows="3" style={{flexGrow: 1}} type={attribute2InputType(attributeTypename2Object(attribute.attribute.value.__typename))} placeholder="Enter value" value={value} onChange={e => setValue(e.target.value)} />
+            <Form.Control style={{flexGrow: 1}} type={attribute2InputType(attributeTypename2Object(attribute.attribute.value.__typename))} placeholder="Enter value" value={value} onChange={e => setValue(e.target.value)} />
             <Button type="submit" className={'mx-1'} disabled={attribute.attribute.value.value === value}>Update</Button>
             {removeButton}
           </Form.Group>

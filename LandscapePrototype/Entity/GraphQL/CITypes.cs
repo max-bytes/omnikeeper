@@ -100,7 +100,7 @@ namespace LandscapePrototype.Entity.GraphQL
             Field(x => x.ChangesetID);
             Field(x => x.Name);
             Field(x => x.State, type: typeof(AttributeStateType));
-            Field(x => x.Value, type: typeof(AttributeValueType));
+            Field(x => x.Value, type: typeof(AttributeValueGQLType));
         }
     }
 
@@ -108,9 +108,15 @@ namespace LandscapePrototype.Entity.GraphQL
     {
     }
 
-    public class AttributeValueType : UnionGraphType
+
+    public class AttributeValueTypeType : EnumerationGraphType<AttributeValueType>
     {
-        public AttributeValueType()
+    }
+
+    // TODO: consider switching to AttributeValueGeneric for output too
+    public class AttributeValueGQLType : UnionGraphType
+    {
+        public AttributeValueGQLType()
         {
             Type<AttributeValueIntegerType>();
             Type<AttributeValueTextType>();

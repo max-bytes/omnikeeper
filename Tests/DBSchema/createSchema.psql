@@ -22,6 +22,12 @@ CREATE TYPE usertype AS ENUM (
 );
 ALTER TYPE usertype OWNER TO postgres;
 
+CREATE TYPE attributevaluetype AS ENUM (
+    'text',
+    'integer'
+);
+ALTER TYPE attributevaluetype OWNER TO postgres;
+
 
 CREATE TABLE public.citype
 (
@@ -113,7 +119,7 @@ CREATE TABLE public.attribute (
     id bigint NOT NULL,
     name text NOT NULL,
     ci_id text NOT NULL,
-    type text NOT NULL,
+    type public.attributevaluetype DEFAULT 'text'::public.attributevaluetype NOT NULL,
     value text NOT NULL,
     layer_id bigint NOT NULL,
     state public.attributestate DEFAULT 'new'::public.attributestate NOT NULL,

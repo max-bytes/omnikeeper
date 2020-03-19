@@ -158,8 +158,6 @@ function ApolloWrapper({ component: Component, ...rest }) {
       }
     });
 
-    console.log(httpLink);
-
     const client = new ApolloClient({
       cache,
       link: httpLink,

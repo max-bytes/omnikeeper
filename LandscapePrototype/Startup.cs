@@ -13,7 +13,6 @@ using GraphQL.Types;
 using GraphQL.Validation;
 using Landscape.Base;
 using Landscape.Base.Model;
-using LandscapePrototype.Entity.Converters;
 using LandscapePrototype.Entity.GraphQL;
 using LandscapePrototype.Model;
 using LandscapePrototype.Utils;
