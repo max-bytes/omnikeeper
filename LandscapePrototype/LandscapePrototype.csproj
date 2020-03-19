@@ -29,5 +29,9 @@
     <ProjectReference Include="..\Base\Landscape.Base.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Plugin\" />
+  </ItemGroup>
+
 
 </Project>

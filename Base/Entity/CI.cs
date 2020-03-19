@@ -11,7 +11,7 @@ namespace LandscapePrototype.Entity
     {
         public string Identity { get; private set; }
         public CIType Type { get; private set; }
-        public MergedCIAttribute[] Attributes { get; private set; }
+        public MergedCIAttribute[] MergedAttributes { get; private set; }
         public LayerSet Layers { get; private set; }
         public DateTimeOffset AtTime { get; private set; }
 
@@ -23,7 +23,7 @@ namespace LandscapePrototype.Entity
                 Layers = layers,
                 AtTime = atTime,
                 Identity = CIIdentity,
-                Attributes = attributes.ToArray()
+                MergedAttributes = attributes.ToArray()
             };
         }
     }

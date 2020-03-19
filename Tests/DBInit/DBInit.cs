@@ -141,9 +141,9 @@ namespace Tests.DBInit
                 //await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
                 //await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
                 //await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
-                await ciModel.InsertAttribute("monitoring.commands.check_host_cmd", AttributeValueText.Build("check_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
-                await ciModel.InsertAttribute("monitoring.commands.check_windows_host_cmd", AttributeValueText.Build("check_windows_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
-                await ciModel.InsertAttribute("monitoring.commands.check_linux_host_cmd", AttributeValueText.Build("check_linux_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
+                await ciModel.InsertAttribute("monitoring.commands.check_host_cmd - ciid: {{ target.ciid }},  - suffix", AttributeValueText.Build("check_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
+                await ciModel.InsertAttribute("monitoring.commands.check_windows_host_cmd - ciid: {{ target.ciid }} - suffix", AttributeValueText.Build("check_windows_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
+                await ciModel.InsertAttribute("monitoring.commands.check_linux_host_cmd - ciid: {{ target.ciid }} - suffix", AttributeValueText.Build("check_linux_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
                 trans.Commit();
             }
 

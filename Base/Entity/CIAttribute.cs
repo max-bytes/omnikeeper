@@ -30,8 +30,6 @@ namespace LandscapePrototype.Entity
         public string Name { get; private set; }
         public string CIID { get; private set; }
         public IAttributeValue Value { get; private set; }
-        //public long LayerID { get => LayerStackIDs[^1]; }
-        //public long[] LayerStackIDs { get; private set; }
         public AttributeState State { get; private set; }
         public long ChangesetID { get; private set; }
 
@@ -48,7 +46,6 @@ namespace LandscapePrototype.Entity
                 Name = name,
                 CIID = CIID,
                 Value = value,
-                //LayerStackIDs = layerStackIDs,
                 State = state,
                 ChangesetID = changesetID
             };

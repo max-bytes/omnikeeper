@@ -8,7 +8,7 @@ import { onAppear, onExit } from '../utils/animation';
 
 function AttributeList(props) {
   // TODO: does not work with nested groups yet
-  const nestedAttributes = _.groupBy(props.attributes, (mergedAttribute) => {
+  const nestedAttributes = _.groupBy(props.mergedAttributes, (mergedAttribute) => {
     const splits = mergedAttribute.attribute.name.split('.');
     if (splits.length <= 1) return "";
     else return splits.slice(0, -1).join(".");
@@ -70,7 +70,7 @@ AttributeList.propTypes = {
         }).isRequired
     ).isRequired,
     ciIdentity: PropTypes.string.isRequired,
-    attributes: PropTypes.arrayOf(
+    mergedAttributes: PropTypes.arrayOf(
       PropTypes.shape({
         attribute: PropTypes.shape({
           name: PropTypes.string.isRequired,

@@ -22,28 +22,22 @@ namespace LandscapePrototype.Entity.AttributeValues
         }
         public static IAttributeValue Build(string type, string value)
         {
-            switch (type)
+            return type switch
             {
-                case "text":
-                    return AttributeValueText.Build(value);
-                case "integer":
-                    return AttributeValueInteger.Build(value);
-                default:
-                    throw new Exception($"Unknown type {type} encountered");
-            }
+                "text" => AttributeValueText.Build(value),
+                "integer" => AttributeValueInteger.Build(value),
+                _ => throw new Exception($"Unknown type {type} encountered"),
+            };
         }
 
         public static string GetTypeString(IAttributeValue av)
         {
-            switch (av)
+            return av switch
             {
-                case AttributeValueText text:
-                    return "text";
-                case AttributeValueInteger integer:
-                    return "integer";
-                default:
-                    throw new Exception($"Unknown AttributeValue {av} encountered");
-            }
+                AttributeValueText _ => "text",
+                AttributeValueInteger _ => "integer",
+                _ => throw new Exception($"Unknown AttributeValue {av} encountered"),
+            };
         }
 
         public static (string, string) GetTypeAndValueString(IAttributeValue av)

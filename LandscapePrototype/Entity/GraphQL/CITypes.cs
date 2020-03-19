@@ -19,13 +19,13 @@ namespace LandscapePrototype.Entity.GraphQL
 
     public class CIType : ObjectGraphType<CI>
     {
-        public CIType(RelationModel relationModel, CIModel ciModel, LayerModel layerModel)
+        public CIType(RelationModel relationModel, CIModel ciModel)
         {
             Field(x => x.Identity);
             Field("layerhash", x => x.Layers.LayerHash);
             Field(x => x.AtTime);
             Field(x => x.Type, type: typeof(CITypeType));
-            Field(x => x.Attributes, type: typeof(ListGraphType<MergedCIAttributeType>));
+            Field(x => x.MergedAttributes, type: typeof(ListGraphType<MergedCIAttributeType>));
             FieldAsync<ListGraphType<RelatedCIType>>("related",
             arguments: new QueryArguments(new List<QueryArgument>
             {
@@ -38,9 +38,7 @@ namespace LandscapePrototype.Entity.GraphQL
                 if (layerset == null)
                     throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!"); 
                 
-                 var CIIdentity = context.Source.Identity;
-                //var layerStrings = context.GetArgument<string[]>("layers");
-                //var layers = await layerModel.BuildLayerSet(layerStrings, null);
+                var CIIdentity = context.Source.Identity;
                 var relations = await relationModel.GetMergedRelations(CIIdentity, false, layerset, RelationModel.IncludeRelationDirections.Both, userContext.Transaction, userContext.TimeThreshold);
 
                 var relatedCIs = new List<RelatedCI>();
@@ -55,7 +53,6 @@ namespace LandscapePrototype.Entity.GraphQL
                 var CIs = (await ciModel.GetFullCIs(layerset, true, userContext.Transaction, userContext.TimeThreshold, relatedCIIDs)).ToDictionary(ci => ci.Identity);
                 foreach(var r in relations)
                 {
-                    //var relatedCIIdentity = await ciModel.GetIdentityFromCIID(r.ToCIID, null);
                     var isForwardRelation = r.FromCIID == CIIdentity;
                     var relatedCIID = (isForwardRelation) ? r.ToCIID : r.FromCIID;
                     relatedCIs.Add(RelatedCI.Build(r, CIs[relatedCIID], isForwardRelation));
@@ -96,24 +93,14 @@ namespace LandscapePrototype.Entity.GraphQL
 
     public class CIAttributeType : ObjectGraphType<CIAttribute>
     {
-        public CIAttributeType(LayerModel layerModel)
+        public CIAttributeType()
         {
             Field("id", x => x.ID);
             Field("ciid", x => x.CIID);
-            //Field(x => x.LayerID);
-            //Field(x => x.LayerStackIDs);
             Field(x => x.ChangesetID);
             Field(x => x.Name);
             Field(x => x.State, type: typeof(AttributeStateType));
             Field(x => x.Value, type: typeof(AttributeValueType));
-
-            //FieldAsync<ListGraphType<LayerType>>("layerStack",
-            //resolve: async (context) =>
-            //{
-            //    var userContext = context.UserContext as LandscapeUserContext;
-            //    var layerstackIDs = context.Source.LayerStackIDs;
-            //    return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
-            //});
         }
     }
 

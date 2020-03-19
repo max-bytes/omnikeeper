@@ -12,9 +12,10 @@ namespace LandscapePrototype.Entity.AttributeValues
 
         public static IAttributeValue Build(string value)
         {
-            var n = new AttributeValueText();
-            n.Value = value;
-            return n;
+            return new AttributeValueText
+            {
+                Value = value
+            };
         }
 
         public string Value2String() => Value;

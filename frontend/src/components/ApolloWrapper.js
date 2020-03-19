@@ -152,10 +152,13 @@ function ApolloWrapper({ component: Component, ...rest }) {
 
     const httpLink = createHttpLink({
       uri: 'https://localhost:44378/graphql',
+      credentials: 'include',
       headers: {
         "Authorization": "Bearer " + ((keycloak.token) ? keycloak.token : "")
       }
     });
+
+    console.log(httpLink);
 
     const client = new ApolloClient({
       cache,

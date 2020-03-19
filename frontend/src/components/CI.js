@@ -30,7 +30,7 @@ function CI(props) {
       </Row>
       <Row>
         <Col>
-        <AttributeList attributes={props.ci.attributes} isEditable={props.isEditable} layers={props.layers} ciIdentity={props.ci.identity}></AttributeList>
+        <AttributeList mergedAttributes={props.ci.mergedAttributes} isEditable={props.isEditable} layers={props.layers} ciIdentity={props.ci.identity}></AttributeList>
         </Col>
       </Row>
     </Tab.Pane> },

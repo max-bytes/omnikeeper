@@ -16,7 +16,7 @@ namespace Landscape.Base
 
         public static IEnumerable<MergedCIAttribute> GetAttributesInGroup(this CI ci, string groupName)
         {
-            return ci.Attributes.Where(a => a.Attribute.Name.StartsWith(groupName));
+            return ci.MergedAttributes.Where(a => a.Attribute.Name.StartsWith(groupName));
         }
     }
 }

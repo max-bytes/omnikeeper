@@ -52,7 +52,7 @@ export const Fragments = {
             }
             isForward
         }
-        attributes {
+        mergedAttributes {
             ...FullMergedAttribute
         }
     }

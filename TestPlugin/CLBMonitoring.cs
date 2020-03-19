@@ -57,9 +57,9 @@ namespace TestPlugin
                 // add/collect variables
                 var variables = new Dictionary<string, object>() { { "target", VariableService.CreateVariablesFromCI(monitoredCI) } };
 
+                // template parsing and rendering
                 foreach (var mca in monitoringCommands)
                 {
-                    // template parsing and rendering
                     string finalCommand;
                     try
                     {
@@ -87,6 +87,20 @@ namespace TestPlugin
                 foreach (var monitoredCI in monitoredCIs)
                     monitoredByCIIDPairs.Add((monitoredCI.Value.Identity, naemonInstance.Identity));
             await relationModel.BulkReplaceRelations(BulkRelationData.Build("is_monitored_by", layerID, monitoredByCIIDPairs.ToArray()), changeset.ID, trans);
+
+            // write final naemon config
+            var checkCommandsPerNaemonInstance = new Dictionary<string, List<string>>();
+            var naemonInstance2MoitoredCILookup = monitoredByCIIDPairs.GroupBy(t => t.Item2).ToDictionary(t => t.Key, t => t.Select(t => t.Item1));
+            var monitoringConfigs = new List<BulkCIAttributeDataFragment>();
+            foreach (var kv in naemonInstance2MoitoredCILookup)
+            {
+                var naemonInstance = kv.Key;
+                var cis = kv.Value;
+                var commands = monitoringCommandFragments.Where(f => cis.Contains(f.CIID)).Select(f => f.Value.Value2String());
+                var finalConfig = string.Join(" ", commands);
+                monitoringConfigs.Add(BulkCIAttributeDataFragment.Build("naemonConfig", AttributeValueText.Build(finalConfig), naemonInstance));
+            }
+            await ciModel.BulkReplaceAttributes(BulkCIAttributeData.Build("monitoring", layerID, monitoringConfigs.ToArray()), changeset.ID, trans);
 
             trans.Commit();
 
