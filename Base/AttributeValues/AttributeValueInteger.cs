@@ -32,8 +32,11 @@ namespace LandscapePrototype.Entity.AttributeValues
             return $"AV-Integer: {Value}";
         }
 
+        public AttributeValueGeneric ToGeneric() => AttributeValueGeneric.Build(Value2String(), Type);
+        public AttributeValueType Type => AttributeValueType.Integer;
+
         public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueInteger);
-        public bool Equals([AllowNull] AttributeValueInteger other) => Value == other.Value;
+        public bool Equals([AllowNull] AttributeValueInteger other) => other != null && Value == other.Value;
         public override int GetHashCode() => Value.GetHashCode();
     }
 }

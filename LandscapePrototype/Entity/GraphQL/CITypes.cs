@@ -100,7 +100,7 @@ namespace LandscapePrototype.Entity.GraphQL
             Field(x => x.ChangesetID);
             Field(x => x.Name);
             Field(x => x.State, type: typeof(AttributeStateType));
-            Field(x => x.Value, type: typeof(AttributeValueGQLType));
+            Field("value", x => x.Value.ToGeneric(), type: typeof(AttributeValueGenericType));
         }
     }
 
@@ -113,28 +113,38 @@ namespace LandscapePrototype.Entity.GraphQL
     {
     }
 
-    // TODO: consider switching to AttributeValueGeneric for output too
-    public class AttributeValueGQLType : UnionGraphType
+    public class AttributeValueGenericType : ObjectGraphType<AttributeValueGeneric>
     {
-        public AttributeValueGQLType()
+        public AttributeValueGenericType()
         {
-            Type<AttributeValueIntegerType>();
-            Type<AttributeValueTextType>();
+            Field(x => x.Type, type: typeof(AttributeValueTypeType));
+            Field(x => x.Value);
         }
     }
 
-    public class AttributeValueIntegerType : ObjectGraphType<AttributeValueInteger>
-    {
-        public AttributeValueIntegerType()
-        {
-            Field(x => x.Value);
-        }
-    }
-    public class AttributeValueTextType : ObjectGraphType<AttributeValueText>
-    {
-        public AttributeValueTextType()
-        {
-            Field(x => x.Value);
-        }
-    }
+    // TODO: consider switching to AttributeValueGeneric for output too
+    //public class AttributeValueGQLType : UnionGraphType
+    //{
+    //    public AttributeValueGQLType()
+    //    {
+    //        Type<AttributeValueIntegerType>();
+    //        Type<AttributeValueTextType>();
+    //    }
+    //}
+
+    //public class AttributeValueIntegerType : ObjectGraphType<AttributeValueInteger>
+    //{
+    //    public AttributeValueIntegerType()
+    //    {
+    //        Field(x => x.Value);
+    //    }
+    //}
+    //public class AttributeValueTextType : ObjectGraphType<AttributeValueText>
+    //{
+    //    public AttributeValueTextType()
+    //    {
+    //        Field(x => x.Value);
+    //        Field(x => x.Multiline);
+    //    }
+    //}
 }

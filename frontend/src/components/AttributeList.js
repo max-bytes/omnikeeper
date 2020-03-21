@@ -76,12 +76,8 @@ AttributeList.propTypes = {
           name: PropTypes.string.isRequired,
           state: PropTypes.string.isRequired,
           value: PropTypes.shape({
-              __typename: PropTypes.string.isRequired,
-              value: PropTypes.oneOfType([
-              PropTypes.string,
-              PropTypes.number,
-              PropTypes.bool
-              ]).isRequired
+              type: PropTypes.string.isRequired,
+              value: PropTypes.string.isRequired
           })
         })
       })

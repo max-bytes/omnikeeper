@@ -6,13 +6,13 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import { mutations } from '../graphql/mutations'
-import { AttributeTypes, attribute2InputType, attributeID2Object } from '../utils/attributeTypes'
+import { AttributeTypes, attributeType2InputProps } from '../utils/attributeTypes'
 import { Row } from "react-bootstrap";
 import { Dropdown } from 'semantic-ui-react'
 
 function AddNewAttribute(props) {
 
-  let initialAttribute = {name: '', type: AttributeTypes.find(at => at.id === 'text').id, value: ''};
+  let initialAttribute = {name: '', type: 'TEXT', value: ''};
   const [selectedLayer, setSelectedLayer] = useState(undefined);
   const [newAttribute, setNewAttribute] = useState(initialAttribute);
   React.useEffect(() => { if (!props.isEditable) setSelectedLayer(undefined); }, [props.isEditable]);
@@ -64,7 +64,7 @@ function AddNewAttribute(props) {
           <Form.Group as={Row} controlId="value">
             <Form.Label column>Value</Form.Label>
             <Col sm={10}>
-              <Form.Control type={attribute2InputType(attributeID2Object(newAttribute.type))} placeholder="Enter value" value={newAttribute.value} onChange={e => setNewAttribute({...newAttribute, value: e.target.value})} />                        
+              <Form.Control {...attributeType2InputProps(newAttribute.type)} placeholder="Enter value" value={newAttribute.value} onChange={e => setNewAttribute({...newAttribute, value: e.target.value})} />                        
             </Col>
           </Form.Group>
           <Button variant="primary" type="submit">Insert</Button>

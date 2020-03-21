@@ -37,10 +37,10 @@ namespace Tests.DBInit
 
             var random = new Random(3);
 
-            var numRegularCIs = 1000;
-            var numRegularRelations = 2000;
-            int numAttributesPerCIFrom = 10;
-            int numAttributesPerCITo = 30;
+            var numRegularCIs = 5000;
+            var numRegularRelations = 50000;
+            int numAttributesPerCIFrom = 20;
+            int numAttributesPerCITo = 40;
             var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
 
 
@@ -54,13 +54,13 @@ namespace Tests.DBInit
                 Predicate.Build("is_monitored_by", "is monitored by", "monitors")
             };
             var regularAttributeNames = new[] { "att_1", "att_2", "att_3", "att_4", "att_5", "att_6", "att_7", "att_8", "att_9" };
-            var regularAttributeValues = new[] { "foo", "bar", "blub", "bla", "this", "are", "all", "values" };
+            var regularAttributeValues = Enumerable.Range(0, 10).Select(i => $"attribute value {i + 1}").ToArray();
 
             var user = await DBSetup.SetupUser(userModel, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
 
             var regularCiids = Enumerable.Range(0, numRegularCIs).Select(i =>
             {
-                var identity = "H" + RandomString.Generate(8, random, "0123456789");
+                var identity = "H" + RandomString.Generate(9, random, "0123456789");
                 return identity;
             }).ToList();
 
@@ -138,12 +138,9 @@ namespace Tests.DBInit
                 await ciModel.CreateCIWithType("MON_MODULE_HOST_WINDOWS", "Monitoring Check Module", null);
                 await ciModel.CreateCIWithType("MON_MODULE_HOST_LINUX", "Monitoring Check Module", null);
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                //await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
-                //await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
-                //await ciModel.InsertAttribute("__type", AttributeValueText.Build("Monitoring Check Module"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
-                await ciModel.InsertAttribute("monitoring.commands.check_host_cmd - ciid: {{ target.ciid }},  - suffix", AttributeValueText.Build("check_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
-                await ciModel.InsertAttribute("monitoring.commands.check_windows_host_cmd - ciid: {{ target.ciid }} - suffix", AttributeValueText.Build("check_windows_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
-                await ciModel.InsertAttribute("monitoring.commands.check_linux_host_cmd - ciid: {{ target.ciid }} - suffix", AttributeValueText.Build("check_linux_host_cmd"), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
+                await ciModel.InsertAttribute("monitoring.commands.check_host_cmd", AttributeValueText.Build("check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
+                await ciModel.InsertAttribute("monitoring.commands.check_windows_host_cmd", AttributeValueText.Build("check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
+                await ciModel.InsertAttribute("monitoring.commands.check_linux_host_cmd", AttributeValueText.Build("check_linux_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
                 trans.Commit();
             }
 

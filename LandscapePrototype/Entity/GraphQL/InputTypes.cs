@@ -47,7 +47,7 @@ namespace LandscapePrototype.Entity.GraphQL
             Field("ci", x => x.CI);
             Field(x => x.Name);
             Field(x => x.LayerID);
-            Field(x => x.Value, type: typeof(AttributeValueGenericType));
+            Field(x => x.Value, type: typeof(AttributeValueGenericInputType));
         }
     }
 
@@ -67,9 +67,9 @@ namespace LandscapePrototype.Entity.GraphQL
         }
     }
 
-    public class AttributeValueGenericType : InputObjectGraphType<AttributeValueGeneric>
+    public class AttributeValueGenericInputType : InputObjectGraphType<AttributeValueGeneric>
     {
-        public AttributeValueGenericType()
+        public AttributeValueGenericInputType()
         {
             Field(x => x.Type, type: typeof(AttributeValueTypeType));
             Field(x => x.Value);

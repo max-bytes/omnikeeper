@@ -9,12 +9,14 @@ namespace LandscapePrototype.Entity.AttributeValues
     public class AttributeValueText : IAttributeValue, IEquatable<AttributeValueText>
     {
         public string Value { get; private set; }
+        public bool Multiline { get; private set; }
 
-        public static IAttributeValue Build(string value)
+        public static IAttributeValue Build(string value, bool multiline = false)
         {
             return new AttributeValueText
             {
-                Value = value
+                Value = value,
+                Multiline = multiline
             };
         }
 
@@ -22,11 +24,14 @@ namespace LandscapePrototype.Entity.AttributeValues
 
         public override string ToString()
         {
-            return $"AV-Text: {Value}";
+            return $"AV-Text ({((Multiline) ? "Multiline" : "")}): {Value}";
         }
 
+        public AttributeValueGeneric ToGeneric() => AttributeValueGeneric.Build(Value2String(), Type);
+        public AttributeValueType Type => (Multiline) ? AttributeValueType.MultilineText : AttributeValueType.Text;
+
         public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueText);
-        public bool Equals([AllowNull] AttributeValueText other) => Value == other.Value;
+        public bool Equals([AllowNull] AttributeValueText other) => other != null && Value == other.Value;
         public override int GetHashCode() => Value.GetHashCode();
     }
 }

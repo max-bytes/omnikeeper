@@ -1,28 +1,24 @@
 
 export const AttributeTypes = [
     {
-        id: 'text',
-        typename: 'AttributeValueTextType',
+        id: 'TEXT',
         name: 'Text'
     },
     {
-        id: 'integer',
-        typename: 'AttributeValueIntegerType',
+        id: 'MULTILINE_TEXT',
+        name: 'Multi-Line Text'
+    },
+    {
+        id: 'INTEGER',
         name: 'Integer'
     }
 ];
 
-export function attributeID2Object(id) {
-    return AttributeTypes.find(at => at.id === id);
-};
-
-export function attributeTypename2Object(typename) {
-    return AttributeTypes.find(at => at.typename === typename);
-};
-
-export function attribute2InputType(attribute) {
-    switch(attribute.id) {
-      case 'integer': return 'number';
-      default: return 'text';
+export function attributeType2InputProps(type) {
+    console.log(type);
+    switch(type) {
+      case 'INTEGER': return {type: 'number' };
+      case 'MULTILINE_TEXT': return {type: 'text', as: 'textarea', rows: 7 };
+      default: return {type: 'text' };
     }
 };

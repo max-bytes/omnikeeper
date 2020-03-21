@@ -97,8 +97,8 @@ namespace TestPlugin
                 var naemonInstance = kv.Key;
                 var cis = kv.Value;
                 var commands = monitoringCommandFragments.Where(f => cis.Contains(f.CIID)).Select(f => f.Value.Value2String());
-                var finalConfig = string.Join(" ", commands);
-                monitoringConfigs.Add(BulkCIAttributeDataFragment.Build("naemonConfig", AttributeValueText.Build(finalConfig), naemonInstance));
+                var finalConfig = string.Join("\n", commands);
+                monitoringConfigs.Add(BulkCIAttributeDataFragment.Build("naemonConfig", AttributeValueText.Build(finalConfig, true), naemonInstance));
             }
             await ciModel.BulkReplaceAttributes(BulkCIAttributeData.Build("monitoring", layerID, monitoringConfigs.ToArray()), changeset.ID, trans);
 

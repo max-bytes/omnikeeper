@@ -24,6 +24,7 @@ ALTER TYPE usertype OWNER TO postgres;
 
 CREATE TYPE attributevaluetype AS ENUM (
     'text',
+    'multiline_text',
     'integer'
 );
 ALTER TYPE attributevaluetype OWNER TO postgres;
@@ -123,6 +124,7 @@ CREATE TABLE public.attribute (
     value text NOT NULL,
     layer_id bigint NOT NULL,
     state public.attributestate DEFAULT 'new'::public.attributestate NOT NULL,
+    "timestamp" timestamp with time zone NOT NULL,
     changeset_id bigint NOT NULL
 );
 
@@ -250,3 +252,8 @@ CREATE INDEX
 CREATE INDEX
     ON public.relation USING btree
     (to_ci_id ASC NULLS LAST);
+
+CREATE INDEX i_changeset_timestamp
+    ON public.changeset USING btree
+    ("timestamp" ASC NULLS LAST)
+    TABLESPACE pg_default;

@@ -5,9 +5,9 @@ import { withApollo } from 'react-apollo';
 import Form from 'react-bootstrap/Form';
 import { mutations } from '../graphql/mutations'
 import Button from 'react-bootstrap/Button';
-import { attributeTypename2Object, attribute2InputType } from '../utils/attributeTypes'
 import LayerStackIcons from "./LayerStackIcons";
 import ChangesetPopup from "./ChangesetPopup";
+import { attributeType2InputProps } from '../utils/attributeTypes'
 
 function Attribute(props) {
 
@@ -53,16 +53,16 @@ function Attribute(props) {
       <Form inline onSubmit={e => {
           e.preventDefault();
           insertCIAttribute({ variables: { layers: visibleLayers, ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, value: {
-            type: attributeTypename2Object(attribute.attribute.value.__typename).id,
+            type: attribute.attribute.value.type,
             value: value
           } } })
           .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
-        }} >
+        }} style={{alignItems: 'center'}} >
           <LayerStackIcons layerStack={attribute.layerStack}></LayerStackIcons>
           <ChangesetPopup changesetID={attribute.attribute.changesetID} />
-          <Form.Group controlId={`value:${attribute.attribute.name}`} style={{flexGrow: 1}}>
+          <Form.Group controlId={`value:${attribute.attribute.name}`} style={{flexGrow: 1, alignItems: 'center'}}>
             <Form.Label className={"pr-1"} style={{flexBasis: '160px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{attribute.attribute.name}:</Form.Label>
-            <Form.Control style={{flexGrow: 1}} type={attribute2InputType(attributeTypename2Object(attribute.attribute.value.__typename))} placeholder="Enter value" value={value} onChange={e => setValue(e.target.value)} />
+            <Form.Control style={{flexGrow: 1}} {...attributeType2InputProps(attribute.attribute.value.type)} placeholder="Enter value" value={value} onChange={e => setValue(e.target.value)} />
             <Button type="submit" className={'mx-1'} disabled={attribute.attribute.value.value === value}>Update</Button>
             {removeButton}
           </Form.Group>
@@ -74,7 +74,7 @@ function Attribute(props) {
       <ChangesetPopup changesetID={attribute.attribute.changesetID} />
       <Form.Group controlId={`value:${attribute.attribute.name}`} style={{flexGrow: 1}}>
         <Form.Label className={"pr-1"} style={{flexBasis: '160px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{attribute.attribute.name}:</Form.Label>
-        <Form.Control style={{flexGrow: 1}} type={attribute2InputType(attributeTypename2Object(attribute.attribute.value.__typename))} placeholder="Enter value" value={value} readOnly />
+        <Form.Control style={{flexGrow: 1}} {...attributeType2InputProps(attribute.attribute.value.type)} placeholder="Enter value" value={value} readOnly />
       </Form.Group>
     </Form>);
   }
@@ -102,12 +102,8 @@ Attribute.propTypes = {
         name: PropTypes.string.isRequired,
         state: PropTypes.string.isRequired,
         value: PropTypes.shape({
-          __typename: PropTypes.string.isRequired,
-          value: PropTypes.oneOfType([
-            PropTypes.string,
-            PropTypes.number,
-            PropTypes.bool
-          ]).isRequired
+          type: PropTypes.string.isRequired,
+          value: PropTypes.string.isRequired
         })
       })
     }).isRequired

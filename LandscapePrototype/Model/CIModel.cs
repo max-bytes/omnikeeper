@@ -329,14 +329,13 @@ namespace LandscapePrototype.Model
                 return currentAttribute;
             }
 
-            using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, changeset_id) 
-                VALUES (@name, @ci_id, @type, @value, @layer_id, @state, @changeset_id) returning id", conn, trans);
-            var (strType, strValue) = AttributeValueBuilder.GetTypeAndValueString(currentAttribute.Value);
-
+            using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
+                VALUES (@name, @ci_id, @type, @value, @layer_id, @state, now(), @changeset_id) returning id", conn, trans);
+            
             command.Parameters.AddWithValue("name", name);
             command.Parameters.AddWithValue("ci_id", ciid);
-            command.Parameters.AddWithValue("type", strType);
-            command.Parameters.AddWithValue("value", strValue);
+            command.Parameters.AddWithValue("type", currentAttribute.Value.Type);
+            command.Parameters.AddWithValue("value", currentAttribute.Value.Value2String());
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", AttributeState.Removed);
             command.Parameters.AddWithValue("changeset_id", changesetID);
@@ -375,14 +374,13 @@ namespace LandscapePrototype.Model
             if (currentAttribute != null && currentAttribute.State != AttributeState.Removed && currentAttribute.Value.Equals(value)) // TODO: check other things, like user
                 return currentAttribute;
 
-            using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, changeset_id) 
-                VALUES (@name, @ci_id, @type, @value, @layer_id, @state, @changeset_id) returning id", conn, trans);
-            var (strType, strValue) = AttributeValueBuilder.GetTypeAndValueString(value);
+            using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
+                VALUES (@name, @ci_id, @type, @value, @layer_id, @state, now(), @changeset_id) returning id", conn, trans);
 
             command.Parameters.AddWithValue("name", name);
             command.Parameters.AddWithValue("ci_id", ciid);
-            command.Parameters.AddWithValue("type", strType);
-            command.Parameters.AddWithValue("value", strValue);
+            command.Parameters.AddWithValue("type", value.Type);
+            command.Parameters.AddWithValue("value", value.Value2String());
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", state);
             command.Parameters.AddWithValue("changeset_id", changesetID);
@@ -419,14 +417,13 @@ namespace LandscapePrototype.Model
                 if (currentAttribute != null && currentAttribute.State != AttributeState.Removed && currentAttribute.Value.Equals(fragment.Value))
                     continue;
 
-                using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, changeset_id) 
-                VALUES (@name, @ci_id, @type, @value, @layer_id, @state, @changeset_id) returning id", conn, trans);
-                var (strType, strValue) = AttributeValueBuilder.GetTypeAndValueString(fragment.Value);
+                using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
+                VALUES (@name, @ci_id, @type, @value, @layer_id, @state, now(), @changeset_id) returning id", conn, trans);
 
                 command.Parameters.AddWithValue("name", fullName);
                 command.Parameters.AddWithValue("ci_id", fragment.CIID);
-                command.Parameters.AddWithValue("type", strType);
-                command.Parameters.AddWithValue("value", strValue);
+                command.Parameters.AddWithValue("type", fragment.Value.Type);
+                command.Parameters.AddWithValue("value", fragment.Value.Value2String());
                 command.Parameters.AddWithValue("layer_id", data.LayerID);
                 command.Parameters.AddWithValue("state", state);
                 command.Parameters.AddWithValue("changeset_id", changesetID);

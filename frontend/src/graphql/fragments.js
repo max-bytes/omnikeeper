@@ -23,13 +23,8 @@ export const Fragments = {
         changesetID
         state
         value {
-            __typename
-            ... on AttributeValueTextType {
-                value
-            }
-            ... on AttributeValueIntegerType {
-                value
-            }
+            type
+            value
         }
     }
   `,

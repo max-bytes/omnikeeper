@@ -3,7 +3,7 @@ import { Fragments } from './fragments';
 
 export const mutations = {
     INSERT_CI_ATTRIBUTE: gql`
-    mutation InsertCIAttribute($layers: [String]!, $ciIdentity: String!, $name: String!, $layerID: Long!, $value: AttributeValueGenericType!) {
+    mutation InsertCIAttribute($layers: [String]!, $ciIdentity: String!, $name: String!, $layerID: Long!, $value: AttributeValueGenericInputType!) {
       mutate(layers: $layers, insertAttributes: [
         {
           ci: $ciIdentity,
