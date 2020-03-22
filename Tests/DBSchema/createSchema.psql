@@ -244,6 +244,11 @@ ALTER TABLE ONLY public.predicate_wording
 CREATE INDEX
     ON public.attribute USING btree
     (ci_id ASC NULLS LAST);
+    
+CREATE INDEX
+    ON public.attribute USING btree
+    (ci_id COLLATE pg_catalog."default" ASC NULLS LAST, name COLLATE pg_catalog."default" ASC NULLS LAST, layer_id ASC NULLS LAST, "timestamp" DESC NULLS FIRST)
+    TABLESPACE pg_default;
 
 
 CREATE INDEX
@@ -257,3 +262,4 @@ CREATE INDEX i_changeset_timestamp
     ON public.changeset USING btree
     ("timestamp" ASC NULLS LAST)
     TABLESPACE pg_default;
+
