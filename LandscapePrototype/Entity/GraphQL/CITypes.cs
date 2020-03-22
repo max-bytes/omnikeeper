@@ -50,6 +50,7 @@ namespace LandscapePrototype.Entity.GraphQL
                     return relatedCIID;
                 });
 
+                // TODO: consider packing the actual CIs into its own resolver so they are only queried when really necessary
                 var CIs = (await ciModel.GetFullCIs(layerset, true, userContext.Transaction, userContext.TimeThreshold, relatedCIIDs)).ToDictionary(ci => ci.Identity);
                 foreach(var r in relations)
                 {

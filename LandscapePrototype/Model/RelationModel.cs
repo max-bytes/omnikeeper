@@ -30,6 +30,7 @@ namespace LandscapePrototype.Model
         {
             var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layerset, "temp_layerset", conn, trans);
 
+            // TODO: imrpvoe inner join to not join with changeset and create and use proper index (see CIModel)
             var innerWhereClauses = new List<string>();
             if (ciIdentity != null)
                 innerWhereClauses.Add(ird switch
@@ -117,6 +118,7 @@ namespace LandscapePrototype.Model
         {
             var predicates = await predicateModel.GetPredicates(trans, atTime); // TODO: caching?
 
+            // TODO: imrpvoe inner join to not join with changeset and create and use proper index (see CIModel)
             using (var command = new NpgsqlCommand(@"select distinct
             last_value(a.id) over wnd as last_id,
             last_value(a.state) over wnd as last_state,

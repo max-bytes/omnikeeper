@@ -184,19 +184,17 @@ namespace LandscapePrototype.Model
             array_agg(inn.last_layer_id) over wndOut
             from(
                 select distinct
-                last_value(a.id) over wnd as last_id,
-                last_value(a.name) over wnd as last_name,
-                last_value(a.ci_id) over wnd as last_ci_id,
-                last_value(a.type) over wnd as last_type,
-                last_value(a.value) over wnd as ""last_value"",
-                last_value(a.layer_id) over wnd as last_layer_id,
-                last_value(a.state) over wnd as last_state,
-                last_value(a.changeset_id) over wnd as last_changeset_id
+                first_value(a.id) over wnd as last_id,
+                first_value(a.name) over wnd as last_name,
+                first_value(a.ci_id) over wnd as last_ci_id,
+                first_value(a.type) over wnd as last_type,
+                first_value(a.value) over wnd as ""last_value"",
+                first_value(a.layer_id) over wnd as last_layer_id,
+                first_value(a.state) over wnd as last_state,
+                first_value(a.changeset_id) over wnd as last_changeset_id
                 from ""attribute"" a
-                inner join changeset c on c.id = a.changeset_id
-                WHERE c.timestamp <= @time_threshold and a.ci_id = ANY(@ci_identities)
-                WINDOW wnd AS(PARTITION by a.name, a.ci_id, a.layer_id ORDER BY c.timestamp ASC -- sort by timestamp
-                    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+                WHERE a.timestamp <= @time_threshold and a.ci_id = ANY(@ci_identities)
+                WINDOW wnd AS(PARTITION by a.ci_id, a.name, a.layer_id ORDER BY a.timestamp DESC) -- sort by timestamp
             ) inn
             inner join {tempLayersetTableName} ls ON inn.last_layer_id = ls.id-- inner join to only keep rows that are in the selected layers
             where inn.last_state != ALL(@excluded_states) -- remove entries from layers which' last item is deleted
@@ -236,19 +234,17 @@ namespace LandscapePrototype.Model
 
             using var command = new NpgsqlCommand(@"
             select distinct
-            last_value(a.id) over wnd as last_id,
-            last_value(a.name) over wnd as last_name,
-            last_value(a.ci_id) over wnd as last_ci_id,
-            last_value(a.type) over wnd as last_type,
-            last_value(a.value) over wnd as ""last_value"",
-            last_value(a.state) over wnd as last_state,
-            last_value(a.changeset_id) over wnd as last_changeset_id
+            first_value(a.id) over wnd as last_id,
+            first_value(a.name) over wnd as last_name,
+            first_value(a.ci_id) over wnd as last_ci_id,
+            first_value(a.type) over wnd as last_type,
+            first_value(a.value) over wnd as ""last_value"",
+            first_value(a.state) over wnd as last_state,
+            first_value(a.changeset_id) over wnd as last_changeset_id
                 from ""attribute"" a
-                inner join changeset c on c.id = a.changeset_id
-                where c.timestamp <= @time_threshold and a.layer_id = @layer_id and a.name LIKE @like_name
+                where a.timestamp <= @time_threshold and a.layer_id = @layer_id and a.name LIKE @like_name
             WINDOW wnd AS(
-                PARTITION by a.name, a.ci_id ORDER BY c.timestamp
-                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) 
+                PARTITION by a.ci_id, a.name ORDER BY a.timestamp DESC) 
             ", conn, trans);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("like_name", like);
@@ -279,18 +275,16 @@ namespace LandscapePrototype.Model
         {
             using var command = new NpgsqlCommand(@"
             select distinct
-            last_value(a.id) over wnd as last_id,
-            last_value(a.ci_id) over wnd as last_ci_id,
-            last_value(a.type) over wnd as last_type,
-            last_value(a.value) over wnd as ""last_value"",
-            last_value(a.state) over wnd as last_state,
-            last_value(a.changeset_id) over wnd as last_changeset_id
+            first_value(a.id) over wnd as last_id,
+            first_value(a.ci_id) over wnd as last_ci_id,
+            first_value(a.type) over wnd as last_type,
+            first_value(a.value) over wnd as ""last_value"",
+            first_value(a.state) over wnd as last_state,
+            first_value(a.changeset_id) over wnd as last_changeset_id
                 from ""attribute"" a
-                inner join changeset c on c.id = a.changeset_id
-                where c.timestamp <= @time_threshold and a.ci_id = @ci_id and a.layer_id = @layer_id and a.name = @name
+                where a.timestamp <= @time_threshold and a.ci_id = @ci_id and a.layer_id = @layer_id and a.name = @name
             WINDOW wnd AS(
-                PARTITION by a.name, a.ci_id ORDER BY c.timestamp
-                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) 
+                PARTITION by a.ci_id, a.name ORDER BY a.timestamp DESC) 
             LIMIT 1
             ", conn, trans);
             command.Parameters.AddWithValue("ci_id", ciid);
