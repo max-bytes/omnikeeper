@@ -21,7 +21,7 @@ function Timeline(props) {
       variables: { from: from, to: to, ciid: ciid, layers: allLayers }
     });
 
-    React.useEffect(() => {  if (props.currentTime.isLatest) refetchChangesets(); }, [props.currentTime, refetchChangesets]);
+    React.useEffect(() => { console.log("!!"); if (props.currentTime.isLatest) refetchChangesets(); }, [props.currentTime, refetchChangesets]);
 
     const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 

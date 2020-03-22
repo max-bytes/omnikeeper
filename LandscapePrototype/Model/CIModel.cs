@@ -66,14 +66,11 @@ namespace LandscapePrototype.Model
 
         public async Task<IDictionary<string, CIType>> GetTypeOfCIs(IEnumerable<string> ciids, NpgsqlTransaction trans, DateTimeOffset? atTime)
         {
-            using var command = new NpgsqlCommand(@"SELECT distinct
-                last_value(cta.ci_id) over wnd,
-                last_value(ct.id) over wnd
+            using var command = new NpgsqlCommand(@"SELECT distinct on (cta.ci_id)
+                cta.ci_id, ct.id
                 FROM citype_assignment cta
                 INNER JOIN citype ct ON ct.id = cta.citype_id AND cta.timestamp <= @atTime AND cta.ci_id = ANY(@ci_ids)
-                WINDOW wnd AS(
-                    PARTITION by cta.ci_id ORDER BY cta.timestamp
-                    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+                ORDER BY cta.ci_id, cta.timestamp DESC
             ", conn, trans);
             var finalTimeThreshold = atTime ?? DateTimeOffset.Now;
             command.Parameters.AddWithValue("atTime", finalTimeThreshold);
@@ -172,33 +169,24 @@ namespace LandscapePrototype.Model
 
             var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn, trans);
 
+            // inner query can use distinct on, outer needs to do windowing, because of array_agg
             using (var command = new NpgsqlCommand(@$"
             select distinct
-            last_value(inn.last_id) over wndOut,
-            last_value(inn.last_name) over wndOut,
-            last_value(inn.last_ci_id) over wndOut,
-            last_value(inn.last_type) over wndOut,
-            last_value(inn.last_value) over wndOut,
-            last_value(inn.last_state) over wndOut,
-            last_value(inn.last_changeset_id) over wndOut,
-            array_agg(inn.last_layer_id) over wndOut
+            last_value(inn.id) over wndOut,
+            last_value(inn.name) over wndOut,
+            last_value(inn.ci_id) over wndOut,
+            last_value(inn.type) over wndOut,
+            last_value(inn.value) over wndOut,
+            last_value(inn.state) over wndOut,
+            last_value(inn.changeset_id) over wndOut,
+            array_agg(inn.layer_id) over wndOut
             from(
-                select distinct
-                first_value(a.id) over wnd as last_id,
-                first_value(a.name) over wnd as last_name,
-                first_value(a.ci_id) over wnd as last_ci_id,
-                first_value(a.type) over wnd as last_type,
-                first_value(a.value) over wnd as ""last_value"",
-                first_value(a.layer_id) over wnd as last_layer_id,
-                first_value(a.state) over wnd as last_state,
-                first_value(a.changeset_id) over wnd as last_changeset_id
-                from ""attribute"" a
-                WHERE a.timestamp <= @time_threshold and a.ci_id = ANY(@ci_identities)
-                WINDOW wnd AS(PARTITION by a.ci_id, a.name, a.layer_id ORDER BY a.timestamp DESC) -- sort by timestamp
+                select distinct on (ci_id, name, layer_id) * from
+                    attribute where timestamp <= @time_threshold and ci_id = ANY(@ci_identities) and layer_id = ANY(@layer_ids) order by ci_id, name, layer_id, timestamp DESC
             ) inn
-            inner join {tempLayersetTableName} ls ON inn.last_layer_id = ls.id-- inner join to only keep rows that are in the selected layers
-            where inn.last_state != ALL(@excluded_states) -- remove entries from layers which' last item is deleted
-            WINDOW wndOut AS(PARTITION by inn.last_name, inn.last_ci_id ORDER BY ls.order DESC -- sort by layer order
+            inner join {tempLayersetTableName} ls ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
+            where inn.state != ALL(@excluded_states) -- remove entries from layers which' last item is deleted
+            WINDOW wndOut AS(PARTITION by inn.name, inn.ci_id ORDER BY ls.order DESC -- sort by layer order
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
             ", conn, trans))
             {
@@ -206,6 +194,7 @@ namespace LandscapePrototype.Model
                 var excludedStates = (includeRemoved) ? new AttributeState[] { } : new AttributeState[] { AttributeState.Removed };
                 command.Parameters.AddWithValue("excluded_states", excludedStates);
                 command.Parameters.AddWithValue("time_threshold", atTime);
+                command.Parameters.AddWithValue("layer_ids", layers.ToArray());
                 using var dr = command.ExecuteReader();
 
                 while (dr.Read())
@@ -231,21 +220,12 @@ namespace LandscapePrototype.Model
         public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
             var ret = new List<CIAttribute>();
-
+            
             using var command = new NpgsqlCommand(@"
-            select distinct
-            first_value(a.id) over wnd as last_id,
-            first_value(a.name) over wnd as last_name,
-            first_value(a.ci_id) over wnd as last_ci_id,
-            first_value(a.type) over wnd as last_type,
-            first_value(a.value) over wnd as ""last_value"",
-            first_value(a.state) over wnd as last_state,
-            first_value(a.changeset_id) over wnd as last_changeset_id
-                from ""attribute"" a
-                where a.timestamp <= @time_threshold and a.layer_id = @layer_id and a.name LIKE @like_name
-            WINDOW wnd AS(
-                PARTITION by a.ci_id, a.name ORDER BY a.timestamp DESC) 
+            select distinct on(ci_id, name, layer_id) id, name, ci_id, type, value, state, changeset_id from
+                attribute where timestamp <= @time_threshold and layer_id = @layer_id and name like @like_name order by ci_id, name, layer_id, timestamp DESC
             ", conn, trans);
+
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("like_name", like);
             command.Parameters.AddWithValue("time_threshold", atTime);
@@ -274,18 +254,10 @@ namespace LandscapePrototype.Model
         private async Task<CIAttribute> GetAttribute(string name, long layerID, string ciid, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
             using var command = new NpgsqlCommand(@"
-            select distinct
-            first_value(a.id) over wnd as last_id,
-            first_value(a.ci_id) over wnd as last_ci_id,
-            first_value(a.type) over wnd as last_type,
-            first_value(a.value) over wnd as ""last_value"",
-            first_value(a.state) over wnd as last_state,
-            first_value(a.changeset_id) over wnd as last_changeset_id
-                from ""attribute"" a
-                where a.timestamp <= @time_threshold and a.ci_id = @ci_id and a.layer_id = @layer_id and a.name = @name
-            WINDOW wnd AS(
-                PARTITION by a.ci_id, a.name ORDER BY a.timestamp DESC) 
-            LIMIT 1
+            select id, ci_id, type, value, state, changeset_id FROM attribute 
+            where timestamp <= @time_threshold and ci_id = @ci_id and layer_id = @layer_id and name = @name
+            order by timestamp DESC LIMIT 1
+
             ", conn, trans);
             command.Parameters.AddWithValue("ci_id", ciid);
             command.Parameters.AddWithValue("layer_id", layerID);
@@ -390,44 +362,93 @@ namespace LandscapePrototype.Model
             var outdatedAttributes = (await FindAttributesByName($"{data.NamePrefix}%", false, data.LayerID, trans, DateTimeOffset.Now))
                 .ToDictionary(a => a.InformationHash);
 
-            // TODO: use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
-            foreach (var fragment in data.Fragments)
-            {
-                var fullName = fragment.FullName(data.NamePrefix);
-                var informationHash = CIAttribute.CreateInformationHash(fullName, fragment.CIID);
-                // remove the current attribute from the list of attribute to remove
-                outdatedAttributes.Remove(informationHash, out var currentAttribute);
+            // get current timestamp in database
+            using var commandTime = new NpgsqlCommand(@"SELECT now()", conn, trans);
+            var now = ((DateTime)(await commandTime.ExecuteScalarAsync()));
 
-                var state = AttributeState.New;
-                if (currentAttribute != null)
+            // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
+            using (var writer = conn.BeginBinaryImport(@"COPY attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)"))
+            {
+                foreach (var fragment in data.Fragments)
                 {
-                    if (currentAttribute.State == AttributeState.Removed)
-                        state = AttributeState.Renewed;
-                    else
-                        state = AttributeState.Changed;
+                    var fullName = fragment.FullName(data.NamePrefix);
+                    var informationHash = CIAttribute.CreateInformationHash(fullName, fragment.CIID);
+                    // remove the current attribute from the list of attribute to remove
+                    outdatedAttributes.Remove(informationHash, out var currentAttribute);
+
+                    var state = AttributeState.New;
+                    if (currentAttribute != null)
+                    {
+                        if (currentAttribute.State == AttributeState.Removed)
+                            state = AttributeState.Renewed;
+                        else
+                            state = AttributeState.Changed;
+                    }
+
+                    // handle equality case, also think about what should happen if a different user inserts the same data
+                    if (currentAttribute != null && currentAttribute.State != AttributeState.Removed && currentAttribute.Value.Equals(fragment.Value))
+                        continue;
+
+                    writer.StartRow();
+                    writer.Write(fullName);
+                    writer.Write(fragment.CIID);
+                    writer.Write(fragment.Value.Type, "attributevaluetype");
+                    writer.Write(fragment.Value.Value2String());
+                    writer.Write(data.LayerID);
+                    writer.Write(state, "attributestate");
+                    writer.Write(now, NpgsqlDbType.TimestampTz);
+                    writer.Write(changesetID);
+
+                    //using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
+                    //VALUES (@name, @ci_id, @type, @value, @layer_id, @state, now(), @changeset_id) returning id", conn, trans);
+
+                    //command.Parameters.AddWithValue("name", fullName);
+                    //command.Parameters.AddWithValue("ci_id", fragment.CIID);
+                    //command.Parameters.AddWithValue("type", fragment.Value.Type);
+                    //command.Parameters.AddWithValue("value", fragment.Value.Value2String());
+                    //command.Parameters.AddWithValue("layer_id", data.LayerID);
+                    //command.Parameters.AddWithValue("state", state);
+                    //command.Parameters.AddWithValue("changeset_id", changesetID);
+
+                    //var id = (long)await command.ExecuteScalarAsync();
                 }
 
-                // handle equality case, also think about what should happen if a different user inserts the same data
-                if (currentAttribute != null && currentAttribute.State != AttributeState.Removed && currentAttribute.Value.Equals(fragment.Value))
-                    continue;
-
-                using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
-                VALUES (@name, @ci_id, @type, @value, @layer_id, @state, now(), @changeset_id) returning id", conn, trans);
-
-                command.Parameters.AddWithValue("name", fullName);
-                command.Parameters.AddWithValue("ci_id", fragment.CIID);
-                command.Parameters.AddWithValue("type", fragment.Value.Type);
-                command.Parameters.AddWithValue("value", fragment.Value.Value2String());
-                command.Parameters.AddWithValue("layer_id", data.LayerID);
-                command.Parameters.AddWithValue("state", state);
-                command.Parameters.AddWithValue("changeset_id", changesetID);
-
-                var id = (long)await command.ExecuteScalarAsync();
-            }
+            //    writer.Complete();
+            //}
 
             // remove outdated 
-            foreach (var outdatedAttribute in outdatedAttributes.Values)
-                await RemoveAttribute(outdatedAttribute.Name, data.LayerID, outdatedAttribute.CIID, changesetID, trans);
+            //using (var writer = conn.BeginBinaryImport(@"COPY attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)"))
+            //{
+                foreach (var outdatedAttribute in outdatedAttributes.Values)
+                {
+                    writer.StartRow();
+                    writer.Write(outdatedAttribute.Name);
+                    writer.Write(outdatedAttribute.CIID);
+                    writer.Write(outdatedAttribute.Value.Type, "attributevaluetype");
+                    writer.Write(outdatedAttribute.Value.Value2String());
+                    writer.Write(data.LayerID);
+                    writer.Write(AttributeState.Removed, "attributestate");
+                    writer.Write(now, NpgsqlDbType.TimestampTz);
+                    writer.Write(changesetID);
+
+                    //using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
+                    //VALUES (@name, @ci_id, @type, @value, @layer_id, @state, now(), @changeset_id) returning id", conn, trans);
+
+                    //command.Parameters.AddWithValue("name", outdatedAttribute.Name);
+                    //command.Parameters.AddWithValue("ci_id", outdatedAttribute.CIID);
+                    //command.Parameters.AddWithValue("type", outdatedAttribute.Value.Type);
+                    //command.Parameters.AddWithValue("value", outdatedAttribute.Value.Value2String());
+                    //command.Parameters.AddWithValue("layer_id", data.LayerID);
+                    //command.Parameters.AddWithValue("state", AttributeState.Removed);
+                    //command.Parameters.AddWithValue("changeset_id", changesetID);
+
+                    //using var reader = await command.ExecuteReaderAsync();
+                    //await reader.ReadAsync();
+                    //var id = reader.GetInt64(0);
+                }
+
+                writer.Complete();
+            }
 
             return true;
         }

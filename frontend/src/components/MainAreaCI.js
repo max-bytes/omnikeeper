@@ -7,13 +7,39 @@ import LoadingOverlay from 'react-loading-overlay'
 import {Container} from 'react-bootstrap';
 import moment from 'moment'
 
+// function useTraceUpdate(props) {
+//   const prev = React.useRef(props);
+//   React.useEffect(() => {
+//     const changedProps = Object.entries(props).reduce((ps, [k, v]) => {
+//       if (prev.current[k] !== v) {
+//         ps[k] = [prev.current[k], v];
+//       }
+//       return ps;
+//     }, {});
+//     if (Object.keys(changedProps).length > 0) {
+//       console.log('Changed props:', changedProps);
+//     }
+//     prev.current = props;
+//   });
+// }
+
 function MainAreaCI(props) {
+  // useTraceUpdate(props);
+
     let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
 
-    const timeThreshold = props.currentTime.time || moment().add(1, 'year').format('YYYY-MM-DD HH:mm:ss');
+    console.log("Reload main area");
+
+    const timeThreshold = props.currentTime.time;
     const { loading: loadingCI, error: errorCI, data: dataCI } = useQuery(queries.CI, {
       variables: { identity: props.ciid, layers: visibleLayers, timeThreshold }
     });
+
+    console.log(timeThreshold);
+    console.log(loadingCI);
+    console.log(errorCI);
+    console.log(dataCI);
+    console.log("!");
 
     const isEditable = props.currentTime.isLatest;
 

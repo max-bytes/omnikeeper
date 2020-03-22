@@ -50,13 +50,13 @@ namespace LandscapePrototype.Entity.GraphQL
                     return relatedCIID;
                 });
 
-                // TODO: consider packing the actual CIs into its own resolver so they are only queried when really necessary
-                var CIs = (await ciModel.GetFullCIs(layerset, true, userContext.Transaction, userContext.TimeThreshold, relatedCIIDs)).ToDictionary(ci => ci.Identity);
+                // TODO: consider packing the actual CIs into its own resolver so they can be queried when necessary
+                //var CIs = (await ciModel.GetFullCIs(layerset, true, userContext.Transaction, userContext.TimeThreshold, relatedCIIDs)).ToDictionary(ci => ci.Identity);
                 foreach(var r in relations)
                 {
                     var isForwardRelation = r.FromCIID == CIIdentity;
                     var relatedCIID = (isForwardRelation) ? r.ToCIID : r.FromCIID;
-                    relatedCIs.Add(RelatedCI.Build(r, CIs[relatedCIID], isForwardRelation));
+                    relatedCIs.Add(RelatedCI.Build(r, relatedCIID, isForwardRelation));
                 }
 
                 var wStr = context.GetArgument<string>("where"); // TODO: develop further

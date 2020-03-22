@@ -40,7 +40,7 @@ namespace LandscapePrototype.Entity.GraphQL
         public RelatedCIType()
         {
             Field(x => x.Relation, type: typeof(RelationType));
-            Field("ci", x => x.CI, type: typeof(CIType));
+            Field("ciid", x => x.CIID);
             Field(x => x.IsForward);
         }
     }

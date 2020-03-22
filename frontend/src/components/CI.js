@@ -16,7 +16,7 @@ function CI(props) {
     const predicateCompare = a.relation.predicate.id.localeCompare(b.relation.predicate.id);
     if (predicateCompare !== 0)
       return predicateCompare;
-    return a.ci.identity.localeCompare(b.ci.identity);
+    return a.ciid.localeCompare(b.ciid);
   });
 
   const [selectedTab, setSelectedTab] = useState(0);

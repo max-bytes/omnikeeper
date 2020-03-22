@@ -40,11 +40,7 @@ export const Fragments = {
             relation {
                 ...FullRelation
             }
-            ci {
-                identity
-                layerhash
-                atTime
-            }
+            ciid
             isForward
         }
         mergedAttributes {

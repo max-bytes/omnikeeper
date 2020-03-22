@@ -28,7 +28,7 @@ function RelatedCI(props) {
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
   // const otherCIButton = <Button variant="link" onClick={() => setSelectedCI({variables: { newSelectedCI: props.related.ci.identity }})}>{props.related.ci.identity}</Button>;
-  const otherCIButton = <Link to={"/explorer/" + props.related.ci.identity}>{props.related.ci.identity}</Link>;
+  const otherCIButton = <Link to={"/explorer/" + props.related.ciid}>{props.related.ciid}</Link>;
 
   let written;
   if (props.related.isForward) {

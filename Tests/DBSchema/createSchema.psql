@@ -250,6 +250,10 @@ CREATE INDEX
     (ci_id COLLATE pg_catalog."default" ASC NULLS LAST, name COLLATE pg_catalog."default" ASC NULLS LAST, layer_id ASC NULLS LAST, "timestamp" DESC NULLS FIRST)
     TABLESPACE pg_default;
 
+CREATE INDEX
+    ON public.attribute USING btree
+    (layer_id ASC NULLS LAST, name COLLATE pg_catalog."default" text_pattern_ops ASC NULLS LAST, "timestamp" ASC NULLS LAST)
+    TABLESPACE pg_default;
 
 CREATE INDEX
     ON public.relation USING btree
@@ -261,5 +265,10 @@ CREATE INDEX
 CREATE INDEX i_changeset_timestamp
     ON public.changeset USING btree
     ("timestamp" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX
+    ON public.citype_assignment USING btree
+    (ci_id COLLATE pg_catalog."default" ASC NULLS LAST, "timestamp" DESC NULLS FIRST)
     TABLESPACE pg_default;
 
