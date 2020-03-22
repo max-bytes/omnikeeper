@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client';
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types'
 import { queries } from '../graphql/queries'
 import LoadingOverlay from 'react-loading-overlay'
@@ -11,7 +11,6 @@ import UserTypeIcon from './UserTypeIcon';
 import moment from 'moment'
 
 function Timeline(props) {
-    // let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
     let allLayers = props.layers.map(l => l.name);
 
     var ciid = props.ciid;
@@ -22,12 +21,10 @@ function Timeline(props) {
       variables: { from: from, to: to, ciid: ciid, layers: allLayers }
     });
 
-    // TODO: loading
-    const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
-    
-    const [refetchingChangesets, setRefetchingChangesets] = useState(false);
+    React.useEffect(() => {  if (props.currentTime.isLatest) refetchChangesets(); }, [props.currentTime, refetchChangesets]);
 
-  
+    const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
+
     if (data) {
       var changesets = [...data.changesets].reverse();
 
@@ -54,12 +51,8 @@ function Timeline(props) {
       const latestChangeset = changesets.find(e => true);
    
       const refreshButton = (<SemanticButton basic size='mini' compact onClick={() => {
-        setRefetchingChangesets(true);
-        refetchChangesets()
-        .then(() => {
-          setSelectedTimeThreshold({variables: { newTimeThreshold: moment().format('YYYY-MM-DD HH:mm:ss'), isLatest: true }});
-        }).finally(() => setRefetchingChangesets(false));
-      }}><Icon loading={refetchingChangesets} fitted name={'sync'} /></SemanticButton>)
+          setSelectedTimeThreshold({variables: { newTimeThreshold: null, isLatest: true }});
+      }}><Icon loading={loadingChangesets} fitted name={'sync'} /></SemanticButton>)
 
       return (
         <div>

@@ -28,7 +28,7 @@ function AddNewRelation(props) {
   // TODO: loading
   const { data: dataCIs } = useQuery(queries.CIList);
   const { data: dataPredicates } = useQuery(queries.PredicateList);
-  const [insertRelation] = useMutation(mutations.INSERT_RELATION, { refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true });
+  const [insertRelation] = useMutation(mutations.INSERT_RELATION);
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
   

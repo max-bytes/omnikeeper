@@ -14,7 +14,6 @@ function RelatedCI(props) {
 
   // TODO: loading
   const [removeRelation] = useMutation(mutations.REMOVE_RELATION, { 
-    refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true,
     update: (cache, data) => {
       /* HACK: find a better way to deal with cache invalidation! We would like to invalidate the affected CIs, which 
       translates to multiple entries in the cache, because each CI can be cached multiple times for each layerhash

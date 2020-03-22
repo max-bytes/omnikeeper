@@ -19,9 +19,8 @@ function Attribute(props) {
   let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
 
   // TODO: loading
-  const [insertCIAttribute] = useMutation(mutations.INSERT_CI_ATTRIBUTE, { refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true });
-  const [removeCIAttribute] = useMutation(mutations.REMOVE_CI_ATTRIBUTE, { 
-    refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true,
+  const [insertCIAttribute] = useMutation(mutations.INSERT_CI_ATTRIBUTE);
+  const [removeCIAttribute] = useMutation(mutations.REMOVE_CI_ATTRIBUTE, {
     update: (cache, data) => {
       /* HACK: find a better way to deal with cache invalidation! We would like to invalidate the affected CIs, which 
       translates to multiple entries in the cache, because each CI can be cached multiple times for each layerhash

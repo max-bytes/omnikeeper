@@ -3,6 +3,7 @@ import { queries } from '../graphql/queries'
 import { ApolloProvider, ApolloClient, createHttpLink, InMemoryCache,gql,defaultDataIdFromObject  } from '@apollo/client';
 import { ApolloProvider as ApolloHooksProvider } from '@apollo/react-hooks'
 import { useKeycloak } from '@react-keycloak/web'
+import moment from 'moment'
 
 let toHSL = function(string, opts) {
   var h, s, l;
@@ -69,8 +70,11 @@ function ApolloWrapper({ component: Component, ...rest }) {
         Mutation: {
         setSelectedTimeThreshold: (_root, variables, { cache, getCacheKey }) => {
             cache.writeQuery({query: queries.SelectedTimeThreshold, data: {
-            selectedTimeThreshold: { time: variables.newTimeThreshold, isLatest: variables.isLatest }
-            } });
+                selectedTimeThreshold: { 
+                    time: variables.newTimeThreshold || moment().add(1, 'year').format('YYYY-MM-DD HH:mm:ss'),
+                    isLatest: variables.isLatest
+                }
+            }});
             return null;
         },
         // setSelectedCI: (_root, variables, { cache, getCacheKey }) => {

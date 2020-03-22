@@ -25,7 +25,7 @@ function AddNewAttribute(props) {
   })}</div>;
 
   // TODO: loading
-  const [insertCIAttribute] = useMutation(mutations.INSERT_CI_ATTRIBUTE, { refetchQueries: ['changesets', 'ci'], awaitRefetchQueries: true });
+  const [insertCIAttribute] = useMutation(mutations.INSERT_CI_ATTRIBUTE);
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
   let addAttribute = <span></span>;

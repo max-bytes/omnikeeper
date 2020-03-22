@@ -15,7 +15,6 @@ export const AttributeTypes = [
 ];
 
 export function attributeType2InputProps(type) {
-    console.log(type);
     switch(type) {
       case 'INTEGER': return {type: 'number' };
       case 'MULTILINE_TEXT': return {type: 'text', as: 'textarea', rows: 7 };
