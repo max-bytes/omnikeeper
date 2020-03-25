@@ -74,6 +74,8 @@ namespace LandscapePrototype.Model
 
         public async Task<IEnumerable<Layer>> GetLayers(long[] layerIDs, NpgsqlTransaction trans)
         {
+            if (layerIDs.Length == 0) return new List<Layer>();
+
             var layers = new List<Layer>();
             using var command = new NpgsqlCommand(@"select id, name from layer where id = ANY(@layer_ids)", conn, trans);
             command.Parameters.AddWithValue("layer_ids", layerIDs);

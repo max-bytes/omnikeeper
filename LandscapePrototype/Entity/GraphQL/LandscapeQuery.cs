@@ -1,6 +1,7 @@
 ﻿using GraphQL.Types;
 using Landscape.Base;
 using LandscapePrototype.Model;
+using LandscapePrototype.Model.Cached;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace LandscapePrototype.Entity.GraphQL
 {
     public class LandscapeQuery : ObjectGraphType
     {
-        public LandscapeQuery(CIModel ciModel, LayerModel layerModel, PredicateModel predicateModel, ChangesetModel changesetModel)
+        public LandscapeQuery(CIModel ciModel, CachedLayerModel layerModel, PredicateModel predicateModel, ChangesetModel changesetModel)
         {
 
             FieldAsync<CIType>("ci",

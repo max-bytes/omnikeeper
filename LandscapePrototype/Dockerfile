@@ -14,8 +14,18 @@ COPY . .
 WORKDIR "/src/LandscapePrototype"
 RUN dotnet build "LandscapePrototype.csproj" -c Release -o /app/build
 
+WORKDIR /src
+COPY ["TestPlugin/TestPlugin.csproj", "TestPlugin/"]
+RUN dotnet restore "TestPlugin/TestPlugin.csproj"
+WORKDIR "/src/TestPlugin"
+RUN dotnet build "TestPlugin.csproj" -c Release -o /app/build
+
+
 FROM build AS publish
+WORKDIR "/src/LandscapePrototype"
 RUN dotnet publish "LandscapePrototype.csproj" -c Release -o /app/publish
+WORKDIR "/src/TestPlugin"
+RUN dotnet publish "TestPlugin.csproj" -c Release -o /app/publish/plugins
 
 FROM base AS final
 WORKDIR /app

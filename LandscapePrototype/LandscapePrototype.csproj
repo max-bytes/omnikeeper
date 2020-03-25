@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Base\Landscape.Base.csproj" />
+    <ProjectReference Include="..\TestPlugin\TestPlugin.csproj" />
   </ItemGroup>
 
   <ItemGroup>

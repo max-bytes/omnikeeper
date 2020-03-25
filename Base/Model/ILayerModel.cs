@@ -11,5 +11,10 @@ namespace Landscape.Base.Model
     public interface ILayerModel
     {
         Task<LayerSet> BuildLayerSet(string[] layerNames, NpgsqlTransaction trans);
+        Task<LayerSet> BuildLayerSet(NpgsqlTransaction trans);
+
+        Task<Layer> GetLayer(long layerID, NpgsqlTransaction trans);
+        Task<IEnumerable<Layer>> GetLayers(long[] layerIDs, NpgsqlTransaction trans);
+        Task<IEnumerable<Layer>> GetLayers(NpgsqlTransaction trans);
     }
 }

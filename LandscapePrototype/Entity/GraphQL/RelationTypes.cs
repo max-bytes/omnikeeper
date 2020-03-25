@@ -1,6 +1,7 @@
 ﻿using GraphQL.Types;
 using LandscapePrototype.Entity.AttributeValues;
 using LandscapePrototype.Model;
+using LandscapePrototype.Model.Cached;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace LandscapePrototype.Entity.GraphQL
 {
     public class RelationType : ObjectGraphType<Relation>
     {
-        public RelationType(LayerModel layerModel)
+        public RelationType(CachedLayerModel layerModel)
         {
             Field("id", x => x.ID);
             Field(x => x.FromCIID);

@@ -38,6 +38,10 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Hangfire.AspNetCore;
 using Hangfire.Console;
+using LandscapePrototype.Model.Cached;
+using TestPlugin;
+using Hangfire.Dashboard;
+using Hangfire.Annotations;
 
 namespace LandscapePrototype
 {
@@ -57,12 +61,13 @@ namespace LandscapePrototype
             services.AddScoped<IServiceProvider>(x => new FuncServiceProvider(x.GetRequiredService)); // graphql needs this
 
             // add plugins
-            var testAssembly = Assembly.LoadFrom(@"C:\Users\Maximilian Csuk\Projects\Landscape\TestPlugin\bin\Debug\netstandard2.1\TestPlugin.dll");
-            services.RegisterAssemblyPublicNonGenericClasses(testAssembly)
-                .Where(a => {
-                    return true;// a.GetInterfaces().Contains(typeof(ILandscapePluginRegistry));
-                    })
-                .AsPublicImplementedInterfaces(ServiceLifetime.Scoped);
+            //var testAssembly = Assembly.LoadFrom(@"C:\Users\Maximilian Csuk\Projects\Landscape\TestPlugin\bin\Debug\netstandard2.1\TestPlugin.dll");
+            //services.RegisterAssemblyPublicNonGenericClasses(testAssembly)
+            //    .Where(a => {
+            //        return true;// a.GetInterfaces().Contains(typeof(ILandscapePluginRegistry));
+            //        })
+            //    .AsPublicImplementedInterfaces(ServiceLifetime.Scoped);
+            services.AddScoped<IComputeLayerBrain, CLBMonitoring>();
 
             services.AddCors(options => options.AddPolicy("AllowAllOrigins", builder =>
                builder.WithOrigins("http://localhost:3000")
@@ -76,7 +81,7 @@ namespace LandscapePrototype
             services.AddScoped((sp) =>
             {
                 var dbcb = new DBConnectionBuilder();
-                return dbcb.Build("landscape_prototype");
+                return dbcb.Build(Configuration);
             });
 
             // TODO: remove AddScoped<Model>(), only use AddScoped<IModel, Model>()
@@ -86,6 +91,7 @@ namespace LandscapePrototype
             services.AddScoped<UserModel>();
             services.AddScoped<ILayerModel, LayerModel>();
             services.AddScoped<LayerModel>();
+            services.AddScoped<CachedLayerModel>();
             services.AddScoped<IRelationModel, RelationModel>();
             services.AddScoped<RelationModel>();
             services.AddScoped<IChangesetModel, ChangesetModel>();
@@ -104,7 +110,7 @@ namespace LandscapePrototype
 
             services.AddGraphQL(x =>
             {
-                x.ExposeExceptions = CurrentEnvironment.IsDevelopment(); //set true only in development mode. make it switchable.
+                x.ExposeExceptions = CurrentEnvironment.IsDevelopment() || CurrentEnvironment.IsStaging(); //set true only in development mode. make it switchable.
             })
             .AddGraphTypes(ServiceLifetime.Scoped);
 
@@ -122,7 +128,7 @@ namespace LandscapePrototype
                     ValidateAudience = true,
                     ValidAudience = "landscape",
                 };
-                options.Authority = "http://localhost:8080/auth/realms/landscape";
+                options.Authority = Configuration["AuthenticationAuthority"];
                 options.Audience = "landscape";
                 options.RequireHttpsMetadata = false;
                 options.Events = new JwtBearerEvents()
@@ -158,7 +164,8 @@ namespace LandscapePrototype
             services.AddScoped<CLBRunner>();
             services.AddHangfire(config =>
             {
-                config.UsePostgreSqlStorage(Configuration.GetConnectionString("HangfireConnection"));
+                var cs = Configuration.GetConnectionString("HangfireConnection");
+                config.UsePostgreSqlStorage(cs);
                 //config.UseConsole();
             });
 
@@ -173,7 +180,7 @@ namespace LandscapePrototype
 
             app.UseStaticFiles();
 
-            if (env.IsDevelopment())
+            if (env.IsDevelopment() || env.IsStaging())
             {
                 app.UseDeveloperExceptionPage();
 
@@ -198,9 +205,24 @@ namespace LandscapePrototype
             // Configure hangfire to use the new JobActivator we defined.
             GlobalConfiguration.Configuration.UseConsole().UseActivator(new AspNetCoreJobActivator(serviceScopeFactory));
             app.UseHangfireServer();
-            app.UseHangfireDashboard();
+            if (env.IsDevelopment())
+            {
+                app.UseHangfireDashboard(options: new DashboardOptions()
+                {
+                    Authorization = new IDashboardAuthorizationFilter[] { new HangFireAuthorizationFilter() }
+                });
+            }
 
             RecurringJob.AddOrUpdate<CLBRunner>(runner => runner.Run(), Cron.Daily);// "*/15 * * * * *");
+        }
+    }
+
+    // in a docker-based environment, we need a custom authorization filter for the hangfire dashboard because non-localhost access is blocked by default
+    public class HangFireAuthorizationFilter : IDashboardAuthorizationFilter
+    {
+        public bool Authorize([NotNull] DashboardContext context)
+        {
+            return true;
         }
     }
 

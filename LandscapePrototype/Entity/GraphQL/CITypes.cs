@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Linq.Dynamic.Core;
+using LandscapePrototype.Model.Cached;
 
 namespace LandscapePrototype.Entity.GraphQL
 {
@@ -77,7 +78,7 @@ namespace LandscapePrototype.Entity.GraphQL
 
     public class MergedCIAttributeType : ObjectGraphType<MergedCIAttribute>
     {
-        public MergedCIAttributeType(LayerModel layerModel)
+        public MergedCIAttributeType(CachedLayerModel layerModel)
         {
             Field(x => x.LayerStackIDs);
             Field(x => x.Attribute, type: typeof(CIAttributeType));

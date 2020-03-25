@@ -16,7 +16,7 @@ import ApolloWrapper from './components/ApolloWrapper';
 
 const keycloak = new Keycloak({
   "realm": "landscape",
-  "url": "http://localhost:8080/auth/",
+  "url": "http://host.docker.internal:8090/auth/",
   "ssl-required": "none",
   "resource": "landscape",
   "clientId": "landscape",
@@ -28,7 +28,10 @@ const keycloak = new Keycloak({
 })
 
 const keycloakProviderInitConfig = {
-  // onLoad: 'check-sso'
+  // workaround, disabling of checking iframe cookie, because its a cross-site one, and chrome stopped accepting them
+  // when they don't have SameSite=None set... and keycloak doesn't send a proper cookie yet: 
+  // https://issues.redhat.com/browse/KEYCLOAK-12125
+  "checkLoginIframe": false 
 }
 
 function App() {

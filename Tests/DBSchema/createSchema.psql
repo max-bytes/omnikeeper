@@ -91,6 +91,7 @@ CREATE TABLE public.relation
     changeset_id bigint NOT NULL,
     layer_id bigint NOT NULL,
     state public.relationstate DEFAULT 'new'::public.relationstate NOT NULL,
+    "timestamp" timestamp with time zone NOT NULL,
     CONSTRAINT relation_pkey PRIMARY KEY (id)
 );
 
