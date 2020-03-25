@@ -22,7 +22,7 @@ namespace LandscapePrototype.Model
         {
             // check for an updated user first
             var existingUser = await GetUser(username, uuid, trans);
-            if (existingUser != null)
+            if (existingUser != null && existingUser.UserType == type)
                 return existingUser;
 
             using var command = new NpgsqlCommand(@"INSERT INTO ""user"" (keycloak_id, timestamp, type, username) VALUES (@uuid, now(), @type, @username) returning id, timestamp", conn, trans);

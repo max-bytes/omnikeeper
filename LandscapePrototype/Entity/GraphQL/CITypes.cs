@@ -18,9 +18,9 @@ namespace LandscapePrototype.Entity.GraphQL
         }
     }
 
-    public class CIType : ObjectGraphType<CI>
+    public class MergedCIType : ObjectGraphType<MergedCI>
     {
-        public CIType(RelationModel relationModel, CIModel ciModel)
+        public MergedCIType(RelationModel relationModel)
         {
             Field(x => x.Identity);
             Field("layerhash", x => x.Layers.LayerHash);
@@ -123,30 +123,4 @@ namespace LandscapePrototype.Entity.GraphQL
             Field(x => x.Value);
         }
     }
-
-    // TODO: consider switching to AttributeValueGeneric for output too
-    //public class AttributeValueGQLType : UnionGraphType
-    //{
-    //    public AttributeValueGQLType()
-    //    {
-    //        Type<AttributeValueIntegerType>();
-    //        Type<AttributeValueTextType>();
-    //    }
-    //}
-
-    //public class AttributeValueIntegerType : ObjectGraphType<AttributeValueInteger>
-    //{
-    //    public AttributeValueIntegerType()
-    //    {
-    //        Field(x => x.Value);
-    //    }
-    //}
-    //public class AttributeValueTextType : ObjectGraphType<AttributeValueText>
-    //{
-    //    public AttributeValueTextType()
-    //    {
-    //        Field(x => x.Value);
-    //        Field(x => x.Multiline);
-    //    }
-    //}
 }

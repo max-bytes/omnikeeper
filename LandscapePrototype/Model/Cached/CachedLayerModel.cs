@@ -36,6 +36,12 @@ namespace LandscapePrototype.Model.Cached
             return ret ?? AddToCache(await Model.GetLayer(layerID, trans));
         }
 
+        public async Task<Layer> GetLayer(string layerName, NpgsqlTransaction trans)
+        {
+            NameLayerCache.TryGetValue(layerName, out var ret);
+            return ret ?? AddToCache(await Model.GetLayer(layerName, trans));
+        }
+
         public async Task<IEnumerable<Layer>> GetLayers(long[] layerIDs, NpgsqlTransaction trans)
         {
             var tmp = layerIDs.Select(id => {

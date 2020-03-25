@@ -1,6 +1,10 @@
 
+using Landscape.Base.Model;
 using LandscapePrototype.Entity.AttributeValues;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace LandscapePrototype.Entity
 {
@@ -52,39 +56,95 @@ namespace LandscapePrototype.Entity
         }
     }
 
-    public class BulkCIAttributeDataFragment
+    public interface IBulkCIAttributeData<F>
     {
-        private string Name {  get; set; }
-        public string FullName(string prefix) => $"{prefix}.{Name}";
-        public IAttributeValue Value { get; private set; }
-        public string CIID { get; private set; }
+        string GetCIID(F f);
+        string NamePrefix { get; }
+        long LayerID { get; }
+        public F[] Fragments { get; }
 
-        public static string StripPrefix(string fullName, string prefix) => fullName.Replace($"{prefix}.", "");
-
-        public static BulkCIAttributeDataFragment Build(string name, IAttributeValue value, string ciid)
-        {
-            return new BulkCIAttributeDataFragment()
-            {
-                Name = name,
-                Value = value,
-                CIID = ciid
-            };
-        }
+        string GetFullName(F fragment);
+        IAttributeValue GetValue(F fragment);
     }
 
-    public class BulkCIAttributeData
+    public class BulkCIAttributeDataLayerScope : IBulkCIAttributeData<BulkCIAttributeDataLayerScope.Fragment>
     {
+        public class Fragment
+        {
+            public string Name { get; private set; }
+            public IAttributeValue Value { get; private set; }
+            public string CIID { get; private set; }
+
+            public static string StripPrefix(string fullName, string prefix) => fullName.Replace($"{prefix}.", "");
+
+
+            public static Fragment Build(string name, IAttributeValue value, string ciid)
+            {
+                return new Fragment()
+                {
+                    Name = name,
+                    Value = value,
+                    CIID = ciid
+                };
+            }
+        }
+
         public string NamePrefix { get; private set; }
         public long LayerID { get; private set; }
-        public BulkCIAttributeDataFragment[] Fragments { get; private set; }
+        public Fragment[] Fragments { get; private set; }
 
-        public static BulkCIAttributeData Build(string namePrefix, long layerID, BulkCIAttributeDataFragment[] fragments)
+        public string GetCIID(Fragment f) => f.CIID;
+        public string GetFullName(Fragment fragment) => $"{NamePrefix}.{fragment.Name}";
+        public IAttributeValue GetValue(Fragment f) => f.Value;
+
+        public static BulkCIAttributeDataLayerScope Build(string namePrefix, long layerID, IEnumerable<Fragment> fragments)
         {
-            return new BulkCIAttributeData()
+            return new BulkCIAttributeDataLayerScope()
             {
                 NamePrefix = namePrefix,
                 LayerID = layerID,
-                Fragments = fragments
+                Fragments = fragments.ToArray()
+            };
+        }
+
+    }
+
+    public class BulkCIAttributeDataCIScope : IBulkCIAttributeData<BulkCIAttributeDataCIScope.Fragment>
+    {
+        public class Fragment
+        {
+            public string Name { get; private set; }
+            public IAttributeValue Value { get; private set; }
+
+            public static string StripPrefix(string fullName, string prefix) => fullName.Replace($"{prefix}.", "");
+
+            public static Fragment Build(string name, IAttributeValue value)
+            {
+                return new Fragment()
+                {
+                    Name = name,
+                    Value = value
+                };
+            }
+        }
+
+        public string NamePrefix { get; private set; }
+        public long LayerID { get; private set; }
+        public string CIID { get; private set; }
+        public Fragment[] Fragments { get; private set; }
+
+        public string GetCIID(Fragment f) => CIID;
+        public string GetFullName(Fragment fragment) => $"{NamePrefix}.{fragment.Name}";
+        public IAttributeValue GetValue(Fragment f) => f.Value;
+
+        public static BulkCIAttributeDataCIScope Build(string namePrefix, long layerID, string ciid, IEnumerable<Fragment> fragments)
+        {
+            return new BulkCIAttributeDataCIScope()
+            {
+                NamePrefix = namePrefix,
+                LayerID = layerID,
+                CIID = ciid,
+                Fragments = fragments.ToArray()
             };
         }
     }

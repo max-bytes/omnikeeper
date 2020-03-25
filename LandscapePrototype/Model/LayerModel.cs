@@ -61,6 +61,16 @@ namespace LandscapePrototype.Model
             return new LayerSet(layerIDs.ToArray());
         }
 
+        public async Task<Layer> GetLayer(string layerName, NpgsqlTransaction trans)
+        {
+            using var command = new NpgsqlCommand(@"select id from layer where name = @name LIMIT 1", conn, trans);
+            command.Parameters.AddWithValue("name", layerName);
+            using var r = await command.ExecuteReaderAsync();
+            await r.ReadAsync();
+            var id = r.GetInt64(0);
+            return Layer.Build(layerName, id);
+        }
+
         public async Task<Layer> GetLayer(long layerID, NpgsqlTransaction trans)
         {
             using var command = new NpgsqlCommand(@"select name from layer where id = @id LIMIT 1", conn, trans);

@@ -28,18 +28,11 @@ function MainAreaCI(props) {
 
     let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
 
-    console.log("Reload main area");
-
     const timeThreshold = props.currentTime.time;
     const { loading: loadingCI, error: errorCI, data: dataCI } = useQuery(queries.CI, {
       variables: { identity: props.ciid, layers: visibleLayers, timeThreshold }
     });
 
-    console.log(timeThreshold);
-    console.log(loadingCI);
-    console.log(errorCI);
-    console.log(dataCI);
-    console.log("!");
 
     const isEditable = props.currentTime.isLatest;
 

@@ -269,6 +269,9 @@ namespace Tests.Integration.Model
 
             var a4 = await model.FindAttributesByName("%3", false, layerID1, trans, DateTimeOffset.Now);
             Assert.AreEqual(0, a4.Count());
+
+            var a5 = await model.FindAttributesByName("a1", false, layerID2, trans, DateTimeOffset.Now, ciid2);
+            Assert.AreEqual(1, a5.Count());
         }
 
 
@@ -317,8 +320,8 @@ namespace Tests.Integration.Model
                 var layerset1 = new LayerSet(new long[] { layerID1 });
                 var ciid2 = await model.CreateCIWithType("H456", "T1", trans);
                 var ciid3 = await model.CreateCIWithType("H789", "T2", trans);
-                Assert.AreEqual(1, (await model.GetFullCIsWithType(layerset1, trans, DateTimeOffset.Now, "T1")).Count());
-                Assert.AreEqual(2, (await model.GetFullCIsWithType(layerset1, trans, DateTimeOffset.Now, "T2")).Count());
+                Assert.AreEqual(1, (await model.GetMergedCIsWithType(layerset1, trans, DateTimeOffset.Now, "T1")).Count());
+                Assert.AreEqual(2, (await model.GetMergedCIsWithType(layerset1, trans, DateTimeOffset.Now, "T2")).Count());
             }
         }
 
@@ -351,10 +354,10 @@ namespace Tests.Integration.Model
 
             using var trans2 = conn.BeginTransaction();
             var changeset3 = await changesetModel.CreateChangeset(user.ID, trans2);
-            await model.BulkReplaceAttributes(BulkCIAttributeData.Build("prefix1", layerID1, new BulkCIAttributeDataFragment[] {
-                BulkCIAttributeDataFragment.Build("a1", AttributeValueText.Build("textNew"), ciid1),
-                BulkCIAttributeDataFragment.Build("a4", AttributeValueText.Build("textNew"), ciid2),
-                BulkCIAttributeDataFragment.Build("a2", AttributeValueText.Build("textNew"), ciid2),
+            await model.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("prefix1", layerID1, new BulkCIAttributeDataLayerScope.Fragment[] {
+                BulkCIAttributeDataLayerScope.Fragment.Build("a1", AttributeValueText.Build("textNew"), ciid1),
+                BulkCIAttributeDataLayerScope.Fragment.Build("a4", AttributeValueText.Build("textNew"), ciid2),
+                BulkCIAttributeDataLayerScope.Fragment.Build("a2", AttributeValueText.Build("textNew"), ciid2),
             }), changeset3.ID, trans2);
 
             var a1 = await model.FindAttributesByName("prefix1%", false, layerID1, trans2, DateTimeOffset.Now);

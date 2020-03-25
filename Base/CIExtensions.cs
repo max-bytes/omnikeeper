@@ -14,7 +14,7 @@ namespace Landscape.Base
         //    return ci.Attributes.FirstOrDefault(a => a.Name == "__type" && a.Value.Value2String() == type) != null;
         //}
 
-        public static IEnumerable<MergedCIAttribute> GetAttributesInGroup(this CI ci, string groupName)
+        public static IEnumerable<MergedCIAttribute> GetAttributesInGroup(this MergedCI ci, string groupName)
         {
             return ci.MergedAttributes.Where(a => a.Attribute.Name.StartsWith(groupName));
         }

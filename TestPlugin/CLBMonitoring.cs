@@ -32,16 +32,16 @@ namespace TestPlugin
 
             // prepare list of all monitored cis
             var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.FromCIID).Distinct();
-            var monitoredCIs = (await ciModel.GetFullCIs(layerSetAll, true, trans, DateTimeOffset.Now, monitoredCIIDs))
+            var monitoredCIs = (await ciModel.GetMergedCIs(layerSetAll, true, trans, DateTimeOffset.Now, monitoredCIIDs))
                 .ToDictionary(ci => ci.Identity);
 
             // prepare list of all monitoring modules
             var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.ToCIID).Distinct();
-            var monitoringModuleCIs = (await ciModel.GetFullCIs(layerSetMonitoringDefinitionsOnly, false, trans, DateTimeOffset.Now, monitoringModuleCIIDs))
+            var monitoringModuleCIs = (await ciModel.GetMergedCIs(layerSetMonitoringDefinitionsOnly, false, trans, DateTimeOffset.Now, monitoringModuleCIIDs))
                 .ToDictionary(ci => ci.Identity);
 
             // find and parse commands, insert into monitored CIs
-            var monitoringCommandFragments = new List<BulkCIAttributeDataFragment>();
+            var monitoringCommandFragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
             foreach (var p in allHasMonitoringModuleRelations)
             {
                 var monitoringModuleCI = monitoringModuleCIs[p.ToCIID];
@@ -73,16 +73,16 @@ namespace TestPlugin
                         continue;
                     }
                     monitoringCommandFragments.Add(
-                        BulkCIAttributeDataFragment.Build(BulkCIAttributeDataFragment.StripPrefix(mca.Attribute.Name, "monitoring.commands"),
+                        BulkCIAttributeDataLayerScope.Fragment.Build(BulkCIAttributeDataLayerScope.Fragment.StripPrefix(mca.Attribute.Name, "monitoring.commands"),
                         AttributeValueText.Build(finalCommand), p.FromCIID)
                     );
                 }
             }
-            await ciModel.BulkReplaceAttributes(BulkCIAttributeData.Build("monitoring.commands", layerID, monitoringCommandFragments.ToArray()), changeset.ID, trans);
+            await ciModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.commands", layerID, monitoringCommandFragments), changeset.ID, trans);
 
             // assign monitored cis to naemon instances
             var monitoredByCIIDPairs = new List<(string, string)>();
-            var naemonInstances = await ciModel.GetFullCIsWithType(layerSetMonitoringDefinitionsOnly, trans, DateTimeOffset.Now, "Naemon Instance");
+            var naemonInstances = await ciModel.GetMergedCIsWithType(layerSetMonitoringDefinitionsOnly, trans, DateTimeOffset.Now, "Naemon Instance");
             foreach (var naemonInstance in naemonInstances)
                 foreach (var monitoredCI in monitoredCIs)
                     monitoredByCIIDPairs.Add((monitoredCI.Value.Identity, naemonInstance.Identity));
@@ -91,16 +91,16 @@ namespace TestPlugin
             // write final naemon config
             var checkCommandsPerNaemonInstance = new Dictionary<string, List<string>>();
             var naemonInstance2MoitoredCILookup = monitoredByCIIDPairs.GroupBy(t => t.Item2).ToDictionary(t => t.Key, t => t.Select(t => t.Item1));
-            var monitoringConfigs = new List<BulkCIAttributeDataFragment>();
+            var monitoringConfigs = new List<BulkCIAttributeDataLayerScope.Fragment>();
             foreach (var kv in naemonInstance2MoitoredCILookup)
             {
                 var naemonInstance = kv.Key;
                 var cis = kv.Value;
                 var commands = monitoringCommandFragments.Where(f => cis.Contains(f.CIID)).Select(f => f.Value.Value2String());
                 var finalConfig = string.Join("\n", commands);
-                monitoringConfigs.Add(BulkCIAttributeDataFragment.Build("naemonConfig", AttributeValueText.Build(finalConfig, true), naemonInstance));
+                monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("naemonConfig", AttributeValueText.Build(finalConfig, true), naemonInstance));
             }
-            await ciModel.BulkReplaceAttributes(BulkCIAttributeData.Build("monitoring", layerID, monitoringConfigs.ToArray()), changeset.ID, trans);
+            await ciModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring", layerID, monitoringConfigs), changeset.ID, trans);
 
             trans.Commit();
 

@@ -10,7 +10,7 @@ namespace LandscapePrototype.Entity.GraphQL
 {
     public class LandscapeMutation : ObjectGraphType
     {
-        public LandscapeMutation(CIModel ciModel, LayerModel layerModel, RelationModel relationModel, ChangesetModel changesetModel, NpgsqlConnection conn)
+        public LandscapeMutation(CIModel ciModel, LayerModel layerModel, TemplateModel templateModel, RelationModel relationModel, ChangesetModel changesetModel, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutate",
               arguments: new QueryArguments(
@@ -98,7 +98,19 @@ namespace LandscapePrototype.Entity.GraphQL
                   .Concat(insertedRelations.SelectMany(i => new string[] { i.FromCIID, i.ToCIID }))
                   .Concat(removedRelations.SelectMany(i => new string[] { i.FromCIID, i.ToCIID }))
                   .Distinct();
-                  var affectedCIs = await ciModel.GetFullCIs(userContext.LayerSet, true, transaction, changeset.Timestamp, affectedCIIDs);
+                  var affectedCIs = await ciModel.GetMergedCIs(userContext.LayerSet, true, transaction, changeset.Timestamp, affectedCIIDs);
+
+                  var modifiedCIIDsAndLayers = removeAttributes.Select(r => (r.CI, r.LayerID))
+                  .Concat(insertAttributes.Select(i => (i.CI, i.LayerID)))
+                  .Concat(insertRelations.SelectMany(i => new (string, long)[] { (i.FromCIID, i.LayerID), (i.ToCIID, i.LayerID) }))
+                  .Concat(removedRelations.SelectMany(i => new (string, long)[] { (i.FromCIID, i.LayerID), (i.ToCIID, i.LayerID) }))
+                  .Distinct();
+
+                  // update template errors
+                  // TODO: performance improvements
+                  foreach (var affectedCIIDAndLayer in modifiedCIIDsAndLayers)
+                    await templateModel.UpdateErrorsOfCI(affectedCIIDAndLayer.Item1, affectedCIIDAndLayer.Item2, null, ciModel, changeset.ID, transaction);
+
 
                   await transaction.CommitAsync();
 

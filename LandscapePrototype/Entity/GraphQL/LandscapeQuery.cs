@@ -14,7 +14,7 @@ namespace LandscapePrototype.Entity.GraphQL
         public LandscapeQuery(CIModel ciModel, CachedLayerModel layerModel, PredicateModel predicateModel, ChangesetModel changesetModel)
         {
 
-            FieldAsync<CIType>("ci",
+            FieldAsync<MergedCIType>("ci",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {
                     new QueryArgument<NonNullGraphType<StringGraphType>>
@@ -40,7 +40,7 @@ namespace LandscapePrototype.Entity.GraphQL
                     userContext.LayerSet = ls;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
 
-                    var ci = await ciModel.GetFullCI(ciIdentity, userContext.LayerSet, null, userContext.TimeThreshold);
+                    var ci = await ciModel.GetMergedCI(ciIdentity, userContext.LayerSet, null, userContext.TimeThreshold);
 
                     return ci;
                 });
@@ -52,7 +52,7 @@ namespace LandscapePrototype.Entity.GraphQL
                     return ciids;
                 });
 
-            FieldAsync<ListGraphType<CIType>>("cis",
+            FieldAsync<ListGraphType<MergedCIType>>("cis",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {
                     new QueryArgument<ListGraphType<StringGraphType>>
@@ -79,7 +79,7 @@ namespace LandscapePrototype.Entity.GraphQL
 
                     var includeEmpty = context.GetArgument<bool>("includeEmpty", false);
 
-                    var cis = await ciModel.GetFullCIs(userContext.LayerSet, includeEmpty, null, userContext.TimeThreshold);
+                    var cis = await ciModel.GetMergedCIs(userContext.LayerSet, includeEmpty, null, userContext.TimeThreshold);
                     return cis;
                 });
             FieldAsync<ListGraphType<PredicateType>>("predicates",

@@ -155,7 +155,8 @@ function ApolloWrapper({ component: Component, ...rest }) {
     });
 
     const httpLink = createHttpLink({
-      uri: 'https://localhost:44360/graphql',
+    //   uri: 'https://localhost:44360/graphql',
+      uri: 'https://localhost:44378/graphql',
       credentials: 'include',
       headers: {
         "Authorization": "Bearer " + ((keycloak.token) ? keycloak.token : "")

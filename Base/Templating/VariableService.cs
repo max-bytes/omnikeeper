@@ -42,7 +42,7 @@ namespace Landscape.Base.Templating
             d.Add("value", value);
         }
 
-        public static Dictionary<string, object> CreateVariablesFromCI(CI ci)
+        public static Dictionary<string, object> CreateVariablesFromCI(MergedCI ci)
         {
             var targetVariables = new Dictionary<string, object>() { { "ciid", ci.Identity }, { "type", ci.Type.ID } };
             foreach (var monitoredCIAttribute in ci.MergedAttributes)

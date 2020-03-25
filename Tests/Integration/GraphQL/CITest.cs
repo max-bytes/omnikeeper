@@ -25,7 +25,7 @@ namespace Tests.Integration.GraphQL
             DBSetup.Setup();
 
             Services.Register<LandscapeQuery>();
-            Services.Register<CIType>();
+            Services.Register<MergedCIType>();
             Services.Register<CIModel>();
             Services.Register<UserModel>();
             Services.Register<LayerModel>();

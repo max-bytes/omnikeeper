@@ -17,5 +17,15 @@ namespace LandscapePrototype.Entity
                 ID = id
             };
         }
+
+        public override int GetHashCode() => HashCode.Combine(ID);
+        public override bool Equals(object obj)
+        {
+            if (obj is CIType other)
+            {
+                return ID.Equals(other.ID);
+            }
+            else return false;
+        }
     }
 }

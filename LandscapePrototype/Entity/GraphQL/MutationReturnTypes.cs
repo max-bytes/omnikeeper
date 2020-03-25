@@ -13,9 +13,9 @@ namespace LandscapePrototype.Entity.GraphQL
         public IEnumerable<CIAttribute> RemovedAttributes { get; private set; }
         public IEnumerable<Relation> InsertedRelations { get; private set; }
         
-        public IEnumerable<CI> AffectedCIs { get; private set; }
+        public IEnumerable<MergedCI> AffectedCIs { get; private set; }
         public static MutateReturn Build(IEnumerable<CIAttribute> insertedAttributes,
-            IEnumerable<CIAttribute> removedAttributes, IEnumerable<Relation> insertedRelations, IEnumerable<CI> affectedCIs)
+            IEnumerable<CIAttribute> removedAttributes, IEnumerable<Relation> insertedRelations, IEnumerable<MergedCI> affectedCIs)
         {
             return new MutateReturn()
             {
@@ -33,7 +33,7 @@ namespace LandscapePrototype.Entity.GraphQL
             Field(x => x.InsertedAttributes, type: typeof(ListGraphType<CIAttributeType>));
             Field(x => x.RemovedAttributes, type: typeof(ListGraphType<CIAttributeType>));
             Field(x => x.InsertedRelations, type: typeof(ListGraphType<RelationType>));
-            Field(x => x.AffectedCIs, type: typeof(ListGraphType<CIType>));
+            Field(x => x.AffectedCIs, type: typeof(ListGraphType<MergedCIType>));
         }
     }
 
