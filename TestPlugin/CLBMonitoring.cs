@@ -17,8 +17,8 @@ namespace TestPlugin
     {
         private readonly IRelationModel relationModel;
 
-        public CLBMonitoring(ICIModel ciModel, ILayerModel layerModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserModel userModel, NpgsqlConnection conn) 
-            : base(ciModel, layerModel, changesetModel, userModel, conn)
+        public CLBMonitoring(ICIModel ciModel, ILayerModel layerModel, ITemplateModel templateModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserModel userModel, NpgsqlConnection conn) 
+            : base(ciModel, layerModel, templateModel, changesetModel, userModel, conn)
         {
             this.relationModel = relationModel;
         }
@@ -101,8 +101,6 @@ namespace TestPlugin
                 monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("naemonConfig", AttributeValueText.Build(finalConfig, true), naemonInstance));
             }
             await ciModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring", layerID, monitoringConfigs), changeset.ID, trans);
-
-            trans.Commit();
 
             return true;
         }

@@ -96,8 +96,9 @@ namespace LandscapePrototype
             services.AddScoped<RelationModel>();
             services.AddScoped<IChangesetModel, ChangesetModel>();
             services.AddScoped<ChangesetModel>();
-
+            services.AddScoped<ITemplateModel, TemplateModel>();
             services.AddScoped<TemplateModel>();
+
             services.AddScoped<PredicateModel>();
 
             services.AddSingleton<TemplatesProvider>(); // can be singleton because it does not depend on any scoped services

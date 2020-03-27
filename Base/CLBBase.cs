@@ -16,20 +16,29 @@ namespace Landscape.Base
         protected readonly IUserModel userModel;
         protected readonly IChangesetModel changesetModel;
         protected readonly ILayerModel layerModel;
+        protected readonly ITemplateModel templateModel;
         protected readonly NpgsqlConnection conn;
 
-        public CLBBase(ICIModel ciModel, ILayerModel layerModel, IChangesetModel changesetModel, IUserModel userModel, NpgsqlConnection conn)
+        public CLBBase(ICIModel ciModel, ILayerModel layerModel, ITemplateModel templateModel, IChangesetModel changesetModel, IUserModel userModel, NpgsqlConnection conn)
         {
             this.ciModel = ciModel;
             this.userModel = userModel;
             this.changesetModel = changesetModel;
             this.conn = conn;
             this.layerModel = layerModel;
+            this.templateModel = templateModel;
         }
 
         protected CLBSettings Settings { get; private set; }
 
         public string Name => GetType().FullName;
+
+        public void RunSync(CLBSettings settings)
+        {
+            Console.WriteLine("Starting");
+            var task = Task.Run(async () => await RunMiddle(settings));
+            var x = task.Result; // Must stay here, so the tasks actually gets completed before returning from this method
+        }
 
         protected async Task<bool> RunMiddle(CLBSettings settings)
         {
@@ -39,17 +48,25 @@ namespace Landscape.Base
 
                 using var trans = await conn.BeginTransactionAsync();
                 var layerSet = await layerModel.BuildLayerSet(new[] { Settings.LayerName }, trans);
-                var layerID = layerSet.LayerIDs.First(); // TODO: better way to get layerID from name -> dedicated function
+                var layer = await layerModel.GetLayer(Settings.LayerName, trans);
                 var username = Name; // HACK: make username the same as CLB name
                 var guid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1"); // TODO
                 var user = await userModel.CreateOrUpdateFetchUser(username, guid, UserType.Robot, trans);
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
 
-                var errorHandler = new CLBErrorHandler(trans, Name, layerID, changeset.ID, ciModel);
+                var errorHandler = new CLBErrorHandler(trans, Name, layer.ID, changeset.ID, ciModel);
 
-                var result = await Run(layerID, changeset, errorHandler, trans);
+                var result = await Run(layer.ID, changeset, errorHandler, trans);
 
-                await errorHandler.RemoveOutdatedErrors();
+                if (result)
+                {
+                    await errorHandler.RemoveOutdatedErrors();
+
+                    // update template errors
+                    await templateModel.UpdateErrorsOfLayer(layer.ID, ciModel, changeset.ID, trans);
+
+                    trans.Commit();
+                }
 
                 return result;
             } catch (Exception e)
@@ -61,11 +78,5 @@ namespace Landscape.Base
 
         public abstract Task<bool> Run(long layerID, Changeset changeset, CLBErrorHandler errorHandler, NpgsqlTransaction trans);
 
-        public void RunSync(CLBSettings settings)
-        {
-            Console.WriteLine("Starting");
-            var task = Task.Run(async () => await RunMiddle(settings));
-            var x = task.Result; // Must stay here, so the tasks actually gets completed before returning from this method
-        }
     }
 }

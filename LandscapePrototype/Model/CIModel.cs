@@ -61,8 +61,23 @@ namespace LandscapePrototype.Model
         public async Task<CI> GetCI(string ciid, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
             var type = await GetTypeOfCI(ciid, trans, atTime);
-            var attributes = await GetAttributes(ciid, false, layerID, trans, atTime);
+            var attributes = await GetAttributes(new SingleCIIDAttributeSelection(ciid), false, layerID, trans, atTime);
             return CI.Build(ciid, type, layerID, atTime, attributes);
+        }
+
+        public async Task<IEnumerable<CI>> GetCIs(long layerID, bool includeEmptyCIs, NpgsqlTransaction trans, DateTimeOffset atTime)
+        {
+            var attributes = await GetAttributes(new AllCIIDsAttributeSelection(), false, layerID, trans, atTime);
+            var groupedAttributes = attributes.GroupBy(a => a.CIID).ToDictionary(a => a.Key, a => a.ToList());
+            if (includeEmptyCIs)
+            {
+                var allCIIds = await GetCIIDs(trans);
+                var emptyCIs = allCIIds.Except(groupedAttributes.Select(a => a.Key)).ToDictionary(a => a, a => new List<CIAttribute>());
+                groupedAttributes = groupedAttributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
+            }
+            var ciTypes = await GetTypeOfCIs(groupedAttributes.Keys, trans, atTime);
+            var t = groupedAttributes.Select(ga => CI.Build(ga.Key, ciTypes[ga.Key], layerID, atTime, ga.Value));
+            return t;
         }
 
         public async Task<CIType> GetTypeOfCI(string ciid, NpgsqlTransaction trans, DateTimeOffset? atTime)
@@ -224,16 +239,46 @@ namespace LandscapePrototype.Model
             return ret;
         }
 
-        private async Task<IEnumerable<CIAttribute>> GetAttributes(string ciid, bool includeRemoved, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime)
+        interface IAttributeSelection
+        {
+            string WhereClause { get; }
+            void AddParameters(NpgsqlParameterCollection p);
+        }
+        class SingleCIIDAttributeSelection : IAttributeSelection
+        {
+            public string CIID { get; }
+            public SingleCIIDAttributeSelection(string ciid)
+            {
+                CIID = ciid;
+            }
+            public string WhereClause => "ci_id = @ci_id";
+            public void AddParameters(NpgsqlParameterCollection p) => p.AddWithValue("ci_id", CIID);
+        }
+        class MultiCIIDsAttributeSelection : IAttributeSelection
+        {
+            public string[] CIIDs { get; }
+            public MultiCIIDsAttributeSelection(string[] ciids)
+            {
+                CIIDs = ciids;
+            }
+            public string WhereClause => "ci_id = ANY(@ci_ids)";
+            public void AddParameters(NpgsqlParameterCollection p) => p.AddWithValue("ci_ids", CIIDs);
+        }
+        class AllCIIDsAttributeSelection : IAttributeSelection
+        {
+            public string WhereClause => "1=1";
+            public void AddParameters(NpgsqlParameterCollection p) { }
+        }
+        private async Task<IEnumerable<CIAttribute>> GetAttributes(IAttributeSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
             var ret = new List<CIAttribute>();
 
-            using var command = new NpgsqlCommand(@"
-            select distinct on(name) id, name, ci_id, type, value, state, changeset_id FROM attribute 
-            where timestamp <= @time_threshold and ci_id = @ci_id and layer_id = @layer_id
-            order by name, timestamp DESC
+            using var command = new NpgsqlCommand($@"
+            select distinct on(ci_id, name) id, name, ci_id, type, value, state, changeset_id FROM attribute 
+            where timestamp <= @time_threshold and ({selection.WhereClause}) and layer_id = @layer_id
+            order by ci_id, name, timestamp DESC
             ", conn, trans);
-            command.Parameters.AddWithValue("ci_id", ciid);
+            selection.AddParameters(command.Parameters);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("time_threshold", atTime);
 

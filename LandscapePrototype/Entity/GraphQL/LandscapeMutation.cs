@@ -16,7 +16,6 @@ namespace LandscapePrototype.Entity.GraphQL
               arguments: new QueryArguments(
                 new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                 new QueryArgument<ListGraphType<CreateLayerInputType>> { Name = "CreateLayers" },
-                new QueryArgument<ListGraphType<CreateCIInputType>> { Name = "CreateCIs" },
                 new QueryArgument<ListGraphType<InsertCIAttributeInputType>> { Name = "InsertAttributes" },
                 new QueryArgument<ListGraphType<RemoveCIAttributeInputType>> { Name = "RemoveAttributes" },
                 new QueryArgument<ListGraphType<InsertRelationInputType>> { Name = "InsertRelations" },
@@ -26,7 +25,6 @@ namespace LandscapePrototype.Entity.GraphQL
               {
                   var layers = context.GetArgument<string[]>("layers");
                   var createLayers = context.GetArgument("CreateLayers", new List<CreateLayerInput>());
-                  var createCIs = context.GetArgument("CreateCIs", new List<CreateCIInput>());
                   var insertAttributes = context.GetArgument("InsertAttributes", new List<InsertCIAttributeInput>());
                   var removeAttributes = context.GetArgument("RemoveAttributes", new List<RemoveCIAttributeInput>());
                   var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>());
@@ -45,12 +43,6 @@ namespace LandscapePrototype.Entity.GraphQL
                   foreach (var layer in createLayers)
                   {
                       await layerModel.CreateLayer(layer.Name, transaction);
-                  }
-
-                  var createdCIIDs = new List<string>();
-                  foreach (var ci in createCIs)
-                  {
-                      createdCIIDs.Add(await ciModel.CreateCI(ci.Identity, transaction)); // TODO: add changeset
                   }
 
                   var groupedInsertAttributes = insertAttributes.GroupBy(a => a.CI);
@@ -92,8 +84,7 @@ namespace LandscapePrototype.Entity.GraphQL
                       removedRelations.Add(await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, removeRelation.LayerID, changeset.ID, transaction));
                   }
 
-                  var affectedCIIDs = createdCIIDs
-                  .Concat(removedAttributes.Select(r => r.CIID))
+                  var affectedCIIDs = removedAttributes.Select(r => r.CIID)
                   .Concat(insertedAttributes.Select(i => i.CIID))
                   .Concat(insertedRelations.SelectMany(i => new string[] { i.FromCIID, i.ToCIID }))
                   .Concat(removedRelations.SelectMany(i => new string[] { i.FromCIID, i.ToCIID }))
@@ -109,7 +100,7 @@ namespace LandscapePrototype.Entity.GraphQL
                   // update template errors
                   // TODO: performance improvements
                   foreach (var affectedCIIDAndLayer in modifiedCIIDsAndLayers)
-                    await templateModel.UpdateErrorsOfCI(affectedCIIDAndLayer.Item1, affectedCIIDAndLayer.Item2, null, ciModel, changeset.ID, transaction);
+                    await templateModel.UpdateErrorsOfCI(affectedCIIDAndLayer.Item1, affectedCIIDAndLayer.Item2, ciModel, changeset.ID, transaction);
 
 
                   await transaction.CommitAsync();

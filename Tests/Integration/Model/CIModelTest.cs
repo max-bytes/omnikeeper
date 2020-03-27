@@ -127,6 +127,67 @@ namespace Tests.Integration.Model
 
 
         [Test]
+        public async Task TestGetCIs()
+        {
+            var model = new CIModel(conn);
+            var userModel = new UserModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn);
+            var layerModel = new LayerModel(conn);
+            var user = await DBSetup.SetupUser(userModel);
+            string ciid1;
+            string ciid2;
+            string ciid3;
+            using (var trans = conn.BeginTransaction())
+            {
+                var changesetID = await changesetModel.CreateChangeset(user.ID, trans);
+                var ciTypeID1 = await model.CreateCIType("T1", trans);
+                ciid1 = await model.CreateCIWithType("H123", ciTypeID1, trans);
+                ciid2 = await model.CreateCIWithType("H456", ciTypeID1, trans);
+                ciid3 = await model.CreateCIWithType("H789", ciTypeID1, trans);
+                trans.Commit();
+            }
+
+            long layerID1;
+            long layerID2;
+            using (var trans = conn.BeginTransaction())
+            {
+                layerID1 = await layerModel.CreateLayer("l1", trans);
+                layerID2 = await layerModel.CreateLayer("l2", trans);
+                trans.Commit();
+            }
+
+            using (var trans = conn.BeginTransaction())
+            {
+                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                var i1 = await model.InsertAttribute("a1", AttributeValueText.Build("text1"), layerID1, ciid1, changeset.ID, trans);
+                var i2 = await model.InsertAttribute("a2", AttributeValueText.Build("text1"), layerID1, ciid2, changeset.ID, trans);
+                var i3 = await model.InsertAttribute("a3", AttributeValueText.Build("text1"), layerID2, ciid1, changeset.ID, trans);
+
+                trans.Commit();
+            }
+
+            using (var trans = conn.BeginTransaction())
+            {
+                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                var cis1 = await model.GetCIs(layerID1, false, trans, DateTimeOffset.Now);
+                Assert.AreEqual(2, cis1.Count());
+                Assert.AreEqual(1, cis1.Count(c => c.Identity == ciid1 && c.Attributes.Any(a => a.Name == "a1")));
+                Assert.AreEqual(1, cis1.Count(c => c.Identity == ciid2 && c.Attributes.Any(a => a.Name == "a2")));
+                var cis2 = await model.GetCIs(layerID2, false, trans, DateTimeOffset.Now);
+                Assert.AreEqual(1, cis2.Count());
+                Assert.AreEqual(1, cis2.Count(c => c.Identity == ciid1 && c.Attributes.Any(a => a.Name == "a3")));
+                var cis3 = await model.GetCIs(layerID2, true, trans, DateTimeOffset.Now);
+                Assert.AreEqual(3, cis3.Count());
+                Assert.AreEqual(1, cis3.Count(c => c.Identity == ciid1 && c.Attributes.Any(a => a.Name == "a3")));
+                Assert.AreEqual(1, cis3.Count(c => c.Identity == ciid2 && c.Attributes.Count() == 0));
+                Assert.AreEqual(1, cis3.Count(c => c.Identity == ciid3 && c.Attributes.Count() == 0));
+
+                trans.Commit();
+            }
+        }
+
+
+        [Test]
         public async Task TestLayerSets()
         {
             var userModel = new UserModel(conn);
