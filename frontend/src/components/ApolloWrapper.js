@@ -142,9 +142,17 @@ function ApolloWrapper({ component: Component, ...rest }) {
     };
 
     var cache = new InMemoryCache({
+        typePolicies: {
+            // RelationType: {
+            //     keyFields: false
+            // },
+            // RelatedCIType: {
+            //     keyFields: false
+            // }
+        },
         dataIdFromObject: object => {
             switch (object.__typename) {
-            case 'CIType': return `CIType:${object.identity}:${object.layerhash}:${object.atTime}`; 
+            case 'MergedCIType': return `MergedCIType:${object.identity}:${object.layerhash}:${object.atTime}`; 
             case 'MergedCIAttributeType': return `MergedCIAttributeType:${object.attribute.id}:ls${object.layerStackIDs.join(',')}`;
             case 'CIAttributeType': return `CIAttributeType:${object.id}}`;
             case 'RelationType': return `RelationType:${object.id}:ls${object.layerStackIDs.join(',')}`;
@@ -167,7 +175,12 @@ function ApolloWrapper({ component: Component, ...rest }) {
       cache,
       link: httpLink,
       typeDefs: typeDefs,
-      resolvers: resolvers
+      resolvers: resolvers,
+    //   defaultOptions: {
+    //     watchQuery: {
+    //       fetchPolicy: 'no-cache',
+    //     },
+    //   },
     });
 
     var initialState = {

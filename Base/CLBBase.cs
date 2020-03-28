@@ -16,17 +16,15 @@ namespace Landscape.Base
         protected readonly IUserModel userModel;
         protected readonly IChangesetModel changesetModel;
         protected readonly ILayerModel layerModel;
-        protected readonly ITemplateModel templateModel;
         protected readonly NpgsqlConnection conn;
 
-        public CLBBase(ICIModel ciModel, ILayerModel layerModel, ITemplateModel templateModel, IChangesetModel changesetModel, IUserModel userModel, NpgsqlConnection conn)
+        public CLBBase(ICIModel ciModel, ILayerModel layerModel, IChangesetModel changesetModel, IUserModel userModel, NpgsqlConnection conn)
         {
             this.ciModel = ciModel;
             this.userModel = userModel;
             this.changesetModel = changesetModel;
             this.conn = conn;
             this.layerModel = layerModel;
-            this.templateModel = templateModel;
         }
 
         protected CLBSettings Settings { get; private set; }
@@ -61,9 +59,6 @@ namespace Landscape.Base
                 if (result)
                 {
                     await errorHandler.RemoveOutdatedErrors();
-
-                    // update template errors
-                    await templateModel.UpdateErrorsOfLayer(layer.ID, ciModel, changeset.ID, trans);
 
                     trans.Commit();
                 }

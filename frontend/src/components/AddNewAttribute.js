@@ -15,7 +15,14 @@ function AddNewAttribute(props) {
   let initialAttribute = {name: '', type: 'TEXT', value: ''};
   const [selectedLayer, setSelectedLayer] = useState(undefined);
   const [newAttribute, setNewAttribute] = useState(initialAttribute);
+  const [valueAutofocussed, setValueAutofocussed] = useState(false);
   React.useEffect(() => { if (!props.isEditable) setSelectedLayer(undefined); }, [props.isEditable]);
+
+  React.useEffect(() => {if (props.prefilled) {
+    setSelectedLayer(selectedLayer ?? props.prefilled.layer);
+    setNewAttribute({name: props.prefilled.name, type: props.prefilled.type, value: props.prefilled.value ?? ''});
+    setValueAutofocussed(true);
+  }}, [props.prefilled]);
   
   let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
 
@@ -64,7 +71,7 @@ function AddNewAttribute(props) {
           <Form.Group as={Row} controlId="value">
             <Form.Label column>Value</Form.Label>
             <Col sm={10}>
-              <Form.Control {...attributeType2InputProps(newAttribute.type)} placeholder="Enter value" value={newAttribute.value} onChange={e => setNewAttribute({...newAttribute, value: e.target.value})} />                        
+              <Form.Control autoFocus={valueAutofocussed} {...attributeType2InputProps(newAttribute.type)} placeholder="Enter value" value={newAttribute.value} onChange={e => setNewAttribute({...newAttribute, value: e.target.value})} />                        
             </Col>
           </Form.Group>
           <Button variant="primary" type="submit">Insert</Button>

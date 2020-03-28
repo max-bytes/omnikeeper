@@ -13,7 +13,6 @@ namespace LandscapePrototype.Entity.GraphQL
     {
         public LandscapeQuery(CIModel ciModel, CachedLayerModel layerModel, PredicateModel predicateModel, ChangesetModel changesetModel)
         {
-
             FieldAsync<MergedCIType>("ci",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {

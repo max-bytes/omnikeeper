@@ -5,7 +5,7 @@ import PropTypes from 'prop-types'
 import { queries } from '../graphql/queries'
 import LoadingOverlay from 'react-loading-overlay'
 import {Container} from 'react-bootstrap';
-import moment from 'moment'
+import { ErrorView } from './ErrorView';
 
 // function useTraceUpdate(props) {
 //   const prev = React.useRef(props);
@@ -28,9 +28,10 @@ function MainAreaCI(props) {
 
     let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
 
+    // TODO: move into CI
     const timeThreshold = props.currentTime.time;
-    const { loading: loadingCI, error: errorCI, data: dataCI } = useQuery(queries.CI, {
-      variables: { identity: props.ciid, layers: visibleLayers, timeThreshold }
+    const { loading: loadingCI, error: errorCI, data: dataCI } = useQuery(queries.FullCI, {
+      variables: { identity: props.ciid, layers: visibleLayers, timeThreshold, includeRelated: false }
     });
 
 
@@ -38,11 +39,11 @@ function MainAreaCI(props) {
 
     if (dataCI) return (<LoadingOverlay active={loadingCI} spinner>
         <Container fluid>
-          <CI ci={dataCI.ci} layers={props.layers} isEditable={isEditable} ></CI>
+          <CI timeThreshold={timeThreshold} ci={dataCI.ci} layers={props.layers} visibleLayers={visibleLayers} isEditable={isEditable} ></CI>
         </Container>
       </LoadingOverlay>);
-    else if (loadingCI) return <LoadingOverlay spinner text='Loading your content...'></LoadingOverlay>;
-    else if (errorCI) return <p>Error: {JSON.stringify(errorCI, null, 2) }}</p>;
+    else if (loadingCI) return <p>Loading...</p>;
+    else if (errorCI) return <ErrorView error={errorCI}/>;
     else return <p>?</p>;
 }
 

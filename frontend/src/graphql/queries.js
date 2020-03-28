@@ -2,17 +2,6 @@ import gql from 'graphql-tag';
 import { Fragments } from './fragments';
 
 export const queries = {
-    CIs: gql`
-        query cis($layers: [String]!) {
-            cis(layers: $layers) {
-                ...FullCI
-            }
-        }
-        ${Fragments.ci}
-        ${Fragments.mergedAttribute}
-        ${Fragments.attribute}
-    `,
-
     CIList: gql`
         query ciList {
             ciids
@@ -34,13 +23,14 @@ export const queries = {
             }
         }
     `,
-    CI: gql`
-        query ci($identity: String!, $layers: [String]!, $timeThreshold: DateTimeOffset) {
+    FullCI: gql`
+        query ci($identity: String!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
             ci(identity: $identity, layers: $layers, timeThreshold: $timeThreshold) {
                 ...FullCI
             }
         }
-        ${Fragments.ci}
+        ${Fragments.relatedCI}
+        ${Fragments.fullCI}
         ${Fragments.mergedAttribute}
         ${Fragments.attribute}
         ${Fragments.relation}

@@ -11,33 +11,33 @@ namespace LandscapePrototype.Entity.Template
 {
     public class Templates
     {
-        public class CITypeLayerKey
-        {
-            public CIType CIType { get; private set; }
-            public long LayerID { get; private set; }
+        //public class CITypeLayerKey
+        //{
+        //    public CIType CIType { get; private set; }
+        //    public long LayerID { get; private set; }
 
-            public override int GetHashCode() => HashCode.Combine(CIType, LayerID);
-            public override bool Equals(object obj)
-            {
-                if (obj is CITypeLayerKey other)
-                {
-                    return CIType.Equals(other.CIType) && LayerID.Equals(other.LayerID);
-                }
-                else return false;
-            }
-            public static CITypeLayerKey Build(CIType ciType, long layerID)
-            {
-                return new CITypeLayerKey()
-                {
-                    CIType = ciType,
-                    LayerID = layerID
-                };
-            }
-        }
+        //    public override int GetHashCode() => HashCode.Combine(CIType, LayerID);
+        //    public override bool Equals(object obj)
+        //    {
+        //        if (obj is CITypeLayerKey other)
+        //        {
+        //            return CIType.Equals(other.CIType) && LayerID.Equals(other.LayerID);
+        //        }
+        //        else return false;
+        //    }
+        //    public static CITypeLayerKey Build(CIType ciType, long layerID)
+        //    {
+        //        return new CITypeLayerKey()
+        //        {
+        //            CIType = ciType,
+        //            LayerID = layerID
+        //        };
+        //    }
+        //}
 
-        private IImmutableDictionary<CITypeLayerKey, CIAttributesTemplate> CIAttributeTemplates { get; set; }
+        private IImmutableDictionary<CIType, CIAttributesTemplate> CIAttributeTemplates { get; set; }
 
-        public CIAttributesTemplate GetAttributesTemplate(CIType ciType, long layerID) => CIAttributeTemplates.GetValueOrDefault(CITypeLayerKey.Build(ciType, layerID));
+        public CIAttributesTemplate GetAttributesTemplate(CIType ciType) => CIAttributeTemplates.GetValueOrDefault(ciType);
 
         public async static Task<Templates> Build(CIModel ciModel, CachedLayerModel layerModel, NpgsqlTransaction trans)
         {
@@ -46,17 +46,17 @@ namespace LandscapePrototype.Entity.Template
             {
                 CIAttributeTemplates = new List<CIAttributesTemplate>()
                 {
-                    CIAttributesTemplate.Build(await ciModel.GetCIType("Application", trans), await layerModel.GetLayer("CMDB", trans),
+                    CIAttributesTemplate.Build(await ciModel.GetCIType("Application", trans),
                         new List<CIAttributeTemplate>() {
                             // TODO
                             CIAttributeTemplate.Build("name", AttributeValues.AttributeValueType.Text)
                         }),
-                    CIAttributesTemplate.Build(await ciModel.GetCIType("Naemon Instance", trans), await layerModel.GetLayer("Monitoring Definitions", trans),
+                    CIAttributesTemplate.Build(await ciModel.GetCIType("Naemon Instance", trans),
                         new List<CIAttributeTemplate>() {
                             // TODO
                             CIAttributeTemplate.Build("name", AttributeValues.AttributeValueType.Text)
                         })
-                }.ToImmutableDictionary(t => CITypeLayerKey.Build(t.CIType, t.Layer.ID))
+                }.ToImmutableDictionary(t => t.CIType)
             };
         }
     }

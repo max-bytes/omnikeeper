@@ -2,6 +2,7 @@
 using LandscapePrototype.Entity;
 using LandscapePrototype.Entity.AttributeValues;
 using LandscapePrototype.Entity.Template;
+using LandscapePrototype.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -18,56 +19,48 @@ namespace LandscapePrototype.Model
             TemplatesProvider = templatesProvider;
         }
 
-        public async Task UpdateErrorsOfLayer(long layerID, ICIModel ciModel, long changesetID, NpgsqlTransaction trans)
+        public async Task<TemplateErrorsCI> CalculateTemplateErrors(string ciid, LayerSet layerset, ICIModel ciModel, NpgsqlTransaction trans)
         {
-            var templates = await TemplatesProvider.GetTemplates(trans);
-
-            var errorFragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
-            var cis = await ciModel.GetCIs(layerID, true, trans, DateTimeOffset.Now);
-            foreach (var ci in cis)
-            {
-                var attributesTemplates = templates.GetAttributesTemplate(ci.Type, layerID);
-                if (attributesTemplates == null) continue; // no attributes set, ignore
-                foreach (var at in attributesTemplates.Attributes.Values)
-                {
-                    errorFragments.AddRange(PerAttributeTemplateChecks(ci, at).Select(t => BulkCIAttributeDataLayerScope.Fragment.Build(t.Item1, t.Item2, ci.Identity)));
-                }
-            }
-            await ciModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("__error.template", layerID, errorFragments), changesetID, trans);
+            var ci = await ciModel.GetMergedCI(ciid, layerset, trans, DateTimeOffset.Now);
+            return await CalculateTemplateErrors(ci, trans);
         }
 
-        public async Task UpdateErrorsOfCI(string ciid, long layerID, ICIModel ciModel, long changesetID, NpgsqlTransaction trans)
+        public async Task<TemplateErrorsCI> CalculateTemplateErrors(MergedCI ci, NpgsqlTransaction trans)
         {
-            var ci = await ciModel.GetCI(ciid, layerID, trans, DateTimeOffset.Now);
-
             var templates = await TemplatesProvider.GetTemplates(trans);
-            var attributesTemplates = templates.GetAttributesTemplate(ci.Type, layerID);
-            if (attributesTemplates == null) return; // no attributes set, ignore
+            var attributesTemplates = templates.GetAttributesTemplate(ci.Type);
 
-            var errorFragments = new List<BulkCIAttributeDataCIScope.Fragment>();
-            foreach (var at in attributesTemplates.Attributes.Values)
-            {
-                errorFragments.AddRange(PerAttributeTemplateChecks(ci, at).Select(t => BulkCIAttributeDataCIScope.Fragment.Build(t.Item1, t.Item2)));
-            }
-            await ciModel.BulkReplaceAttributes(BulkCIAttributeDataCIScope.Build("__error.template", layerID, ciid, errorFragments), changesetID, trans);
+            if (attributesTemplates == null) return TemplateErrorsCI.Build(new Dictionary<string, TemplateErrorsAttribute>());
+
+            return TemplateErrorsCI.Build(
+                attributesTemplates.Attributes.Values
+                .Select(at => (at.Name, CalculateTemplateErrorsAttribute(ci, at)))
+                .Where(t => !t.Item2.Errors.IsEmpty())
+                .ToDictionary(t => t.Name, t => t.Item2)
+            );
         }
 
-        private IEnumerable<(string, IAttributeValue)> PerAttributeTemplateChecks(CI ci, CIAttributeTemplate at)
+        private IEnumerable<ITemplateErrorAttribute> PerAttributeTemplateChecks(MergedCIAttribute foundAttribute, CIAttributeTemplate at)
         {
-            var foundAttribute = ci.Attributes.FirstOrDefault(a => a.Name == at.Name);
             // check required attributes
             if (foundAttribute == null)
             {
-                yield return ($"attribute.{at.Name}.missing", AttributeValueText.Build($"Attribute \"{at.Name}\" is missing!"));
+                yield return TemplateErrorAttributeMissing.Build($"attribute \"{at.Name}\" {((at.Type.HasValue) ? $" of type \"{at.Type.Value}\" " : "")}is missing!", at.Type);
             } else
             {
-                if (at.Type != null && !foundAttribute.Value.Type.Equals(at.Type.Value))
+                if (at.Type != null && !foundAttribute.Attribute.Value.Type.Equals(at.Type.Value))
                 {
-                    yield return ($"attribute.{at.Name}.wrongType", AttributeValueText.Build($"Attribute \"{at.Name}\" must have type \"{at.Type.Value}\"!"));
+                    yield return TemplateErrorAttributeWrongType.Build($"attribute \"{at.Name}\" must have type \"{at.Type.Value}\"!", at.Type.Value);
                 }
             }
 
             // TODO: other checks
+        }
+
+        private TemplateErrorsAttribute CalculateTemplateErrorsAttribute(MergedCI ci, CIAttributeTemplate at)
+        {
+            var foundAttribute = ci.MergedAttributes.FirstOrDefault(a => a.Attribute.Name == at.Name);
+            return TemplateErrorsAttribute.Build(at.Name, PerAttributeTemplateChecks(foundAttribute, at));
         }
     }
 }

@@ -9,6 +9,7 @@ import { mutations } from '../graphql/mutations';
 import { useMutation } from '@apollo/react-hooks';
 import UserTypeIcon from './UserTypeIcon';
 import moment from 'moment'
+import { ErrorView } from './ErrorView';
 
 function Timeline(props) {
     let allLayers = props.layers.map(l => l.name);
@@ -75,8 +76,8 @@ function Timeline(props) {
           })}
           </LoadingOverlay>
         </div>);
-    } else if (loadingChangesets) return <LoadingOverlay spinner text='Loading your content...'></LoadingOverlay>;
-    else if (error) return <p>Error: {JSON.stringify(error, null, 2) }}</p>;
+    } else if (loadingChangesets) return <p>Loading...</p>;
+    else if (error) return <ErrorView error={error}/>;
     else return <p>?</p>;
 }
 

@@ -5,6 +5,7 @@ import MainAreaCI from './MainAreaCI';
 import { queries } from '../graphql/queries'
 import Timeline from './Timeline';
 import { useParams } from 'react-router-dom'
+import { ErrorView } from './ErrorView';
 
 function Explorer(props) {
   const { ciid } = useParams();
@@ -38,11 +39,8 @@ function Explorer(props) {
       </div>
     );
   } else {
-    if (errorLayers) {
-      return <p>Error: {errorLayers}</p>;
-    }
-    else if (errorTime) return <p>Error: {errorTime}</p>;
-    // else if (errorCI) return <p>Error: {errorCI}</p>;
+    if (errorLayers) return <ErrorView error={errorLayers}/>;
+    else if (errorTime) return <ErrorView error={errorTime}/>;
     else return <p>Loading</p>;
     
   }

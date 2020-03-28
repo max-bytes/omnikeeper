@@ -31,7 +31,7 @@ namespace LandscapePrototype.Entity.AttributeValues
         public AttributeValueType Type => (Multiline) ? AttributeValueType.MultilineText : AttributeValueType.Text;
 
         public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueText);
-        public bool Equals([AllowNull] AttributeValueText other) => other != null && Value == other.Value;
+        public bool Equals([AllowNull] AttributeValueText other) => other != null && Value == other.Value && Multiline == other.Multiline;
         public override int GetHashCode() => Value.GetHashCode();
     }
 }

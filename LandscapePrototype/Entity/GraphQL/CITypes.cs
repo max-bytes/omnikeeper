@@ -20,7 +20,7 @@ namespace LandscapePrototype.Entity.GraphQL
 
     public class MergedCIType : ObjectGraphType<MergedCI>
     {
-        public MergedCIType(RelationModel relationModel)
+        public MergedCIType(RelationModel relationModel, TemplateModel templateModel)
         {
             Field(x => x.Identity);
             Field("layerhash", x => x.Layers.LayerHash);
@@ -72,6 +72,13 @@ namespace LandscapePrototype.Entity.GraphQL
                     }
 
                 return relatedCIs;
+            });
+
+            FieldAsync<TemplateErrorsCIType>("templateErrors",
+            resolve: async (context) =>
+            {
+                var userContext = context.UserContext as LandscapeUserContext;
+                return await templateModel.CalculateTemplateErrors(context.Source, userContext.Transaction);
             });
         }
     }

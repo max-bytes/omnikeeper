@@ -15,7 +15,7 @@ namespace LandscapePrototype.Entity.GraphQL
             FieldAsync<MutateReturnType>("mutate",
               arguments: new QueryArguments(
                 new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
-                new QueryArgument<ListGraphType<CreateLayerInputType>> { Name = "CreateLayers" },
+                //new QueryArgument<ListGraphType<CreateLayerInputType>> { Name = "CreateLayers" },
                 new QueryArgument<ListGraphType<InsertCIAttributeInputType>> { Name = "InsertAttributes" },
                 new QueryArgument<ListGraphType<RemoveCIAttributeInputType>> { Name = "RemoveAttributes" },
                 new QueryArgument<ListGraphType<InsertRelationInputType>> { Name = "InsertRelations" },
@@ -24,7 +24,7 @@ namespace LandscapePrototype.Entity.GraphQL
               resolve: async context =>
               {
                   var layers = context.GetArgument<string[]>("layers");
-                  var createLayers = context.GetArgument("CreateLayers", new List<CreateLayerInput>());
+                  //var createLayers = context.GetArgument("CreateLayers", new List<CreateLayerInput>());
                   var insertAttributes = context.GetArgument("InsertAttributes", new List<InsertCIAttributeInput>());
                   var removeAttributes = context.GetArgument("RemoveAttributes", new List<RemoveCIAttributeInput>());
                   var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>());
@@ -40,10 +40,10 @@ namespace LandscapePrototype.Entity.GraphQL
                   userContext.LayerSet = await layerModel.BuildLayerSet(layers, transaction);
                   userContext.TimeThreshold = changeset.Timestamp;
 
-                  foreach (var layer in createLayers)
-                  {
-                      await layerModel.CreateLayer(layer.Name, transaction);
-                  }
+                  //foreach (var layer in createLayers)
+                  //{
+                  //    await layerModel.CreateLayer(layer.Name, transaction);
+                  //}
 
                   var groupedInsertAttributes = insertAttributes.GroupBy(a => a.CI);
                   var insertedAttributes = new List<CIAttribute>();
@@ -51,7 +51,6 @@ namespace LandscapePrototype.Entity.GraphQL
                   {
                       // look for ciid
                       var ciIdentity = attributeGroup.Key;
-                      //var ciid = await ciModel.GetCIIDFromIdentity(ciIdentity, transaction);
                       foreach (var attribute in attributeGroup)
                       {
                           var nonGenericAttributeValue = AttributeValueBuilder.Build(attribute.Value);
@@ -77,7 +76,6 @@ namespace LandscapePrototype.Entity.GraphQL
                       insertedRelations.Add(await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.LayerID, changeset.ID, transaction));
                   }
 
-
                   var removedRelations = new List<Relation>();
                   foreach (var removeRelation in removeRelations)
                   {
@@ -91,16 +89,16 @@ namespace LandscapePrototype.Entity.GraphQL
                   .Distinct();
                   var affectedCIs = await ciModel.GetMergedCIs(userContext.LayerSet, true, transaction, changeset.Timestamp, affectedCIIDs);
 
-                  var modifiedCIIDsAndLayers = removeAttributes.Select(r => (r.CI, r.LayerID))
-                  .Concat(insertAttributes.Select(i => (i.CI, i.LayerID)))
-                  .Concat(insertRelations.SelectMany(i => new (string, long)[] { (i.FromCIID, i.LayerID), (i.ToCIID, i.LayerID) }))
-                  .Concat(removedRelations.SelectMany(i => new (string, long)[] { (i.FromCIID, i.LayerID), (i.ToCIID, i.LayerID) }))
-                  .Distinct();
+                  //var modifiedCIIDsAndLayers = removeAttributes.Select(r => (r.CI, r.LayerID))
+                  //.Concat(insertAttributes.Select(i => (i.CI, i.LayerID)))
+                  //.Concat(insertRelations.SelectMany(i => new (string, long)[] { (i.FromCIID, i.LayerID), (i.ToCIID, i.LayerID) }))
+                  //.Concat(removedRelations.SelectMany(i => new (string, long)[] { (i.FromCIID, i.LayerID), (i.ToCIID, i.LayerID) }))
+                  //.Distinct();
 
-                  // update template errors
+                  // TODO: update template errors?
                   // TODO: performance improvements
-                  foreach (var affectedCIIDAndLayer in modifiedCIIDsAndLayers)
-                    await templateModel.UpdateErrorsOfCI(affectedCIIDAndLayer.Item1, affectedCIIDAndLayer.Item2, ciModel, changeset.ID, transaction);
+                  //foreach (var affectedCIIDAndLayer in modifiedCIIDsAndLayers)
+                  //  await templateModel.UpdateErrorsOfCI(affectedCIIDAndLayer.Item1, affectedCIIDAndLayer.Item2, ciModel, changeset.ID, transaction);
 
 
                   await transaction.CommitAsync();

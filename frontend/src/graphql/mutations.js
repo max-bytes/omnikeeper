@@ -17,7 +17,7 @@ export const mutations = {
     }
   `,
   REMOVE_CI_ATTRIBUTE: gql`
-    mutation RemoveCIAttribute($layers: [String]!, $ciIdentity: String!, $name: String!, $layerID: Long!) {
+    mutation RemoveCIAttribute($layers: [String]!, $ciIdentity: String!, $name: String!, $layerID: Long!, $includeAttributes: Boolean = false, $includeRelated: Boolean = false) {
       mutate(layers: $layers, removeAttributes: [
         {
           ci: $ciIdentity,
@@ -30,10 +30,11 @@ export const mutations = {
         }
       }
     }
+    ${Fragments.relatedCI}
     ${Fragments.mergedAttribute}
     ${Fragments.attribute}
     ${Fragments.relation}
-    ${Fragments.ci}
+    ${Fragments.fullCI}
   `,
 
   INSERT_RELATION: gql`
@@ -52,7 +53,7 @@ export const mutations = {
 `,
 
 REMOVE_RELATION: gql`
-mutation RemoveRelation($layers: [String]!, $fromCIID: String!, $toCIID: String!, $predicateID: String!, $layerID: Long!) {
+mutation RemoveRelation($layers: [String]!, $fromCIID: String!, $toCIID: String!, $predicateID: String!, $layerID: Long!, $includeAttributes: Boolean = false, $includeRelated: Boolean = false) {
   mutate(layers: $layers, removeRelations: [
     {
       fromCIID: $fromCIID,
@@ -66,10 +67,11 @@ mutation RemoveRelation($layers: [String]!, $fromCIID: String!, $toCIID: String!
     }
   }
 }
+${Fragments.relatedCI}
 ${Fragments.mergedAttribute}
 ${Fragments.attribute}
 ${Fragments.relation}
-${Fragments.ci}
+${Fragments.fullCI}
 `,
 
 CREATE_CI: gql`

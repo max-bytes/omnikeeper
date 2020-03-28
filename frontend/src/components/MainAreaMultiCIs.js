@@ -3,6 +3,7 @@ import React from 'react';
 import CIs from './CIs';
 import PropTypes from 'prop-types'
 import { queries } from '../graphql/queries'
+import { ErrorView } from './ErrorView';
 
 
 function MainAreaMultiCIs(props) {
@@ -13,7 +14,7 @@ function MainAreaMultiCIs(props) {
     });
 
     if (loadingCIs) return <p>Loading...</p>;
-    else if (errorCIs) return <p>Error: {JSON.stringify(errorCIs, null, 2) }}</p>;
+    else if (errorCIs) return <ErrorView error={errorCI}/>;
     else return (<CIs cis={dataCIs.cis} layers={visibleLayers}></CIs>);
 }
 

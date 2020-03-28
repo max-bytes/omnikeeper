@@ -28,7 +28,7 @@ export const Fragments = {
         }
     }
   `,
-  ci: gql`
+  fullCI: gql`
     fragment FullCI on MergedCIType {
         identity
         layerhash
@@ -36,16 +36,31 @@ export const Fragments = {
         type {
             id
         }
-        related {
-            relation {
-                ...FullRelation
+        templateErrors {
+          attributeErrors {
+                attributeName
+                errors {
+                    __typename
+                    ... on TemplateErrorAttributeMissingType {errorMessage, type}
+                    ... on TemplateErrorAttributeWrongTypeType {errorMessage, correctType}
+                }
             }
-            ciid
-            isForward
         }
-        mergedAttributes {
+        related @include(if: $includeRelated) {
+            ...RelatedCI
+        }
+        mergedAttributes @include(if: $includeAttributes) {
             ...FullMergedAttribute
         }
+    }
+  `,
+  relatedCI: gql` 
+  fragment RelatedCI on RelatedCIType {
+        relation {
+            ...FullRelation
+        }
+        ciid
+        isForward
     }
   `,
   relation: gql`
