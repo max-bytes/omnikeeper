@@ -24,7 +24,8 @@ export const Fragments = {
         state
         value {
             type
-            value
+            isArray
+            values
         }
     }
   `,
@@ -43,6 +44,7 @@ export const Fragments = {
                     __typename
                     ... on TemplateErrorAttributeMissingType {errorMessage, type}
                     ... on TemplateErrorAttributeWrongTypeType {errorMessage, correctTypes}
+                    ... on TemplateErrorAttributeWrongMultiplicityType {errorMessage, correctIsArray}
                     ... on TemplateErrorAttributeGenericType {errorMessage}
                 }
             }

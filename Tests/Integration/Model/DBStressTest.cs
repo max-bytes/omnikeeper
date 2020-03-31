@@ -76,7 +76,7 @@ namespace Tests.Integration.Model
                 var attributes = Enumerable.Range(0, numAttributeInserts).Select(i =>
                 {
                     var name = attributeNames.GetRandom(random);
-                    var value = AttributeValueText.Build("V" + RandomString.Generate(8, random));
+                    var value = AttributeValueTextScalar.Build("V" + RandomString.Generate(8, random));
                     var layer = layerIDs.GetRandom(random);
                     var ciid = cis.GetRandom(random).Item1;
                     return model.InsertAttribute(name, value, layer, ciid, changeset.ID, trans).GetAwaiter().GetResult();

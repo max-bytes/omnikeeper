@@ -49,12 +49,12 @@ namespace LandscapePrototype.Entity.Template
                     CIAttributesTemplate.Build(await ciModel.GetCIType("Application", trans),
                         new List<CIAttributeTemplate>() {
                             // TODO
-                            CIAttributeTemplate.BuildFromParams("name", "This is a description", AttributeValues.AttributeValueType.Text, CIAttributeValueConstraintTextLength.Build(1, null))
+                            CIAttributeTemplate.BuildFromParams("name", "This is a description", AttributeValues.AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         }),
                     CIAttributesTemplate.Build(await ciModel.GetCIType("Naemon Instance", trans),
                         new List<CIAttributeTemplate>() {
                             // TODO
-                            CIAttributeTemplate.BuildFromParams("name", "This is a description", AttributeValues.AttributeValueType.Text, CIAttributeValueConstraintTextLength.Build(1, null))
+                            CIAttributeTemplate.BuildFromParams("name", "This is a description", AttributeValues.AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         })
                 }.ToImmutableDictionary(t => t.CIType)
             };

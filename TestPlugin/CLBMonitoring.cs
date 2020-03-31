@@ -74,7 +74,7 @@ namespace TestPlugin
                     }
                     monitoringCommandFragments.Add(
                         BulkCIAttributeDataLayerScope.Fragment.Build(BulkCIAttributeDataLayerScope.Fragment.StripPrefix(mca.Attribute.Name, "monitoring.commands"),
-                        AttributeValueText.Build(finalCommand), p.FromCIID)
+                        AttributeValueTextScalar.Build(finalCommand), p.FromCIID)
                     );
                 }
             }
@@ -98,7 +98,7 @@ namespace TestPlugin
                 var cis = kv.Value;
                 var commands = monitoringCommandFragments.Where(f => cis.Contains(f.CIID)).Select(f => f.Value.Value2String());
                 var finalConfig = string.Join("\n", commands);
-                monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("naemonConfig", AttributeValueText.Build(finalConfig, true), naemonInstance));
+                monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("naemonConfig", AttributeValueTextScalar.Build(finalConfig, true), naemonInstance));
             }
             await ciModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring", layerID, monitoringConfigs), changeset.ID, trans);
 

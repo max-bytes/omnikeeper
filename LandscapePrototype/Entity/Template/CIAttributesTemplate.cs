@@ -31,15 +31,24 @@ namespace LandscapePrototype.Entity.Template
         {
             switch (value)
             {
-                case AttributeValueText t:
-                    var tooLong = Maximum.HasValue && t.Value.Length > Maximum;
-                    var tooShort = Minimum.HasValue && t.Value.Length < Minimum;
-                    if (tooLong)
+                case AttributeValueTextScalar t:
+                    if (Maximum.HasValue && t.Value.Length > Maximum)
                         yield return TemplateErrorAttributeGeneric.Build("Text too long!");
-                    else if (tooShort)
+                    else if (Minimum.HasValue && t.Value.Length < Minimum)
                         yield return TemplateErrorAttributeGeneric.Build("Text too short!");
                     break;
-                case AttributeValueInteger i:
+                case AttributeValueTextArray t:
+                    for (int i = 0; i < t.Values.Length; i++)
+                    {
+                        var tooLong = Maximum.HasValue && t.Values[i].Length > Maximum;
+                        var tooShort = Minimum.HasValue && t.Values[i].Length < Minimum;
+                        if (tooLong)
+                            yield return TemplateErrorAttributeGeneric.Build($"Text[{i}] too long!");
+                        else if (tooShort)
+                            yield return TemplateErrorAttributeGeneric.Build($"Text[{i}] too short!");
+                    }
+                    break;
+                case AttributeValueIntegerScalar i:
                     yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, i.Type);
                     break;
                 default:
@@ -53,22 +62,24 @@ namespace LandscapePrototype.Entity.Template
         public string Name { get; private set; }
         public string Description { get; private set; } // TODO: use description
         public AttributeValueType? Type { get; private set; }
+        public bool? IsArray { get; private set; }
         // TODO: status: required(default, other statii: optional, not allowed)
         // TODO: required layer (optional)
         public IEnumerable<ICIAttributeValueConstraint> ValueConstraints { get; private set; }
 
-        public static CIAttributeTemplate BuildFromParams(string name, string description, AttributeValueType? type, params ICIAttributeValueConstraint[] valueConstraints)
+        public static CIAttributeTemplate BuildFromParams(string name, string description, AttributeValueType? type, bool? isArray, params ICIAttributeValueConstraint[] valueConstraints)
         {
-            return Build(name, description, type, valueConstraints);
+            return Build(name, description, type, isArray, valueConstraints);
         }
 
-        public static CIAttributeTemplate Build(string name, string description, AttributeValueType? type, IEnumerable<ICIAttributeValueConstraint> valueConstraints)
+        public static CIAttributeTemplate Build(string name, string description, AttributeValueType? type, bool? isArray, IEnumerable<ICIAttributeValueConstraint> valueConstraints)
         {
             return new CIAttributeTemplate()
             {
                 Name = name,
                 Description = description,
                 Type = type,
+                IsArray = isArray,
                 ValueConstraints = valueConstraints
             };
         }

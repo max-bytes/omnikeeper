@@ -7,14 +7,18 @@ import { mutations } from '../graphql/mutations'
 import Button from 'react-bootstrap/Button';
 import LayerStackIcons from "./LayerStackIcons";
 import ChangesetPopup from "./ChangesetPopup";
+import EditableAttributeValue from "./EditableAttributeValue";
 import { attributeType2InputProps } from '../utils/attributeTypes'
+
 
 function Attribute(props) {
 
   var {ciIdentity, layers, attribute, isEditable, ...rest} = props;
 
-  const [value, setValue] = useState(attribute.attribute.value.value);
-  React.useEffect(() => setValue(attribute.attribute.value.value), [attribute.attribute.value.value])
+  const isArray = attribute.attribute.value.isArray;
+
+  const [values, setValues] = useState(attribute.attribute.value.values);
+  React.useEffect(() => setValues(attribute.attribute.value.values), [attribute.attribute.value.values])
 
   // TODO: loading
   const [insertCIAttribute] = useMutation(mutations.INSERT_CI_ATTRIBUTE);
@@ -36,49 +40,55 @@ function Attribute(props) {
 
   const layerID = props.attribute.layerStackIDs[props.attribute.layerStackIDs.length - 1];
 
-  if (isEditable) {
+  let valueInput = <>
+    <EditableAttributeValue isEditable={isEditable} values={values} setValues={setValues} type={attribute.attribute.value.type} isArray={isArray} />
+  </>;
 
-    let removeButton = (
+  const leftPart = <div style={{display: 'flex', flexBasis: '220px', alignItems: 'center', minHeight: '33px'}}>
+    <LayerStackIcons layerStack={attribute.layerStack} />
+    <ChangesetPopup changesetID={attribute.attribute.changesetID} />
+    <Form.Label className={"pr-1"} style={{whiteSpace: 'nowrap', flexGrow: 1, justifyContent: 'flex-end'}}>{attribute.attribute.name}:</Form.Label>
+  </div>;
+
+  if (isEditable) {
+    const removeButton = (
       <Button variant="danger" onClick={e => {
         e.preventDefault();
         removeCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID } })
         .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
       }}>Remove</Button>
     );
-    
+
     input = (
-      <Form inline onSubmit={e => {
+      <Form inline style={{alignItems: 'flex-start'}} onSubmit={e => {
           e.preventDefault();
           insertCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, value: {
             type: attribute.attribute.value.type,
-            value: value
+            values: values,
+            isArray: isArray
           } } })
           .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
-        }} style={{alignItems: 'center'}} >
-          <LayerStackIcons layerStack={attribute.layerStack}></LayerStackIcons>
-          <ChangesetPopup changesetID={attribute.attribute.changesetID} />
-          <Form.Group controlId={`value:${attribute.attribute.name}`} style={{flexGrow: 1, alignItems: 'center'}}>
-            <Form.Label className={"pr-1"} style={{flexBasis: '160px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{attribute.attribute.name}:</Form.Label>
-            <Form.Control style={{flexGrow: 1}} {...attributeType2InputProps(attribute.attribute.value.type)} placeholder="Enter value" value={value} onChange={e => setValue(e.target.value)} />
-            <Button type="submit" className={'mx-1'} disabled={attribute.attribute.value.value === value}>Update</Button>
+        }}>
+          {leftPart}
+          <Form.Group controlId={`value:${attribute.attribute.name}`} style={{flexGrow: 1, alignItems: 'flex-start'}}>
+            {valueInput}
+            <Button type="submit" className={'mx-1'} disabled={attribute.attribute.value.values === values}>Update</Button>
             {removeButton}
           </Form.Group>
       </Form>
     );
   } else {
-    input = (<Form inline>
-      <LayerStackIcons layerStack={attribute.layerStack}></LayerStackIcons>
-      <ChangesetPopup changesetID={attribute.attribute.changesetID} />
+    input = (<Form inline style={{alignItems: 'flex-start'}} >
+      {leftPart}
       <Form.Group controlId={`value:${attribute.attribute.name}`} style={{flexGrow: 1}}>
-        <Form.Label className={"pr-1"} style={{flexBasis: '160px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{attribute.attribute.name}:</Form.Label>
-        <Form.Control style={{flexGrow: 1}} {...attributeType2InputProps(attribute.attribute.value.type)} placeholder="Enter value" value={value} readOnly />
+        {valueInput}
       </Form.Group>
     </Form>);
   }
 
 
   return (
-    <div key={attribute.attribute.name} style={{margin: "5px"}} {...rest}>
+    <div key={attribute.attribute.name} {...rest}>
       {input}
     </div>
   );
@@ -93,8 +103,9 @@ Attribute.propTypes = {
         state: PropTypes.string.isRequired,
         value: PropTypes.shape({
           type: PropTypes.string.isRequired,
-          value: PropTypes.string.isRequired
-        })
+          isArray: PropTypes.bool.isRequired,
+          values: PropTypes.arrayOf(PropTypes.string).isRequired
+      })
       })
     }).isRequired
 }

@@ -57,6 +57,19 @@ namespace LandscapePrototype.Entity.Template
             };
         }
     }
+    public class TemplateErrorAttributeWrongMultiplicity : ITemplateErrorAttribute
+    {
+        public string ErrorMessage => (CorrectIsArray) ? $"attribute must be array, is scalar!" : $"attribute must be scalar, is array!";
+        public bool CorrectIsArray { get; private set; }
+
+        public static TemplateErrorAttributeWrongMultiplicity Build(bool correctIsArray)
+        {
+            return new TemplateErrorAttributeWrongMultiplicity()
+            {
+                CorrectIsArray = correctIsArray
+            };
+        }
+    }
 
     public class TemplateErrorsAttribute
     {

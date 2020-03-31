@@ -48,9 +48,13 @@ namespace LandscapePrototype.Model
                 yield return TemplateErrorAttributeMissing.Build(at.Name, at.Type);
             } else
             {
-                if (at.Type != null && !foundAttribute.Attribute.Value.Type.Equals(at.Type.Value))
+                if (at.Type != null && (!foundAttribute.Attribute.Value.Type.Equals(at.Type.Value)))
                 {
                     yield return TemplateErrorAttributeWrongType.Build(at.Type.Value, foundAttribute.Attribute.Value.Type);
+                }
+                if (at.IsArray.HasValue && foundAttribute.Attribute.Value.IsArray != at.IsArray.Value)
+                {
+                    yield return TemplateErrorAttributeWrongMultiplicity.Build(at.IsArray.Value);
                 }
 
                 foreach (var c in at.ValueConstraints)

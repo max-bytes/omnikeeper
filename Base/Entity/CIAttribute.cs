@@ -59,10 +59,10 @@ namespace LandscapePrototype.Entity
     public class SimplifiedCIAttribute
     {
         public string Name { get; private set; }
-        public AttributeValueGenericScalar Value { get; private set; }
+        public AttributeValueGeneric Value { get; private set; }
         public AttributeState State { get; private set; }
 
-        public static SimplifiedCIAttribute Build(string name, AttributeValueGenericScalar value, AttributeState state)
+        public static SimplifiedCIAttribute Build(string name, AttributeValueGeneric value, AttributeState state)
         {
             return new SimplifiedCIAttribute
             {

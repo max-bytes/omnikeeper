@@ -8,11 +8,12 @@ import Col from 'react-bootstrap/Col';
 import { mutations } from '../graphql/mutations'
 import { AttributeTypes, attributeType2InputProps } from '../utils/attributeTypes'
 import { Row } from "react-bootstrap";
+import EditableAttributeValue from "./EditableAttributeValue";
 import { Dropdown } from 'semantic-ui-react'
 
 function AddNewAttribute(props) {
 
-  let initialAttribute = {name: '', type: 'TEXT', value: ''};
+  let initialAttribute = {name: '', type: 'TEXT', values: [''], isArray: false};
   const [selectedLayer, setSelectedLayer] = useState(undefined);
   const [newAttribute, setNewAttribute] = useState(initialAttribute);
   const [valueAutofocussed, setValueAutofocussed] = useState(false);
@@ -20,7 +21,7 @@ function AddNewAttribute(props) {
 
   React.useEffect(() => {if (props.prefilled) {
     setSelectedLayer(s => s ?? props.prefilled.layer);
-    setNewAttribute({name: props.prefilled.name, type: props.prefilled.type, value: props.prefilled.value ?? ''});
+    setNewAttribute({name: props.prefilled.name, type: props.prefilled.type, values: props.prefilled.values ?? [''], isArray: props.prefilled.isArray ?? false});
     setValueAutofocussed(true);
   }}, [props.prefilled]);
 
@@ -43,7 +44,8 @@ function AddNewAttribute(props) {
             e.preventDefault();
             insertCIAttribute({ variables: { layers: props.visibleAndWritableLayers.map(l => l.name), ciIdentity: props.ciIdentity, name: newAttribute.name, layerID: selectedLayer.id, value: {
               type: newAttribute.type,
-              value: newAttribute.value
+              isArray: newAttribute.isArray,
+              values: newAttribute.values
             } } }).then(d => {
               setSelectedLayer(undefined);
               setNewAttribute(initialAttribute);
@@ -52,7 +54,7 @@ function AddNewAttribute(props) {
           }}>
           <Form.Group as={Row} controlId="type">
             <Form.Label column>Type</Form.Label>
-            <Col sm={10}>
+            <Col sm={8}>
               <Dropdown placeholder='Select attribute type' fluid search selection value={newAttribute.type}
                 onChange={(e, data) => {
                   // we'll clear the value, to be safe, TODO: better value migration between types
@@ -60,6 +62,11 @@ function AddNewAttribute(props) {
                 }}
                 options={AttributeTypes.map(at => { return {key: at.id, value: at.id, text: at.name }; })}
               />
+            </Col>
+            <Col sm={2}>
+              <Form.Group style={{height: '100%'}} controlId="isArray">
+                <Form.Check style={{height: '100%'}} inline type="checkbox" label="Is Array" checked={newAttribute.isArray} onChange={e => setNewAttribute({...newAttribute, values: [''], isArray: e.target.checked })} />
+              </Form.Group>
             </Col>
           </Form.Group>
           <Form.Group as={Row} controlId="name">
@@ -69,9 +76,11 @@ function AddNewAttribute(props) {
             </Col>
           </Form.Group>
           <Form.Group as={Row} controlId="value">
-            <Form.Label column>Value</Form.Label>
+            <Form.Label column>{((newAttribute.isArray) ? 'Values' : 'Value')}</Form.Label>
             <Col sm={10}>
-              <Form.Control autoFocus={valueAutofocussed} {...attributeType2InputProps(newAttribute.type)} placeholder="Enter value" value={newAttribute.value} onChange={e => setNewAttribute({...newAttribute, value: e.target.value})} />                        
+              <EditableAttributeValue autoFocus={valueAutofocussed} values={newAttribute.values} setValues={vs => setNewAttribute({...newAttribute, values: vs})} type={newAttribute.type} isArray={newAttribute.isArray} />
+
+              {/* <Form.Control autoFocus={valueAutofocussed} {...attributeType2InputProps(newAttribute.type)} placeholder="Enter value" value={newAttribute.value} onChange={e => setNewAttribute({...newAttribute, value: e.target.value})} />                         */}
             </Col>
           </Form.Group>
           <Button variant="primary" type="submit">Insert</Button>

@@ -6,37 +6,65 @@ using System.Threading.Tasks;
 
 namespace LandscapePrototype.Entity.AttributeValues
 {
-    public class AttributeValueInteger : IAttributeValue, IEquatable<AttributeValueInteger>
+    public abstract class AttributeValueInteger : IAttributeValue
+    {
+        public override string ToString() => $"AV-Integer: {Value2String()}";
+        public AttributeValueType Type => AttributeValueType.Integer;
+        public abstract string Value2String();
+        public abstract bool IsArray { get; }
+        public abstract AttributeValueGeneric ToGeneric();
+        public abstract bool Equals(IAttributeValue other);
+    }
+
+    public class AttributeValueIntegerScalar : AttributeValueInteger, IEquatable<AttributeValueIntegerScalar>
     {
         public long Value { get; private set; }
+        public override string Value2String() => Value.ToString();
+        public override AttributeValueGeneric ToGeneric() => AttributeValueGeneric.Build(Value2String(), Type);
+        public override bool IsArray => false;
+        public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueIntegerScalar);
+        public bool Equals([AllowNull] AttributeValueIntegerScalar other) => other != null && Value == other.Value;
+        public override int GetHashCode() => Value.GetHashCode();
 
-        internal static IAttributeValue Build(string value)
+        internal static AttributeValueIntegerScalar Build(string value)
         {
             long.TryParse(value, out var v);
             return Build(v);
         }
 
-        public static IAttributeValue Build(long value)
+        public static AttributeValueIntegerScalar Build(long value)
         {
-            var n = new AttributeValueInteger
+            var n = new AttributeValueIntegerScalar
             {
                 Value = value
             };
             return n;
         }
+    }
 
-        public string Value2String() => Value.ToString();
+    public class AttributeValueIntegerArray : AttributeValueInteger, IEquatable<AttributeValueIntegerArray>
+    {
+        public long[] Values { get; private set; }
+        public override string Value2String() => string.Join(",", Values.Select(value => value.ToString().Replace(",", "\\,")));
+        public override AttributeValueGeneric ToGeneric() => AttributeValueGeneric.Build(Values.Select(v => v.ToString()).ToArray(), Type);
+        public override bool IsArray => true;
+        public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueIntegerArray);
+        public bool Equals([AllowNull] AttributeValueIntegerArray other) => other != null && Values.SequenceEqual(other.Values);
+        public override int GetHashCode() => Values.GetHashCode();
 
-        public override string ToString()
+        public static AttributeValueIntegerArray Build(string[] values)
         {
-            return $"AV-Integer: {Value}";
+            var longValues = values.Select(value => { long.TryParse(value, out var v); return v; }).ToArray();
+            return Build(longValues);
         }
 
-        public AttributeValueGenericScalar ToGeneric() => AttributeValueGenericScalar.Build(Value2String(), Type);
-        public AttributeValueType Type => AttributeValueType.Integer;
-
-        public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueInteger);
-        public bool Equals([AllowNull] AttributeValueInteger other) => other != null && Value == other.Value;
-        public override int GetHashCode() => Value.GetHashCode();
+        public static AttributeValueIntegerArray Build(long[] values)
+        {
+            var n = new AttributeValueIntegerArray
+            {
+                Values = values
+            };
+            return n;
+        }
     }
 }

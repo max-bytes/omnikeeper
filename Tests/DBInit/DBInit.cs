@@ -37,8 +37,8 @@ namespace Tests.DBInit
 
             var random = new Random(3);
 
-            var numRegularCIs = 5000;
-            var numRegularRelations = 50000;
+            var numRegularCIs = 500;
+            var numRegularRelations = 5000;
             int numAttributesPerCIFrom = 20;
             int numAttributesPerCITo = 40;
             var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
@@ -54,7 +54,15 @@ namespace Tests.DBInit
                 Predicate.Build("is_monitored_by", "is monitored by", "monitors")
             };
             var regularAttributeNames = new[] { "att_1", "att_2", "att_3", "att_4", "att_5", "att_6", "att_7", "att_8", "att_9" };
-            var regularAttributeValues = Enumerable.Range(0, 10).Select(i => $"attribute value {i + 1}").ToArray();
+            var regularAttributeValues = Enumerable.Range(0, 10).Select<int, IAttributeValue>(i => {
+                var r = random.Next(6);
+                if (r == 0)
+                    return AttributeValueIntegerScalar.Build(random.Next(1000));
+                else if (r == 1)
+                    return AttributeValueTextArray.Build(Enumerable.Range(0, random.Next(1, 5)).Select(i => $"value_{i}").ToArray());
+                else
+                    return AttributeValueTextScalar.Build($"attribute value {i + 1}");
+            }).ToArray();
 
             var user = await DBSetup.SetupUser(userModel, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
 
@@ -110,7 +118,7 @@ namespace Tests.DBInit
                     var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                     var name = regularAttributeNames.GetRandom(random);
                     var value = regularAttributeValues.GetRandom(random);
-                    await ciModel.InsertAttribute(name, AttributeValueText.Build(value), cmdbLayerID, ciid, changeset.ID, trans);
+                    await ciModel.InsertAttribute(name, value, cmdbLayerID, ciid, changeset.ID, trans);
                     // TODO: attribute removals
                     trans.Commit();
                 }
@@ -138,9 +146,9 @@ namespace Tests.DBInit
                 await ciModel.CreateCIWithType("MON_MODULE_HOST_WINDOWS", "Monitoring Check Module", null);
                 await ciModel.CreateCIWithType("MON_MODULE_HOST_LINUX", "Monitoring Check Module", null);
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await ciModel.InsertAttribute("monitoring.commands.check_host_cmd", AttributeValueText.Build("check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
-                await ciModel.InsertAttribute("monitoring.commands.check_windows_host_cmd", AttributeValueText.Build("check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
-                await ciModel.InsertAttribute("monitoring.commands.check_linux_host_cmd", AttributeValueText.Build("check_linux_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
+                await ciModel.InsertAttribute("monitoring.commands.check_host_cmd", AttributeValueTextScalar.Build("check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
+                await ciModel.InsertAttribute("monitoring.commands.check_windows_host_cmd", AttributeValueTextScalar.Build("check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
+                await ciModel.InsertAttribute("monitoring.commands.check_linux_host_cmd", AttributeValueTextScalar.Build("check_linux_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
                 trans.Commit();
             }
 

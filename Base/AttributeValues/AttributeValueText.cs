@@ -6,32 +6,60 @@ using System.Threading.Tasks;
 
 namespace LandscapePrototype.Entity.AttributeValues
 {
-    public class AttributeValueText : IAttributeValue, IEquatable<AttributeValueText>
+
+    public abstract class AttributeValueText : IAttributeValue
+    {
+        public bool Multiline { get; protected set; }
+
+        public override string ToString() => $"AV-Text ({((Multiline) ? "Multiline" : "")}): {Value2String()}";
+
+        public AttributeValueType Type => (Multiline) ? AttributeValueType.MultilineText : AttributeValueType.Text;
+
+        public abstract string Value2String();
+        public abstract bool IsArray { get; }
+        public abstract AttributeValueGeneric ToGeneric();
+        public abstract bool Equals(IAttributeValue other);
+    }
+
+    public class AttributeValueTextScalar : AttributeValueText, IEquatable<AttributeValueTextScalar>
     {
         public string Value { get; private set; }
-        public bool Multiline { get; private set; }
+        public override string Value2String() => Value;
+        public override AttributeValueGeneric ToGeneric() => AttributeValueGeneric.Build(Value, Type);
+        public override bool IsArray => false;
+        public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueTextScalar);
+        public bool Equals([AllowNull] AttributeValueTextScalar other) => other != null && Value == other.Value && Multiline == other.Multiline;
+        public override int GetHashCode() => Value.GetHashCode();
 
-        public static IAttributeValue Build(string value, bool multiline = false)
+        public static AttributeValueTextScalar Build(string value, bool multiline = false)
         {
-            return new AttributeValueText
+            return new AttributeValueTextScalar
             {
                 Value = value,
                 Multiline = multiline
             };
         }
 
-        public string Value2String() => Value;
+    }
 
-        public override string ToString()
+    public class AttributeValueTextArray : AttributeValueText, IEquatable<AttributeValueTextArray>
+    {
+        public string[] Values { get; private set; }
+        public override string Value2String() => string.Join(",", Values.Select(value => value.Replace(",", "\\,")));
+        public override AttributeValueGeneric ToGeneric() => AttributeValueGeneric.Build(Values, Type);
+        public override bool IsArray => true;
+        public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueTextArray);
+        public bool Equals([AllowNull] AttributeValueTextArray other) => other != null && Values.SequenceEqual(other.Values) && Multiline == other.Multiline;
+        public override int GetHashCode() => Values.GetHashCode();
+
+        public static AttributeValueTextArray Build(string[] values, bool multiline = false)
         {
-            return $"AV-Text ({((Multiline) ? "Multiline" : "")}): {Value}";
+            return new AttributeValueTextArray
+            {
+                Values = values,
+                Multiline = multiline
+            };
         }
 
-        public AttributeValueGenericScalar ToGeneric() => AttributeValueGenericScalar.Build(Value2String(), Type);
-        public AttributeValueType Type => (Multiline) ? AttributeValueType.MultilineText : AttributeValueType.Text;
-
-        public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueText);
-        public bool Equals([AllowNull] AttributeValueText other) => other != null && Value == other.Value && Multiline == other.Multiline;
-        public override int GetHashCode() => Value.GetHashCode();
     }
 }

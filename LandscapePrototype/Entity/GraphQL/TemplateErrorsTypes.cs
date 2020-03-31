@@ -24,6 +24,15 @@ namespace LandscapePrototype.Entity.GraphQL
             Field(x => x.CurrentType, type: typeof(AttributeValueTypeType));
         }
     }
+    public class TemplateErrorAttributeWrongMultiplicityType : ObjectGraphType<TemplateErrorAttributeWrongMultiplicity>
+    {
+        public TemplateErrorAttributeWrongMultiplicityType()
+        {
+            Field(x => x.ErrorMessage);
+            Field(x => x.CorrectIsArray);
+        }
+    }
+    
     public class TemplateErrorAttributeGenericType : ObjectGraphType<TemplateErrorAttributeGeneric>
     {
         public TemplateErrorAttributeGenericType()
@@ -37,6 +46,7 @@ namespace LandscapePrototype.Entity.GraphQL
         {
             Type<TemplateErrorAttributeMissingType>();
             Type<TemplateErrorAttributeWrongTypeType>();
+            Type<TemplateErrorAttributeWrongMultiplicityType>();
             Type<TemplateErrorAttributeGenericType>();
         }
     }
