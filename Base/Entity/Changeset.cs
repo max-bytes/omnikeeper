@@ -10,9 +10,9 @@ namespace LandscapePrototype.Entity
     {
         public long ID { get; private set; }
         public DateTimeOffset Timestamp { get; private set; }
-        public User User { get; private set; }
+        public UserInDatabase User { get; private set; }
 
-        public static Changeset Build(long id, User user, DateTimeOffset timestamp)
+        public static Changeset Build(long id, UserInDatabase user, DateTimeOffset timestamp)
         {
             var c = new Changeset
             {

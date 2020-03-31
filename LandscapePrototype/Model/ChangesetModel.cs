@@ -12,9 +12,9 @@ namespace LandscapePrototype.Model
     public class ChangesetModel : IChangesetModel
     {
         private readonly NpgsqlConnection conn;
-        private readonly UserModel userModel;
+        private readonly UserInDatabaseModel userModel;
 
-        public ChangesetModel(UserModel userModel, NpgsqlConnection connection)
+        public ChangesetModel(UserInDatabaseModel userModel, NpgsqlConnection connection)
         {
             conn = connection;
             this.userModel = userModel;
@@ -53,7 +53,7 @@ namespace LandscapePrototype.Model
             var userType = dr.GetFieldValue<UserType>(4);
             var userTimestamp = dr.GetTimeStamp(5).ToDateTime();
 
-            var user = User.Build(userID, userUUID, username, userType, userTimestamp);
+            var user = UserInDatabase.Build(userID, userUUID, username, userType, userTimestamp);
             return Changeset.Build(id, user, timestamp);
         }
 
@@ -113,7 +113,7 @@ namespace LandscapePrototype.Model
                 var userType = dr.GetFieldValue<UserType>(5);
                 var userTimestamp = dr.GetTimeStamp(6).ToDateTime();
 
-                var user = User.Build(userID, userUUID, username, userType, userTimestamp);
+                var user = UserInDatabase.Build(userID, userUUID, username, userType, userTimestamp);
                 var c = Changeset.Build(id, user, timestamp);
                 ret.Add(c);
             }

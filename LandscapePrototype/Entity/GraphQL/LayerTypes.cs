@@ -1,10 +1,6 @@
 ﻿using GraphQL.Types;
-using LandscapePrototype.Entity.AttributeValues;
 using LandscapePrototype.Model;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace LandscapePrototype.Entity.GraphQL
 {
@@ -14,6 +10,13 @@ namespace LandscapePrototype.Entity.GraphQL
         {
             Field(x => x.Name);
             Field("id", x => x.ID);
+            Field<BooleanGraphType>("writable",
+            resolve: (context) =>
+            {
+                var userContext = context.UserContext as LandscapeUserContext;
+                var isWritable = userContext.User.WritableLayers.Any(l => l.ID == context.Source.ID);
+                return isWritable;
+            });
         }
     }
 

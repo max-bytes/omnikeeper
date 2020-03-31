@@ -36,14 +36,15 @@ export const queries = {
         ${Fragments.relation}
     `,
     Layers: gql`
-    {
-      layers {
-        id
-        name
-        sort @client
-        visibility @client
-        color @client
-      }
+    query layers {
+        layers {
+            id
+            name
+            writable
+            sort @client
+            visibility @client
+            color @client
+        }
     }
     `,
     Changesets: gql`

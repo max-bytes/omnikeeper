@@ -13,21 +13,15 @@ namespace LandscapePrototype.Entity
 
     public class User
     {
-        public long ID { get; private set; }
-        public Guid UUID { get; private set; }
-        public string Username { get; private set; }
-        public DateTimeOffset Timestamp { get; private set; }
-        public UserType UserType { get; private set; }
+        public UserInDatabase InDatabase { get; private set; }
+        public IEnumerable<Layer> WritableLayers { get; private set; }
 
-        public static User Build(long id, Guid uuid, string username, UserType userType, DateTimeOffset timestamp)
+        public static User Build(UserInDatabase inDatabase, IEnumerable<Layer> writableLayers)
         {
             var user = new User
             {
-                ID = id,
-                UUID = uuid,
-                UserType = userType,
-                Username = username,
-                Timestamp = timestamp
+                InDatabase = inDatabase,
+                WritableLayers = writableLayers
             };
             return user;
         }

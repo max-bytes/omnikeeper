@@ -1,11 +1,4 @@
-import { useQuery, useMutation } from '@apollo/client';
-import React, { useState } from 'react';
-import RelatedCI from './RelatedCI';
-import {Row, Col} from 'react-bootstrap';
-import AddNewRelation from './AddNewRelation';
-import { Flipper, Flipped } from 'react-flip-toolkit'
-import { onAppear, onExit } from '../utils/animation';
-import { queries } from '../graphql/queries'
+import React from 'react';
 import { Button } from 'semantic-ui-react';
 
 function TemplateErrors(props) {
@@ -24,7 +17,11 @@ function TemplateErrors(props) {
                 actions = <Button basic size='mini' compact onClick={t => props.onCreateNewAttribute(ae.attributeName, e.type)}>Create</Button>
                 break;
               case "TemplateErrorAttributeWrongTypeType":
-                actions = <Button basic size='mini' compact onClick={t => props.onOverwriteAttribute(ae.attributeName, e.correctType)}>Update</Button>
+                actions = <Button basic size='mini' compact onClick={t => props.onOverwriteAttribute(ae.attributeName, e.correctTypes[0])}>Update</Button>
+                break;
+                case "TemplateErrorAttributeGenericType":
+                  break;
+              default:
                 break;
             }
 

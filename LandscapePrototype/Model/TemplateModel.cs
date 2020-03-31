@@ -45,12 +45,18 @@ namespace LandscapePrototype.Model
             // check required attributes
             if (foundAttribute == null)
             {
-                yield return TemplateErrorAttributeMissing.Build($"attribute \"{at.Name}\" {((at.Type.HasValue) ? $" of type \"{at.Type.Value}\" " : "")}is missing!", at.Type);
+                yield return TemplateErrorAttributeMissing.Build(at.Name, at.Type);
             } else
             {
                 if (at.Type != null && !foundAttribute.Attribute.Value.Type.Equals(at.Type.Value))
                 {
-                    yield return TemplateErrorAttributeWrongType.Build($"attribute \"{at.Name}\" must have type \"{at.Type.Value}\"!", at.Type.Value);
+                    yield return TemplateErrorAttributeWrongType.Build(at.Type.Value, foundAttribute.Attribute.Value.Type);
+                }
+
+                foreach (var c in at.ValueConstraints)
+                {
+                    var ce = c.CalculateErrors(foundAttribute.Attribute.Value);
+                    foreach (var cc in ce) yield return cc;
                 }
             }
 

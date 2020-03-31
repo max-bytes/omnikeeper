@@ -1,36 +1,34 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types'
-import RelatedCI from './RelatedCI';
 import {Row, Col} from 'react-bootstrap';
 import AddNewAttribute from './AddNewAttribute';
 import AttributeList from './AttributeList';
-import AddNewRelation from './AddNewRelation';
 import TemplateErrors from './TemplateErrors';
 import CIRelations from './CIRelations';
-import { Flipper, Flipped } from 'react-flip-toolkit'
 import { Tab } from 'semantic-ui-react'
-import { onAppear, onExit } from '../utils/animation';
 
 function CI(props) {
 
   const [selectedTab, setSelectedTab] = useState(0);
   const [createNewAttribute, setCreateNewAttribute] = useState(undefined);
+    
+  let visibleAndWritableLayers = props.layers.filter(l => l.visibility && l.writable);
 
   const panes = [
     { menuItem: 'Attributes', render: () => <Tab.Pane>
       <Row>
         <Col>
-          <AddNewAttribute prefilled={createNewAttribute} isEditable={props.isEditable} layers={props.layers} ciIdentity={props.ci.identity}></AddNewAttribute>
+          <AddNewAttribute prefilled={createNewAttribute} isEditable={props.isEditable} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ci.identity}></AddNewAttribute>
         </Col>
       </Row>
       <Row>
         <Col>
-        <AttributeList mergedAttributes={props.ci.mergedAttributes} isEditable={props.isEditable} layers={props.layers} ciIdentity={props.ci.identity}></AttributeList>
+        <AttributeList mergedAttributes={props.ci.mergedAttributes} isEditable={props.isEditable} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ci.identity}></AttributeList>
         </Col>
       </Row>
     </Tab.Pane> },
     { menuItem: 'Relations', render: () => <Tab.Pane>
-      <CIRelations visibleLayers={props.visibleLayers} timeThreshold={props.timeThreshold} related={props.ci.related} isEditable={props.isEditable} layers={props.layers} ciIdentity={props.ci.identity} />
+      <CIRelations visibleLayers={props.visibleLayers} timeThreshold={props.timeThreshold} related={props.ci.related} isEditable={props.isEditable} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ci.identity} />
     </Tab.Pane> },
   ]
 
@@ -43,7 +41,6 @@ function CI(props) {
       onOverwriteAttribute={(attributeName, attributeType) => {
         // find current value and layer
         var currentAttribute = props.ci.mergedAttributes.find(a => a.attribute.name === attributeName);
-        console.log(props.ci.mergedAttributes);
         if (currentAttribute) {
           // TODO: get current correct layer
           const layerID = currentAttribute.layerStackIDs[currentAttribute.layerStackIDs.length - 1];
@@ -74,7 +71,7 @@ CI.propTypes = {
     templateErrors: PropTypes.shape({
       attributeErrors: PropTypes.arrayOf(PropTypes.shape({
         attributeName: PropTypes.string.isRequired,
-        errors: PropTypes.arrayOf(PropTypes.string).isRequired
+        errors: PropTypes.arrayOf(PropTypes.object).isRequired
       })).isRequired
     }).isRequired,
     attributes: PropTypes.arrayOf(

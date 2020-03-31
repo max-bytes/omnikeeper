@@ -122,7 +122,7 @@ namespace LandscapePrototype.Entity.GraphQL
     {
     }
 
-    public class AttributeValueGenericType : ObjectGraphType<AttributeValueGeneric>
+    public class AttributeValueGenericType : ObjectGraphType<AttributeValueGenericScalar>
     {
         public AttributeValueGenericType()
         {

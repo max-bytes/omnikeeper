@@ -42,7 +42,8 @@ export const Fragments = {
                 errors {
                     __typename
                     ... on TemplateErrorAttributeMissingType {errorMessage, type}
-                    ... on TemplateErrorAttributeWrongTypeType {errorMessage, correctType}
+                    ... on TemplateErrorAttributeWrongTypeType {errorMessage, correctTypes}
+                    ... on TemplateErrorAttributeGenericType {errorMessage}
                 }
             }
         }

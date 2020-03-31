@@ -40,7 +40,7 @@ namespace Tests.Integration.Model
         public async Task TestAddingUpdatingRemovingAndRenewingOfAttributes()
         {
             var model = new CIModel(conn);
-            var userModel = new UserModel(conn);
+            var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
@@ -130,7 +130,7 @@ namespace Tests.Integration.Model
         public async Task TestGetCIs()
         {
             var model = new CIModel(conn);
-            var userModel = new UserModel(conn);
+            var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
@@ -190,7 +190,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestLayerSets()
         {
-            var userModel = new UserModel(conn);
+            var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
@@ -230,7 +230,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestEqualValueInserts()
         {
-            var userModel = new UserModel(conn);
+            var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
@@ -256,7 +256,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestRemoveShowsLayerBelow()
         {
-            var userModel = new UserModel(conn);
+            var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
@@ -294,7 +294,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestFindAttributesByName()
         {
-            var userModel = new UserModel(conn);
+            var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);
@@ -340,7 +340,7 @@ namespace Tests.Integration.Model
         public async Task TestCITypes()
         {
             var model = new CIModel(conn);
-            var userModel = new UserModel(conn);
+            var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
@@ -381,15 +381,15 @@ namespace Tests.Integration.Model
                 var layerset1 = new LayerSet(new long[] { layerID1 });
                 var ciid2 = await model.CreateCIWithType("H456", "T1", trans);
                 var ciid3 = await model.CreateCIWithType("H789", "T2", trans);
-                Assert.AreEqual(1, (await model.GetMergedCIsWithType(layerset1, trans, DateTimeOffset.Now, "T1")).Count());
-                Assert.AreEqual(2, (await model.GetMergedCIsWithType(layerset1, trans, DateTimeOffset.Now, "T2")).Count());
+                Assert.AreEqual(1, (await model.GetMergedCIsByType(layerset1, trans, DateTimeOffset.Now, "T1")).Count());
+                Assert.AreEqual(2, (await model.GetMergedCIsByType(layerset1, trans, DateTimeOffset.Now, "T2")).Count());
             }
         }
 
         [Test]
         public async Task TestBulkReplace()
         {
-            var userModel = new UserModel(conn);
+            var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var model = new CIModel(conn);
             var layerModel = new LayerModel(conn);

@@ -16,8 +16,6 @@ function Attribute(props) {
   const [value, setValue] = useState(attribute.attribute.value.value);
   React.useEffect(() => setValue(attribute.attribute.value.value), [attribute.attribute.value.value])
 
-  let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
-
   // TODO: loading
   const [insertCIAttribute] = useMutation(mutations.INSERT_CI_ATTRIBUTE);
   const [removeCIAttribute] = useMutation(mutations.REMOVE_CI_ATTRIBUTE, {
@@ -25,11 +23,11 @@ function Attribute(props) {
       /* HACK: find a better way to deal with cache invalidation! We would like to invalidate the affected CIs, which 
       translates to multiple entries in the cache, because each CI can be cached multiple times for each layerhash
       */
-      data.data.mutate.affectedCIs.forEach(ci => {
-        var id = props.client.cache.identify(ci);
-        console.log("Evicting: " + id);
-        cache.evict(id);
-      });
+      // data.data.mutate.affectedCIs.forEach(ci => {
+      //   var id = props.client.cache.identify(ci);
+      //   console.log("Evicting: " + id);
+      //   cache.evict(id);
+      // });
     }
   });
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
@@ -43,7 +41,7 @@ function Attribute(props) {
     let removeButton = (
       <Button variant="danger" onClick={e => {
         e.preventDefault();
-        removeCIAttribute({ variables: { layers: visibleLayers, ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID } })
+        removeCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID } })
         .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
       }}>Remove</Button>
     );
@@ -51,7 +49,7 @@ function Attribute(props) {
     input = (
       <Form inline onSubmit={e => {
           e.preventDefault();
-          insertCIAttribute({ variables: { layers: visibleLayers, ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, value: {
+          insertCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, value: {
             type: attribute.attribute.value.type,
             value: value
           } } })
@@ -89,13 +87,6 @@ function Attribute(props) {
 Attribute.propTypes = {
   isEditable: PropTypes.bool.isRequired,
   ciIdentity: PropTypes.string.isRequired,
-  layers: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      name: PropTypes.string.isRequired,
-      visibility: PropTypes.bool.isRequired
-    }).isRequired
-  ).isRequired,
   attribute: PropTypes.shape({
       attribute: PropTypes.shape({
         name: PropTypes.string.isRequired,

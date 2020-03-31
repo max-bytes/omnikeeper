@@ -11,18 +11,18 @@ namespace LandscapePrototype.Entity.AttributeValues
     {
         public abstract string Value2String();
         public abstract int GetHashCode();
-        public abstract AttributeValueGeneric ToGeneric();
+        public abstract AttributeValueGenericScalar ToGeneric();
         public AttributeValueType Type { get; }
     }
 
-    public class AttributeValueGeneric
+    public class AttributeValueGenericScalar
     {
         public AttributeValueType Type { get; private set; }
         public string Value { get; private set; }
 
-        public static AttributeValueGeneric Build(string value, AttributeValueType type)
+        public static AttributeValueGenericScalar Build(string value, AttributeValueType type)
         {
-            return new AttributeValueGeneric()
+            return new AttributeValueGenericScalar()
             {
                 Value = value,
                 Type = type
@@ -32,7 +32,7 @@ namespace LandscapePrototype.Entity.AttributeValues
 
     public static class AttributeValueBuilder
     {
-        public static IAttributeValue Build(AttributeValueGeneric generic)
+        public static IAttributeValue Build(AttributeValueGenericScalar generic)
         {
             return Build(generic.Type, generic.Value);
         }

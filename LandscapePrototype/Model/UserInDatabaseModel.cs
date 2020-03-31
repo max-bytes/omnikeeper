@@ -4,21 +4,22 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using static LandscapePrototype.Model.RelationModel;
 
 namespace LandscapePrototype.Model
 {
-    public class UserModel : IUserModel
+    public class UserInDatabaseModel : IUserInDatabaseModel
     {
         private readonly NpgsqlConnection conn;
 
-        public UserModel(NpgsqlConnection connection)
+        public UserInDatabaseModel(NpgsqlConnection connection)
         {
             conn = connection;
         }
 
-        public async Task<User> CreateOrUpdateFetchUser(string username, Guid uuid, UserType type, NpgsqlTransaction trans)
+        public async Task<UserInDatabase> CreateOrUpdateFetchUser(string username, Guid uuid, UserType type, NpgsqlTransaction trans)
         {
             // check for an updated user first
             var existingUser = await GetUser(username, uuid, trans);
@@ -33,10 +34,10 @@ namespace LandscapePrototype.Model
             await reader.ReadAsync();
             var id = reader.GetInt64(0);
             var timestamp = reader.GetDateTime(1);
-            return User.Build(id, uuid, username, type, timestamp);
+            return UserInDatabase.Build(id, uuid, username, type, timestamp);
         }
 
-        public async Task<User> GetUser(long id, NpgsqlTransaction trans)
+        public async Task<UserInDatabase> GetUser(long id, NpgsqlTransaction trans)
         {
             using var command = new NpgsqlCommand(@"SELECT keycloak_id, username, type, timestamp FROM ""user"" WHERE id = @id LIMIT 1", conn, trans);
 
@@ -50,10 +51,10 @@ namespace LandscapePrototype.Model
             var username = dr.GetString(1);
             var usertype = dr.GetFieldValue<UserType>(2);
             var timestamp = dr.GetTimeStamp(3).ToDateTime();
-            return User.Build(id, uuid, username, usertype, timestamp);
+            return UserInDatabase.Build(id, uuid, username, usertype, timestamp);
         }
 
-        private async Task<User> GetUser(string username, Guid uuid, NpgsqlTransaction trans)
+        private async Task<UserInDatabase> GetUser(string username, Guid uuid, NpgsqlTransaction trans)
         {
             // TODO: order by timestamp and get latest user
             using var command = new NpgsqlCommand(@"SELECT id, timestamp, type FROM ""user"" WHERE keycloak_id = @uuid AND username = @username", conn, trans);
@@ -68,7 +69,7 @@ namespace LandscapePrototype.Model
             var id = dr.GetInt64(0);
             var timestamp = dr.GetTimeStamp(1).ToDateTime();
             var usertype = dr.GetFieldValue<UserType>(2);
-            return User.Build(id, uuid, username, usertype, timestamp);
+            return UserInDatabase.Build(id, uuid, username, usertype, timestamp);
         }
     }
 }

@@ -19,21 +19,21 @@ function AddNewAttribute(props) {
   React.useEffect(() => { if (!props.isEditable) setSelectedLayer(undefined); }, [props.isEditable]);
 
   React.useEffect(() => {if (props.prefilled) {
-    setSelectedLayer(selectedLayer ?? props.prefilled.layer);
+    setSelectedLayer(s => s ?? props.prefilled.layer);
     setNewAttribute({name: props.prefilled.name, type: props.prefilled.type, value: props.prefilled.value ?? ''});
     setValueAutofocussed(true);
   }}, [props.prefilled]);
-  
-  let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
-
-  let addButtons = <div>Add Attribute to Layer: {props.layers.map(layer => {
-    return <Button disabled={!props.isEditable} key={layer.name} style={{backgroundColor: layer.color, borderColor: layer.color, color: '#111'}} className={"mx-1"}
-    onClick={() => {if (selectedLayer === layer) setSelectedLayer(undefined); else setSelectedLayer(layer);}}>{layer.name}</Button>;
-  })}</div>;
 
   // TODO: loading
   const [insertCIAttribute] = useMutation(mutations.INSERT_CI_ATTRIBUTE);
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
+
+  if (props.visibleAndWritableLayers.length === 0) return <></>;
+  
+  let addButtons = <div>Add Attribute to Layer: {props.visibleAndWritableLayers.map(layer => {
+    return <Button disabled={!props.isEditable} key={layer.name} style={{backgroundColor: layer.color, borderColor: layer.color, color: '#111'}} className={"mx-1"}
+    onClick={() => {if (selectedLayer === layer) setSelectedLayer(undefined); else setSelectedLayer(layer);}}>{layer.name}</Button>;
+  })}</div>;
 
   let addAttribute = <span></span>;
   if (selectedLayer) {
@@ -41,7 +41,7 @@ function AddNewAttribute(props) {
       <div style={{backgroundColor: selectedLayer.color, borderColor: selectedLayer.color}} className={"p-2"}>
         <Form onSubmit={e => {
             e.preventDefault();
-            insertCIAttribute({ variables: { layers: visibleLayers, ciIdentity: props.ciIdentity, name: newAttribute.name, layerID: selectedLayer.id, value: {
+            insertCIAttribute({ variables: { layers: props.visibleAndWritableLayers.map(l => l.name), ciIdentity: props.ciIdentity, name: newAttribute.name, layerID: selectedLayer.id, value: {
               type: newAttribute.type,
               value: newAttribute.value
             } } }).then(d => {
@@ -87,15 +87,7 @@ function AddNewAttribute(props) {
 
 AddNewAttribute.propTypes = {
   isEditable: PropTypes.bool.isRequired,
-  ciIdentity: PropTypes.string.isRequired,
-  layers: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      name: PropTypes.string.isRequired,
-      visibility: PropTypes.bool.isRequired,
-      color: PropTypes.string.isRequired
-    }).isRequired
-  ).isRequired
+  ciIdentity: PropTypes.string.isRequired
 }
 
 export default withApollo(AddNewAttribute);

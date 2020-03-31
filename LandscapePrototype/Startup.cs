@@ -42,6 +42,9 @@ using LandscapePrototype.Model.Cached;
 using TestPlugin;
 using Hangfire.Dashboard;
 using Hangfire.Annotations;
+using LandscapePrototype.Service;
+using Microsoft.OpenApi.Models;
+using System.IO;
 
 namespace LandscapePrototype
 {
@@ -76,7 +79,11 @@ namespace LandscapePrototype
                 .AllowAnyHeader())
             );
 
-            services.AddControllers().AddNewtonsoftJson();
+            services.AddControllers().AddNewtonsoftJson(options =>
+            {
+                // enums to string conversion
+                options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+            });
 
             services.AddScoped((sp) =>
             {
@@ -84,11 +91,13 @@ namespace LandscapePrototype
                 return dbcb.Build(Configuration);
             });
 
+            services.AddHttpContextAccessor();
+
             // TODO: remove AddScoped<Model>(), only use AddScoped<IModel, Model>()
             services.AddScoped<ICIModel, CIModel>();
             services.AddScoped<CIModel>();
-            services.AddScoped<IUserModel, UserModel>();
-            services.AddScoped<UserModel>();
+            services.AddScoped<IUserInDatabaseModel, UserInDatabaseModel>();
+            services.AddScoped<UserInDatabaseModel>();
             services.AddScoped<ILayerModel, LayerModel>();
             services.AddScoped<LayerModel>();
             services.AddScoped<CachedLayerModel>();
@@ -100,6 +109,8 @@ namespace LandscapePrototype
             services.AddScoped<TemplateModel>();
 
             services.AddScoped<PredicateModel>();
+
+            services.AddScoped<CurrentUserService>();
 
             services.AddSingleton<TemplatesProvider>(); // can be singleton because it does not depend on any scoped services
             services.AddSingleton<CachedTemplatesProvider>(); // can be singleton because it does not depend on any scoped services
@@ -171,9 +182,16 @@ namespace LandscapePrototype
             {
                 var cs = Configuration.GetConnectionString("HangfireConnection");
                 config.UsePostgreSqlStorage(cs);
-                //config.UseConsole();
+                //config.UseConsole(); TODO
             });
 
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Landscape Registry REST API", Version = "v1" });
+                var filePath = Path.Combine(System.AppContext.BaseDirectory, "LandscapePrototype.xml");
+                c.IncludeXmlComments(filePath);
+            });
+            services.AddSwaggerGenNewtonsoftSupport();
         }
 
         private IWebHostEnvironment CurrentEnvironment { get; set; }
@@ -206,6 +224,11 @@ namespace LandscapePrototype
                 endpoints.MapControllers();
             });
 
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Landscape Registry REST API V1");
+            });
 
             // Configure hangfire to use the new JobActivator we defined.
             GlobalConfiguration.Configuration.UseConsole().UseActivator(new AspNetCoreJobActivator(serviceScopeFactory));

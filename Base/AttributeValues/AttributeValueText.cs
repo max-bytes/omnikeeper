@@ -27,7 +27,7 @@ namespace LandscapePrototype.Entity.AttributeValues
             return $"AV-Text ({((Multiline) ? "Multiline" : "")}): {Value}";
         }
 
-        public AttributeValueGeneric ToGeneric() => AttributeValueGeneric.Build(Value2String(), Type);
+        public AttributeValueGenericScalar ToGeneric() => AttributeValueGenericScalar.Build(Value2String(), Type);
         public AttributeValueType Type => (Multiline) ? AttributeValueType.MultilineText : AttributeValueType.Text;
 
         public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueText);

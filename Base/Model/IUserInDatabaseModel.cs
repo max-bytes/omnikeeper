@@ -9,8 +9,9 @@ using System.Threading.Tasks;
 
 namespace Landscape.Base.Model
 {
-    public interface IUserModel
+    public interface IUserInDatabaseModel
     {
-        Task<User> CreateUserFromClaims(IEnumerable<Claim> claims);
+        //Task<UserInDatabase> CreateUserFromClaims(IEnumerable<Claim> claims);
+        Task<UserInDatabase> CreateOrUpdateFetchUser(string username, Guid uuid, UserType type, NpgsqlTransaction trans);
     }
 }

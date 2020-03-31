@@ -28,7 +28,7 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var userModel = new UserModel(conn);
+            var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var ciModel = new CIModel(conn);
             var predicateModel = new PredicateModel(conn);
@@ -81,7 +81,7 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var userModel = new UserModel(conn);
+            var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var ciModel = new CIModel(conn);
             var predicateModel = new PredicateModel(conn);

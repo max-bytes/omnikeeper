@@ -29,7 +29,7 @@ namespace Tests.DBInit
             using var conn = dbcb.Build("landscape_prototype", false, true);
 
             var ciModel = new CIModel(conn);
-            var userModel = new UserModel(conn);
+            var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var layerModel = new LayerModel(conn);
             var predicateModel = new PredicateModel(conn);
@@ -145,7 +145,7 @@ namespace Tests.DBInit
             }
 
 
-            var windowsHosts = await ciModel.GetMergedCIsWithType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, DateTimeOffset.Now, "Host Windows");
+            var windowsHosts = await ciModel.GetMergedCIsByType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, DateTimeOffset.Now, "Host Windows");
             foreach(var ci in windowsHosts)
             {
                 using var trans = conn.BeginTransaction();
@@ -154,7 +154,7 @@ namespace Tests.DBInit
                 await relationModel.InsertRelation(ci.Identity, "MON_MODULE_HOST_WINDOWS", "has_monitoring_module", monitoringDefinitionsLayerID, changeset.ID, trans);
                 trans.Commit();
             }
-            var linuxHosts = await ciModel.GetMergedCIsWithType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, DateTimeOffset.Now, "Host Linux");
+            var linuxHosts = await ciModel.GetMergedCIsByType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, DateTimeOffset.Now, "Host Linux");
             foreach (var ci in linuxHosts)
             {
                 using var trans = conn.BeginTransaction();

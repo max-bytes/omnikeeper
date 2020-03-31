@@ -12,9 +12,9 @@ namespace LandscapePrototype.Entity.GraphQL
     {
     }
 
-    public class UserTypeGQL : ObjectGraphType<User>
+    public class UserInDatabaseType : ObjectGraphType<UserInDatabase>
     {
-        public UserTypeGQL()
+        public UserInDatabaseType()
         {
             Field("id", x => x.ID);
             Field(x => x.Username);
@@ -28,7 +28,7 @@ namespace LandscapePrototype.Entity.GraphQL
         public ChangesetType()
         {
             Field(x => x.Timestamp);
-            Field(x => x.User, type: typeof(UserTypeGQL));
+            Field(x => x.User, type: typeof(UserInDatabaseType));
             Field("id", x => x.ID);
             //FieldAsync<UserTypeGQL>("user",
             //    resolve: async (context) =>

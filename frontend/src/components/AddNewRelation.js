@@ -17,13 +17,6 @@ function AddNewRelation(props) {
   const [selectedLayer, setSelectedLayer] = useState(undefined);
   const [newRelation, setNewRelation] = useState(initialRelation);
   React.useEffect(() => { if (!props.isEditable) setSelectedLayer(undefined); }, [props.isEditable]);
-  
-  let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
-
-  let addButtons = <div>Add Relation to Layer: {props.layers.map(layer => {
-    return <Button disabled={!props.isEditable} key={layer.name} style={{backgroundColor: layer.color, borderColor: layer.color, color: '#111'}} className={"mx-1"}
-    onClick={() => {if (selectedLayer === layer) setSelectedLayer(undefined); else setSelectedLayer(layer);}}>{layer.name}</Button>;
-  })}</div>;
 
   // TODO: loading
   const { data: dataCIs } = useQuery(queries.CIList);
@@ -31,6 +24,12 @@ function AddNewRelation(props) {
   const [insertRelation] = useMutation(mutations.INSERT_RELATION);
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
+  if (props.visibleAndWritableLayers.length === 0) return <></>;
+  
+  let addButtons = <div>Add Relation to Layer: {props.visibleAndWritableLayers.map(layer => {
+    return <Button disabled={!props.isEditable} key={layer.name} style={{backgroundColor: layer.color, borderColor: layer.color, color: '#111'}} className={"mx-1"}
+    onClick={() => {if (selectedLayer === layer) setSelectedLayer(undefined); else setSelectedLayer(layer);}}>{layer.name}</Button>;
+  })}</div>;
   
   let addRelation = <span></span>;
   if (selectedLayer && dataCIs && dataPredicates) {
@@ -45,7 +44,7 @@ function AddNewRelation(props) {
       <div style={{backgroundColor: selectedLayer.color, borderColor: selectedLayer.color}} className={"p-2"}>
         <Form onSubmit={e => {
             e.preventDefault();
-            insertRelation({ variables: { layers: visibleLayers, fromCIID: props.ciIdentity, toCIID: newRelation.toCIID, predicateID: newRelation.predicateID, layerID: selectedLayer.id} }).then(d => {
+            insertRelation({ variables: { fromCIID: props.ciIdentity, toCIID: newRelation.toCIID, predicateID: newRelation.predicateID, layerID: selectedLayer.id} }).then(d => {
               setSelectedLayer(undefined);
               setNewRelation(initialRelation);
               setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }});
@@ -94,15 +93,7 @@ function AddNewRelation(props) {
 
 AddNewRelation.propTypes = {
   isEditable: PropTypes.bool.isRequired,
-  ciIdentity: PropTypes.string.isRequired,
-  layers: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      name: PropTypes.string.isRequired,
-      visibility: PropTypes.bool.isRequired,
-      color: PropTypes.string.isRequired
-    }).isRequired
-  ).isRequired
+  ciIdentity: PropTypes.string.isRequired
 }
 
 export default withApollo(AddNewRelation);

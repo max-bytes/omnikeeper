@@ -37,7 +37,7 @@ namespace LandscapePrototype.Entity.Template
 
         private IImmutableDictionary<CIType, CIAttributesTemplate> CIAttributeTemplates { get; set; }
 
-        public CIAttributesTemplate GetAttributesTemplate(CIType ciType) => CIAttributeTemplates.GetValueOrDefault(ciType);
+        public CIAttributesTemplate GetAttributesTemplate(CIType ciType) => CIAttributeTemplates.GetValueOrDefault(ciType, null);
 
         public async static Task<Templates> Build(CIModel ciModel, CachedLayerModel layerModel, NpgsqlTransaction trans)
         {
@@ -49,12 +49,12 @@ namespace LandscapePrototype.Entity.Template
                     CIAttributesTemplate.Build(await ciModel.GetCIType("Application", trans),
                         new List<CIAttributeTemplate>() {
                             // TODO
-                            CIAttributeTemplate.Build("name", AttributeValues.AttributeValueType.Text)
+                            CIAttributeTemplate.BuildFromParams("name", "This is a description", AttributeValues.AttributeValueType.Text, CIAttributeValueConstraintTextLength.Build(1, null))
                         }),
                     CIAttributesTemplate.Build(await ciModel.GetCIType("Naemon Instance", trans),
                         new List<CIAttributeTemplate>() {
                             // TODO
-                            CIAttributeTemplate.Build("name", AttributeValues.AttributeValueType.Text)
+                            CIAttributeTemplate.BuildFromParams("name", "This is a description", AttributeValues.AttributeValueType.Text, CIAttributeValueConstraintTextLength.Build(1, null))
                         })
                 }.ToImmutableDictionary(t => t.CIType)
             };

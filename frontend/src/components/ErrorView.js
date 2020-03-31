@@ -5,7 +5,7 @@ export function ErrorView(props) {
     <div>
       <h3>{props.error.name}</h3>
       <p>{props.error.message}</p>
-      <p><pre>{props.error.stack}</pre></p>
+      <pre>{props.error.stack}</pre>
       </div>
   )
 }

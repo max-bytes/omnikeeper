@@ -1,6 +1,7 @@
 ﻿using GraphQL;
 using GraphQL.Execution;
 using GraphQL.Types;
+using LandscapePrototype.Entity;
 using LandscapePrototype.Entity.AttributeValues;
 using LandscapePrototype.Entity.GraphQL;
 using LandscapePrototype.Model;
@@ -27,7 +28,7 @@ namespace Tests.Integration.GraphQL
             Services.Register<LandscapeQuery>();
             Services.Register<MergedCIType>();
             Services.Register<CIModel>();
-            Services.Register<UserModel>();
+            Services.Register<UserInDatabaseModel>();
             Services.Register<LayerModel>();
             Services.Register<RelationModel>();
             Services.Register<RelatedCIType>();
@@ -56,13 +57,13 @@ namespace Tests.Integration.GraphQL
             var ciModel = Services.Get<CIModel>();
             var layerModel = Services.Get<LayerModel>();
             var changesetModel = Services.Get<ChangesetModel>();
-            var userModel = Services.Get<UserModel>();
+            var userModel = Services.Get<UserInDatabaseModel>();
             using var trans = Services.Get<NpgsqlConnection>().BeginTransaction();
-            var user = await userModel.CreateOrUpdateFetchUser(username, userGUID, LandscapePrototype.Entity.UserType.Robot, trans);
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var layerID1 = await layerModel.CreateLayer("layer_1", trans);
             var layerID2 = await layerModel.CreateLayer("layer_2", trans);
-            var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+            var user = User.Build(await userModel.CreateOrUpdateFetchUser(username, userGUID, UserType.Robot, trans), new List<Layer>());
+            var changeset = await changesetModel.CreateChangeset(user.InDatabase.ID, trans);
             await ciModel.InsertAttribute("a1", AttributeValueInteger.Build(3), layerID1, ciid1, changeset.ID, trans);
             trans.Commit();
 

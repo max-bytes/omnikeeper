@@ -1,5 +1,5 @@
-import { useQuery, useMutation } from '@apollo/client';
-import React, { useState } from 'react';
+import { useQuery } from '@apollo/client';
+import React from 'react';
 import RelatedCI from './RelatedCI';
 import {Row, Col} from 'react-bootstrap';
 import AddNewRelation from './AddNewRelation';
@@ -26,17 +26,19 @@ function CIRelations(props) {
     return (<>
     <Row>
       <Col>
-        <AddNewRelation isEditable={props.isEditable} layers={props.layers} ciIdentity={props.ciIdentity}></AddNewRelation>
+        <AddNewRelation isEditable={props.isEditable} visibleAndWritableLayers={props.visibleAndWritableLayers} ciIdentity={props.ciIdentity}></AddNewRelation>
       </Col>
     </Row>
     <Row>
       <Col>
         <Flipper flipKey={sortedRelatedCIs.map(r => r.relation.layerStackIDs).join(' ')}>
-          {sortedRelatedCIs.map(r => (
-            <Flipped key={r.relation.id} flipId={r.relation.predicateID} onAppear={onAppear} onExit={onExit}>
-              <RelatedCI related={r} ciIdentity={props.ciIdentity} layers={props.layers} isEditable={props.isEditable}></RelatedCI>
-            </Flipped>
-          ))}
+          {sortedRelatedCIs.map(r => {
+            var isLayerWritable = props.visibleAndWritableLayers.some(l => l.id === r.relation.layerID);
+
+            return (<Flipped key={r.relation.id} flipId={r.relation.predicateID} onAppear={onAppear} onExit={onExit}>
+                <RelatedCI related={r} ciIdentity={props.ciIdentity} isEditable={props.isEditable && isLayerWritable}></RelatedCI>
+              </Flipped>);
+          })}
         </Flipper>
       </Col>
     </Row>

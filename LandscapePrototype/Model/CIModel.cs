@@ -141,7 +141,7 @@ namespace LandscapePrototype.Model
             return ret;
         }
 
-        public async Task<IEnumerable<MergedCI>> GetMergedCIsWithType(LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime, string typeID)
+        public async Task<IEnumerable<MergedCI>> GetMergedCIsByType(LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime, string typeID)
         {
             // TODO: performance improvements
             var cis = await GetMergedCIs(layers, true, trans, atTime);

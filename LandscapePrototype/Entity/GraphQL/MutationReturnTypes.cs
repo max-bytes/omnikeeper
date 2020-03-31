@@ -33,7 +33,7 @@ namespace LandscapePrototype.Entity.GraphQL
             Field(x => x.InsertedAttributes, type: typeof(ListGraphType<CIAttributeType>));
             Field(x => x.RemovedAttributes, type: typeof(ListGraphType<CIAttributeType>));
             Field(x => x.InsertedRelations, type: typeof(ListGraphType<RelationType>));
-            Field(x => x.AffectedCIs, type: typeof(ListGraphType<MergedCIType>));
+            Field(x => x.AffectedCIs, nullable: true, type: typeof(ListGraphType<MergedCIType>));
         }
     }
 

@@ -40,11 +40,13 @@ function AttributeList(props) {
       </Accordion.Title>
       <Accordion.Content active={active}>
         <Flipper flipKey={sortedAttributes.map(a => a.layerStackIDs).join(' ')}>
-          {sortedAttributes.map(a => (
-            <Flipped key={a.attribute.name} flipId={a.attribute.name} onAppear={onAppear} onExit={onExit}>
-              <Attribute attribute={a} ciIdentity={props.ciIdentity} layers={props.layers} isEditable={props.isEditable}></Attribute>
-            </Flipped>
-          ))}
+          {sortedAttributes.map(a => {
+            var isLayerWritable = props.visibleAndWritableLayers.some(l => l.id === a.layerStackIDs[a.layerStackIDs.length - 1]);
+
+            return (<Flipped key={a.attribute.name} flipId={a.attribute.name} onAppear={onAppear} onExit={onExit}>
+              <Attribute attribute={a} ciIdentity={props.ciIdentity} isEditable={props.isEditable && isLayerWritable}></Attribute>
+            </Flipped>);
+          })}
         </Flipper>
       </Accordion.Content></div>);
 
@@ -62,13 +64,6 @@ function AttributeList(props) {
 
 AttributeList.propTypes = {
     isEditable: PropTypes.bool.isRequired,
-    layers: PropTypes.arrayOf(
-        PropTypes.shape({
-        id: PropTypes.number.isRequired,
-        name: PropTypes.string.isRequired,
-        visibility: PropTypes.bool.isRequired
-        }).isRequired
-    ).isRequired,
     ciIdentity: PropTypes.string.isRequired,
     mergedAttributes: PropTypes.arrayOf(
       PropTypes.shape({

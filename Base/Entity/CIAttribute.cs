@@ -56,6 +56,23 @@ namespace LandscapePrototype.Entity
         }
     }
 
+    public class SimplifiedCIAttribute
+    {
+        public string Name { get; private set; }
+        public AttributeValueGenericScalar Value { get; private set; }
+        public AttributeState State { get; private set; }
+
+        public static SimplifiedCIAttribute Build(string name, AttributeValueGenericScalar value, AttributeState state)
+        {
+            return new SimplifiedCIAttribute
+            {
+                Name = name,
+                Value = value,
+                State = state
+            };
+        }
+    }
+
     public interface IBulkCIAttributeData<F>
     {
         string GetCIID(F f);

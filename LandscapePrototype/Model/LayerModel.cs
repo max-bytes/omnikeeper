@@ -67,6 +67,7 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("name", layerName);
             using var r = await command.ExecuteReaderAsync();
             await r.ReadAsync();
+            if (!r.HasRows) return null;
             var id = r.GetInt64(0);
             return Layer.Build(layerName, id);
         }
@@ -77,6 +78,7 @@ namespace LandscapePrototype.Model
             command.Parameters.AddWithValue("id", layerID);
             using var r = await command.ExecuteReaderAsync();
             await r.ReadAsync();
+            if (!r.HasRows) return null;
             var name = r.GetString(0);
             return Layer.Build(name, layerID);
         }

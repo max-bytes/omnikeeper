@@ -13,12 +13,12 @@ namespace Landscape.Base
     public abstract class CLBBase : IComputeLayerBrain
     {
         protected readonly ICIModel ciModel;
-        protected readonly IUserModel userModel;
+        protected readonly IUserInDatabaseModel userModel;
         protected readonly IChangesetModel changesetModel;
         protected readonly ILayerModel layerModel;
         protected readonly NpgsqlConnection conn;
 
-        public CLBBase(ICIModel ciModel, ILayerModel layerModel, IChangesetModel changesetModel, IUserModel userModel, NpgsqlConnection conn)
+        public CLBBase(ICIModel ciModel, ILayerModel layerModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
         {
             this.ciModel = ciModel;
             this.userModel = userModel;

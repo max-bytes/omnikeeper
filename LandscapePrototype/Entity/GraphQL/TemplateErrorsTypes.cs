@@ -20,7 +20,15 @@ namespace LandscapePrototype.Entity.GraphQL
         public TemplateErrorAttributeWrongTypeType()
         {
             Field(x => x.ErrorMessage);
-            Field(x => x.CorrectType, type: typeof(AttributeValueTypeType));
+            Field(x => x.CorrectTypes, type: typeof(ListGraphType<AttributeValueTypeType>));
+            Field(x => x.CurrentType, type: typeof(AttributeValueTypeType));
+        }
+    }
+    public class TemplateErrorAttributeGenericType : ObjectGraphType<TemplateErrorAttributeGeneric>
+    {
+        public TemplateErrorAttributeGenericType()
+        {
+            Field(x => x.ErrorMessage);
         }
     }
     public class TemplateErrorAttributeType : UnionGraphType
@@ -29,6 +37,7 @@ namespace LandscapePrototype.Entity.GraphQL
         {
             Type<TemplateErrorAttributeMissingType>();
             Type<TemplateErrorAttributeWrongTypeType>();
+            Type<TemplateErrorAttributeGenericType>();
         }
     }
 

@@ -10,19 +10,17 @@ import ChangesetPopup from "./ChangesetPopup";
 
 function RelatedCI(props) {
 
-  let visibleLayers = props.layers.filter(l => l.visibility).map(l => l.name);
-
   // TODO: loading
   const [removeRelation] = useMutation(mutations.REMOVE_RELATION, { 
     update: (cache, data) => {
       /* HACK: find a better way to deal with cache invalidation! We would like to invalidate the affected CIs, which 
       translates to multiple entries in the cache, because each CI can be cached multiple times for each layerhash
       */
-      data.data.mutate.affectedCIs.forEach(ci => {
-        var id = props.client.cache.identify(ci);
-        console.log("Evicting: " + id);
-        cache.evict(id);
-      });
+      // data.data.mutate.affectedCIs.forEach(ci => {
+      //   var id = props.client.cache.identify(ci);
+      //   console.log("Evicting: " + id);
+      //   cache.evict(id);
+      // });
     }
   });
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
@@ -41,7 +39,7 @@ function RelatedCI(props) {
   if (props.isEditable) {
     removeButton = <Button variant="danger" onClick={e => {
       e.preventDefault();
-      removeRelation({ variables: { layers: visibleLayers, fromCIID: props.related.relation.fromCIID, toCIID: props.related.relation.toCIID, predicateID: props.related.relation.predicate.id, layerID: props.related.relation.layerID } })
+      removeRelation({ variables: { fromCIID: props.related.relation.fromCIID, toCIID: props.related.relation.toCIID, predicateID: props.related.relation.predicate.id, layerID: props.related.relation.layerID } })
       .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
     }}>Remove</Button>;
   }

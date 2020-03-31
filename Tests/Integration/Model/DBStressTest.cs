@@ -30,7 +30,7 @@ namespace Tests.Integration.Model
             DBSetup.Setup();
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var userModel = new UserModel(conn);
+            var userModel = new UserInDatabaseModel(conn);
             var user = await DBSetup.SetupUser(userModel);
 
             using (var trans = conn.BeginTransaction())

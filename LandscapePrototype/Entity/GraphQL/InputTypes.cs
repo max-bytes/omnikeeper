@@ -38,7 +38,7 @@ namespace LandscapePrototype.Entity.GraphQL
         public string CI { get; private set; }
         public string Name { get; private set; }
         public long LayerID { get; private set; }
-        public AttributeValueGeneric Value { get; private set; }
+        public AttributeValueGenericScalar Value { get; private set; }
     }
     public class InsertCIAttributeInputType : InputObjectGraphType<InsertCIAttributeInput>
     {
@@ -67,7 +67,7 @@ namespace LandscapePrototype.Entity.GraphQL
         }
     }
 
-    public class AttributeValueGenericInputType : InputObjectGraphType<AttributeValueGeneric>
+    public class AttributeValueGenericInputType : InputObjectGraphType<AttributeValueGenericScalar>
     {
         public AttributeValueGenericInputType()
         {

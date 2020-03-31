@@ -13,7 +13,7 @@ namespace LandscapePrototype.Model.Cached
 
         private readonly Dictionary<long, Layer> IDLayerCache = new Dictionary<long, Layer>();
         private readonly Dictionary<string, Layer> NameLayerCache = new Dictionary<string, Layer>();
-        private IEnumerable<Layer> AllLayersHash = null;
+        private IEnumerable<Layer> AllLayersCache = null;
 
         public CachedLayerModel(ILayerModel model)
         {
@@ -22,8 +22,11 @@ namespace LandscapePrototype.Model.Cached
 
         private Layer AddToCache(Layer l)
         {
-            IDLayerCache.Add(l.ID, l);
-            NameLayerCache.Add(l.Name, l);
+            if (l != null)
+            {
+                IDLayerCache.Add(l.ID, l);
+                NameLayerCache.Add(l.Name, l);
+            }
             return l;
         }
 
@@ -55,11 +58,11 @@ namespace LandscapePrototype.Model.Cached
 
         public async Task<IEnumerable<Layer>> GetLayers(NpgsqlTransaction trans)
         {
-            if (AllLayersHash == null)
+            if (AllLayersCache == null)
             {
-                AllLayersHash = await Model.GetLayers(trans);
+                AllLayersCache = await Model.GetLayers(trans);
             }
-            return AllLayersHash;
+            return AllLayersCache;
         }
     }
 }

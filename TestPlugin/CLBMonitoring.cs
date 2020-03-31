@@ -17,7 +17,7 @@ namespace TestPlugin
     {
         private readonly IRelationModel relationModel;
 
-        public CLBMonitoring(ICIModel ciModel, ILayerModel layerModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserModel userModel, NpgsqlConnection conn) 
+        public CLBMonitoring(ICIModel ciModel, ILayerModel layerModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn) 
             : base(ciModel, layerModel, changesetModel, userModel, conn)
         {
             this.relationModel = relationModel;
@@ -82,7 +82,7 @@ namespace TestPlugin
 
             // assign monitored cis to naemon instances
             var monitoredByCIIDPairs = new List<(string, string)>();
-            var naemonInstances = await ciModel.GetMergedCIsWithType(layerSetMonitoringDefinitionsOnly, trans, DateTimeOffset.Now, "Naemon Instance");
+            var naemonInstances = await ciModel.GetMergedCIsByType(layerSetMonitoringDefinitionsOnly, trans, DateTimeOffset.Now, "Naemon Instance");
             foreach (var naemonInstance in naemonInstances)
                 foreach (var monitoredCI in monitoredCIs)
                     monitoredByCIIDPairs.Add((monitoredCI.Value.Identity, naemonInstance.Identity));

@@ -3,8 +3,8 @@ import { Fragments } from './fragments';
 
 export const mutations = {
     INSERT_CI_ATTRIBUTE: gql`
-    mutation InsertCIAttribute($layers: [String]!, $ciIdentity: String!, $name: String!, $layerID: Long!, $value: AttributeValueGenericInputType!) {
-      mutate(layers: $layers, insertAttributes: [
+    mutation InsertCIAttribute($ciIdentity: String!, $name: String!, $layerID: Long!, $value: AttributeValueGenericInputType!) {
+      mutate(insertAttributes: [
         {
           ci: $ciIdentity,
           name: $name,
@@ -17,8 +17,8 @@ export const mutations = {
     }
   `,
   REMOVE_CI_ATTRIBUTE: gql`
-    mutation RemoveCIAttribute($layers: [String]!, $ciIdentity: String!, $name: String!, $layerID: Long!, $includeAttributes: Boolean = false, $includeRelated: Boolean = false) {
-      mutate(layers: $layers, removeAttributes: [
+    mutation RemoveCIAttribute($ciIdentity: String!, $name: String!, $layerID: Long!, $includeAttributes: Boolean = false, $includeRelated: Boolean = false) {
+      mutate(removeAttributes: [
         {
           ci: $ciIdentity,
           name: $name,
@@ -38,8 +38,8 @@ export const mutations = {
   `,
 
   INSERT_RELATION: gql`
-  mutation InsertRelation($layers: [String]!, $fromCIID: String!, $toCIID: String!, $predicateID: String!, $layerID: Long!) {
-    mutate(layers: $layers, insertRelations: [
+  mutation InsertRelation($fromCIID: String!, $toCIID: String!, $predicateID: String!, $layerID: Long!) {
+    mutate(insertRelations: [
       {
         fromCIID: $fromCIID,
         toCIID: $toCIID,
@@ -53,8 +53,8 @@ export const mutations = {
 `,
 
 REMOVE_RELATION: gql`
-mutation RemoveRelation($layers: [String]!, $fromCIID: String!, $toCIID: String!, $predicateID: String!, $layerID: Long!, $includeAttributes: Boolean = false, $includeRelated: Boolean = false) {
-  mutate(layers: $layers, removeRelations: [
+mutation RemoveRelation($fromCIID: String!, $toCIID: String!, $predicateID: String!, $layerID: Long!, $includeAttributes: Boolean = false, $includeRelated: Boolean = false) {
+  mutate(removeRelations: [
     {
       fromCIID: $fromCIID,
       toCIID: $toCIID,
