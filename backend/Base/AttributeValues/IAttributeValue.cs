@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
-namespace LandscapePrototype.Entity.AttributeValues
+namespace LandscapeRegistry.Entity.AttributeValues
 {
     public enum AttributeValueType
     {

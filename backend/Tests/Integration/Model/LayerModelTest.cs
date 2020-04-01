@@ -1,7 +1,7 @@
-﻿using LandscapePrototype;
-using LandscapePrototype.Entity.AttributeValues;
-using LandscapePrototype.Model;
-using LandscapePrototype.Utils;
+﻿using LandscapeRegistry;
+using LandscapeRegistry.Entity.AttributeValues;
+using LandscapeRegistry.Model;
+using LandscapeRegistry.Utils;
 using Microsoft.DotNet.InternalAbstractions;
 using Npgsql;
 using NUnit.Framework;

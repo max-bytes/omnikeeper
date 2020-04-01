@@ -1,5 +1,5 @@
-﻿using LandscapePrototype.Entity;
-using LandscapePrototype.Model;
+﻿using LandscapeRegistry.Entity;
+using LandscapeRegistry.Model;
 using Npgsql;
 using System;
 using System.Collections.Generic;

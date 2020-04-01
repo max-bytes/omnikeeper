@@ -16,7 +16,7 @@ import ApolloWrapper from './components/ApolloWrapper';
 
 const keycloak = new Keycloak({
   "realm": "landscape",
-  "url": "http://host.docker.internal:8090/auth/",
+  "url": "https://host.docker.internal:8443/auth/",
   "ssl-required": "none",
   "resource": "landscape",
   "clientId": "landscape-registry-frontend",

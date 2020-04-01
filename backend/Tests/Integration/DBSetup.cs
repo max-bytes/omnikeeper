@@ -1,6 +1,6 @@
 ﻿using Landscape.Base.Model;
-using LandscapePrototype.Controllers;
-using LandscapePrototype.Entity;
+using LandscapeRegistry.Controllers;
+using LandscapeRegistry.Entity;
 using Microsoft.DotNet.InternalAbstractions;
 using Npgsql;
 using System;

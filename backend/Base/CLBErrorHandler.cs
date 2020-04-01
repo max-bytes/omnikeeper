@@ -1,6 +1,6 @@
 ﻿using Landscape.Base.Model;
-using LandscapePrototype.Entity;
-using LandscapePrototype.Entity.AttributeValues;
+using LandscapeRegistry.Entity;
+using LandscapeRegistry.Entity.AttributeValues;
 using Npgsql;
 using System;
 using System.Collections.Generic;

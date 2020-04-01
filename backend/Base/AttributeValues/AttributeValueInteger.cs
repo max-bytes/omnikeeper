@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LandscapePrototype.Entity.AttributeValues
+namespace LandscapeRegistry.Entity.AttributeValues
 {
     public abstract class AttributeValueInteger : IAttributeValue
     {

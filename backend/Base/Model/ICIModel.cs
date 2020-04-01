@@ -1,7 +1,7 @@
-﻿using LandscapePrototype;
-using LandscapePrototype.Entity;
-using LandscapePrototype.Entity.AttributeValues;
-using LandscapePrototype.Model;
+﻿using LandscapeRegistry;
+using LandscapeRegistry.Entity;
+using LandscapeRegistry.Entity.AttributeValues;
+using LandscapeRegistry.Model;
 using Npgsql;
 using System;
 using System.Collections.Generic;

@@ -1,5 +1,5 @@
-﻿using LandscapePrototype;
-using LandscapePrototype.Entity;
+﻿using LandscapeRegistry;
+using LandscapeRegistry.Entity;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,12 +1,12 @@
 
 using Landscape.Base.Model;
-using LandscapePrototype.Entity.AttributeValues;
+using LandscapeRegistry.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LandscapePrototype.Entity
+namespace LandscapeRegistry.Entity
 {
     public enum AttributeState
     {

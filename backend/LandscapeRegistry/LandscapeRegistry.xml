@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>LandscapeRegistry</name>
+    </assembly>
+    <members>
+        <member name="M:LandscapeRegistry.Controllers.CIController.GetAllCITypes">
+            <summary>
+            list of all CI-types
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LandscapeRegistry.Controllers.CIController.GetAllCIIDs">
+            <summary>
+            list of all CI-IDs
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LandscapeRegistry.Controllers.CIController.GetMergedCIsByType(System.Int64[],System.String[],System.Nullable{System.DateTimeOffset})">
+            <summary>
+            list of merged CIs with a specific CI-type
+            </summary>
+            <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
+            <param name="CITypeIDs"></param>
+            <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
+            <returns></returns>
+        </member>
+        <member name="M:LandscapeRegistry.Controllers.CIController.GetSimplifiedCIsByType(System.Int64[],System.String[],System.Nullable{System.DateTimeOffset})">
+            <summary>
+            list of merged CIs with speficied CI-types, in a simplified form
+            </summary>
+            <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
+            <param name="CITypeIDs"></param>
+            <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
+            <returns></returns>
+        </member>
+        <member name="M:LandscapeRegistry.Controllers.CIController.GetSimplifiedCIByID(System.Int64[],System.String,System.Nullable{System.DateTimeOffset})">
+            <summary>
+            single CI by CI-ID, in a simplified form
+            </summary>
+            <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
+            <param name="CIID"></param>
+            <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
+            <returns></returns>
+        </member>
+        <member name="M:LandscapeRegistry.Controllers.LayerController.GetAllLayers">
+            <summary>
+            list of all layers
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LandscapeRegistry.Controllers.LayerController.GetLayerByName(System.String)">
+            <summary>
+            get a layer by name
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:EnumerableExtensions.FindIndex``1(System.Collections.Generic.IEnumerable{``0},System.Func{``0,System.Boolean})">
+            <summary>Finds the index of the first item matching an expression in an enumerable.</summary>
+            <param name="items">The enumerable to search.</param>
+            <param name="predicate">The expression to test the items against.</param>
+            <returns>The index of the first matching item, or -1 if no items match.</returns>
+        </member>
+        <member name="M:EnumerableExtensions.IndexOf``1(System.Collections.Generic.IEnumerable{``0},``0)">
+            <summary>Finds the index of the first occurrence of an item in an enumerable.</summary>
+            <param name="items">The enumerable to search.</param>
+            <param name="item">The item to find.</param>
+            <returns>The index of the first matching item, or -1 if the item was not found.</returns>
+        </member>
+    </members>
+</doc>

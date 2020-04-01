@@ -1,11 +1,11 @@
 ﻿
-using LandscapePrototype.Model;
+using LandscapeRegistry.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LandscapePrototype.Entity
+namespace LandscapeRegistry.Entity
 {
     public class CIType
     {

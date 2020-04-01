@@ -1,7 +1,7 @@
-using LandscapePrototype.Entity.AttributeValues;
+using LandscapeRegistry.Entity.AttributeValues;
 using System;
 
-namespace LandscapePrototype.Entity
+namespace LandscapeRegistry.Entity
 {
     public enum RelationState
     {

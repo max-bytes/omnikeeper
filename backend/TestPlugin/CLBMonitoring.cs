@@ -2,9 +2,9 @@
 using Landscape.Base;
 using Landscape.Base.Model;
 using Landscape.Base.Templating;
-using LandscapePrototype.Entity;
-using LandscapePrototype.Entity.AttributeValues;
-using LandscapePrototype.Model;
+using LandscapeRegistry.Entity;
+using LandscapeRegistry.Entity.AttributeValues;
+using LandscapeRegistry.Model;
 using Npgsql;
 using System;
 using System.Collections.Generic;

@@ -1,11 +1,11 @@
 ﻿using GraphQL;
 using GraphQL.Execution;
 using GraphQL.Types;
-using LandscapePrototype.Entity;
-using LandscapePrototype.Entity.AttributeValues;
-using LandscapePrototype.Entity.GraphQL;
-using LandscapePrototype.Model;
-using LandscapePrototype.Utils;
+using LandscapeRegistry.Entity;
+using LandscapeRegistry.Entity.AttributeValues;
+using LandscapeRegistry.Entity.GraphQL;
+using LandscapeRegistry.Model;
+using LandscapeRegistry.Utils;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
