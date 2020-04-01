@@ -1,3 +1,0 @@
-Start keycloak server:
-
-docker run -p 8090:8080 -d -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=123123 jboss/keycloak
