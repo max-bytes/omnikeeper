@@ -19,7 +19,7 @@ const keycloak = new Keycloak({
   "url": "http://host.docker.internal:8090/auth/",
   "ssl-required": "none",
   "resource": "landscape",
-  "clientId": "landscape",
+  "clientId": "landscape-registry-frontend",
   "public-client": true,
   "verify-token-audience": true,
   "use-resource-role-mappings": true,

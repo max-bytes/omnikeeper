@@ -43,7 +43,7 @@ function AttributeList(props) {
           {sortedAttributes.map((a, index) => {
             var isLayerWritable = props.visibleAndWritableLayers.some(l => l.id === a.layerStackIDs[a.layerStackIDs.length - 1]);
             return (<Flipped key={a.attribute.name} flipId={a.attribute.name} onAppear={onAppear} onExit={onExit}>
-              <Attribute style={{padding: '5px 0px', backgroundColor: ((index % 2 === 0) ? '#00000011' : '#00000000')}} attribute={a} ciIdentity={props.ciIdentity} isEditable={props.isEditable && isLayerWritable}></Attribute>
+              <Attribute style={{padding: '5px 0px', backgroundColor: ((index % 2 === 1) ? '#00000009' : '#00000000')}} attribute={a} ciIdentity={props.ciIdentity} isEditable={props.isEditable && isLayerWritable}></Attribute>
             </Flipped>);
           })}
         </Flipper>

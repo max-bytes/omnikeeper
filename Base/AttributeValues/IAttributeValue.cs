@@ -90,7 +90,16 @@ namespace LandscapePrototype.Entity.AttributeValues
             };
         }
 
-        public string Value2DatabaseString() => $"{(IsArray ? "A" : "S")}{MergeValues(Values)}"; // TODO: correct?
+        public string Value2DatabaseString() {
+            if (IsArray)
+            {
+                return $"A{MarshalValues(Values)}";
+            } else
+            {
+                return $"S{Value}";
+            }
+            
+        }
 
         public static AttributeValueGeneric BuildFromDatabase(string value, AttributeValueType type)
         {
@@ -98,17 +107,17 @@ namespace LandscapePrototype.Entity.AttributeValues
             var finalValue = value.Substring(1);
             if (multiplicityIndicator == "A")
             {
-                var finalValues = SplitValues(finalValue);
+                var finalValues = UnmarshalValues(finalValue);
                 return Build(finalValues, type);
             }
             else
                 return Build(finalValue, type);
         }
-        public static string MergeValues(string[] values)
+        public static string MarshalValues(string[] values)
         {
             return string.Join(",", values.Select(value => value.Replace("\\", "\\\\").Replace(",", "\\,")));
         }
-        public static string[] SplitValues(string value)
+        public static string[] UnmarshalValues(string value)
         {
             var values = value.Tokenize(',', '\\');
             return values.Select(v => v.Replace("\\\\", "\\")).ToArray();

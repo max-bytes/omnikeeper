@@ -147,6 +147,12 @@ namespace LandscapePrototype.Model
             var cis = await GetMergedCIs(layers, true, trans, atTime);
             return cis.Where(ci => ci.Type.ID == typeID);
         }
+        public async Task<IEnumerable<MergedCI>> GetMergedCIsByType(LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime, IEnumerable<string> typeIDs)
+        {
+            // TODO: performance improvements
+            var cis = await GetMergedCIs(layers, true, trans, atTime);
+            return cis.Where(ci => typeIDs.Contains(ci.Type.ID));
+        }
 
         public async Task<IEnumerable<string>> GetCIIDs(NpgsqlTransaction trans)
         {

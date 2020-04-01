@@ -52,29 +52,45 @@ namespace LandscapePrototype.Controllers
         /// list of merged CIs with a specific CI-type
         /// </summary>
         /// <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
-        /// <param name="CITypeID"></param>
+        /// <param name="CITypeIDs"></param>
         /// <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
         /// <returns></returns>
-        [HttpGet("getMergedCIsWithType")]
-        public async Task<ActionResult<IEnumerable<MergedCI>>> GetMergedCIsWithType([FromQuery,Required]long[] layerIDs, [FromQuery,Required]string CITypeID, [FromQuery]DateTimeOffset? atTime = null)
+        [HttpGet("getMergedCIsByType")]
+        public async Task<ActionResult<IEnumerable<MergedCI>>> GetMergedCIsByType([FromQuery,Required]long[] layerIDs, [FromQuery,Required]string[] CITypeIDs, [FromQuery]DateTimeOffset? atTime = null)
         {
             var layerset = new LayerSet(layerIDs);
-            return Ok(await ciModel.GetMergedCIsByType(layerset, null, atTime ?? DateTimeOffset.Now, CITypeID));
+            return Ok(await ciModel.GetMergedCIsByType(layerset, null, atTime ?? DateTimeOffset.Now, CITypeIDs));
         }
 
         /// <summary>
-        /// list of merged CIs with a specific CI-type, in a simplified form
+        /// list of merged CIs with speficied CI-types, in a simplified form
         /// </summary>
         /// <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
-        /// <param name="CITypeID"></param>
+        /// <param name="CITypeIDs"></param>
         /// <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
         /// <returns></returns>
         [HttpGet("getSimplifiedCIsByType")]
-        public async Task<ActionResult<IEnumerable<SimplifiedCI>>> GetSimplifiedCIsByType([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string CITypeID, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<SimplifiedCI>>> GetSimplifiedCIsByType([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string[] CITypeIDs, [FromQuery]DateTimeOffset? atTime = null)
         {
             var layerset = new LayerSet(layerIDs);
-            var cis = await ciModel.GetMergedCIsByType(layerset, null, atTime ?? DateTimeOffset.Now, CITypeID);
+            var cis = await ciModel.GetMergedCIsByType(layerset, null, atTime ?? DateTimeOffset.Now, CITypeIDs);
             return Ok(cis.Select(ci => SimplifiedCI.Build(ci)));
+        }
+
+        /// <summary>
+        /// single CI by CI-ID, in a simplified form
+        /// </summary>
+        /// <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
+        /// <param name="CIID"></param>
+        /// <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
+        /// <returns></returns>
+        [HttpGet("getSimplifiedCIByID")]
+        public async Task<ActionResult<SimplifiedCI>> GetSimplifiedCIByID([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string CIID, [FromQuery]DateTimeOffset? atTime = null)
+        {
+            var layerset = new LayerSet(layerIDs);
+            var ci = await ciModel.GetMergedCI(CIID, layerset, null, atTime ?? DateTimeOffset.Now);
+            if (ci == null) return NotFound();
+            return Ok(SimplifiedCI.Build(ci));
         }
     }
 }
