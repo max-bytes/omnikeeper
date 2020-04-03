@@ -28,6 +28,7 @@ namespace Tests.Integration.GraphQL
             Services.Register<LandscapeQuery>();
             Services.Register<MergedCIType>();
             Services.Register<CIModel>();
+            Services.Register<AttributeModel>();
             Services.Register<UserInDatabaseModel>();
             Services.Register<LayerModel>();
             Services.Register<RelationModel>();
@@ -55,6 +56,7 @@ namespace Tests.Integration.GraphQL
             var username = "testUser";
             var userGUID = new Guid("7dc848b7-881d-4785-9f25-985e9b6f2715");
             var ciModel = Services.Get<CIModel>();
+            var attributeModel = Services.Get<AttributeModel>();
             var layerModel = Services.Get<LayerModel>();
             var changesetModel = Services.Get<ChangesetModel>();
             var userModel = Services.Get<UserInDatabaseModel>();
@@ -64,7 +66,7 @@ namespace Tests.Integration.GraphQL
             var layerID2 = await layerModel.CreateLayer("layer_2", trans);
             var user = User.Build(await userModel.CreateOrUpdateFetchUser(username, userGUID, UserType.Robot, trans), new List<Layer>());
             var changeset = await changesetModel.CreateChangeset(user.InDatabase.ID, trans);
-            await ciModel.InsertAttribute("a1", AttributeValueIntegerScalar.Build(3), layerID1, ciid1, changeset.ID, trans);
+            await attributeModel.InsertAttribute("a1", AttributeValueIntegerScalar.Build(3), layerID1, ciid1, changeset.ID, trans);
             trans.Commit();
 
             string query = @"

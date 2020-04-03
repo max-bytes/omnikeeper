@@ -28,12 +28,12 @@ namespace LandscapeRegistry.Model
         public async Task<TemplateErrorsCI> CalculateTemplateErrors(MergedCI ci, NpgsqlTransaction trans)
         {
             var templates = await TemplatesProvider.GetTemplates(trans);
-            var attributesTemplates = templates.GetAttributesTemplate(ci.Type);
+            var attributesTemplates = templates.GetTemplate(ci.Type)?.AttributeTemplates;
 
             if (attributesTemplates == null) return TemplateErrorsCI.Build(new Dictionary<string, TemplateErrorsAttribute>());
 
             return TemplateErrorsCI.Build(
-                attributesTemplates.Attributes.Values
+                attributesTemplates.Values
                 .Select(at => (at.Name, CalculateTemplateErrorsAttribute(ci, at)))
                 .Where(t => !t.Item2.Errors.IsEmpty())
                 .ToDictionary(t => t.Name, t => t.Item2)

@@ -16,10 +16,12 @@ namespace TestPlugin
     public class CLBMonitoring : CLBBase
     {
         private readonly IRelationModel relationModel;
+        private readonly ICIModel ciModel;
 
-        public CLBMonitoring(ICIModel ciModel, ILayerModel layerModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn) 
-            : base(ciModel, layerModel, changesetModel, userModel, conn)
+        public CLBMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn) 
+            : base(atributeModel, layerModel, changesetModel, userModel, conn)
         {
+            this.ciModel = ciModel;
             this.relationModel = relationModel;
         }
 
@@ -78,7 +80,7 @@ namespace TestPlugin
                     );
                 }
             }
-            await ciModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.commands", layerID, monitoringCommandFragments), changeset.ID, trans);
+            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.commands", layerID, monitoringCommandFragments), changeset.ID, trans);
 
             // assign monitored cis to naemon instances
             var monitoredByCIIDPairs = new List<(string, string)>();
@@ -100,7 +102,7 @@ namespace TestPlugin
                 var finalConfig = string.Join("\n", commands);
                 monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("naemonConfig", AttributeValueTextScalar.Build(finalConfig, true), naemonInstance));
             }
-            await ciModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring", layerID, monitoringConfigs), changeset.ID, trans);
+            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring", layerID, monitoringConfigs), changeset.ID, trans);
 
             return true;
         }

@@ -36,7 +36,8 @@ namespace Tests.Integration.Model
             using (var trans = conn.BeginTransaction())
             {
                 var changesetModel = new ChangesetModel(userModel, conn);
-                var model = new CIModel(conn);
+                var attributeModel = new AttributeModel(conn);
+                var model = new CIModel(attributeModel, conn);
                 var layerModel = new LayerModel(conn);
 
                 var numCIs = 500;
@@ -79,7 +80,7 @@ namespace Tests.Integration.Model
                     var value = AttributeValueTextScalar.Build("V" + RandomString.Generate(8, random));
                     var layer = layerIDs.GetRandom(random);
                     var ciid = cis.GetRandom(random).Item1;
-                    return model.InsertAttribute(name, value, layer, ciid, changeset.ID, trans).GetAwaiter().GetResult();
+                    return attributeModel.InsertAttribute(name, value, layer, ciid, changeset.ID, trans).GetAwaiter().GetResult();
                 }).ToList();
 
                 await trans.CommitAsync();
@@ -96,7 +97,8 @@ namespace Tests.Integration.Model
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             using var trans = conn.BeginTransaction();
-            var model = new CIModel(conn);
+            var attributeModel = new AttributeModel(conn);
+            var model = new CIModel(attributeModel, conn);
             var layerModel = new LayerModel(conn);
 
             var layerset = layerModel.BuildLayerSet(layerNames.ToArray(), trans).GetAwaiter().GetResult();
@@ -105,7 +107,7 @@ namespace Tests.Integration.Model
             timer.Start();
             foreach (var ciName in ciNames)
             {
-                var a1 = await model.GetMergedAttributes(ciName, false, layerset, trans, DateTimeOffset.Now);
+                var a1 = await attributeModel.GetMergedAttributes(ciName, false, layerset, trans, DateTimeOffset.Now);
 
                 //Console.WriteLine($"{ciName} count: {a1.Count()}");
                 //foreach (var aa in a1)

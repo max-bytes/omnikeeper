@@ -29,7 +29,8 @@ namespace Tests.DBInit
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build("landscape_prototype", false, true);
 
-            var ciModel = new CIModel(conn);
+            var attributeModel = new AttributeModel(conn);
+            var ciModel = new CIModel(attributeModel, conn);
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var layerModel = new LayerModel(conn);
@@ -119,7 +120,7 @@ namespace Tests.DBInit
                     var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                     var name = regularAttributeNames.GetRandom(random);
                     var value = regularAttributeValues.GetRandom(random);
-                    await ciModel.InsertAttribute(name, value, cmdbLayerID, ciid, changeset.ID, trans);
+                    await attributeModel.InsertAttribute(name, value, cmdbLayerID, ciid, changeset.ID, trans);
                     // TODO: attribute removals
                     trans.Commit();
                 }
@@ -147,9 +148,9 @@ namespace Tests.DBInit
                 await ciModel.CreateCIWithType("MON_MODULE_HOST_WINDOWS", "Monitoring Check Module", null);
                 await ciModel.CreateCIWithType("MON_MODULE_HOST_LINUX", "Monitoring Check Module", null);
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await ciModel.InsertAttribute("monitoring.commands.check_host_cmd", AttributeValueTextScalar.Build("check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
-                await ciModel.InsertAttribute("monitoring.commands.check_windows_host_cmd", AttributeValueTextScalar.Build("check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
-                await ciModel.InsertAttribute("monitoring.commands.check_linux_host_cmd", AttributeValueTextScalar.Build("check_linux_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
+                await attributeModel.InsertAttribute("monitoring.commands.check_host_cmd", AttributeValueTextScalar.Build("check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST", changeset.ID, trans);
+                await attributeModel.InsertAttribute("monitoring.commands.check_windows_host_cmd", AttributeValueTextScalar.Build("check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST_WINDOWS", changeset.ID, trans);
+                await attributeModel.InsertAttribute("monitoring.commands.check_linux_host_cmd", AttributeValueTextScalar.Build("check_linux_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, "MON_MODULE_HOST_LINUX", changeset.ID, trans);
                 trans.Commit();
             }
 

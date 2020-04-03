@@ -10,7 +10,7 @@ namespace LandscapeRegistry.Entity.GraphQL
 {
     public class LandscapeMutation : ObjectGraphType
     {
-        public LandscapeMutation(CIModel ciModel, LayerModel layerModel, TemplateModel templateModel, RelationModel relationModel, ChangesetModel changesetModel, NpgsqlConnection conn)
+        public LandscapeMutation(CIModel ciModel, AttributeModel attributeModel, LayerModel layerModel, TemplateModel templateModel, RelationModel relationModel, ChangesetModel changesetModel, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutate",
               arguments: new QueryArguments(
@@ -49,7 +49,7 @@ namespace LandscapeRegistry.Entity.GraphQL
                       {
                           var nonGenericAttributeValue = AttributeValueBuilder.Build(attribute.Value);
 
-                          insertedAttributes.Add(await ciModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, attribute.LayerID, ciIdentity, changeset.ID, transaction));
+                          insertedAttributes.Add(await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, attribute.LayerID, ciIdentity, changeset.ID, transaction));
                       }
                   }
 
@@ -60,7 +60,7 @@ namespace LandscapeRegistry.Entity.GraphQL
                       // look for ciid
                       var ciIdentity = attributeGroup.Key;
                       foreach (var attribute in attributeGroup) {
-                          removedAttributes.Add(await ciModel.RemoveAttribute(attribute.Name, attribute.LayerID, ciIdentity, changeset.ID, transaction));
+                          removedAttributes.Add(await attributeModel.RemoveAttribute(attribute.Name, attribute.LayerID, ciIdentity, changeset.ID, transaction));
                       }
                   }
 

@@ -79,6 +79,13 @@ namespace LandscapeRegistry.Entity.GraphQL
                 var userContext = context.UserContext as LandscapeUserContext;
                 return await templateModel.CalculateTemplateErrors(context.Source, userContext.Transaction);
             });
+
+            //FieldAsync<ListGraphType<EffectiveTraitType>>("effectiveTraits",
+            //resolve: async (context) =>
+            //{
+            //    var userContext = context.UserContext as LandscapeUserContext;
+            //    //TODO
+            //});
         }
     }
 

@@ -61,7 +61,7 @@ namespace LandscapeRegistry.Entity.Template
     {
         public string Name { get; private set; }
         public string Description { get; private set; } // TODO: use description
-        public AttributeValueType? Type { get; private set; }
+        public AttributeValueType? Type { get; private set; } // TODO: could be more than one type allowed
         public bool? IsArray { get; private set; }
         // TODO: status: required(default, other statii: optional, not allowed)
         // TODO: required layer (optional)
@@ -85,18 +85,16 @@ namespace LandscapeRegistry.Entity.Template
         }
     }
 
-    public class CIAttributesTemplate
-    {
-        public CIType CIType { get; private set; }
-        public IImmutableDictionary<string, CIAttributeTemplate> Attributes { get; private set; }
+    //public class CIAttributeTemplates
+    //{
+    //    public IImmutableDictionary<string, CIAttributeTemplate> Attributes { get; private set; }
 
-        public static CIAttributesTemplate Build(CIType ciType, IList<CIAttributeTemplate> attributes)
-        {
-            return new CIAttributesTemplate()
-            {
-                CIType = ciType,
-                Attributes = attributes.ToImmutableDictionary(a => a.Name)
-            };
-        }
-    }
+    //    public static CIAttributeTemplates Build(IList<CIAttributeTemplate> attributes)
+    //    {
+    //        return new CIAttributeTemplates()
+    //        {
+    //            Attributes = attributes.ToImmutableDictionary(a => a.Name)
+    //        };
+    //    }
+    //}
 }

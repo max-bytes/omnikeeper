@@ -16,17 +16,17 @@ namespace Landscape.Base
         private readonly string clbName;
         private readonly long clbLayerID;
         private readonly long changesetID;
-        private readonly ICIModel ciModel;
+        private readonly IAttributeModel attributeModel;
 
         private readonly IList<CIAttribute> writtenErrors = new List<CIAttribute>();
 
-        public CLBErrorHandler(NpgsqlTransaction trans, string clbName, long clbLayerID, long changesetID, ICIModel ciModel)
+        public CLBErrorHandler(NpgsqlTransaction trans, string clbName, long clbLayerID, long changesetID, IAttributeModel attributeModel)
         {
             this.trans = trans;
             this.clbName = clbName;
             this.clbLayerID = clbLayerID;
             this.changesetID = changesetID;
-            this.ciModel = ciModel;
+            this.attributeModel = attributeModel;
         }
 
         private string AttributeNamePrefix => $"__error.clb.{clbName}";
@@ -35,7 +35,7 @@ namespace Landscape.Base
         // TODO: rewrite into using bulk replace?
         public async Task RemoveOutdatedErrors()
         {
-            var allAttributes = await ciModel.FindAttributesByName($"{AttributeNamePrefix}%", false, clbLayerID, trans, DateTimeOffset.Now);
+            var allAttributes = await attributeModel.FindAttributesByName($"{AttributeNamePrefix}%", false, clbLayerID, trans, DateTimeOffset.Now);
 
             var attributesToRemove = allAttributes.Where(a =>
             {
@@ -44,13 +44,13 @@ namespace Landscape.Base
 
             foreach(var remove in attributesToRemove)
             {
-                await ciModel.RemoveAttribute(remove.Name, clbLayerID, remove.CIID, changesetID, trans);
+                await attributeModel.RemoveAttribute(remove.Name, clbLayerID, remove.CIID, changesetID, trans);
             }
         }
 
         public async Task LogError(string ciid, string name, string message)
         {
-            var a = await ciModel.InsertAttribute($"{AttributeNamePrefix}.{name}", AttributeValueTextScalar.Build(message), clbLayerID, ciid, changesetID, trans);
+            var a = await attributeModel.InsertAttribute($"{AttributeNamePrefix}.{name}", AttributeValueTextScalar.Build(message), clbLayerID, ciid, changesetID, trans);
             writtenErrors.Add(a);
         }
     }

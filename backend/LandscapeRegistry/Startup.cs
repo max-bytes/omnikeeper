@@ -97,6 +97,8 @@ namespace LandscapeRegistry
             // TODO: remove AddScoped<Model>(), only use AddScoped<IModel, Model>()
             services.AddScoped<ICIModel, CIModel>();
             services.AddScoped<CIModel>();
+            services.AddScoped<IAttributeModel, AttributeModel>();
+            services.AddScoped<AttributeModel>();
             services.AddScoped<IUserInDatabaseModel, UserInDatabaseModel>();
             services.AddScoped<UserInDatabaseModel>();
             services.AddScoped<ILayerModel, LayerModel>();

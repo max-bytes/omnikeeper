@@ -32,7 +32,8 @@ namespace Tests.Integration.Model
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
-            var ciModel = new CIModel(conn);
+            var attributeModel = new AttributeModel(conn);
+            var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
             var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
@@ -101,8 +102,9 @@ namespace Tests.Integration.Model
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             using var trans = conn.BeginTransaction();
             var userModel = new UserInDatabaseModel(conn);
-            var changesetModel = new ChangesetModel(userModel, conn);
-            var ciModel = new CIModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn); 
+            var attributeModel = new AttributeModel(conn);
+            var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
             var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
@@ -137,7 +139,8 @@ namespace Tests.Integration.Model
             using var trans = conn.BeginTransaction();
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
-            var ciModel = new CIModel(conn);
+            var attributeModel = new AttributeModel(conn);
+            var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
             var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
@@ -172,8 +175,9 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            
-            var ciModel = new CIModel(conn);
+
+            var attributeModel = new AttributeModel(conn);
+            var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
             var relationModel = new RelationModel(predicateModel, conn);
             var userModel = new UserInDatabaseModel(conn);
@@ -231,7 +235,8 @@ namespace Tests.Integration.Model
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
-            var ciModel = new CIModel(conn);
+            var attributeModel = new AttributeModel(conn);
+            var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
             var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);

@@ -12,15 +12,15 @@ namespace Landscape.Base
 {
     public abstract class CLBBase : IComputeLayerBrain
     {
-        protected readonly ICIModel ciModel;
+        protected readonly IAttributeModel attributeModel;
         protected readonly IUserInDatabaseModel userModel;
         protected readonly IChangesetModel changesetModel;
         protected readonly ILayerModel layerModel;
         protected readonly NpgsqlConnection conn;
 
-        public CLBBase(ICIModel ciModel, ILayerModel layerModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
+        public CLBBase(IAttributeModel attributeModel, ILayerModel layerModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
         {
-            this.ciModel = ciModel;
+            this.attributeModel = attributeModel;
             this.userModel = userModel;
             this.changesetModel = changesetModel;
             this.conn = conn;
@@ -52,7 +52,7 @@ namespace Landscape.Base
                 var user = await userModel.CreateOrUpdateFetchUser(username, guid, UserType.Robot, trans);
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
 
-                var errorHandler = new CLBErrorHandler(trans, Name, layer.ID, changeset.ID, ciModel);
+                var errorHandler = new CLBErrorHandler(trans, Name, layer.ID, changeset.ID, attributeModel);
 
                 var result = await Run(layer.ID, changeset, errorHandler, trans);
 
