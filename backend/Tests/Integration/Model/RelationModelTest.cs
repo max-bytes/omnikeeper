@@ -2,6 +2,7 @@
 using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
+using LandscapeRegistry.Model.Cached;
 using LandscapeRegistry.Utils;
 using Microsoft.DotNet.InternalAbstractions;
 using Npgsql;
@@ -32,7 +33,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var ciModel = new CIModel(conn);
-            var predicateModel = new PredicateModel(conn);
+            var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
             var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
@@ -102,7 +103,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var ciModel = new CIModel(conn);
-            var predicateModel = new PredicateModel(conn);
+            var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
             var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
@@ -137,7 +138,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var ciModel = new CIModel(conn);
-            var predicateModel = new PredicateModel(conn);
+            var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
             var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
@@ -173,7 +174,7 @@ namespace Tests.Integration.Model
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             
             var ciModel = new CIModel(conn);
-            var predicateModel = new PredicateModel(conn);
+            var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
             var relationModel = new RelationModel(predicateModel, conn);
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
@@ -231,7 +232,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var ciModel = new CIModel(conn);
-            var predicateModel = new PredicateModel(conn);
+            var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
             var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);

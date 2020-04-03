@@ -1,6 +1,7 @@
 ﻿using LandscapeRegistry;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
+using LandscapeRegistry.Model.Cached;
 using LandscapeRegistry.Utils;
 using Microsoft.DotNet.InternalAbstractions;
 using Npgsql;
@@ -31,16 +32,14 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var ciModel = new CIModel(conn);
-            var predicateModel = new PredicateModel(conn);
+            var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
             var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
 
-            using var trans = conn.BeginTransaction();
-            var ciid1 = await ciModel.CreateCI("H123", trans);
-            var ciid2 = await ciModel.CreateCI("H456", trans);
-            var ciid3 = await ciModel.CreateCI("H789", trans);
-            trans.Commit();
+            var ciid1 = await ciModel.CreateCI("H123", null);
+            var ciid2 = await ciModel.CreateCI("H456", null);
+            var ciid3 = await ciModel.CreateCI("H789", null);
 
             var t1 = DateTimeOffset.Now;
 
@@ -67,11 +66,27 @@ namespace Tests.Integration.Model
 
             var t3 = DateTimeOffset.Now;
 
-            var changesets = await changesetModel.GetChangesetsInTimespan(t1, t2, layerset, RelationModel.IncludeRelationDirections.Forward, null, null);
+            var changesets = await changesetModel.GetChangesetsInTimespan(t1, t2, layerset, RelationModel.IncludeRelationDirections.Forward, null);
             Assert.AreEqual(2, changesets.Count());
 
             var changesets2 = await changesetModel.GetChangesetsInTimespan(t1, t3, layerset, RelationModel.IncludeRelationDirections.Forward, ciid3, null);
             Assert.AreEqual(2, changesets2.Count());
+
+
+            using (var trans = conn.BeginTransaction())
+            {
+                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                await ciModel.InsertAttribute("a3", AttributeValueTextScalar.Build("textL1"), layerID1, ciid2, changeset3.ID, trans);
+                trans.Commit();
+            }
+            var t4 = DateTimeOffset.Now;
+
+            var changesets3 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, RelationModel.IncludeRelationDirections.Forward, null);
+            Assert.AreEqual(3, changesets3.Count());
+            var changesets4 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, RelationModel.IncludeRelationDirections.Forward, null, 2);
+            Assert.AreEqual(2, changesets4.Count());
+            var changesets5 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, RelationModel.IncludeRelationDirections.Forward, ciid2, null, 1);
+            Assert.AreEqual(1, changesets5.Count());
         }
 
 
@@ -84,7 +99,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var ciModel = new CIModel(conn);
-            var predicateModel = new PredicateModel(conn);
+            var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
             var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);

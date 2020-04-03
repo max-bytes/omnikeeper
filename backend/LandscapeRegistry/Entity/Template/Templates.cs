@@ -11,30 +11,6 @@ namespace LandscapeRegistry.Entity.Template
 {
     public class Templates
     {
-        //public class CITypeLayerKey
-        //{
-        //    public CIType CIType { get; private set; }
-        //    public long LayerID { get; private set; }
-
-        //    public override int GetHashCode() => HashCode.Combine(CIType, LayerID);
-        //    public override bool Equals(object obj)
-        //    {
-        //        if (obj is CITypeLayerKey other)
-        //        {
-        //            return CIType.Equals(other.CIType) && LayerID.Equals(other.LayerID);
-        //        }
-        //        else return false;
-        //    }
-        //    public static CITypeLayerKey Build(CIType ciType, long layerID)
-        //    {
-        //        return new CITypeLayerKey()
-        //        {
-        //            CIType = ciType,
-        //            LayerID = layerID
-        //        };
-        //    }
-        //}
-
         private IImmutableDictionary<CIType, CIAttributesTemplate> CIAttributeTemplates { get; set; }
 
         public CIAttributesTemplate GetAttributesTemplate(CIType ciType) => CIAttributeTemplates.GetValueOrDefault(ciType, null);

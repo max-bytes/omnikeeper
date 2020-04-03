@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client';
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types'
 import { queries } from '../graphql/queries'
 import LoadingOverlay from 'react-loading-overlay'
@@ -17,9 +17,10 @@ function Timeline(props) {
     var ciid = props.ciid;
     var from = "2010-01-01 00:00:00";
     var to = "2022-01-01 00:00:00";
+    var [limit, setLimit] = useState(10);
 
     const { loading: loadingChangesets, error, data, refetch: refetchChangesets } = useQuery(queries.Changesets, {
-      variables: { from: from, to: to, ciid: ciid, layers: allLayers }
+      variables: { from: from, to: to, ciid: ciid, layers: allLayers, limit: limit }
     });
 
     React.useEffect(() => { if (props.currentTime.isLatest) refetchChangesets(); }, [props.currentTime, refetchChangesets]);
@@ -27,7 +28,7 @@ function Timeline(props) {
     const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
     if (data) {
-      var changesets = [...data.changesets].reverse();
+      var changesets = [...data.changesets];
 
       let activeChangeset = (props.currentTime.isLatest) ? changesets.find(e => true) : changesets.find(cs => cs.timestamp === props.currentTime.time);
 
@@ -67,13 +68,26 @@ function Timeline(props) {
           {changesets.map((cs) => {
 
             const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.username}</span> : '';
-            const label = <span>{moment(cs.timestamp).format('YYYY-MM-DD HH:mm:ss')} - {userLabel}</span>;
+            const buttonStyle = {
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+              overflow: 'hidden',
+              display: 'inline-block',
+              width: '100%',
+              textAlign: 'left'
+            };
+            const label = <span style={((activeChangeset === cs) ? {fontWeight: 'bold'} : {})}>{moment(cs.timestamp).format('YYYY-MM-DD HH:mm:ss')} - {userLabel}</span>;
             if (activeChangeset === cs) {
-              return (<Button variant="link" size="sm" disabled key={cs.id}>{label} &gt;</Button>);
+              return (<Button style={buttonStyle} variant="link" size="sm" disabled key={cs.id}>{label}</Button>);
             }
             const isLatest = latestChangeset === cs;
-            return <Button key={cs.id} variant="link" size="sm" onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: cs.timestamp, isLatest: isLatest }})}>{label}</Button>
+            return <Button style={buttonStyle} key={cs.id} variant="link" size="sm" onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: cs.timestamp, isLatest: isLatest }})}>{label}</Button>
           })}
+            <Form inline onSubmit={e => e.preventDefault()} style={{justifyContent: "center"}}>
+              <SemanticButton basic size='mini' compact onClick={() => {
+                setLimit(l => l + 10);
+              }}><Icon loading={loadingChangesets} fitted name={'arrow alternate circle down outline'} /></SemanticButton>
+            </Form>
           </LoadingOverlay>
         </div>);
     } else if (loadingChangesets) return <p>Loading...</p>;

@@ -6,7 +6,7 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import { mutations } from '../graphql/mutations'
-import { AttributeTypes, attributeType2InputProps } from '../utils/attributeTypes'
+import { AttributeTypes } from '../utils/attributeTypes'
 import { Row } from "react-bootstrap";
 import EditableAttributeValue from "./EditableAttributeValue";
 import { Dropdown } from 'semantic-ui-react'

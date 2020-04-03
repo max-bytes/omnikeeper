@@ -109,7 +109,9 @@ namespace LandscapeRegistry
             services.AddScoped<ITemplateModel, TemplateModel>();
             services.AddScoped<TemplateModel>();
 
+            services.AddScoped<IPredicateModel, PredicateModel>();
             services.AddScoped<PredicateModel>();
+            services.AddScoped<CachedPredicateModel>();
 
             services.AddScoped<CurrentUserService>();
 
@@ -201,15 +203,15 @@ namespace LandscapeRegistry
                     {
                         //AuthorizationCode = new OpenApiOAuthFlow
                         //{
-                        //    AuthorizationUrl = new Uri("https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/auth", UriKind.Absolute), // TODO
+                        //    AuthorizationUrl = new Uri("https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/auth", UriKind.Absolute),
                         //    Scopes = new Dictionary<string, string> {},
-                        //    TokenUrl = new Uri("https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/token", UriKind.Absolute), // TODO
+                        //    TokenUrl = new Uri("https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/token", UriKind.Absolute),
                         //},
                         ClientCredentials = new OpenApiOAuthFlow
                         {
                             Scopes = new Dictionary<string, string> { },
-                            AuthorizationUrl = new Uri("https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/auth", UriKind.Absolute), // TODO
-                            TokenUrl = new Uri("https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/token", UriKind.Absolute), // TODO
+                            AuthorizationUrl = new Uri("https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/auth", UriKind.Absolute),
+                            TokenUrl = new Uri("https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/token", UriKind.Absolute),
                         }
                     }
                 }); 

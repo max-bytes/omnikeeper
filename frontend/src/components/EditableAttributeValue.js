@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import Form from 'react-bootstrap/Form';
 import { Button } from 'semantic-ui-react'
 import { Icon } from 'semantic-ui-react'
 import { attributeType2InputProps } from '../utils/attributeTypes'
 
 function EditableAttributeValue(props) {
-  var {values, setValues, type, isArray, autoFocus, isEditable, ...rest} = props;
+  var {values, setValues, type, isArray, autoFocus, isEditable} = props;
 
   isEditable = isEditable ?? true;
 
@@ -24,15 +24,15 @@ function EditableAttributeValue(props) {
                 props.setValues(newValues);
               }} />
               
-            <Button className={'ml-1'} disabled={!canRemoveItem || !isEditable}  size='mini' compact onClick={e => {
+            {isEditable && <Button className={'ml-1'} disabled={!canRemoveItem || !isEditable}  size='mini' compact onClick={e => {
               e.preventDefault();
               let newValues = values.slice();
               newValues.splice(index, 1);
               props.setValues(newValues);
             }}>
               <Icon fitted name={'remove'} size="large" />
-            </Button>
-            <Button className={'ml-1'} disabled={!isEditable} size='mini' compact onClick={e => {
+            </Button>}
+            {isEditable && <Button className={'ml-1'} disabled={!isEditable} size='mini' compact onClick={e => {
               e.preventDefault();
               let newValues = values.slice();
               newValues.splice(index, 0, '');
@@ -42,8 +42,8 @@ function EditableAttributeValue(props) {
                 <Icon fitted name={'add'} />
                 <Icon corner={'top right'} name='caret up' />
               </Icon.Group>
-            </Button>
-            <Button className={'ml-1'}  disabled={!isEditable}size='mini' compact onClick={e => {
+            </Button>}
+            {isEditable && <Button className={'ml-1'}  disabled={!isEditable}size='mini' compact onClick={e => {
               e.preventDefault();
               let newValues = values.slice();
               newValues.splice(index + 1, 0, '');
@@ -53,7 +53,7 @@ function EditableAttributeValue(props) {
                 <Icon fitted name={'add'} />
                 <Icon corner name='caret down' />
               </Icon.Group>
-            </Button>
+            </Button>}
           </Form.Group>;
           })
         }

@@ -8,7 +8,6 @@ import Button from 'react-bootstrap/Button';
 import LayerStackIcons from "./LayerStackIcons";
 import ChangesetPopup from "./ChangesetPopup";
 import EditableAttributeValue from "./EditableAttributeValue";
-import { attributeType2InputProps } from '../utils/attributeTypes'
 
 
 function Attribute(props) {

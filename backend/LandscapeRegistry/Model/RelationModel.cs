@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Model;
 using LandscapeRegistry.Entity;
+using LandscapeRegistry.Model.Cached;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -11,9 +12,9 @@ namespace LandscapeRegistry.Model
     public class RelationModel : IRelationModel
     {
         private readonly NpgsqlConnection conn;
-        private readonly PredicateModel predicateModel;
+        private readonly CachedPredicateModel predicateModel;
 
-        public RelationModel(PredicateModel predicateModel, NpgsqlConnection connection)
+        public RelationModel(CachedPredicateModel predicateModel, NpgsqlConnection connection)
         {
             conn = connection;
             this.predicateModel = predicateModel;
@@ -30,7 +31,6 @@ namespace LandscapeRegistry.Model
         {
             var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layerset, "temp_layerset", conn, trans);
 
-            // TODO: imrpvoe inner join to not join with changeset and create and use proper index (see CIModel)
             var innerWhereClauses = new List<string>();
             if (ciIdentity != null)
                 innerWhereClauses.Add(ird switch

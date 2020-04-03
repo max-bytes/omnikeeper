@@ -1,6 +1,7 @@
 ﻿using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
+using LandscapeRegistry.Model.Cached;
 using LandscapeRegistry.Utils;
 using Npgsql;
 using NUnit.Framework;
@@ -32,7 +33,7 @@ namespace Tests.DBInit
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var layerModel = new LayerModel(conn);
-            var predicateModel = new PredicateModel(conn);
+            var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
             var relationModel = new RelationModel(predicateModel, conn);
 
             var random = new Random(3);

@@ -11,7 +11,7 @@ namespace LandscapeRegistry.Entity.GraphQL
 {
     public class LandscapeQuery : ObjectGraphType
     {
-        public LandscapeQuery(CIModel ciModel, CachedLayerModel layerModel, PredicateModel predicateModel, ChangesetModel changesetModel)
+        public LandscapeQuery(CIModel ciModel, CachedLayerModel layerModel, CachedPredicateModel predicateModel, ChangesetModel changesetModel)
         {
             FieldAsync<MergedCIType>("ci",
                 arguments: new QueryArguments(new List<QueryArgument>
@@ -138,6 +138,10 @@ namespace LandscapeRegistry.Entity.GraphQL
                     new QueryArgument<StringGraphType>
                     {
                         Name = "ciid"
+                    },
+                    new QueryArgument<IntGraphType>
+                    {
+                        Name = "limit"
                     }
                 }),
                 resolve: async context =>
@@ -148,8 +152,12 @@ namespace LandscapeRegistry.Entity.GraphQL
 
                     var from = context.GetArgument<DateTimeOffset>("from");
                     var to = context.GetArgument<DateTimeOffset>("to");
-                    var ciid = context.GetArgument<string>("ciid");
-                    return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, RelationModel.IncludeRelationDirections.Both, ciid, null);
+                    var ciid = context.GetArgument<string>("ciid", null);
+                    var limit = context.GetArgument<int?>("limit", null);
+                    if (ciid != null)
+                        return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, RelationModel.IncludeRelationDirections.Both, ciid, null, limit);
+                    else
+                        return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, RelationModel.IncludeRelationDirections.Both, null, limit);
                 });
         }
     }

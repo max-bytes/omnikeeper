@@ -91,7 +91,7 @@ namespace Tests.Integration.Model
         }
 
         [Test]
-        public void TestSelectOnBigDatabase()
+        public async Task TestSelectOnBigDatabase()
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
@@ -105,7 +105,7 @@ namespace Tests.Integration.Model
             timer.Start();
             foreach (var ciName in ciNames)
             {
-                var a1 = model.GetMergedAttributes(ciName, false, layerset, trans, DateTimeOffset.Now);
+                var a1 = await model.GetMergedAttributes(ciName, false, layerset, trans, DateTimeOffset.Now);
 
                 //Console.WriteLine($"{ciName} count: {a1.Count()}");
                 //foreach (var aa in a1)

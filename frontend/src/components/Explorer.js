@@ -23,7 +23,7 @@ function Explorer(props) {
     });
 
     return (
-      <div style={{position: 'relative'}}>
+      <div style={{position: 'relative', height: '100%'}}>
         <div className="left">
           <div className={"layers"}>
             <h5>Layers</h5>

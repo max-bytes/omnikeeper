@@ -57,16 +57,16 @@ namespace LandscapeRegistry.Model
             return Changeset.Build(id, user, timestamp);
         }
 
-        // if ciid != null, returns all changesets affecting this CI, both via attributes OR relations
+        // returns all changesets affecting this CI, both via attributes OR relations
         // sorted by timestamp
-        public async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IncludeRelationDirections ird, string ciid, NpgsqlTransaction trans)
+        public async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IncludeRelationDirections ird, string ciid, NpgsqlTransaction trans, int? limit = null)
         {
             var queryAttributes = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 INNER JOIN attribute a ON a.changeset_id = c.id 
                 INNER JOIN ci ci ON a.ci_id = ci.id
                 LEFT JOIN ""user"" u ON c.user_id = u.id
                 WHERE c.timestamp >= @from AND c.timestamp <= @to AND a.layer_id = ANY(@layer_ids)";
-            if (ciid != null) queryAttributes += " AND ci.id = @ciid"; // TODO: performance improvements when ciid === null, ci join unnecessary then
+            queryAttributes += " AND ci.id = @ciid";
 
             string irdClause;
             switch (ird)
@@ -89,16 +89,19 @@ namespace LandscapeRegistry.Model
                 INNER JOIN ci ci ON ({irdClause})
                 LEFT JOIN ""user"" u ON c.user_id = u.id
                 WHERE c.timestamp >= @from AND c.timestamp <= @to AND r.layer_id = ANY(@layer_ids)";
-            if (ciid != null) queryRelations += " AND ci.id = @ciid"; // TODO: performance improvements when ciid === null, ci join unnecessary then
+            queryRelations += " AND ci.id = @ciid";
 
-            var query = @$" {queryAttributes} UNION {queryRelations}";
+            var query = @$" {queryAttributes} UNION {queryRelations} ORDER BY 3 DESC";
+            if (limit.HasValue)
+                query += " LIMIT @limit";
 
             using var command = new NpgsqlCommand(query, conn, trans);
             command.Parameters.AddWithValue("from", from);
             command.Parameters.AddWithValue("to", to);
-            if (ciid != null)
-                command.Parameters.AddWithValue("ciid", ciid);
+            command.Parameters.AddWithValue("ciid", ciid);
             command.Parameters.AddWithValue("layer_ids", layers.LayerIDs);
+            if (limit.HasValue)
+                command.Parameters.AddWithValue("limit", limit.Value);
             using var dr = await command.ExecuteReaderAsync();
 
             var ret = new List<Changeset>();
@@ -117,7 +120,49 @@ namespace LandscapeRegistry.Model
                 var c = Changeset.Build(id, user, timestamp);
                 ret.Add(c);
             }
-            return ret.OrderBy(x => x.Timestamp);
+            return ret;
+        }
+
+
+        public async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IncludeRelationDirections ird, NpgsqlTransaction trans, int? limit = null)
+        {
+            var query = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.keycloak_id, u.type, u.timestamp FROM changeset c 
+                LEFT JOIN attribute a ON a.changeset_id = c.id 
+                LEFT JOIN relation r ON r.changeset_id = c.id
+                LEFT JOIN ""user"" u ON c.user_id = u.id
+                WHERE c.timestamp >= @from AND c.timestamp <= @to
+                AND
+                    (EXISTS(SELECT * FROM attribute a WHERE a.changeset_id = c.id AND a.layer_id = ANY(@layer_ids))
+                    OR EXISTS(SELECT * FROM relation r WHERE r.changeset_id = c.id AND r.layer_id = ANY(@layer_ids)))
+                ORDER BY c.timestamp DESC";
+            if (limit.HasValue)
+                query += " LIMIT @limit";
+
+            using var command = new NpgsqlCommand(query, conn, trans);
+            command.Parameters.AddWithValue("from", from);
+            command.Parameters.AddWithValue("to", to);
+            command.Parameters.AddWithValue("layer_ids", layers.LayerIDs);
+            if (limit.HasValue)
+                command.Parameters.AddWithValue("limit", limit.Value);
+            using var dr = await command.ExecuteReaderAsync();
+
+            var ret = new List<Changeset>();
+            while (await dr.ReadAsync())
+            {
+                var id = dr.GetInt64(0);
+                var userID = dr.GetInt64(1);
+                var timestamp = dr.GetTimeStamp(2).ToDateTime();
+
+                var username = dr.GetString(3);
+                var userUUID = dr.GetGuid(4);
+                var userType = dr.GetFieldValue<UserType>(5);
+                var userTimestamp = dr.GetTimeStamp(6).ToDateTime();
+
+                var user = UserInDatabase.Build(userID, userUUID, username, userType, userTimestamp);
+                var c = Changeset.Build(id, user, timestamp);
+                ret.Add(c);
+            }
+            return ret;
         }
     }
 }

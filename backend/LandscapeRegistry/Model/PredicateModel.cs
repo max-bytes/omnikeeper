@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model
 {
-    public class PredicateModel
+    public class PredicateModel : IPredicateModel
     {
         private readonly NpgsqlConnection conn;
 

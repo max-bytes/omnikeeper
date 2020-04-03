@@ -48,8 +48,8 @@ export const queries = {
     }
     `,
     Changesets: gql`
-        query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciid: String, $layers:[String]!) {
-            changesets(from: $from, to:$to, ciid:$ciid, layers: $layers) {
+        query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciid: String, $layers:[String]!, $limit: Int) {
+            changesets(from: $from, to:$to, ciid:$ciid, layers: $layers, limit: $limit) {
                 id
                 user {
                     username

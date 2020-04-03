@@ -439,9 +439,9 @@ namespace LandscapeRegistry.Model
                     state = AttributeState.Changed;
             }
 
-            // handle equality case, also think about what should happen if a different user inserts the same data
-            //var equalValue = false;
-            if (currentAttribute != null && currentAttribute.State != AttributeState.Removed && currentAttribute.Value.Equals(value)) // TODO: check other things, like user
+            // handle equality case
+            // which user it is does not make any difference; if the data is the same, no insert is made
+            if (currentAttribute != null && currentAttribute.State != AttributeState.Removed && currentAttribute.Value.Equals(value))
                 return currentAttribute;
 
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 

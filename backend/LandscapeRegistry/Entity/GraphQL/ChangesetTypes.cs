@@ -30,14 +30,6 @@ namespace LandscapeRegistry.Entity.GraphQL
             Field(x => x.Timestamp);
             Field(x => x.User, type: typeof(UserInDatabaseType));
             Field("id", x => x.ID);
-            //FieldAsync<UserTypeGQL>("user",
-            //    resolve: async (context) =>
-            //    { // TODO: refactor to have user be part of changeset -> no 1+N
-            //        var userContext = context.UserContext as LandscapeUserContext;
-            //        var userID = context.Source.UserID;
-            //        var user = await userModel.GetUser(userID, userContext.Transaction);
-            //        return user;
-            //    });
         }
     }
 
