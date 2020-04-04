@@ -1,4 +1,5 @@
 ﻿using GraphQL.Types;
+using Landscape.Base.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using Npgsql;

@@ -1,7 +1,6 @@
 ﻿using Landscape.Base.Model;
 using LandscapeRegistry.Entity;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Entity.Template;
+using LandscapeRegistry.Service;
 using LandscapeRegistry.Utils;
 using Npgsql;
 using System;
@@ -13,8 +12,8 @@ namespace LandscapeRegistry.Model
 {
     public class TemplateModel : ITemplateModel
     {
-        private CachedTemplatesProvider TemplatesProvider { get; set; }
-        public TemplateModel(CachedTemplatesProvider templatesProvider)
+        private ITemplatesProvider TemplatesProvider { get; set; }
+        public TemplateModel(ITemplatesProvider templatesProvider)
         {
             TemplatesProvider = templatesProvider;
         }
@@ -40,37 +39,11 @@ namespace LandscapeRegistry.Model
             );
         }
 
-        private IEnumerable<ITemplateErrorAttribute> PerAttributeTemplateChecks(MergedCIAttribute foundAttribute, CIAttributeTemplate at)
-        {
-            // check required attributes
-            if (foundAttribute == null)
-            {
-                yield return TemplateErrorAttributeMissing.Build(at.Name, at.Type);
-            } else
-            {
-                if (at.Type != null && (!foundAttribute.Attribute.Value.Type.Equals(at.Type.Value)))
-                {
-                    yield return TemplateErrorAttributeWrongType.Build(at.Type.Value, foundAttribute.Attribute.Value.Type);
-                }
-                if (at.IsArray.HasValue && foundAttribute.Attribute.Value.IsArray != at.IsArray.Value)
-                {
-                    yield return TemplateErrorAttributeWrongMultiplicity.Build(at.IsArray.Value);
-                }
-
-                foreach (var c in at.ValueConstraints)
-                {
-                    var ce = c.CalculateErrors(foundAttribute.Attribute.Value);
-                    foreach (var cc in ce) yield return cc;
-                }
-            }
-
-            // TODO: other checks
-        }
 
         private TemplateErrorsAttribute CalculateTemplateErrorsAttribute(MergedCI ci, CIAttributeTemplate at)
         {
             var foundAttribute = ci.MergedAttributes.FirstOrDefault(a => a.Attribute.Name == at.Name);
-            return TemplateErrorsAttribute.Build(at.Name, PerAttributeTemplateChecks(foundAttribute, at));
+            return TemplateErrorsAttribute.Build(at.Name, TemplateCheckService.PerAttributeTemplateChecks(foundAttribute, at));
         }
     }
 }

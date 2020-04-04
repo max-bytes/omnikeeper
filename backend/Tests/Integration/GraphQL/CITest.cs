@@ -1,6 +1,7 @@
 ﻿using GraphQL;
 using GraphQL.Execution;
 using GraphQL.Types;
+using Landscape.Base.Model;
 using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Entity.GraphQL;
@@ -29,10 +30,17 @@ namespace Tests.Integration.GraphQL
             Services.Register<MergedCIType>();
             Services.Register<CIModel>();
             Services.Register<AttributeModel>();
+            Services.Register<IAttributeModel, AttributeModel>();
             Services.Register<UserInDatabaseModel>();
             Services.Register<LayerModel>();
+            Services.Register<ILayerModel,LayerModel>();
             Services.Register<RelationModel>();
             Services.Register<RelatedCIType>();
+            Services.Register<IPredicateModel, PredicateModel>();
+            Services.Register<ITemplatesProvider, CachedTemplatesProvider>();
+            Services.Register<TemplatesProvider>();
+            Services.Register<ITraitsProvider, CachedTraitsProvider>();
+            Services.Register<TraitsProvider>();
             Services.Register<RelationType>();
             Services.Register<ChangesetModel>();
             Services.Singleton(() =>
@@ -41,7 +49,9 @@ namespace Tests.Integration.GraphQL
                 return dbcb.Build(DBSetup.dbName, false);
             });
 
-            Services.Singleton(new LandscapeSchema(new SimpleContainerAdapter(Services)));
+            var sp = new SimpleContainerAdapter(Services);
+            Services.Singleton<IServiceProvider>(sp);
+            Services.Singleton(new LandscapeSchema(sp));
         }
 
         [OneTimeTearDown]

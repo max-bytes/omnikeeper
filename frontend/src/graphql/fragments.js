@@ -37,6 +37,9 @@ export const Fragments = {
         type {
             id
         }
+        effectiveTraits { 
+            underlyingTrait {name}
+        }
         templateErrors {
           attributeErrors {
                 attributeName

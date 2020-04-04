@@ -1,0 +1,109 @@
+﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
+using LandscapeRegistry;
+using LandscapeRegistry.Entity;
+using LandscapeRegistry.Entity.AttributeValues;
+using LandscapeRegistry.Model;
+using LandscapeRegistry.Utils;
+using Microsoft.DotNet.InternalAbstractions;
+using Npgsql;
+using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Tests.Integration.Model
+{
+    class TraitsModelTest
+    {
+        [SetUp]
+        public void Setup()
+        {
+            DBSetup.Setup();
+        }
+
+        private class MockedTraitsProvider : ITraitsProvider
+        {
+            public Task<Traits> GetTraits(NpgsqlTransaction trans)
+            {
+                return Traits.Build(new List<Trait>()
+                {
+                    Trait.Build("test_trait_1", new List<TraitAttribute>()
+                    {
+                        TraitAttribute.Build(
+                            CIAttributeTemplate.BuildFromParams("a4", "this is a description", AttributeValueType.Text, false)
+                        )
+                    }),
+                    Trait.Build("test_trait_2", new List<TraitAttribute>()
+                    {
+                        TraitAttribute.Build(
+                            CIAttributeTemplate.BuildFromParams("a4", "this is a description", AttributeValueType.Text, false)
+                        ),
+                        TraitAttribute.Build(
+                            CIAttributeTemplate.BuildFromParams("a2", "this is a description", AttributeValueType.Text, false)
+                        )
+                    }),
+                    Trait.Build("test_trait_3", new List<TraitAttribute>()
+                    {
+                        TraitAttribute.Build(
+                            CIAttributeTemplate.BuildFromParams("a1", "this is a description", AttributeValueType.Text, false)
+                        )
+                    })
+                }, trans);
+            }
+        }
+
+        [Test]
+        public async Task TestBasics()
+        {
+            var dbcb = new DBConnectionBuilder();
+            using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            var attributeModel = new AttributeModel(conn);
+            var ciModel = new CIModel(attributeModel, conn);
+            var userModel = new UserInDatabaseModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn);
+            var layerModel = new LayerModel(conn);
+            var traitModel = new TraitModel(ciModel, new MockedTraitsProvider(), conn);
+            var user = await DBSetup.SetupUser(userModel);
+            await ciModel.CreateCIType("type1", null);
+            var ciid1 = await ciModel.CreateCIWithType("H123", "type1", null);
+            var ciid2 = await ciModel.CreateCIWithType("H456", "type1", null);
+            var ciid3 = await ciModel.CreateCIWithType("H789", "type1", null);
+            var layerID1 = await layerModel.CreateLayer("l1", null);
+
+            using (var trans = conn.BeginTransaction())
+            {
+                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("text1"), layerID1, ciid1, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a2", AttributeValueTextScalar.Build("text2"), layerID1, ciid1, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("text3"), layerID1, ciid1, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a4", AttributeValueTextScalar.Build("text4"), layerID1, ciid1, changeset.ID, trans);
+
+                await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("text1"), layerID1, ciid2, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a4", AttributeValueTextScalar.Build("text4"), layerID1, ciid2, changeset.ID, trans);
+
+                await attributeModel.InsertAttribute("a2", AttributeValueTextScalar.Build("text2"), layerID1, ciid3, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("text3"), layerID1, ciid3, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a4", AttributeValueTextScalar.Build("text4"), layerID1, ciid3, changeset.ID, trans);
+
+                trans.Commit();
+            }
+
+            var layerset = await layerModel.BuildLayerSet(new string[] { "l1" }, null);
+
+            var t1 = await traitModel.FindCIsByTraitName("test_trait_1", layerset, null, DateTimeOffset.Now);
+            Assert.AreEqual(3, t1.Count());
+            var t2 = await traitModel.FindCIsByTraitName("test_trait_2", layerset, null, DateTimeOffset.Now);
+            Assert.AreEqual(2, t2.Count());
+            Assert.IsTrue(t2.All(t => t.Item1.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a2") && t.Item1.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a4")));
+            var t3 = await traitModel.FindCIsByTraitName("test_trait_3", layerset, null, DateTimeOffset.Now);
+            Assert.AreEqual(2, t3.Count());
+            Assert.IsTrue(t3.All(t => t.Item1.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
+        }
+
+    }
+}

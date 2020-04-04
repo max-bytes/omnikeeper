@@ -110,15 +110,18 @@ namespace LandscapeRegistry
             services.AddScoped<ChangesetModel>();
             services.AddScoped<ITemplateModel, TemplateModel>();
             services.AddScoped<TemplateModel>();
-
             services.AddScoped<IPredicateModel, PredicateModel>();
             services.AddScoped<PredicateModel>();
             services.AddScoped<CachedPredicateModel>();
 
+            services.AddScoped<TraitModel>();
+
             services.AddScoped<CurrentUserService>();
 
+            services.AddSingleton<ITemplatesProvider, CachedTemplatesProvider>(); // can be singleton because it does not depend on any scoped services
             services.AddSingleton<TemplatesProvider>(); // can be singleton because it does not depend on any scoped services
-            services.AddSingleton<CachedTemplatesProvider>(); // can be singleton because it does not depend on any scoped services
+            services.AddSingleton<ITraitsProvider, CachedTraitsProvider>(); // can be singleton because it does not depend on any scoped services
+            services.AddSingleton<TraitsProvider>(); // can be singleton because it does not depend on any scoped services
 
             services.AddScoped<MergedCIType>();
             services.AddScoped<RelationType>();

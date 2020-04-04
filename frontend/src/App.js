@@ -39,12 +39,18 @@ function App() {
     <KeycloakProvider keycloak={keycloak} initConfig={keycloakProviderInitConfig}>
       <div style={{height: '100%'}}>
         <BrowserRouter basename="/" forceRefresh={false}>
-          <Menu fixed='top' inverted style={{display: 'flex', justifyContent: 'flex-end'}}>
-            <Route path="*">
-              <Menu.Item><Link to="/createCI">Create New CI</Link></Menu.Item>
-              <Menu.Item><Link to="/explorer">Search CI</Link></Menu.Item>
-            </Route>
-            <UserBar />
+          <Menu fixed='top' inverted style={{display: 'flex', justifyContent: 'space-between'}}>
+            <div>
+              <Menu.Item style={{fontSize:'1.2em'}}>Landscape Registry</Menu.Item>
+            </div>
+            <div style={{flexGrow: 1}}></div>
+            <div style={{display:'flex'}}>
+              <Route path="*">
+                <Menu.Item><Link to="/createCI">Create New CI</Link></Menu.Item>
+                <Menu.Item><Link to="/explorer">Search CI</Link></Menu.Item>
+              </Route>
+              <UserBar />
+            </div>
           </Menu>
           <div style={{height: '100%', paddingTop: '50px'}}> {/* HACK: because we are not 100% using semantic UI, move the main content down manually*/}
             <Switch>

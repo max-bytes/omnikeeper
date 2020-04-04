@@ -1,4 +1,5 @@
-﻿using LandscapeRegistry.Entity.Template;
+﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using LandscapeRegistry.Model.Cached;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -9,11 +10,6 @@ using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model
 {
-    public interface ITemplatesProvider
-    {
-        public Task<Templates> GetTemplates(NpgsqlTransaction trans);
-    }
-
     public class TemplatesProvider : ITemplatesProvider
     {
         private readonly IServiceProvider SP;
@@ -25,7 +21,7 @@ namespace LandscapeRegistry.Model
         public async Task<Templates> GetTemplates(NpgsqlTransaction trans)
         {
             using var scope = SP.CreateScope();
-            return await Templates.Build(scope.ServiceProvider.GetRequiredService<CIModel>(), scope.ServiceProvider.GetRequiredService<CachedLayerModel>(), trans);
+            return await Templates.Build(scope.ServiceProvider.GetRequiredService<CIModel>(), scope.ServiceProvider.GetRequiredService<ITraitsProvider>(), trans);
         }
     }
 

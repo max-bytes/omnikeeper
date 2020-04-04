@@ -1,5 +1,6 @@
 ﻿using DotLiquid;
 using Landscape.Base;
+using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Templating;
 using LandscapeRegistry.Entity;
@@ -66,7 +67,7 @@ namespace TestPlugin
                     try
                     {
                         var command = mca.Attribute.Value.Value2String();
-                        Template template = Template.Parse(command);
+                        var template = DotLiquid.Template.Parse(command);
                         finalCommand = template.Render(Hash.FromDictionary(variables));
                     }
                     catch (Exception e)

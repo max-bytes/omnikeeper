@@ -1,0 +1,26 @@
+﻿using LandscapeRegistry.Entity;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Text;
+
+namespace Landscape.Base.Entity
+{
+    public class Template
+    {
+        public CIType CIType { get; private set; }
+        public IImmutableDictionary<string, CIAttributeTemplate> AttributeTemplates { get; private set; }
+
+        public IImmutableDictionary<string, Trait> Traits { get; private set; } // TODO: actually check if the traits are fulfilled
+
+        public static Template Build(CIType ciType, IEnumerable<CIAttributeTemplate> attributes, IEnumerable<Trait> traits)
+        {
+            return new Template()
+            {
+                CIType = ciType,
+                AttributeTemplates = attributes.ToImmutableDictionary(t => t.Name),
+                Traits = traits.ToImmutableDictionary(t => t.Name)
+            };
+        }
+    }
+}

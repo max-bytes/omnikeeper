@@ -5,7 +5,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LandscapeRegistry.Entity.Template
+namespace LandscapeRegistry.Entity
 {
     public interface ICIAttributeValueConstraint
     {
@@ -84,17 +84,4 @@ namespace LandscapeRegistry.Entity.Template
             };
         }
     }
-
-    //public class CIAttributeTemplates
-    //{
-    //    public IImmutableDictionary<string, CIAttributeTemplate> Attributes { get; private set; }
-
-    //    public static CIAttributeTemplates Build(IList<CIAttributeTemplate> attributes)
-    //    {
-    //        return new CIAttributeTemplates()
-    //        {
-    //            Attributes = attributes.ToImmutableDictionary(a => a.Name)
-    //        };
-    //    }
-    //}
 }

@@ -1,4 +1,5 @@
 ﻿using Landscape.Base;
+using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
@@ -25,6 +26,7 @@ namespace LandscapeRegistry.Model
             conn = connection;
         }
 
+        [Obsolete("Please use CreateCIWithType instead")]
         public async Task<string> CreateCI(string identity, NpgsqlTransaction trans)
         {
             using var command = new NpgsqlCommand(@"INSERT INTO ci (id) VALUES (@id)", conn, trans);

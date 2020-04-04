@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using LandscapeRegistry.Model.Cached;
+using Landscape.Base.Entity;
 
 namespace LandscapeRegistry.Entity.GraphQL
 {
@@ -19,7 +20,7 @@ namespace LandscapeRegistry.Entity.GraphQL
 
     public class MergedCIType : ObjectGraphType<MergedCI>
     {
-        public MergedCIType(RelationModel relationModel, TemplateModel templateModel)
+        public MergedCIType(RelationModel relationModel, TemplateModel templateModel, TraitModel traitModel)
         {
             Field(x => x.Identity);
             Field("layerhash", x => x.Layers.LayerHash);
@@ -80,12 +81,14 @@ namespace LandscapeRegistry.Entity.GraphQL
                 return await templateModel.CalculateTemplateErrors(context.Source, userContext.Transaction);
             });
 
-            //FieldAsync<ListGraphType<EffectiveTraitType>>("effectiveTraits",
-            //resolve: async (context) =>
-            //{
-            //    var userContext = context.UserContext as LandscapeUserContext;
-            //    //TODO
-            //});
+            FieldAsync<ListGraphType<EffectiveTraitType>>("effectiveTraits",
+            resolve: async (context) =>
+            {
+                var userContext = context.UserContext as LandscapeUserContext;
+
+                var et = await traitModel.CalculateEffectiveTraitsForCI(context.Source, userContext.Transaction);
+                return et;
+            });
         }
     }
 

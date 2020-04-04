@@ -1,5 +1,4 @@
 ﻿using GraphQL.Types;
-using LandscapeRegistry.Entity.Template;
 using System;
 using System.Collections.Generic;
 using System.Linq;

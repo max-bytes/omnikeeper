@@ -32,6 +32,8 @@ namespace LandscapeRegistry.Model
 
         public static async Task<string> CreateLayerSetTempTable(LayerSet layers, string tablePrefix, NpgsqlConnection conn, NpgsqlTransaction trans)
         {
+            //--CREATE TEMPORARY TABLE temp_layerset(id bigint, "order" int);
+            //--INSERT INTO temp_layerset(id, "order") VALUES(1, 1), (2, 2), (3, 3), (4, 4);
             var fullTableName = $"{tablePrefix}_{layers.LayerHash}";
 
             using var cCheck = new NpgsqlCommand(@$"SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema like 'pg_temp_%' AND table_name = LOWER('{fullTableName}') )", conn, trans);

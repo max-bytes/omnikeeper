@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LandscapeRegistry.Entity.Template
+namespace LandscapeRegistry.Entity
 {
     public interface ITemplateErrorAttribute
     {

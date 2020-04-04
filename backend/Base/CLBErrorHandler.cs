@@ -1,4 +1,5 @@
-﻿using Landscape.Base.Model;
+﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using Npgsql;
