@@ -60,7 +60,7 @@ namespace LandscapeRegistry
             services.AddScoped<IComputeLayerBrain, CLBMonitoring>();
 
             services.AddCors(options => options.AddPolicy("AllowAllOrigins", builder =>
-               builder.WithOrigins("http://localhost:3000")
+               builder.WithOrigins(Configuration.GetSection("CORS")["AllowedHosts"].Split(","))
                .AllowCredentials()
                 .AllowAnyMethod()
                 .AllowAnyHeader())
@@ -194,25 +194,22 @@ namespace LandscapeRegistry
                     {
                         //AuthorizationCode = new OpenApiOAuthFlow
                         //{
-                        //    AuthorizationUrl = new Uri("https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/auth", UriKind.Absolute),
+                        //    AuthorizationUrl = new Uri(Configuration["AuthenticationAuthority"] + "/protocol/openid-connect/auth", UriKind.Absolute),
                         //    Scopes = new Dictionary<string, string> {},
-                        //    TokenUrl = new Uri("https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/token", UriKind.Absolute),
+                        //    TokenUrl = new Uri(Configuration["AuthenticationAuthority"] + "/protocol/openid-connect/token", UriKind.Absolute),
                         //},
                         ClientCredentials = new OpenApiOAuthFlow
                         {
                             Scopes = new Dictionary<string, string> { },
-                            AuthorizationUrl = new Uri("https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/auth", UriKind.Absolute),
-                            TokenUrl = new Uri("https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/token", UriKind.Absolute),
+                            AuthorizationUrl = new Uri(Configuration["AuthenticationAuthority"] + "/protocol/openid-connect/auth", UriKind.Absolute),
+                            TokenUrl = new Uri(Configuration["AuthenticationAuthority"] + "/protocol/openid-connect/token", UriKind.Absolute),
                         }
                     }
                 });
                 c.OperationFilter<AuthenticationRequirementsOperationFilter>();
 
                 // Use method name as operationId
-                c.CustomOperationIds(apiDesc =>
-                {
-                    return apiDesc.TryGetMethodInfo(out MethodInfo methodInfo) ? methodInfo.Name : null;
-                });
+                c.CustomOperationIds(apiDesc => apiDesc.TryGetMethodInfo(out MethodInfo methodInfo) ? methodInfo.Name : null);
             });
             services.AddSwaggerGenNewtonsoftSupport();
         }

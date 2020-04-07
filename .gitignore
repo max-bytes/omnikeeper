@@ -340,4 +340,5 @@ ASALocalRun/
 healthchecksdb
 
 appsettings*.json
+appsecrets*.json
 LandscapeRegistry.xml
