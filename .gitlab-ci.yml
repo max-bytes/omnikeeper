@@ -5,7 +5,7 @@ stages:
 variables:
   # The 'docker' hostname is the alias of the service container as described at
   # https://docs.gitlab.com/ee/ci/docker/using_docker_images.html#accessing-the-services
-  DOCKER_HOST: tcp://localhost:2375/
+  DOCKER_HOST: tcp://docker:2375/
   DOCKER_DRIVER: overlay2
 
   # build breaks with
@@ -13,6 +13,8 @@ variables:
   # see https://gitlab.com/gitlab-org/gitlab-runner/issues/4501 for details
   DOCKER_TLS_CERTDIR: ""
 
+services:
+  - docker:19.03.1-dind
 
 before_script:
     - "cd backend"
