@@ -1,0 +1,23 @@
+image: microsoft/dotnet:latest
+
+stages:
+    - build
+    - test
+
+variables:
+    test: "Tests"
+
+before_script:
+    - "cd backend"
+    - "dotnet restore"
+
+build:
+    stage: build
+    script:
+        - "dotnet build"
+
+test:
+    stage: test
+    script: 
+        - "cd $test"
+        - "dotnet test"
