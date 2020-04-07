@@ -16,6 +16,8 @@ before_script:
 
 build:
     stage: build
+    tags:
+        - h1lscapet01.mhx.local
     script:
         - "docker build -t landscape_registry_backend -f ./LandscapeRegistry/Dockerfile ."
 
