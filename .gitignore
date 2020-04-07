@@ -339,6 +339,4 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 
-appsettings*.json
-appsecrets*.json
 LandscapeRegistry.xml
