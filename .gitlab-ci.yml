@@ -1,23 +1,26 @@
-image: mcr.microsoft.com/dotnet/core/aspnet:3.1
+image: docker:latest
+
+services:
+  - docker:dind
+
 
 stages:
     - build
-    - test
+#    - test
 
-variables:
-    test: "Example.Test"
+#variables:
+#    test: "Example.Test"
 
 before_script:
     - "cd backend"
-    - "dotnet restore"
 
 build:
     stage: build
     script:
         - "docker build -t LandscapeRegistryBackend -f .\\LandscapeRegistry\\Dockerfile ."
 
-test:
-    stage: test
-    script: 
-        - "cd $test"
-        - "dotnet test"
+#test:
+#    stage: test
+#    script: 
+#        - "cd $test"
+#        - "dotnet test"
