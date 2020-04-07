@@ -14,9 +14,6 @@ variables:
   DOCKER_TLS_CERTDIR: ""
 
 
-services:
-  - docker:dind
-
 before_script:
     - "cd backend"
 
