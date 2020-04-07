@@ -18,7 +18,7 @@ before_script:
     - "cd backend"
 
 build:
-    image: docker:latest
+    image: docker:stable
     stage: build
     tags:
         - h1lscapet01.mhx.local
