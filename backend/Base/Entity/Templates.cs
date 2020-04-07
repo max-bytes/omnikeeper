@@ -1,7 +1,6 @@
 ﻿using Landscape.Base.Model;
 using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -25,25 +24,31 @@ namespace Landscape.Base.Entity
             {
                 templates = new List<Template>()
                 {
-                    Template.Build(await ciModel.GetCIType("Application", trans),
+                    Template.Build(await ciModel.GetCITypeByID("Application", trans),
                             new List<CIAttributeTemplate>() {
                                 // TODO
                                 CIAttributeTemplate.BuildFromParams("name", "This is a description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                             },
-                            new List<Trait>()
-                            {
-
-                            }
+                            new List<RelationTemplate>() {},
+                            new List<Trait>() {}
                     ),
-                    Template.Build(await ciModel.GetCIType("Naemon Instance", trans),
+                    Template.Build(await ciModel.GetCITypeByID("Naemon Instance", trans),
                             new List<CIAttributeTemplate>() {
                                 // TODO
                                 CIAttributeTemplate.BuildFromParams("name", "This is a description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                             },
+                            new List<RelationTemplate>() {},
                             new List<Trait>()
                             {
                                 traits.traits["ansible_can_deploy_to_it"]
                             }
+                    ),
+                    Template.Build(await ciModel.GetCITypeByID("Ansible Host Group", trans),
+                            new List<CIAttributeTemplate>() {
+                                CIAttributeTemplate.BuildFromParams("automation.ansible_group_name", "This is a description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                            },
+                            new List<RelationTemplate>() {},
+                            new List<Trait>() {}
                     )
                 }.ToImmutableDictionary(t => t.CIType)
             };

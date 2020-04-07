@@ -1,7 +1,7 @@
-﻿using LandscapeRegistry;
+﻿using Landscape.Base.Entity;
+using LandscapeRegistry;
 using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -12,7 +12,7 @@ namespace Landscape.Base.Model
 {
     public interface ICIModel
     {
-        Task<CIType> GetCIType(string typeID, NpgsqlTransaction trans);
+        Task<CIType> GetCITypeByID(string typeID, NpgsqlTransaction trans);
         Task<CIType> GetTypeOfCI(string ciid, NpgsqlTransaction trans, DateTimeOffset? atTime);
         Task<MergedCI> GetMergedCI(string ciIdentity, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime);
         Task<CI> GetCI(string ciid, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime);

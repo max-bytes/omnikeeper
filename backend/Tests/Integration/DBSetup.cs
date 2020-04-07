@@ -1,4 +1,5 @@
-﻿using Landscape.Base.Model;
+﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using LandscapeRegistry.Controllers;
 using LandscapeRegistry.Entity;
 using Microsoft.DotNet.InternalAbstractions;

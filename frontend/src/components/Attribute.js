@@ -46,7 +46,7 @@ function Attribute(props) {
   const leftPart = <div style={{display: 'flex', flexBasis: '220px', alignItems: 'center', minHeight: '33px'}}>
     <LayerStackIcons layerStack={attribute.layerStack} />
     <ChangesetPopup changesetID={attribute.attribute.changesetID} />
-    <Form.Label className={"pr-1"} style={{whiteSpace: 'nowrap', flexGrow: 1, justifyContent: 'flex-end'}}>{attribute.attribute.name}:</Form.Label>
+    <Form.Label className={"pr-1"} style={{whiteSpace: 'nowrap', flexGrow: 1, justifyContent: 'flex-end'}}>{attribute.attribute.name}</Form.Label>
   </div>;
 
   if (isEditable) {

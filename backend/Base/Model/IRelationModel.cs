@@ -1,6 +1,6 @@
-﻿using LandscapeRegistry;
+﻿using Landscape.Base.Entity;
+using LandscapeRegistry;
 using LandscapeRegistry.Entity;
-using LandscapeRegistry.Model;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -11,7 +11,14 @@ namespace Landscape.Base.Model
 {
     public interface IRelationModel
     {
+        public enum IncludeRelationDirections
+        {
+            Forward, Backward, Both
+        }
+
         Task<IEnumerable<Relation>> GetRelationsWithPredicateID(LayerSet layerset, bool includeRemoved, string predicate, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null);
+        Task<IEnumerable<Relation>> GetMergedRelations(string ciIdentity, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null);
+
 
         Task<bool> BulkReplaceRelations(BulkRelationData data, long changesetID, NpgsqlTransaction trans);
 

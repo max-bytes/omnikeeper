@@ -1,15 +1,25 @@
 ﻿using Landscape.Base.Entity;
-using LandscapeRegistry.Entity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Service
 {
     public class TemplateCheckService
     {
-        public static IEnumerable<ITemplateErrorAttribute> PerAttributeTemplateChecks(MergedCIAttribute foundAttribute, CIAttributeTemplate at)
+        public static (MergedCIAttribute foundAttribute, TemplateErrorsAttribute errors) CalculateTemplateErrorsAttribute(MergedCI ci, CIAttributeTemplate at)
+        {
+            var foundAttribute = ci.MergedAttributes.FirstOrDefault(a => a.Attribute.Name == at.Name);
+            return (foundAttribute, TemplateErrorsAttribute.Build(at.Name, PerAttributeTemplateChecks(foundAttribute, at)));
+        }
+        public static (IEnumerable<(Relation relation, MergedCI toCI)> foundRelations, TemplateErrorsRelation errors) CalculateTemplateErrorsRelation(ILookup<string, (Relation relation, MergedCI toCI)> relations, RelationTemplate rt)
+        {
+            var foundRelations = relations[rt.Predicate.ID].Where(r => rt.ToCITypes.Contains(r.toCI.Type));
+
+            return (foundRelations, TemplateErrorsRelation.Build(rt.Predicate, PerRelationTemplateChecks(foundRelations, rt)));
+        }
+
+        private static IEnumerable<ITemplateErrorAttribute> PerAttributeTemplateChecks(MergedCIAttribute foundAttribute, CIAttributeTemplate at)
         {
             // check required attributes
             if (foundAttribute == null)
@@ -34,6 +44,15 @@ namespace LandscapeRegistry.Service
                 }
             }
 
+            // TODO: other checks
+        }
+
+        private static IEnumerable<ITemplateErrorRelation> PerRelationTemplateChecks(IEnumerable<(Relation relation, MergedCI toCI)> foundRelations, RelationTemplate rt)
+        {
+            if (rt.MaxCardinality.HasValue && foundRelations.Count() > rt.MaxCardinality.Value)
+                yield return TemplateErrorRelationGeneric.Build($"At most {rt.MaxCardinality.Value} relations with predicate {rt.Predicate.ID} allowed, found {foundRelations.Count()}!");
+            if (rt.MinCardinality.HasValue && foundRelations.Count() < rt.MinCardinality.Value)
+                yield return TemplateErrorRelationGeneric.Build($"At least {rt.MinCardinality.Value} relations with predicate {rt.Predicate.ID} required, found {foundRelations.Count()}!");
             // TODO: other checks
         }
     }

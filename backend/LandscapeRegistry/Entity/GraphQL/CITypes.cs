@@ -1,16 +1,17 @@
 ﻿using GraphQL.Types;
+using Landscape.Base.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
+using LandscapeRegistry.Model.Cached;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
-using LandscapeRegistry.Model.Cached;
-using Landscape.Base.Entity;
+using static Landscape.Base.Model.IRelationModel;
 
 namespace LandscapeRegistry.Entity.GraphQL
 {
-    public class CITypeType : ObjectGraphType<Entity.CIType>
+    public class CITypeType : ObjectGraphType<CIType>
     {
         public CITypeType()
         {
@@ -37,10 +38,10 @@ namespace LandscapeRegistry.Entity.GraphQL
                 var userContext = context.UserContext as LandscapeUserContext;
                 var layerset = userContext.LayerSet;
                 if (layerset == null)
-                    throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!"); 
-                
+                    throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!");
+
                 var CIIdentity = context.Source.Identity;
-                var relations = await relationModel.GetMergedRelations(CIIdentity, false, layerset, RelationModel.IncludeRelationDirections.Both, userContext.Transaction, userContext.TimeThreshold);
+                var relations = await relationModel.GetMergedRelations(CIIdentity, false, layerset, IncludeRelationDirections.Both, userContext.Transaction, userContext.TimeThreshold);
 
                 var relatedCIs = new List<RelatedCI>();
 
@@ -53,7 +54,7 @@ namespace LandscapeRegistry.Entity.GraphQL
 
                 // TODO: consider packing the actual CIs into its own resolver so they can be queried when necessary
                 //var CIs = (await ciModel.GetFullCIs(layerset, true, userContext.Transaction, userContext.TimeThreshold, relatedCIIDs)).ToDictionary(ci => ci.Identity);
-                foreach(var r in relations)
+                foreach (var r in relations)
                 {
                     var isForwardRelation = r.FromCIID == CIIdentity;
                     var relatedCIID = (isForwardRelation) ? r.ToCIID : r.FromCIID;
@@ -86,8 +87,8 @@ namespace LandscapeRegistry.Entity.GraphQL
             {
                 var userContext = context.UserContext as LandscapeUserContext;
 
-                var et = await traitModel.CalculateEffectiveTraitsForCI(context.Source, userContext.Transaction);
-                return et;
+                var et = await traitModel.CalculateEffectiveTraitSetForCI(context.Source, userContext.Transaction);
+                return et.EffectiveTraits.Values;
             });
         }
     }

@@ -1,6 +1,7 @@
 ﻿using GraphQL;
 using GraphQL.Execution;
 using GraphQL.Types;
+using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;

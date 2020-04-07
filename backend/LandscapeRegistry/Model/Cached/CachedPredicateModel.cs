@@ -1,9 +1,8 @@
-﻿using Landscape.Base.Model;
-using LandscapeRegistry.Entity;
+﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using Npgsql;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model.Cached
@@ -28,7 +27,8 @@ namespace LandscapeRegistry.Model.Cached
                 AllPredicatesCache.TryGetValue(atTime.Value, out value);
             else
                 value = PredicateCacheForNullTime;
-            if (value == null) {
+            if (value == null)
+            {
                 value = await Model.GetPredicates(trans, atTime);
                 if (atTime.HasValue)
                     AllPredicatesCache.Add(atTime.Value, value);

@@ -1,11 +1,6 @@
 ﻿using GraphQL.Types;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
+using Landscape.Base.Entity;
 using LandscapeRegistry.Model.Cached;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Entity.GraphQL
 {

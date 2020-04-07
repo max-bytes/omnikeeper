@@ -1,28 +1,23 @@
-﻿using Landscape.Base.Model;
-using LandscapeRegistry.Entity;
-using LandscapeRegistry.Model.Cached;
+﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static Landscape.Base.Model.IRelationModel;
 
 namespace LandscapeRegistry.Model
 {
     public class RelationModel : IRelationModel
     {
         private readonly NpgsqlConnection conn;
-        private readonly CachedPredicateModel predicateModel;
+        private readonly IPredicateModel predicateModel;
 
-        public RelationModel(CachedPredicateModel predicateModel, NpgsqlConnection connection)
+        public RelationModel(IPredicateModel predicateModel, NpgsqlConnection connection)
         {
             conn = connection;
             this.predicateModel = predicateModel;
-        }
-
-        public enum IncludeRelationDirections
-        {
-            Forward, Backward, Both
         }
 
         // TODO: make MergedRelation its own type
@@ -273,7 +268,7 @@ namespace LandscapeRegistry.Model
             }
 
             // remove outdated 
-            foreach(var outdatedRelation in outdatedRelations.Values)
+            foreach (var outdatedRelation in outdatedRelations.Values)
                 await RemoveRelation(outdatedRelation.FromCIID, outdatedRelation.ToCIID, data.PredicateID, data.LayerID, changesetID, trans);
 
             return true;

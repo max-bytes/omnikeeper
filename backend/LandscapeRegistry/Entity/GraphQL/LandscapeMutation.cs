@@ -3,7 +3,6 @@ using Landscape.Base.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using Npgsql;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -60,13 +59,14 @@ namespace LandscapeRegistry.Entity.GraphQL
                   {
                       // look for ciid
                       var ciIdentity = attributeGroup.Key;
-                      foreach (var attribute in attributeGroup) {
+                      foreach (var attribute in attributeGroup)
+                      {
                           removedAttributes.Add(await attributeModel.RemoveAttribute(attribute.Name, attribute.LayerID, ciIdentity, changeset.ID, transaction));
                       }
                   }
 
                   var insertedRelations = new List<Relation>();
-                  foreach(var insertRelation in insertRelations)
+                  foreach (var insertRelation in insertRelations)
                   {
                       insertedRelations.Add(await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.LayerID, changeset.ID, transaction));
                   }

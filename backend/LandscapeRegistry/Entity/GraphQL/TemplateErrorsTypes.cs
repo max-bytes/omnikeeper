@@ -1,8 +1,5 @@
 ﻿using GraphQL.Types;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Landscape.Base.Entity;
 
 namespace LandscapeRegistry.Entity.GraphQL
 {
@@ -31,7 +28,7 @@ namespace LandscapeRegistry.Entity.GraphQL
             Field(x => x.CorrectIsArray);
         }
     }
-    
+
     public class TemplateErrorAttributeGenericType : ObjectGraphType<TemplateErrorAttributeGeneric>
     {
         public TemplateErrorAttributeGenericType()
@@ -59,11 +56,36 @@ namespace LandscapeRegistry.Entity.GraphQL
         }
     }
 
+
+    public class TemplateErrorRelationGenericType : ObjectGraphType<TemplateErrorRelationGeneric>
+    {
+        public TemplateErrorRelationGenericType()
+        {
+            Field(x => x.ErrorMessage);
+        }
+    }
+    public class TemplateErrorRelationType : UnionGraphType
+    {
+        public TemplateErrorRelationType()
+        {
+            Type<TemplateErrorRelationGenericType>();
+        }
+    }
+    public class TemplateErrorsRelationType : ObjectGraphType<TemplateErrorsRelation>
+    {
+        public TemplateErrorsRelationType()
+        {
+            Field(x => x.Predicate, type: typeof(PredicateType));
+            Field(x => x.Errors, type: typeof(ListGraphType<TemplateErrorRelationType>));
+        }
+    }
+
     public class TemplateErrorsCIType : ObjectGraphType<TemplateErrorsCI>
     {
         public TemplateErrorsCIType()
         {
             Field("attributeErrors", x => x.AttributeErrors.Values, type: typeof(ListGraphType<TemplateErrorsAttributeType>)); // GraphQL cannot deal with dictionaries, make list of values instead
+            Field("relationErrors", x => x.RelationErrors.Values, type: typeof(ListGraphType<TemplateErrorsRelationType>)); // GraphQL cannot deal with dictionaries, make list of values instead
         }
     }
 }

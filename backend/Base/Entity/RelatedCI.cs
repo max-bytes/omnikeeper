@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LandscapeRegistry.Entity
+namespace Landscape.Base.Entity
 {
     public class RelatedCI
     {

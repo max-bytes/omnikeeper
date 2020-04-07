@@ -1,5 +1,5 @@
-﻿using Landscape.Base.Model;
-using LandscapeRegistry.Entity;
+﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using Npgsql;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,7 +47,8 @@ namespace LandscapeRegistry.Model.Cached
 
         public async Task<IEnumerable<Layer>> GetLayers(long[] layerIDs, NpgsqlTransaction trans)
         {
-            var tmp = layerIDs.Select(id => {
+            var tmp = layerIDs.Select(id =>
+            {
                 IDLayerCache.TryGetValue(id, out var ret);
                 return (id, ret);
             });

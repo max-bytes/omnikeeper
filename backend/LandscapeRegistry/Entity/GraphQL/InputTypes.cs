@@ -1,9 +1,5 @@
 ﻿using GraphQL.Types;
 using LandscapeRegistry.Entity.AttributeValues;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Entity.GraphQL
 {
@@ -77,7 +73,8 @@ namespace LandscapeRegistry.Entity.GraphQL
         }
     }
 
-    public class InsertRelationInput { 
+    public class InsertRelationInput
+    {
         public string FromCIID { get; private set; }
         public string ToCIID { get; private set; }
         public string PredicateID { get; private set; }

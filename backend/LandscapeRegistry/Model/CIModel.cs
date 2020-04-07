@@ -1,14 +1,8 @@
-﻿using Landscape.Base;
-using Landscape.Base.Entity;
+﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
-using LandscapeRegistry.Entity;
-using LandscapeRegistry.Entity.AttributeValues;
-using Microsoft.Extensions.Configuration;
 using Npgsql;
-using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using static Landscape.Base.Model.IAttributeModel;
@@ -45,7 +39,7 @@ namespace LandscapeRegistry.Model
 
         public async Task<string> CreateCIWithType(string identity, string typeID, NpgsqlTransaction trans)
         {
-            var ciType = await GetCIType(typeID, trans);
+            var ciType = await GetCITypeByID(typeID, trans);
             if (ciType == null) throw new Exception($"Could not find CI-Type {typeID}");
             using var command = new NpgsqlCommand(@"INSERT INTO ci (id) VALUES (@id)", conn, trans);
             command.Parameters.AddWithValue("id", identity);
@@ -116,7 +110,7 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<CIType> GetCIType(string typeID, NpgsqlTransaction trans)
+        public async Task<CIType> GetCITypeByID(string typeID, NpgsqlTransaction trans)
         {
             using var command = new NpgsqlCommand(@"SELECT id FROM citype WHERE id = @citype_id LIMIT 1", conn, trans);
             command.Parameters.AddWithValue("citype_id", typeID);

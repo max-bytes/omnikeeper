@@ -1,5 +1,5 @@
-﻿using Landscape.Base.Model;
-using LandscapeRegistry.Entity;
+﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using LandscapeRegistry.Service;
 using LandscapeRegistry.Utils;
 using Npgsql;
@@ -13,9 +13,13 @@ namespace LandscapeRegistry.Model
     public class TemplateModel : ITemplateModel
     {
         private ITemplatesProvider TemplatesProvider { get; set; }
-        public TemplateModel(ITemplatesProvider templatesProvider)
+        private IRelationModel RelationModel { get; set; }
+        private ICIModel CIModel { get; set; }
+        public TemplateModel(ITemplatesProvider templatesProvider, IRelationModel relationModel, ICIModel ciModel)
         {
             TemplatesProvider = templatesProvider;
+            RelationModel = relationModel;
+            CIModel = ciModel;
         }
 
         public async Task<TemplateErrorsCI> CalculateTemplateErrors(string ciid, LayerSet layerset, ICIModel ciModel, NpgsqlTransaction trans)
@@ -27,23 +31,29 @@ namespace LandscapeRegistry.Model
         public async Task<TemplateErrorsCI> CalculateTemplateErrors(MergedCI ci, NpgsqlTransaction trans)
         {
             var templates = await TemplatesProvider.GetTemplates(trans);
-            var attributesTemplates = templates.GetTemplate(ci.Type)?.AttributeTemplates;
+            var template = templates.GetTemplate(ci.Type);
+            var attributesTemplates = template?.AttributeTemplates;
+            var relationTemplates = template?.RelationTemplates;
 
-            if (attributesTemplates == null) return TemplateErrorsCI.Build(new Dictionary<string, TemplateErrorsAttribute>());
+            var relationsAndToCIs = (await RelationService.GetMergedForwardRelationsAndToCIs(ci, CIModel, RelationModel, trans))
+                .ToLookup(t => t.relation.PredicateID);
 
-            return TemplateErrorsCI.Build(
-                attributesTemplates.Values
-                .Select(at => (at.Name, CalculateTemplateErrorsAttribute(ci, at)))
-                .Where(t => !t.Item2.Errors.IsEmpty())
-                .ToDictionary(t => t.Name, t => t.Item2)
-            );
+            var errorsAttribute = new Dictionary<string, TemplateErrorsAttribute>();
+            if (attributesTemplates != null)
+                errorsAttribute = attributesTemplates.Values
+                .Select(at => (at.Name, TemplateCheckService.CalculateTemplateErrorsAttribute(ci, at).errors))
+                .Where(t => !t.errors.Errors.IsEmpty())
+                .ToDictionary(t => t.Name, t => t.errors);
+            var errorsRelation = new Dictionary<string, TemplateErrorsRelation>();
+            if (relationTemplates != null)
+                errorsRelation = relationTemplates.Values
+                .Select(rt => (rt.Predicate.ID, TemplateCheckService.CalculateTemplateErrorsRelation(relationsAndToCIs, rt).errors))
+                .Where(t => !t.errors.Errors.IsEmpty())
+                .ToDictionary(t => t.ID, t => t.errors);
+
+            return TemplateErrorsCI.Build(errorsAttribute, errorsRelation);
         }
 
 
-        private TemplateErrorsAttribute CalculateTemplateErrorsAttribute(MergedCI ci, CIAttributeTemplate at)
-        {
-            var foundAttribute = ci.MergedAttributes.FirstOrDefault(a => a.Attribute.Name == at.Name);
-            return TemplateErrorsAttribute.Build(at.Name, TemplateCheckService.PerAttributeTemplateChecks(foundAttribute, at));
-        }
     }
 }

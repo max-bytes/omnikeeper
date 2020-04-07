@@ -1,6 +1,5 @@
-﻿using Landscape.Base.Model;
-using LandscapeRegistry.Entity;
-using LandscapeRegistry.Model;
+﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using Microsoft.AspNetCore.Http;
 using Npgsql;
 using System;
@@ -33,7 +32,7 @@ namespace LandscapeRegistry.Service
         private async Task<User> CreateUserFromClaims(IEnumerable<Claim> claims, NpgsqlTransaction trans)
         {
             var username = claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
-            
+
             if (username == null)
             {
                 var anonymousGuid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef2"); // TODO: ?

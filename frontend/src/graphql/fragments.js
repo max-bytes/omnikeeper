@@ -51,6 +51,15 @@ export const Fragments = {
                     ... on TemplateErrorAttributeGenericType {errorMessage}
                 }
             }
+            relationErrors {
+                predicate {
+                    id
+                }
+                errors {
+                    __typename
+                    ... on TemplateErrorRelationGenericType {errorMessage}
+                }
+            }
         }
         related @include(if: $includeRelated) {
             ...RelatedCI

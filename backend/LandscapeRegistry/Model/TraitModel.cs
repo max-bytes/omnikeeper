@@ -1,6 +1,5 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
-using LandscapeRegistry.Entity;
 using LandscapeRegistry.Service;
 using LandscapeRegistry.Utils;
 using Npgsql;
@@ -17,39 +16,41 @@ namespace LandscapeRegistry.Model
 
         private ITraitsProvider TraitsProvider { get; set; }
         private readonly ICIModel ciModel;
-        public TraitModel(ICIModel ciModel, ITraitsProvider traitsProvider, NpgsqlConnection connection)
+        private readonly IRelationModel relationModel;
+        public TraitModel(ICIModel ciModel, IRelationModel relationModel, ITraitsProvider traitsProvider, NpgsqlConnection connection)
         {
             TraitsProvider = traitsProvider;
             conn = connection;
             this.ciModel = ciModel;
+            this.relationModel = relationModel;
         }
 
-        public async Task<IEnumerable<EffectiveTrait>> CalculateEffectiveTraitsForCI(MergedCI ci, NpgsqlTransaction trans)
+        public async Task<EffectiveTraitSet> CalculateEffectiveTraitSetForCI(MergedCI ci, NpgsqlTransaction trans)
         {
             var traits = await TraitsProvider.GetTraits(trans);
 
             var ret = new List<EffectiveTrait>();
-            foreach(var trait in traits.traits.Values)
+            foreach (var trait in traits.traits.Values)
             {
-                var et = CalculateEffectiveTrait(trait, ci);
+                var et = await CalculateEffectiveTrait(trait, ci, trans);
                 if (et != null) ret.Add(et);
             }
-            return ret;
+            return EffectiveTraitSet.Build(ci, ret);
         }
 
-        public async Task<IEnumerable<(EffectiveTrait, MergedCI)>> FindCIsByTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
             var traits = await TraitsProvider.GetTraits(trans);
             var trait = traits.traits.GetValueOrDefault(traitName);
             if (trait == null) return null; // trait not found by name
-            return await FindCIsByTrait(trait, layerSet, trans, atTime);
+            return await CalculateEffectiveTraitSetsForTrait(trait, layerSet, trans, atTime);
 
         }
 
-        public async Task<IEnumerable<(EffectiveTrait, MergedCI)>> FindCIsByTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
             // do a precursor filtering based on attribute names
-            var requiredAttributeNames = trait.Attributes.Select(a => a.AttributeTemplate.Name);
+            var requiredAttributeNames = trait.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
             var candidateCIIDs = new List<string>();
             var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layerSet, "temp_layerset", conn, trans);
 
@@ -82,23 +83,42 @@ namespace LandscapeRegistry.Model
             }
 
             // now do a full pass to check which ci's REALLY fulfill the trait's requirements
+            // TODO: performance improvement: use a function that works on a list of ci's, not check every ci on its own (and do N queries)
             var cis = await ciModel.GetMergedCIs(layerSet, false, trans, atTime, candidateCIIDs);
-            return cis.Select(ci => (effectiveTrait: CalculateEffectiveTrait(trait, ci), ci)).Where(t => t.effectiveTrait != null);
+            var effectiveTraits = new List<EffectiveTraitSet>();
+            foreach (var ci in cis)
+            {
+                var et = await CalculateEffectiveTrait(trait, ci, trans);
+                if (et != null)
+                    effectiveTraits.Add(EffectiveTraitSet.Build(ci, et));
+            }
+            return effectiveTraits;
         }
 
-        private EffectiveTrait CalculateEffectiveTrait(Trait trait, MergedCI ci)
+        private async Task<EffectiveTrait> CalculateEffectiveTrait(Trait trait, MergedCI ci, NpgsqlTransaction trans)
         {
-            var effectiveTraitAttributes = trait.Attributes.Select(ta =>
+            var relationsAndToCIs = (await RelationService.GetMergedForwardRelationsAndToCIs(ci, ciModel, relationModel, trans))
+                .ToLookup(t => t.relation.PredicateID);
+
+            var effectiveTraitAttributes = trait.RequiredAttributes.Select(ta =>
             {
-                var foundAttribute = ci.MergedAttributes.FirstOrDefault(a => a.Attribute.Name == ta.AttributeTemplate.Name);
-                var effectiveName = ta.AlternativeName;
-                return (effectiveName, foundAttribute, checks: TemplateCheckService.PerAttributeTemplateChecks(foundAttribute, ta.AttributeTemplate));
+                var traitAttributeIdentifier = ta.Identifier;
+                var (foundAttribute, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
+                return (traitAttributeIdentifier, foundAttribute, checks);
+            });
+            var effectiveTraitRelations = trait.RequiredRelations.Select(tr =>
+            {
+                var traitRelationIdentifier = tr.Identifier;
+                var (foundRelations, checks) = TemplateCheckService.CalculateTemplateErrorsRelation(relationsAndToCIs, tr.RelationTemplate);
+                return (traitRelationIdentifier, foundRelations, checks);
             });
 
-            var isTraitApplicable = effectiveTraitAttributes.All(t => t.checks.IsEmpty());
+            var isTraitApplicable = effectiveTraitAttributes.All(t => t.checks.Errors.IsEmpty()) && effectiveTraitRelations.All(t => t.checks.Errors.IsEmpty());
 
             if (isTraitApplicable)
-                return EffectiveTrait.Build(trait, effectiveTraitAttributes.ToDictionary(t => t.effectiveName, t => t.foundAttribute));
+                return EffectiveTrait.Build(trait,
+                    effectiveTraitAttributes.ToDictionary(t => t.traitAttributeIdentifier, t => t.foundAttribute),
+                    effectiveTraitRelations.ToDictionary(t => t.traitRelationIdentifier, t => t.foundRelations));
             return null;
         }
     }

@@ -1,5 +1,5 @@
-﻿using Landscape.Base.Model;
-using LandscapeRegistry.Entity;
+﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -37,7 +37,7 @@ namespace LandscapeRegistry.Model
         public async Task<LayerSet> BuildLayerSet(string[] layerNames, NpgsqlTransaction trans)
         {
             var layerIDs = new List<long>();
-            foreach(var ln in layerNames)
+            foreach (var ln in layerNames)
             {
                 using var command = new NpgsqlCommand(@"select id from layer where name = @name LIMIT 1", conn, trans);
                 command.Parameters.AddWithValue("name", ln);
@@ -54,7 +54,7 @@ namespace LandscapeRegistry.Model
             var layerIDs = new List<long>();
             using var command = new NpgsqlCommand(@"select id from layer", conn, trans);
             using var reader = await command.ExecuteReaderAsync();
-            while(await reader.ReadAsync())
+            while (await reader.ReadAsync())
             {
                 layerIDs.Add(reader.GetInt64(0));
             }
@@ -108,7 +108,7 @@ namespace LandscapeRegistry.Model
             var layers = new List<Layer>();
             using var command = new NpgsqlCommand(@"select id, name from layer", conn, trans);
             using var r = await command.ExecuteReaderAsync();
-            while(await r.ReadAsync())
+            while (await r.ReadAsync())
             {
                 var id = r.GetInt64(0);
                 var name = r.GetString(1);

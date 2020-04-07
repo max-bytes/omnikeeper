@@ -1,12 +1,15 @@
 ﻿using GraphQL.Types;
 using Landscape.Base.Entity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Entity.GraphQL
 {
+    public class EffectiveTraitSetType : ObjectGraphType<EffectiveTraitSet>
+    {
+        public EffectiveTraitSetType()
+        {
+            Field(x => x.EffectiveTraits, type: typeof(ListGraphType<EffectiveTraitType>));
+        }
+    }
     public class EffectiveTraitType : ObjectGraphType<EffectiveTrait>
     {
         public EffectiveTraitType()

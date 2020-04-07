@@ -1,5 +1,5 @@
 ﻿using GraphQL.Types;
-using LandscapeRegistry.Model;
+using Landscape.Base.Entity;
 using System.Linq;
 
 namespace LandscapeRegistry.Entity.GraphQL

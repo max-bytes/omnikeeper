@@ -1,10 +1,6 @@
 ﻿using GraphQL.Types;
 using Landscape.Base.Entity;
-using LandscapeRegistry.Entity.AttributeValues;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Entity.GraphQL
 {
@@ -13,7 +9,7 @@ namespace LandscapeRegistry.Entity.GraphQL
         public IEnumerable<CIAttribute> InsertedAttributes { get; private set; }
         public IEnumerable<CIAttribute> RemovedAttributes { get; private set; }
         public IEnumerable<Relation> InsertedRelations { get; private set; }
-        
+
         public IEnumerable<MergedCI> AffectedCIs { get; private set; }
         public static MutateReturn Build(IEnumerable<CIAttribute> insertedAttributes,
             IEnumerable<CIAttribute> removedAttributes, IEnumerable<Relation> insertedRelations, IEnumerable<MergedCI> affectedCIs)

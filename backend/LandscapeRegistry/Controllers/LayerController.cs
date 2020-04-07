@@ -1,21 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-using LandscapeRegistry.Entity;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
+﻿using Landscape.Base.Entity;
 using LandscapeRegistry.Model.Cached;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Npgsql;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [Authorize]
     public class LayerController : ControllerBase
     {
@@ -40,9 +35,23 @@ namespace LandscapeRegistry.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("getLayerByName")]
-        public async Task<ActionResult<Layer>> GetLayerByName([FromQuery,Required]string layerName)
+        public async Task<ActionResult<Layer>> GetLayerByName([FromQuery, Required]string layerName)
         {
             return Ok(await layerModel.GetLayer(layerName, null));
+        }
+
+        /// <summary>
+        /// get layers by name
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("getLayersByName")]
+        public async Task<ActionResult<IEnumerable<Layer>>> GetLayersByName([FromQuery, Required]string[] layerNames)
+        {
+            var ret = new List<Layer>();
+            // TODO: better performance: use GetLayers()
+            foreach (var layerName in layerNames)
+                ret.Add(await layerModel.GetLayer(layerName, null));
+            return Ok(ret);
         }
     }
 }

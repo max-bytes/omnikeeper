@@ -6,34 +6,55 @@ using System.Text;
 
 namespace Landscape.Base.Entity
 {
+    public class TraitRelation
+    {
+        public RelationTemplate RelationTemplate { get; private set; }
+        // TODO: implement anyOf(RelationTemplate[])
+        public string Identifier { get; private set; }
+
+        public static TraitRelation Build(string identifier, RelationTemplate relationTemplate)
+        {
+            return new TraitRelation()
+            {
+                Identifier = identifier,
+                RelationTemplate = relationTemplate
+            };
+        }
+    }
     public class TraitAttribute
     {
         public CIAttributeTemplate AttributeTemplate { get;private set; }
-        public string AlternativeName => AttributeTemplate.Name; // TODO
+        public string Identifier { get; private set; }
 
         // TODO: implement anyOf(CIAttributeTemplate[])
-        // TODO: add optional name/label (to refer to it)
 
-        public static TraitAttribute Build(CIAttributeTemplate attributeTemplate)
+        public static TraitAttribute Build(string identifier, CIAttributeTemplate attributeTemplate)
         {
             return new TraitAttribute()
             {
+                Identifier = identifier,
                 AttributeTemplate = attributeTemplate
             };
         }
     }
+
     public class Trait
     {
         public string Name { get; private set; }
 
-        public IImmutableList<TraitAttribute> Attributes { get; private set; }
+        public IImmutableList<TraitAttribute> RequiredAttributes { get; private set; }
+        // TODO: implement optional attributes
 
-        public static Trait Build(string name, IList<TraitAttribute> attributes)
+        public ImmutableList<TraitRelation> RequiredRelations { get; private set; }
+        // TODO: implement optional relations
+
+        public static Trait Build(string name, IEnumerable<TraitAttribute> requiredAttributes, IEnumerable<TraitRelation> requiredRelations)
         {
             return new Trait()
             {
                 Name = name,
-                Attributes = attributes.ToImmutableList()
+                RequiredAttributes = requiredAttributes.ToImmutableList(),
+                RequiredRelations = requiredRelations.ToImmutableList()
             };
         }
     }

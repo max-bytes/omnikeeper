@@ -1,10 +1,6 @@
 ﻿using GraphQL;
-using GraphQL.DataLoader;
-using GraphQL.Execution;
 using GraphQL.Types;
 using GraphQL.Validation;
-using Landscape.Base.Model;
-using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.GraphQL;
 using LandscapeRegistry.Service;
 using Microsoft.AspNetCore.Authorization;
@@ -15,7 +11,6 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Controllers
@@ -29,6 +24,8 @@ namespace LandscapeRegistry.Controllers
     }
 
     [ApiController]
+    [ApiVersionNeutral]
+    [Route("[controller]")]
     public class GraphQLController : Controller
     {
         private readonly ISchema _schema;

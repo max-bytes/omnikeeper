@@ -1,9 +1,7 @@
-﻿using LandscapeRegistry.Model;
-using Microsoft.AspNetCore.Http;
+﻿using Landscape.Base.Entity;
 using Npgsql;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace LandscapeRegistry.Entity.GraphQL
 {
@@ -16,7 +14,8 @@ namespace LandscapeRegistry.Entity.GraphQL
             User = user;
         }
 
-        public DateTimeOffset TimeThreshold {
+        public DateTimeOffset TimeThreshold
+        {
             get
             {
                 TryGetValue("TimeThreshold", out var ls);

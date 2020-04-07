@@ -1,14 +1,8 @@
-﻿using Landscape.Base;
+﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
-using LandscapeRegistry.Entity;
-using LandscapeRegistry.Entity.AttributeValues;
-using Microsoft.Extensions.Configuration;
 using Npgsql;
-using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model

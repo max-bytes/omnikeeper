@@ -62,6 +62,10 @@ namespace Landscape.Base.Entity
         public AttributeValueGeneric Value { get; private set; }
         public AttributeState State { get; private set; }
 
+        public static SimplifiedCIAttribute Build(MergedCIAttribute attribute)
+        {
+            return Build(attribute.Attribute.Name, attribute.Attribute.Value.ToGeneric(), attribute.Attribute.State);
+        }
         public static SimplifiedCIAttribute Build(string name, AttributeValueGeneric value, AttributeState state)
         {
             return new SimplifiedCIAttribute

@@ -1,12 +1,11 @@
 ﻿
 using Landscape.Base.Entity;
-using LandscapeRegistry.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LandscapeRegistry.Entity
+namespace Landscape.Base.Entity
 {
     public class MergedCI
     {

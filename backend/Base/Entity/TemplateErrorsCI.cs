@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LandscapeRegistry.Entity
+namespace Landscape.Base.Entity
 {
     public interface ITemplateErrorAttribute
     {
@@ -84,15 +84,50 @@ namespace LandscapeRegistry.Entity
             };
         }
     }
+
+
+
+    public interface ITemplateErrorRelation
+    {
+        string ErrorMessage { get; }
+    }
+    public class TemplateErrorRelationGeneric : ITemplateErrorRelation
+    {
+        public string ErrorMessage { get; private set; }
+
+        public static TemplateErrorRelationGeneric Build(string message)
+        {
+            return new TemplateErrorRelationGeneric()
+            {
+                ErrorMessage = message
+            };
+        }
+    }
+    public class TemplateErrorsRelation
+    {
+        public Predicate Predicate { get; private set; }
+        public IEnumerable<ITemplateErrorRelation> Errors { get; private set; }
+        public static TemplateErrorsRelation Build(Predicate predicate, IEnumerable<ITemplateErrorRelation> errors)
+        {
+            return new TemplateErrorsRelation()
+            {
+                Predicate = predicate,
+                Errors = errors
+            };
+        }
+    }
+
     public class TemplateErrorsCI
     {
         public IDictionary<string, TemplateErrorsAttribute> AttributeErrors { get; private set; }
+        public IDictionary<string, TemplateErrorsRelation> RelationErrors { get; private set; }
 
-        public static TemplateErrorsCI Build(IDictionary<string, TemplateErrorsAttribute> attributeErrors)
+        public static TemplateErrorsCI Build(IDictionary<string, TemplateErrorsAttribute> attributeErrors, IDictionary<string, TemplateErrorsRelation> relationErrors)
         {
             return new TemplateErrorsCI()
             {
-                AttributeErrors = attributeErrors
+                AttributeErrors = attributeErrors,
+                RelationErrors = relationErrors
             };
         }
     }

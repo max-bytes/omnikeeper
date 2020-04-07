@@ -1,4 +1,5 @@
-﻿using LandscapeRegistry;
+﻿using Landscape.Base.Entity;
+using LandscapeRegistry;
 using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
@@ -14,6 +15,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static Landscape.Base.Model.IRelationModel;
 
 namespace Tests.Integration.Model
 {
@@ -58,7 +60,7 @@ namespace Tests.Integration.Model
                 // test single relation
                 var i1 = await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layerID1, changeset.ID, trans);
                 Assert.AreEqual(predicateID1, i1.PredicateID);
-                var r1 = await relationModel.GetMergedRelations("H123", false, layerset, RelationModel.IncludeRelationDirections.Forward, trans);
+                var r1 = await relationModel.GetMergedRelations("H123", false, layerset, IncludeRelationDirections.Forward, trans);
                 Assert.AreEqual(1, r1.Count());
                 var rr1 = r1.First();
                 Assert.AreEqual(ciid1, rr1.FromCIID);
@@ -70,7 +72,7 @@ namespace Tests.Integration.Model
                 // test repeated insertion
                 var i2 = await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layerID1, changeset.ID, trans);
                 Assert.AreEqual(predicateID1, i2.PredicateID);
-                r1 = await relationModel.GetMergedRelations("H123", false, layerset, RelationModel.IncludeRelationDirections.Forward, trans);
+                r1 = await relationModel.GetMergedRelations("H123", false, layerset, IncludeRelationDirections.Forward, trans);
                 Assert.AreEqual(1, r1.Count());
                 rr1 = r1.First();
                 Assert.AreEqual(RelationState.New, rr1.State); // state must still be New
@@ -79,7 +81,7 @@ namespace Tests.Integration.Model
                 // test second relation
                 var i3 = await relationModel.InsertRelation(ciid1, ciid3, predicateID1, layerID1, changeset.ID, trans);
                 Assert.AreEqual(predicateID1, i3.PredicateID);
-                var r2 = await relationModel.GetMergedRelations("H123", false, layerset, RelationModel.IncludeRelationDirections.Forward, trans);
+                var r2 = await relationModel.GetMergedRelations("H123", false, layerset, IncludeRelationDirections.Forward, trans);
                 Assert.AreEqual(2, r2.Count());
                 var rr2 = r2.Last();
                 Assert.AreEqual(ciid1, rr2.FromCIID);
@@ -124,7 +126,7 @@ namespace Tests.Integration.Model
             var i2 = await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layerID2, changeset.ID, trans);
             Assert.AreEqual(predicateID1, i1.PredicateID);
             Assert.AreEqual(predicateID1, i2.PredicateID);
-            var r1 = await relationModel.GetMergedRelations("H123", false, layerset, RelationModel.IncludeRelationDirections.Forward, trans);
+            var r1 = await relationModel.GetMergedRelations("H123", false, layerset, IncludeRelationDirections.Forward, trans);
             Assert.AreEqual(1, r1.Count());
             var rr1 = r1.First();
             Assert.AreEqual(layerID2, rr1.LayerID);
@@ -207,7 +209,7 @@ namespace Tests.Integration.Model
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 var removedRelation = await relationModel.RemoveRelation(ciid1, ciid2, predicateID1, layerID2, changeset.ID, trans);
                 Assert.IsNotNull(removedRelation);
-                var r1 = await relationModel.GetMergedRelations("H123", false, layerset, RelationModel.IncludeRelationDirections.Forward, trans);
+                var r1 = await relationModel.GetMergedRelations("H123", false, layerset, IncludeRelationDirections.Forward, trans);
                 Assert.AreEqual(1, r1.Count());
                 var rr1 = r1.First();
                 Assert.AreEqual(layerID1, rr1.LayerID);
@@ -219,7 +221,7 @@ namespace Tests.Integration.Model
             {
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layerID2, changeset.ID, trans);
-                var r2 = await relationModel.GetMergedRelations("H123", false, layerset, RelationModel.IncludeRelationDirections.Forward, trans);
+                var r2 = await relationModel.GetMergedRelations("H123", false, layerset, IncludeRelationDirections.Forward, trans);
                 Assert.AreEqual(1, r2.Count());
                 var rr2 = r2.First();
                 Assert.AreEqual(layerID2, rr2.LayerID);

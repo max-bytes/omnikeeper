@@ -1,4 +1,5 @@
-﻿using LandscapeRegistry;
+﻿using Landscape.Base.Entity;
+using LandscapeRegistry;
 using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
@@ -192,7 +193,7 @@ namespace Tests.Integration.Model
             {
                 // test setting and getting of citype
                 var ciTypeID1 = await model.CreateCIType("T1", trans);
-                Assert.AreEqual("T1", (await model.GetCIType("T1", trans)).ID);
+                Assert.AreEqual("T1", (await model.GetCITypeByID("T1", trans)).ID);
 
                 // test CI creation
                 var ciid1 = await model.CreateCIWithType("H123", ciTypeID1, trans);

@@ -1,11 +1,9 @@
 ﻿using GraphQL.Types;
-using Landscape.Base;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Cached;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
+using static Landscape.Base.Model.IRelationModel;
 
 namespace LandscapeRegistry.Entity.GraphQL
 {
@@ -155,9 +153,9 @@ namespace LandscapeRegistry.Entity.GraphQL
                     var ciid = context.GetArgument<string>("ciid", null);
                     var limit = context.GetArgument<int?>("limit", null);
                     if (ciid != null)
-                        return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, RelationModel.IncludeRelationDirections.Both, ciid, null, limit);
+                        return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, IncludeRelationDirections.Both, ciid, null, limit);
                     else
-                        return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, RelationModel.IncludeRelationDirections.Both, null, limit);
+                        return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, IncludeRelationDirections.Both, null, limit);
                 });
         }
     }

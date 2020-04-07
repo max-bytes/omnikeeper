@@ -1,51 +1,35 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using GraphQL;
-using GraphQL.Authorization;
 using GraphQL.Server;
-using GraphQL.Server.Transports.AspNetCore;
 using GraphQL.Server.Ui.Playground;
 using GraphQL.Types;
-using GraphQL.Validation;
+using Hangfire;
+using Hangfire.Annotations;
+using Hangfire.AspNetCore;
+using Hangfire.Console;
+using Hangfire.Dashboard;
+using Hangfire.PostgreSql;
 using Landscape.Base;
 using Landscape.Base.Model;
 using LandscapeRegistry.Entity.GraphQL;
 using LandscapeRegistry.Model;
+using LandscapeRegistry.Model.Cached;
+using LandscapeRegistry.Service;
 using LandscapeRegistry.Utils;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SpaServices.Webpack;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Newtonsoft.Json;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
-using NetCore.AutoRegisterDi;
-using Npgsql;
-using Hangfire;
-using Hangfire.PostgreSql;
-using Hangfire.AspNetCore;
-using Hangfire.Console;
-using LandscapeRegistry.Model.Cached;
-using TestPlugin;
-using Hangfire.Dashboard;
-using Hangfire.Annotations;
-using LandscapeRegistry.Service;
 using Microsoft.OpenApi.Models;
-using System.IO;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using TestPlugin;
 
 namespace LandscapeRegistry
 {
@@ -63,6 +47,8 @@ namespace LandscapeRegistry
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddScoped<IServiceProvider>(x => new FuncServiceProvider(x.GetRequiredService)); // graphql needs this
+
+            services.AddApiVersioning();
 
             // add plugins
             //var testAssembly = Assembly.LoadFrom(@"C:\Users\Maximilian Csuk\Projects\Landscape\TestPlugin\bin\Debug\netstandard2.1\TestPlugin.dll");
@@ -219,8 +205,14 @@ namespace LandscapeRegistry
                             TokenUrl = new Uri("https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/token", UriKind.Absolute),
                         }
                     }
-                }); 
+                });
                 c.OperationFilter<AuthenticationRequirementsOperationFilter>();
+
+                // Use method name as operationId
+                c.CustomOperationIds(apiDesc =>
+                {
+                    return apiDesc.TryGetMethodInfo(out MethodInfo methodInfo) ? methodInfo.Name : null;
+                });
             });
             services.AddSwaggerGenNewtonsoftSupport();
         }

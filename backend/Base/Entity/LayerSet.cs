@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LandscapeRegistry.Model
+namespace Landscape.Base.Entity
 {
     public class LayerSet : IEnumerable<long>
     {

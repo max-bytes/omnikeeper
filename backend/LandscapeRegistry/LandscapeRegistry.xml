@@ -16,16 +16,7 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:LandscapeRegistry.Controllers.CIController.GetMergedCIsByType(System.Int64[],System.String[],System.Nullable{System.DateTimeOffset})">
-            <summary>
-            list of merged CIs with a specific CI-type
-            </summary>
-            <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
-            <param name="CITypeIDs"></param>
-            <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
-            <returns></returns>
-        </member>
-        <member name="M:LandscapeRegistry.Controllers.CIController.GetSimplifiedCIsByType(System.Int64[],System.String[],System.Nullable{System.DateTimeOffset})">
+        <member name="M:LandscapeRegistry.Controllers.CIController.GetCIsByType(System.Int64[],System.String[],System.Nullable{System.DateTimeOffset})">
             <summary>
             list of merged CIs with speficied CI-types, in a simplified form
             </summary>
@@ -34,12 +25,23 @@
             <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
             <returns></returns>
         </member>
-        <member name="M:LandscapeRegistry.Controllers.CIController.GetSimplifiedCIByID(System.Int64[],System.String,System.Nullable{System.DateTimeOffset})">
+        <member name="M:LandscapeRegistry.Controllers.CIController.GetCIByID(System.Int64[],System.String,System.Nullable{System.DateTimeOffset})">
             <summary>
             single CI by CI-ID, in a simplified form
             </summary>
             <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
             <param name="CIID"></param>
+            <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
+            <returns></returns>
+        </member>
+        <member name="M:LandscapeRegistry.Controllers.CIController.GetCIsByID(System.Int64[],System.String[],System.Nullable{System.DateTimeOffset})">
+            <summary>
+            multiple CIs by CI-ID, in a simplified form
+            !Watch out for the query URL getting too long because of a lot of CIIDs!
+            TODO: consider using POST
+            </summary>
+            <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
+            <param name="CIIDs"></param>
             <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
             <returns></returns>
         </member>
@@ -52,6 +54,12 @@
         <member name="M:LandscapeRegistry.Controllers.LayerController.GetLayerByName(System.String)">
             <summary>
             get a layer by name
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:LandscapeRegistry.Controllers.LayerController.GetLayersByName(System.String[])">
+            <summary>
+            get layers by name
             </summary>
             <returns></returns>
         </member>

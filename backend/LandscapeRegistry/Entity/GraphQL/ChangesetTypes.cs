@@ -1,14 +1,9 @@
 ﻿using GraphQL.Types;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Landscape.Base.Entity;
 
 namespace LandscapeRegistry.Entity.GraphQL
 {
-    public class UserTypeType : EnumerationGraphType<Entity.UserType>
+    public class UserTypeType : EnumerationGraphType<UserType>
     {
     }
 

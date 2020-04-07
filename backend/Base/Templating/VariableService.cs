@@ -1,4 +1,5 @@
-﻿using LandscapeRegistry.Entity;
+﻿using Landscape.Base.Entity;
+using LandscapeRegistry.Entity;
 using System;
 using System.Collections.Generic;
 using System.Text;
