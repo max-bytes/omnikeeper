@@ -1,11 +1,11 @@
-image: microsoft/dotnet:latest
+image: mcr.microsoft.com/dotnet/core/aspnet:3.1
 
 stages:
     - build
     - test
 
 variables:
-    test: "Tests"
+    test: "Example.Test"
 
 before_script:
     - "cd backend"
@@ -14,7 +14,7 @@ before_script:
 build:
     stage: build
     script:
-        - "dotnet build"
+        - "docker build -t LandscapeRegistryBackend -f .\LandscapeRegistry\Dockerfile ."
 
 test:
     stage: test
