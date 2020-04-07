@@ -1,20 +1,27 @@
-image: docker:latest
-
-services:
-  - docker:dind
-
-
 stages:
     - build
 #    - test
 
-#variables:
-#    test: "Example.Test"
+variables:
+  # The 'docker' hostname is the alias of the service container as described at
+  # https://docs.gitlab.com/ee/ci/docker/using_docker_images.html#accessing-the-services
+  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_DRIVER: overlay2
+
+  # build breaks with
+  # docker: Cannot connect to the Docker daemon at tcp://docker:2375. Is the docker daemon running?.
+  # see https://gitlab.com/gitlab-org/gitlab-runner/issues/4501 for details
+  DOCKER_TLS_CERTDIR: ""
+
+
+services:
+  - docker:dind
 
 before_script:
     - "cd backend"
 
 build:
+    image: docker:latest
     stage: build
     tags:
         - h1lscapet01.mhx.local
