@@ -17,7 +17,7 @@ before_script:
 build:
     stage: build
     script:
-        - "docker build -t landscape_registry_backend -f .\\LandscapeRegistry\\Dockerfile ."
+        - "docker build -t landscape_registry_backend -f ./LandscapeRegistry/Dockerfile ."
 
 #test:
 #    stage: test
