@@ -1,5 +1,6 @@
 stages:
-    - build
+  - build
+  - deploy
 #    - test
 
 variables:
@@ -17,15 +18,32 @@ services:
   - docker:19.03.1-dind
 
 before_script:
-    - "cd backend"
+  - "cd backend"
 
 build:
-    image: docker:stable
-    stage: build
-    tags:
-        - h1lscapet01.mhx.local
-    script:
-        - "docker build -t landscape_registry_backend -f ./LandscapeRegistry/Dockerfile ."
+  image: docker:stable
+  stage: build
+  when: manual
+  tags:
+    - h1lscapet01.mhx.local
+  script:
+    - "docker build -t landscape_registry_backend -f ./LandscapeRegistry/Dockerfile ."
+
+test-deploy:
+  image: docker-registry.mhx.at/infra-docker/builddeploy-php:7.2.1
+  stage: deploy
+  environment: mhx-test
+  when: manual
+  tags:
+    - h1lscapet01.mhx.local
+  script:
+    # deploy
+    - eval $(ssh-agent -s)
+    - ssh-add <(echo "$STAGING_PRIVATE_KEY")
+    - ssh cicdauto@10.131.1.13 hostname
+
+
+
 
 #test:
 #    stage: test
