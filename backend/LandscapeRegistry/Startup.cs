@@ -257,10 +257,14 @@ namespace LandscapeRegistry
                 endpoints.MapControllers();
             });
 
-            app.UseSwagger();
+            app.UseSwagger(c =>
+            {
+                c.RouteTemplate = Configuration["BaseURL"] + "/swagger/{documentname}/swagger.json";
+            });
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Landscape Registry REST API V1");
+                c.SwaggerEndpoint("./v1/swagger.json", "Landscape Registry REST API V1");
+                c.RoutePrefix = ((Configuration["BaseURL"].Length == 0) ? "" : Configuration["BaseURL"] + "/") + "swagger";
                 c.OAuthClientId("landscape-registry-api");
                 c.OAuthClientSecret(Configuration.GetSection("SwaggerUI")["OAuthClientSecret"]);
             });
