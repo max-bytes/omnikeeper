@@ -1,6 +1,6 @@
 stages:
-  - build
-  - deploy
+ - build
+ - deploy
 
 variables:
   # The 'docker' hostname is the alias of the service container as described at
@@ -14,23 +14,35 @@ variables:
   DOCKER_TLS_CERTDIR: ""
 
 
-build:
+build-backend:
   image: docker:stable
   stage: build
-  when: manual # speicherproblem aus jedem commit ein image zu bauen ;) // sonst auch kein deployment wenn nicht alle jubs der vorstufe done oder manual sind
+  when: manual
   tags:
     - h1lscapet01.mhx.local
-
   services:
     - docker:19.03.1-dind
-
   before_script:
     - "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
-
   script:
     - "cd backend"
     - "docker build -t $CI_REGISTRY/landscape/registry/backend:latest -f ./LandscapeRegistry/Dockerfile ."
     - "docker push $CI_REGISTRY/landscape/registry/backend:latest"
+
+build-frontend:
+  image: docker:stable
+  stage: build
+  when: manual
+  tags:
+    - h1lscapet01.mhx.local
+  services:
+    - docker:19.03.1-dind
+  before_script:
+    - "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
+  script:
+    - "cd frontend"
+    - "docker build -t $CI_REGISTRY/landscape/registry/frontend:latest ."
+    - "docker push $CI_REGISTRY/landscape/registry/frontend:latest"
 
 test-deploy:
   image: docker-registry.mhx.at/infra-docker/builddeploy-php:7.2.1
