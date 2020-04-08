@@ -18,6 +18,7 @@ using LandscapeRegistry.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -257,10 +258,14 @@ namespace LandscapeRegistry
                 endpoints.MapControllers();
             });
 
-            app.UseSwagger();
+            app.UseSwagger(c =>
+            {
+                //c.RouteTemplate = Configuration["BaseURL"] + "/swagger/{documentname}/swagger.json";
+            });
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Landscape Registry REST API V1");
+                c.SwaggerEndpoint("./v1/swagger.json", "Landscape Registry REST API V1");
+                //c.RoutePrefix = ((Configuration["BaseURL"].Length == 0) ? "" : Configuration["BaseURL"] + "/") + "swagger";
                 c.OAuthClientId("landscape-registry-api");
                 c.OAuthClientSecret(Configuration.GetSection("SwaggerUI")["OAuthClientSecret"]);
             });
@@ -268,10 +273,21 @@ namespace LandscapeRegistry
             // Configure hangfire to use the new JobActivator we defined.
             GlobalConfiguration.Configuration.UseConsole().UseActivator(new AspNetCoreJobActivator(serviceScopeFactory));
             app.UseHangfireServer();
-            if (env.IsDevelopment())
+            if (env.IsDevelopment() || env.IsStaging())
             {
+                // workaround, see: https://github.com/HangfireIO/Hangfire/issues/1110
+                app.Use((context, next) =>
+                {
+                    if (context.Request.Path.StartsWithSegments("/hangfire"))
+                    {
+                        context.Request.PathBase = new PathString(context.Request.Headers["X-Forwarded-Prefix"]);
+                    }
+                    return next();
+                });
+
                 app.UseHangfireDashboard(options: new DashboardOptions()
                 {
+                    AppPath = null,
                     Authorization = new IDashboardAuthorizationFilter[] { new HangFireAuthorizationFilter() }
                 });
             }
