@@ -22,6 +22,7 @@ before_script:
 build:
   image: docker:stable
   stage: build
+  when: manual # speicherproblem aus jedem commit ein image zu bauen ;) // sonst auch kein deployment wenn nicht alle jubs der vorstufe done oder manual sind
   tags:
     - h1lscapet01.mhx.local
   script:
