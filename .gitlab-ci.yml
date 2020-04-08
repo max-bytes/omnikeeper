@@ -13,11 +13,6 @@ variables:
   # see https://gitlab.com/gitlab-org/gitlab-runner/issues/4501 for details
   DOCKER_TLS_CERTDIR: ""
 
-services:
-  - docker:19.03.1-dind
-
-before_script:
-  - "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
 
 build:
   image: docker:stable
@@ -25,6 +20,13 @@ build:
   when: manual # speicherproblem aus jedem commit ein image zu bauen ;) // sonst auch kein deployment wenn nicht alle jubs der vorstufe done oder manual sind
   tags:
     - h1lscapet01.mhx.local
+
+  services:
+    - docker:19.03.1-dind
+
+  before_script:
+    - "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
+
   script:
     - "cd backend"
     - "docker build -t $CI_REGISTRY/landscape/registry/backend:latest -f ./LandscapeRegistry/Dockerfile ."
