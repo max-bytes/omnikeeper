@@ -4,6 +4,7 @@ import { ApolloProvider, ApolloClient, createHttpLink, InMemoryCache,gql,default
 import { ApolloProvider as ApolloHooksProvider } from '@apollo/react-hooks'
 import { useKeycloak } from '@react-keycloak/web'
 import moment from 'moment'
+import env from "@beam-australia/react-env";
 
 let toHSL = function(string, opts) {
   var h, s, l;
@@ -163,8 +164,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
     });
 
     const httpLink = createHttpLink({
-    //   uri: 'https://localhost:44360/graphql',
-      uri: 'https://localhost:44378/graphql',
+      uri: env('BACKEND_URL'),
       credentials: 'include',
       headers: {
         "Authorization": "Bearer " + ((keycloak.token) ? keycloak.token : "")

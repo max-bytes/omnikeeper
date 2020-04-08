@@ -13,10 +13,11 @@ import SearchCI from './components/SearchCI'
 import UserBar from './components/UserBar';
 import { Redirect, Route, Switch, BrowserRouter, Link  } from 'react-router-dom'
 import ApolloWrapper from './components/ApolloWrapper';
+import env from "@beam-australia/react-env";
 
 const keycloak = new Keycloak({
   "realm": "landscape",
-  "url": "https://host.docker.internal:8443/auth/",
+  "url": env("KEYCLOAK_URL"),
   "ssl-required": "none",
   "resource": "landscape",
   "clientId": "landscape-registry-frontend",

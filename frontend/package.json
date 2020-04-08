@@ -10,6 +10,7 @@
     "@testing-library/user-event": "^7.2.1",
     "apollo-client": "^2.6.8",
     "bootstrap": "^4.4.1",
+    "env-cmd": "^10.1.0",
     "graphql": "^14.6.0",
     "keycloak-js": "^9.0.0",
     "lodash": "^4.17.15",
@@ -31,8 +32,13 @@
     "use-promise": "^2.0.1"
   },
   "scripts": {
+    "prestart": "react-env",
     "start": "react-scripts start --no-cache",
     "build": "react-scripts build",
+    "start:dev": "env-cmd -f .env.development react-scripts start --no-cache",
+    "build:dev": "env-cmd -f .env.development react-scripts build",
+    "start:test": "env-cmd -f .env.test react-scripts start --no-cache",
+    "build:test": "env-cmd -f .env.test react-scripts build",
     "test": "react-scripts test --no-cache",
     "eject": "react-scripts eject"
   },
@@ -50,5 +56,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@beam-australia/react-env": "^2.1.2"
   }
 }
