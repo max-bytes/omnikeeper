@@ -11,13 +11,13 @@ COPY package-lock.json ./
 RUN npm install
 RUN npm install react-scripts@3.4.1 -g
 
-# # add app
+# add app
 COPY . ./
 
-RUN npm run build
+RUN PUBLIC_URL=__PUBLIC_URL_PLACEHOLDER__ npm run build
 
 # Create deployable image
-FROM beamaustralia/react-env:latest
+FROM docker-registry.mhx.at/landscape/react-frontend-image/react-frontend:latest
 
 WORKDIR /var/www
 
