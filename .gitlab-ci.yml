@@ -41,8 +41,9 @@ build-frontend:
     - "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
   script:
     - "cd frontend"
-    - "docker pull $CI_REGISTRY/landscape/registry/frontend:latest || true" # doesn't do much because our build image is doing the hard lifting, so having a cached final image doesn't help
-    - "docker build --cache-from $CI_REGISTRY/landscape/registry/frontend:latest -t $CI_REGISTRY/landscape/registry/frontend:latest ."
+#    - "docker pull $CI_REGISTRY/landscape/registry/frontend:latest || true" # doesn't do much because our build image is doing the hard lifting, so having a cached final image doesn't help
+# - "docker build --cache-from $CI_REGISTRY/landscape/registry/frontend:latest -t $CI_REGISTRY/landscape/registry/frontend:latest ."
+    - "docker build -t $CI_REGISTRY/landscape/registry/frontend:latest ."
     - "docker push $CI_REGISTRY/landscape/registry/frontend:latest"
 
 test-deploy:
