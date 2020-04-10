@@ -34,12 +34,12 @@ const keycloakProviderInitConfig = {
   // https://issues.redhat.com/browse/KEYCLOAK-12125
   "checkLoginIframe": false 
 }
-
+//{env("BASE_NAME")}
 function App() {
   return (
     <KeycloakProvider keycloak={keycloak} initConfig={keycloakProviderInitConfig}>
       <div style={{height: '100%'}}>
-        <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
+        <BrowserRouter basename='/landscape/registry' forceRefresh={false}>
           <Menu fixed='top' inverted style={{display: 'flex', justifyContent: 'space-between'}}>
             <div>
               <Menu.Item style={{fontSize:'1.2em'}}>Landscape Registry</Menu.Item>
