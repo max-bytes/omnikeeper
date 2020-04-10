@@ -39,7 +39,7 @@ function App() {
   return (
     <KeycloakProvider keycloak={keycloak} initConfig={keycloakProviderInitConfig}>
       <div style={{height: '100%'}}>
-        <BrowserRouter basename={process.env.PUBLIC_URL} forceRefresh={false}>
+        <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
           <Menu fixed='top' inverted style={{display: 'flex', justifyContent: 'space-between'}}>
             <div>
               <Menu.Item style={{fontSize:'1.2em'}}>Landscape Registry</Menu.Item>
