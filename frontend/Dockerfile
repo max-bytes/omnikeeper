@@ -17,7 +17,7 @@ COPY . ./
 RUN PUBLIC_URL=__PUBLIC_URL_PLACEHOLDER__ npm run build
 
 # Create deployable image
-FROM registry-frontend-image:latest
+FROM docker-registry.mhx.at/landscape/react-frontend-image/react-frontend:latest
 
 WORKDIR /var/www
 
