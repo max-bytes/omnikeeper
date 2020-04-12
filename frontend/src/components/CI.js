@@ -40,7 +40,7 @@ function CI(props) {
     <h3>CI {props.ci.identity} - type: {props.ci.type.id}</h3>
     <TemplateErrors templateErrors={props.ci.templateErrors} 
       onCreateNewAttribute={(attributeName, attributeType) => {
-        setCreateNewAttribute({name: attributeName, type: attributeType, value: '', layer: props.layers[0]}); // TODO: correct layer
+        setCreateNewAttribute({name: attributeName, type: attributeType, value: '', layer: visibleAndWritableLayers[0]}); // TODO: correct layer
       }}
       onOverwriteAttribute={(attributeName, attributeType) => {
         // find current value and layer
@@ -48,7 +48,7 @@ function CI(props) {
         if (currentAttribute) {
           // TODO: get current correct layer
           const layerID = currentAttribute.layerStackIDs[currentAttribute.layerStackIDs.length - 1];
-          const layer = props.layers.find(l => l.id === layerID);
+          const layer = visibleAndWritableLayers.find(l => l.id === layerID);
           const newValues = {name: attributeName, type: attributeType, value: currentAttribute.attribute.value.value, layer: layer};
           setCreateNewAttribute(newValues);
         }

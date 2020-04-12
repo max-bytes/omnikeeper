@@ -2,24 +2,27 @@ import React, { useState } from "react";
 import PropTypes from 'prop-types'
 import { useMutation } from '@apollo/react-hooks';
 import { withApollo } from 'react-apollo';
-import Button from 'react-bootstrap/Button';
+//import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import { mutations } from '../graphql/mutations'
 import { AttributeTypes } from '../utils/attributeTypes'
 import { Row } from "react-bootstrap";
 import EditableAttributeValue from "./EditableAttributeValue";
-import { Dropdown } from 'semantic-ui-react'
+import { Dropdown, Segment, Button, Icon } from 'semantic-ui-react'
+import LayerDropdown from "./LayerDropdown";
 
 function AddNewAttribute(props) {
-
+  const canBeEdited = props.isEditable && props.visibleAndWritableLayers.length > 0;
   let initialAttribute = {name: '', type: 'TEXT', values: [''], isArray: false};
-  const [selectedLayer, setSelectedLayer] = useState(undefined);
+  const [selectedLayer, setSelectedLayer] = useState(props.visibleAndWritableLayers[0]);
+  const [isOpen, setOpen] = useState(false);
   const [newAttribute, setNewAttribute] = useState(initialAttribute);
   const [valueAutofocussed, setValueAutofocussed] = useState(false);
-  React.useEffect(() => { if (!props.isEditable) setSelectedLayer(undefined); }, [props.isEditable]);
+  React.useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
 
   React.useEffect(() => {if (props.prefilled) {
+    setOpen(true);
     setSelectedLayer(s => s ?? props.prefilled.layer);
     setNewAttribute({name: props.prefilled.name, type: props.prefilled.type, values: props.prefilled.values ?? [''], isArray: props.prefilled.isArray ?? false});
     setValueAutofocussed(true);
@@ -29,17 +32,14 @@ function AddNewAttribute(props) {
   const [insertCIAttribute] = useMutation(mutations.INSERT_CI_ATTRIBUTE);
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
-  if (props.visibleAndWritableLayers.length === 0) return <></>;
-  
-  let addButtons = <div>Add Attribute to Layer: {props.visibleAndWritableLayers.map(layer => {
-    return <Button disabled={!props.isEditable} key={layer.name} style={{backgroundColor: layer.color, borderColor: layer.color, color: '#111'}} className={"mx-1"}
-    onClick={() => {if (selectedLayer === layer) setSelectedLayer(undefined); else setSelectedLayer(layer);}}>{layer.name}</Button>;
-  })}</div>;
+  let addButton = <Button disabled={!canBeEdited} onClick={() => setOpen(!isOpen)} icon primary labelPosition='left'>
+      <Icon name='plus' />Add Attribute
+    </Button>;
 
   let addAttribute = <span></span>;
-  if (selectedLayer) {
+  if (isOpen) {
     addAttribute = 
-      <div style={{backgroundColor: selectedLayer.color, borderColor: selectedLayer.color}} className={"p-2"}>
+      <Segment raised>
         <Form onSubmit={e => {
             e.preventDefault();
             insertCIAttribute({ variables: { layers: props.visibleAndWritableLayers.map(l => l.name), ciIdentity: props.ciIdentity, name: newAttribute.name, layerID: selectedLayer.id, value: {
@@ -47,11 +47,19 @@ function AddNewAttribute(props) {
               isArray: newAttribute.isArray,
               values: newAttribute.values
             } } }).then(d => {
-              setSelectedLayer(undefined);
+              setOpen(false);
               setNewAttribute(initialAttribute);
               setSelectedTimeThreshold({ variables:{ newTimeThreshold: null, isLatest: true }});
             });
           }}>
+
+          <Form.Group as={Row} controlId="layer">
+            <Form.Label column>Layer</Form.Label>
+            <Col sm={10}>
+              <LayerDropdown layers={props.visibleAndWritableLayers} selectedLayer={selectedLayer} onSetSelectedLayer={l => setSelectedLayer(l)} />
+            </Col>
+          </Form.Group>
+
           <Form.Group as={Row} controlId="type">
             <Form.Label column>Type</Form.Label>
             <Col sm={8}>
@@ -83,13 +91,14 @@ function AddNewAttribute(props) {
               {/* <Form.Control autoFocus={valueAutofocussed} {...attributeType2InputProps(newAttribute.type)} placeholder="Enter value" value={newAttribute.value} onChange={e => setNewAttribute({...newAttribute, value: e.target.value})} />                         */}
             </Col>
           </Form.Group>
-          <Button variant="primary" type="submit">Insert</Button>
+          <Button secondary className="mr-2" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button primary type="submit">Insert</Button>
         </Form>
-      </div>;
+      </Segment>;
   }
 
-  return <div className={"m-2"}>
-    {addButtons}
+  return <div className={"mb-4"}>
+    {!isOpen && addButton}
     {addAttribute}
     </div>;
 }

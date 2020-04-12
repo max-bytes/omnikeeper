@@ -7,7 +7,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.left {
+.left-bar {
   bottom: 0;
     min-width: 100px;
     position: relative;
