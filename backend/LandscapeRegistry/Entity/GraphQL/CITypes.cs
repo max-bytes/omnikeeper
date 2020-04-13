@@ -1,5 +1,6 @@
 ﻿using GraphQL.Types;
 using Landscape.Base.Entity;
+using Landscape.Base.Entity.DTO;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Cached;
@@ -119,7 +120,7 @@ namespace LandscapeRegistry.Entity.GraphQL
             Field(x => x.ChangesetID);
             Field(x => x.Name);
             Field(x => x.State, type: typeof(AttributeStateType));
-            Field("value", x => x.Value.ToGeneric(), type: typeof(AttributeValueGenericType));
+            Field("value", x => x.Value.ToGeneric(), type: typeof(AttributeValueDTOType));
         }
     }
 
@@ -132,12 +133,12 @@ namespace LandscapeRegistry.Entity.GraphQL
     {
     }
 
-    public class AttributeValueGenericType : ObjectGraphType<AttributeValueGeneric>
+    public class AttributeValueDTOType : ObjectGraphType<AttributeValueDTO>
     {
-        public AttributeValueGenericType()
+        public AttributeValueDTOType()
         {
             Field(x => x.Type, type: typeof(AttributeValueTypeType));
-            Field(x => x.Value);
+            Field("Value", x => x.Values[0]);
             Field(x => x.Values);
             Field(x => x.IsArray);
         }

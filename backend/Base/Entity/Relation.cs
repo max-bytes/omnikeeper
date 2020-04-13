@@ -39,26 +39,6 @@ namespace Landscape.Base.Entity
         }
     }
 
-    public class SimplifiedRelation
-    {
-        public string FromCIID { get; private set; }
-        public SimplifiedCI ToCI { get; private set; }
-        public string PredicateID { get => Predicate.ID; }
-        public Predicate Predicate { get; private set; }
-        public RelationState State { get; private set; }
-
-        public static SimplifiedRelation Build(Relation r, SimplifiedCI toCI)
-        {
-            return new SimplifiedRelation
-            {
-                FromCIID = r.FromCIID,
-                ToCI = toCI,
-                Predicate = r.Predicate,
-                State = r.State
-            };
-        }
-    }
-
     public class BulkRelationData
     {
         public string PredicateID { get; private set; }

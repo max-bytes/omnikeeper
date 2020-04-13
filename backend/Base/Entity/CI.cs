@@ -28,35 +28,6 @@ namespace Landscape.Base.Entity
         }
     }
 
-    public class SimplifiedCI
-    {
-        public string Identity { get; private set; }
-        public CIType Type { get; private set; }
-        public IDictionary<string, SimplifiedCIAttribute> Attributes { get; private set; }
-
-        public static SimplifiedCI Build(string CIIdentity, CIType type, IEnumerable<SimplifiedCIAttribute> attributes)
-        {
-            return new SimplifiedCI
-            {
-                Type = type,
-                Identity = CIIdentity,
-                Attributes = attributes.ToDictionary(a => a.Name)
-            };
-        }
-
-        public static SimplifiedCI Build(MergedCI ci)
-        {
-            return new SimplifiedCI
-            {
-                Identity = ci.Identity,
-                Type = ci.Type,
-                Attributes = ci.MergedAttributes.Select(ma => 
-                    SimplifiedCIAttribute.Build(ma.Attribute.Name, ma.Attribute.Value.ToGeneric(), ma.Attribute.State)
-                ).ToDictionary(a => a.Name)
-            };
-        }
-    }
-
     public class CI
     {
         public string Identity { get; private set; }

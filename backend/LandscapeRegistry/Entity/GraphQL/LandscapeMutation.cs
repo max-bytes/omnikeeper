@@ -10,7 +10,7 @@ namespace LandscapeRegistry.Entity.GraphQL
 {
     public class LandscapeMutation : ObjectGraphType
     {
-        public LandscapeMutation(CIModel ciModel, AttributeModel attributeModel, LayerModel layerModel, TemplateModel templateModel, RelationModel relationModel, ChangesetModel changesetModel, NpgsqlConnection conn)
+        public LandscapeMutation(CIModel ciModel, AttributeModel attributeModel, LayerModel layerModel, RelationModel relationModel, ChangesetModel changesetModel, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutate",
               arguments: new QueryArguments(

@@ -1,8 +1,10 @@
 
+using Landscape.Base.Entity.DTO;
 using Landscape.Base.Model;
 using LandscapeRegistry.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -56,27 +58,7 @@ namespace Landscape.Base.Entity
         }
     }
 
-    public class SimplifiedCIAttribute
-    {
-        public string Name { get; private set; }
-        public AttributeValueGeneric Value { get; private set; }
-        public AttributeState State { get; private set; }
-
-        public static SimplifiedCIAttribute Build(MergedCIAttribute attribute)
-        {
-            return Build(attribute.Attribute.Name, attribute.Attribute.Value.ToGeneric(), attribute.Attribute.State);
-        }
-        public static SimplifiedCIAttribute Build(string name, AttributeValueGeneric value, AttributeState state)
-        {
-            return new SimplifiedCIAttribute
-            {
-                Name = name,
-                Value = value,
-                State = state
-            };
-        }
-    }
-
+    
     public interface IBulkCIAttributeData<F>
     {
         string GetCIID(F f);
@@ -128,6 +110,10 @@ namespace Landscape.Base.Entity
             };
         }
 
+        public static BulkCIAttributeDataLayerScope BuildFromDTO(BulkCIAttributeLayerScopeDTO dto)
+        {
+            return Build(dto.NamePrefix, dto.LayerID, dto.Fragments.Select(f => Fragment.Build(f.Name, AttributeValueBuilder.Build(f.Value), f.CIID)));
+        }
     }
 
     public class BulkCIAttributeDataCIScope : IBulkCIAttributeData<BulkCIAttributeDataCIScope.Fragment>

@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Entity.DTO;
 using LandscapeRegistry.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,11 +25,11 @@ namespace LandscapeRegistry.Controllers
         }
 
         [HttpGet("getEffectiveTraitSetsForTraitName")]
-        public async Task<ActionResult<IEnumerable<SimplifiedEffectiveTraitSet>>> GetEffectiveTraitSetsForTraitName([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string traitName, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<EffectiveTraitSetDTO>>> GetEffectiveTraitSetsForTraitName([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string traitName, [FromQuery]DateTimeOffset? atTime = null)
         {
             var layerset = new LayerSet(layerIDs);
             var traitSets = await traitModel.CalculateEffectiveTraitSetsForTraitName(traitName, layerset, null, atTime ?? DateTimeOffset.Now);
-            return Ok(traitSets.Select(traitSet => SimplifiedEffectiveTraitSet.Build(traitSet)));
+            return Ok(traitSets.Select(traitSet => EffectiveTraitSetDTO.Build(traitSet)));
         }
     }
 }

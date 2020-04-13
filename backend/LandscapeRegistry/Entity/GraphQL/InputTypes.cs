@@ -1,4 +1,5 @@
 ﻿using GraphQL.Types;
+using Landscape.Base.Entity.DTO;
 using LandscapeRegistry.Entity.AttributeValues;
 
 namespace LandscapeRegistry.Entity.GraphQL
@@ -34,7 +35,7 @@ namespace LandscapeRegistry.Entity.GraphQL
         public string CI { get; private set; }
         public string Name { get; private set; }
         public long LayerID { get; private set; }
-        public AttributeValueGeneric Value { get; private set; }
+        public AttributeValueDTO Value { get; private set; }
     }
     public class InsertCIAttributeInputType : InputObjectGraphType<InsertCIAttributeInput>
     {
@@ -43,7 +44,7 @@ namespace LandscapeRegistry.Entity.GraphQL
             Field("ci", x => x.CI);
             Field(x => x.Name);
             Field(x => x.LayerID);
-            Field(x => x.Value, type: typeof(AttributeValueGenericInputType));
+            Field(x => x.Value, type: typeof(AttributeValueDTOInputType));
         }
     }
 
@@ -63,9 +64,9 @@ namespace LandscapeRegistry.Entity.GraphQL
         }
     }
 
-    public class AttributeValueGenericInputType : InputObjectGraphType<AttributeValueGeneric>
+    public class AttributeValueDTOInputType : InputObjectGraphType<AttributeValueDTO>
     {
-        public AttributeValueGenericInputType()
+        public AttributeValueDTOInputType()
         {
             Field(x => x.Type, type: typeof(AttributeValueTypeType));
             Field(x => x.Values);

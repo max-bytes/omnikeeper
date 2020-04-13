@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Landscape.Base.Entity.DTO;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public AttributeValueType Type => AttributeValueType.Integer;
         public abstract string Value2String();
         public abstract bool IsArray { get; }
-        public abstract AttributeValueGeneric ToGeneric();
+        public abstract AttributeValueDTO ToGeneric();
         public abstract bool Equals(IAttributeValue other);
     }
 
@@ -20,7 +21,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
     {
         public long Value { get; private set; }
         public override string Value2String() => Value.ToString();
-        public override AttributeValueGeneric ToGeneric() => AttributeValueGeneric.Build(Value2String(), Type);
+        public override AttributeValueDTO ToGeneric() => AttributeValueDTO.Build(Value2String(), Type);
         public override bool IsArray => false;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueIntegerScalar);
         public bool Equals([AllowNull] AttributeValueIntegerScalar other) => other != null && Value == other.Value;
@@ -46,7 +47,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
     {
         public long[] Values { get; private set; }
         public override string Value2String() => string.Join(",", Values.Select(value => value.ToString().Replace(",", "\\,")));
-        public override AttributeValueGeneric ToGeneric() => AttributeValueGeneric.Build(Values.Select(v => v.ToString()).ToArray(), Type);
+        public override AttributeValueDTO ToGeneric() => AttributeValueDTO.Build(Values.Select(v => v.ToString()).ToArray(), Type);
         public override bool IsArray => true;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueIntegerArray);
         public bool Equals([AllowNull] AttributeValueIntegerArray other) => other != null && Values.SequenceEqual(other.Values);

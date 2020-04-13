@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Entity.DTO;
 using LandscapeRegistry.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,9 +29,9 @@ namespace LandscapeRegistry.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("getAllCITypes")]
-        public async Task<ActionResult<IEnumerable<CIType>>> GetAllCITypes()
+        public async Task<ActionResult<IEnumerable<CITypeDTO>>> GetAllCITypes()
         {
-            return Ok(await ciModel.GetCITypes(null));
+            return Ok((await ciModel.GetCITypes(null)).Select(t => CITypeDTO.Build(t)));
         }
 
         /// <summary>
@@ -58,38 +59,38 @@ namespace LandscapeRegistry.Controllers
         //}
 
         /// <summary>
-        /// list of merged CIs with speficied CI-types, in a simplified form
+        /// list of merged CIs with speficied CI-types
         /// </summary>
         /// <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
         /// <param name="CITypeIDs"></param>
         /// <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
         /// <returns></returns>
         [HttpGet("getCIsByType")]
-        public async Task<ActionResult<IEnumerable<SimplifiedCI>>> GetCIsByType([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string[] CITypeIDs, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<CIDTO>>> GetCIsByType([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string[] CITypeIDs, [FromQuery]DateTimeOffset? atTime = null)
         {
             var layerset = new LayerSet(layerIDs);
             var cis = await ciModel.GetMergedCIsByType(layerset, null, atTime ?? DateTimeOffset.Now, CITypeIDs);
-            return Ok(cis.Select(ci => SimplifiedCI.Build(ci)));
+            return Ok(cis.Select(ci => CIDTO.Build(ci)));
         }
 
         /// <summary>
-        /// single CI by CI-ID, in a simplified form
+        /// single CI by CI-ID
         /// </summary>
         /// <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
         /// <param name="CIID"></param>
         /// <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
         /// <returns></returns>
         [HttpGet("getCIByID")]
-        public async Task<ActionResult<SimplifiedCI>> GetCIByID([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string CIID, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<CIDTO>> GetCIByID([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string CIID, [FromQuery]DateTimeOffset? atTime = null)
         {
             var layerset = new LayerSet(layerIDs);
             var ci = await ciModel.GetMergedCI(CIID, layerset, null, atTime ?? DateTimeOffset.Now);
             if (ci == null) return NotFound();
-            return Ok(SimplifiedCI.Build(ci));
+            return Ok(CIDTO.Build(ci));
         }
 
         /// <summary>
-        /// multiple CIs by CI-ID, in a simplified form
+        /// multiple CIs by CI-ID
         /// !Watch out for the query URL getting too long because of a lot of CIIDs!
         /// TODO: consider using POST
         /// </summary>
@@ -98,11 +99,11 @@ namespace LandscapeRegistry.Controllers
         /// <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
         /// <returns></returns>
         [HttpGet("getCIsByID")]
-        public async Task<ActionResult<IEnumerable<SimplifiedCI>>> GetCIsByID([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string[] CIIDs, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<CIDTO>>> GetCIsByID([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string[] CIIDs, [FromQuery]DateTimeOffset? atTime = null)
         {
             var layerset = new LayerSet(layerIDs);
             var cis = await ciModel.GetMergedCIs(layerset, true, null, atTime ?? DateTimeOffset.Now, CIIDs);
-            return Ok(cis.Select(ci => SimplifiedCI.Build(ci)));
+            return Ok(cis.Select(ci => CIDTO.Build(ci)));
         }
     }
 }

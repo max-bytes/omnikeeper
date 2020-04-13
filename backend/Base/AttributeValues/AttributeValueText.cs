@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Landscape.Base.Entity.DTO;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
 
         public abstract string Value2String();
         public abstract bool IsArray { get; }
-        public abstract AttributeValueGeneric ToGeneric();
+        public abstract AttributeValueDTO ToGeneric();
         public abstract bool Equals(IAttributeValue other);
     }
 
@@ -25,7 +26,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
     {
         public string Value { get; private set; }
         public override string Value2String() => Value;
-        public override AttributeValueGeneric ToGeneric() => AttributeValueGeneric.Build(Value, Type);
+        public override AttributeValueDTO ToGeneric() => AttributeValueDTO.Build(Value, Type);
         public override bool IsArray => false;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueTextScalar);
         public bool Equals([AllowNull] AttributeValueTextScalar other) => other != null && Value == other.Value && Multiline == other.Multiline;
@@ -46,7 +47,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
     {
         public string[] Values { get; private set; }
         public override string Value2String() => string.Join(",", Values.Select(value => value.Replace(",", "\\,")));
-        public override AttributeValueGeneric ToGeneric() => AttributeValueGeneric.Build(Values, Type);
+        public override AttributeValueDTO ToGeneric() => AttributeValueDTO.Build(Values, Type);
         public override bool IsArray => true;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueTextArray);
         public bool Equals([AllowNull] AttributeValueTextArray other) => other != null && Values.SequenceEqual(other.Values) && Multiline == other.Multiline;
