@@ -7,10 +7,14 @@
 
   <ItemGroup>
     <None Remove="Scripts\00001-init.psql" />
+    <None Remove="Scripts\00002-predicate-state.psql" />
+    <None Remove="Scripts\00003-predicate-state-add-deprecated.psql" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Scripts\00001-init.psql" />
+    <EmbeddedResource Include="Scripts\00002-predicate-state.psql" />
+    <EmbeddedResource Include="Scripts\00003-predicate-state-add-deprecated.psql" />
   </ItemGroup>
 
   <ItemGroup>

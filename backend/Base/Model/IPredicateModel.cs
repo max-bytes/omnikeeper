@@ -11,7 +11,13 @@ namespace Landscape.Base.Model
 {
     public interface IPredicateModel
     {
+        public enum PredicateStateFilter
+        {
+            ActiveOnly,
+            ActiveAndDeprecated,
+            All
+        }
         Task<string> CreatePredicate(string id, string wordingFrom, string wordingTo, NpgsqlTransaction trans);
-        Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, DateTimeOffset? atTime);
+        Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, DateTimeOffset? atTime, PredicateStateFilter stateFilter);
     }
 }

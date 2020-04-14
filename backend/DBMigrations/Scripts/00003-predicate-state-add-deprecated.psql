@@ -1,0 +1,1 @@
+﻿ALTER TYPE predicatestate ADD VALUE 'deprecated' AFTER 'active';

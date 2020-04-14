@@ -49,9 +49,9 @@ namespace Tests.DBInit
             int numAttributesPerCITo = 40;
             var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
             var regularPredicates = new[] { 
-                Predicate.Build("is_part_of", "is part of", "has part"), 
-                Predicate.Build("runs_on", "runs on", "is running"),
-                Predicate.Build("is_attached_to", "is attached to", "has attachment"),
+                Predicate.Build("is_part_of", "is part of", "has part", PredicateState.Active), 
+                Predicate.Build("runs_on", "runs on", "is running", PredicateState.Active),
+                Predicate.Build("is_attached_to", "is attached to", "has attachment", PredicateState.Active),
             };
             var regularAttributeNames = new[] { "att_1", "att_2", "att_3", "att_4", "att_5", "att_6", "att_7", "att_8", "att_9" };
             var regularAttributeValues = Enumerable.Range(0, 10).Select<int, IAttributeValue>(i => {
@@ -71,12 +71,12 @@ namespace Tests.DBInit
             }).ToList();
 
             var monitoringPredicates = new[] {
-                Predicate.Build("has_monitoring_module", "has monitoring module", "is assigned to"),
-                Predicate.Build("is_monitored_by", "is monitored by", "monitors")
+                Predicate.Build("has_monitoring_module", "has monitoring module", "is assigned to", PredicateState.Active),
+                Predicate.Build("is_monitored_by", "is monitored by", "monitors", PredicateState.Active)
             };
 
             var automationPredicates = new[] {
-                Predicate.Build("has_ansible_group", "has ansible group", "is assigned to")
+                Predicate.Build("has_ansible_group", "has ansible group", "is assigned to", PredicateState.Active)
             };
 
             

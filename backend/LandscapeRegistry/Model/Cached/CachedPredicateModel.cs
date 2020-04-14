@@ -4,6 +4,7 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static Landscape.Base.Model.IPredicateModel;
 
 namespace LandscapeRegistry.Model.Cached
 {
@@ -20,7 +21,7 @@ namespace LandscapeRegistry.Model.Cached
             Model = model;
         }
 
-        public async Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, DateTimeOffset? atTime)
+        public async Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, DateTimeOffset? atTime, PredicateStateFilter stateFilter)
         {
             IDictionary<string, Predicate> value;
             if (atTime.HasValue)
@@ -29,7 +30,7 @@ namespace LandscapeRegistry.Model.Cached
                 value = PredicateCacheForNullTime;
             if (value == null)
             {
-                value = await Model.GetPredicates(trans, atTime);
+                value = await Model.GetPredicates(trans, atTime, stateFilter);
                 if (atTime.HasValue)
                     AllPredicatesCache.Add(atTime.Value, value);
                 else

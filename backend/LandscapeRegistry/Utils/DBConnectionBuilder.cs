@@ -12,10 +12,7 @@ namespace LandscapeRegistry.Utils
             var cs = configuration.GetConnectionString("LandscapeDatabaseConnection");
             NpgsqlConnection conn = new NpgsqlConnection(cs);
             conn.Open();
-            conn.TypeMapper.MapEnum<AttributeState>("attributestate");
-            conn.TypeMapper.MapEnum<RelationState>("relationstate");
-            conn.TypeMapper.MapEnum<AttributeValueType>("attributevaluetype");
-            conn.TypeMapper.MapEnum<UserType>("usertype");
+            MapEnums(conn);
             return conn;
         }
 
@@ -24,11 +21,17 @@ namespace LandscapeRegistry.Utils
             NpgsqlConnection conn = new NpgsqlConnection($"Server=127.0.0.1;User Id=postgres; Password=postgres;Database={dbName};Pooling={pooling}");
             conn.Open();
             if (reloadTypes) conn.ReloadTypes(); // HACK, see https://github.com/npgsql/npgsql/issues/2366
+            MapEnums(conn);
+            return conn;
+        }
+
+        private void MapEnums(NpgsqlConnection conn)
+        {
             conn.TypeMapper.MapEnum<AttributeState>("attributestate");
+            conn.TypeMapper.MapEnum<PredicateState>("predicatestate");
             conn.TypeMapper.MapEnum<RelationState>("relationstate");
             conn.TypeMapper.MapEnum<AttributeValueType>("attributevaluetype");
             conn.TypeMapper.MapEnum<UserType>("usertype");
-            return conn;
         }
     }
 }

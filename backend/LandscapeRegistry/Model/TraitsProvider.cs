@@ -22,7 +22,7 @@ namespace LandscapeRegistry.Model
             using var scope = SP.CreateScope();
             var predicateModel = scope.ServiceProvider.GetRequiredService<IPredicateModel>();
             var ciModel = scope.ServiceProvider.GetRequiredService<ICIModel>();
-            var predicates = await predicateModel.GetPredicates(trans, null);
+            var predicates = await predicateModel.GetPredicates(trans, null, IPredicateModel.PredicateStateFilter.All);
 
             // TODO: move somewhere else
             var traits = new List<Trait>()

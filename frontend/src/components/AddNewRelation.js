@@ -41,7 +41,8 @@ function AddNewRelation(props) {
       return { key: d, value: d, text: d };
     });
     var predicateList = dataPredicates.predicates.map(d => {
-      return { key: d.id, value: d.id, text: d.wordingFrom };
+      const isDisabled = d.state !== "ACTIVE";
+      return { key: d.id, value: d.id, text: d.wordingFrom + ((d.state === 'DEPRECATED') ? " *DEPRECATED*" : ""), disabled: isDisabled };
     });
 
     addRelation = 

@@ -71,7 +71,7 @@ namespace LandscapeRegistry.Model
         {
             var ret = new List<Relation>();
 
-            var predicates = await predicateModel.GetPredicates(trans, timeThreshold); // TODO: caching?
+            var predicates = await predicateModel.GetPredicates(trans, timeThreshold, IPredicateModel.PredicateStateFilter.All);
 
             using (var command = await CreateMergedRelationCommand(ciIdentity, includeRemoved, layerset, ird, null, trans, timeThreshold))
             {
@@ -99,7 +99,7 @@ namespace LandscapeRegistry.Model
 
         private async Task<Relation> GetRelation(string fromCIID, string toCIID, string predicateID, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
-            var predicates = await predicateModel.GetPredicates(trans, atTime); // TODO: caching?
+            var predicates = await predicateModel.GetPredicates(trans, atTime, IPredicateModel.PredicateStateFilter.All);
 
             using (var command = new NpgsqlCommand(@"select id, state, changeset_id from relation where 
                 timestamp <= @time_threshold AND from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id and layer_id = @layer_id and predicate_id = @predicate_id order by timestamp DESC 
@@ -128,7 +128,7 @@ namespace LandscapeRegistry.Model
         {
             var ret = new List<Relation>();
 
-            var predicates = await predicateModel.GetPredicates(trans, timeThreshold); // TODO: caching?
+            var predicates = await predicateModel.GetPredicates(trans, timeThreshold, IPredicateModel.PredicateStateFilter.All);
 
             using (var command = await CreateMergedRelationCommand(null, includeRemoved, layerset, IncludeRelationDirections.Both, $"predicate_id = '{predicateID}'", trans, timeThreshold))
             {
@@ -169,7 +169,7 @@ namespace LandscapeRegistry.Model
                 return currentRelation;
             }
 
-            var predicates = await predicateModel.GetPredicates(trans, DateTimeOffset.Now); // TODO: caching?
+            var predicates = await predicateModel.GetPredicates(trans, DateTimeOffset.Now, IPredicateModel.PredicateStateFilter.All);
 
             using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
                 VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, now()) returning id", conn, trans);
@@ -183,7 +183,7 @@ namespace LandscapeRegistry.Model
 
             var layerStack = new long[] { layerID }; // TODO: calculate proper layerstack(?)
 
-            var predicate = predicates[predicateID];
+            var predicate = predicates[predicateID]; // TODO: only get one predicate?
 
             var id = (long)await command.ExecuteScalarAsync();
             return Relation.Build(id, fromCIID, toCIID, predicate, layerStack, RelationState.Removed, changesetID);
@@ -205,7 +205,7 @@ namespace LandscapeRegistry.Model
                 }
             }
 
-            var predicates = await predicateModel.GetPredicates(trans, DateTimeOffset.Now); // TODO: caching?
+            var predicates = await predicateModel.GetPredicates(trans, DateTimeOffset.Now, IPredicateModel.PredicateStateFilter.ActiveOnly); // only active predicates allowed
 
             using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
                 VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, now()) returning id", conn, trans);
@@ -219,7 +219,7 @@ namespace LandscapeRegistry.Model
 
             var layerStack = new long[] { layerID }; // TODO: calculate proper layerstack(?)
 
-            var predicate = predicates[predicateID];
+            var predicate = predicates[predicateID]; // TODO: only get one predicate?
 
             var id = (long)await command.ExecuteScalarAsync();
             return Relation.Build(id, fromCIID, toCIID, predicate, layerStack, state, changesetID);
@@ -227,8 +227,6 @@ namespace LandscapeRegistry.Model
 
         public async Task<bool> BulkReplaceRelations(BulkRelationData data, long changesetID, NpgsqlTransaction trans)
         {
-            var predicates = await predicateModel.GetPredicates(trans, DateTimeOffset.Now); // TODO: caching?
-
             var layerSet = new LayerSet(data.LayerID);
             var outdatedRelations = (await GetRelationsWithPredicateID(layerSet, false, data.PredicateID, trans))
                 .ToDictionary(r => r.InformationHash);
@@ -259,12 +257,7 @@ namespace LandscapeRegistry.Model
                 command.Parameters.AddWithValue("state", state);
                 command.Parameters.AddWithValue("changeset_id", changesetID);
 
-                //var layerStack = new long[] { data.LayerID }; // TODO: calculate proper layerstack(?)
-
-                //var predicate = predicates[data.PredicateID];
-
                 var id = (long)await command.ExecuteScalarAsync();
-                //Relation.Build(id, ciidPair.Item1, ciidPair.Item2, predicate, layerStack, state, changesetID);
             }
 
             // remove outdated 

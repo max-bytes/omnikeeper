@@ -1,0 +1,15 @@
+﻿
+CREATE TYPE predicatestate AS ENUM (
+    'active',
+    'inactive'
+);
+ALTER TYPE predicatestate OWNER TO postgres;
+
+CREATE TABLE public.predicate_state
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    predicate_id text NOT NULL,
+    state public.predicatestate DEFAULT 'active'::public.predicatestate NOT NULL,
+    "timestamp" timestamp with time zone NOT NULL,
+    CONSTRAINT predicate_state_pkey PRIMARY KEY (id)
+);

@@ -1,3 +1,4 @@
+using DBMigrations;
 using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
@@ -233,6 +234,15 @@ namespace LandscapeRegistry
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory)
         {
+            // run database migrations
+            // TODO, HACK: this has issues once we run multiple (load-balanced) application instances with the same database
+            // consider more advanced migration methods, such as running it during deployment, etc...
+            var cs = Configuration.GetConnectionString("LandscapeDatabaseConnection");
+            var migrationResult = DBMigration.Migrate(cs);
+            if (!migrationResult.Successful)
+                throw new Exception("Database migration failed!", migrationResult.Error);
+
+
             app.UseCors("AllowAllOrigins");
 
             app.UseStaticFiles();

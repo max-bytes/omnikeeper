@@ -13,6 +13,7 @@ export const queries = {
                 id
                 wordingFrom
                 wordingTo
+                state
             }
         }
     `,

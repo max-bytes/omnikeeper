@@ -16,6 +16,7 @@ namespace DBMigrations
             var upgrader =
                 DeployChanges.To
                     .PostgresqlDatabase(connectionString)
+                    .WithTransaction()
                     .WithScriptsEmbeddedInAssembly(Assembly.GetExecutingAssembly(), s => s.EndsWith(".psql"))
                     .LogToConsole()
                     .Build();

@@ -1,4 +1,5 @@
 ﻿using GraphQL.Types;
+using Landscape.Base.Model;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Cached;
 using System;
@@ -84,8 +85,10 @@ namespace LandscapeRegistry.Entity.GraphQL
                 {
                     var userContext = context.UserContext as LandscapeUserContext;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
+                    var activeOnly = context.GetArgument<bool>("activeOnly");
 
-                    return (await predicateModel.GetPredicates(null, userContext.TimeThreshold)).Values;
+                    var stateFilter = IPredicateModel.PredicateStateFilter.ActiveAndDeprecated; // TODO: make configurable
+                    return (await predicateModel.GetPredicates(null, userContext.TimeThreshold, stateFilter)).Values;
                 });
             FieldAsync<ListGraphType<CITypeType>>("citypes",
                 resolve: async context =>
