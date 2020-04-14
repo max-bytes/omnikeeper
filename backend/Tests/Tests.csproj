@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DBMigrations\DBMigrations.csproj" />
     <ProjectReference Include="..\LandscapeRegistry\LandscapeRegistry.csproj" />
   </ItemGroup>
 
