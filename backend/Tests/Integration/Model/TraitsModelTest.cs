@@ -75,22 +75,22 @@ namespace Tests.Integration.Model
             var ciid1 = await ciModel.CreateCIWithType("H123", "type1", null);
             var ciid2 = await ciModel.CreateCIWithType("H456", "type1", null);
             var ciid3 = await ciModel.CreateCIWithType("H789", "type1", null);
-            var layerID1 = await layerModel.CreateLayer("l1", null);
+            var layer1 = await layerModel.CreateLayer("l1", null);
 
             using (var trans = conn.BeginTransaction())
             {
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("text1"), layerID1, ciid1, changeset.ID, trans);
-                await attributeModel.InsertAttribute("a2", AttributeValueTextScalar.Build("text2"), layerID1, ciid1, changeset.ID, trans);
-                await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("text3"), layerID1, ciid1, changeset.ID, trans);
-                await attributeModel.InsertAttribute("a4", AttributeValueTextScalar.Build("text4"), layerID1, ciid1, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("text1"), layer1.ID, ciid1, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a2", AttributeValueTextScalar.Build("text2"), layer1.ID, ciid1, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("text3"), layer1.ID, ciid1, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a4", AttributeValueTextScalar.Build("text4"), layer1.ID, ciid1, changeset.ID, trans);
 
-                await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("text1"), layerID1, ciid2, changeset.ID, trans);
-                await attributeModel.InsertAttribute("a4", AttributeValueTextScalar.Build("text4"), layerID1, ciid2, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("text1"), layer1.ID, ciid2, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a4", AttributeValueTextScalar.Build("text4"), layer1.ID, ciid2, changeset.ID, trans);
 
-                await attributeModel.InsertAttribute("a2", AttributeValueTextScalar.Build("text2"), layerID1, ciid3, changeset.ID, trans);
-                await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("text3"), layerID1, ciid3, changeset.ID, trans);
-                await attributeModel.InsertAttribute("a4", AttributeValueTextScalar.Build("text4"), layerID1, ciid3, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a2", AttributeValueTextScalar.Build("text2"), layer1.ID, ciid3, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("text3"), layer1.ID, ciid3, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a4", AttributeValueTextScalar.Build("text4"), layer1.ID, ciid3, changeset.ID, trans);
 
                 trans.Commit();
             }

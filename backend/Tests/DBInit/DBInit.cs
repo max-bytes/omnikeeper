@@ -87,11 +87,14 @@ namespace Tests.DBInit
             long automationLayerID;
             using (var trans = conn.BeginTransaction())
             {
-                cmdbLayerID = await layerModel.CreateLayer("CMDB", trans);
+                var cmdbLayer = await layerModel.CreateLayer("CMDB", trans);
+                cmdbLayerID = cmdbLayer.ID;
                 await layerModel.CreateLayer("Inventory Scan", trans);
-                monitoringDefinitionsLayerID = await layerModel.CreateLayer("Monitoring Definitions", trans);
+                var monitoringDefinitionsLayer = await layerModel.CreateLayer("Monitoring Definitions", trans);
+                monitoringDefinitionsLayerID = monitoringDefinitionsLayer.ID;
                 await layerModel.CreateLayer("Monitoring", "TestPlugin.CLBMonitoring", trans);
-                automationLayerID = await layerModel.CreateLayer("Automation", trans);
+                var automationLayer = await layerModel.CreateLayer("Automation", trans);
+                automationLayerID = automationLayer.ID;
                 trans.Commit();
             }
 
@@ -119,7 +122,7 @@ namespace Tests.DBInit
             using (var trans = conn.BeginTransaction())
             {
                 foreach (var predicate in regularPredicates.Concat(monitoringPredicates).Concat(automationPredicates))
-                    await predicateModel.CreatePredicate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, trans);
+                    await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, PredicateState.Active, trans);
 
                 trans.Commit();
             }

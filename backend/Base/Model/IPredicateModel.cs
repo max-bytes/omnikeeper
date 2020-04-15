@@ -15,9 +15,11 @@ namespace Landscape.Base.Model
         {
             ActiveOnly,
             ActiveAndDeprecated,
-            All
+            All,
+            MarkedForDeletion
         }
-        Task<string> CreatePredicate(string id, string wordingFrom, string wordingTo, NpgsqlTransaction trans);
+        Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, PredicateState state, NpgsqlTransaction trans);
+        Task<bool> TryToDelete(string id, NpgsqlTransaction trans);
         Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, DateTimeOffset? atTime, PredicateStateFilter stateFilter);
     }
 }

@@ -39,10 +39,16 @@ namespace LandscapeRegistry.Model.Cached
             return value;
         }
 
-        public async Task<string> CreatePredicate(string id, string wordingFrom, string wordingTo, NpgsqlTransaction trans)
+        public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, PredicateState state, NpgsqlTransaction trans)
         {
             //TODO: add to cache(?)
-            return await Model.CreatePredicate(id, wordingFrom, wordingTo, trans);
+            return await Model.InsertOrUpdate(id, wordingFrom, wordingTo, state, trans);
+        }
+
+        public async Task<bool> TryToDelete(string id, NpgsqlTransaction trans)
+        {
+            // TODO: remove from cache(?)
+            return await Model.TryToDelete(id, trans);
         }
     }
 }

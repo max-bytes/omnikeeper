@@ -73,11 +73,11 @@ namespace Tests.Integration.GraphQL
             var userModel = Services.Get<UserInDatabaseModel>();
             using var trans = Services.Get<NpgsqlConnection>().BeginTransaction();
             var ciid1 = await ciModel.CreateCI("H123", trans);
-            var layerID1 = await layerModel.CreateLayer("layer_1", trans);
-            var layerID2 = await layerModel.CreateLayer("layer_2", trans);
+            var layer1 = await layerModel.CreateLayer("layer_1", trans);
+            //var layerID2 = await layerModel.CreateLayer("layer_2", trans);
             var user = User.Build(await userModel.CreateOrUpdateFetchUser(username, userGUID, UserType.Robot, trans), new List<Layer>());
             var changeset = await changesetModel.CreateChangeset(user.InDatabase.ID, trans);
-            await attributeModel.InsertAttribute("a1", AttributeValueIntegerScalar.Build(3), layerID1, ciid1, changeset.ID, trans);
+            await attributeModel.InsertAttribute("a1", AttributeValueIntegerScalar.Build(3), layer1.ID, ciid1, changeset.ID, trans);
             trans.Commit();
 
             string query = @"

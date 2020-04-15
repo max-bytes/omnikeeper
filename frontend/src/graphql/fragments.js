@@ -78,15 +78,23 @@ export const Fragments = {
         isForward
     }
   `,
+  fullLayer: gql`
+  fragment FullLayer on LayerType {
+    id
+    name
+    writable
+    sort @client
+    visibility @client
+    color @client
+  }
+  `,
   relation: gql`
     fragment FullRelation on RelationType {
         id
         fromCIID
         toCIID
         predicate {
-            id,
-            wordingFrom
-            wordingTo
+            ...FullPredicate
         }
         layerID
         layerStackIDs
@@ -99,4 +107,12 @@ export const Fragments = {
         }
     }
   `,
+  fullPredicate: gql`
+  fragment FullPredicate on PredicateType {
+    id,
+    wordingFrom
+    wordingTo,
+    state
+  }
+  `
 };

@@ -47,24 +47,24 @@ namespace Tests.Integration.Model
             var t1 = DateTimeOffset.Now;
 
             using var trans2 = conn.BeginTransaction();
-            var layerID1 = await layerModel.CreateLayer("l1", trans2);
-            var layerset = new LayerSet(new long[] { layerID1 });
+            var layer1 = await layerModel.CreateLayer("l1", trans2);
+            var layerset = new LayerSet(new long[] { layer1.ID });
             var changeset1 = await changesetModel.CreateChangeset(user.ID, trans2);
-            await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("textL1"), layerID1, ciid2, changeset1.ID, trans2);
+            await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid2, changeset1.ID, trans2);
             trans2.Commit();
 
             Thread.Sleep(500);
 
             using var trans3 = conn.BeginTransaction();
             var changeset2 = await changesetModel.CreateChangeset(user.ID, trans3);
-            await attributeModel.InsertAttribute("a2", AttributeValueTextScalar.Build("textL1"), layerID1, ciid3, changeset2.ID, trans3);
+            await attributeModel.InsertAttribute("a2", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid3, changeset2.ID, trans3);
             trans3.Commit();
 
             var t2 = DateTimeOffset.Now;
 
             using var trans4 = conn.BeginTransaction();
             var changeset3 = await changesetModel.CreateChangeset(user.ID, trans4);
-            await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("textL1"), layerID1, ciid3, changeset3.ID, trans4);
+            await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid3, changeset3.ID, trans4);
             trans4.Commit();
 
             var t3 = DateTimeOffset.Now;
@@ -79,7 +79,7 @@ namespace Tests.Integration.Model
             using (var trans = conn.BeginTransaction())
             {
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("textL1"), layerID1, ciid2, changeset3.ID, trans);
+                await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid2, changeset3.ID, trans);
                 trans.Commit();
             }
             var t4 = DateTimeOffset.Now;
@@ -111,17 +111,17 @@ namespace Tests.Integration.Model
             using var trans = conn.BeginTransaction();
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var ciid2 = await ciModel.CreateCI("H456", trans);
-            var predicate1 = await predicateModel.CreatePredicate("predicate_1", "", "", trans);
-            var predicate2 = await predicateModel.CreatePredicate("predicate_2", "", "", trans);
+            var predicate1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", PredicateState.Active, trans);
+            var predicate2 = await predicateModel.InsertOrUpdate("predicate_2", "", "", PredicateState.Active, trans);
             trans.Commit();
 
             var t1 = DateTimeOffset.Now;
 
             using var trans2 = conn.BeginTransaction();
-            var layerID1 = await layerModel.CreateLayer("l1", trans2);
-            var layerset = new LayerSet(new long[] { layerID1 });
+            var layer1 = await layerModel.CreateLayer("l1", trans2);
+            var layerset = new LayerSet(new long[] { layer1.ID });
             var changeset1 = await changesetModel.CreateChangeset(user.ID, trans2);
-            await relationModel.InsertRelation("H123", "H456", predicate1, layerID1, changeset1.ID, trans2);
+            await relationModel.InsertRelation("H123", "H456", predicate1.ID, layer1.ID, changeset1.ID, trans2);
             trans2.Commit();
 
             Thread.Sleep(500);
@@ -129,7 +129,7 @@ namespace Tests.Integration.Model
 
             using var trans3 = conn.BeginTransaction();
             var changeset2 = await changesetModel.CreateChangeset(user.ID, trans3);
-            await relationModel.InsertRelation("H456", "H123", predicate2, layerID1, changeset2.ID, trans3);
+            await relationModel.InsertRelation("H456", "H123", predicate2.ID, layer1.ID, changeset2.ID, trans3);
             trans3.Commit();
 
             Thread.Sleep(500);

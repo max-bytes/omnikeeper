@@ -81,13 +81,19 @@ namespace LandscapeRegistry.Entity.GraphQL
                     return cis;
                 });
             FieldAsync<ListGraphType<PredicateType>>("predicates",
+                arguments: new QueryArguments(new List<QueryArgument>
+                {
+                    new QueryArgument<NonNullGraphType<PredicateStateFilterType>>
+                    {
+                        Name = "stateFilter"
+                    },
+                }),
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as LandscapeUserContext;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
-                    var activeOnly = context.GetArgument<bool>("activeOnly");
+                    var stateFilter = context.GetArgument<IPredicateModel.PredicateStateFilter>("stateFilter");
 
-                    var stateFilter = IPredicateModel.PredicateStateFilter.ActiveAndDeprecated; // TODO: make configurable
                     return (await predicateModel.GetPredicates(null, userContext.TimeThreshold, stateFilter)).Values;
                 });
             FieldAsync<ListGraphType<CITypeType>>("citypes",

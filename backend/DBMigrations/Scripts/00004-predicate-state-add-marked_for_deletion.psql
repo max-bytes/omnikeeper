@@ -1,0 +1,1 @@
+﻿ALTER TYPE predicatestate ADD VALUE 'marked_for_deletion' AFTER 'inactive';

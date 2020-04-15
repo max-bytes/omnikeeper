@@ -68,7 +68,7 @@ namespace Tests.Integration.Model
                     return (model.CreateCI(identity, trans).GetAwaiter().GetResult(), identity);
                 }).ToList();
 
-                var layerIDs = layerNames.Select(identity =>
+                var layers = layerNames.Select(identity =>
                 {
                     return layerModel.CreateLayer(identity, trans).GetAwaiter().GetResult();
                 }).ToList();
@@ -78,9 +78,9 @@ namespace Tests.Integration.Model
                 {
                     var name = attributeNames.GetRandom(random);
                     var value = AttributeValueTextScalar.Build("V" + RandomString.Generate(8, random));
-                    var layer = layerIDs.GetRandom(random);
+                    var layer = layers.GetRandom(random);
                     var ciid = cis.GetRandom(random).Item1;
-                    return attributeModel.InsertAttribute(name, value, layer, ciid, changeset.ID, trans).GetAwaiter().GetResult();
+                    return attributeModel.InsertAttribute(name, value, layer.ID, ciid, changeset.ID, trans).GetAwaiter().GetResult();
                 }).ToList();
 
                 await trans.CommitAsync();

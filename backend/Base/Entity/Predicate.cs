@@ -8,7 +8,10 @@ namespace Landscape.Base.Entity
 {
     public enum PredicateState
     {
-        Active, Deprecated, Inactive
+        Active, 
+        Deprecated, // predicate can be set via processes, but not via UIs; UI selection lists show predicate as deprecated
+        Inactive, // predicate cannot be set via processes or UIs, does not show up in UI selection lists
+        MarkedForDeletion // predicate cannot be set via processes or UIs, does not show up in UI selection lists, will be deleted when possible
     }
 
     public class Predicate : IEquatable<Predicate>
@@ -32,7 +35,7 @@ namespace Landscape.Base.Entity
         public override bool Equals(object obj) => Equals(obj as Predicate);
         public bool Equals(Predicate other)
         {
-            return ID == other.ID &&
+            return other != null && ID == other.ID &&
                    WordingFrom == other.WordingFrom &&
                    WordingTo == other.WordingTo &&
                    State == other.State;

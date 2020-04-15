@@ -52,4 +52,23 @@ namespace LandscapeRegistry.Entity.GraphQL
             Field(x => x.CIIDs, type: typeof(ListGraphType<StringGraphType>));
         }
     }
+
+    //public class MutatePredicatesReturn
+    //{
+    //    public IEnumerable<Predicate> MutatedPredicates { get; private set; }
+    //    public static MutatePredicatesReturn Build(IEnumerable<Predicate> mutatedPredicates)
+    //    {
+    //        return new MutatePredicatesReturn()
+    //        {
+    //            MutatedPredicates = mutatedPredicates
+    //        };
+    //    }
+    //}
+    //public class MutatePredicatesReturnType : ObjectGraphType<MutatePredicatesReturn>
+    //{
+    //    public MutatePredicatesReturnType()
+    //    {
+    //        Field(x => x.MutatedPredicates, type: typeof(ListGraphType<PredicateType>));
+    //    }
+    //}
 }

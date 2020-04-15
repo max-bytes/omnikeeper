@@ -17,11 +17,11 @@ namespace LandscapeRegistry.Model
             conn = connection;
         }
 
-        public async Task<long> CreateLayer(string name, NpgsqlTransaction trans)
+        public async Task<Layer> CreateLayer(string name, NpgsqlTransaction trans)
         {
             return await CreateLayer(name, null, trans);
         }
-        public async Task<long> CreateLayer(string name, string computeLayerBrain, NpgsqlTransaction trans)
+        public async Task<Layer> CreateLayer(string name, string computeLayerBrain, NpgsqlTransaction trans)
         {
             using var command = new NpgsqlCommand(@"INSERT INTO layer (name, computeLayerBrain) VALUES (@name, @computeLayerBrain) returning id", conn, trans);
             command.Parameters.AddWithValue("name", name);
@@ -30,7 +30,7 @@ namespace LandscapeRegistry.Model
             else
                 command.Parameters.AddWithValue("computeLayerBrain", computeLayerBrain);
             var id = (long)await command.ExecuteScalarAsync();
-            return id;
+            return Layer.Build(name, id);
         }
 
         // TODO: performance improvements(?)

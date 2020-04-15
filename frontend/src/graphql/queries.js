@@ -8,14 +8,12 @@ export const queries = {
         }
     `,
     PredicateList: gql`
-        query predicateList {
-            predicates {
-                id
-                wordingFrom
-                wordingTo
-                state
+        query predicateList($stateFilter: PredicateStateFilter!) {
+            predicates(stateFilter: $stateFilter) {
+                ...FullPredicate
             }
         }
+        ${Fragments.fullPredicate}
     `,
     CITypeList: gql`
         query citypes {
@@ -35,18 +33,15 @@ export const queries = {
         ${Fragments.mergedAttribute}
         ${Fragments.attribute}
         ${Fragments.relation}
+        ${Fragments.fullPredicate}
     `,
     Layers: gql`
     query layers {
         layers {
-            id
-            name
-            writable
-            sort @client
-            visibility @client
-            color @client
+            ...FullLayer
         }
     }
+    ${Fragments.fullLayer}
     `,
     Changesets: gql`
         query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciid: String, $layers:[String]!, $limit: Int) {

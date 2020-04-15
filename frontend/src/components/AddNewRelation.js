@@ -8,7 +8,6 @@ import Col from 'react-bootstrap/Col';
 import { mutations } from '../graphql/mutations'
 import { queries } from '../graphql/queries'
 import { Row } from "react-bootstrap";
-import LayerIcon from "./LayerIcon";
 import { Dropdown, Button, Icon, Segment } from 'semantic-ui-react';
 import LayerDropdown from "./LayerDropdown";
 

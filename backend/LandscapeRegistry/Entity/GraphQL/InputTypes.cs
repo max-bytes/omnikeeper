@@ -1,4 +1,5 @@
 ﻿using GraphQL.Types;
+using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
 using LandscapeRegistry.Entity.AttributeValues;
 
@@ -108,6 +109,24 @@ namespace LandscapeRegistry.Entity.GraphQL
             Field(x => x.ToCIID);
             Field(x => x.PredicateID);
             Field(x => x.LayerID);
+        }
+    }
+
+    public class MutatePredicateInput
+    {
+        public string ID { get; private set; }
+        public string WordingFrom { get; private set; }
+        public string WordingTo { get; private set; }
+        public PredicateState State { get; private set; }
+    }
+    public class MutatePredicateInputType : InputObjectGraphType<MutatePredicateInput>
+    {
+        public MutatePredicateInputType()
+        {
+            Field("id", x => x.ID);
+            Field(x => x.WordingFrom);
+            Field(x => x.WordingTo);
+            Field(x => x.State, type: typeof(PredicateStateType));
         }
     }
 }

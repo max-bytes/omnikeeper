@@ -10,12 +10,12 @@ namespace LandscapeRegistry.Entity.GraphQL
 {
     public class LandscapeMutation : ObjectGraphType
     {
-        public LandscapeMutation(CIModel ciModel, AttributeModel attributeModel, LayerModel layerModel, RelationModel relationModel, ChangesetModel changesetModel, NpgsqlConnection conn)
+        public LandscapeMutation(CIModel ciModel, AttributeModel attributeModel, LayerModel layerModel, RelationModel relationModel, 
+            ChangesetModel changesetModel, PredicateModel predicateModel, NpgsqlConnection conn)
         {
-            FieldAsync<MutateReturnType>("mutate",
+            FieldAsync<MutateReturnType>("mutateCIs",
               arguments: new QueryArguments(
                 new QueryArgument<ListGraphType<StringGraphType>> { Name = "layers" },
-                //new QueryArgument<ListGraphType<CreateLayerInputType>> { Name = "CreateLayers" },
                 new QueryArgument<ListGraphType<InsertCIAttributeInputType>> { Name = "InsertAttributes" },
                 new QueryArgument<ListGraphType<RemoveCIAttributeInputType>> { Name = "RemoveAttributes" },
                 new QueryArgument<ListGraphType<InsertRelationInputType>> { Name = "InsertRelations" },
@@ -114,6 +114,41 @@ namespace LandscapeRegistry.Entity.GraphQL
                   await transaction.CommitAsync();
 
                   return CreateCIsReturn.Build(createdCIIDs);
+              });
+
+            FieldAsync<LayerType>("createLayer",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<CreateLayerInputType>> { Name = "layer" }
+              ),
+              resolve: async context =>
+              {
+                  var createLayer = context.GetArgument<CreateLayerInput>("layer");
+                  var userContext = context.UserContext as LandscapeUserContext;
+                  using var transaction = await conn.BeginTransactionAsync();
+                  userContext.Transaction = transaction;
+
+                  var createdLayer = await layerModel.CreateLayer(createLayer.Name, transaction);
+                  await transaction.CommitAsync();
+
+                  return createdLayer;
+              });
+
+            FieldAsync<PredicateType>("mutatePredicate",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<MutatePredicateInputType>> { Name = "predicate" }
+              ),
+              resolve: async context =>
+              {
+                  var predicate = context.GetArgument<MutatePredicateInput>("predicate");
+
+                  var userContext = context.UserContext as LandscapeUserContext;
+                  using var transaction = await conn.BeginTransactionAsync();
+                  userContext.Transaction = transaction;
+
+                  var mutatedPredicate = await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, predicate.State, transaction);
+                  await transaction.CommitAsync();
+
+                  return mutatedPredicate;
               });
         }
     }

@@ -1,0 +1,8 @@
+﻿
+ALTER TABLE ONLY public.predicate_wording DROP CONSTRAINT f_predicate_wording;
+ALTER TABLE ONLY public.predicate_wording
+    ADD CONSTRAINT f_predicate_wording FOREIGN KEY (predicate_id) REFERENCES public.predicate(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+ALTER TABLE ONLY public.predicate_state
+    ADD CONSTRAINT f_predicate_state FOREIGN KEY (predicate_id) REFERENCES public.predicate(id) ON UPDATE CASCADE ON DELETE CASCADE;

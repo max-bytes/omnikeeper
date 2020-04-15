@@ -4,16 +4,19 @@ import Explorer from './components/Explorer';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'semantic-ui-css/semantic.min.css'
 import Keycloak from 'keycloak-js'
-import { Menu } from 'semantic-ui-react'
+import { Menu, Icon } from 'semantic-ui-react'
 import { KeycloakProvider } from '@react-keycloak/web'
 import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/AddNewCI'
 import SearchCI from './components/SearchCI'
+import Manage from './components/manage/Manage'
 import UserBar from './components/UserBar';
 import { Redirect, Route, Switch, BrowserRouter, Link  } from 'react-router-dom'
 import ApolloWrapper from './components/ApolloWrapper';
 import env from "@beam-australia/react-env";
+import ManagePredicates from './components/manage/ManagePredicates';
+import ManageLayers from './components/manage/ManageLayers';
 
 const keycloak = new Keycloak({
   "realm": "landscape",
@@ -47,6 +50,7 @@ function App() {
             <div style={{flexGrow: 1}}></div>
             <div style={{display:'flex'}}>
               <Route path="*">
+                <Menu.Item><Link to="/manage"><Icon name="wrench" /></Link></Menu.Item>
                 <Menu.Item><Link to="/createCI">Create New CI</Link></Menu.Item>
                 <Menu.Item><Link to="/explorer">Search CI</Link></Menu.Item>
               </Route>
@@ -67,6 +71,17 @@ function App() {
               <PrivateRoute path="/explorer">
                 <ApolloWrapper component={SearchCI} />
               </PrivateRoute>
+              
+              <PrivateRoute path="/manage/predicates">
+                <ApolloWrapper component={ManagePredicates} />
+              </PrivateRoute>
+              <PrivateRoute path="/manage/layers">
+                <ApolloWrapper component={ManageLayers} />
+              </PrivateRoute>
+              <PrivateRoute path="/manage">
+                <ApolloWrapper component={Manage} />
+              </PrivateRoute>
+
               <Route path="*">
                 <Redirect to="/explorer" />
               </Route>

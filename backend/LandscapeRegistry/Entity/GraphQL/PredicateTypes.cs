@@ -1,5 +1,6 @@
 ﻿using GraphQL.Types;
 using Landscape.Base.Entity;
+using static Landscape.Base.Model.IPredicateModel;
 
 namespace LandscapeRegistry.Entity.GraphQL
 {
@@ -15,5 +16,10 @@ namespace LandscapeRegistry.Entity.GraphQL
             Field(x => x.WordingTo);
             Field(x => x.State, type: typeof(PredicateStateType));
         }
+    }
+
+    public class PredicateStateFilterType : EnumerationGraphType<PredicateStateFilter>
+    {
+
     }
 }

@@ -1,0 +1,20 @@
+﻿
+CREATE TYPE layerstate AS ENUM (
+    'active',
+    'deprecated',
+    'inactive',
+    'marked_for_deletion'
+);
+ALTER TYPE layerstate OWNER TO postgres;
+
+CREATE TABLE public.layer_state
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    layer_id bigint NOT NULL,
+    state public.layerstate DEFAULT 'active'::public.layerstate NOT NULL,
+    "timestamp" timestamp with time zone NOT NULL,
+    CONSTRAINT layer_state_pkey PRIMARY KEY (id)
+);
+
+ALTER TABLE ONLY public.layer_state
+    ADD CONSTRAINT f_layer_state FOREIGN KEY (layer_id) REFERENCES public.layer(id) ON UPDATE CASCADE ON DELETE CASCADE;

@@ -105,6 +105,7 @@ namespace LandscapeRegistry
             services.AddScoped<TraitModel>();
 
             services.AddScoped<CurrentUserService>();
+            services.AddScoped<MarkedForDeletionService>();
 
             services.AddSingleton<ITemplatesProvider, CachedTemplatesProvider>(); // can be singleton because it does not depend on any scoped services
             services.AddSingleton<TemplatesProvider>(); // can be singleton because it does not depend on any scoped services
@@ -303,6 +304,8 @@ namespace LandscapeRegistry
             }
 
             RecurringJob.AddOrUpdate<CLBRunner>(runner => runner.Run(), Cron.Daily);// "*/15 * * * * *");
+
+            RecurringJob.AddOrUpdate<MarkedForDeletionService>(s => s.Run(), Cron.Minutely);
         }
     }
 
