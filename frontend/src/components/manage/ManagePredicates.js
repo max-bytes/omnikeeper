@@ -21,7 +21,7 @@ export default function ManagePredicates(props) {
       console.log(e);
     }
   });
-  const [mutate] = useMutation(mutations.MUTATE_PREDICATE);
+  const [upsert] = useMutation(mutations.UPSERT_PREDICATE);
 
   const columnDefs = [
     { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
@@ -40,8 +40,8 @@ export default function ManagePredicates(props) {
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
       saveRow={async row => {
         const predicate = { id: row.id, wordingFrom: row.wordingFrom, wordingTo: row.wordingTo, state: row.state };
-        return mutate({ variables: { predicate: predicate } })
-          .then(r => ({result: r.data.mutatePredicate, id: row.id}))
+        return upsert({ variables: { predicate: predicate } })
+          .then(r => ({result: r.data.upsertPredicate, id: row.id}))
           .catch(e => ({result: e, id: row.id }));
       }} />
   </div>;

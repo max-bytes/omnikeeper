@@ -21,14 +21,11 @@ function AddNewRelation(props) {
 
   // TODO: loading
   const { data: dataCIs } = useQuery(queries.CIList);
-  const { data: dataPredicates } = useQuery(queries.PredicateList);
+  const { data: dataPredicates } = useQuery(queries.PredicateList, {
+    variables: {stateFilter: 'ACTIVE_AND_DEPRECATED'}
+  });
   const [insertRelation] = useMutation(mutations.INSERT_RELATION);
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
-
-  // let addButtons = <div>Add Relation to Layer: {props.visibleAndWritableLayers.map(layer => {
-  //   return <Button disabled={!props.isEditable} key={layer.name} style={{backgroundColor: layer.color, borderColor: layer.color, color: '#111'}} className={"mx-1"}
-  //   onClick={() => {if (selectedLayer === layer) setSelectedLayer(undefined); else setSelectedLayer(layer);}}>{layer.name}</Button>;
-  // })}</div>;
 
   const addButton = <Button disabled={!canBeEdited} onClick={() => setOpen(!isOpen)} icon primary labelPosition='left'>
     <Icon name='plus' />Add Relation
@@ -39,9 +36,11 @@ function AddNewRelation(props) {
     var ciList = dataCIs.ciids.map(d => {
       return { key: d, value: d, text: d };
     });
-    var predicateList = dataPredicates.predicates.map(d => {
+    const sortedPredicates = [...dataPredicates.predicates]
+    sortedPredicates.sort((a,b) => (a.state + "_" + a.wordingFrom).localeCompare(b.state + "_" + b.wordingFrom));
+    var predicateList = sortedPredicates.map(d => {
       const isDisabled = d.state !== "ACTIVE";
-      return { key: d.id, value: d.id, text: d.wordingFrom + ((d.state === 'DEPRECATED') ? " *DEPRECATED*" : ""), disabled: isDisabled };
+      return { key: d.id, value: d.id, text: d.labelWordingFrom, disabled: isDisabled };
     });
 
     addRelation = 

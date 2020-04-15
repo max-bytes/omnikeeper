@@ -30,7 +30,7 @@ function RelatedCI(props) {
 
   let written;
   if (props.related.isForward) {
-    written = <span>{`This CI "${props.related.relation.predicate.wordingFrom}" `}{otherCIButton}</span>;
+    written = <span>{`This CI "${props.related.relation.predicate.labelWordingFrom}" `}{otherCIButton}</span>;
   } else {
     written = <span>{`This CI "${props.related.relation.predicate.wordingTo}" `}{otherCIButton}</span>;
   }

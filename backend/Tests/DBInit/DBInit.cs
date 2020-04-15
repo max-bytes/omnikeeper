@@ -49,9 +49,9 @@ namespace Tests.DBInit
             int numAttributesPerCITo = 40;
             var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
             var regularPredicates = new[] { 
-                Predicate.Build("is_part_of", "is part of", "has part", PredicateState.Active), 
-                Predicate.Build("runs_on", "runs on", "is running", PredicateState.Active),
-                Predicate.Build("is_attached_to", "is attached to", "has attachment", PredicateState.Active),
+                Predicate.Build("is_part_of", "is part of", "has part", AnchorState.Active), 
+                Predicate.Build("runs_on", "runs on", "is running", AnchorState.Active),
+                Predicate.Build("is_attached_to", "is attached to", "has attachment", AnchorState.Active),
             };
             var regularAttributeNames = new[] { "att_1", "att_2", "att_3", "att_4", "att_5", "att_6", "att_7", "att_8", "att_9" };
             var regularAttributeValues = Enumerable.Range(0, 10).Select<int, IAttributeValue>(i => {
@@ -71,12 +71,12 @@ namespace Tests.DBInit
             }).ToList();
 
             var monitoringPredicates = new[] {
-                Predicate.Build("has_monitoring_module", "has monitoring module", "is assigned to", PredicateState.Active),
-                Predicate.Build("is_monitored_by", "is monitored by", "monitors", PredicateState.Active)
+                Predicate.Build("has_monitoring_module", "has monitoring module", "is assigned to", AnchorState.Active),
+                Predicate.Build("is_monitored_by", "is monitored by", "monitors", AnchorState.Active)
             };
 
             var automationPredicates = new[] {
-                Predicate.Build("has_ansible_group", "has ansible group", "is assigned to", PredicateState.Active)
+                Predicate.Build("has_ansible_group", "has ansible group", "is assigned to", AnchorState.Active)
             };
 
             
@@ -92,7 +92,7 @@ namespace Tests.DBInit
                 await layerModel.CreateLayer("Inventory Scan", trans);
                 var monitoringDefinitionsLayer = await layerModel.CreateLayer("Monitoring Definitions", trans);
                 monitoringDefinitionsLayerID = monitoringDefinitionsLayer.ID;
-                await layerModel.CreateLayer("Monitoring", "TestPlugin.CLBMonitoring", trans);
+                await layerModel.CreateLayer("Monitoring", AnchorState.Active, "TestPlugin.CLBMonitoring", trans);
                 var automationLayer = await layerModel.CreateLayer("Automation", trans);
                 automationLayerID = automationLayer.ID;
                 trans.Commit();
@@ -122,7 +122,7 @@ namespace Tests.DBInit
             using (var trans = conn.BeginTransaction())
             {
                 foreach (var predicate in regularPredicates.Concat(monitoringPredicates).Concat(automationPredicates))
-                    await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, PredicateState.Active, trans);
+                    await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, AnchorState.Active, trans);
 
                 trans.Commit();
             }

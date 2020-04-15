@@ -14,7 +14,7 @@ namespace LandscapeRegistry.Model
 
         private static readonly string DefaultWordingFrom = "relates to";
         private static readonly string DefaultWordingTo = "is being related to from";
-        private static readonly PredicateState DefaultState = PredicateState.Active;
+        private static readonly AnchorState DefaultState = AnchorState.Active;
 
         public PredicateModel(NpgsqlConnection connection)
         {
@@ -30,7 +30,7 @@ namespace LandscapeRegistry.Model
             return Predicate.Build(id, DefaultWordingFrom, DefaultWordingTo, DefaultState);
         }
 
-        public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, PredicateState state, NpgsqlTransaction trans)
+        public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, NpgsqlTransaction trans)
         {
             var current = await GetPredicate(id, trans);
 
@@ -74,12 +74,11 @@ namespace LandscapeRegistry.Model
             }
             catch (PostgresException e)
             {
-                Console.WriteLine(e);
                 return false;
             }
         }
 
-        public async Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, DateTimeOffset? atTime, PredicateStateFilter stateFilter)
+        public async Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, DateTimeOffset? atTime, AnchorStateFilter stateFilter)
         {
             var ret = new Dictionary<string, Predicate>();
             using var command = new NpgsqlCommand(@"
@@ -95,23 +94,15 @@ namespace LandscapeRegistry.Model
             ", conn, trans);
             var finalTimeThreshold = atTime ?? DateTimeOffset.Now;
             command.Parameters.AddWithValue("atTime", finalTimeThreshold);
-            var states = stateFilter switch
-            {
-                PredicateStateFilter.ActiveOnly => new PredicateState[] { PredicateState.Active },
-                PredicateStateFilter.ActiveAndDeprecated => new PredicateState[] { PredicateState.Active, PredicateState.Deprecated },
-                PredicateStateFilter.All => Enum.GetValues(typeof(PredicateState)),
-                PredicateStateFilter.MarkedForDeletion => new PredicateState[] { PredicateState.MarkedForDeletion },
-                _ => null
-            };
-            command.Parameters.AddWithValue("states", states);
+            command.Parameters.AddWithValue("states", stateFilter.Filter2States());
             using (var s = await command.ExecuteReaderAsync())
             {
                 while (await s.ReadAsync())
                 {
                     var id = s.GetString(0);
-                    var wordingFrom = (s.IsDBNull(1)) ? "relates to" : s.GetString(1);
-                    var wordingTo = (s.IsDBNull(2)) ? "is being related to from" : s.GetString(2);
-                    var state = (s.IsDBNull(3)) ? PredicateState.Active : s.GetFieldValue<PredicateState>(3);
+                    var wordingFrom = (s.IsDBNull(1)) ? DefaultWordingFrom : s.GetString(1);
+                    var wordingTo = (s.IsDBNull(2)) ? DefaultWordingTo : s.GetString(2);
+                    var state = (s.IsDBNull(3)) ? DefaultState : s.GetFieldValue<AnchorState>(3);
                     ret.Add(id, Predicate.Build(id, wordingFrom, wordingTo, state));
                 }
             }
@@ -137,7 +128,7 @@ namespace LandscapeRegistry.Model
                 return null;
             var wordingFrom = (s.IsDBNull(0)) ? DefaultWordingFrom : s.GetString(0);
             var wordingTo = (s.IsDBNull(1)) ? DefaultWordingTo : s.GetString(1);
-            var state = (s.IsDBNull(2)) ? DefaultState : s.GetFieldValue<PredicateState>(2);
+            var state = (s.IsDBNull(2)) ? DefaultState : s.GetFieldValue<AnchorState>(2);
             return Predicate.Build(id, wordingFrom, wordingTo, state);
         }
     }

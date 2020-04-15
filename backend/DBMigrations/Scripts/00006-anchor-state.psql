@@ -1,0 +1,8 @@
+﻿
+CREATE TYPE anchorstate AS ENUM (
+    'active',
+    'deprecated',
+    'inactive',
+    'marked_for_deletion'
+);
+ALTER TYPE anchorstate OWNER TO postgres;

@@ -65,5 +65,15 @@ namespace LandscapeRegistry.Model.Cached
             }
             return AllLayersCache;
         }
+
+        public async Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, NpgsqlTransaction trans)
+        {
+            return await Model.GetLayers(stateFilter, trans); // TODO: caching
+        }
+
+        public async Task<bool> TryToDelete(long id, NpgsqlTransaction trans)
+        {
+            return await Model.TryToDelete(id, trans); // TODO: caching
+        }
     }
 }

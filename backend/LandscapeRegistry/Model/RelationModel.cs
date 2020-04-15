@@ -71,7 +71,7 @@ namespace LandscapeRegistry.Model
         {
             var ret = new List<Relation>();
 
-            var predicates = await predicateModel.GetPredicates(trans, timeThreshold, IPredicateModel.PredicateStateFilter.All);
+            var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.All);
 
             using (var command = await CreateMergedRelationCommand(ciIdentity, includeRemoved, layerset, ird, null, trans, timeThreshold))
             {
@@ -99,7 +99,7 @@ namespace LandscapeRegistry.Model
 
         private async Task<Relation> GetRelation(string fromCIID, string toCIID, string predicateID, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
-            var predicates = await predicateModel.GetPredicates(trans, atTime, IPredicateModel.PredicateStateFilter.All);
+            var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 
             using (var command = new NpgsqlCommand(@"select id, state, changeset_id from relation where 
                 timestamp <= @time_threshold AND from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id and layer_id = @layer_id and predicate_id = @predicate_id order by timestamp DESC 
@@ -128,7 +128,7 @@ namespace LandscapeRegistry.Model
         {
             var ret = new List<Relation>();
 
-            var predicates = await predicateModel.GetPredicates(trans, timeThreshold, IPredicateModel.PredicateStateFilter.All);
+            var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.All);
 
             using (var command = await CreateMergedRelationCommand(null, includeRemoved, layerset, IncludeRelationDirections.Both, $"predicate_id = '{predicateID}'", trans, timeThreshold))
             {
@@ -169,7 +169,7 @@ namespace LandscapeRegistry.Model
                 return currentRelation;
             }
 
-            var predicates = await predicateModel.GetPredicates(trans, DateTimeOffset.Now, IPredicateModel.PredicateStateFilter.All);
+            var predicates = await predicateModel.GetPredicates(trans, DateTimeOffset.Now, AnchorStateFilter.All);
 
             using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
                 VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, now()) returning id", conn, trans);
@@ -205,7 +205,7 @@ namespace LandscapeRegistry.Model
                 }
             }
 
-            var predicates = await predicateModel.GetPredicates(trans, DateTimeOffset.Now, IPredicateModel.PredicateStateFilter.ActiveOnly); // only active predicates allowed
+            var predicates = await predicateModel.GetPredicates(trans, DateTimeOffset.Now, AnchorStateFilter.ActiveOnly); // only active predicates allowed
 
             using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
                 VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, now()) returning id", conn, trans);

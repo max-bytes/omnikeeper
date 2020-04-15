@@ -21,14 +21,15 @@ export default function ManageLayers(props) {
     }
   });
   const [createLayer] = useMutation(mutations.CREATE_LAYER);
+  const [updateLayer] = useMutation(mutations.UPDATE_LAYER);
 
   const columnDefs = [
     { headerName: "ID", field: "id", editable: false },
     { headerName: "Name", field: "name", editable: (params) => params.data.isNew },
-    // { headerName: "State", field: "state", cellEditor: 'agSelectCellEditor', cellEditorParams: {
-    //     values: ['ACTIVE', 'DEPRECATED', 'INACTIVE', 'MARKED_FOR_DELETION'],
-    //   },
-    // }
+    { headerName: "State", field: "state", cellEditor: 'agSelectCellEditor', cellEditorParams: {
+        values: ['ACTIVE', 'DEPRECATED', 'INACTIVE', 'MARKED_FOR_DELETION'],
+      },
+    }
   ];
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
@@ -38,11 +39,13 @@ export default function ManageLayers(props) {
     <AgGridCrud idIsUserCreated={false} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
       saveRow={async row => {
         if (row.id === undefined && row.frontend_id !== undefined) {
-          return createLayer({variables: { layer: { name: row.name }}})
+          return createLayer({variables: { layer: { name: row.name, state: row.state }}})
             .then(r => ({result: r.data.createLayer, frontend_id: row.frontend_id}))
             .catch(e => ({result: e, frontend_id: row.frontend_id }));
         } else {
-          return {result: new Error("Only adding allowed!"), id: row.id};
+          return updateLayer({variables: { layer: { id: row.id, state: row.state }}})
+            .then(r => ({result: r.data.updateLayer, id: row.id}))
+            .catch(e => ({result: e, id: row.id }));
         }
       }} />
   </div>;

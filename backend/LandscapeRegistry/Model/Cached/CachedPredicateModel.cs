@@ -21,7 +21,7 @@ namespace LandscapeRegistry.Model.Cached
             Model = model;
         }
 
-        public async Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, DateTimeOffset? atTime, PredicateStateFilter stateFilter)
+        public async Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, DateTimeOffset? atTime, AnchorStateFilter stateFilter)
         {
             IDictionary<string, Predicate> value;
             if (atTime.HasValue)
@@ -39,7 +39,7 @@ namespace LandscapeRegistry.Model.Cached
             return value;
         }
 
-        public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, PredicateState state, NpgsqlTransaction trans)
+        public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, NpgsqlTransaction trans)
         {
             //TODO: add to cache(?)
             return await Model.InsertOrUpdate(id, wordingFrom, wordingTo, state, trans);

@@ -69,76 +69,88 @@ function ApolloWrapper({ component: Component, ...rest }) {
 
     const resolvers = {
         Mutation: {
-        setSelectedTimeThreshold: (_root, variables, { cache, getCacheKey }) => {
-            cache.writeQuery({query: queries.SelectedTimeThreshold, data: {
-                selectedTimeThreshold: { 
-                    time: variables.newTimeThreshold || moment().add(1, 'year').format('YYYY-MM-DD HH:mm:ss'),
-                    isLatest: variables.isLatest
+            setSelectedTimeThreshold: (_root, variables, { cache, getCacheKey }) => {
+                cache.writeQuery({query: queries.SelectedTimeThreshold, data: {
+                    selectedTimeThreshold: { 
+                        time: variables.newTimeThreshold || moment().add(1, 'year').format('YYYY-MM-DD HH:mm:ss'),
+                        isLatest: variables.isLatest
+                    }
+                }});
+                return null;
+            },
+            // setSelectedCI: (_root, variables, { cache, getCacheKey }) => {
+            //     cache.writeQuery({query: queries.SelectedCI, data: {selectedCI: variables.newSelectedCI } });
+            //     return null;
+            // },
+            toggleLayerVisibility: (_root, variables, { cache, getCacheKey }) => {
+                const id = getCacheKey({ __typename: 'LayerType', id: variables.id })
+                const fragment = gql`
+                fragment visibleLayer on LayerType {
+                    visibility
                 }
-            }});
-            return null;
-        },
-        // setSelectedCI: (_root, variables, { cache, getCacheKey }) => {
-        //     cache.writeQuery({query: queries.SelectedCI, data: {selectedCI: variables.newSelectedCI } });
-        //     return null;
-        // },
-        toggleLayerVisibility: (_root, variables, { cache, getCacheKey }) => {
-            const id = getCacheKey({ __typename: 'LayerType', id: variables.id })
-            const fragment = gql`
-            fragment visibleLayer on LayerType {
-                visibility
-            }
-            `;
-            const layer = cache.readFragment({ fragment, id });
-            const data = { ...layer, visibility: !layer.visibility }; 
-            cache.writeData({ id, data });
-            return null;
-        },
-        changeLayerSortOrder: (_root, variables, { cache, getCacheKey }) => {
-            const id = getCacheKey({ __typename: 'LayerType', id: variables.id })
-            const fragment = gql`
-            fragment layer on LayerType {
-                sort
-            }
-            `;
-            const layer = cache.readFragment({ fragment, id });
+                `;
+                const layer = cache.readFragment({ fragment, id });
+                const data = { ...layer, visibility: !layer.visibility }; 
+                cache.writeData({ id, data });
+                return null;
+            },
+            changeLayerSortOrder: (_root, variables, { cache, getCacheKey }) => {
+                const id = getCacheKey({ __typename: 'LayerType', id: variables.id })
+                const fragment = gql`
+                fragment layer on LayerType {
+                    sort
+                }
+                `;
+                const layer = cache.readFragment({ fragment, id });
 
-            var sortOrderChange = variables.change;
-            var newSortOrder = layer.sort + sortOrderChange;
+                var sortOrderChange = variables.change;
+                var newSortOrder = layer.sort + sortOrderChange;
 
-            var { layers } = cache.readQuery({query: queries.Layers});
-            var pushedLayers = layers.filter(l => l.sort === newSortOrder && l.id !== variables.id);
+                var { layers } = cache.readQuery({query: queries.Layers});
+                var pushedLayers = layers.filter(l => l.sort === newSortOrder && l.id !== variables.id);
 
-            if (pushedLayers.length === 0)
-            return null;
+                if (pushedLayers.length === 0)
+                return null;
 
-            pushedLayers.forEach(l => {
-            const d = { ...l, sort: l.sort - sortOrderChange }; 
-            var cacheKey = getCacheKey({ __typename: 'LayerType', id: l.id });
-            // console.log("Moving layer " + l.id + " (" + cacheKey +  ") from sort " + l.sort + " to sort " + d.sort);
-            cache.writeData({ id: cacheKey, data: d });
-            // console.log({ id: cacheKey, data: d });
-            });
+                pushedLayers.forEach(l => {
+                const d = { ...l, sort: l.sort - sortOrderChange }; 
+                var cacheKey = getCacheKey({ __typename: 'LayerType', id: l.id });
+                // console.log("Moving layer " + l.id + " (" + cacheKey +  ") from sort " + l.sort + " to sort " + d.sort);
+                cache.writeData({ id: cacheKey, data: d });
+                // console.log({ id: cacheKey, data: d });
+                });
 
-            // console.log("Moving layer " + variables.id + " (" + id + ") from sort " + layer.sort + " to sort " + (layer.sort + sortOrderChange));
-            const data = { ...layer, sort: layer.sort + sortOrderChange }; 
-            cache.writeData({ id, data });
-            // console.log({ id, data });
-            return null;
-        },
+                // console.log("Moving layer " + variables.id + " (" + id + ") from sort " + layer.sort + " to sort " + (layer.sort + sortOrderChange));
+                const data = { ...layer, sort: layer.sort + sortOrderChange }; 
+                cache.writeData({ id, data });
+                // console.log({ id, data });
+                return null;
+            },
         },
         LayerType: {
-        visibility: (obj, args, context, info) => {
-            return true;
+            visibility: (obj, args, context, info) => {
+                return true;
+            },
+            sort: (obj, args, context, info) => {
+                return initalLayerSort++;
+            },
+            color: (obj, args, context, info) => {
+                var layerName = obj.name;
+                var layerHue = toHSL(layerName);
+                return layerHue; // TODO: use cie lab instead
+            }
         },
-        sort: (obj, args, context, info) => {
-            return initalLayerSort++;
-        },
-        color: (obj, args, context, info) => {
-            var layerName = obj.name;
-            var layerHue = toHSL(layerName);
-            return layerHue; // TODO: use cie lab instead
-        }
+        PredicateType: {
+            labelWordingFrom: (obj, args, context, info) => {
+                var stateStr = "";
+                if (obj.state !== 'ACTIVE') stateStr = " (DEPRECATED)";
+                return obj.wordingFrom + stateStr;
+            },
+            labelWordingTo: (obj, args, context, info) => {
+                var stateStr = "";
+                if (obj.state !== 'ACTIVE') stateStr = " (DEPRECATED)";
+                return obj.wordingTo + stateStr;
+            }
         }
     };
 

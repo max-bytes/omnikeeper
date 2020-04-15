@@ -13,7 +13,7 @@ function CI(props) {
   const [selectedTab, setSelectedTab] = useState(0);
   const [createNewAttribute, setCreateNewAttribute] = useState(undefined);
     
-  let visibleAndWritableLayers = props.layers.filter(l => l.visibility && l.writable);
+  let visibleAndWritableLayers = props.layers.filter(l => l.visibility && l.writable && l.state === 'ACTIVE');
 
   const panes = [
     { menuItem: 'Attributes', render: () => <Tab.Pane>

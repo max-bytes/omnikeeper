@@ -22,12 +22,27 @@ namespace LandscapeRegistry.Entity.GraphQL
     public class CreateLayerInput
     {
         public string Name { get; private set; }
+        public AnchorState State { get; private set; }
     }
     public class CreateLayerInputType : InputObjectGraphType<CreateLayerInput>
     {
         public CreateLayerInputType()
         {
             Field(x => x.Name);
+            Field(x => x.State, type: typeof(AnchorStateType));
+        }
+    }
+    public class UpdateLayerInput
+    {
+        public long ID { get; private set; }
+        public AnchorState State { get; private set; }
+    }
+    public class UpdateLayerInputType : InputObjectGraphType<UpdateLayerInput>
+    {
+        public UpdateLayerInputType()
+        {
+            Field("id", x => x.ID);
+            Field(x => x.State, type: typeof(AnchorStateType));
         }
     }
 
@@ -112,21 +127,21 @@ namespace LandscapeRegistry.Entity.GraphQL
         }
     }
 
-    public class MutatePredicateInput
+    public class UpsertPredicateInput
     {
         public string ID { get; private set; }
         public string WordingFrom { get; private set; }
         public string WordingTo { get; private set; }
-        public PredicateState State { get; private set; }
+        public AnchorState State { get; private set; }
     }
-    public class MutatePredicateInputType : InputObjectGraphType<MutatePredicateInput>
+    public class UpsertPredicateInputType : InputObjectGraphType<UpsertPredicateInput>
     {
-        public MutatePredicateInputType()
+        public UpsertPredicateInputType()
         {
             Field("id", x => x.ID);
             Field(x => x.WordingFrom);
             Field(x => x.WordingTo);
-            Field(x => x.State, type: typeof(PredicateStateType));
+            Field(x => x.State, type: typeof(AnchorStateType));
         }
     }
 }

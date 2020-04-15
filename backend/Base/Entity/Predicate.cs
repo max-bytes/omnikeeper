@@ -6,22 +6,14 @@ using System.Threading.Tasks;
 
 namespace Landscape.Base.Entity
 {
-    public enum PredicateState
-    {
-        Active, 
-        Deprecated, // predicate can be set via processes, but not via UIs; UI selection lists show predicate as deprecated
-        Inactive, // predicate cannot be set via processes or UIs, does not show up in UI selection lists
-        MarkedForDeletion // predicate cannot be set via processes or UIs, does not show up in UI selection lists, will be deleted when possible
-    }
-
     public class Predicate : IEquatable<Predicate>
     {
         public string ID { get; private set; }
         public string WordingFrom { get; private set; }
         public string WordingTo { get; private set; }
-        public PredicateState State { get; private set; }
+        public AnchorState State { get; private set; }
 
-        public static Predicate Build(string id, string wordingFrom, string wordingTo, PredicateState state)
+        public static Predicate Build(string id, string wordingFrom, string wordingTo, AnchorState state)
         {
             return new Predicate
             {

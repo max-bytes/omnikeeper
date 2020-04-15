@@ -12,6 +12,8 @@ namespace LandscapeRegistry.Model
     {
         private readonly NpgsqlConnection conn;
 
+        private static readonly AnchorState DefaultState = AnchorState.Active;
+
         public LayerModel(NpgsqlConnection connection)
         {
             conn = connection;
@@ -19,10 +21,11 @@ namespace LandscapeRegistry.Model
 
         public async Task<Layer> CreateLayer(string name, NpgsqlTransaction trans)
         {
-            return await CreateLayer(name, null, trans);
+            return await CreateLayer(name, DefaultState, null, trans);
         }
-        public async Task<Layer> CreateLayer(string name, string computeLayerBrain, NpgsqlTransaction trans)
+        public async Task<Layer> CreateLayer(string name, AnchorState state, string computeLayerBrain, NpgsqlTransaction trans)
         {
+            // TODO: make computelayerbrain its own table
             using var command = new NpgsqlCommand(@"INSERT INTO layer (name, computeLayerBrain) VALUES (@name, @computeLayerBrain) returning id", conn, trans);
             command.Parameters.AddWithValue("name", name);
             if (computeLayerBrain == null)
@@ -30,7 +33,48 @@ namespace LandscapeRegistry.Model
             else
                 command.Parameters.AddWithValue("computeLayerBrain", computeLayerBrain);
             var id = (long)await command.ExecuteScalarAsync();
-            return Layer.Build(name, id);
+
+            // set state
+            using var commandState = new NpgsqlCommand(@"INSERT INTO layer_state (layer_id, state, ""timestamp"")
+                    VALUES (@layer_id, @state, now())", conn, trans);
+            commandState.Parameters.AddWithValue("layer_id", id);
+            commandState.Parameters.AddWithValue("state", state);
+            await commandState.ExecuteNonQueryAsync();
+
+            return Layer.Build(name, id, state);
+        }
+
+        public async Task<Layer> Update(long id, AnchorState state, NpgsqlTransaction trans)
+        {
+            var current = await GetLayer(id, trans);
+
+            // update state
+            if (current.State != state)
+            {
+                using var commandState = new NpgsqlCommand(@"INSERT INTO layer_state (layer_id, state, ""timestamp"")
+                    VALUES (@layer_id, @state, now())", conn, trans);
+                commandState.Parameters.AddWithValue("layer_id", id);
+                commandState.Parameters.AddWithValue("state", state);
+                await commandState.ExecuteNonQueryAsync();
+                current = Layer.Build(current.Name, current.ID, state);
+            }
+
+            return current;
+        }
+
+        public async Task<bool> TryToDelete(long id, NpgsqlTransaction trans)
+        {
+            try
+            {
+                using var command = new NpgsqlCommand(@"DELETE FROM layer WHERE id = @id", conn, trans);
+                command.Parameters.AddWithValue("id", id);
+                await command.ExecuteNonQueryAsync();
+                return true;
+            }
+            catch (PostgresException e)
+            {
+                return false;
+            }
         }
 
         // TODO: performance improvements(?)
@@ -63,24 +107,34 @@ namespace LandscapeRegistry.Model
 
         public async Task<Layer> GetLayer(string layerName, NpgsqlTransaction trans)
         {
-            using var command = new NpgsqlCommand(@"select id from layer where name = @name LIMIT 1", conn, trans);
+            using var command = new NpgsqlCommand(@"SELECT l.id, ls.state FROM layer l
+                LEFT JOIN 
+                    (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
+                    ON ls.layer_id = l.id
+                WHERE l.name = @name LIMIT 1", conn, trans);
             command.Parameters.AddWithValue("name", layerName);
             using var r = await command.ExecuteReaderAsync();
             await r.ReadAsync();
             if (!r.HasRows) return null;
             var id = r.GetInt64(0);
-            return Layer.Build(layerName, id);
+            var state = (r.IsDBNull(1)) ? DefaultState : r.GetFieldValue<AnchorState>(1);
+            return Layer.Build(layerName, id, state);
         }
 
         public async Task<Layer> GetLayer(long layerID, NpgsqlTransaction trans)
         {
-            using var command = new NpgsqlCommand(@"select name from layer where id = @id LIMIT 1", conn, trans);
+            using var command = new NpgsqlCommand(@"SELECT l.name, ls.state FROM layer l
+                LEFT JOIN 
+                    (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
+                    ON ls.layer_id = l.id
+                WHERE l.id = @id LIMIT 1", conn, trans);
             command.Parameters.AddWithValue("id", layerID);
             using var r = await command.ExecuteReaderAsync();
             await r.ReadAsync();
             if (!r.HasRows) return null;
             var name = r.GetString(0);
-            return Layer.Build(name, layerID);
+            var state = (r.IsDBNull(1)) ? DefaultState : r.GetFieldValue<AnchorState>(1);
+            return Layer.Build(name, layerID, state);
         }
 
 
@@ -89,14 +143,19 @@ namespace LandscapeRegistry.Model
             if (layerIDs.Length == 0) return new List<Layer>();
 
             var layers = new List<Layer>();
-            using var command = new NpgsqlCommand(@"select id, name from layer where id = ANY(@layer_ids)", conn, trans);
+            using var command = new NpgsqlCommand(@"SELECT l.id, l.name, ls.state FROM layer l
+                LEFT JOIN 
+                    (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
+                    ON ls.layer_id = l.id
+                WHERE l.id = ANY(@layer_ids)", conn, trans);
             command.Parameters.AddWithValue("layer_ids", layerIDs);
             using var r = await command.ExecuteReaderAsync();
             while (await r.ReadAsync())
             {
                 var id = r.GetInt64(0);
                 var name = r.GetString(1);
-                layers.Add(Layer.Build(name, id));
+                var state = (r.IsDBNull(2)) ? DefaultState : r.GetFieldValue<AnchorState>(2);
+                layers.Add(Layer.Build(name, id, state));
             }
 
             // HACK: wonky re-sorting of layers according to input layerIDs
@@ -106,13 +165,37 @@ namespace LandscapeRegistry.Model
         public async Task<IEnumerable<Layer>> GetLayers(NpgsqlTransaction trans)
         {
             var layers = new List<Layer>();
-            using var command = new NpgsqlCommand(@"select id, name from layer", conn, trans);
+            using var command = new NpgsqlCommand(@"SELECT l.id, l.name, ls.state FROM layer l
+                LEFT JOIN 
+                    (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
+                    ON ls.layer_id = l.id", conn, trans);
             using var r = await command.ExecuteReaderAsync();
             while (await r.ReadAsync())
             {
                 var id = r.GetInt64(0);
                 var name = r.GetString(1);
-                layers.Add(Layer.Build(name, id));
+                var state = (r.IsDBNull(2)) ? DefaultState : r.GetFieldValue<AnchorState>(2);
+                layers.Add(Layer.Build(name, id, state));
+            }
+            return layers;
+        }
+
+        public async Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, NpgsqlTransaction trans)
+        {
+            var layers = new List<Layer>();
+            using var command = new NpgsqlCommand(@"SELECT l.id, l.name, ls.state FROM layer l
+                LEFT JOIN 
+                    (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
+                    ON ls.layer_id = l.id
+                WHERE ls.state = ANY(@states) OR ls.state IS NULL", conn, trans);
+            command.Parameters.AddWithValue("states", stateFilter.Filter2States());
+            using var r = await command.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+            {
+                var id = r.GetInt64(0);
+                var name = r.GetString(1);
+                var state = (r.IsDBNull(2)) ? DefaultState : r.GetFieldValue<AnchorState>(2);
+                layers.Add(Layer.Build(name, id, state));
             }
             return layers;
         }

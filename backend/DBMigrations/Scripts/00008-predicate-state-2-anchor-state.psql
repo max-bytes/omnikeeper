@@ -1,0 +1,8 @@
+﻿ALTER TABLE public.predicate_state
+  ALTER COLUMN state DROP DEFAULT,
+  ALTER COLUMN state
+    SET DATA TYPE public.anchorstate
+    USING state::text::public.anchorstate,
+  ALTER COLUMN state SET DEFAULT 'active'::public.anchorstate;
+
+DROP TYPE public.predicatestate;

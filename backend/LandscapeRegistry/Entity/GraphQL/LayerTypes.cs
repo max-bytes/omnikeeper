@@ -10,6 +10,7 @@ namespace LandscapeRegistry.Entity.GraphQL
         {
             Field(x => x.Name);
             Field("id", x => x.ID);
+            Field(x => x.State, type: typeof(AnchorStateType));
             Field<BooleanGraphType>("writable",
             resolve: (context) =>
             {

@@ -31,6 +31,7 @@ export const mutations = {
       }
     }
     ${Fragments.relatedCI}
+    ${Fragments.fullPredicate}
     ${Fragments.mergedAttribute}
     ${Fragments.attribute}
     ${Fragments.relation}
@@ -68,6 +69,7 @@ mutation RemoveRelation($fromCIID: String!, $toCIID: String!, $predicateID: Stri
   }
 }
 ${Fragments.relatedCI}
+${Fragments.fullPredicate}
 ${Fragments.mergedAttribute}
 ${Fragments.attribute}
 ${Fragments.relation}
@@ -96,9 +98,18 @@ CREATE_CI: gql`
   ${Fragments.fullLayer}
 `,
 
-  MUTATE_PREDICATE: gql`
-  mutation MutatePredicate($predicate: MutatePredicateInputType!) {
-    mutatePredicate(predicate: $predicate) {
+  UPDATE_LAYER: gql`
+  mutation UpdateLayer($layer: UpdateLayerInputType!) {
+    updateLayer(layer: $layer) {
+      ...FullLayer
+    }
+  }
+  ${Fragments.fullLayer}
+  `,
+
+  UPSERT_PREDICATE: gql`
+  mutation UpsertPredicate($predicate: UpsertPredicateInputType!) {
+    upsertPredicate(predicate: $predicate) {
         ...FullPredicate
     }
   }

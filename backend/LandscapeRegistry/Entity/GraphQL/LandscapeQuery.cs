@@ -1,4 +1,5 @@
 ﻿using GraphQL.Types;
+using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Cached;
@@ -83,7 +84,7 @@ namespace LandscapeRegistry.Entity.GraphQL
             FieldAsync<ListGraphType<PredicateType>>("predicates",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {
-                    new QueryArgument<NonNullGraphType<PredicateStateFilterType>>
+                    new QueryArgument<NonNullGraphType<AnchorStateFilterType>>
                     {
                         Name = "stateFilter"
                     },
@@ -92,7 +93,7 @@ namespace LandscapeRegistry.Entity.GraphQL
                 {
                     var userContext = context.UserContext as LandscapeUserContext;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
-                    var stateFilter = context.GetArgument<IPredicateModel.PredicateStateFilter>("stateFilter");
+                    var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
 
                     return (await predicateModel.GetPredicates(null, userContext.TimeThreshold, stateFilter)).Values;
                 });

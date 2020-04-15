@@ -8,7 +8,7 @@ export const queries = {
         }
     `,
     PredicateList: gql`
-        query predicateList($stateFilter: PredicateStateFilter!) {
+        query predicateList($stateFilter: AnchorStateFilter!) {
             predicates(stateFilter: $stateFilter) {
                 ...FullPredicate
             }

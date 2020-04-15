@@ -28,8 +28,8 @@ namespace LandscapeRegistry.Utils
         private void MapEnums(NpgsqlConnection conn)
         {
             conn.TypeMapper.MapEnum<AttributeState>("attributestate");
-            conn.TypeMapper.MapEnum<PredicateState>("predicatestate");
             conn.TypeMapper.MapEnum<RelationState>("relationstate");
+            conn.TypeMapper.MapEnum<AnchorState>("anchorstate");
             conn.TypeMapper.MapEnum<AttributeValueType>("attributevaluetype");
             conn.TypeMapper.MapEnum<UserType>("usertype");
         }

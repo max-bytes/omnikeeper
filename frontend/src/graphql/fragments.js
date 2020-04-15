@@ -82,6 +82,7 @@ export const Fragments = {
   fragment FullLayer on LayerType {
     id
     name
+    state
     writable
     sort @client
     visibility @client
@@ -112,7 +113,9 @@ export const Fragments = {
     id,
     wordingFrom
     wordingTo,
-    state
+    state,
+    labelWordingFrom @client,
+    labelWordingTo @client
   }
   `
 };
