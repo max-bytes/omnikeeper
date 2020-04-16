@@ -13,9 +13,11 @@ import EditableAttributeValue from "./EditableAttributeValue";
 function Attribute(props) {
 
   var {ciIdentity, layers, attribute, isEditable, ...rest} = props;
+  
 
   const isArray = attribute.attribute.value.isArray;
 
+  var [hasErrors, setHasErrors] = useState(false);
   const [values, setValues] = useState(attribute.attribute.value.values);
   React.useEffect(() => setValues(attribute.attribute.value.values), [attribute.attribute.value.values])
 
@@ -40,7 +42,7 @@ function Attribute(props) {
   const layerID = props.attribute.layerStackIDs[props.attribute.layerStackIDs.length - 1];
 
   let valueInput = <>
-    <EditableAttributeValue isEditable={isEditable} values={values} setValues={setValues} type={attribute.attribute.value.type} isArray={isArray} />
+    <EditableAttributeValue name={attribute.attribute.name} setHasErrors={setHasErrors} isEditable={isEditable} values={values} setValues={setValues} type={attribute.attribute.value.type} isArray={isArray} />
   </>;
 
   const leftPart = <div style={{display: 'flex', flexBasis: '220px', alignItems: 'center', minHeight: '33px'}}>
@@ -71,7 +73,7 @@ function Attribute(props) {
           {leftPart}
           <Form.Group controlId={`value:${attribute.attribute.name}`} style={{flexGrow: 1, alignItems: 'flex-start'}}>
             {valueInput}
-            <Button type="submit" className={'mx-1'} disabled={attribute.attribute.value.values === values}>Update</Button>
+            <Button type="submit" className={'mx-1'} disabled={attribute.attribute.value.values === values || hasErrors}>Update</Button>
             {removeButton}
           </Form.Group>
       </Form>

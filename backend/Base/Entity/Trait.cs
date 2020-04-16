@@ -43,17 +43,19 @@ namespace Landscape.Base.Entity
         public string Name { get; private set; }
 
         public IImmutableList<TraitAttribute> RequiredAttributes { get; private set; }
-        // TODO: implement optional attributes
+        public IImmutableList<TraitAttribute> OptionalAttributes { get; private set; }
 
         public ImmutableList<TraitRelation> RequiredRelations { get; private set; }
         // TODO: implement optional relations
 
-        public static Trait Build(string name, IEnumerable<TraitAttribute> requiredAttributes, IEnumerable<TraitRelation> requiredRelations)
+        public static Trait Build(string name, IEnumerable<TraitAttribute> requiredAttributes, IEnumerable<TraitAttribute> optionalAttributes,
+            IEnumerable<TraitRelation> requiredRelations)
         {
             return new Trait()
             {
                 Name = name,
                 RequiredAttributes = requiredAttributes.ToImmutableList(),
+                OptionalAttributes = optionalAttributes.ToImmutableList(),
                 RequiredRelations = requiredRelations.ToImmutableList()
             };
         }

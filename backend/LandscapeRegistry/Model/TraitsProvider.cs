@@ -33,6 +33,11 @@ namespace LandscapeRegistry.Model
                             CIAttributeTemplate.BuildFromParams("ipAddress", "this is a description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     },
+                    new List<TraitAttribute>() {
+                        TraitAttribute.Build("variables",
+                            CIAttributeTemplate.BuildFromParams("automation.ansible_variables", "this is a description", AttributeValueType.JSON, false)
+                        )
+                    },
                     new List<TraitRelation>() {
                         TraitRelation.Build("ansible_groups",
                             RelationTemplate.Build(predicates["has_ansible_group"], new CIType[] { await ciModel.GetCITypeByID("Ansible Host Group", trans) }, 1, null)

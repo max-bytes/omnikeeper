@@ -15,7 +15,7 @@ export default function AgGridCrud(props) {
   const getRowNodeId = data => data.id;
   const isFrontendRowNodeOnly = data => data.id === undefined && data.frontend_id !== undefined && !props.idIsUserCreated;
 
-  const uuidv4 = () => ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
+  const uuidv4 = () => ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ ((crypto.getRandomValues(new Uint8Array(1))[0] & 15) >> c / 4)).toString(16));
 
   const columnDefs = [
     { headerName: "", sortable: false, resizable: false, filter: false, width: 30, colId: 'state', editable: false, valueGetter: 'data', 

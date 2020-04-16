@@ -1,26 +1,32 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Form from 'react-bootstrap/Form';
 import { Button } from 'semantic-ui-react'
 import { Icon } from 'semantic-ui-react'
-import { attributeType2InputProps } from '../utils/attributeTypes'
+import { InputControl } from '../utils/attributeTypes'
+
+
+
 
 function EditableAttributeValue(props) {
-  var {values, setValues, type, isArray, autoFocus, isEditable} = props;
-
+  var {values, setValues, type, isArray, autoFocus, isEditable, setHasErrors, name} = props;
+  
   isEditable = isEditable ?? true;
 
-  if (isArray) {
+  var [errorsInArray, setErrorsInArray] = useState([]);
+  useEffect(() => setHasErrors(errorsInArray.filter(e => e).length > 0), [errorsInArray, setHasErrors]);
 
+  if (isArray) {
     const canRemoveItem = values.length > 1;
 
     return <div style={{ display: 'flex', flexDirection: 'column', flexGrow: '1' }}>
         {values.map((v, index) => {
           return <Form.Group controlId={`value::${index}`} key={index} style={{display: 'flex', flexGrow: 1, alignItems: 'center'}}>
-            <Form.Control disabled={!isEditable} key={index} style={{flexGrow: 1}} {...attributeType2InputProps(type)} placeholder="Enter value" value={v} 
-              autoFocus={autoFocus && index === 0}
-              onChange={e => {
+            <InputControl name={name + "_" + index} setHasErrors={e => {
+              setErrorsInArray(oldErrorsInArray => { let newErrorsInArray = [...oldErrorsInArray]; newErrorsInArray[index] = e; return newErrorsInArray;});
+            }} key={index} type={type} isArray={isArray} value={v} disabled={!isEditable} autoFocus={autoFocus && index === 0}
+              onChange={value => {
                 let newValues = values.slice();
-                newValues[index] = e.target.value;
+                newValues[index] = value;
                 props.setValues(newValues);
               }} />
               
@@ -43,7 +49,7 @@ function EditableAttributeValue(props) {
                 <Icon corner={'top right'} name='caret up' />
               </Icon.Group>
             </Button>}
-            {isEditable && <Button className={'ml-1'}  disabled={!isEditable}size='mini' compact onClick={e => {
+            {isEditable && <Button className={'ml-1'}  disabled={!isEditable} size='mini' compact onClick={e => {
               e.preventDefault();
               let newValues = values.slice();
               newValues.splice(index + 1, 0, '');
@@ -59,7 +65,7 @@ function EditableAttributeValue(props) {
         }
     </div>;
   } else {
-    return <Form.Control autoFocus={autoFocus} disabled={!isEditable} style={{flexGrow: 1}} {...attributeType2InputProps(type)} placeholder="Enter value" value={values[0]} onChange={e => setValues([e.target.value])} />;
+    return <InputControl name={name} setHasErrors={setHasErrors} isArray={isArray} type={type} value={values[0]} disabled={!isEditable} autoFocus={autoFocus} onChange={value => setValues([value])} />
   }
 }
 

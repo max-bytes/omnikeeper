@@ -31,7 +31,7 @@ function AddNewRelation(props) {
     <Icon name='plus' />Add Relation
   </Button>
   
-  let addRelation = <span></span>;
+  let addRelation = <></>;
   if (isOpen && dataCIs && dataPredicates) {
     var ciList = dataCIs.ciids.map(d => {
       return { key: d, value: d, text: d };

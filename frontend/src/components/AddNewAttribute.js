@@ -11,14 +11,17 @@ import { Row } from "react-bootstrap";
 import EditableAttributeValue from "./EditableAttributeValue";
 import { Dropdown, Segment, Button, Icon } from 'semantic-ui-react'
 import LayerDropdown from "./LayerDropdown";
+import { ErrorPopupButton } from "./ErrorPopupButton";
 
 function AddNewAttribute(props) {
+  const [insertError, setInsertError] = useState(undefined);
   const canBeEdited = props.isEditable && props.visibleAndWritableLayers.length > 0;
   let initialAttribute = {name: '', type: 'TEXT', values: [''], isArray: false};
   const [selectedLayer, setSelectedLayer] = useState(props.visibleAndWritableLayers[0]);
   const [isOpen, setOpen] = useState(false);
   const [newAttribute, setNewAttribute] = useState(initialAttribute);
   const [valueAutofocussed, setValueAutofocussed] = useState(false);
+  var [hasErrors, setHasErrors] = useState(false);
   React.useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
 
   React.useEffect(() => {if (props.prefilled) {
@@ -36,12 +39,13 @@ function AddNewAttribute(props) {
       <Icon name='plus' />Add Attribute
     </Button>;
 
-  let addAttribute = <span></span>;
+  let addAttribute = <></>;
   if (isOpen) {
     addAttribute = 
       <Segment raised>
         <Form onSubmit={e => {
             e.preventDefault();
+            setInsertError(undefined);
             insertCIAttribute({ variables: { layers: props.visibleAndWritableLayers.map(l => l.name), ciIdentity: props.ciIdentity, name: newAttribute.name, layerID: selectedLayer.id, value: {
               type: newAttribute.type,
               isArray: newAttribute.isArray,
@@ -50,6 +54,8 @@ function AddNewAttribute(props) {
               setOpen(false);
               setNewAttribute(initialAttribute);
               setSelectedTimeThreshold({ variables:{ newTimeThreshold: null, isLatest: true }});
+            }).catch(e => {
+              setInsertError(e);
             });
           }}>
 
@@ -86,13 +92,12 @@ function AddNewAttribute(props) {
           <Form.Group as={Row} controlId="value">
             <Form.Label column>{((newAttribute.isArray) ? 'Values' : 'Value')}</Form.Label>
             <Col sm={10}>
-              <EditableAttributeValue autoFocus={valueAutofocussed} values={newAttribute.values} setValues={vs => setNewAttribute({...newAttribute, values: vs})} type={newAttribute.type} isArray={newAttribute.isArray} />
-
-              {/* <Form.Control autoFocus={valueAutofocussed} {...attributeType2InputProps(newAttribute.type)} placeholder="Enter value" value={newAttribute.value} onChange={e => setNewAttribute({...newAttribute, value: e.target.value})} />                         */}
+              <EditableAttributeValue setHasErrors={setHasErrors} name={'newAttribute'} autoFocus={valueAutofocussed} values={newAttribute.values} setValues={vs => setNewAttribute({...newAttribute, values: vs})} type={newAttribute.type} isArray={newAttribute.isArray} />
             </Col>
           </Form.Group>
           <Button secondary className="mr-2" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button primary type="submit">Insert</Button>
+          <Button primary type="submit" disabled={hasErrors || !newAttribute.name}>Insert</Button>
+          <ErrorPopupButton error={insertError} />
         </Form>
       </Segment>;
   }

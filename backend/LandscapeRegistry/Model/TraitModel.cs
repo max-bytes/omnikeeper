@@ -49,7 +49,7 @@ namespace LandscapeRegistry.Model
 
         public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
-            // do a precursor filtering based on attribute names
+            // do a precursor filtering based on required attribute names
             var requiredAttributeNames = trait.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
             var candidateCIIDs = new List<string>();
             var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layerSet, "temp_layerset", conn, trans);
@@ -100,25 +100,37 @@ namespace LandscapeRegistry.Model
             var relationsAndToCIs = (await RelationService.GetMergedForwardRelationsAndToCIs(ci, ciModel, relationModel, trans))
                 .ToLookup(t => t.relation.PredicateID);
 
-            var effectiveTraitAttributes = trait.RequiredAttributes.Select(ta =>
+            var requiredEffectiveTraitAttributes = trait.RequiredAttributes.Select(ta =>
             {
                 var traitAttributeIdentifier = ta.Identifier;
                 var (foundAttribute, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
                 return (traitAttributeIdentifier, foundAttribute, checks);
             });
-            var effectiveTraitRelations = trait.RequiredRelations.Select(tr =>
+            var requiredEffectiveTraitRelations = trait.RequiredRelations.Select(tr =>
             {
                 var traitRelationIdentifier = tr.Identifier;
                 var (foundRelations, checks) = TemplateCheckService.CalculateTemplateErrorsRelation(relationsAndToCIs, tr.RelationTemplate);
                 return (traitRelationIdentifier, foundRelations, checks);
             });
 
-            var isTraitApplicable = effectiveTraitAttributes.All(t => t.checks.Errors.IsEmpty()) && effectiveTraitRelations.All(t => t.checks.Errors.IsEmpty());
+            var isTraitApplicable = requiredEffectiveTraitAttributes.All(t => t.checks.Errors.IsEmpty()) && requiredEffectiveTraitRelations.All(t => t.checks.Errors.IsEmpty());
+
+
 
             if (isTraitApplicable)
+            {
+                // add optional traitAttributes
+                var optionalEffectiveTraitAttributes = trait.OptionalAttributes.Select(ta =>
+                {
+                    var traitAttributeIdentifier = ta.Identifier;
+                    var (foundAttribute, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
+                    return (traitAttributeIdentifier, foundAttribute, checks);
+                }).Where(t => t.checks.Errors.IsEmpty());
+
                 return EffectiveTrait.Build(trait,
-                    effectiveTraitAttributes.ToDictionary(t => t.traitAttributeIdentifier, t => t.foundAttribute),
-                    effectiveTraitRelations.ToDictionary(t => t.traitRelationIdentifier, t => t.foundRelations));
+                    requiredEffectiveTraitAttributes.Concat(optionalEffectiveTraitAttributes).ToDictionary(t => t.traitAttributeIdentifier, t => t.foundAttribute),
+                    requiredEffectiveTraitRelations.ToDictionary(t => t.traitRelationIdentifier, t => t.foundRelations));
+            }
             return null;
         }
     }

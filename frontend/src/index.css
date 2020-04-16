@@ -54,3 +54,11 @@ body {
   padding: .85714286em 1.14285714em;
   width: 100%;
 }
+
+/* HACK to make semantic popups work alongside bootstrap */
+.semantic-popup {
+  top: unset;
+  right: unset;
+  bottom: unset;
+  left: unset;
+}

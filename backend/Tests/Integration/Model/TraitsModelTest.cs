@@ -37,7 +37,7 @@ namespace Tests.Integration.Model
                         TraitAttribute.Build("a4",
                             CIAttributeTemplate.BuildFromParams("a4", "this is a description", AttributeValueType.Text, false)
                         )
-                    }, new List<TraitRelation>() { }),
+                    }, new List<TraitAttribute>() { }, new List<TraitRelation>() { }),
                     Trait.Build("test_trait_2", new List<TraitAttribute>()
                     {
                         TraitAttribute.Build("a4",
@@ -46,13 +46,13 @@ namespace Tests.Integration.Model
                         TraitAttribute.Build("a2",
                             CIAttributeTemplate.BuildFromParams("a2", "this is a description", AttributeValueType.Text, false)
                         )
-                    }, new List<TraitRelation>() { }),
+                    }, new List<TraitAttribute>() { }, new List<TraitRelation>() { }),
                     Trait.Build("test_trait_3", new List<TraitAttribute>()
                     {
                         TraitAttribute.Build("a1",
                             CIAttributeTemplate.BuildFromParams("a1", "this is a description", AttributeValueType.Text, false)
                         )
-                    }, new List<TraitRelation>() { })
+                    }, new List<TraitAttribute>() { }, new List<TraitRelation>() { })
                 }, trans);
             }
         }
