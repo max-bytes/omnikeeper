@@ -30,31 +30,7 @@ namespace Landscape.Base.Entity
 
         public IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value)
         {
-            switch (value)
-            {
-                case AttributeValueTextScalar t:
-                    if (Maximum.HasValue && t.Value.Length > Maximum)
-                        yield return TemplateErrorAttributeGeneric.Build("Text too long!");
-                    else if (Minimum.HasValue && t.Value.Length < Minimum)
-                        yield return TemplateErrorAttributeGeneric.Build("Text too short!");
-                    break;
-                case AttributeValueTextArray t:
-                    for (int i = 0; i < t.Values.Length; i++)
-                    {
-                        var tooLong = Maximum.HasValue && t.Values[i].Length > Maximum;
-                        var tooShort = Minimum.HasValue && t.Values[i].Length < Minimum;
-                        if (tooLong)
-                            yield return TemplateErrorAttributeGeneric.Build($"Text[{i}] too long!");
-                        else if (tooShort)
-                            yield return TemplateErrorAttributeGeneric.Build($"Text[{i}] too short!");
-                    }
-                    break;
-                case AttributeValueIntegerScalar i:
-                    yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, i.Type);
-                    break;
-                default:
-                    throw new Exception("Unknown type");
-            }
+            return value.ApplyTextLengthConstraint(Minimum, Maximum);
         }
     }
 

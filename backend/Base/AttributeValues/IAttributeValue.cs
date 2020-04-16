@@ -1,4 +1,5 @@
-﻿using Landscape.Base.Entity.DTO;
+﻿using Landscape.Base.Entity;
+using Landscape.Base.Entity.DTO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -9,7 +10,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
 {
     public enum AttributeValueType
     {
-        Text, MultilineText, Integer
+        Text, MultilineText, Integer, JSON
     }
 
     public interface IAttributeValue : IEquatable<IAttributeValue>
@@ -19,6 +20,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public AttributeValueDTO ToGeneric();
         public AttributeValueType Type { get; }
         public bool IsArray { get; }
+
+        IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum);
     }
 
 
@@ -76,6 +79,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
                 AttributeValueType.Text => AttributeValueTextScalar.Build(value, false),
                 AttributeValueType.MultilineText => AttributeValueTextScalar.Build(value, true),
                 AttributeValueType.Integer => AttributeValueIntegerScalar.Build(value),
+                AttributeValueType.JSON => AttributeValueJSONScalar.Build(value),
                 _ => throw new Exception($"Unknown type {type} encountered"),
             };
         }
@@ -86,6 +90,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
                 AttributeValueType.Text => AttributeValueTextArray.Build(values, false),
                 AttributeValueType.MultilineText => AttributeValueTextArray.Build(values, true),
                 AttributeValueType.Integer => AttributeValueIntegerArray.Build(values),
+                AttributeValueType.JSON => AttributeValueJSONArray.Build(values),
                 _ => throw new Exception($"Unknown type {type} encountered"),
             };
         }

@@ -1,4 +1,5 @@
-﻿using Landscape.Base.Entity.DTO;
+﻿using Landscape.Base.Entity;
+using Landscape.Base.Entity.DTO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -20,6 +21,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public abstract bool IsArray { get; }
         public abstract AttributeValueDTO ToGeneric();
         public abstract bool Equals(IAttributeValue other);
+
+        public abstract IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum);
     }
 
     public class AttributeValueTextScalar : AttributeValueText, IEquatable<AttributeValueTextScalar>
@@ -41,6 +44,13 @@ namespace LandscapeRegistry.Entity.AttributeValues
             };
         }
 
+        public override IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
+        {
+            if (maximum.HasValue && Value.Length > maximum)
+                yield return TemplateErrorAttributeGeneric.Build("Text too long!");
+            else if (minimum.HasValue && Value.Length < minimum)
+                yield return TemplateErrorAttributeGeneric.Build("Text too short!");
+        }
     }
 
     public class AttributeValueTextArray : AttributeValueText, IEquatable<AttributeValueTextArray>
@@ -62,5 +72,17 @@ namespace LandscapeRegistry.Entity.AttributeValues
             };
         }
 
+        public override IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
+        {
+            for (int i = 0; i < Values.Length; i++)
+            {
+                var tooLong = maximum.HasValue && Values[i].Length > maximum;
+                var tooShort = minimum.HasValue && Values[i].Length < minimum;
+                if (tooLong)
+                    yield return TemplateErrorAttributeGeneric.Build($"Text[{i}] too long!");
+                else if (tooShort)
+                    yield return TemplateErrorAttributeGeneric.Build($"Text[{i}] too short!");
+            }
+        }
     }
 }

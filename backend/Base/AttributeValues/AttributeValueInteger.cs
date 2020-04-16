@@ -1,4 +1,5 @@
-﻿using Landscape.Base.Entity.DTO;
+﻿using Landscape.Base.Entity;
+using Landscape.Base.Entity.DTO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -15,6 +16,11 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public abstract bool IsArray { get; }
         public abstract AttributeValueDTO ToGeneric();
         public abstract bool Equals(IAttributeValue other);
+
+        public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
+        { // does not make sense for integer
+            yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, Type);
+        }
     }
 
     public class AttributeValueIntegerScalar : AttributeValueInteger, IEquatable<AttributeValueIntegerScalar>
