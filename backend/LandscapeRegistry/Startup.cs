@@ -11,7 +11,7 @@ using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using Landscape.Base;
 using Landscape.Base.Model;
-using LandscapeRegistry.Entity.GraphQL;
+using LandscapeRegistry.GraphQL;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Cached;
 using LandscapeRegistry.Service;

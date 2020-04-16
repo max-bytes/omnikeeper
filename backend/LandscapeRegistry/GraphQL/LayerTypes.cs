@@ -2,7 +2,7 @@
 using Landscape.Base.Entity;
 using System.Linq;
 
-namespace LandscapeRegistry.Entity.GraphQL
+namespace LandscapeRegistry.GraphQL
 {
     public class LayerType : ObjectGraphType<Layer>
     {

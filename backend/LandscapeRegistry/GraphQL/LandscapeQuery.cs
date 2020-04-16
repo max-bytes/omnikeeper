@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using static Landscape.Base.Model.IRelationModel;
 
-namespace LandscapeRegistry.Entity.GraphQL
+namespace LandscapeRegistry.GraphQL
 {
     public class LandscapeQuery : ObjectGraphType
     {
@@ -72,11 +72,11 @@ namespace LandscapeRegistry.Entity.GraphQL
                     var userContext = context.UserContext as LandscapeUserContext;
 
                     var layerStrings = context.GetArgument<string[]>("layers");
-                    var layerSet = (layerStrings != null) ? await layerModel.BuildLayerSet(layerStrings, null) : await layerModel.BuildLayerSet(null);
+                    var layerSet = layerStrings != null ? await layerModel.BuildLayerSet(layerStrings, null) : await layerModel.BuildLayerSet(null);
                     userContext.LayerSet = layerSet;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
 
-                    var includeEmpty = context.GetArgument<bool>("includeEmpty", false);
+                    var includeEmpty = context.GetArgument("includeEmpty", false);
 
                     var cis = await ciModel.GetMergedCIs(userContext.LayerSet, includeEmpty, null, userContext.TimeThreshold);
                     return cis;
@@ -103,7 +103,7 @@ namespace LandscapeRegistry.Entity.GraphQL
                     var userContext = context.UserContext as LandscapeUserContext;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
 
-                    return (await ciModel.GetCITypes(null));
+                    return await ciModel.GetCITypes(null);
                 });
             FieldAsync<ListGraphType<LayerType>>("layers",
                 resolve: async context =>

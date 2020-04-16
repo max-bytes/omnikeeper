@@ -2,7 +2,7 @@
 using Landscape.Base.Entity;
 using static Landscape.Base.Model.IPredicateModel;
 
-namespace LandscapeRegistry.Entity.GraphQL
+namespace LandscapeRegistry.GraphQL
 {
     public class PredicateType : ObjectGraphType<Predicate>
     {

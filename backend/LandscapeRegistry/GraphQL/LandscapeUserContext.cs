@@ -3,7 +3,7 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 
-namespace LandscapeRegistry.Entity.GraphQL
+namespace LandscapeRegistry.GraphQL
 {
     public class LandscapeUserContext : Dictionary<string, object>
     {

@@ -5,7 +5,7 @@ using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Entity.GraphQL;
+using LandscapeRegistry.GraphQL;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Utils;
 using Microsoft.AspNetCore.Hosting;

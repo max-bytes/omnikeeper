@@ -10,7 +10,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using static Landscape.Base.Model.IRelationModel;
 
-namespace LandscapeRegistry.Entity.GraphQL
+namespace LandscapeRegistry.GraphQL
 {
     public class CITypeType : ObjectGraphType<CIType>
     {

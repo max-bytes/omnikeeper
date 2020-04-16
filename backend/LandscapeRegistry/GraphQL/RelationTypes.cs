@@ -2,7 +2,7 @@
 using Landscape.Base.Entity;
 using LandscapeRegistry.Model.Cached;
 
-namespace LandscapeRegistry.Entity.GraphQL
+namespace LandscapeRegistry.GraphQL
 {
     public class RelationType : ObjectGraphType<Relation>
     {

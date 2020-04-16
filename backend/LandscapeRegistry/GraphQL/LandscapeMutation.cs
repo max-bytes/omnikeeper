@@ -6,11 +6,11 @@ using Npgsql;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LandscapeRegistry.Entity.GraphQL
+namespace LandscapeRegistry.GraphQL
 {
     public class LandscapeMutation : ObjectGraphType
     {
-        public LandscapeMutation(CIModel ciModel, AttributeModel attributeModel, LayerModel layerModel, RelationModel relationModel, 
+        public LandscapeMutation(CIModel ciModel, AttributeModel attributeModel, LayerModel layerModel, RelationModel relationModel,
             ChangesetModel changesetModel, PredicateModel predicateModel, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
@@ -36,7 +36,7 @@ namespace LandscapeRegistry.Entity.GraphQL
 
                   var changeset = await changesetModel.CreateChangeset(userContext.User.InDatabase.ID, transaction);
 
-                  userContext.LayerSet = (layers != null) ? await layerModel.BuildLayerSet(layers, transaction) : null;
+                  userContext.LayerSet = layers != null ? await layerModel.BuildLayerSet(layers, transaction) : null;
                   userContext.TimeThreshold = changeset.Timestamp;
 
                   var groupedInsertAttributes = insertAttributes.GroupBy(a => a.CI);

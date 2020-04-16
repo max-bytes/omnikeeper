@@ -1,7 +1,7 @@
 ﻿using GraphQL;
 using GraphQL.Types;
 using GraphQL.Validation;
-using LandscapeRegistry.Entity.GraphQL;
+using LandscapeRegistry.GraphQL;
 using LandscapeRegistry.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;

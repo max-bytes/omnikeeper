@@ -3,7 +3,7 @@ using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
 using LandscapeRegistry.Entity.AttributeValues;
 
-namespace LandscapeRegistry.Entity.GraphQL
+namespace LandscapeRegistry.GraphQL
 {
     public class CreateCIInput
     {

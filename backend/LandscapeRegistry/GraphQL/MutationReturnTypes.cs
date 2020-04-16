@@ -2,7 +2,7 @@
 using Landscape.Base.Entity;
 using System.Collections.Generic;
 
-namespace LandscapeRegistry.Entity.GraphQL
+namespace LandscapeRegistry.GraphQL
 {
     public class MutateReturn
     {

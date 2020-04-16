@@ -2,7 +2,7 @@
 using GraphQL.Utilities;
 using System;
 
-namespace LandscapeRegistry.Entity.GraphQL
+namespace LandscapeRegistry.GraphQL
 {
     public class LandscapeSchema : Schema
     {
