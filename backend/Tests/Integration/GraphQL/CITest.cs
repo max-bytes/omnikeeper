@@ -75,7 +75,7 @@ namespace Tests.Integration.GraphQL
             var ciid1 = await ciModel.CreateCI("H123", trans);
             var layer1 = await layerModel.CreateLayer("layer_1", trans);
             //var layerID2 = await layerModel.CreateLayer("layer_2", trans);
-            var user = User.Build(await userModel.CreateOrUpdateFetchUser(username, userGUID, UserType.Robot, trans), new List<Layer>());
+            var user = User.Build(await userModel.UpsertUser(username, userGUID, UserType.Robot, trans), new List<Layer>());
             var changeset = await changesetModel.CreateChangeset(user.InDatabase.ID, trans);
             await attributeModel.InsertAttribute("a1", AttributeValueIntegerScalar.Build(3), layer1.ID, ciid1, changeset.ID, trans);
             trans.Commit();

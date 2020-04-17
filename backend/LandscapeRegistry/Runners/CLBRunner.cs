@@ -30,7 +30,7 @@ namespace LandscapeRegistry.Runners
         {
             logger.LogInformation("Start");
 
-            var activeLayers = await layerModel.GetLayers(Landscape.Base.Entity.AnchorStateFilter.ActiveOnly, null);
+            var activeLayers = await layerModel.GetLayers(Landscape.Base.Entity.AnchorStateFilter.ActiveAndDeprecated, null);
             var layersWithCLBs = activeLayers.Where(l => l.ComputeLayerBrain.Name != ""); // TODO: better check for set clb than name != ""
 
             foreach(var l in layersWithCLBs)

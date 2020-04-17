@@ -41,7 +41,7 @@ namespace Tests.Integration
         public static async Task<UserInDatabase> SetupUser(IUserInDatabaseModel userModel, string username = "test-user", Guid? userGUID = null, UserType type = UserType.Robot)
         {
             var guid = userGUID ?? new Guid("2544f9a7-cc17-4cba-8052-f88656cf1ef1");
-            return await userModel.CreateOrUpdateFetchUser(username, guid, type, null);
+            return await userModel.UpsertUser(username, guid, type, null);
         }
     }
 }

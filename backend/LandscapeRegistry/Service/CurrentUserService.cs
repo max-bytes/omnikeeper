@@ -59,7 +59,7 @@ namespace LandscapeRegistry.Service
                     usertype = UserType.Robot;
 
                 var guid = new Guid(guidString);
-                var userInDatabase = await UserModel.CreateOrUpdateFetchUser(username, guid, usertype, null);
+                var userInDatabase = await UserModel.UpsertUser(username, guid, usertype, null);
 
                 return User.Build(userInDatabase, writableLayers);
             }

@@ -12,7 +12,7 @@ namespace Landscape.Base
     {
         string Name { get; }
 
-        Task<bool> Run(long layerID, Changeset changeset, CLBErrorHandler errorHandler, Npgsql.NpgsqlTransaction trans, ILogger logger);
+        Task<bool> Run(Layer targetLayer, Changeset changeset, CLBErrorHandler errorHandler, Npgsql.NpgsqlTransaction trans, ILogger logger);
         Task<bool> Run(CLBSettings settings, ILogger logger);
     }
 }

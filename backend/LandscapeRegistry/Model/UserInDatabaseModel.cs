@@ -15,7 +15,7 @@ namespace LandscapeRegistry.Model
             conn = connection;
         }
 
-        public async Task<UserInDatabase> CreateOrUpdateFetchUser(string username, Guid uuid, UserType type, NpgsqlTransaction trans)
+        public async Task<UserInDatabase> UpsertUser(string username, Guid uuid, UserType type, NpgsqlTransaction trans)
         {
             // check for an updated user first
             var existingUser = await GetUser(username, uuid, trans);

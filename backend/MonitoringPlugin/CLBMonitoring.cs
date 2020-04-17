@@ -26,7 +26,7 @@ namespace MonitoringPlugin
             this.relationModel = relationModel;
         }
 
-        public override async Task<bool> Run(long layerID, Changeset changeset, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger)
+        public override async Task<bool> Run(Layer targetLayer, Changeset changeset, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger)
         {
             var layerSetMonitoringDefinitionsOnly = await layerModel.BuildLayerSet(new[] { "Monitoring Definitions" }, trans);
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
@@ -83,7 +83,7 @@ namespace MonitoringPlugin
                     );
                 }
             }
-            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.commands", layerID, monitoringCommandFragments), changeset.ID, trans);
+            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.commands", targetLayer.ID, monitoringCommandFragments), changeset.ID, trans);
 
             // assign monitored cis to naemon instances
             var monitoredByCIIDPairs = new List<(string, string)>();
@@ -91,7 +91,7 @@ namespace MonitoringPlugin
             foreach (var naemonInstance in naemonInstances)
                 foreach (var monitoredCI in monitoredCIs)
                     monitoredByCIIDPairs.Add((monitoredCI.Value.Identity, naemonInstance.Identity));
-            await relationModel.BulkReplaceRelations(BulkRelationData.Build("is_monitored_by", layerID, monitoredByCIIDPairs.ToArray()), changeset.ID, trans);
+            await relationModel.BulkReplaceRelations(BulkRelationData.Build("is_monitored_by", targetLayer.ID, monitoredByCIIDPairs.ToArray()), changeset.ID, trans);
 
             // write final naemon config
             var checkCommandsPerNaemonInstance = new Dictionary<string, List<string>>();
@@ -105,7 +105,7 @@ namespace MonitoringPlugin
                 var finalConfig = string.Join("\n", commands);
                 monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("naemonConfig", AttributeValueTextScalar.Build(finalConfig, true), naemonInstance));
             }
-            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring", layerID, monitoringConfigs), changeset.ID, trans);
+            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring", targetLayer.ID, monitoringConfigs), changeset.ID, trans);
 
             return true;
         }

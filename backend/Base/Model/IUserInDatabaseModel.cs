@@ -11,7 +11,6 @@ namespace Landscape.Base.Model
 {
     public interface IUserInDatabaseModel
     {
-        //Task<UserInDatabase> CreateUserFromClaims(IEnumerable<Claim> claims);
-        Task<UserInDatabase> CreateOrUpdateFetchUser(string username, Guid uuid, UserType type, NpgsqlTransaction trans);
+        Task<UserInDatabase> UpsertUser(string username, Guid uuid, UserType type, NpgsqlTransaction trans);
     }
 }
