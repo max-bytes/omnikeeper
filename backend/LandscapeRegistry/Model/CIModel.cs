@@ -20,7 +20,6 @@ namespace LandscapeRegistry.Model
             conn = connection;
         }
 
-        [Obsolete("Please use CreateCIWithType instead")]
         public async Task<string> CreateCI(string identity, NpgsqlTransaction trans)
         {
             using var command = new NpgsqlCommand(@"INSERT INTO ci (id) VALUES (@id)", conn, trans);
@@ -29,25 +28,12 @@ namespace LandscapeRegistry.Model
             return identity;
         }
 
-        public async Task<string> CreateCIType(string typeID, NpgsqlTransaction trans)
+        public async Task<CIType> CreateCIType(string typeID, NpgsqlTransaction trans)
         {
             using var command = new NpgsqlCommand(@"INSERT INTO citype (id) VALUES (@id)", conn, trans);
             command.Parameters.AddWithValue("id", typeID);
             var r = await command.ExecuteNonQueryAsync();
-            return typeID;
-        }
-
-        public async Task<string> CreateCIWithType(string identity, string typeID, NpgsqlTransaction trans)
-        {
-            var ciType = await GetCITypeByID(typeID, trans);
-            if (ciType == null) throw new Exception($"Could not find CI-Type {typeID}");
-            using var command = new NpgsqlCommand(@"INSERT INTO ci (id) VALUES (@id)", conn, trans);
-            command.Parameters.AddWithValue("id", identity);
-            await command.ExecuteNonQueryAsync();
-
-            await SetCIType(identity, typeID, trans);
-
-            return identity;
+            return CIType.Build(typeID);
         }
 
         public async Task<MergedCI> GetMergedCI(string ciid, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
@@ -81,6 +67,7 @@ namespace LandscapeRegistry.Model
 
         public async Task<CIType> GetTypeOfCI(string ciid, NpgsqlTransaction trans, DateTimeOffset? atTime)
         {
+            // TODO: performance improvements?
             var r = await GetTypeOfCIs(new string[] { ciid }, trans, atTime);
             return r.Values.FirstOrDefault();
         }
@@ -98,6 +85,7 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("ci_ids", ciids.ToArray());
 
             var ret = new Dictionary<string, CIType>();
+            var notYetFoundCIIDs = new HashSet<string>(ciids);
             using (var s = await command.ExecuteReaderAsync())
             {
                 while (await s.ReadAsync())
@@ -105,8 +93,15 @@ namespace LandscapeRegistry.Model
                     var ciid = s.GetString(0);
                     var typeID = s.GetString(1);
                     ret.Add(ciid, CIType.Build(typeID));
+                    notYetFoundCIIDs.Remove(ciid);
                 }
             }
+
+            foreach(var notFoundCIID in notYetFoundCIIDs)
+            {
+                ret[notFoundCIID] = CIType.UnspecifiedCIType;
+            }
+
             return ret;
         }
 
@@ -162,6 +157,17 @@ namespace LandscapeRegistry.Model
                 tmp.Add(s.GetString(0));
             return tmp;
         }
+        public async Task<bool> CIIDExists(string ciid, NpgsqlTransaction trans)
+        {
+            using var command = new NpgsqlCommand(@"select id from ci WHERE id = @ciid LIMIT 1", conn, trans);
+            command.Parameters.AddWithValue("ciid", ciid);
+
+            using var dr = await command.ExecuteReaderAsync();
+
+            if (!await dr.ReadAsync())
+                return false;
+            return true;
+        }
 
         public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, DateTimeOffset atTime, IEnumerable<string> CIIDs = null)
         {
@@ -185,12 +191,55 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<bool> SetCIType(string ciid, string typeID, NpgsqlTransaction trans)
+
+        private async Task<CIType> CheckIfCITypeIDExists(string ciTypeID, NpgsqlTransaction trans)
         {
+            var inDB = await GetCITypeByID(ciTypeID, trans);
+
+            if (inDB == null)
+            {
+                if (CIType.UnspecifiedCIType.ID ==ciTypeID)
+                {
+                    return await CreateCIType(CIType.UnspecifiedCIType.ID, trans);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else return inDB;
+        }
+        public async Task<string> CreateCIWithType(string identity, string typeID, NpgsqlTransaction trans)
+        {
+            var type = await CheckIfCITypeIDExists(typeID, trans);
+            if (type == null)
+                throw new Exception($"Could not find CI-Type {typeID} in database");
+
+            using var command = new NpgsqlCommand(@"INSERT INTO ci (id) VALUES (@id)", conn, trans);
+            command.Parameters.AddWithValue("id", identity);
+            await command.ExecuteNonQueryAsync();
+
+            using var commandAssignment = new NpgsqlCommand(@"INSERT INTO citype_assignment (ci_id, citype_id, timestamp) VALUES
+                (@ci_id, @citype_id, NOW())", conn, trans);
+            commandAssignment.Parameters.AddWithValue("ci_id", identity);
+            commandAssignment.Parameters.AddWithValue("citype_id", type.ID);
+            await commandAssignment.ExecuteNonQueryAsync();
+
+            return identity;
+        }
+
+        public async Task<bool> UpdateCI(string ciid, string typeID, NpgsqlTransaction trans)
+        {
+            if (!await CIIDExists(ciid, trans))
+                throw new Exception($"Could not find CI {ciid} in database");
+            var type = await CheckIfCITypeIDExists(typeID, trans);
+            if (type == null)
+                throw new Exception($"Could not find CI-Type {typeID} in database");
+
             using var command = new NpgsqlCommand(@"INSERT INTO citype_assignment (ci_id, citype_id, timestamp) VALUES
                 (@ci_id, @citype_id, NOW())", conn, trans);
             command.Parameters.AddWithValue("ci_id", ciid);
-            command.Parameters.AddWithValue("citype_id", typeID);
+            command.Parameters.AddWithValue("citype_id", type.ID);
             await command.ExecuteNonQueryAsync();
             return true;
         }
