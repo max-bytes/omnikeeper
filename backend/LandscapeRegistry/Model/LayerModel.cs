@@ -3,6 +3,7 @@ using Landscape.Base.Model;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -12,6 +13,7 @@ namespace LandscapeRegistry.Model
     {
         private readonly NpgsqlConnection conn;
 
+        private static readonly ComputeLayerBrain DefaultCLB = ComputeLayerBrain.Build("");
         private static readonly AnchorState DefaultState = AnchorState.Active;
 
         public LayerModel(NpgsqlConnection connection)
@@ -21,17 +23,15 @@ namespace LandscapeRegistry.Model
 
         public async Task<Layer> CreateLayer(string name, NpgsqlTransaction trans)
         {
-            return await CreateLayer(name, DefaultState, null, trans);
+            return await CreateLayer(name, DefaultState, DefaultCLB, trans);
         }
-        public async Task<Layer> CreateLayer(string name, AnchorState state, string computeLayerBrain, NpgsqlTransaction trans)
+        public async Task<Layer> CreateLayer(string name, AnchorState state, ComputeLayerBrain computeLayerBrain, NpgsqlTransaction trans)
         {
-            // TODO: make computelayerbrain its own table
-            using var command = new NpgsqlCommand(@"INSERT INTO layer (name, computeLayerBrain) VALUES (@name, @computeLayerBrain) returning id", conn, trans);
+            Debug.Assert(computeLayerBrain != null);
+
+            // create layer
+            using var command = new NpgsqlCommand(@"INSERT INTO layer (name) VALUES (@name) returning id", conn, trans);
             command.Parameters.AddWithValue("name", name);
-            if (computeLayerBrain == null)
-                command.Parameters.AddWithValue("computeLayerBrain", DBNull.Value);
-            else
-                command.Parameters.AddWithValue("computeLayerBrain", computeLayerBrain);
             var id = (long)await command.ExecuteScalarAsync();
 
             // set state
@@ -41,12 +41,23 @@ namespace LandscapeRegistry.Model
             commandState.Parameters.AddWithValue("state", state);
             await commandState.ExecuteNonQueryAsync();
 
-            return Layer.Build(name, id, state);
+            // set clb
+            using var commandCLB = new NpgsqlCommand(@"INSERT INTO layer_computelayerbrain (layer_id, brainname, ""timestamp"")
+                    VALUES (@layer_id, @brainname, now())", conn, trans);
+            commandCLB.Parameters.AddWithValue("layer_id", id);
+            commandCLB.Parameters.AddWithValue("brainname", computeLayerBrain.Name);
+            await commandCLB.ExecuteNonQueryAsync();
+
+            return Layer.Build(name, id, state, computeLayerBrain);
         }
 
-        public async Task<Layer> Update(long id, AnchorState state, NpgsqlTransaction trans)
+        public async Task<Layer> Update(long id, AnchorState state, ComputeLayerBrain computeLayerBrain, NpgsqlTransaction trans)
         {
+            Debug.Assert(computeLayerBrain != null);
+
             var current = await GetLayer(id, trans);
+
+            Debug.Assert(current.ComputeLayerBrain != null);
 
             // update state
             if (current.State != state)
@@ -56,7 +67,18 @@ namespace LandscapeRegistry.Model
                 commandState.Parameters.AddWithValue("layer_id", id);
                 commandState.Parameters.AddWithValue("state", state);
                 await commandState.ExecuteNonQueryAsync();
-                current = Layer.Build(current.Name, current.ID, state);
+                current = Layer.Build(current.Name, current.ID, state, current.ComputeLayerBrain);
+            }
+
+            // update clb
+            if (!current.ComputeLayerBrain.Equals(computeLayerBrain))
+            {
+                using var commandCLB = new NpgsqlCommand(@"INSERT INTO layer_computelayerbrain (layer_id, brainname, ""timestamp"")
+                    VALUES (@layer_id, @brainname, now())", conn, trans);
+                commandCLB.Parameters.AddWithValue("layer_id", id);
+                commandCLB.Parameters.AddWithValue("brainname", computeLayerBrain.Name);
+                await commandCLB.ExecuteNonQueryAsync();
+                current = Layer.Build(current.Name, current.ID, current.State, computeLayerBrain);
             }
 
             return current;
@@ -107,10 +129,13 @@ namespace LandscapeRegistry.Model
 
         public async Task<Layer> GetLayer(string layerName, NpgsqlTransaction trans)
         {
-            using var command = new NpgsqlCommand(@"SELECT l.id, ls.state FROM layer l
+            using var command = new NpgsqlCommand(@"SELECT l.id, ls.state, lclb.brainname FROM layer l
                 LEFT JOIN 
                     (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
                     ON ls.layer_id = l.id
+                LEFT JOIN 
+                    (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain ORDER BY layer_id, timestamp DESC) lclb
+                    ON lclb.layer_id = l.id
                 WHERE l.name = @name LIMIT 1", conn, trans);
             command.Parameters.AddWithValue("name", layerName);
             using var r = await command.ExecuteReaderAsync();
@@ -118,15 +143,19 @@ namespace LandscapeRegistry.Model
             if (!r.HasRows) return null;
             var id = r.GetInt64(0);
             var state = (r.IsDBNull(1)) ? DefaultState : r.GetFieldValue<AnchorState>(1);
-            return Layer.Build(layerName, id, state);
+            var clb = (r.IsDBNull(2)) ? DefaultCLB : ComputeLayerBrain.Build(r.GetString(2));
+            return Layer.Build(layerName, id, state, clb);
         }
 
         public async Task<Layer> GetLayer(long layerID, NpgsqlTransaction trans)
         {
-            using var command = new NpgsqlCommand(@"SELECT l.name, ls.state FROM layer l
+            using var command = new NpgsqlCommand(@"SELECT l.name, ls.state, lclb.brainname FROM layer l
                 LEFT JOIN 
                     (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
                     ON ls.layer_id = l.id
+                LEFT JOIN 
+                    (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain ORDER BY layer_id, timestamp DESC) lclb
+                    ON lclb.layer_id = l.id
                 WHERE l.id = @id LIMIT 1", conn, trans);
             command.Parameters.AddWithValue("id", layerID);
             using var r = await command.ExecuteReaderAsync();
@@ -134,7 +163,8 @@ namespace LandscapeRegistry.Model
             if (!r.HasRows) return null;
             var name = r.GetString(0);
             var state = (r.IsDBNull(1)) ? DefaultState : r.GetFieldValue<AnchorState>(1);
-            return Layer.Build(name, layerID, state);
+            var clb = (r.IsDBNull(2)) ? DefaultCLB : ComputeLayerBrain.Build(r.GetString(2));
+            return Layer.Build(name, layerID, state, clb);
         }
 
 
@@ -143,10 +173,13 @@ namespace LandscapeRegistry.Model
             if (layerIDs.Length == 0) return new List<Layer>();
 
             var layers = new List<Layer>();
-            using var command = new NpgsqlCommand(@"SELECT l.id, l.name, ls.state FROM layer l
+            using var command = new NpgsqlCommand(@"SELECT l.id, l.name, ls.state, lclb.brainname FROM layer l
                 LEFT JOIN 
                     (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
                     ON ls.layer_id = l.id
+                LEFT JOIN 
+                    (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain ORDER BY layer_id, timestamp DESC) lclb
+                    ON lclb.layer_id = l.id
                 WHERE l.id = ANY(@layer_ids)", conn, trans);
             command.Parameters.AddWithValue("layer_ids", layerIDs);
             using var r = await command.ExecuteReaderAsync();
@@ -155,7 +188,8 @@ namespace LandscapeRegistry.Model
                 var id = r.GetInt64(0);
                 var name = r.GetString(1);
                 var state = (r.IsDBNull(2)) ? DefaultState : r.GetFieldValue<AnchorState>(2);
-                layers.Add(Layer.Build(name, id, state));
+                var clb = (r.IsDBNull(3)) ? DefaultCLB : ComputeLayerBrain.Build(r.GetString(3));
+                layers.Add(Layer.Build(name, id, state, clb));
             }
 
             // HACK: wonky re-sorting of layers according to input layerIDs
@@ -165,17 +199,22 @@ namespace LandscapeRegistry.Model
         public async Task<IEnumerable<Layer>> GetLayers(NpgsqlTransaction trans)
         {
             var layers = new List<Layer>();
-            using var command = new NpgsqlCommand(@"SELECT l.id, l.name, ls.state FROM layer l
+            using var command = new NpgsqlCommand(@"SELECT l.id, l.name, ls.state, lclb.brainname FROM layer l
                 LEFT JOIN 
                     (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
-                    ON ls.layer_id = l.id", conn, trans);
+                    ON ls.layer_id = l.id
+                LEFT JOIN 
+                    (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain ORDER BY layer_id, timestamp DESC) lclb
+                    ON lclb.layer_id = l.id
+                    ", conn, trans);
             using var r = await command.ExecuteReaderAsync();
             while (await r.ReadAsync())
             {
                 var id = r.GetInt64(0);
                 var name = r.GetString(1);
                 var state = (r.IsDBNull(2)) ? DefaultState : r.GetFieldValue<AnchorState>(2);
-                layers.Add(Layer.Build(name, id, state));
+                var clb = (r.IsDBNull(3)) ? DefaultCLB : ComputeLayerBrain.Build(r.GetString(3));
+                layers.Add(Layer.Build(name, id, state, clb));
             }
             return layers;
         }
@@ -183,10 +222,13 @@ namespace LandscapeRegistry.Model
         public async Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, NpgsqlTransaction trans)
         {
             var layers = new List<Layer>();
-            using var command = new NpgsqlCommand(@"SELECT l.id, l.name, ls.state FROM layer l
+            using var command = new NpgsqlCommand(@"SELECT l.id, l.name, ls.state, lclb.brainname FROM layer l
                 LEFT JOIN 
                     (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
                     ON ls.layer_id = l.id
+                LEFT JOIN 
+                    (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain ORDER BY layer_id, timestamp DESC) lclb
+                    ON lclb.layer_id = l.id
                 WHERE ls.state = ANY(@states) OR ls.state IS NULL", conn, trans);
             command.Parameters.AddWithValue("states", stateFilter.Filter2States());
             using var r = await command.ExecuteReaderAsync();
@@ -195,7 +237,8 @@ namespace LandscapeRegistry.Model
                 var id = r.GetInt64(0);
                 var name = r.GetString(1);
                 var state = (r.IsDBNull(2)) ? DefaultState : r.GetFieldValue<AnchorState>(2);
-                layers.Add(Layer.Build(name, id, state));
+                var clb = (r.IsDBNull(3)) ? DefaultCLB : ComputeLayerBrain.Build(r.GetString(3));
+                layers.Add(Layer.Build(name, id, state, clb));
             }
             return layers;
         }

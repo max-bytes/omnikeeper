@@ -4,11 +4,19 @@ using System.Linq;
 
 namespace LandscapeRegistry.GraphQL
 {
+    //public class ComputeLayerBrainType : ObjectGraphType<ComputeLayerBrain>
+    //{
+    //    public ComputeLayerBrainType()
+    //    {
+    //        Field(x => x.Name);
+    //    }
+    //}
     public class LayerType : ObjectGraphType<Layer>
     {
         public LayerType()
         {
             Field(x => x.Name);
+            Field("brainName", x => x.ComputeLayerBrain.Name);
             Field("id", x => x.ID);
             Field(x => x.State, type: typeof(AnchorStateType));
             Field<BooleanGraphType>("writable",

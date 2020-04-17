@@ -127,10 +127,29 @@ namespace LandscapeRegistry.GraphQL
                   using var transaction = await conn.BeginTransactionAsync();
                   userContext.Transaction = transaction;
 
-                  var createdLayer = await layerModel.CreateLayer(createLayer.Name, createLayer.State, null, transaction);
+                  var clb = ComputeLayerBrain.Build(createLayer.BrainName);
+                  var createdLayer = await layerModel.CreateLayer(createLayer.Name, createLayer.State, clb, transaction);
                   await transaction.CommitAsync();
 
                   return createdLayer;
+              });
+            FieldAsync<LayerType>("updateLayer",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<UpdateLayerInputType>> { Name = "layer" }
+              ),
+              resolve: async context =>
+              {
+                  var layer = context.GetArgument<UpdateLayerInput>("layer");
+
+                  var userContext = context.UserContext as LandscapeUserContext;
+                  using var transaction = await conn.BeginTransactionAsync();
+                  userContext.Transaction = transaction;
+
+                  var clb = ComputeLayerBrain.Build(layer.BrainName);
+                  var updatedLayer = await layerModel.Update(layer.ID, layer.State, clb, transaction);
+                  await transaction.CommitAsync();
+
+                  return updatedLayer;
               });
 
             FieldAsync<PredicateType>("upsertPredicate",
@@ -149,24 +168,6 @@ namespace LandscapeRegistry.GraphQL
                   await transaction.CommitAsync();
 
                   return newPredicate;
-              });
-
-            FieldAsync<LayerType>("updateLayer",
-              arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<UpdateLayerInputType>> { Name = "layer" }
-              ),
-              resolve: async context =>
-              {
-                  var layer = context.GetArgument<UpdateLayerInput>("layer");
-
-                  var userContext = context.UserContext as LandscapeUserContext;
-                  using var transaction = await conn.BeginTransactionAsync();
-                  userContext.Transaction = transaction;
-
-                  var updatedLayer = await layerModel.Update(layer.ID, layer.State, transaction);
-                  await transaction.CommitAsync();
-
-                  return updatedLayer;
               });
         }
     }

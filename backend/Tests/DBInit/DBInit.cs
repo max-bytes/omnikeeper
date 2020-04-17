@@ -79,8 +79,6 @@ namespace Tests.DBInit
                 Predicate.Build("has_ansible_group", "has ansible group", "is assigned to", AnchorState.Active)
             };
 
-            
-
             // create layers
             long cmdbLayerID;
             long monitoringDefinitionsLayerID;
@@ -92,7 +90,7 @@ namespace Tests.DBInit
                 await layerModel.CreateLayer("Inventory Scan", trans);
                 var monitoringDefinitionsLayer = await layerModel.CreateLayer("Monitoring Definitions", trans);
                 monitoringDefinitionsLayerID = monitoringDefinitionsLayer.ID;
-                await layerModel.CreateLayer("Monitoring", AnchorState.Active, "TestPlugin.CLBMonitoring", trans);
+                await layerModel.CreateLayer("Monitoring", AnchorState.Active, ComputeLayerBrain.Build("TestPlugin.CLBMonitoring"), trans);
                 var automationLayer = await layerModel.CreateLayer("Automation", trans);
                 automationLayerID = automationLayer.ID;
                 trans.Commit();

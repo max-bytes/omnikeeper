@@ -15,6 +15,7 @@
     <None Remove="Scripts\00007-layer-state.psql" />
     <None Remove="Scripts\00008-predicate-state-2-anchor-state.psql" />
     <None Remove="Scripts\00009-attributevaluetype-json.psql" />
+    <None Remove="Scripts\00010-computerlayerbrain-rework.psql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +28,7 @@
     <EmbeddedResource Include="Scripts\00003-predicate-state-add-deprecated.psql" />
     <EmbeddedResource Include="Scripts\00009-attributevaluetype-json.psql" />
     <EmbeddedResource Include="Scripts\00008-predicate-state-2-anchor-state.psql" />
+    <EmbeddedResource Include="Scripts\00010-computerlayerbrain-rework.psql" />
   </ItemGroup>
 
   <ItemGroup>

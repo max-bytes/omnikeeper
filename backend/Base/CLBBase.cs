@@ -1,6 +1,7 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using LandscapeRegistry.Entity;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -31,14 +32,14 @@ namespace Landscape.Base
 
         public string Name => GetType().FullName;
 
-        public void RunSync(CLBSettings settings)
-        {
-            Console.WriteLine("Starting");
-            var task = Task.Run(async () => await RunMiddle(settings));
-            var x = task.Result; // Must stay here, so the tasks actually gets completed before returning from this method
-        }
+        //public void RunSync(CLBSettings settings, ILogger logger)
+        //{
+        //    Console.WriteLine("Starting");
+        //    var task = Task.Run(async () => await Run(settings, logger));
+        //    var x = task.Result; // Must stay here, so the tasks actually gets completed before returning from this method
+        //}
 
-        protected async Task<bool> RunMiddle(CLBSettings settings)
+        public async Task<bool> Run(CLBSettings settings, ILogger logger)
         {
             try
             {
@@ -54,7 +55,7 @@ namespace Landscape.Base
 
                 var errorHandler = new CLBErrorHandler(trans, Name, layer.ID, changeset.ID, attributeModel);
 
-                var result = await Run(layer.ID, changeset, errorHandler, trans);
+                var result = await Run(layer.ID, changeset, errorHandler, trans, logger);
 
                 if (result)
                 {
@@ -71,7 +72,7 @@ namespace Landscape.Base
             }
         }
 
-        public abstract Task<bool> Run(long layerID, Changeset changeset, CLBErrorHandler errorHandler, NpgsqlTransaction trans);
+        public abstract Task<bool> Run(long layerID, Changeset changeset, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger);
 
     }
 }

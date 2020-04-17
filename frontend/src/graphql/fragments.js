@@ -84,6 +84,7 @@ export const Fragments = {
     name
     state
     writable
+    brainName
     sort @client
     visibility @client
     color @client

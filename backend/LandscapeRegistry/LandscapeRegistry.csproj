@@ -31,10 +31,12 @@
     <PackageReference Include="Hangfire.Console" Version="1.4.2" />
     <PackageReference Include="Hangfire.Core" Version="1.7.9" />
     <PackageReference Include="Hangfire.PostgreSql" Version="1.6.4.1" />
+    <PackageReference Include="Karambolo.Extensions.Logging.File" Version="3.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="4.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices" Version="3.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0-preview.2.20160.3" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.9.10" />
     <PackageReference Include="NetCore.AutoRegisterDi" Version="1.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
@@ -47,7 +49,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Base\Landscape.Base.csproj" />
     <ProjectReference Include="..\DBMigrations\DBMigrations.csproj" />
-    <ProjectReference Include="..\TestPlugin\TestPlugin.csproj" />
+    <ProjectReference Include="..\MonitoringPlugin\MonitoringPlugin.csproj" />
   </ItemGroup>
 
 

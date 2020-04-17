@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using LandscapeRegistry.Entity;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,8 +12,7 @@ namespace Landscape.Base
     {
         string Name { get; }
 
-        Task<bool> Run(long layerID, Changeset changeset, CLBErrorHandler errorHandler, Npgsql.NpgsqlTransaction trans);
-
-        void RunSync(CLBSettings settings);
+        Task<bool> Run(long layerID, Changeset changeset, CLBErrorHandler errorHandler, Npgsql.NpgsqlTransaction trans, ILogger logger);
+        Task<bool> Run(CLBSettings settings, ILogger logger);
     }
 }

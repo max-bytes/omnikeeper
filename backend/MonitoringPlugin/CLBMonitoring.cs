@@ -5,31 +5,32 @@ using Landscape.Base.Model;
 using Landscape.Base.Templating;
 using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TestPlugin
+namespace MonitoringPlugin
 {
     public class CLBMonitoring : CLBBase
     {
         private readonly IRelationModel relationModel;
         private readonly ICIModel ciModel;
 
-        public CLBMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn) 
+        public CLBMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
             : base(atributeModel, layerModel, changesetModel, userModel, conn)
         {
             this.ciModel = ciModel;
             this.relationModel = relationModel;
         }
 
-        public override async Task<bool> Run(long layerID, Changeset changeset, CLBErrorHandler errorHandler, NpgsqlTransaction trans)
+        public override async Task<bool> Run(long layerID, Changeset changeset, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger)
         {
             var layerSetMonitoringDefinitionsOnly = await layerModel.BuildLayerSet(new[] { "Monitoring Definitions" }, trans);
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
-            
+
             var allHasMonitoringModuleRelations = await relationModel.GetRelationsWithPredicateID(layerSetMonitoringDefinitionsOnly, false, "has_monitoring_module", trans);
 
             // prepare list of all monitored cis
@@ -49,6 +50,7 @@ namespace TestPlugin
                 var monitoringModuleCI = monitoringModuleCIs[p.ToCIID];
                 if (monitoringModuleCI.Type.ID != "Monitoring Check Module")
                 {
+                    logger.LogError($"Expected CI {monitoringModuleCI.Identity} to be of type \"Monitoring Check Module\"");
                     await errorHandler.LogError(monitoringModuleCI.Identity, "error", "Expected this CI to be of type \"Monitoring Check Module\"");
                     continue;
                 }
@@ -71,6 +73,7 @@ namespace TestPlugin
                     }
                     catch (Exception e)
                     {
+                        logger.LogError($"Error parsing or rendering command from monitoring module \"{monitoringModuleCI.Identity}\": {e.Message}");
                         await errorHandler.LogError(mca.Attribute.CIID, "error", $"Error parsing or rendering command: {e.Message}");
                         continue;
                     }

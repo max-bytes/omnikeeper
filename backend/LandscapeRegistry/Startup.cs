@@ -14,6 +14,7 @@ using Landscape.Base.Model;
 using LandscapeRegistry.GraphQL;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Cached;
+using LandscapeRegistry.Runners;
 using LandscapeRegistry.Service;
 using LandscapeRegistry.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -26,12 +27,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using MonitoringPlugin;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using TestPlugin;
 
 namespace LandscapeRegistry
 {
@@ -59,6 +60,8 @@ namespace LandscapeRegistry
             //        return true;// a.GetInterfaces().Contains(typeof(ILandscapePluginRegistry));
             //        })
             //    .AsPublicImplementedInterfaces(ServiceLifetime.Scoped);
+
+            // register compute layer brains
             services.AddScoped<IComputeLayerBrain, CLBMonitoring>();
 
             services.AddCors(options => options.AddPolicy("AllowAllOrigins", builder =>
@@ -174,12 +177,11 @@ namespace LandscapeRegistry
                 //policy.RequireClaim("member_of", "[accounting]")); //this claim value is an array. Any suggestions how to extract just single role? This still works.
             });
 
-            services.AddScoped<CLBRunner>();
             services.AddHangfire(config =>
             {
                 var cs = Configuration.GetConnectionString("HangfireConnection");
                 config.UsePostgreSqlStorage(cs);
-                //config.UseConsole(); TODO
+                //config.UseConsole(); //TODO
             });
 
             services.AddSwaggerGen(c =>
@@ -282,7 +284,9 @@ namespace LandscapeRegistry
             });
 
             // Configure hangfire to use the new JobActivator we defined.
-            GlobalConfiguration.Configuration.UseConsole().UseActivator(new AspNetCoreJobActivator(serviceScopeFactory));
+            GlobalConfiguration.Configuration
+                .UseConsole()
+                .UseActivator(new AspNetCoreJobActivator(serviceScopeFactory));
             app.UseHangfireServer();
             if (env.IsDevelopment() || env.IsStaging())
             {
@@ -303,9 +307,8 @@ namespace LandscapeRegistry
                 });
             }
 
-            RecurringJob.AddOrUpdate<CLBRunner>(runner => runner.Run(), Cron.Daily);// "*/15 * * * * *");
-
-            RecurringJob.AddOrUpdate<MarkedForDeletionService>(s => s.Run(), Cron.Minutely);
+            RecurringJob.AddOrUpdate<CLBRunner>(runner => runner.Run(), Cron.Minutely);// "*/15 * * * * *");
+            RecurringJob.AddOrUpdate<MarkedForDeletionRunner>(s => s.Run(), Cron.Minutely);
         }
     }
 
@@ -314,27 +317,7 @@ namespace LandscapeRegistry
     {
         public bool Authorize([NotNull] DashboardContext context)
         {
-            return true;
+            return true; // TODO: proper auth
         }
-    }
-
-    public class CLBRunner
-    {
-        public CLBRunner(IEnumerable<IComputeLayerBrain> computeLayerBrains)
-        {
-            ComputeLayerBrains = computeLayerBrains;
-        }
-
-        public void Run()
-        {
-            Console.WriteLine("Running CLBRunner");
-            foreach (var clb in ComputeLayerBrains)
-            {
-                var settings = new CLBSettings("Monitoring"); // TODO
-                clb.RunSync(settings);
-            }
-        }
-
-        private IEnumerable<IComputeLayerBrain> ComputeLayerBrains { get; }
     }
 }
