@@ -97,7 +97,7 @@ namespace LandscapeRegistry.Model
                 }
             }
 
-            foreach(var notFoundCIID in notYetFoundCIIDs)
+            foreach (var notFoundCIID in notYetFoundCIIDs)
             {
                 ret[notFoundCIID] = CIType.UnspecifiedCIType;
             }
@@ -198,7 +198,7 @@ namespace LandscapeRegistry.Model
 
             if (inDB == null)
             {
-                if (CIType.UnspecifiedCIType.ID ==ciTypeID)
+                if (CIType.UnspecifiedCIType.ID == ciTypeID)
                 {
                     return await CreateCIType(CIType.UnspecifiedCIType.ID, trans);
                 }

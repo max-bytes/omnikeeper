@@ -1,8 +1,5 @@
-﻿using LandscapeRegistry.Entity;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Text;
 
 namespace Landscape.Base.Entity
 {
@@ -23,7 +20,7 @@ namespace Landscape.Base.Entity
     }
     public class TraitAttribute
     {
-        public CIAttributeTemplate AttributeTemplate { get;private set; }
+        public CIAttributeTemplate AttributeTemplate { get; private set; }
         public string Identifier { get; private set; }
 
         // TODO: implement anyOf(CIAttributeTemplate[])

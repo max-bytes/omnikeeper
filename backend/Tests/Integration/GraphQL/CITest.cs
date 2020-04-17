@@ -1,22 +1,15 @@
 ﻿using GraphQL;
-using GraphQL.Execution;
-using GraphQL.Types;
 using Landscape.Base.Entity;
 using Landscape.Base.Model;
-using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.GraphQL;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Utils;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Tests.Integration.GraphQL
@@ -34,7 +27,7 @@ namespace Tests.Integration.GraphQL
             Services.Register<IAttributeModel, AttributeModel>();
             Services.Register<UserInDatabaseModel>();
             Services.Register<LayerModel>();
-            Services.Register<ILayerModel,LayerModel>();
+            Services.Register<ILayerModel, LayerModel>();
             Services.Register<RelationModel>();
             Services.Register<RelatedCIType>();
             Services.Register<IPredicateModel, PredicateModel>();

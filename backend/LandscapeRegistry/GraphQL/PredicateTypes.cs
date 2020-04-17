@@ -1,6 +1,5 @@
 ﻿using GraphQL.Types;
 using Landscape.Base.Entity;
-using static Landscape.Base.Model.IPredicateModel;
 
 namespace LandscapeRegistry.GraphQL
 {

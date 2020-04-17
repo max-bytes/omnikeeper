@@ -4,7 +4,6 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using static Landscape.Base.Model.IPredicateModel;
 
 namespace LandscapeRegistry.Model
 {

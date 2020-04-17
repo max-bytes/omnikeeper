@@ -1,16 +1,7 @@
-﻿using LandscapeRegistry;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
+﻿using LandscapeRegistry.Model;
 using LandscapeRegistry.Utils;
-using Microsoft.DotNet.InternalAbstractions;
-using Npgsql;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
@@ -41,10 +32,10 @@ namespace Tests.Integration.Model
 
             //try
             //{
-                var layerSet1 = await layerModel.BuildLayerSet(layerNames.ToArray(), trans);
-                //var layerSet1 = await layerModel.BuildLayerSet(new string[] { "l1", "l2", "l3" });
-                //Console.WriteLine($"mid");
-                //var layerSet2 = await layerModel.BuildLayerSet(new string[] { "l2", "l3" });
+            var layerSet1 = await layerModel.BuildLayerSet(layerNames.ToArray(), trans);
+            //var layerSet1 = await layerModel.BuildLayerSet(new string[] { "l1", "l2", "l3" });
+            //Console.WriteLine($"mid");
+            //var layerSet2 = await layerModel.BuildLayerSet(new string[] { "l2", "l3" });
             //} catch ( Exception e)
             //{
             //    Console.WriteLine(e);

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Text;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Landscape.Base.Entity.DTO
 {
@@ -9,7 +6,7 @@ namespace Landscape.Base.Entity.DTO
     {
         [Required] public string ID { get; set; }
 
-        private CITypeDTO() {}
+        private CITypeDTO() { }
 
         public static CITypeDTO Build(CIType t)
         {

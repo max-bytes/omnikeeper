@@ -1,7 +1,4 @@
 ﻿using GraphQL;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Tests.Integration.GraphQL
 {

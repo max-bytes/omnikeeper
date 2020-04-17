@@ -1,8 +1,4 @@
 ﻿
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using GraphQL;
 using GraphQL.Conversion;
 using GraphQL.Execution;
@@ -12,6 +8,10 @@ using GraphQL.Validation;
 using GraphQL.Validation.Complexity;
 using GraphQLParser.Exceptions;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 namespace Tests.Integration.GraphQL
 {

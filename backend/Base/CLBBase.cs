@@ -1,12 +1,8 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
-using LandscapeRegistry.Entity;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Landscape.Base
@@ -65,7 +61,8 @@ namespace Landscape.Base
                 }
 
                 return result;
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 Console.WriteLine(e.Message); // TODO: proper error handling, use error handler(?)
                 return false;

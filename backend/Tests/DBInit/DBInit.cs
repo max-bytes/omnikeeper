@@ -1,16 +1,11 @@
 ﻿using Landscape.Base.Entity;
-using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Cached;
 using LandscapeRegistry.Utils;
-using Npgsql;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Tests.Integration;
 using Tests.Integration.Model;
@@ -48,13 +43,14 @@ namespace Tests.DBInit
             int numAttributesPerCIFrom = 20;
             int numAttributesPerCITo = 40;
             var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
-            var regularPredicates = new[] { 
-                Predicate.Build("is_part_of", "is part of", "has part", AnchorState.Active), 
+            var regularPredicates = new[] {
+                Predicate.Build("is_part_of", "is part of", "has part", AnchorState.Active),
                 Predicate.Build("runs_on", "runs on", "is running", AnchorState.Active),
                 Predicate.Build("is_attached_to", "is attached to", "has attachment", AnchorState.Active),
             };
             var regularAttributeNames = new[] { "att_1", "att_2", "att_3", "att_4", "att_5", "att_6", "att_7", "att_8", "att_9" };
-            var regularAttributeValues = Enumerable.Range(0, 10).Select<int, IAttributeValue>(i => {
+            var regularAttributeValues = Enumerable.Range(0, 10).Select<int, IAttributeValue>(i =>
+            {
                 var r = random.Next(6);
                 if (r == 0)
                     return AttributeValueIntegerScalar.Build(random.Next(1000));
@@ -110,7 +106,7 @@ namespace Tests.DBInit
             // create regular CIs
             using (var trans = conn.BeginTransaction())
             {
-                foreach(var ciid in regularCiids)
+                foreach (var ciid in regularCiids)
                     await ciModel.CreateCIWithType(ciid, regularTypeIDs.GetRandom(random), trans);
 
                 trans.Commit();
@@ -126,7 +122,7 @@ namespace Tests.DBInit
             }
 
             // create regular attributes
-            foreach(var ciid in regularCiids)
+            foreach (var ciid in regularCiids)
             {
                 var numAttributeChanges = random.Next(numAttributesPerCIFrom, numAttributesPerCITo);
                 for (int i = 0; i < numAttributeChanges; i++)
@@ -142,7 +138,7 @@ namespace Tests.DBInit
             }
 
             // create regular relations
-            for (var i = 0;i < numRegularRelations;i++)
+            for (var i = 0; i < numRegularRelations; i++)
             {
                 using var trans = conn.BeginTransaction();
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
@@ -174,7 +170,7 @@ namespace Tests.DBInit
 
             // create monitoring relations
             var windowsHosts = await ciModel.GetMergedCIsByType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, DateTimeOffset.Now, "Host Windows");
-            foreach(var ci in windowsHosts)
+            foreach (var ci in windowsHosts)
             {
                 using var trans = conn.BeginTransaction();
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);

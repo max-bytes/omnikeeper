@@ -1,12 +1,8 @@
 
 using Landscape.Base.Entity.DTO;
-using Landscape.Base.Model;
 using LandscapeRegistry.Entity.AttributeValues;
-using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Landscape.Base.Entity
 {
@@ -58,7 +54,7 @@ namespace Landscape.Base.Entity
         }
     }
 
-    
+
     public interface IBulkCIAttributeData<F>
     {
         string GetCIID(F f);

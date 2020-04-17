@@ -1,9 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Service
@@ -22,13 +19,14 @@ namespace LandscapeRegistry.Service
         {
             // try to delete marked predicates
             var toDeletePredicates = await predicateModel.GetPredicates(null, null, AnchorStateFilter.MarkedForDeletion);
-            foreach(var d in toDeletePredicates)
+            foreach (var d in toDeletePredicates)
             {
                 var wasDeleted = await predicateModel.TryToDelete(d.Key, null);
                 if (wasDeleted)
                 {
                     logger.LogInformation($"Deleted predicate {d.Key}");
-                } else
+                }
+                else
                 {
                     logger.LogDebug($"Could not delete predicate {d.Key}");
                 }

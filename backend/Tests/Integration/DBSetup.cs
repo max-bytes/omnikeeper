@@ -1,15 +1,8 @@
 ﻿using DBMigrations;
 using Landscape.Base.Entity;
 using Landscape.Base.Model;
-using LandscapeRegistry.Controllers;
-using LandscapeRegistry.Entity;
-using Microsoft.DotNet.InternalAbstractions;
 using Npgsql;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Tests.Integration
@@ -21,7 +14,7 @@ namespace Tests.Integration
         public static void Setup()
         {
             _Setup(dbName);
-        }   
+        }
 
         public static void _Setup(string _dbName)
         {

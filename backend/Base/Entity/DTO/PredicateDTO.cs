@@ -1,10 +1,4 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Landscape.Base.Entity
+﻿namespace Landscape.Base.Entity
 {
     public class PredicateDTO
     {

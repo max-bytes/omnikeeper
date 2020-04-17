@@ -1,19 +1,10 @@
 ﻿using Landscape.Base.Entity;
-using LandscapeRegistry;
-using LandscapeRegistry.Entity;
-using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Cached;
 using LandscapeRegistry.Utils;
-using Microsoft.DotNet.InternalAbstractions;
-using Npgsql;
 using NUnit.Framework;
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using static Landscape.Base.Model.IRelationModel;
 
@@ -105,7 +96,7 @@ namespace Tests.Integration.Model
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             using var trans = conn.BeginTransaction();
             var userModel = new UserInDatabaseModel(conn);
-            var changesetModel = new ChangesetModel(userModel, conn); 
+            var changesetModel = new ChangesetModel(userModel, conn);
             var attributeModel = new AttributeModel(conn);
             var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new CachedPredicateModel(new PredicateModel(conn));

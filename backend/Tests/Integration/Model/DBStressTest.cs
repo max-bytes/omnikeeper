@@ -1,17 +1,11 @@
-﻿using LandscapeRegistry;
-using LandscapeRegistry.Entity.AttributeValues;
+﻿using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Utils;
-using Microsoft.DotNet.InternalAbstractions;
-using Npgsql;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Tests.Integration.Model

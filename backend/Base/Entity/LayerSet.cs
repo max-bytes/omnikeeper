@@ -1,5 +1,4 @@
 ﻿using Npgsql;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +10,8 @@ namespace Landscape.Base.Entity
     {
         // can be unsorted
         public long[] LayerIDs { get; private set; }
-        public long LayerHash {
+        public long LayerHash
+        {
             get
             {
                 unchecked // we expect overflows

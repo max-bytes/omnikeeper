@@ -1,18 +1,11 @@
 ﻿using Landscape.Base.Entity;
-using LandscapeRegistry;
-using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Utils;
-using Microsoft.DotNet.InternalAbstractions;
 using Npgsql;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
@@ -165,10 +158,10 @@ namespace Tests.Integration.Model
             using (var trans = conn.BeginTransaction())
             {
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await attributeModel.InsertAttribute("a1", AttributeValueIntegerArray.Build(new long[] { 1,2,3,4 }), layer1.ID, ciid1, changeset.ID, trans);
+                await attributeModel.InsertAttribute("a1", AttributeValueIntegerArray.Build(new long[] { 1, 2, 3, 4 }), layer1.ID, ciid1, changeset.ID, trans);
                 var a1 = await attributeModel.GetMergedAttributes("H123", false, layerset1, trans, DateTimeOffset.Now);
                 Assert.AreEqual(1, a1.Count());
-                Assert.AreEqual(AttributeValueIntegerArray.Build(new long[] { 1,2,3,4 }), a1.First().Attribute.Value);
+                Assert.AreEqual(AttributeValueIntegerArray.Build(new long[] { 1, 2, 3, 4 }), a1.First().Attribute.Value);
             }
         }
 

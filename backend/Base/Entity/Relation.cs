@@ -1,6 +1,3 @@
-using LandscapeRegistry.Entity.AttributeValues;
-using System;
-
 namespace Landscape.Base.Entity
 {
     public enum RelationState

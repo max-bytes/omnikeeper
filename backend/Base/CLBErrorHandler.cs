@@ -1,12 +1,10 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
-using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Landscape.Base
@@ -43,7 +41,7 @@ namespace Landscape.Base
                 return !writtenErrors.Any(we => we.ID == a.ID);
             });
 
-            foreach(var remove in attributesToRemove)
+            foreach (var remove in attributesToRemove)
             {
                 await attributeModel.RemoveAttribute(remove.Name, clbLayerID, remove.CIID, changesetID, trans);
             }

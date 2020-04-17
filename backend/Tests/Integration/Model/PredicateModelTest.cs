@@ -1,21 +1,9 @@
 ﻿using Landscape.Base.Entity;
-using LandscapeRegistry;
-using LandscapeRegistry.Entity;
-using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
-using LandscapeRegistry.Model.Cached;
 using LandscapeRegistry.Utils;
-using Microsoft.DotNet.InternalAbstractions;
-using Npgsql;
 using NUnit.Framework;
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using static Landscape.Base.Model.IRelationModel;
 
 namespace Tests.Integration.Model
 {

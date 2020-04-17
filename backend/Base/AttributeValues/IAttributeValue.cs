@@ -2,8 +2,6 @@
 using Landscape.Base.Entity.DTO;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Text;
 
 namespace LandscapeRegistry.Entity.AttributeValues

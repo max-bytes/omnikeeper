@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Landscape.Base.Entity
+﻿namespace Landscape.Base.Entity
 {
     public enum AnchorState
     {

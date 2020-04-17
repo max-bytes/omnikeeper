@@ -3,7 +3,6 @@ using Landscape.Base;
 using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Templating;
-using LandscapeRegistry.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using Microsoft.Extensions.Logging;
 using Npgsql;

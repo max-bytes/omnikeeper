@@ -1,12 +1,10 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Entity.AttributeValues
 {

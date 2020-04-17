@@ -1,7 +1,5 @@
-﻿using DbUp;
-using System;
+﻿using System;
 using System.Linq;
-using System.Reflection;
 
 namespace DBMigrations
 {

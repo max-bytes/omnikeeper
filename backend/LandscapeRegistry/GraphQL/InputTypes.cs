@@ -1,7 +1,6 @@
 ﻿using GraphQL.Types;
 using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
-using LandscapeRegistry.Entity.AttributeValues;
 
 namespace LandscapeRegistry.GraphQL
 {

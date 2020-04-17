@@ -1,10 +1,6 @@
-﻿using LandscapeRegistry.Entity;
-using LandscapeRegistry.Entity.AttributeValues;
+﻿using LandscapeRegistry.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Landscape.Base.Entity
 {
