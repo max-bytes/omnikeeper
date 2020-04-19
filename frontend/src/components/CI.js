@@ -19,25 +19,25 @@ function CI(props) {
     { menuItem: 'Attributes', render: () => <Tab.Pane>
       <Row>
         <Col>
-          <AddNewAttribute prefilled={createNewAttribute} isEditable={props.isEditable} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ci.identity}></AddNewAttribute>
+          <AddNewAttribute prefilled={createNewAttribute} isEditable={props.isEditable} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ci.id}></AddNewAttribute>
         </Col>
       </Row>
       <Row>
         <Col>
-          <AttributeList mergedAttributes={props.ci.mergedAttributes} isEditable={props.isEditable} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ci.identity}></AttributeList>
+          <AttributeList mergedAttributes={props.ci.mergedAttributes} isEditable={props.isEditable} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ci.id}></AttributeList>
         </Col>
       </Row>
     </Tab.Pane> },
     { menuItem: 'Relations', render: () => <Tab.Pane>
-      <CIRelations visibleLayers={props.visibleLayers} timeThreshold={props.timeThreshold} related={props.ci.related} isEditable={props.isEditable} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ci.identity} />
+      <CIRelations visibleLayers={props.visibleLayers} timeThreshold={props.timeThreshold} related={props.ci.related} isEditable={props.isEditable} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ci.id} />
     </Tab.Pane> },
     { menuItem: 'Traits', render: () => <Tab.Pane>
-      <Traits visibleLayers={props.visibleLayers} timeThreshold={props.timeThreshold} traits={props.ci.effectiveTraits} ciIdentity={props.ci.identity} />
+      <Traits visibleLayers={props.visibleLayers} timeThreshold={props.timeThreshold} traits={props.ci.effectiveTraits} ciIdentity={props.ci.id} />
     </Tab.Pane> },
   ]
 
   return (<div style={{margin: "10px 10px"}}>
-    <h3>CI {props.ci.identity} - type: {props.ci.type.id}</h3>
+    <h3>CI {props.ci.id} - type: {props.ci.type.id}</h3>
     <TemplateErrors templateErrors={props.ci.templateErrors} 
       onCreateNewAttribute={(attributeName, attributeType) => {
         setCreateNewAttribute({name: attributeName, type: attributeType, value: '', layer: visibleAndWritableLayers[0]}); // TODO: correct layer
@@ -68,7 +68,7 @@ CI.propTypes = {
     }).isRequired
   ).isRequired,
   ci: PropTypes.shape({
-    identity: PropTypes.string.isRequired,
+    id: PropTypes.string.isRequired,
     type: PropTypes.shape({
       id: PropTypes.string.isRequired
     }).isRequired,

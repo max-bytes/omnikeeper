@@ -58,7 +58,7 @@ namespace LandscapeRegistry.Model
 
         // returns all changesets affecting this CI, both via attributes OR relations
         // sorted by timestamp
-        public async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IncludeRelationDirections ird, string ciid, NpgsqlTransaction trans, int? limit = null)
+        public async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IncludeRelationDirections ird, Guid ciid, NpgsqlTransaction trans, int? limit = null)
         {
             var queryAttributes = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 INNER JOIN attribute a ON a.changeset_id = c.id 

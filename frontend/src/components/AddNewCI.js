@@ -11,7 +11,7 @@ import { withRouter } from 'react-router-dom'
 
 function AddNewCI(props) {
 
-  let initialNewCI = {ciIdentity: "", typeID: null };
+  let initialNewCI = {typeID: null };
   const [newCI, setNewCI] = useState(initialNewCI);
   
   const [error, setError] = useState("");
@@ -28,22 +28,16 @@ function AddNewCI(props) {
       <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1}}>
         <Form style={{display: 'flex', flexDirection: 'column', flexBasis: '500px'}} onSubmit={e => {
             e.preventDefault();
-            createNewCI({ variables: { ciIdentity: newCI.ciIdentity, typeID: newCI.typeID }})
+            createNewCI({ variables: { typeID: newCI.typeID }})
             .then(d => {
               if (goToCIAfterCreation)
-                props.history.push(`/explorer/${newCI.ciIdentity}`);
+                props.history.push(`/explorer/${d.data.createCIs.ciids[0]}`);
               else
                 setNewCI(initialNewCI);
             }).catch(e => {
               setError(e.message);
             });
           }}>
-          <Form.Group as={Row} controlId="ciid">
-            <Form.Label column>CI ID</Form.Label>
-            <Col sm={10}>
-              <Form.Control type="text" placeholder="Enter CI ID" value={newCI.ciIdentity} onChange={e => setNewCI({...newCI, ciIdentity: e.target.value})} />
-            </Col>
-          </Form.Group>
           <Form.Group as={Row} controlId="type">
             <Form.Label column>Type</Form.Label>
             <Col sm={10}>

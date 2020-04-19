@@ -3,6 +3,7 @@ using Landscape.Base.Entity;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using Npgsql;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -82,8 +83,8 @@ namespace LandscapeRegistry.GraphQL
                   {
                       var affectedCIIDs = removedAttributes.Select(r => r.CIID)
                       .Concat(insertedAttributes.Select(i => i.CIID))
-                      .Concat(insertedRelations.SelectMany(i => new string[] { i.FromCIID, i.ToCIID }))
-                      .Concat(removedRelations.SelectMany(i => new string[] { i.FromCIID, i.ToCIID }))
+                      .Concat(insertedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
+                      .Concat(removedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
                       .Distinct();
                       affectedCIs = await ciModel.GetMergedCIs(userContext.LayerSet, true, transaction, changeset.Timestamp, affectedCIIDs);
                   }
@@ -106,10 +107,10 @@ namespace LandscapeRegistry.GraphQL
                   using var transaction = await conn.BeginTransactionAsync();
                   userContext.Transaction = transaction;
 
-                  var createdCIIDs = new List<string>();
+                  var createdCIIDs = new List<Guid>();
                   foreach (var ci in createCIs)
                   {
-                      createdCIIDs.Add(await ciModel.CreateCIWithType(ci.Identity, ci.TypeID, transaction));
+                      createdCIIDs.Add(await ciModel.CreateCIWithType(ci.TypeID, transaction));
                   }
                   await transaction.CommitAsync();
 

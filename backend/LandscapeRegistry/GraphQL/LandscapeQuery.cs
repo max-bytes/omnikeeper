@@ -15,7 +15,7 @@ namespace LandscapeRegistry.GraphQL
             FieldAsync<MergedCIType>("ci",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "identity"
                     },
@@ -32,13 +32,13 @@ namespace LandscapeRegistry.GraphQL
                 {
                     var userContext = context.UserContext as LandscapeUserContext;
 
-                    var ciIdentity = context.GetArgument<string>("identity");
+                    var ciid = context.GetArgument<Guid>("identity");
                     var layerStrings = context.GetArgument<string[]>("layers");
                     var ls = await layerModel.BuildLayerSet(layerStrings, null);
                     userContext.LayerSet = ls;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
 
-                    var ci = await ciModel.GetMergedCI(ciIdentity, userContext.LayerSet, null, userContext.TimeThreshold);
+                    var ci = await ciModel.GetMergedCI(ciid, userContext.LayerSet, null, userContext.TimeThreshold);
 
                     return ci;
                 });
@@ -142,7 +142,7 @@ namespace LandscapeRegistry.GraphQL
                     {
                         Name = "to"
                     },
-                    new QueryArgument<StringGraphType>
+                    new QueryArgument<GuidGraphType>
                     {
                         Name = "ciid"
                     },
@@ -159,10 +159,10 @@ namespace LandscapeRegistry.GraphQL
 
                     var from = context.GetArgument<DateTimeOffset>("from");
                     var to = context.GetArgument<DateTimeOffset>("to");
-                    var ciid = context.GetArgument<string>("ciid", null);
+                    var ciid = context.GetArgument<Guid?>("ciid", null);
                     var limit = context.GetArgument<int?>("limit", null);
                     if (ciid != null)
-                        return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, IncludeRelationDirections.Both, ciid, null, limit);
+                        return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, IncludeRelationDirections.Both, ciid.Value, null, limit);
                     else
                         return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, IncludeRelationDirections.Both, null, limit);
                 });

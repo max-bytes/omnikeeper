@@ -1,3 +1,5 @@
+using System;
+
 namespace Landscape.Base.Entity
 {
     public enum RelationState
@@ -8,8 +10,8 @@ namespace Landscape.Base.Entity
     public class Relation
     {
         public long ID { get; private set; }
-        public string FromCIID { get; private set; }
-        public string ToCIID { get; private set; }
+        public Guid FromCIID { get; private set; }
+        public Guid ToCIID { get; private set; }
         public string PredicateID { get => Predicate.ID; }
         public Predicate Predicate { get; private set; }
         public long LayerID { get => LayerStackIDs[^1]; }
@@ -19,9 +21,9 @@ namespace Landscape.Base.Entity
 
         // information hash: 
         public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);
-        public static string CreateInformationHash(string fromCIID, string toCIID, string predicateID) => fromCIID + "_" + toCIID + "_" + predicateID;
+        public static string CreateInformationHash(Guid fromCIID, Guid toCIID, string predicateID) => fromCIID + "_" + toCIID + "_" + predicateID;
 
-        public static Relation Build(long id, string fromCIID, string toCIID, Predicate predicate, long[] layerStackIDs, RelationState state, long changesetID)
+        public static Relation Build(long id, Guid fromCIID, Guid toCIID, Predicate predicate, long[] layerStackIDs, RelationState state, long changesetID)
         {
             return new Relation
             {
@@ -40,9 +42,9 @@ namespace Landscape.Base.Entity
     {
         public string PredicateID { get; private set; }
         public long LayerID { get; private set; }
-        public (string, string)[] FromToCIIDPairs { get; private set; } // TODO: create and refactor into BulkRelationDataFragment
+        public (Guid, Guid)[] FromToCIIDPairs { get; private set; } // TODO: create and refactor into BulkRelationDataFragment
 
-        public static BulkRelationData Build(string predicateID, long layerID, (string, string)[] fromToCIIDPairs)
+        public static BulkRelationData Build(string predicateID, long layerID, (Guid, Guid)[] fromToCIIDPairs)
         {
             return new BulkRelationData()
             {

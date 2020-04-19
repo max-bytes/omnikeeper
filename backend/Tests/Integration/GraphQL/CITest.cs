@@ -65,7 +65,7 @@ namespace Tests.Integration.GraphQL
             var changesetModel = Services.Get<ChangesetModel>();
             var userModel = Services.Get<UserInDatabaseModel>();
             using var trans = Services.Get<NpgsqlConnection>().BeginTransaction();
-            var ciid1 = await ciModel.CreateCI("H123", trans);
+            var ciid1 = await ciModel.CreateCI(trans);
             var layer1 = await layerModel.CreateLayer("layer_1", trans);
             //var layerID2 = await layerModel.CreateLayer("layer_2", trans);
             var user = User.Build(await userModel.UpsertUser(username, userGUID, UserType.Robot, trans), new List<Layer>());

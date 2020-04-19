@@ -1,19 +1,18 @@
 ﻿using GraphQL.Types;
 using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
+using System;
 
 namespace LandscapeRegistry.GraphQL
 {
     public class CreateCIInput
     {
-        public string Identity { get; private set; }
         public string TypeID { get; private set; }
     }
     public class CreateCIInputType : InputObjectGraphType<CreateCIInput>
     {
         public CreateCIInputType()
         {
-            Field(x => x.Identity);
             Field(x => x.TypeID);
         }
     }
@@ -51,7 +50,7 @@ namespace LandscapeRegistry.GraphQL
 
     public class InsertCIAttributeInput
     {
-        public string CI { get; private set; }
+        public Guid CI { get; private set; }
         public string Name { get; private set; }
         public long LayerID { get; private set; }
         public AttributeValueDTO Value { get; private set; }
@@ -60,7 +59,7 @@ namespace LandscapeRegistry.GraphQL
     {
         public InsertCIAttributeInputType()
         {
-            Field("ci", x => x.CI);
+            Field("ci", x => x.CI, type: typeof(NonNullGraphType<GuidGraphType>));
             Field(x => x.Name);
             Field(x => x.LayerID);
             Field(x => x.Value, type: typeof(AttributeValueDTOInputType));
@@ -69,7 +68,7 @@ namespace LandscapeRegistry.GraphQL
 
     public class RemoveCIAttributeInput
     {
-        public string CI { get; private set; }
+        public Guid CI { get; private set; }
         public string Name { get; private set; }
         public long LayerID { get; private set; }
     }
@@ -77,7 +76,7 @@ namespace LandscapeRegistry.GraphQL
     {
         public RemoveCIAttributeInputType()
         {
-            Field("ci", x => x.CI);
+            Field("ci", x => x.CI, type: typeof(NonNullGraphType<GuidGraphType>));
             Field(x => x.Name);
             Field(x => x.LayerID);
         }
@@ -95,8 +94,8 @@ namespace LandscapeRegistry.GraphQL
 
     public class InsertRelationInput
     {
-        public string FromCIID { get; private set; }
-        public string ToCIID { get; private set; }
+        public Guid FromCIID { get; private set; }
+        public Guid ToCIID { get; private set; }
         public string PredicateID { get; private set; }
         public long LayerID { get; private set; }
     }
@@ -105,8 +104,8 @@ namespace LandscapeRegistry.GraphQL
     {
         public InsertRelationInputType()
         {
-            Field(x => x.FromCIID);
-            Field(x => x.ToCIID);
+            Field(x => x.FromCIID, type: typeof(NonNullGraphType<GuidGraphType>));
+            Field(x => x.ToCIID, type: typeof(NonNullGraphType<GuidGraphType>));
             Field(x => x.PredicateID);
             Field(x => x.LayerID);
         }
@@ -114,8 +113,8 @@ namespace LandscapeRegistry.GraphQL
 
     public class RemoveRelationInput
     {
-        public string FromCIID { get; private set; }
-        public string ToCIID { get; private set; }
+        public Guid FromCIID { get; private set; }
+        public Guid ToCIID { get; private set; }
         public string PredicateID { get; private set; }
         public long LayerID { get; private set; }
     }
@@ -123,8 +122,8 @@ namespace LandscapeRegistry.GraphQL
     {
         public RemoveRelationInputType()
         {
-            Field(x => x.FromCIID);
-            Field(x => x.ToCIID);
+            Field(x => x.FromCIID, type: typeof(NonNullGraphType<GuidGraphType>));
+            Field(x => x.ToCIID, type: typeof(NonNullGraphType<GuidGraphType>));
             Field(x => x.PredicateID);
             Field(x => x.LayerID);
         }

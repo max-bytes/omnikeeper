@@ -12,7 +12,7 @@ namespace Tests.Integration.Model
 {
     class DBStressTest
     {
-        private List<string> ciNames;
+        private List<Guid> ciNames;
         private List<string> layerNames;
 
         [SetUp]
@@ -43,8 +43,9 @@ namespace Tests.Integration.Model
 
                 ciNames = Enumerable.Range(0, numCIs).Select(i =>
                 {
-                    var identity = "CI" + RandomString.Generate(8, random);
-                    return identity;
+                    //var identity = "CI" + RandomString.Generate(8, random);
+                    //return identity;
+                    return Guid.NewGuid();
                 }).ToList();
 
                 layerNames = Enumerable.Range(0, numLayers).Select(i =>
@@ -59,7 +60,7 @@ namespace Tests.Integration.Model
                 //Console.WriteLine(ciNames.Count());
                 var cis = ciNames.Select(identity =>
                 {
-                    return (model.CreateCI(identity, trans).GetAwaiter().GetResult(), identity);
+                    return (model.CreateCI(trans, identity).GetAwaiter().GetResult(), identity);
                 }).ToList();
 
                 var layers = layerNames.Select(identity =>

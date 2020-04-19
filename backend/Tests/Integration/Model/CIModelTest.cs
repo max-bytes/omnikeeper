@@ -40,16 +40,16 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
-            string ciid1;
-            string ciid2;
-            string ciid3;
+            Guid ciid1;
+            Guid ciid2;
+            Guid ciid3;
             using (var trans = conn.BeginTransaction())
             {
                 var changesetID = await changesetModel.CreateChangeset(user.ID, trans);
                 var ciType1 = await model.InsertCIType("T1", trans);
-                ciid1 = await model.CreateCIWithType("H123", ciType1.ID, trans);
-                ciid2 = await model.CreateCIWithType("H456", ciType1.ID, trans);
-                ciid3 = await model.CreateCIWithType("H789", ciType1.ID, trans);
+                ciid1 = await model.CreateCIWithType(ciType1.ID, trans);
+                ciid2 = await model.CreateCIWithType(ciType1.ID, trans);
+                ciid3 = await model.CreateCIWithType(ciType1.ID, trans);
                 trans.Commit();
             }
 
@@ -79,16 +79,16 @@ namespace Tests.Integration.Model
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 var cis1 = await model.GetCIs(layerID1, false, trans, DateTimeOffset.Now);
                 Assert.AreEqual(2, cis1.Count());
-                Assert.AreEqual(1, cis1.Count(c => c.Identity == ciid1 && c.Attributes.Any(a => a.Name == "a1")));
-                Assert.AreEqual(1, cis1.Count(c => c.Identity == ciid2 && c.Attributes.Any(a => a.Name == "a2")));
+                Assert.AreEqual(1, cis1.Count(c => c.ID == ciid1 && c.Attributes.Any(a => a.Name == "a1")));
+                Assert.AreEqual(1, cis1.Count(c => c.ID == ciid2 && c.Attributes.Any(a => a.Name == "a2")));
                 var cis2 = await model.GetCIs(layerID2, false, trans, DateTimeOffset.Now);
                 Assert.AreEqual(1, cis2.Count());
-                Assert.AreEqual(1, cis2.Count(c => c.Identity == ciid1 && c.Attributes.Any(a => a.Name == "a3")));
+                Assert.AreEqual(1, cis2.Count(c => c.ID == ciid1 && c.Attributes.Any(a => a.Name == "a3")));
                 var cis3 = await model.GetCIs(layerID2, true, trans, DateTimeOffset.Now);
                 Assert.AreEqual(3, cis3.Count());
-                Assert.AreEqual(1, cis3.Count(c => c.Identity == ciid1 && c.Attributes.Any(a => a.Name == "a3")));
-                Assert.AreEqual(1, cis3.Count(c => c.Identity == ciid2 && c.Attributes.Count() == 0));
-                Assert.AreEqual(1, cis3.Count(c => c.Identity == ciid3 && c.Attributes.Count() == 0));
+                Assert.AreEqual(1, cis3.Count(c => c.ID == ciid1 && c.Attributes.Any(a => a.Name == "a3")));
+                Assert.AreEqual(1, cis3.Count(c => c.ID == ciid2 && c.Attributes.Count() == 0));
+                Assert.AreEqual(1, cis3.Count(c => c.ID == ciid3 && c.Attributes.Count() == 0));
 
                 trans.Commit();
             }
@@ -105,7 +105,7 @@ namespace Tests.Integration.Model
             using var trans = conn.BeginTransaction();
             var user = await DBSetup.SetupUser(userModel);
 
-            var ciid1 = await model.CreateCI("H123", trans);
+            var ciid1 = await model.CreateCI(trans);
             var layer1 = await layerModel.CreateLayer("l1", trans);
             var layer2 = await layerModel.CreateLayer("l2", trans);
 
@@ -118,19 +118,19 @@ namespace Tests.Integration.Model
             await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid1, changeset.ID, trans);
             await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("textL2"), layer2.ID, ciid1, changeset.ID, trans);
 
-            var a1 = await attributeModel.GetMergedAttributes("H123", false, layerset1, trans, DateTimeOffset.Now);
+            var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset1, trans, DateTimeOffset.Now);
             Assert.AreEqual(1, a1.Count());
             Assert.AreEqual(AttributeValueTextScalar.Build("textL1"), a1.First().Attribute.Value);
 
-            var a2 = await attributeModel.GetMergedAttributes("H123", false, layerset2, trans, DateTimeOffset.Now);
+            var a2 = await attributeModel.GetMergedAttributes(ciid1, false, layerset2, trans, DateTimeOffset.Now);
             Assert.AreEqual(1, a2.Count());
             Assert.AreEqual(AttributeValueTextScalar.Build("textL2"), a2.First().Attribute.Value);
 
-            var a3 = await attributeModel.GetMergedAttributes("H123", false, layerset3, trans, DateTimeOffset.Now);
+            var a3 = await attributeModel.GetMergedAttributes(ciid1, false, layerset3, trans, DateTimeOffset.Now);
             Assert.AreEqual(1, a3.Count());
             Assert.AreEqual(AttributeValueTextScalar.Build("textL1"), a3.First().Attribute.Value);
 
-            var a4 = await attributeModel.GetMergedAttributes("H123", false, layerset4, trans, DateTimeOffset.Now);
+            var a4 = await attributeModel.GetMergedAttributes(ciid1, false, layerset4, trans, DateTimeOffset.Now);
             Assert.AreEqual(1, a4.Count());
             Assert.AreEqual(AttributeValueTextScalar.Build("textL2"), a4.First().Attribute.Value);
         }
@@ -145,7 +145,7 @@ namespace Tests.Integration.Model
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
 
-            var ciid1 = await model.CreateCI("H123", null);
+            var ciid1 = await model.CreateCI(null);
             var layer1 = await layerModel.CreateLayer("l1", null);
             var layer2 = await layerModel.CreateLayer("l2", null);
             var layerset1 = new LayerSet(new long[] { layer2.ID, layer1.ID });
@@ -169,7 +169,7 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
 
-            var a1 = await attributeModel.GetMergedAttributes("H123", false, layerset1, null, DateTimeOffset.Now);
+            var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset1, null, DateTimeOffset.Now);
             Assert.AreEqual(1, a1.Count()); // layerID1 shines through deleted
             Assert.AreEqual(AttributeValueTextScalar.Build("textL1"), a1.First().Attribute.Value);
         }
@@ -184,6 +184,7 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
+            Guid ciid1;
             using (var trans = conn.BeginTransaction())
             {
                 // test setting and getting of citype
@@ -191,9 +192,9 @@ namespace Tests.Integration.Model
                 Assert.AreEqual("T1", (await model.GetCITypeByID("T1", trans, null)).ID);
 
                 // test CI creation
-                var ciid1 = await model.CreateCIWithType("H123", ciType1.ID, trans);
-                Assert.AreEqual("H123", ciid1);
-                var ciType = await model.GetTypeOfCI("H123", trans, null);
+                ciid1 = await model.CreateCIWithType(ciType1.ID, trans);
+                Assert.AreEqual(ciid1, ciid1);
+                var ciType = await model.GetTypeOfCI(ciid1, trans, null);
                 Assert.AreEqual("T1", ciType.ID);
 
                 trans.Commit();
@@ -201,15 +202,15 @@ namespace Tests.Integration.Model
 
             using (var trans = conn.BeginTransaction())
             {
-                Assert.ThrowsAsync<Exception>(async () => await model.CreateCIWithType("H456", "T-Nonexisting", trans));
+                Assert.ThrowsAsync<Exception>(async () => await model.CreateCIWithType("T-Nonexisting", trans));
             }
 
             using (var trans = conn.BeginTransaction())
             {
                 // test overriding of type
                 var ciTypeID2 = await model.InsertCIType("T2", trans);
-                await model.UpdateCI("H123", "T2", trans);
-                var ciType = await model.GetTypeOfCI("H123", trans, null);
+                await model.UpdateCI(ciid1, "T2", trans);
+                var ciType = await model.GetTypeOfCI(ciid1, trans, null);
                 Assert.AreEqual("T2", ciType.ID);
                 trans.Commit();
             }
@@ -219,8 +220,8 @@ namespace Tests.Integration.Model
                 // test getting by ci type
                 var layer1 = await layerModel.CreateLayer("l1", trans);
                 var layerset1 = new LayerSet(new long[] { layer1.ID });
-                var ciid2 = await model.CreateCIWithType("H456", "T1", trans);
-                var ciid3 = await model.CreateCIWithType("H789", "T2", trans);
+                var ciid2 = await model.CreateCIWithType("T1", trans);
+                var ciid3 = await model.CreateCIWithType("T2", trans);
                 Assert.AreEqual(1, (await model.GetMergedCIsByType(layerset1, trans, DateTimeOffset.Now, "T1")).Count());
                 Assert.AreEqual(2, (await model.GetMergedCIsByType(layerset1, trans, DateTimeOffset.Now, "T2")).Count());
             }

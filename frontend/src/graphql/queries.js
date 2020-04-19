@@ -24,7 +24,7 @@ export const queries = {
         }
     `,
     FullCI: gql`
-        query ci($identity: String!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
+        query ci($identity: Guid!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
             ci(identity: $identity, layers: $layers, timeThreshold: $timeThreshold) {
                 ...FullCI
             }
@@ -45,7 +45,7 @@ export const queries = {
     ${Fragments.fullLayer}
     `,
     Changesets: gql`
-        query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciid: String, $layers:[String]!, $limit: Int) {
+        query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciid: Guid, $layers:[String]!, $limit: Int) {
             changesets(from: $from, to:$to, ciid:$ciid, layers: $layers, limit: $limit) {
                 id
                 user {

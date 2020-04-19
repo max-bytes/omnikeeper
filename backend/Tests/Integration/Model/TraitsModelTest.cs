@@ -66,9 +66,9 @@ namespace Tests.Integration.Model
             var traitModel = new TraitModel(ciModel, relationModel, new MockedTraitsProvider(), conn);
             var user = await DBSetup.SetupUser(userModel);
             await ciModel.InsertCIType("type1", null);
-            var ciid1 = await ciModel.CreateCIWithType("H123", "type1", null);
-            var ciid2 = await ciModel.CreateCIWithType("H456", "type1", null);
-            var ciid3 = await ciModel.CreateCIWithType("H789", "type1", null);
+            var ciid1 = await ciModel.CreateCIWithType("type1", null);
+            var ciid2 = await ciModel.CreateCIWithType("type1", null);
+            var ciid3 = await ciModel.CreateCIWithType("type1", null);
             var layer1 = await layerModel.CreateLayer("l1", null);
 
             using (var trans = conn.BeginTransaction())

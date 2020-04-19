@@ -16,8 +16,8 @@ namespace Landscape.Base.Model
         }
         class SingleCIIDAttributeSelection : IAttributeSelection
         {
-            public string CIID { get; }
-            public SingleCIIDAttributeSelection(string ciid)
+            public Guid CIID { get; }
+            public SingleCIIDAttributeSelection(Guid ciid)
             {
                 CIID = ciid;
             }
@@ -26,8 +26,8 @@ namespace Landscape.Base.Model
         }
         class MultiCIIDsAttributeSelection : IAttributeSelection
         {
-            public string[] CIIDs { get; }
-            public MultiCIIDsAttributeSelection(string[] ciids)
+            public Guid[] CIIDs { get; }
+            public MultiCIIDsAttributeSelection(Guid[] ciids)
             {
                 CIIDs = ciids;
             }
@@ -40,14 +40,14 @@ namespace Landscape.Base.Model
             public void AddParameters(NpgsqlParameterCollection p) { }
         }
 
-        Task<IEnumerable<MergedCIAttribute>> GetMergedAttributes(string ciIdentity, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime);
-        Task<IEnumerable<MergedCIAttribute>> GetMergedAttributes(IEnumerable<string> ciIdentities, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime);
+        Task<IEnumerable<MergedCIAttribute>> GetMergedAttributes(Guid ciid, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime);
+        Task<IEnumerable<MergedCIAttribute>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime);
         Task<IEnumerable<CIAttribute>> GetAttributes(IAttributeSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime);
 
 
-        Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, string ciid, long changesetID, NpgsqlTransaction trans);
-        Task<CIAttribute> RemoveAttribute(string name, long layerID, string ciid, long changesetID, NpgsqlTransaction trans);
-        Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime, string ciid = null);
+        Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans);
+        Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans);
+        Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime, Guid? ciid = null);
 
         Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, long changesetID, NpgsqlTransaction trans);
     }

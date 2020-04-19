@@ -35,12 +35,12 @@ namespace MonitoringPlugin
             // prepare list of all monitored cis
             var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.FromCIID).Distinct();
             var monitoredCIs = (await ciModel.GetMergedCIs(layerSetAll, true, trans, DateTimeOffset.Now, monitoredCIIDs))
-                .ToDictionary(ci => ci.Identity);
+                .ToDictionary(ci => ci.ID);
 
             // prepare list of all monitoring modules
             var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.ToCIID).Distinct();
             var monitoringModuleCIs = (await ciModel.GetMergedCIs(layerSetMonitoringDefinitionsOnly, false, trans, DateTimeOffset.Now, monitoringModuleCIIDs))
-                .ToDictionary(ci => ci.Identity);
+                .ToDictionary(ci => ci.ID);
 
             // find and parse commands, insert into monitored CIs
             var monitoringCommandFragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
@@ -49,8 +49,8 @@ namespace MonitoringPlugin
                 var monitoringModuleCI = monitoringModuleCIs[p.ToCIID];
                 if (monitoringModuleCI.Type.ID != "Monitoring Check Module")
                 {
-                    logger.LogError($"Expected CI {monitoringModuleCI.Identity} to be of type \"Monitoring Check Module\"");
-                    await errorHandler.LogError(monitoringModuleCI.Identity, "error", "Expected this CI to be of type \"Monitoring Check Module\"");
+                    logger.LogError($"Expected CI {monitoringModuleCI.ID} to be of type \"Monitoring Check Module\"");
+                    await errorHandler.LogError(monitoringModuleCI.ID, "error", "Expected this CI to be of type \"Monitoring Check Module\"");
                     continue;
                 }
 
@@ -72,7 +72,7 @@ namespace MonitoringPlugin
                     }
                     catch (Exception e)
                     {
-                        logger.LogError($"Error parsing or rendering command from monitoring module \"{monitoringModuleCI.Identity}\": {e.Message}");
+                        logger.LogError($"Error parsing or rendering command from monitoring module \"{monitoringModuleCI.ID}\": {e.Message}");
                         await errorHandler.LogError(mca.Attribute.CIID, "error", $"Error parsing or rendering command: {e.Message}");
                         continue;
                     }
@@ -85,11 +85,11 @@ namespace MonitoringPlugin
             await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.commands", targetLayer.ID, monitoringCommandFragments), changeset.ID, trans);
 
             // assign monitored cis to naemon instances
-            var monitoredByCIIDPairs = new List<(string, string)>();
+            var monitoredByCIIDPairs = new List<(Guid, Guid)>();
             var naemonInstances = await ciModel.GetMergedCIsByType(layerSetMonitoringDefinitionsOnly, trans, DateTimeOffset.Now, "Naemon Instance");
             foreach (var naemonInstance in naemonInstances)
                 foreach (var monitoredCI in monitoredCIs)
-                    monitoredByCIIDPairs.Add((monitoredCI.Value.Identity, naemonInstance.Identity));
+                    monitoredByCIIDPairs.Add((monitoredCI.Value.ID, naemonInstance.ID));
             await relationModel.BulkReplaceRelations(BulkRelationData.Build("is_monitored_by", targetLayer.ID, monitoredByCIIDPairs.ToArray()), changeset.ID, trans);
 
             // write final naemon config

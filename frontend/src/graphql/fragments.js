@@ -31,7 +31,7 @@ export const Fragments = {
   `,
   fullCI: gql`
     fragment FullCI on MergedCIType {
-        identity
+        id
         layerhash
         atTime
         type {

@@ -22,7 +22,7 @@ namespace LandscapeRegistry.Model
             CIModel = ciModel;
         }
 
-        public async Task<TemplateErrorsCI> CalculateTemplateErrors(string ciid, LayerSet layerset, ICIModel ciModel, NpgsqlTransaction trans)
+        public async Task<TemplateErrorsCI> CalculateTemplateErrors(Guid ciid, LayerSet layerset, ICIModel ciModel, NpgsqlTransaction trans)
         {
             var ci = await ciModel.GetMergedCI(ciid, layerset, trans, DateTimeOffset.Now);
             return await CalculateTemplateErrors(ci, trans);

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
@@ -6,16 +7,16 @@ namespace Landscape.Base.Entity.DTO
 {
     public class CIDTO
     {
-        [Required] public string Identity { get; private set; }
+        [Required] public Guid ID { get; private set; }
         [Required] public CITypeDTO Type { get; private set; }
         [Required] public IDictionary<string, CIAttributeDTO> Attributes { get; private set; }
 
-        public static CIDTO Build(string CIIdentity, CITypeDTO type, IEnumerable<CIAttributeDTO> attributes)
+        public static CIDTO Build(Guid ciid, CITypeDTO type, IEnumerable<CIAttributeDTO> attributes)
         {
             return new CIDTO
             {
                 Type = type,
-                Identity = CIIdentity,
+                ID = ciid,
                 Attributes = attributes.ToDictionary(a => a.Name)
             };
         }
@@ -24,7 +25,7 @@ namespace Landscape.Base.Entity.DTO
         {
             return new CIDTO
             {
-                Identity = ci.Identity,
+                ID = ci.ID,
                 Type = CITypeDTO.Build(ci.Type),
                 Attributes = ci.MergedAttributes.Select(ma =>
                     CIAttributeDTO.Build(ma.Attribute.Name, ma.Attribute.Value.ToGeneric(), ma.Attribute.State)

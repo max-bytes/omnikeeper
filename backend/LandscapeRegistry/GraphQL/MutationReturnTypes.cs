@@ -1,5 +1,6 @@
 ﻿using GraphQL.Types;
 using Landscape.Base.Entity;
+using System;
 using System.Collections.Generic;
 
 namespace LandscapeRegistry.GraphQL
@@ -36,8 +37,8 @@ namespace LandscapeRegistry.GraphQL
 
     public class CreateCIsReturn
     {
-        public IEnumerable<string> CIIDs { get; private set; }
-        public static CreateCIsReturn Build(IEnumerable<string> ciids)
+        public IEnumerable<Guid> CIIDs { get; private set; }
+        public static CreateCIsReturn Build(IEnumerable<Guid> ciids)
         {
             return new CreateCIsReturn()
             {
@@ -49,7 +50,7 @@ namespace LandscapeRegistry.GraphQL
     {
         public CreateCIsReturnType()
         {
-            Field(x => x.CIIDs, type: typeof(ListGraphType<StringGraphType>));
+            Field("ciids", x => x.CIIDs, type: typeof(ListGraphType<GuidGraphType>));
         }
     }
 

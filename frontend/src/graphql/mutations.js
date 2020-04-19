@@ -3,7 +3,7 @@ import { Fragments } from './fragments';
 
 export const mutations = {
     INSERT_CI_ATTRIBUTE: gql`
-    mutation InsertCIAttribute($ciIdentity: String!, $name: String!, $layerID: Long!, $value: AttributeValueDTOInputType!) {
+    mutation InsertCIAttribute($ciIdentity: Guid!, $name: String!, $layerID: Long!, $value: AttributeValueDTOInputType!) {
       mutateCIs(insertAttributes: [
         {
           ci: $ciIdentity,
@@ -17,7 +17,7 @@ export const mutations = {
     }
   `,
   REMOVE_CI_ATTRIBUTE: gql`
-    mutation RemoveCIAttribute($ciIdentity: String!, $name: String!, $layerID: Long!, $includeAttributes: Boolean = false, $includeRelated: Boolean = false) {
+    mutation RemoveCIAttribute($ciIdentity: Guid!, $name: String!, $layerID: Long!, $includeAttributes: Boolean = false, $includeRelated: Boolean = false) {
       mutateCIs(removeAttributes: [
         {
           ci: $ciIdentity,
@@ -39,7 +39,7 @@ export const mutations = {
   `,
 
   INSERT_RELATION: gql`
-  mutation InsertRelation($fromCIID: String!, $toCIID: String!, $predicateID: String!, $layerID: Long!) {
+  mutation InsertRelation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: Long!) {
     mutateCIs(insertRelations: [
       {
         fromCIID: $fromCIID,
@@ -54,7 +54,7 @@ export const mutations = {
 `,
 
 REMOVE_RELATION: gql`
-mutation RemoveRelation($fromCIID: String!, $toCIID: String!, $predicateID: String!, $layerID: Long!, $includeAttributes: Boolean = false, $includeRelated: Boolean = false) {
+mutation RemoveRelation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: Long!, $includeAttributes: Boolean = false, $includeRelated: Boolean = false) {
   mutateCIs(removeRelations: [
     {
       fromCIID: $fromCIID,
@@ -77,14 +77,14 @@ ${Fragments.fullCI}
 `,
 
 CREATE_CI: gql`
-    mutation CreateCI($ciIdentity: String!, $typeID: String!) {
+    mutation CreateCI($typeID: String!) {
       createCIs(cis: [
         {
-          identity: $ciIdentity
           typeID: $typeID
         }
       ]) {
         __typename
+        ciids
       }
     }
   `,

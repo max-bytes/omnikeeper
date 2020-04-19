@@ -34,7 +34,7 @@ namespace Landscape.Base.Entity.DTO
         {
             [Required] public string Name { get; set; }
             [Required] public AttributeValueDTO Value { get; set; }
-            [Required] public string CIID { get; set; }
+            [Required] public Guid CIID { get; set; }
 
             private FragmentDTO() { }
         }

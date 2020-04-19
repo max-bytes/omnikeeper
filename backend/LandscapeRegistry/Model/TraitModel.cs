@@ -51,7 +51,7 @@ namespace LandscapeRegistry.Model
         {
             // do a precursor filtering based on required attribute names
             var requiredAttributeNames = trait.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
-            var candidateCIIDs = new List<string>();
+            var candidateCIIDs = new List<Guid>();
             var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layerSet, "temp_layerset", conn, trans);
 
             using (var command = new NpgsqlCommand(@$"
@@ -77,7 +77,7 @@ namespace LandscapeRegistry.Model
 
                 while (dr.Read())
                 {
-                    var CIID = dr.GetString(0);
+                    var CIID = dr.GetGuid(0);
                     candidateCIIDs.Add(CIID);
                 }
             }

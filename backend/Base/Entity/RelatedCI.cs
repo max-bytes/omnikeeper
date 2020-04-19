@@ -1,13 +1,15 @@
-﻿namespace Landscape.Base.Entity
+﻿using System;
+
+namespace Landscape.Base.Entity
 {
     public class RelatedCI
     {
         public Relation Relation { get; private set; }
         //public CI CI { get; private set; }
-        public string CIID { get; private set; }
+        public Guid CIID { get; private set; }
         public bool IsForward { get; private set; }
 
-        public static RelatedCI Build(Relation relation, string ciid, bool isForward)
+        public static RelatedCI Build(Relation relation, Guid ciid, bool isForward)
         {
             var r = new RelatedCI
             {

@@ -40,7 +40,7 @@ CREATE TABLE public.citype
 CREATE TABLE public.citype_assignment
 (
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
-    ci_id text NOT NULL,
+    ci_id uuid NOT NULL,
     citype_id text NOT NULL,
     "timestamp" timestamp with time zone NOT NULL,
     CONSTRAINT citype_assignment_pkey PRIMARY KEY (id)
@@ -85,8 +85,8 @@ ALTER TABLE public.changeset
 CREATE TABLE public.relation
 (
     id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
-    from_ci_id text NOT NULL,
-    to_ci_id text NOT NULL,
+    from_ci_id uuid NOT NULL,
+    to_ci_id uuid NOT NULL,
     predicate_id text NOT NULL,
     changeset_id bigint NOT NULL,
     layer_id bigint NOT NULL,
@@ -103,8 +103,7 @@ ALTER TABLE public.relation
 --
 
 CREATE TABLE public.ci (
-    internal_id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
-    id text NOT NULL,
+    id uuid NOT NULL,
     CONSTRAINT ci_pkey PRIMARY KEY (id)
 );
 
@@ -120,7 +119,7 @@ ALTER TABLE public.ci OWNER TO postgres;
 CREATE TABLE public.attribute (
     id bigint NOT NULL,
     name text NOT NULL,
-    ci_id text NOT NULL,
+    ci_id uuid NOT NULL,
     type public.attributevaluetype DEFAULT 'text'::public.attributevaluetype NOT NULL,
     value text NOT NULL,
     layer_id bigint NOT NULL,
@@ -244,11 +243,11 @@ ALTER TABLE ONLY public.predicate_wording
 
 CREATE INDEX
     ON public.attribute USING btree
-    (ci_id ASC NULLS LAST);
+    (ci_id);
     
 CREATE INDEX
     ON public.attribute USING btree
-    (ci_id COLLATE pg_catalog."default" ASC NULLS LAST, name COLLATE pg_catalog."default" ASC NULLS LAST, layer_id ASC NULLS LAST, "timestamp" DESC NULLS FIRST)
+    (ci_id, name COLLATE pg_catalog."default" ASC NULLS LAST, layer_id ASC NULLS LAST, "timestamp" DESC NULLS FIRST)
     TABLESPACE pg_default;
 
 CREATE INDEX
@@ -258,10 +257,10 @@ CREATE INDEX
 
 CREATE INDEX
     ON public.relation USING btree
-    (from_ci_id ASC NULLS LAST);
+    (from_ci_id);
 CREATE INDEX
     ON public.relation USING btree
-    (to_ci_id ASC NULLS LAST);
+    (to_ci_id);
 
 CREATE INDEX i_changeset_timestamp
     ON public.changeset USING btree
@@ -270,6 +269,5 @@ CREATE INDEX i_changeset_timestamp
 
 CREATE INDEX
     ON public.citype_assignment USING btree
-    (ci_id COLLATE pg_catalog."default" ASC NULLS LAST, "timestamp" DESC NULLS FIRST)
+    (ci_id, "timestamp" DESC NULLS FIRST)
     TABLESPACE pg_default;
-

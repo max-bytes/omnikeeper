@@ -20,12 +20,12 @@ namespace LandscapeRegistry.Model
             conn = connection;
         }
 
-        public async Task<IEnumerable<MergedCIAttribute>> GetMergedAttributes(string ciIdentity, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<IEnumerable<MergedCIAttribute>> GetMergedAttributes(Guid ciid, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
-            return await GetMergedAttributes(new string[] { ciIdentity }, includeRemoved, layers, trans, atTime);
+            return await GetMergedAttributes(new Guid[] { ciid }, includeRemoved, layers, trans, atTime);
         }
 
-        public async Task<IEnumerable<MergedCIAttribute>> GetMergedAttributes(IEnumerable<string> ciIdentities, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<IEnumerable<MergedCIAttribute>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
             var ret = new List<MergedCIAttribute>();
 
@@ -52,7 +52,7 @@ namespace LandscapeRegistry.Model
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
             ", conn, trans))
             {
-                command.Parameters.AddWithValue("ci_identities", ciIdentities.ToArray());
+                command.Parameters.AddWithValue("ci_identities", ciids.ToArray());
                 var excludedStates = (includeRemoved) ? new AttributeState[] { } : new AttributeState[] { AttributeState.Removed };
                 command.Parameters.AddWithValue("excluded_states", excludedStates);
                 command.Parameters.AddWithValue("time_threshold", atTime);
@@ -63,7 +63,7 @@ namespace LandscapeRegistry.Model
                 {
                     var id = dr.GetInt64(0);
                     var name = dr.GetString(1);
-                    var CIID = dr.GetString(2);
+                    var CIID = dr.GetGuid(2);
                     var type = dr.GetFieldValue<AttributeValueType>(3);
                     var value = dr.GetString(4);
                     var av = AttributeValueBuilder.BuildFromDatabase(value, type);
@@ -99,7 +99,7 @@ namespace LandscapeRegistry.Model
             {
                 var id = dr.GetInt64(0);
                 var name = dr.GetString(1);
-                var CIID = dr.GetString(2);
+                var CIID = dr.GetGuid(2);
                 var type = dr.GetFieldValue<AttributeValueType>(3);
                 var value = dr.GetString(4);
                 var av = AttributeValueBuilder.BuildFromDatabase(value, type);
@@ -115,7 +115,7 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime, string ciid = null)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime, Guid? ciid = null)
         {
             var ret = new List<CIAttribute>();
 
@@ -134,14 +134,14 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("like_name", like);
             command.Parameters.AddWithValue("time_threshold", atTime);
             if (ciid != null)
-                command.Parameters.AddWithValue("ci_id", ciid);
+                command.Parameters.AddWithValue("ci_id", ciid.Value);
 
             using var dr = await command.ExecuteReaderAsync();
             while (dr.Read())
             {
                 var id = dr.GetInt64(0);
                 var name = dr.GetString(1);
-                var CIID = dr.GetString(2);
+                var CIID = dr.GetGuid(2);
                 var type = dr.GetFieldValue<AttributeValueType>(3);
                 var value = dr.GetString(4);
                 var av = AttributeValueBuilder.BuildFromDatabase(value, type);
@@ -157,7 +157,7 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        private async Task<CIAttribute> GetAttribute(string name, long layerID, string ciid, NpgsqlTransaction trans, DateTimeOffset atTime)
+        private async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
             using var command = new NpgsqlCommand(@"
             select id, ci_id, type, value, state, changeset_id FROM attribute 
@@ -176,7 +176,7 @@ namespace LandscapeRegistry.Model
                 return null;
 
             var id = dr.GetInt64(0);
-            var CIID = dr.GetString(1);
+            var CIID = dr.GetGuid(1);
             var type = dr.GetFieldValue<AttributeValueType>(2);
             var value = dr.GetString(3);
             var av = AttributeValueBuilder.BuildFromDatabase(value, type);
@@ -186,7 +186,7 @@ namespace LandscapeRegistry.Model
             return att;
         }
 
-        public async Task<CIAttribute> RemoveAttribute(string name, long layerID, string ciid, long changesetID, NpgsqlTransaction trans)
+        public async Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans)
         {
             var currentAttribute = await GetAttribute(name, layerID, ciid, trans, DateTimeOffset.Now);
 
@@ -221,7 +221,7 @@ namespace LandscapeRegistry.Model
         }
 
 
-        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, string ciid, long changesetID, NpgsqlTransaction trans)
+        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans)
         {
             var currentAttribute = await GetAttribute(name, layerID, ciid, trans, DateTimeOffset.Now);
 

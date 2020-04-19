@@ -1,6 +1,7 @@
 
 using Landscape.Base.Entity.DTO;
 using LandscapeRegistry.Entity.AttributeValues;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -30,17 +31,17 @@ namespace Landscape.Base.Entity
     {
         public long ID { get; private set; }
         public string Name { get; private set; }
-        public string CIID { get; private set; }
+        public Guid CIID { get; private set; }
         public IAttributeValue Value { get; private set; }
         public AttributeState State { get; private set; }
         public long ChangesetID { get; private set; }
 
         // information hash: 
         public string InformationHash => CreateInformationHash(Name, CIID);
-        public static string CreateInformationHash(string name, string ciid) => name + "_" + ciid;
+        public static string CreateInformationHash(string name, Guid ciid) => name + "_" + ciid;
 
 
-        public static CIAttribute Build(long id, string name, string CIID, IAttributeValue value, AttributeState state, long changesetID)
+        public static CIAttribute Build(long id, string name, Guid CIID, IAttributeValue value, AttributeState state, long changesetID)
         {
             return new CIAttribute
             {
@@ -57,7 +58,7 @@ namespace Landscape.Base.Entity
 
     public interface IBulkCIAttributeData<F>
     {
-        string GetCIID(F f);
+        Guid GetCIID(F f);
         string NamePrefix { get; }
         long LayerID { get; }
         public F[] Fragments { get; }
@@ -72,12 +73,12 @@ namespace Landscape.Base.Entity
         {
             public string Name { get; private set; }
             public IAttributeValue Value { get; private set; }
-            public string CIID { get; private set; }
+            public Guid CIID { get; private set; }
 
             public static string StripPrefix(string fullName, string prefix) => fullName.Replace($"{prefix}.", "");
 
 
-            public static Fragment Build(string name, IAttributeValue value, string ciid)
+            public static Fragment Build(string name, IAttributeValue value, Guid ciid)
             {
                 return new Fragment()
                 {
@@ -92,7 +93,7 @@ namespace Landscape.Base.Entity
         public long LayerID { get; private set; }
         public Fragment[] Fragments { get; private set; }
 
-        public string GetCIID(Fragment f) => f.CIID;
+        public Guid GetCIID(Fragment f) => f.CIID;
         public string GetFullName(Fragment fragment) => $"{NamePrefix}.{fragment.Name}";
         public IAttributeValue GetValue(Fragment f) => f.Value;
 
@@ -133,14 +134,14 @@ namespace Landscape.Base.Entity
 
         public string NamePrefix { get; private set; }
         public long LayerID { get; private set; }
-        public string CIID { get; private set; }
+        public Guid CIID { get; private set; }
         public Fragment[] Fragments { get; private set; }
 
-        public string GetCIID(Fragment f) => CIID;
+        public Guid GetCIID(Fragment f) => CIID;
         public string GetFullName(Fragment fragment) => $"{NamePrefix}.{fragment.Name}";
         public IAttributeValue GetValue(Fragment f) => f.Value;
 
-        public static BulkCIAttributeDataCIScope Build(string namePrefix, long layerID, string ciid, IEnumerable<Fragment> fragments)
+        public static BulkCIAttributeDataCIScope Build(string namePrefix, long layerID, Guid ciid, IEnumerable<Fragment> fragments)
         {
             return new BulkCIAttributeDataCIScope()
             {

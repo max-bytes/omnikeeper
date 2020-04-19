@@ -25,7 +25,7 @@ namespace LandscapeRegistry.GraphQL
     {
         public MergedCIType(RelationModel relationModel, TemplateModel templateModel, TraitModel traitModel)
         {
-            Field(x => x.Identity);
+            Field("id", x => x.ID);
             Field("layerhash", x => x.Layers.LayerHash);
             Field(x => x.AtTime);
             Field(x => x.Type, type: typeof(CITypeType));
@@ -42,7 +42,7 @@ namespace LandscapeRegistry.GraphQL
                 if (layerset == null)
                     throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!");
 
-                var CIIdentity = context.Source.Identity;
+                var CIIdentity = context.Source.ID;
                 var relations = await relationModel.GetMergedRelations(CIIdentity, false, layerset, IncludeRelationDirections.Both, userContext.Transaction, userContext.TimeThreshold);
 
                 var relatedCIs = new List<RelatedCI>();

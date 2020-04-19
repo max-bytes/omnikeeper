@@ -1,10 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Landscape.Base.Entity.DTO
 {
     public class RelationDTO
     {
-        [Required] public string FromCIID { get; private set; }
+        [Required] public Guid FromCIID { get; private set; }
         [Required] public CIDTO ToCI { get; private set; }
         [Required] public string PredicateID { get => Predicate.ID; }
         [Required] public PredicateDTO Predicate { get; private set; }
