@@ -31,7 +31,7 @@ namespace LandscapeRegistry.Controllers
         [HttpGet("getAllCITypes")]
         public async Task<ActionResult<IEnumerable<CITypeDTO>>> GetAllCITypes()
         {
-            return Ok((await ciModel.GetCITypes(null)).Select(t => CITypeDTO.Build(t)));
+            return Ok((await ciModel.GetCITypes(null, null)).Select(t => CITypeDTO.Build(t)));
         }
 
         /// <summary>

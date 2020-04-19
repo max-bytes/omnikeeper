@@ -8,7 +8,7 @@ namespace Landscape.Base.Model
 {
     public interface ICIModel
     {
-        Task<CIType> GetCITypeByID(string typeID, NpgsqlTransaction trans);
+        Task<CIType> GetCITypeByID(string typeID, NpgsqlTransaction trans, DateTimeOffset? atTime);
         Task<CIType> GetTypeOfCI(string ciid, NpgsqlTransaction trans, DateTimeOffset? atTime);
         Task<MergedCI> GetMergedCI(string ciIdentity, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime);
         Task<CI> GetCI(string ciid, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime);

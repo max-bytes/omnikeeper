@@ -46,7 +46,7 @@ namespace Tests.Integration.Model
             using (var trans = conn.BeginTransaction())
             {
                 var changesetID = await changesetModel.CreateChangeset(user.ID, trans);
-                var ciType1 = await model.CreateCIType("T1", trans);
+                var ciType1 = await model.InsertCIType("T1", trans);
                 ciid1 = await model.CreateCIWithType("H123", ciType1.ID, trans);
                 ciid2 = await model.CreateCIWithType("H456", ciType1.ID, trans);
                 ciid3 = await model.CreateCIWithType("H789", ciType1.ID, trans);
@@ -187,8 +187,8 @@ namespace Tests.Integration.Model
             using (var trans = conn.BeginTransaction())
             {
                 // test setting and getting of citype
-                var ciType1 = await model.CreateCIType("T1", trans);
-                Assert.AreEqual("T1", (await model.GetCITypeByID("T1", trans)).ID);
+                var ciType1 = await model.InsertCIType("T1", trans);
+                Assert.AreEqual("T1", (await model.GetCITypeByID("T1", trans, null)).ID);
 
                 // test CI creation
                 var ciid1 = await model.CreateCIWithType("H123", ciType1.ID, trans);
@@ -207,7 +207,7 @@ namespace Tests.Integration.Model
             using (var trans = conn.BeginTransaction())
             {
                 // test overriding of type
-                var ciTypeID2 = await model.CreateCIType("T2", trans);
+                var ciTypeID2 = await model.InsertCIType("T2", trans);
                 await model.UpdateCI("H123", "T2", trans);
                 var ciType = await model.GetTypeOfCI("H123", trans, null);
                 Assert.AreEqual("T2", ciType.ID);

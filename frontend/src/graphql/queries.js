@@ -19,6 +19,7 @@ export const queries = {
         query citypes {
             citypes {
                 id
+                state
             }
         }
     `,

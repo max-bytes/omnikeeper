@@ -40,7 +40,7 @@ namespace LandscapeRegistry.Model
                     },
                     new List<TraitRelation>() {
                         TraitRelation.Build("ansible_groups",
-                            RelationTemplate.Build(predicates["has_ansible_group"], new CIType[] { await ciModel.GetCITypeByID("Ansible Host Group", trans) }, 1, null)
+                            RelationTemplate.Build(predicates["has_ansible_group"], new CIType[] { await ciModel.GetCITypeByID("Ansible Host Group", trans, null) }, 1, null)
                         )
                     })
                 };

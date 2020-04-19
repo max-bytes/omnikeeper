@@ -169,6 +169,24 @@ namespace LandscapeRegistry.GraphQL
 
                   return newPredicate;
               });
+
+            FieldAsync<CITypeType>("upsertCIType",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<UpsertCITypeInputType>> { Name = "citype" }
+              ),
+              resolve: async context =>
+              {
+                  var ciType = context.GetArgument<UpsertCITypeInput>("citype");
+
+                  var userContext = context.UserContext as LandscapeUserContext;
+                  using var transaction = await conn.BeginTransactionAsync();
+                  userContext.Transaction = transaction;
+
+                  var newCIType = await ciModel.UpsertCIType(ciType.ID, ciType.State, transaction);
+                  await transaction.CommitAsync();
+
+                  return newCIType;
+              });
         }
     }
 }

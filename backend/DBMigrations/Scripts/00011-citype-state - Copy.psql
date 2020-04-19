@@ -1,0 +1,12 @@
+﻿
+CREATE TABLE public.citype_state
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    citype_id text NOT NULL,
+    state public.anchorstate DEFAULT 'active'::public.anchorstate NOT NULL,
+    "timestamp" timestamp with time zone NOT NULL,
+    CONSTRAINT citype_state_pkey PRIMARY KEY (id)
+);
+
+ALTER TABLE ONLY public.citype_state
+    ADD CONSTRAINT f_citype_state FOREIGN KEY (citype_id) REFERENCES public.citype(id) ON UPDATE CASCADE ON DELETE CASCADE;

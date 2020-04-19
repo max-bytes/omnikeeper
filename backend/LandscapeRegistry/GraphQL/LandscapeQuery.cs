@@ -102,7 +102,7 @@ namespace LandscapeRegistry.GraphQL
                     var userContext = context.UserContext as LandscapeUserContext;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
 
-                    return await ciModel.GetCITypes(null);
+                    return await ciModel.GetCITypes(null, userContext.TimeThreshold);
                 });
             FieldAsync<ListGraphType<LayerType>>("layers",
                 resolve: async context =>

@@ -17,6 +17,7 @@ namespace LandscapeRegistry.GraphQL
         public CITypeType()
         {
             Field("id", x => x.ID);
+            Field(x => x.State, type: typeof(AnchorStateType));
         }
     }
 

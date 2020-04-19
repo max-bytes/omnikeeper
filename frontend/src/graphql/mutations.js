@@ -116,6 +116,15 @@ CREATE_CI: gql`
   ${Fragments.fullPredicate}
 `,
 
+  UPSERT_CITYPE: gql`
+  mutation UpsertCIType($citype: UpsertCITypeInputType!) {
+    upsertCIType(citype: $citype) {
+        id
+        state
+    }
+  }
+  `,
+
   TOGGLE_LAYER_VISIBILITY: gql`
   mutation ToggleLayerVisibility($id: Int!) {
     toggleLayerVisibility(id: $id) @client

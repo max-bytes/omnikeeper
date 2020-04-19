@@ -147,4 +147,18 @@ namespace LandscapeRegistry.GraphQL
             Field(x => x.State, type: typeof(AnchorStateType));
         }
     }
+
+    public class UpsertCITypeInput
+    {
+        public string ID { get; private set; }
+        public AnchorState State { get; private set; }
+    }
+    public class UpsertCITypeInputType : InputObjectGraphType<UpsertCITypeInput>
+    {
+        public UpsertCITypeInputType()
+        {
+            Field("id", x => x.ID);
+            Field(x => x.State, type: typeof(AnchorStateType));
+        }
+    }
 }

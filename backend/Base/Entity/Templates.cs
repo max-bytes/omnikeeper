@@ -21,7 +21,7 @@ namespace Landscape.Base.Entity
             {
                 templates = new List<Template>()
                 {
-                    Template.Build(await ciModel.GetCITypeByID("Application", trans),
+                    Template.Build(await ciModel.GetCITypeByID("Application", trans, null),
                             new List<CIAttributeTemplate>() {
                                 // TODO
                                 CIAttributeTemplate.BuildFromParams("name", "This is a description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
@@ -29,7 +29,7 @@ namespace Landscape.Base.Entity
                             new List<RelationTemplate>() {},
                             new List<Trait>() {}
                     ),
-                    Template.Build(await ciModel.GetCITypeByID("Naemon Instance", trans),
+                    Template.Build(await ciModel.GetCITypeByID("Naemon Instance", trans, null),
                             new List<CIAttributeTemplate>() {
                                 // TODO
                                 CIAttributeTemplate.BuildFromParams("name", "This is a description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
@@ -40,7 +40,7 @@ namespace Landscape.Base.Entity
                                 traits.traits["ansible_can_deploy_to_it"]
                             }
                     ),
-                    Template.Build(await ciModel.GetCITypeByID("Ansible Host Group", trans),
+                    Template.Build(await ciModel.GetCITypeByID("Ansible Host Group", trans, null),
                             new List<CIAttributeTemplate>() {
                                 CIAttributeTemplate.BuildFromParams("automation.ansible_group_name", "This is a description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                             },

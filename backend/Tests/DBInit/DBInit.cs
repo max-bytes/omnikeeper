@@ -96,10 +96,10 @@ namespace Tests.DBInit
             using (var trans = conn.BeginTransaction())
             {
                 foreach (var ciType in regularTypeIDs)
-                    await ciModel.CreateCIType(ciType, trans);
-                await ciModel.CreateCIType("Monitoring Check Module", trans);
-                await ciModel.CreateCIType("Naemon Instance", trans);
-                await ciModel.CreateCIType("Ansible Host Group", trans);
+                    await ciModel.InsertCIType(ciType, trans);
+                await ciModel.InsertCIType("Monitoring Check Module", trans);
+                await ciModel.InsertCIType("Naemon Instance", trans);
+                await ciModel.InsertCIType("Ansible Host Group", trans);
                 trans.Commit();
             }
 

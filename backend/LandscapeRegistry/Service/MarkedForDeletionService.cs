@@ -47,6 +47,8 @@ namespace LandscapeRegistry.Service
                 }
             }
 
+            // TODO: delete marked citypes
+
             return true;
         }
     }

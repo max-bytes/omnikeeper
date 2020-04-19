@@ -65,7 +65,7 @@ namespace Tests.Integration.Model
             var layerModel = new LayerModel(conn);
             var traitModel = new TraitModel(ciModel, relationModel, new MockedTraitsProvider(), conn);
             var user = await DBSetup.SetupUser(userModel);
-            await ciModel.CreateCIType("type1", null);
+            await ciModel.InsertCIType("type1", null);
             var ciid1 = await ciModel.CreateCIWithType("H123", "type1", null);
             var ciid2 = await ciModel.CreateCIWithType("H456", "type1", null);
             var ciid3 = await ciModel.CreateCIWithType("H789", "type1", null);
