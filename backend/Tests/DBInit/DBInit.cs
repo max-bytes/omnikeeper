@@ -161,12 +161,17 @@ namespace Tests.DBInit
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 ciNaemon01 = await ciModel.CreateCIWithType("Naemon Instance", null);
                 ciNaemon02 = await ciModel.CreateCIWithType("Naemon Instance", null);
+                await attributeModel.InsertAttribute("__name", AttributeValueTextScalar.Build("Naemon Instance 01"), cmdbLayerID, ciNaemon01, changeset.ID, trans);
+                await attributeModel.InsertAttribute("__name", AttributeValueTextScalar.Build("Naemon Instance 02"), cmdbLayerID, ciNaemon02, changeset.ID, trans);
                 await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("1.2.3.4"), cmdbLayerID, ciNaemon01, changeset.ID, trans);
                 await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("4.5.6.7"), cmdbLayerID, ciNaemon02, changeset.ID, trans);
 
                 ciMonModuleHost = await ciModel.CreateCIWithType("Monitoring Check Module", null);
                 ciMonModuleHostWindows = await ciModel.CreateCIWithType("Monitoring Check Module", null);
                 ciMonModuleHostLinux = await ciModel.CreateCIWithType("Monitoring Check Module", null);
+                await attributeModel.InsertAttribute("__name", AttributeValueTextScalar.Build("Monitoring Check Module Host"), monitoringDefinitionsLayerID, ciMonModuleHost, changeset.ID, trans);
+                await attributeModel.InsertAttribute("__name", AttributeValueTextScalar.Build("Monitoring Check Module Host Windows"), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset.ID, trans);
+                await attributeModel.InsertAttribute("__name", AttributeValueTextScalar.Build("Monitoring Check Module Host Linux"), monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset.ID, trans);
                 await attributeModel.InsertAttribute("monitoring.commands.check_host_cmd", AttributeValueTextScalar.Build("check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, ciMonModuleHost, changeset.ID, trans);
                 await attributeModel.InsertAttribute("monitoring.commands.check_windows_host_cmd", AttributeValueTextScalar.Build("check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset.ID, trans);
                 await attributeModel.InsertAttribute("monitoring.commands.check_linux_host_cmd", AttributeValueTextScalar.Build("check_linux_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset.ID, trans);
@@ -201,6 +206,8 @@ namespace Tests.DBInit
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 ciAutomationAnsibleHostGroupTest = await ciModel.CreateCIWithType("Ansible Host Group", null);
                 ciAutomationAnsibleHostGroupTest2 = await ciModel.CreateCIWithType("Ansible Host Group", null);
+                await attributeModel.InsertAttribute("__name", AttributeValueTextScalar.Build("Ansible Host Group Test"), automationLayerID, ciAutomationAnsibleHostGroupTest, changeset.ID, trans);
+                await attributeModel.InsertAttribute("__name", AttributeValueTextScalar.Build("Ansible Host Group Test2"), automationLayerID, ciAutomationAnsibleHostGroupTest2, changeset.ID, trans);
                 await attributeModel.InsertAttribute("automation.ansible_group_name", AttributeValueTextScalar.Build("test_group"), automationLayerID, ciAutomationAnsibleHostGroupTest, changeset.ID, trans);
                 await attributeModel.InsertAttribute("automation.ansible_group_name", AttributeValueTextScalar.Build("test_group2"), automationLayerID, ciAutomationAnsibleHostGroupTest2, changeset.ID, trans);
                 trans.Commit();

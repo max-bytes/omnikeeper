@@ -1,6 +1,7 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using LandscapeRegistry.Entity.AttributeValues;
+using LandscapeRegistry.Utils;
 using Npgsql;
 using NpgsqlTypes;
 using System;
@@ -20,14 +21,15 @@ namespace LandscapeRegistry.Model
             conn = connection;
         }
 
-        public async Task<IEnumerable<MergedCIAttribute>> GetMergedAttributes(Guid ciid, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<IDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
-            return await GetMergedAttributes(new Guid[] { ciid }, includeRemoved, layers, trans, atTime);
+            var d = await GetMergedAttributes(new Guid[] { ciid }, includeRemoved, layers, trans, atTime);
+            return d.GetValueOrDefault(ciid, () => new Dictionary<string, MergedCIAttribute>());
         }
 
-        public async Task<IEnumerable<MergedCIAttribute>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
-            var ret = new List<MergedCIAttribute>();
+            var ret = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
 
             var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn, trans);
 
@@ -74,7 +76,9 @@ namespace LandscapeRegistry.Model
 
                     var att = MergedCIAttribute.Build(CIAttribute.Build(id, name, CIID, av, state, changesetID), layerStack);
 
-                    ret.Add(att);
+                    if (!ret.ContainsKey(CIID))
+                        ret.Add(CIID, new Dictionary<string, MergedCIAttribute>());
+                    ret[CIID].Add(name, att);
                 }
             }
             return ret;

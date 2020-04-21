@@ -37,7 +37,7 @@ function CI(props) {
   ]
 
   return (<div style={{margin: "10px 10px"}}>
-    <h3>CI {props.ci.id} - type: {props.ci.type.id}</h3>
+    <h3>CI "{props.ci.name ?? "[UNNAMED]"}" ({props.ci.id}) - type: {props.ci.type.id}</h3>
     <TemplateErrors templateErrors={props.ci.templateErrors} 
       onCreateNewAttribute={(attributeName, attributeType) => {
         setCreateNewAttribute({name: attributeName, type: attributeType, value: '', layer: visibleAndWritableLayers[0]}); // TODO: correct layer
@@ -69,6 +69,7 @@ CI.propTypes = {
   ).isRequired,
   ci: PropTypes.shape({
     id: PropTypes.string.isRequired,
+    name: PropTypes.string,
     type: PropTypes.shape({
       id: PropTypes.string.isRequired
     }).isRequired,

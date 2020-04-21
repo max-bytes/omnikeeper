@@ -79,7 +79,7 @@ namespace Tests.Integration.Model
 
                 var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset, trans, DateTimeOffset.Now);
                 Assert.AreEqual(1, a1.Count());
-                var aa1 = a1.First();
+                var aa1 = a1.First().Value;
                 Assert.AreEqual(ciid1, aa1.Attribute.CIID);
                 //Assert.AreEqual(layerID1, aa1.Attribute.LayerID);
                 Assert.AreEqual("a1", aa1.Attribute.Name);
@@ -100,7 +100,7 @@ namespace Tests.Integration.Model
                 Assert.AreEqual(0, a2.Count());
                 var a3 = await attributeModel.GetMergedAttributes(ciid1, true, layerset, trans, DateTimeOffset.Now);
                 Assert.AreEqual(1, a3.Count());
-                var aa3 = a3.First();
+                var aa3 = a3.First().Value;
                 Assert.AreEqual(AttributeState.Removed, aa3.Attribute.State);
 
                 trans.Commit();
@@ -114,7 +114,7 @@ namespace Tests.Integration.Model
 
                 var a4 = await attributeModel.GetMergedAttributes(ciid1, false, layerset, trans, DateTimeOffset.Now);
                 Assert.AreEqual(1, a4.Count());
-                var aa4 = a4.First();
+                var aa4 = a4.First().Value;
                 Assert.AreEqual(AttributeState.Renewed, aa4.Attribute.State);
                 Assert.AreEqual(AttributeValueTextScalar.Build("text3"), aa4.Attribute.Value);
             }
@@ -142,7 +142,7 @@ namespace Tests.Integration.Model
                 await attributeModel.InsertAttribute("a1", AttributeValueTextArray.Build(new string[] { "a", "b", "c" }), layer1.ID, ciid1, changeset.ID, trans);
                 var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset1, trans, DateTimeOffset.Now);
                 Assert.AreEqual(1, a1.Count());
-                Assert.AreEqual(AttributeValueTextArray.Build(new string[] { "a", "b", "c" }), a1.First().Attribute.Value);
+                Assert.AreEqual(AttributeValueTextArray.Build(new string[] { "a", "b", "c" }), a1.First().Value.Attribute.Value);
             }
 
             using (var trans = conn.BeginTransaction())
@@ -151,7 +151,7 @@ namespace Tests.Integration.Model
                 await attributeModel.InsertAttribute("a1", AttributeValueTextArray.Build(new string[] { "a,", "b,b", ",c", "\\d", "\\,e" }), layer1.ID, ciid1, changeset.ID, trans);
                 var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset1, trans, DateTimeOffset.Now);
                 Assert.AreEqual(1, a1.Count());
-                Assert.AreEqual(AttributeValueTextArray.Build(new string[] { "a,", "b,b", ",c", "\\d", "\\,e" }), a1.First().Attribute.Value);
+                Assert.AreEqual(AttributeValueTextArray.Build(new string[] { "a,", "b,b", ",c", "\\d", "\\,e" }), a1.First().Value.Attribute.Value);
             }
 
             using (var trans = conn.BeginTransaction())
@@ -160,7 +160,7 @@ namespace Tests.Integration.Model
                 await attributeModel.InsertAttribute("a1", AttributeValueIntegerArray.Build(new long[] { 1, 2, 3, 4 }), layer1.ID, ciid1, changeset.ID, trans);
                 var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset1, trans, DateTimeOffset.Now);
                 Assert.AreEqual(1, a1.Count());
-                Assert.AreEqual(AttributeValueIntegerArray.Build(new long[] { 1, 2, 3, 4 }), a1.First().Attribute.Value);
+                Assert.AreEqual(AttributeValueIntegerArray.Build(new long[] { 1, 2, 3, 4 }), a1.First().Value.Attribute.Value);
             }
         }
 
@@ -188,7 +188,7 @@ namespace Tests.Integration.Model
 
             var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset1, trans, DateTimeOffset.Now);
             Assert.AreEqual(1, a1.Count());
-            Assert.AreEqual(AttributeState.New, a1.First().Attribute.State); // second insertAttribute() must not have changed the current entry
+            Assert.AreEqual(AttributeState.New, a1.First().Value.Attribute.State); // second insertAttribute() must not have changed the current entry
         }
 
         [Test]

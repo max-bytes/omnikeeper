@@ -120,19 +120,19 @@ namespace Tests.Integration.Model
 
             var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset1, trans, DateTimeOffset.Now);
             Assert.AreEqual(1, a1.Count());
-            Assert.AreEqual(AttributeValueTextScalar.Build("textL1"), a1.First().Attribute.Value);
+            Assert.AreEqual(AttributeValueTextScalar.Build("textL1"), a1.First().Value.Attribute.Value);
 
             var a2 = await attributeModel.GetMergedAttributes(ciid1, false, layerset2, trans, DateTimeOffset.Now);
             Assert.AreEqual(1, a2.Count());
-            Assert.AreEqual(AttributeValueTextScalar.Build("textL2"), a2.First().Attribute.Value);
+            Assert.AreEqual(AttributeValueTextScalar.Build("textL2"), a2.First().Value.Attribute.Value);
 
             var a3 = await attributeModel.GetMergedAttributes(ciid1, false, layerset3, trans, DateTimeOffset.Now);
             Assert.AreEqual(1, a3.Count());
-            Assert.AreEqual(AttributeValueTextScalar.Build("textL1"), a3.First().Attribute.Value);
+            Assert.AreEqual(AttributeValueTextScalar.Build("textL1"), a3.First().Value.Attribute.Value);
 
             var a4 = await attributeModel.GetMergedAttributes(ciid1, false, layerset4, trans, DateTimeOffset.Now);
             Assert.AreEqual(1, a4.Count());
-            Assert.AreEqual(AttributeValueTextScalar.Build("textL2"), a4.First().Attribute.Value);
+            Assert.AreEqual(AttributeValueTextScalar.Build("textL2"), a4.First().Value.Attribute.Value);
         }
 
         [Test]
@@ -171,7 +171,7 @@ namespace Tests.Integration.Model
 
             var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset1, null, DateTimeOffset.Now);
             Assert.AreEqual(1, a1.Count()); // layerID1 shines through deleted
-            Assert.AreEqual(AttributeValueTextScalar.Build("textL1"), a1.First().Attribute.Value);
+            Assert.AreEqual(AttributeValueTextScalar.Build("textL1"), a1.First().Value.Attribute.Value);
         }
 
 

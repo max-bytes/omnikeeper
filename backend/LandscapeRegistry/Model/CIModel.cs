@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using LandscapeRegistry.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,8 @@ namespace LandscapeRegistry.Model
         private readonly NpgsqlConnection conn;
         private readonly IAttributeModel attributeModel;
         private static readonly AnchorState DefaultState = AnchorState.Active;
+
+        private static readonly string NameAttribute = "__name";
 
         public CIModel(IAttributeModel attributeModel, NpgsqlConnection connection)
         {
@@ -50,18 +53,31 @@ namespace LandscapeRegistry.Model
             return current;
         }
 
+        private string GetNameFromAttributes(IDictionary<string, MergedCIAttribute> attributes)
+        {
+            var nameA = attributes.GetValueOrDefault(NameAttribute, (MergedCIAttribute)null);
+            return nameA?.Attribute.Value.Value2String(); // TODO
+        }
+        private string GetNameFromAttributes(IEnumerable<CIAttribute> attributes)
+        {
+            var nameA = attributes.FirstOrDefault(a => a.Name == NameAttribute);
+            return nameA?.Value.Value2String(); // TODO
+        }
+
         public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
             var type = await GetTypeOfCI(ciid, trans, atTime);
             var attributes = await attributeModel.GetMergedAttributes(ciid, false, layers, trans, atTime);
-            return MergedCI.Build(ciid, type, layers, atTime, attributes);
+            var name = GetNameFromAttributes(attributes);
+            return MergedCI.Build(ciid, name, type, layers, atTime, attributes);
         }
 
         public async Task<CI> GetCI(Guid ciid, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
             var type = await GetTypeOfCI(ciid, trans, atTime);
             var attributes = await attributeModel.GetAttributes(new SingleCIIDAttributeSelection(ciid), false, layerID, trans, atTime);
-            return CI.Build(ciid, type, layerID, atTime, attributes);
+            var name = GetNameFromAttributes(attributes);
+            return CI.Build(ciid, name, type, layerID, atTime, attributes);
         }
 
         public async Task<IEnumerable<CI>> GetCIs(long layerID, bool includeEmptyCIs, NpgsqlTransaction trans, DateTimeOffset atTime)
@@ -75,7 +91,11 @@ namespace LandscapeRegistry.Model
                 groupedAttributes = groupedAttributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
             }
             var ciTypes = await GetTypeOfCIs(groupedAttributes.Keys, trans, atTime);
-            var t = groupedAttributes.Select(ga => CI.Build(ga.Key, ciTypes[ga.Key], layerID, atTime, ga.Value));
+            var t = groupedAttributes.Select(ga => {
+                var att = ga.Value;
+                var name = GetNameFromAttributes(att);
+                return CI.Build(ga.Key, name, ciTypes[ga.Key], layerID, atTime, att);
+            });
             return t;
         }
 
@@ -203,19 +223,21 @@ namespace LandscapeRegistry.Model
             if (CIIDs == null) CIIDs = await GetCIIDs(trans);
             var attributes = await attributeModel.GetMergedAttributes(CIIDs, false, layers, trans, atTime);
 
-            var groupedAttributes = attributes.GroupBy(a => a.Attribute.CIID).ToDictionary(a => a.Key, a => a.ToList());
+            //var groupedAttributes = attributes.GroupBy(a => a.Attribute.CIID).ToDictionary(a => a.Key, a => a.ToList());
 
             if (includeEmptyCIs)
             {
-                var emptyCIs = CIIDs.Except(groupedAttributes.Select(a => a.Key)).ToDictionary(a => a, a => new List<MergedCIAttribute>());
-                groupedAttributes = groupedAttributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
+                IDictionary<Guid, IDictionary<string, MergedCIAttribute>> emptyCIs = CIIDs.Except(attributes.Keys).ToDictionary(a => a, a => (IDictionary<string, MergedCIAttribute>)new Dictionary<string, MergedCIAttribute>());
+                attributes = attributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
             }
 
             var ret = new List<MergedCI>();
-            var ciTypes = await GetTypeOfCIs(groupedAttributes.Keys, trans, atTime);
-            foreach (var ga in groupedAttributes)
+            var ciTypes = await GetTypeOfCIs(attributes.Keys, trans, atTime);
+            foreach (var ga in attributes)
             {
-                ret.Add(MergedCI.Build(ga.Key, ciTypes[ga.Key], layers, atTime, ga.Value));
+                var att = ga.Value;
+                var name = GetNameFromAttributes(att);
+                ret.Add(MergedCI.Build(ga.Key, name, ciTypes[ga.Key], layers, atTime, att));
             }
             return ret;
         }

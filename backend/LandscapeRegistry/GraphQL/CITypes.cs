@@ -26,6 +26,7 @@ namespace LandscapeRegistry.GraphQL
         public MergedCIType(RelationModel relationModel, TemplateModel templateModel, TraitModel traitModel)
         {
             Field("id", x => x.ID);
+            Field("name", x => x.Name, nullable: true);
             Field("layerhash", x => x.Layers.LayerHash);
             Field(x => x.AtTime);
             Field(x => x.Type, type: typeof(CITypeType));
