@@ -38,19 +38,82 @@ namespace Landscape.Base.Entity
         }
     }
 
-    public class BulkRelationData
+    public interface IBulkRelationData<F>
     {
+        public long LayerID { get; }
+        public F[] Fragments { get; }
+
+        string GetPredicateID(F fragment);
+        Guid GetFromCIID(F fragment);
+        Guid GetToCIID(F fragment);
+    }
+
+    public class BulkRelationDataPredicateScope : IBulkRelationData<BulkRelationDataPredicateScope.Fragment>
+    {
+        public class Fragment
+        {
+            public Guid From { get; private set; }
+            public Guid To { get; private set; }
+
+            public static Fragment Build(Guid from, Guid to)
+            {
+                return new Fragment()
+                {
+                    From = from,
+                    To = to
+                };
+            }
+        }
+
         public string PredicateID { get; private set; }
         public long LayerID { get; private set; }
-        public (Guid, Guid)[] FromToCIIDPairs { get; private set; } // TODO: create and refactor into BulkRelationDataFragment
+        public Fragment[] Fragments { get; private set; }
+        public string GetPredicateID(Fragment fragment) => PredicateID;
+        public Guid GetFromCIID(Fragment fragment) => fragment.From;
+        public Guid GetToCIID(Fragment fragment) => fragment.To;
 
-        public static BulkRelationData Build(string predicateID, long layerID, (Guid, Guid)[] fromToCIIDPairs)
+        public static BulkRelationDataPredicateScope Build(string predicateID, long layerID, Fragment[] fragments)
         {
-            return new BulkRelationData()
+            return new BulkRelationDataPredicateScope()
             {
                 PredicateID = predicateID,
                 LayerID = layerID,
-                FromToCIIDPairs = fromToCIIDPairs
+                Fragments = fragments
+            };
+        }
+    }
+
+    public class BulkRelationDataLayerScope : IBulkRelationData<BulkRelationDataLayerScope.Fragment>
+    {
+        public class Fragment
+        {
+            public Guid From { get; private set; }
+            public Guid To { get; private set; }
+            public string PredicateID { get; private set; }
+
+            public static Fragment Build(Guid from, Guid to, string predicateID)
+            {
+                return new Fragment()
+                {
+                    From = from,
+                    To = to,
+                    PredicateID = predicateID
+                };
+            }
+        }
+
+        public long LayerID { get; private set; }
+        public Fragment[] Fragments { get; private set; }
+        public string GetPredicateID(Fragment fragment) => fragment.PredicateID;
+        public Guid GetFromCIID(Fragment fragment) => fragment.From;
+        public Guid GetToCIID(Fragment fragment) => fragment.To;
+
+        public static BulkRelationDataLayerScope Build(long layerID, Fragment[] fragments)
+        {
+            return new BulkRelationDataLayerScope()
+            {
+                LayerID = layerID,
+                Fragments = fragments
             };
         }
     }

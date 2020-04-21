@@ -1,4 +1,6 @@
-﻿using Landscape.Base.Entity;
+﻿using DotLiquid.Tags;
+using Hangfire.States;
+using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Npgsql;
 using System;
@@ -38,6 +40,7 @@ namespace LandscapeRegistry.Model
             if (additionalWhereClause != null)
                 innerWhereClauses.Add(additionalWhereClause);
             var innerWhereClause = String.Join(" AND ", innerWhereClauses);
+            if (innerWhereClause == "") innerWhereClause = "1=1";
             var query = $@"
             select distinct
             last_value(inn.id) over wndOut,
@@ -67,7 +70,7 @@ namespace LandscapeRegistry.Model
             return command;
         }
 
-        public async Task<IEnumerable<Relation>> GetMergedRelations(Guid ciid, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null)
+        public async Task<IEnumerable<Relation>> GetMergedRelations(Guid? ciid, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null)
         {
             var ret = new List<Relation>();
 
@@ -124,7 +127,7 @@ namespace LandscapeRegistry.Model
             }
         }
 
-        public async Task<IEnumerable<Relation>> GetRelationsWithPredicateID(LayerSet layerset, bool includeRemoved, string predicateID, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null)
+        public async Task<IEnumerable<Relation>> GetMergedRelationsWithPredicateID(LayerSet layerset, bool includeRemoved, string predicateID, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null)
         {
             var ret = new List<Relation>();
 
@@ -225,16 +228,22 @@ namespace LandscapeRegistry.Model
             return Relation.Build(id, fromCIID, toCIID, predicate, layerStack, state, changesetID);
         }
 
-        public async Task<bool> BulkReplaceRelations(BulkRelationData data, long changesetID, NpgsqlTransaction trans)
+        public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, long changesetID, NpgsqlTransaction trans)
         {
             var layerSet = new LayerSet(data.LayerID);
-            var outdatedRelations = (await GetRelationsWithPredicateID(layerSet, false, data.PredicateID, trans))
-                .ToDictionary(r => r.InformationHash);
+            var outdatedRelations = (data switch {
+                BulkRelationDataPredicateScope p => (await GetMergedRelationsWithPredicateID(layerSet, false, p.PredicateID, trans)),
+                BulkRelationDataLayerScope l => (await GetMergedRelations(null, false, layerSet, IncludeRelationDirections.Both, trans)),
+                _ => null
+            }).ToDictionary(r => r.InformationHash);
 
             // TODO: use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
-            foreach (var ciidPair in data.FromToCIIDPairs)
+            foreach (var fragment in data.Fragments)
             {
-                var informationHash = Relation.CreateInformationHash(ciidPair.Item1, ciidPair.Item2, data.PredicateID);
+                var fromCIID = data.GetFromCIID(fragment);
+                var toCIID = data.GetToCIID(fragment);
+                var predicateID = data.GetPredicateID(fragment);
+                var informationHash = Relation.CreateInformationHash(fromCIID, toCIID, predicateID);
                 // remove the current relation from the list of relations to remove
                 outdatedRelations.Remove(informationHash, out var currentRelation);
 
@@ -250,9 +259,9 @@ namespace LandscapeRegistry.Model
                 using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
                     VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, now()) returning id", conn, trans);
 
-                command.Parameters.AddWithValue("from_ci_id", ciidPair.Item1);
-                command.Parameters.AddWithValue("to_ci_id", ciidPair.Item2);
-                command.Parameters.AddWithValue("predicate_id", data.PredicateID);
+                command.Parameters.AddWithValue("from_ci_id", fromCIID);
+                command.Parameters.AddWithValue("to_ci_id", toCIID);
+                command.Parameters.AddWithValue("predicate_id", predicateID);
                 command.Parameters.AddWithValue("layer_id", data.LayerID);
                 command.Parameters.AddWithValue("state", state);
                 command.Parameters.AddWithValue("changeset_id", changesetID);
@@ -262,7 +271,7 @@ namespace LandscapeRegistry.Model
 
             // remove outdated 
             foreach (var outdatedRelation in outdatedRelations.Values)
-                await RemoveRelation(outdatedRelation.FromCIID, outdatedRelation.ToCIID, data.PredicateID, data.LayerID, changesetID, trans);
+                await RemoveRelation(outdatedRelation.FromCIID, outdatedRelation.ToCIID, outdatedRelation.PredicateID, data.LayerID, changesetID, trans);
 
             return true;
         }

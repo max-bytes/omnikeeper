@@ -75,7 +75,7 @@ namespace Landscape.Base.Entity
             public IAttributeValue Value { get; private set; }
             public Guid CIID { get; private set; }
 
-            public static string StripPrefix(string fullName, string prefix) => fullName.Replace($"{prefix}.", "");
+            public static string StripPrefix(string fullName, string prefix) => fullName.Replace($"{prefix}", "");
 
 
             public static Fragment Build(string name, IAttributeValue value, Guid ciid)
@@ -94,7 +94,7 @@ namespace Landscape.Base.Entity
         public Fragment[] Fragments { get; private set; }
 
         public Guid GetCIID(Fragment f) => f.CIID;
-        public string GetFullName(Fragment fragment) => $"{NamePrefix}.{fragment.Name}";
+        public string GetFullName(Fragment fragment) => $"{NamePrefix}{fragment.Name}";
         public IAttributeValue GetValue(Fragment f) => f.Value;
 
         public static BulkCIAttributeDataLayerScope Build(string namePrefix, long layerID, IEnumerable<Fragment> fragments)
@@ -120,7 +120,7 @@ namespace Landscape.Base.Entity
             public string Name { get; private set; }
             public IAttributeValue Value { get; private set; }
 
-            public static string StripPrefix(string fullName, string prefix) => fullName.Replace($"{prefix}.", "");
+            public static string StripPrefix(string fullName, string prefix) => fullName.Replace($"{prefix}", "");
 
             public static Fragment Build(string name, IAttributeValue value)
             {
@@ -138,7 +138,7 @@ namespace Landscape.Base.Entity
         public Fragment[] Fragments { get; private set; }
 
         public Guid GetCIID(Fragment f) => CIID;
-        public string GetFullName(Fragment fragment) => $"{NamePrefix}.{fragment.Name}";
+        public string GetFullName(Fragment fragment) => $"{NamePrefix}{fragment.Name}";
         public IAttributeValue GetValue(Fragment f) => f.Value;
 
         public static BulkCIAttributeDataCIScope Build(string namePrefix, long layerID, Guid ciid, IEnumerable<Fragment> fragments)

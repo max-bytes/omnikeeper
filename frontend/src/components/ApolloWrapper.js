@@ -165,7 +165,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
         },
         dataIdFromObject: object => {
             switch (object.__typename) {
-            case 'MergedCIType': return `MergedCIType:${object.identity}:${object.layerhash}:${object.atTime}`; 
+            case 'MergedCIType': return `MergedCIType:${object.id}:${object.layerhash}:${object.atTime}`; 
             case 'MergedCIAttributeType': return `MergedCIAttributeType:${object.attribute.id}:ls${object.layerStackIDs.join(',')}`;
             case 'CIAttributeType': return `CIAttributeType:${object.id}}`;
             case 'RelationType': return `RelationType:${object.id}:ls${object.layerStackIDs.join(',')}`;

@@ -30,7 +30,7 @@ namespace MonitoringPlugin
             var layerSetMonitoringDefinitionsOnly = await layerModel.BuildLayerSet(new[] { "Monitoring Definitions" }, trans);
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
 
-            var allHasMonitoringModuleRelations = await relationModel.GetRelationsWithPredicateID(layerSetMonitoringDefinitionsOnly, false, "has_monitoring_module", trans);
+            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelationsWithPredicateID(layerSetMonitoringDefinitionsOnly, false, "has_monitoring_module", trans);
 
             // prepare list of all monitored cis
             var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.FromCIID).Distinct();
@@ -77,24 +77,24 @@ namespace MonitoringPlugin
                         continue;
                     }
                     monitoringCommandFragments.Add(
-                        BulkCIAttributeDataLayerScope.Fragment.Build(BulkCIAttributeDataLayerScope.Fragment.StripPrefix(mca.Attribute.Name, "monitoring.commands"),
+                        BulkCIAttributeDataLayerScope.Fragment.Build(BulkCIAttributeDataLayerScope.Fragment.StripPrefix(mca.Attribute.Name, "monitoring.commands."),
                         AttributeValueTextScalar.Build(finalCommand), p.FromCIID)
                     );
                 }
             }
-            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.commands", targetLayer.ID, monitoringCommandFragments), changeset.ID, trans);
+            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.commands.", targetLayer.ID, monitoringCommandFragments), changeset.ID, trans);
 
             // assign monitored cis to naemon instances
-            var monitoredByCIIDPairs = new List<(Guid, Guid)>();
+            var monitoredByCIIDFragments = new List<BulkRelationDataPredicateScope.Fragment>();
             var naemonInstances = await ciModel.GetMergedCIsByType(layerSetMonitoringDefinitionsOnly, trans, DateTimeOffset.Now, "Naemon Instance");
             foreach (var naemonInstance in naemonInstances)
                 foreach (var monitoredCI in monitoredCIs)
-                    monitoredByCIIDPairs.Add((monitoredCI.Value.ID, naemonInstance.ID));
-            await relationModel.BulkReplaceRelations(BulkRelationData.Build("is_monitored_by", targetLayer.ID, monitoredByCIIDPairs.ToArray()), changeset.ID, trans);
+                    monitoredByCIIDFragments.Add(BulkRelationDataPredicateScope.Fragment.Build(monitoredCI.Value.ID, naemonInstance.ID));
+            await relationModel.BulkReplaceRelations(BulkRelationDataPredicateScope.Build("is_monitored_by", targetLayer.ID, monitoredByCIIDFragments.ToArray()), changeset.ID, trans);
 
             // write final naemon config
             var checkCommandsPerNaemonInstance = new Dictionary<string, List<string>>();
-            var naemonInstance2MoitoredCILookup = monitoredByCIIDPairs.GroupBy(t => t.Item2).ToDictionary(t => t.Key, t => t.Select(t => t.Item1));
+            var naemonInstance2MoitoredCILookup = monitoredByCIIDFragments.GroupBy(t => t.To).ToDictionary(t => t.Key, t => t.Select(t => t.From));
             var monitoringConfigs = new List<BulkCIAttributeDataLayerScope.Fragment>();
             foreach (var kv in naemonInstance2MoitoredCILookup)
             {
@@ -104,7 +104,7 @@ namespace MonitoringPlugin
                 var finalConfig = string.Join("\n", commands);
                 monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("naemonConfig", AttributeValueTextScalar.Build(finalConfig, true), naemonInstance));
             }
-            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring", targetLayer.ID, monitoringConfigs), changeset.ID, trans);
+            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.", targetLayer.ID, monitoringConfigs), changeset.ID, trans);
 
             return true;
         }

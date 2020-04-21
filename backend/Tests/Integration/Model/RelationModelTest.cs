@@ -157,10 +157,10 @@ namespace Tests.Integration.Model
             var i3 = await relationModel.InsertRelation(ciid2, ciid3, predicateID1.ID, layer1.ID, changeset.ID, trans);
             var i4 = await relationModel.InsertRelation(ciid3, ciid1, predicateID2.ID, layer1.ID, changeset.ID, trans);
 
-            var r1 = await relationModel.GetRelationsWithPredicateID(layerset, false, predicateID1.ID, trans);
+            var r1 = await relationModel.GetMergedRelationsWithPredicateID(layerset, false, predicateID1.ID, trans);
             Assert.AreEqual(2, r1.Count());
             Assert.IsFalse(r1.Any(r => r.PredicateID == predicateID2.ID));
-            var r2 = await relationModel.GetRelationsWithPredicateID(layerset, false, predicateID2.ID, trans);
+            var r2 = await relationModel.GetMergedRelationsWithPredicateID(layerset, false, predicateID2.ID, trans);
             Assert.AreEqual(2, r2.Count());
             Assert.IsFalse(r2.Any(r => r.PredicateID == predicateID1.ID));
         }
@@ -256,14 +256,14 @@ namespace Tests.Integration.Model
             // test bulk replace
             using var trans2 = conn.BeginTransaction();
             var changeset2 = await changesetModel.CreateChangeset(user.ID, trans2);
-            await relationModel.BulkReplaceRelations(BulkRelationData.Build(predicateID1.ID, layer1.ID, new (Guid, Guid)[] {
-                    (ciid1, ciid2),
-                    (ciid2, ciid1),
-                    (ciid3, ciid2),
-                    (ciid3, ciid1)
+            await relationModel.BulkReplaceRelations(BulkRelationDataPredicateScope.Build(predicateID1.ID, layer1.ID, new BulkRelationDataPredicateScope.Fragment[] {
+                    BulkRelationDataPredicateScope.Fragment.Build(ciid1, ciid2),
+                    BulkRelationDataPredicateScope.Fragment.Build(ciid2, ciid1),
+                    BulkRelationDataPredicateScope.Fragment.Build(ciid3, ciid2),
+                    BulkRelationDataPredicateScope.Fragment.Build(ciid3, ciid1)
                 }), changeset2.ID, trans2);
 
-            var r1 = await relationModel.GetRelationsWithPredicateID(layerset, false, predicateID1.ID, trans2);
+            var r1 = await relationModel.GetMergedRelationsWithPredicateID(layerset, false, predicateID1.ID, trans2);
             Assert.AreEqual(4, r1.Count());
         }
     }

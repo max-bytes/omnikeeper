@@ -48,6 +48,9 @@ namespace Landscape.Base.Model
         Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans);
         Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans);
         Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime, Guid? ciid = null);
+        Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime);
+
+
 
         Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, long changesetID, NpgsqlTransaction trans);
     }
