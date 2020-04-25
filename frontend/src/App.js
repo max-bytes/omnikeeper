@@ -20,11 +20,11 @@ import ManageLayers from './components/manage/ManageLayers';
 import ManageCITypes from './components/manage/ManageCITypes';
 
 const keycloak = new Keycloak({
-  "realm": "landscape",
+  "realm": env("KEYCLOAK_REALM"),
   "url": env("KEYCLOAK_URL"),
   "ssl-required": "none",
   "resource": "landscape",
-  "clientId": "landscape-registry-frontend",
+  "clientId": "landscape-registry",
   "public-client": true,
   "verify-token-audience": true,
   "use-resource-role-mappings": true,
