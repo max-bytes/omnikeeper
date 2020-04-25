@@ -266,7 +266,7 @@ namespace Tests.Integration.Model
 
             using var trans2 = conn.BeginTransaction();
             var changeset3 = await changesetModel.CreateChangeset(user.ID, trans2);
-            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("prefix1", layer1.ID, new BulkCIAttributeDataLayerScope.Fragment[] {
+            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("prefix1.", layer1.ID, new BulkCIAttributeDataLayerScope.Fragment[] {
                 BulkCIAttributeDataLayerScope.Fragment.Build("a1", AttributeValueTextScalar.Build("textNew"), ciid1),
                 BulkCIAttributeDataLayerScope.Fragment.Build("a4", AttributeValueTextScalar.Build("textNew"), ciid2),
                 BulkCIAttributeDataLayerScope.Fragment.Build("a2", AttributeValueTextScalar.Build("textNew"), ciid2),

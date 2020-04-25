@@ -1,6 +1,8 @@
-﻿using GraphQL.Types;
+﻿using DotLiquid.Util;
+using GraphQL.Types;
 using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
+using Landscape.Base.Model;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Cached;
@@ -8,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using static Landscape.Base.Model.IAttributeModel;
 using static Landscape.Base.Model.IRelationModel;
 
 namespace LandscapeRegistry.GraphQL
@@ -23,7 +26,7 @@ namespace LandscapeRegistry.GraphQL
 
     public class MergedCIType : ObjectGraphType<MergedCI>
     {
-        public MergedCIType(RelationModel relationModel, TemplateModel templateModel, TraitModel traitModel)
+        public MergedCIType(RelationModel relationModel, TemplateModel templateModel, TraitModel traitModel, ICIModel ciModel)
         {
             Field("id", x => x.ID);
             Field("name", x => x.Name, nullable: true);
@@ -48,20 +51,19 @@ namespace LandscapeRegistry.GraphQL
 
                 var relatedCIs = new List<RelatedCI>();
 
-                var relatedCIIDs = relations.Select(r =>
+                var relationTuples = relations.Select(r =>
                 {
                     var isForwardRelation = r.FromCIID == CIIdentity;
                     var relatedCIID = (isForwardRelation) ? r.ToCIID : r.FromCIID;
-                    return relatedCIID;
+                    return (relation: r, relatedCIID, isForwardRelation);
                 });
 
-                // TODO: consider packing the actual CIs into its own resolver so they can be queried when necessary
-                //var CIs = (await ciModel.GetFullCIs(layerset, true, userContext.Transaction, userContext.TimeThreshold, relatedCIIDs)).ToDictionary(ci => ci.Identity);
-                foreach (var r in relations)
+                // TODO: consider packing the actual CIs into its own resolver so they can be queried when necessary... but that would open up the 1+N problem again :(
+                var relatedCINames = await ciModel.GetCINames(relationTuples.Select(t => t.relatedCIID), layerset, userContext.Transaction, userContext.TimeThreshold);
+                foreach ((var relation, var relatedCIID, var isForwardRelation) in relationTuples)
                 {
-                    var isForwardRelation = r.FromCIID == CIIdentity;
-                    var relatedCIID = (isForwardRelation) ? r.ToCIID : r.FromCIID;
-                    relatedCIs.Add(RelatedCI.Build(r, relatedCIID, isForwardRelation));
+                    relatedCINames.TryGetValue(relatedCIID, out var ciName);
+                    relatedCIs.Add(RelatedCI.Build(relation, relatedCIID, ciName, isForwardRelation));
                 }
 
                 var wStr = context.GetArgument<string>("where"); // TODO: develop further

@@ -1,5 +1,6 @@
 ﻿using GraphQL.Types;
 using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Cached;
 using System;
@@ -10,7 +11,7 @@ namespace LandscapeRegistry.GraphQL
 {
     public class LandscapeQuery : ObjectGraphType
     {
-        public LandscapeQuery(CIModel ciModel, CachedLayerModel layerModel, CachedPredicateModel predicateModel, ChangesetModel changesetModel)
+        public LandscapeQuery(CIModel ciModel, CachedLayerModel layerModel, CachedPredicateModel predicateModel, ChangesetModel changesetModel, ICISearchModel ciSearchModel)
         {
             FieldAsync<MergedCIType>("ci",
                 arguments: new QueryArguments(new List<QueryArgument>
@@ -48,6 +49,32 @@ namespace LandscapeRegistry.GraphQL
                 {
                     var ciids = await ciModel.GetCIIDs(null);
                     return ciids;
+                });
+
+
+            FieldAsync<ListGraphType<MergedCIType>>("searchCIs",
+                arguments: new QueryArguments(new List<QueryArgument>
+                {
+                    //new QueryArgument<ListGraphType<StringGraphType>>
+                    //{
+                    //    Name = "layers"
+                    //},
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "searchString"
+                    },
+                }),
+                resolve: async context =>
+                {
+                    var userContext = context.UserContext as LandscapeUserContext;
+
+                    var ciid = context.GetArgument<Guid>("identity");
+                    //var layerStrings = context.GetArgument<string[]>("layers");
+                    var ls = await layerModel.BuildLayerSet(null);
+                    userContext.LayerSet = ls;
+                    userContext.TimeThreshold = DateTimeOffset.Now;
+
+                    return await ciSearchModel.Search(context.GetArgument<string>("searchString"), ls, null);
                 });
 
             FieldAsync<ListGraphType<MergedCIType>>("cis",

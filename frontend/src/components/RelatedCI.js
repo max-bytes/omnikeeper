@@ -26,7 +26,7 @@ function RelatedCI(props) {
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
   // const otherCIButton = <Button variant="link" onClick={() => setSelectedCI({variables: { newSelectedCI: props.related.ci.identity }})}>{props.related.ci.identity}</Button>;
-  const otherCIButton = <Link to={"/explorer/" + props.related.ciid}>{props.related.ciid}</Link>;
+  const otherCIButton = <Link to={"/explorer/" + props.related.ciid}>{props.related.ciName ?? "[UNNAMED]"}</Link>;
 
   let written;
   if (props.related.isForward) {
@@ -51,7 +51,6 @@ function RelatedCI(props) {
         <ChangesetPopup changesetID={props.related.relation.changesetID} />
         <Form.Group controlId={`value:${props.related.relation.predicate.id}`} style={{flexGrow: 1}}>
           <Form.Label className={"pr-1"} style={{flexBasis: '400px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{written}</Form.Label>
-          
           {removeButton}
         </Form.Group>
       </Form>

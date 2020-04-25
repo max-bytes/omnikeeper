@@ -229,8 +229,9 @@ namespace LandscapeRegistry.Model
                 LEFT JOIN 
                     (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain ORDER BY layer_id, timestamp DESC) lclb
                     ON lclb.layer_id = l.id
-                WHERE ls.state = ANY(@states) OR ls.state IS NULL", conn, trans);
+                WHERE ls.state = ANY(@states) OR (ls.state IS NULL AND @default_state = ANY(@states))", conn, trans);
             command.Parameters.AddWithValue("states", stateFilter.Filter2States());
+            command.Parameters.AddWithValue("default_state", DefaultState);
             using var r = await command.ExecuteReaderAsync();
             while (await r.ReadAsync())
             {

@@ -21,13 +21,13 @@ namespace LandscapeRegistry.Model
             conn = connection;
         }
 
-        public async Task<IDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<IDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? atTime = null)
         {
             var d = await GetMergedAttributes(new Guid[] { ciid }, includeRemoved, layers, trans, atTime);
             return d.GetValueOrDefault(ciid, () => new Dictionary<string, MergedCIAttribute>());
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? atTime)
         {
             var ret = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
 
@@ -57,7 +57,7 @@ namespace LandscapeRegistry.Model
                 command.Parameters.AddWithValue("ci_identities", ciids.ToArray());
                 var excludedStates = (includeRemoved) ? new AttributeState[] { } : new AttributeState[] { AttributeState.Removed };
                 command.Parameters.AddWithValue("excluded_states", excludedStates);
-                command.Parameters.AddWithValue("time_threshold", atTime);
+                command.Parameters.AddWithValue("time_threshold", atTime ?? DateTimeOffset.Now);
                 command.Parameters.AddWithValue("layer_ids", layers.ToArray());
                 using var dr = command.ExecuteReader();
 
@@ -161,11 +161,12 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, IAttributeSelection selection, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? atTime)
         {
             var ret = new Dictionary<Guid, MergedCIAttribute>();
 
             var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn, trans);
+
 
             // inner query can use distinct on, outer needs to do windowing, because of array_agg
             using (var command = new NpgsqlCommand(@$"
@@ -179,7 +180,7 @@ namespace LandscapeRegistry.Model
             array_agg(inn.layer_id) over wndOut
             from(
                 select distinct on (ci_id, name, layer_id) * from
-                    attribute where timestamp <= @time_threshold and name = @name and layer_id = ANY(@layer_ids) order by ci_id, name, layer_id, timestamp DESC
+                    attribute where timestamp <= @time_threshold and ({selection.WhereClause}) and name = @name and layer_id = ANY(@layer_ids) order by ci_id, name, layer_id, timestamp DESC
             ) inn
             inner join {tempLayersetTableName} ls ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
             where inn.state != ALL(@excluded_states) -- remove entries from layers which' last item is deleted
@@ -189,9 +190,10 @@ namespace LandscapeRegistry.Model
             {
                 var excludedStates = (includeRemoved) ? new AttributeState[] { } : new AttributeState[] { AttributeState.Removed };
                 command.Parameters.AddWithValue("excluded_states", excludedStates);
-                command.Parameters.AddWithValue("time_threshold", atTime);
+                command.Parameters.AddWithValue("time_threshold", atTime ?? DateTimeOffset.Now);
                 command.Parameters.AddWithValue("name", name);
                 command.Parameters.AddWithValue("layer_ids", layers.ToArray());
+                selection.AddParameters(command.Parameters);
                 using var dr = command.ExecuteReader();
 
                 while (dr.Read())

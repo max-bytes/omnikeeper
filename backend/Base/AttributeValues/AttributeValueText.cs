@@ -22,6 +22,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public abstract bool Equals(IAttributeValue other);
 
         public abstract IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum);
+        public abstract bool FullTextSearch(string searchString);
     }
 
     public class AttributeValueTextScalar : AttributeValueText, IEquatable<AttributeValueTextScalar>
@@ -50,6 +51,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
             else if (minimum.HasValue && Value.Length < minimum)
                 yield return TemplateErrorAttributeGeneric.Build("Text too short!");
         }
+
+        public override bool FullTextSearch(string searchString) => Value.Contains(searchString);
     }
 
     public class AttributeValueTextArray : AttributeValueText, IEquatable<AttributeValueTextArray>
@@ -83,5 +86,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
                     yield return TemplateErrorAttributeGeneric.Build($"Text[{i}] too short!");
             }
         }
+
+        public override bool FullTextSearch(string searchString) => Values.Any(value => value.Contains(searchString));
     }
 }

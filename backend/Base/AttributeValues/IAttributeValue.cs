@@ -20,6 +20,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public bool IsArray { get; }
 
         IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum);
+        bool FullTextSearch(string searchString);
     }
 
 

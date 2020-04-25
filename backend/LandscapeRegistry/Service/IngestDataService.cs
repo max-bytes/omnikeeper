@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static Landscape.Base.Model.IAttributeModel;
 
 namespace LandscapeRegistry.Service
 {
@@ -42,11 +43,11 @@ namespace LandscapeRegistry.Service
                 this.searchableLayers = searchableLayers;
             }
 
-            private async Task<IDictionary<Guid, MergedCIAttribute>> getMergedAttributesByAttributeNameAndValue(string name, IAttributeValue value, NpgsqlTransaction trans)
+            private async Task<IDictionary<Guid, MergedCIAttribute>> GetMergedAttributesByAttributeNameAndValue(string name, IAttributeValue value, NpgsqlTransaction trans)
             {
                 if (!attributeCache.ContainsKey(name))
                 {
-                    attributeCache[name] = await attributeModel.FindMergedAttributesByFullName(name, false, searchableLayers, trans, DateTimeOffset.Now);
+                    attributeCache[name] = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsAttributeSelection(), false, searchableLayers, trans, DateTimeOffset.Now);
                 }
                 var found = attributeCache[name].Where(kv => kv.Value.Attribute.Value.Equals(value)).ToDictionary(kv => kv.Key, kv => kv.Value);
                 return found;
@@ -63,7 +64,7 @@ namespace LandscapeRegistry.Service
                 var isFirst = true;
                 foreach (var f in identifiableFragments)
                 {
-                    var ma = await getMergedAttributesByAttributeNameAndValue(f.Name, f.Value, trans);
+                    var ma = await GetMergedAttributesByAttributeNameAndValue(f.Name, f.Value, trans);
                     if (isFirst)
                         candidateCIIDs = new List<Guid>(ma.Keys);
                     else
@@ -90,7 +91,7 @@ namespace LandscapeRegistry.Service
                 var foundMatchingCI = false;
                 switch (cic.Value.IdentificationMethod)
                 {
-                    case CIIdentificationMethodByData d: // use identifiable attributes for finding out CIID
+                    case CIIdentificationMethodByData d: // use identifiable data for finding out CIID
                         var candidateCIIDs = await dataIdentifier.Identify(cic.Value.Attributes, d, trans);
                         if (!candidateCIIDs.IsEmpty())
                         { // we found at least one fitting ci, use that // TODO: order matters!!! Find out how to deal with that
@@ -211,14 +212,14 @@ namespace LandscapeRegistry.Service
     public class CICandidate
     {
         public ICIIdentificationMethod IdentificationMethod { get; private set; }
-        private Guid TemporaryCIID { get; set; }// TODO: needed?
+        //private Guid TemporaryCIID { get; set; }// TODO: needed?
         public BulkCICandidateAttributeData Attributes { get; private set; }
 
-        public static CICandidate Build(Guid temporaryCIID, ICIIdentificationMethod identificationMethod, BulkCICandidateAttributeData attributes)
+        public static CICandidate Build(/*Guid temporaryCIID, */ICIIdentificationMethod identificationMethod, BulkCICandidateAttributeData attributes)
         {
             return new CICandidate()
             {
-                TemporaryCIID = temporaryCIID,
+                //TemporaryCIID = temporaryCIID,
                 IdentificationMethod = identificationMethod,
                 Attributes = attributes
             };

@@ -23,6 +23,20 @@ export const queries = {
             }
         }
     `,
+    SearchCIs: gql`
+        query searchCIs($searchString: String!, $includeAttributes: Boolean = false, $includeRelated: Boolean = false) {
+            searchCIs(searchString: $searchString) {
+                ...FullCI
+            }
+        }
+        ${Fragments.relatedCI}
+        ${Fragments.fullCI}
+        ${Fragments.mergedAttribute}
+        ${Fragments.attribute}
+        ${Fragments.relation}
+        ${Fragments.fullPredicate}
+    `,
+
     FullCI: gql`
         query ci($identity: Guid!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
             ci(identity: $identity, layers: $layers, timeThreshold: $timeThreshold) {

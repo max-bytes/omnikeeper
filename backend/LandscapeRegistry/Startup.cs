@@ -86,6 +86,7 @@ namespace LandscapeRegistry
             services.AddHttpContextAccessor();
 
             // TODO: remove AddScoped<Model>(), only use AddScoped<IModel, Model>()
+            services.AddScoped<ICISearchModel, CISearchModel>();
             services.AddScoped<ICIModel, CIModel>();
             services.AddScoped<CIModel>();
             services.AddScoped<IAttributeModel, AttributeModel>();
@@ -107,8 +108,9 @@ namespace LandscapeRegistry
 
             services.AddScoped<TraitModel>();
 
-            services.AddScoped<CurrentUserService>();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<MarkedForDeletionService>();
+            services.AddScoped<IngestDataService>();
 
             services.AddSingleton<ITemplatesProvider, CachedTemplatesProvider>(); // can be singleton because it does not depend on any scoped services
             services.AddSingleton<TemplatesProvider>(); // can be singleton because it does not depend on any scoped services
@@ -142,10 +144,10 @@ namespace LandscapeRegistry
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateAudience = true,
-                    ValidAudience = "landscape",
+                    ValidAudience = Configuration.GetSection("Authentication")["Audience"]
                 };
-                options.Authority = Configuration["AuthenticationAuthority"];
-                options.Audience = "landscape";
+                options.Authority = Configuration.GetSection("Authentication")["Authority"];
+                options.Audience = Configuration.GetSection("Authentication")["Audience"];
                 options.RequireHttpsMetadata = false;
                 options.Events = new JwtBearerEvents()
                 {
@@ -197,17 +199,11 @@ namespace LandscapeRegistry
                     In = ParameterLocation.Header,
                     Flows = new OpenApiOAuthFlows
                     {
-                        //AuthorizationCode = new OpenApiOAuthFlow
-                        //{
-                        //    AuthorizationUrl = new Uri(Configuration["AuthenticationAuthority"] + "/protocol/openid-connect/auth", UriKind.Absolute),
-                        //    Scopes = new Dictionary<string, string> {},
-                        //    TokenUrl = new Uri(Configuration["AuthenticationAuthority"] + "/protocol/openid-connect/token", UriKind.Absolute),
-                        //},
                         ClientCredentials = new OpenApiOAuthFlow
                         {
                             Scopes = new Dictionary<string, string> { },
-                            AuthorizationUrl = new Uri(Configuration["AuthenticationAuthority"] + "/protocol/openid-connect/auth", UriKind.Absolute),
-                            TokenUrl = new Uri(Configuration["AuthenticationAuthority"] + "/protocol/openid-connect/token", UriKind.Absolute),
+                            AuthorizationUrl = new Uri(Configuration.GetSection("Authentication")["Authority"] + "/protocol/openid-connect/auth", UriKind.Absolute),
+                            TokenUrl = new Uri(Configuration.GetSection("Authentication")["Authority"] + "/protocol/openid-connect/token", UriKind.Absolute),
                         }
                     }
                 });

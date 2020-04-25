@@ -32,9 +32,9 @@ namespace LandscapeRegistry.Controllers
         private readonly IDocumentExecuter _documentExecuter;
         private readonly IEnumerable<IValidationRule> _validationRules;
         private readonly IWebHostEnvironment _env;
-        private readonly CurrentUserService _currentUserService;
+        private readonly ICurrentUserService _currentUserService;
 
-        public GraphQLController(ISchema schema, CurrentUserService currentUserService,
+        public GraphQLController(ISchema schema, ICurrentUserService currentUserService,
             IDocumentExecuter documentExecuter,
             IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env)
         {

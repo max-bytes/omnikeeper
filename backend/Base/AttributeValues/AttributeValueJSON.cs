@@ -16,11 +16,13 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public abstract bool IsArray { get; }
         public abstract AttributeValueDTO ToGeneric();
         public abstract bool Equals(IAttributeValue other);
+        public abstract bool FullTextSearch(string searchString);
 
         public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
         { // does not make sense for JSON
             yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, Type);
         }
+
     }
 
     public class AttributeValueJSONScalar : AttributeValueJSON, IEquatable<AttributeValueJSONScalar>
@@ -32,6 +34,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueJSONScalar);
         public bool Equals([AllowNull] AttributeValueJSONScalar other) => other != null && Value.Equals(other.Value);
         public override int GetHashCode() => Value.GetHashCode();
+        public override bool FullTextSearch(string searchString) => Value.Descendants().Where(d => d is JProperty && !(d as JProperty).HasValues).Any(d => (d as JProperty).Value.Contains(searchString));
 
         internal static AttributeValueJSONScalar Build(string value)
         {
@@ -58,6 +61,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueJSONArray);
         public bool Equals([AllowNull] AttributeValueJSONArray other) => other != null && Values.SequenceEqual(other.Values);
         public override int GetHashCode() => Values.GetHashCode();
+        public override bool FullTextSearch(string searchString) => Values.Any(value => value.Descendants().Where(d => d is JProperty && !(d as JProperty).HasValues).Any(d => (d as JProperty).Value.Contains(searchString)));
+
 
         public static AttributeValueJSONArray Build(string[] values)
         {

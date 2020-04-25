@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Service
 {
-    public class CurrentUserService
+    public class CurrentUserService : ICurrentUserService
     {
         public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel, ILayerModel layerModel)
         {
@@ -26,6 +26,7 @@ namespace LandscapeRegistry.Service
 
         public async Task<User> GetCurrentUser(NpgsqlTransaction trans)
         {
+            // TODO: caching
             return await CreateUserFromClaims(HttpContextAccessor.HttpContext.User.Claims, trans);
         }
 

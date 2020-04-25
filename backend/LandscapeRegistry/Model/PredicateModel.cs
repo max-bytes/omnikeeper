@@ -3,6 +3,7 @@ using Landscape.Base.Model;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model
@@ -89,11 +90,12 @@ namespace LandscapeRegistry.Model
                LEFT JOIN
                     (SELECT DISTINCT ON (predicate_id) predicate_id, state from predicate_state ORDER BY predicate_id, timestamp DESC) ps
                     ON ps.predicate_id = p.id
-                WHERE (ps.state = ANY(@states) OR ps.state IS NULL)
+                WHERE (ps.state = ANY(@states) OR (ps.state IS NULL AND @default_state = ANY(@states)))
             ", conn, trans);
             var finalTimeThreshold = atTime ?? DateTimeOffset.Now;
             command.Parameters.AddWithValue("atTime", finalTimeThreshold);
             command.Parameters.AddWithValue("states", stateFilter.Filter2States());
+            command.Parameters.AddWithValue("default_state", DefaultState);
             using (var s = await command.ExecuteReaderAsync())
             {
                 while (await s.ReadAsync())

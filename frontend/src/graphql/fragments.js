@@ -77,6 +77,7 @@ export const Fragments = {
         }
         ciid
         isForward
+        ciName
     }
   `,
   fullLayer: gql`

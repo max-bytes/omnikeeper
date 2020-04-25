@@ -16,7 +16,7 @@ namespace LandscapeRegistry.Model
         private readonly IAttributeModel attributeModel;
         private static readonly AnchorState DefaultState = AnchorState.Active;
 
-        private static readonly string NameAttribute = "__name";
+        public static readonly string NameAttribute = "__name";
 
         public CIModel(IAttributeModel attributeModel, NpgsqlConnection connection)
         {
@@ -64,12 +64,22 @@ namespace LandscapeRegistry.Model
             return nameA?.Value.Value2String(); // TODO
         }
 
-        public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<IDictionary<Guid, string>> GetCINames(IEnumerable<Guid> ciids, LayerSet layerset, NpgsqlTransaction trans, DateTimeOffset? atTime)
+        {
+            var attributes = await attributeModel.FindMergedAttributesByFullName(NameAttribute, new MultiCIIDsAttributeSelection(ciids.ToArray()), false, layerset, trans, atTime);
+            return ciids.Select(ciid =>
+            {
+                attributes.TryGetValue(ciid, out var nameAttribute);
+                return (ciid, name: nameAttribute?.Attribute.Value.Value2String());
+            }).ToDictionary(kv => kv.ciid, kv => kv.name);
+        }
+
+        public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? atTime)
         {
             var type = await GetTypeOfCI(ciid, trans, atTime);
             var attributes = await attributeModel.GetMergedAttributes(ciid, false, layers, trans, atTime);
             var name = GetNameFromAttributes(attributes);
-            return MergedCI.Build(ciid, name, type, layers, atTime, attributes);
+            return MergedCI.Build(ciid, name, type, layers, atTime ?? DateTimeOffset.Now, attributes);
         }
 
         public async Task<CI> GetCI(Guid ciid, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime)
@@ -184,7 +194,7 @@ namespace LandscapeRegistry.Model
             return (await GetCITypes(trans, atTime)).FirstOrDefault(t => t.ID == typeID); 
         }
 
-        public async Task<IEnumerable<MergedCI>> GetMergedCIsByType(LayerSet layers, NpgsqlTransaction trans, DateTimeOffset atTime, string typeID)
+        public async Task<IEnumerable<MergedCI>> GetMergedCIsByType(LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? atTime, string typeID)
         {
             // TODO: performance improvements
             var cis = await GetMergedCIs(layers, true, trans, atTime);
@@ -218,7 +228,7 @@ namespace LandscapeRegistry.Model
             return true;
         }
 
-        public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, DateTimeOffset atTime, IEnumerable<Guid> CIIDs = null)
+        public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, DateTimeOffset? atTime, IEnumerable<Guid> CIIDs = null)
         {
             if (CIIDs == null) CIIDs = await GetCIIDs(trans);
             var attributes = await attributeModel.GetMergedAttributes(CIIDs, false, layers, trans, atTime);
@@ -237,7 +247,7 @@ namespace LandscapeRegistry.Model
             {
                 var att = ga.Value;
                 var name = GetNameFromAttributes(att);
-                ret.Add(MergedCI.Build(ga.Key, name, ciTypes[ga.Key], layers, atTime, att));
+                ret.Add(MergedCI.Build(ga.Key, name, ciTypes[ga.Key], layers, atTime ?? DateTimeOffset.Now, att));
             }
             return ret;
         }

@@ -38,6 +38,7 @@ namespace LandscapeRegistry.GraphQL
             Field(x => x.Relation, type: typeof(RelationType));
             Field("ciid", x => x.CIID);
             Field(x => x.IsForward);
+            Field("ciName", x => x.CIName, nullable: true);
         }
     }
 

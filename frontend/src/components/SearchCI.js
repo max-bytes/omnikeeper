@@ -1,65 +1,49 @@
-import { useQuery } from '@apollo/client';
-import React, { useState } from 'react';
+import { useQuery, useLazyQuery } from '@apollo/client';
+import React, { useState, useEffect } from 'react';
 import { queries } from '../graphql/queries'
-import { Search } from 'semantic-ui-react'
+import { Search, Input } from 'semantic-ui-react'
 import { withRouter, Link } from 'react-router-dom'
 import PropTypes from 'prop-types'
 
-
-const resultRenderer = (d) => <Link to={`/explorer/${d.identity}`}>{d.identity}</Link>
-
-resultRenderer.propTypes = {
-  identity: PropTypes.string
-}
-
-
 function SearchCI(props) {
-  const initialState = { isLoading: false, results: [], value: '' }
+  const initialState = { results: [], value: '' }
 
-  // TODO: this doesn't do any lazy search loading, but loads the full ci list and filters in the frontend
-  const { data: dataCIs } = useQuery(queries.CIList);
+  const [search, { loading, data: dataCIs }] = useLazyQuery(queries.SearchCIs);
   const [state, setState] = useState(initialState);
+  useEffect(() => {
 
-  const handleResultSelect = (e, { result }) => setState({ ...state, value: result.title });
+    if (dataCIs && state.value !== '') {
+      setState(s => ({...s, results: dataCIs.searchCIs.map(d => {
+        var nd = { id: d.id, title: d.name ?? '[UNNAMED]' };
+        return nd;
+      })}));
+    } else {
+      setState(s => ({...s, results: []}));
+    }
+
+}, [dataCIs, loading, state.value]);
 
   const handleSearchChange = (e, { value }) => {
-    // if (value.length < 1) return setState(initialState);
+    if (value.length < 1) return setState(initialState);
+    setState({...state, value: value});
 
-    RegExp.escape = function(s) {
-        return s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-    };
+    search({variables: {searchString: value}});
+  };
 
-    const re = new RegExp(RegExp.escape(value), 'i');
-    const isMatch = (result) => re.test(result);
-
-    setState({
-      isLoading: false,
-      value,
-      results: dataCIs.ciids.filter(isMatch).map(d => {
-        var nd = { identity: d, title: d };
-        return nd;
-      })
-    });
-  }
-
-  if (!dataCIs)
-    return "Loading";
-  else
   return (
     <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
       <div style={{display: 'flex', justifyContent: 'center', marginTop: '50px'}}>
-        <Search size="huge" className={"CISearch"}
-          minCharacters={0}
-            loading={state.isLoading}
-            onResultSelect={handleResultSelect}
-            // onSearchChange={_.debounce(handleSearchChange, 500, {
-            //   leading: true,
-            // })}
-            onSearchChange={handleSearchChange} // TODO: no debouncing
-            results={state.results}
-            value={state.value}
-            resultRenderer={resultRenderer}
-          />
+        <Input icon='search' placeholder='Search...' loading={loading} value={state.value} onChange={handleSearchChange} />
+      </div>
+      <div style={{flexGrow: 1, overflowY: 'auto', margin: '20px auto', minWidth: '50%'}}>
+        {state.results.map((result, index) => {
+          return (
+            <Link key={result.id} to={`/explorer/${result.id}`}>
+              <div style={{display: 'flex', padding: '10px', backgroundColor: ((index % 2 === 0) ? '#eee' : '#fff')}}>
+                <div style={{flexGrow: '2', fontWeight: 'bold', flexBasis: '0'}}>{result.title}</div><div style={{flexGrow: '2', flexBasis: '0'}}>{result.id}</div>
+              </div>
+            </Link>);
+        })}
       </div>
     </div>
   );
