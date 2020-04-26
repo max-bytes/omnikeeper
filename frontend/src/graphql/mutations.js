@@ -77,7 +77,7 @@ ${Fragments.fullCI}
 `,
 
 CREATE_CI: gql`
-    mutation CreateCI($typeID: String!) {
+    mutation CreateCI($typeID: String) {
       createCIs(cis: [
         {
           typeID: $typeID

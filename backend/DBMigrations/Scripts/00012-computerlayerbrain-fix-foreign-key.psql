@@ -1,0 +1,6 @@
+﻿
+ALTER TABLE ONLY public.layer_computelayerbrain
+    DROP CONSTRAINT f_layer;
+    
+ALTER TABLE ONLY public.layer_computelayerbrain
+    ADD CONSTRAINT f_layer FOREIGN KEY (layer_id) REFERENCES public.layer(id) ON UPDATE CASCADE ON DELETE CASCADE;

@@ -13,7 +13,7 @@ namespace LandscapeRegistry.GraphQL
     {
         public CreateCIInputType()
         {
-            Field(x => x.TypeID);
+            Field(x => x.TypeID, nullable: true);
         }
     }
 

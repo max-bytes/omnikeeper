@@ -17,6 +17,7 @@
     <None Remove="Scripts\00009-attributevaluetype-json.psql" />
     <None Remove="Scripts\00010-computerlayerbrain-rework.psql" />
     <None Remove="Scripts\00011-citype-state.psql" />
+    <None Remove="Scripts\00012-computerlayerbrain-fix-foreign-key.psql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,6 +30,7 @@
     <EmbeddedResource Include="Scripts\00003-predicate-state-add-deprecated.psql" />
     <EmbeddedResource Include="Scripts\00009-attributevaluetype-json.psql" />
     <EmbeddedResource Include="Scripts\00008-predicate-state-2-anchor-state.psql" />
+    <EmbeddedResource Include="Scripts\00012-computerlayerbrain-fix-foreign-key.psql" />
     <EmbeddedResource Include="Scripts\00011-citype-state.psql" />
     <EmbeddedResource Include="Scripts\00010-computerlayerbrain-rework.psql" />
   </ItemGroup>

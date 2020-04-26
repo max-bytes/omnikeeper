@@ -110,7 +110,10 @@ namespace LandscapeRegistry.GraphQL
                   var createdCIIDs = new List<Guid>();
                   foreach (var ci in createCIs)
                   {
-                      createdCIIDs.Add(await ciModel.CreateCIWithType(ci.TypeID, transaction));
+                      if (ci.TypeID != null)
+                        createdCIIDs.Add(await ciModel.CreateCIWithType(ci.TypeID, transaction));
+                      else
+                        createdCIIDs.Add(await ciModel.CreateCI(transaction));
                   }
                   await transaction.CommitAsync();
 

@@ -255,7 +255,11 @@ namespace LandscapeRegistry
                 IdentityModelEventSource.ShowPII = true; // to show more debugging information
             }
 
-            app.UseHttpsRedirection();
+            if (env.IsDevelopment())
+            {
+                // non-dev environments are behind an ssl proxy, so no https redirect required
+                app.UseHttpsRedirection();
+            }
 
             app.UseRouting();
 

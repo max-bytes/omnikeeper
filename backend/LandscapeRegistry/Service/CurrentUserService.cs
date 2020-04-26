@@ -59,7 +59,7 @@ namespace LandscapeRegistry.Service
                 else if (groups.Contains("/robots"))
                     usertype = UserType.Robot;
 
-                var guid = new Guid(guidString);
+                var guid = new Guid(guidString); // TODO: check for null, handle case
                 var userInDatabase = await UserModel.UpsertUser(username, guid, usertype, null);
 
                 return User.Build(userInDatabase, writableLayers);
