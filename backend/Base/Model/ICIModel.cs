@@ -19,6 +19,7 @@ namespace Landscape.Base.Model
         Task<IEnumerable<CI>> GetCIs(long layerID, bool includeEmptyCIs, NpgsqlTransaction trans, DateTimeOffset atTime);
         Task<IEnumerable<MergedCI>> GetMergedCIsByType(LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? atTime, string typeID);
         Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, DateTimeOffset? atTime = null, IEnumerable<Guid> CIIDs = null);
+        Task<IEnumerable<CompactCI>> GetCompactCIs(LayerSet visibleLayers, NpgsqlTransaction trans, DateTimeOffset? atTime, IEnumerable<Guid> CIIDs = null);
 
         Task<IDictionary<Guid, string>> GetCINames(IEnumerable<Guid> ciids, LayerSet layerset, NpgsqlTransaction trans, DateTimeOffset? atTime);
     }

@@ -13,14 +13,14 @@ import LayerDropdown from "./LayerDropdown";
 
 function AddNewRelation(props) {
   const canBeEdited = props.isEditable && props.visibleAndWritableLayers.length > 0;
-  let initialRelation = {predicateID: null, toCIID: null };
-  const [selectedLayer, setSelectedLayer] = useState(props.visibleAndWritableLayers[0]);
+  let initialRelation = {predicateID: null, toCIID: null, layer: null };
+  // const [selectedLayer, setSelectedLayer] = useState(undefined);
   const [isOpen, setOpen] = useState(false);
   const [newRelation, setNewRelation] = useState(initialRelation);
   React.useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
 
   // TODO: loading
-  const { data: dataCIs } = useQuery(queries.CIList);
+  const { data: dataCIs } = useQuery(queries.CIList, { variables: {layers: props.visibleLayers} });
   const { data: dataPredicates } = useQuery(queries.PredicateList, {
     variables: {stateFilter: 'ACTIVE_AND_DEPRECATED'}
   });
@@ -33,8 +33,8 @@ function AddNewRelation(props) {
   
   let addRelation = <></>;
   if (isOpen && dataCIs && dataPredicates) {
-    var ciList = dataCIs.ciids.map(d => {
-      return { key: d, value: d, text: d };
+    var ciList = dataCIs.compactCIs.map(d => {
+      return { key: d.id, value: d.id, text: d.name };
     });
     const sortedPredicates = [...dataPredicates.predicates]
     sortedPredicates.sort((a,b) => (a.state + "_" + a.wordingFrom).localeCompare(b.state + "_" + b.wordingFrom));
@@ -47,7 +47,7 @@ function AddNewRelation(props) {
       <Segment raised>
         <Form onSubmit={e => {
             e.preventDefault();
-            insertRelation({ variables: { fromCIID: props.ciIdentity, toCIID: newRelation.toCIID, predicateID: newRelation.predicateID, layerID: selectedLayer.id} }).then(d => {
+            insertRelation({ variables: { fromCIID: props.ciIdentity, toCIID: newRelation.toCIID, predicateID: newRelation.predicateID, layerID: newRelation.layer.id} }).then(d => {
               setOpen(false);
               setNewRelation(initialRelation);
               setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }});
@@ -57,13 +57,14 @@ function AddNewRelation(props) {
           <Form.Group as={Row} controlId="layer">
             <Form.Label column>Layer</Form.Label>
             <Col sm={10}>
-              <LayerDropdown layers={props.visibleAndWritableLayers} selectedLayer={selectedLayer} onSetSelectedLayer={l => setSelectedLayer(l)} />
+              <LayerDropdown layers={props.visibleAndWritableLayers} selectedLayer={newRelation.layer} onSetSelectedLayer={l => setNewRelation({...newRelation, layer: l})} />
             </Col>
           </Form.Group>
 
           <Form.Group as={Row} controlId="name">
             <Form.Label column>Predicate</Form.Label>
             <Col sm={10}>
+              {/* TODO: create own PredicateDropdown (similar to LayerDropdown) */}
               <Dropdown
                 value={newRelation.predicateID}
                 placeholder='Select Predicate'
@@ -79,7 +80,8 @@ function AddNewRelation(props) {
           <Form.Group as={Row} controlId="name">
             <Form.Label column>To CI</Form.Label>
             <Col sm={10}>
-              <Dropdown
+              {/* TODO: create own CIDropdown (similar to LayerDropdown) */}
+              <Dropdown 
                 value={newRelation.toCIID}
                 placeholder='Select CI'
                 onChange={(_, data) => setNewRelation({...newRelation, toCIID: data.value})}

@@ -51,14 +51,33 @@ namespace LandscapeRegistry.GraphQL
                     return ciids;
                 });
 
-
-            FieldAsync<ListGraphType<MergedCIType>>("searchCIs",
+            FieldAsync<ListGraphType<CompactCIType>>("compactCIs",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {
-                    //new QueryArgument<ListGraphType<StringGraphType>>
-                    //{
-                    //    Name = "layers"
-                    //},
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
+                    {
+                        Name = "layers"
+                    },
+                    new QueryArgument<DateTimeOffsetGraphType>
+                    {
+                        Name = "timeThreshold"
+                    },
+                }),
+                resolve: async context =>
+                {
+                    var userContext = context.UserContext as LandscapeUserContext;
+                    var layerStrings = context.GetArgument<string[]>("layers");
+                    var ls = await layerModel.BuildLayerSet(layerStrings, null);
+                    userContext.LayerSet = ls;
+                    userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
+
+                    var ciids = await ciModel.GetCompactCIs(userContext.LayerSet, null, userContext.TimeThreshold);
+                    return ciids;
+                });
+
+            FieldAsync<ListGraphType<CompactCIType>>("searchCIs",
+                arguments: new QueryArguments(new List<QueryArgument>
+                {
                     new QueryArgument<NonNullGraphType<StringGraphType>>
                     {
                         Name = "searchString"

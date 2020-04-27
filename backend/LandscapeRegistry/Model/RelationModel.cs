@@ -196,6 +196,9 @@ namespace LandscapeRegistry.Model
         {
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, DateTimeOffset.Now);
 
+            if (fromCIID == toCIID)
+                throw new Exception("From and To CIID must not be the same!");
+
             var state = RelationState.New;
             if (currentRelation != null)
             {
@@ -242,6 +245,10 @@ namespace LandscapeRegistry.Model
             {
                 var fromCIID = data.GetFromCIID(fragment);
                 var toCIID = data.GetToCIID(fragment);
+
+                if (fromCIID == toCIID)
+                    throw new Exception("From and To CIID must not be the same!");
+
                 var predicateID = data.GetPredicateID(fragment);
                 var informationHash = Relation.CreateInformationHash(fromCIID, toCIID, predicateID);
                 // remove the current relation from the list of relations to remove

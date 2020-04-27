@@ -26,7 +26,7 @@ function CIRelations(props) {
     return (<>
     <Row>
       <Col>
-        <AddNewRelation isEditable={props.isEditable} visibleAndWritableLayers={props.visibleAndWritableLayers} ciIdentity={props.ciIdentity}></AddNewRelation>
+        <AddNewRelation isEditable={props.isEditable} visibleLayers={props.visibleLayers} visibleAndWritableLayers={props.visibleAndWritableLayers} ciIdentity={props.ciIdentity}></AddNewRelation>
       </Col>
     </Row>
     <Row>

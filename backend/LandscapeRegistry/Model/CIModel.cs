@@ -207,6 +207,16 @@ namespace LandscapeRegistry.Model
             return cis.Where(ci => typeIDs.Contains(ci.Type.ID));
         }
 
+        public async Task<IEnumerable<CompactCI>> GetCompactCIs(LayerSet visibleLayers, NpgsqlTransaction trans, DateTimeOffset? atTime, IEnumerable<Guid> CIIDs = null)
+        {
+            if (CIIDs == null) CIIDs = await GetCIIDs(trans);
+            // TODO: performance improvements
+            var ciTypes = await GetTypeOfCIs(CIIDs, trans, atTime);
+            var ciNames = await GetCINames(CIIDs, visibleLayers, trans, atTime);
+
+            return CIIDs.Select(ciid => CompactCI.Build(ciid, ciNames[ciid], ciTypes[ciid], atTime ?? DateTimeOffset.Now));
+        }
+
         public async Task<IEnumerable<Guid>> GetCIIDs(NpgsqlTransaction trans)
         {
             using var command = new NpgsqlCommand(@"select id from ci", conn, trans);

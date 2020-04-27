@@ -8,6 +8,6 @@ namespace Landscape.Base.Model
 {
     public interface ICISearchModel
     {
-        Task<IEnumerable<MergedCI>> Search(string searchString, LayerSet layerSet, NpgsqlTransaction trans, DateTimeOffset? atTime = null);
+        Task<IEnumerable<CompactCI>> Search(string searchString, LayerSet layerSet, NpgsqlTransaction trans, DateTimeOffset? atTime = null);
     }
 }

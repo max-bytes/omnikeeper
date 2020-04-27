@@ -53,4 +53,23 @@ namespace Landscape.Base.Entity
             };
         }
     }
+
+    public class CompactCI
+    {
+        public Guid ID { get; private set; }
+        public string Name { get; private set; }
+        public CIType Type { get; private set; }
+        public DateTimeOffset AtTime { get; private set; }
+
+        public static CompactCI Build(Guid id, string name, CIType type, DateTimeOffset atTime)
+        {
+            return new CompactCI
+            {
+                Type = type,
+                Name = name,
+                AtTime = atTime,
+                ID = id
+            };
+        }
+    }
 }

@@ -29,6 +29,13 @@ export const Fragments = {
         }
     }
   `,
+  compactCI: gql`
+    fragment CompactCI on CompactCIType {
+        id
+        name
+        type {id}
+    }
+  `,
   fullCI: gql`
     fragment FullCI on MergedCIType {
         id

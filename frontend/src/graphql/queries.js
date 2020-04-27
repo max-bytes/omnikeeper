@@ -3,9 +3,12 @@ import { Fragments } from './fragments';
 
 export const queries = {
     CIList: gql`
-        query ciList {
-            ciids
-        }
+        query ciList($layers: [String]!) {
+            compactCIs(layers: $layers) {
+              ...CompactCI
+            }
+          }
+        ${Fragments.compactCI}
     `,
     PredicateList: gql`
         query predicateList($stateFilter: AnchorStateFilter!) {
@@ -24,17 +27,12 @@ export const queries = {
         }
     `,
     SearchCIs: gql`
-        query searchCIs($searchString: String!, $includeAttributes: Boolean = false, $includeRelated: Boolean = false) {
+        query searchCIs($searchString: String!) {
             searchCIs(searchString: $searchString) {
-                ...FullCI
+                ...CompactCI
             }
         }
-        ${Fragments.relatedCI}
-        ${Fragments.fullCI}
-        ${Fragments.mergedAttribute}
-        ${Fragments.attribute}
-        ${Fragments.relation}
-        ${Fragments.fullPredicate}
+        ${Fragments.compactCI}
     `,
 
     FullCI: gql`

@@ -59,7 +59,7 @@ namespace LandscapeRegistry.GraphQL
                 });
 
                 // TODO: consider packing the actual CIs into its own resolver so they can be queried when necessary... but that would open up the 1+N problem again :(
-                var relatedCINames = await ciModel.GetCINames(relationTuples.Select(t => t.relatedCIID), layerset, userContext.Transaction, userContext.TimeThreshold);
+                var relatedCINames = await ciModel.GetCINames(relationTuples.Select(t => t.relatedCIID).Distinct(), layerset, userContext.Transaction, userContext.TimeThreshold);
                 foreach ((var relation, var relatedCIID, var isForwardRelation) in relationTuples)
                 {
                     relatedCINames.TryGetValue(relatedCIID, out var ciName);
@@ -95,6 +95,18 @@ namespace LandscapeRegistry.GraphQL
                 var et = await traitModel.CalculateEffectiveTraitSetForCI(context.Source, userContext.Transaction);
                 return et.EffectiveTraits.Values;
             });
+        }
+    }
+
+
+    public class CompactCIType : ObjectGraphType<CompactCI>
+    {
+        public CompactCIType()
+        {
+            Field("id", x => x.ID);
+            Field("name", x => x.Name, nullable: true);
+            Field(x => x.AtTime);
+            Field(x => x.Type, type: typeof(CITypeType));
         }
     }
 

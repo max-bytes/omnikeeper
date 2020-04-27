@@ -21,7 +21,7 @@ namespace LandscapeRegistry.Model
             this.ciModel = ciModel;
         }
 
-        public async Task<IEnumerable<MergedCI>> Search(string searchString, LayerSet layerSet, NpgsqlTransaction trans, DateTimeOffset? atTime = null)
+        public async Task<IEnumerable<CompactCI>> Search(string searchString, LayerSet layerSet, NpgsqlTransaction trans, DateTimeOffset? atTime = null)
         {
             // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
             var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(CIModel.NameAttribute, new AllCIIDsAttributeSelection(), false, layerSet, trans, atTime);
@@ -31,7 +31,7 @@ namespace LandscapeRegistry.Model
             if (Guid.TryParse(searchString, out var guid))
                 foundCIIDs = (await ciModel.GetCIIDs(trans)).Where(ciid => ciid.Equals(guid)).ToDictionary(ciid => ciid, ciid => ciid.ToString());
 
-            var cis = await ciModel.GetMergedCIs(layerSet, false, trans, atTime, foundCIIDs.Select(t => t.Key)); // TODO: this messes up the previous sorting :(
+            var cis = await ciModel.GetCompactCIs(layerSet, trans, atTime, foundCIIDs.Select(t => t.Key)); // TODO: this messes up the previous sorting :(
 
             return cis.Select(ci => (ci, text: foundCIIDs[ci.ID])).OrderBy(t => t.text).Select(t => t.ci);
         }
