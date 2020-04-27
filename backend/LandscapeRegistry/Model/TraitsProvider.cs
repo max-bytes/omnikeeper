@@ -19,10 +19,10 @@ namespace LandscapeRegistry.Model
 
         public async Task<Traits> GetTraits(NpgsqlTransaction trans)
         {
-            using var scope = SP.CreateScope();
-            var predicateModel = scope.ServiceProvider.GetRequiredService<IPredicateModel>();
-            var ciModel = scope.ServiceProvider.GetRequiredService<ICIModel>();
-            var predicates = await predicateModel.GetPredicates(trans, null, AnchorStateFilter.All);
+            //using var scope = SP.CreateScope();
+            //var predicateModel = scope.ServiceProvider.GetRequiredService<IPredicateModel>();
+            //var ciModel = scope.ServiceProvider.GetRequiredService<ICIModel>();
+            //var predicates = await predicateModel.GetPredicates(trans, null, AnchorStateFilter.All);
 
             // TODO: move somewhere else
             var traits = new List<Trait>()
@@ -40,7 +40,7 @@ namespace LandscapeRegistry.Model
                     },
                     new List<TraitRelation>() {
                         TraitRelation.Build("ansible_groups",
-                            RelationTemplate.Build(predicates["has_ansible_group"], new CIType[] { await ciModel.GetCITypeByID("Ansible Host Group", trans, null) }, 1, null)
+                            RelationTemplate.Build("has_ansible_group", new string[] {"Ansible Host Group" }, 1, null)
                         )
                     })
                 };

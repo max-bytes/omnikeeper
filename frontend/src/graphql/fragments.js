@@ -53,9 +53,7 @@ export const Fragments = {
                 }
             }
             relationErrors {
-                predicate {
-                    id
-                }
+                predicateID
                 errors {
                     __typename
                     ... on TemplateErrorRelationGenericType {errorMessage}

@@ -249,10 +249,10 @@ namespace LandscapeRegistry
             {
                 app.UseDeveloperExceptionPage();
 
-                app.UseGraphQLPlayground(new GraphQLPlaygroundOptions()); //to explorer API navigate https://*DOMAIN*/ui/playground
-
                 IdentityModelEventSource.ShowPII = true; // to show more debugging information
             }
+
+            app.UseGraphQLPlayground(new GraphQLPlaygroundOptions());
 
             if (env.IsDevelopment())
             {
@@ -270,10 +270,7 @@ namespace LandscapeRegistry
                 endpoints.MapControllers();
             });
 
-            app.UseSwagger(c =>
-            {
-                //c.RouteTemplate = Configuration["BaseURL"] + "/swagger/{documentname}/swagger.json";
-            });
+            app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("./v1/swagger.json", "Landscape Registry REST API V1");
@@ -288,7 +285,7 @@ namespace LandscapeRegistry
                 .UseActivator(new AspNetCoreJobActivator(serviceScopeFactory));
             app.UseHangfireServer();
             if (env.IsDevelopment() || env.IsStaging())
-            {
+            { // TODO: also use in production, but fix auth first
                 // workaround, see: https://github.com/HangfireIO/Hangfire/issues/1110
                 app.Use((context, next) =>
                 {

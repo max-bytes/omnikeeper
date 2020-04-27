@@ -9,9 +9,9 @@ namespace Landscape.Base.Entity
 {
     public class Templates
     {
-        private IImmutableDictionary<CIType, Template> templates { get; set; }
+        private IImmutableDictionary<string, Template> templates { get; set; }
 
-        public Template GetTemplate(CIType ciType) => templates.GetValueOrDefault(ciType, null);
+        public Template GetTemplate(string ciTypeID) => templates.GetValueOrDefault(ciTypeID, null);
 
         public async static Task<Templates> Build(ICIModel ciModel, ITraitsProvider traitsProvider, NpgsqlTransaction trans)
         {
@@ -21,7 +21,7 @@ namespace Landscape.Base.Entity
             {
                 templates = new List<Template>()
                 {
-                    Template.Build(await ciModel.GetCITypeByID("Application", trans, null),
+                    Template.Build("Application",
                             new List<CIAttributeTemplate>() {
                                 // TODO
                                 CIAttributeTemplate.BuildFromParams("name", "This is a description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
@@ -29,7 +29,7 @@ namespace Landscape.Base.Entity
                             new List<RelationTemplate>() {},
                             new List<Trait>() {}
                     ),
-                    Template.Build(await ciModel.GetCITypeByID("Naemon Instance", trans, null),
+                    Template.Build("Naemon Instance",
                             new List<CIAttributeTemplate>() {
                                 // TODO
                                 CIAttributeTemplate.BuildFromParams("name", "This is a description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
@@ -40,14 +40,14 @@ namespace Landscape.Base.Entity
                                 traits.traits["ansible_can_deploy_to_it"]
                             }
                     ),
-                    Template.Build(await ciModel.GetCITypeByID("Ansible Host Group", trans, null),
+                    Template.Build("Ansible Host Group",
                             new List<CIAttributeTemplate>() {
                                 CIAttributeTemplate.BuildFromParams("automation.ansible_group_name", "This is a description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                             },
                             new List<RelationTemplate>() {},
                             new List<Trait>() {}
                     )
-                }.ToImmutableDictionary(t => t.CIType)
+                }.ToImmutableDictionary(t => t.CITypeID)
             };
         }
     }

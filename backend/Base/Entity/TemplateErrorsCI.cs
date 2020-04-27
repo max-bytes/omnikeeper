@@ -102,13 +102,13 @@ namespace Landscape.Base.Entity
     }
     public class TemplateErrorsRelation
     {
-        public Predicate Predicate { get; private set; }
+        public string PredicateID { get; private set; }
         public IEnumerable<ITemplateErrorRelation> Errors { get; private set; }
-        public static TemplateErrorsRelation Build(Predicate predicate, IEnumerable<ITemplateErrorRelation> errors)
+        public static TemplateErrorsRelation Build(string predicateID, IEnumerable<ITemplateErrorRelation> errors)
         {
             return new TemplateErrorsRelation()
             {
-                Predicate = predicate,
+                PredicateID = predicateID,
                 Errors = errors
             };
         }

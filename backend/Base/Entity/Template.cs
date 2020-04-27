@@ -5,19 +5,19 @@ namespace Landscape.Base.Entity
 {
     public class Template
     {
-        public CIType CIType { get; private set; }
+        public string CITypeID { get; private set; }
         public IImmutableDictionary<string, CIAttributeTemplate> AttributeTemplates { get; private set; }
         public IImmutableDictionary<string, RelationTemplate> RelationTemplates { get; private set; }
 
         public IImmutableDictionary<string, Trait> Traits { get; private set; } // TODO: actually check if the traits are fulfilled
 
-        public static Template Build(CIType ciType, IEnumerable<CIAttributeTemplate> attributes, IEnumerable<RelationTemplate> relations, IEnumerable<Trait> traits)
+        public static Template Build(string ciTypeID, IEnumerable<CIAttributeTemplate> attributes, IEnumerable<RelationTemplate> relations, IEnumerable<Trait> traits)
         {
             return new Template()
             {
-                CIType = ciType,
+                CITypeID = ciTypeID,
                 AttributeTemplates = attributes.ToImmutableDictionary(t => t.Name),
-                RelationTemplates = relations.ToImmutableDictionary(t => t.Predicate.ID),
+                RelationTemplates = relations.ToImmutableDictionary(t => t.PredicateID),
                 Traits = traits.ToImmutableDictionary(t => t.Name)
             };
         }

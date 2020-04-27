@@ -75,7 +75,7 @@ namespace LandscapeRegistry.GraphQL
     {
         public TemplateErrorsRelationType()
         {
-            Field(x => x.Predicate, type: typeof(PredicateType));
+            Field(x => x.PredicateID);
             Field(x => x.Errors, type: typeof(ListGraphType<TemplateErrorRelationType>));
         }
     }

@@ -31,7 +31,7 @@ namespace LandscapeRegistry.Model
         public async Task<TemplateErrorsCI> CalculateTemplateErrors(MergedCI ci, NpgsqlTransaction trans)
         {
             var templates = await TemplatesProvider.GetTemplates(trans);
-            var template = templates.GetTemplate(ci.Type);
+            var template = templates.GetTemplate(ci.Type?.ID);
             var attributesTemplates = template?.AttributeTemplates;
             var relationTemplates = template?.RelationTemplates;
 
@@ -47,13 +47,11 @@ namespace LandscapeRegistry.Model
             var errorsRelation = new Dictionary<string, TemplateErrorsRelation>();
             if (relationTemplates != null)
                 errorsRelation = relationTemplates.Values
-                .Select(rt => (rt.Predicate.ID, TemplateCheckService.CalculateTemplateErrorsRelation(relationsAndToCIs, rt).errors))
+                .Select(rt => (rt.PredicateID, TemplateCheckService.CalculateTemplateErrorsRelation(relationsAndToCIs, rt).errors))
                 .Where(t => !t.errors.Errors.IsEmpty())
-                .ToDictionary(t => t.ID, t => t.errors);
+                .ToDictionary(t => t.PredicateID, t => t.errors);
 
             return TemplateErrorsCI.Build(errorsAttribute, errorsRelation);
         }
-
-
     }
 }
