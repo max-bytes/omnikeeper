@@ -29,7 +29,7 @@ namespace LandscapeRegistry.GraphQL
         {
             Field(x => x.Name);
             Field(x => x.State, type: typeof(AnchorStateType));
-            Field(x => x.BrainName);
+            Field(x => x.BrainName, nullable: true);
         }
     }
     public class UpdateLayerInput

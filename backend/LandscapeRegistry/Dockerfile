@@ -20,12 +20,19 @@ RUN dotnet build "LandscapeRegistry.csproj" -c Release -o /app/build
 #WORKDIR "/src/MonitoringPlugin"
 #RUN dotnet build "MonitoringPlugin.csproj" -c Release -o /app/build
 
+WORKDIR /src
+COPY ["DBMigrate/DBMigrate.csproj", "DBMigrate/"]
+RUN dotnet restore "DBMigrate/DBMigrate.csproj"
+WORKDIR "/src/DBMigrate"
+RUN dotnet build "DBMigrate.csproj" -c Release -o /app/build
 
 FROM build AS publish
 WORKDIR "/src/LandscapeRegistry"
 RUN dotnet publish "LandscapeRegistry.csproj" -c Release -o /app/publish
 #WORKDIR "/src/MonitoringPlugin"
 #RUN dotnet publish "MonitoringPlugin.csproj" -c Release -o /app/publish/plugins
+WORKDIR "/src/DBMigrate"
+RUN dotnet publish "DBMigrate.csproj" -c Release -o /app/publish/DBMigrate
 
 FROM base AS final
 WORKDIR /app

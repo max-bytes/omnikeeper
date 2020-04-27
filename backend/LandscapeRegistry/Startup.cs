@@ -32,6 +32,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace LandscapeRegistry
@@ -231,7 +232,7 @@ namespace LandscapeRegistry
         private IWebHostEnvironment CurrentEnvironment { get; set; }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory, IHostApplicationLifetime hostApplicationLifetime)
         {
             // run database migrations
             // TODO, HACK: this has issues once we run multiple (load-balanced) application instances with the same database
@@ -240,7 +241,8 @@ namespace LandscapeRegistry
             var migrationResult = DBMigration.Migrate(cs);
             if (!migrationResult.Successful)
                 throw new Exception("Database migration failed!", migrationResult.Error);
-
+            //if (migrationResult.Scripts.Count() > 0)
+            //    hostApplicationLifetime.StopApplication(); // HACK: we rely on docker to restart us again in case of database migrations
 
             app.UseCors("AllowAllOrigins");
 

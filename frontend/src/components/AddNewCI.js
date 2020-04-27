@@ -41,7 +41,7 @@ function AddNewCI(props) {
           <Form.Group as={Row} controlId="type">
             <Form.Label column>Type</Form.Label>
             <Col sm={10}>
-              <Dropdown placeholder='Select CI type' fluid search selection value={newCI.type}
+              <Dropdown placeholder='Select CI type (optional)' fluid search selection value={newCI.type}
                 onChange={(e, data) => {
                   setNewCI({...newCI, typeID: data.value });
                 }}

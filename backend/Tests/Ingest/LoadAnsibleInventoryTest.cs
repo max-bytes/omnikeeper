@@ -94,7 +94,10 @@ namespace Tests.Ingest
                 var f = LoadFile($"{fqdn}\\setup_facts.json");
                 var jo = JObject.Parse(f);
 
-                await controller.IngestSetupFacts(writeLayerID, searchLayerIDs, jo);
+                await controller.IngestAnsibleInventoryScan(writeLayerID, searchLayerIDs, new Landscape.Base.Entity.DTO.Ingest.AnsibleInventoryScanDTO()
+                {
+                    SetupFacts = new Dictionary<string, JObject>() { { fqdn, jo } }
+                });
             }
 
             //var ingestData = IngestData.Build(cis, relations);
