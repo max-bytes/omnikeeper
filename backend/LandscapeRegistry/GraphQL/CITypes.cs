@@ -63,7 +63,7 @@ namespace LandscapeRegistry.GraphQL
                 foreach ((var relation, var relatedCIID, var isForwardRelation) in relationTuples)
                 {
                     relatedCINames.TryGetValue(relatedCIID, out var ciName);
-                    relatedCIs.Add(RelatedCI.Build(relation, relatedCIID, ciName, isForwardRelation));
+                    relatedCIs.Add(RelatedCI.Build(relation, relatedCIID, ciName, isForwardRelation)); // TODO: rewrite to use CompactCI
                 }
 
                 var wStr = context.GetArgument<string>("where"); // TODO: develop further

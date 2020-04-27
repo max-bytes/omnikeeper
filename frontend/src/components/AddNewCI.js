@@ -8,59 +8,85 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import { Dropdown, Message, Icon } from 'semantic-ui-react'
 import { withRouter } from 'react-router-dom'
+import LayerDropdown from "./LayerDropdown";
 
 function AddNewCI(props) {
 
-  let initialNewCI = {typeID: null };
+  let initialNewCI = {name: "", layerForName: null, typeID: null };
   const [newCI, setNewCI] = useState(initialNewCI);
+  const { error: errorLayers, data: dataLayers } = useQuery(queries.Layers);
   
   const [error, setError] = useState("");
   const [goToCIAfterCreation, setGoToCIAfterCreation] = useState(false);
 
   const { data: dataCITypes } = useQuery(queries.CITypeList);
   const [createNewCI] = useMutation(mutations.CREATE_CI);
-
-  if (!dataCITypes)
+  
+  if (!dataCITypes || !dataLayers)
     return "Loading";
-  else
-  return (
-    <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
-      <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1}}>
-        <Form style={{display: 'flex', flexDirection: 'column', flexBasis: '500px'}} onSubmit={e => {
-            e.preventDefault();
-            createNewCI({ variables: { typeID: newCI.typeID }})
-            .then(d => {
-              if (goToCIAfterCreation)
-                props.history.push(`/explorer/${d.data.createCIs.ciids[0]}`);
-              else
-                setNewCI(initialNewCI);
-            }).catch(e => {
-              setError(e.message);
-            });
-          }}>
-          <Form.Group as={Row} controlId="type">
-            <Form.Label column>Type</Form.Label>
-            <Col sm={10}>
-              <Dropdown placeholder='Select CI type (optional)' fluid search selection value={newCI.type}
-                onChange={(e, data) => {
-                  setNewCI({...newCI, typeID: data.value });
-                }}
-                options={dataCITypes.citypes.map(type => { return {key: type.id, value: type.id, text: type.id }; })}
-              />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row} controlId="type" style={{paddingLeft: "1.25rem"}}>
-            <Form.Check type='checkbox' label='Go to CI after creation' value={goToCIAfterCreation} onChange={e => setGoToCIAfterCreation(e.target.checked)} />
-          </Form.Group>
-          <Button variant="primary" type="submit">Create New CI</Button>
-          {error && <Message attached='bottom' error>
-            <Icon name='warning sign' />
-            {error}
-          </Message>}
-        </Form>
+  else {
+    // sort based on order
+    let sortedLayers = dataLayers.layers.concat();
+    sortedLayers.sort((a,b) => {
+      var o = b.sort - a.sort;
+      if (o === 0) return ('' + a.name).localeCompare(b.name);
+      return o;
+    });
+
+    let visibleAndWritableLayers = sortedLayers.filter(l => l.visibility && l.writable && l.state === 'ACTIVE');
+
+    return (
+      <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
+        <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1}}>
+          <Form style={{display: 'flex', flexDirection: 'column', flexBasis: '500px'}} onSubmit={e => {
+              e.preventDefault();
+              createNewCI({ variables: { name: newCI.name, layerIDForName: newCI.layerForName?.id, typeID: newCI.typeID }})
+              .then(d => {
+                if (goToCIAfterCreation)
+                  props.history.push(`/explorer/${d.data.createCIs.ciids[0]}`);
+                else
+                  setNewCI(initialNewCI);
+              }).catch(e => {
+                setError(e.message);
+              });
+            }}>
+              
+            <Form.Group as={Row} controlId="name">
+              <Form.Label column>Name</Form.Label>
+              <Col sm={9}>
+                <Form.Control type="text" placeholder="Enter name" value={newCI.name} onChange={e => setNewCI({...newCI, name: e.target.value})} />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} controlId="layerForName">
+              <Form.Label column>Layer For Name</Form.Label>
+              <Col sm={9}>
+                <LayerDropdown layers={visibleAndWritableLayers} selectedLayer={newCI.layerForName} onSetSelectedLayer={l => setNewCI({...newCI, layerForName: l })} />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} controlId="type">
+              <Form.Label column>Type</Form.Label>
+              <Col sm={9}>
+                <Dropdown placeholder='Select CI type (optional)' fluid search selection value={newCI.type}
+                  onChange={(e, data) => {
+                    setNewCI({...newCI, typeID: data.value });
+                  }}
+                  options={dataCITypes.citypes.map(type => { return {key: type.id, value: type.id, text: type.id }; })}
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} controlId="type" style={{paddingLeft: "1.25rem"}}>
+              <Form.Check type='checkbox' label='Go to CI after creation' value={goToCIAfterCreation} onChange={e => setGoToCIAfterCreation(e.target.checked)} />
+            </Form.Group>
+            <Button variant="primary" type="submit">Create New CI</Button>
+            {error && <Message attached='bottom' error>
+              <Icon name='warning sign' />
+              {error}
+            </Message>}
+          </Form>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 }
 
 export default withRouter(AddNewCI);

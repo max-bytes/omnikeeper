@@ -13,7 +13,7 @@ namespace LandscapeRegistry.Model
     {
         private readonly NpgsqlConnection conn;
 
-        private static readonly ComputeLayerBrain DefaultCLB = ComputeLayerBrain.Build("");
+        public static readonly ComputeLayerBrain DefaultCLB = ComputeLayerBrain.Build("");
         private static readonly AnchorState DefaultState = AnchorState.Active;
 
         public LayerModel(NpgsqlConnection connection)

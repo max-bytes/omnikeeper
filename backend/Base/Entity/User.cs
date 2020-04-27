@@ -12,6 +12,8 @@ namespace Landscape.Base.Entity
         public UserInDatabase InDatabase { get; private set; }
         public IEnumerable<Layer> WritableLayers { get; private set; }
 
+        public string Username => InDatabase.Username;
+
         public static User Build(UserInDatabase inDatabase, IEnumerable<Layer> writableLayers)
         {
             var user = new User

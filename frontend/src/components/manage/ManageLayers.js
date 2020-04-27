@@ -24,7 +24,7 @@ export default function ManageLayers(props) {
   const [updateLayer] = useMutation(mutations.UPDATE_LAYER);
 
   const columnDefs = [
-    { headerName: "ID", field: "id", editable: false },
+    // { headerName: "ID", field: "id", editable: false },
     { headerName: "Name", field: "name", editable: (params) => params.data.isNew },
     { headerName: "Compute Layer Brain", field: "brainName" },
     { headerName: "State", field: "state", cellEditor: 'agSelectCellEditor', cellEditorParams: {

@@ -8,12 +8,16 @@ namespace LandscapeRegistry.GraphQL
     public class CreateCIInput
     {
         public string TypeID { get; private set; }
+        public string Name { get; private set; }
+        public long LayerIDForName { get; private set; }
     }
     public class CreateCIInputType : InputObjectGraphType<CreateCIInput>
     {
         public CreateCIInputType()
         {
             Field(x => x.TypeID, nullable: true);
+            Field(x => x.Name);
+            Field(x => x.LayerIDForName);
         }
     }
 

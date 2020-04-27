@@ -106,9 +106,11 @@ namespace LandscapeRegistry
             services.AddScoped<IPredicateModel, PredicateModel>();
             services.AddScoped<PredicateModel>();
             services.AddScoped<CachedPredicateModel>();
+            services.AddScoped<KeycloakModel>();
 
             services.AddScoped<TraitModel>();
 
+            services.AddScoped<AuthorizationService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<MarkedForDeletionService>();
             services.AddScoped<IngestDataService>();

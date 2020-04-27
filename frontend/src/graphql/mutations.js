@@ -77,9 +77,11 @@ ${Fragments.fullCI}
 `,
 
 CREATE_CI: gql`
-    mutation CreateCI($typeID: String) {
+    mutation CreateCI($name: String!, $layerIDForName: Long!, $typeID: String) {
       createCIs(cis: [
         {
+          name: $name,
+          layerIDForName: $layerIDForName,
           typeID: $typeID
         }
       ]) {

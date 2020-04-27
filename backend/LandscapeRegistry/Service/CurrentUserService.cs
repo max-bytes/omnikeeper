@@ -13,13 +13,15 @@ namespace LandscapeRegistry.Service
 {
     public class CurrentUserService : ICurrentUserService
     {
-        public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel, ILayerModel layerModel)
+        public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel, ILayerModel layerModel, AuthorizationService authorizationService)
         {
             HttpContextAccessor = httpContextAccessor;
             UserModel = userModel;
             LayerModel = layerModel;
+            AuthorizationService = authorizationService;
         }
 
+        private AuthorizationService AuthorizationService { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
         private IUserInDatabaseModel UserModel { get; }
         private ILayerModel LayerModel { get; }
@@ -45,13 +47,16 @@ namespace LandscapeRegistry.Service
                 var guidString = claims.FirstOrDefault(c => c.Type == "id")?.Value;
                 var groups = claims.Where(c => c.Type == "groups").Select(c => c.Value).ToArray();
 
-                var writableLayers = groups.Where(g => g.StartsWith("/layer_writeaccess_")).Select(async g =>
-                {
-                    var match = Regex.Match(g, "layer_writeaccess_(.*)");
-                    if (!match.Success) throw new Exception("Couldn't parse layer_writeaccess group name");
-                    var layerName = match.Groups[1];
-                    return await LayerModel.GetLayer(layerName.Value, trans);
-                }).Select(t => t.Result).Where(l => l != null).ToList();
+                var writableLayers = new List<Layer>();
+                foreach (var group in groups) {
+                    var layerName = AuthorizationService.ParseLayerNameFromWriteAccessGroupName(group);
+                    if (layerName != null)
+                    {
+                        var layer = await LayerModel.GetLayer(layerName, trans);
+                        if (layer != null)
+                            writableLayers.Add(layer);
+                    }
+                }
 
                 var usertype = UserType.Unknown;
                 if (groups.Contains("/humans"))

@@ -96,7 +96,7 @@ namespace LandscapeRegistry.Model
             var groupedAttributes = attributes.GroupBy(a => a.CIID).ToDictionary(a => a.Key, a => a.ToList());
             if (includeEmptyCIs)
             {
-                var allCIIds = await GetCIIDs(trans);
+                var allCIIds = await GetCIIDs(trans); // TODO: performance improvements?
                 var emptyCIs = allCIIds.Except(groupedAttributes.Select(a => a.Key)).ToDictionary(a => a, a => new List<CIAttribute>());
                 groupedAttributes = groupedAttributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
             }

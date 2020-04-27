@@ -8,6 +8,6 @@ export function ErrorModalCellRenderer(props) {
   return (
     <Popup flowing on='click'
       trigger={<Icon color='red' name='warning circle' />}
-    ><Popup.Content><ErrorView error={error} /></Popup.Content></Popup>
+    ><Popup.Content><ErrorView error={error} inPopup={true} /></Popup.Content></Popup>
   )
 }
