@@ -235,14 +235,11 @@ namespace LandscapeRegistry
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory, IHostApplicationLifetime hostApplicationLifetime)
         {
             // run database migrations
-            // TODO, HACK: this has issues once we run multiple (load-balanced) application instances with the same database
-            // consider more advanced migration methods, such as running it during deployment, etc...
-            var cs = Configuration.GetConnectionString("LandscapeDatabaseConnection");
-            var migrationResult = DBMigration.Migrate(cs);
-            if (!migrationResult.Successful)
-                throw new Exception("Database migration failed!", migrationResult.Error);
-            //if (migrationResult.Scripts.Count() > 0)
-            //    hostApplicationLifetime.StopApplication(); // HACK: we rely on docker to restart us again in case of database migrations
+            // NOTE: is now run in own executable running before app itself starts
+            //var cs = Configuration.GetConnectionString("LandscapeDatabaseConnection");
+            //var migrationResult = DBMigration.Migrate(cs);
+            //if (!migrationResult.Successful)
+            //    throw new Exception("Database migration failed!", migrationResult.Error);
 
             app.UseCors("AllowAllOrigins");
 
