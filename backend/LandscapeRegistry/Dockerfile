@@ -37,4 +37,7 @@ RUN dotnet publish "DBMigrate.csproj" -c Release -o /app/publish/DBMigrate
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "LandscapeRegistry.dll"]
+#ENTRYPOINT ["dotnet", "LandscapeRegistry.dll"]
+RUN chmod +x entrypoint.sh
+RUN cat entrypoint.sh
+ENTRYPOINT ["/app/entrypoint.sh"]

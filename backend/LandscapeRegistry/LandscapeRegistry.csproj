@@ -52,5 +52,11 @@
     <ProjectReference Include="..\MonitoringPlugin\MonitoringPlugin.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="entrypoint.sh">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 
 </Project>
