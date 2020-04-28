@@ -275,7 +275,7 @@ namespace LandscapeRegistry
 
             app.UseSwagger(c =>
             {
-                c.RouteTemplate = "/backend/swagger/{documentName}/swagger.json"; // TEST
+                c.RouteTemplate = "backend/swagger/{documentName}/swagger.json"; // TEST
             });
             app.UseSwaggerUI(c =>
             {
