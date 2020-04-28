@@ -4,7 +4,9 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace LandscapeRegistry.Entity.AttributeValues
 {
@@ -16,9 +18,14 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public abstract bool IsArray { get; }
         public abstract AttributeValueDTO ToGeneric();
         public abstract bool Equals(IAttributeValue other);
-        public abstract bool FullTextSearch(string searchString);
+        public abstract bool FullTextSearch(string searchString, CompareOptions compareOptions);
 
         public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
+        { // does not make sense for JSON
+            yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, Type);
+        }
+
+        public IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex)
         { // does not make sense for JSON
             yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, Type);
         }
@@ -32,9 +39,11 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public override AttributeValueDTO ToGeneric() => AttributeValueDTO.Build(Value2String(), Type);
         public override bool IsArray => false;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueJSONScalar);
-        public bool Equals([AllowNull] AttributeValueJSONScalar other) => other != null && Value.Equals(other.Value);
+        public bool Equals([AllowNull] AttributeValueJSONScalar other) => other != null && JToken.DeepEquals(Value, other.Value);
         public override int GetHashCode() => Value.GetHashCode();
-        public override bool FullTextSearch(string searchString) => Value.Descendants().Where(d => d is JProperty && !(d as JProperty).HasValues).Any(d => (d as JProperty).Value.Contains(searchString));
+        public override bool FullTextSearch(string searchString, CompareOptions compareOptions) 
+            => Value.Descendants().Where(d => d is JProperty && !(d as JProperty).HasValues).Any(d 
+                => CultureInfo.InvariantCulture.CompareInfo.IndexOf((d as JProperty).Value.ToString(), searchString, compareOptions) >= 0); // TODO: correct?
 
         internal static AttributeValueJSONScalar Build(string value)
         {
@@ -59,9 +68,19 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public override AttributeValueDTO ToGeneric() => AttributeValueDTO.Build(Values.Select(v => v.ToString()).ToArray(), Type);
         public override bool IsArray => true;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueJSONArray);
-        public bool Equals([AllowNull] AttributeValueJSONArray other) => other != null && Values.SequenceEqual(other.Values);
+
+        private class EqualityComparer : IEqualityComparer<JObject>
+        {
+            public bool Equals(JObject x, JObject y) => JToken.DeepEquals(x, y);
+            public int GetHashCode(JObject obj) => obj.GetHashCode();
+        }
+        private static readonly EqualityComparer ec = new EqualityComparer();
+        public bool Equals([AllowNull] AttributeValueJSONArray other) 
+            => other != null && Values.SequenceEqual(other.Values, ec);
         public override int GetHashCode() => Values.GetHashCode();
-        public override bool FullTextSearch(string searchString) => Values.Any(value => value.Descendants().Where(d => d is JProperty && !(d as JProperty).HasValues).Any(d => (d as JProperty).Value.Contains(searchString)));
+        public override bool FullTextSearch(string searchString, CompareOptions compareOptions) 
+            => Values.Any(value => value.Descendants().Where(d => d is JProperty && !(d as JProperty).HasValues).Any(d 
+                => CultureInfo.InvariantCulture.CompareInfo.IndexOf((d as JProperty).Value.ToString(), searchString, compareOptions) >= 0));
 
 
         public static AttributeValueJSONArray Build(string[] values)

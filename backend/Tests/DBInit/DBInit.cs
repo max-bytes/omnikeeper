@@ -3,6 +3,7 @@ using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Cached;
 using LandscapeRegistry.Utils;
+using Microsoft.Extensions.Hosting;
 using NUnit.Framework;
 using System;
 using System.Linq;
@@ -37,17 +38,17 @@ namespace Tests.DBInit
 
             var user = await DBSetup.SetupUser(userModel, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
 
-
-            var numRegularCIs = 500;
-            var numRegularRelations = 5000;
+            var numApplicationCIs = 10;
+            var numHostCIs = 10;
+            var numRunsOnRelations = 5;
             int numAttributesPerCIFrom = 20;
             int numAttributesPerCITo = 40;
-            var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
-            var regularPredicates = new[] {
-                Predicate.Build("is_part_of", "is part of", "has part", AnchorState.Active),
-                Predicate.Build("runs_on", "runs on", "is running", AnchorState.Active),
-                Predicate.Build("is_attached_to", "is attached to", "has attachment", AnchorState.Active),
-            };
+            //var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
+            var predicateRunsOn = Predicate.Build("runs_on", "runs on", "is running", AnchorState.Active);
+            //var regularPredicates = new[] {
+                //Predicate.Build("is_part_of", "is part of", "has part", AnchorState.Active),
+                //Predicate.Build("is_attached_to", "is attached to", "has attachment", AnchorState.Active),
+            //};
             var regularAttributeNames = new[] { "att_1", "att_2", "att_3", "att_4", "att_5", "att_6", "att_7", "att_8", "att_9" };
             var regularAttributeValues = Enumerable.Range(0, 10).Select<int, IAttributeValue>(i =>
             {
@@ -60,11 +61,13 @@ namespace Tests.DBInit
                     return AttributeValueTextScalar.Build($"attribute value {i + 1}");
             }).ToArray();
 
-            var regularCiids = Enumerable.Range(0, numRegularCIs).Select(i =>
+            var applicationCIIDs = Enumerable.Range(0, numApplicationCIs).Select(i =>
             {
                 return Guid.NewGuid();
-                //var identity = "H" + RandomString.Generate(9, random, "0123456789");
-                //return identity;
+            }).ToList();
+            var hostCIIDs = Enumerable.Range(0, numHostCIs).Select(i =>
+            {
+                return Guid.NewGuid();
             }).ToList();
 
             var monitoringPredicates = new[] {
@@ -72,9 +75,9 @@ namespace Tests.DBInit
                 Predicate.Build("is_monitored_by", "is monitored by", "monitors", AnchorState.Active)
             };
 
-            var automationPredicates = new[] {
-                Predicate.Build("has_ansible_group", "has ansible group", "is assigned to", AnchorState.Active)
-            };
+            //var automationPredicates = new[] {
+            //    Predicate.Build("has_ansible_group", "has ansible group", "is assigned to", AnchorState.Active)
+            //};
 
             // create layers
             long cmdbLayerID;
@@ -87,17 +90,19 @@ namespace Tests.DBInit
                 await layerModel.CreateLayer("Inventory Scan", trans);
                 var monitoringDefinitionsLayer = await layerModel.CreateLayer("Monitoring Definitions", trans);
                 monitoringDefinitionsLayerID = monitoringDefinitionsLayer.ID;
-                await layerModel.CreateLayer("Monitoring", AnchorState.Active, ComputeLayerBrain.Build("TestPlugin.CLBMonitoring"), trans);
+                await layerModel.CreateLayer("Monitoring", AnchorState.Active, ComputeLayerBrain.Build("MonitoringPlugin.CLBMonitoring"), trans);
                 var automationLayer = await layerModel.CreateLayer("Automation", trans);
                 automationLayerID = automationLayer.ID;
                 trans.Commit();
             }
 
-            // create CI-Types
+            // create CI-Types // TODO: remove/deprecate
             using (var trans = conn.BeginTransaction())
             {
-                foreach (var ciType in regularTypeIDs)
-                    await ciModel.InsertCIType(ciType, trans);
+                //foreach (var ciType in regularTypeIDs)
+                await ciModel.InsertCIType("Host Linux", trans);
+                await ciModel.InsertCIType("Host Windows", trans);
+                await ciModel.InsertCIType("Application", trans);
                 await ciModel.InsertCIType("Monitoring Check Module", trans);
                 await ciModel.InsertCIType("Naemon Instance", trans);
                 await ciModel.InsertCIType("Ansible Host Group", trans);
@@ -107,8 +112,25 @@ namespace Tests.DBInit
             // create regular CIs
             using (var trans = conn.BeginTransaction())
             {
-                foreach (var ciid in regularCiids)
-                    await ciModel.CreateCIWithType(regularTypeIDs.GetRandom(random), trans, ciid);
+                var index = 0;
+                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                foreach (var ciid in applicationCIIDs)
+                {
+                    await ciModel.CreateCIWithType("Application", trans, ciid);
+                    await attributeModel.InsertCINameAttribute($"Application_{index}", cmdbLayerID, ciid, changeset.ID, trans); 
+                    await attributeModel.InsertAttribute("application_name", AttributeValueTextScalar.Build($"Application_{index}"), cmdbLayerID, ciid, changeset.ID, trans);
+                    index++;
+                }
+                index = 0;
+                foreach (var ciid in hostCIIDs)
+                {
+                    var ciType = new string[] { "Host Linux", "Host Windows" }.GetRandom(random);
+                    await ciModel.CreateCIWithType(ciType, trans, ciid);
+                    await attributeModel.InsertCINameAttribute($"{ciType}_{index}", cmdbLayerID, ciid, changeset.ID, trans);
+                    await attributeModel.InsertAttribute("hostname", AttributeValueTextScalar.Build($"hostname_{index}.domain"), cmdbLayerID, ciid, changeset.ID, trans);
+                    await attributeModel.InsertAttribute("system", AttributeValueTextScalar.Build($"{((ciType == "Host Linux") ? "Linux" : "Windows")}"), cmdbLayerID, ciid, changeset.ID, trans);
+                    index++;
+                }
 
                 trans.Commit();
             }
@@ -116,14 +138,14 @@ namespace Tests.DBInit
             // create predicates
             using (var trans = conn.BeginTransaction())
             {
-                foreach (var predicate in regularPredicates.Concat(monitoringPredicates).Concat(automationPredicates))
+                foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates))//.Concat(automationPredicates))
                     await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, AnchorState.Active, trans);
 
                 trans.Commit();
             }
 
             // create regular attributes
-            foreach (var ciid in regularCiids)
+            foreach (var ciid in applicationCIIDs)
             {
                 var numAttributeChanges = random.Next(numAttributesPerCIFrom, numAttributesPerCITo);
                 for (int i = 0; i < numAttributeChanges; i++)
@@ -138,15 +160,14 @@ namespace Tests.DBInit
                 }
             }
 
-            // create regular relations
-            for (var i = 0; i < numRegularRelations; i++)
+            // create runs on predicates
+            for (var i = 0; i < numRunsOnRelations; i++)
             {
                 using var trans = conn.BeginTransaction();
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                var ciid1 = regularCiids.GetRandom(random);
-                var ciid2 = regularCiids.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
-                var predicate = regularPredicates.GetRandom(random);
-                await relationModel.InsertRelation(ciid1, ciid2, predicate.ID, cmdbLayerID, changeset.ID, trans);
+                var ciid1 = applicationCIIDs.GetRandom(random);
+                var ciid2 = hostCIIDs.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
+                await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, cmdbLayerID, changeset.ID, trans);
                 trans.Commit();
             }
 
@@ -161,20 +182,28 @@ namespace Tests.DBInit
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 ciNaemon01 = await ciModel.CreateCIWithType("Naemon Instance", null);
                 ciNaemon02 = await ciModel.CreateCIWithType("Naemon Instance", null);
-                await attributeModel.InsertAttribute("__name", AttributeValueTextScalar.Build("Naemon Instance 01"), cmdbLayerID, ciNaemon01, changeset.ID, trans);
-                await attributeModel.InsertAttribute("__name", AttributeValueTextScalar.Build("Naemon Instance 02"), cmdbLayerID, ciNaemon02, changeset.ID, trans);
-                await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("1.2.3.4"), cmdbLayerID, ciNaemon01, changeset.ID, trans);
-                await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("4.5.6.7"), cmdbLayerID, ciNaemon02, changeset.ID, trans);
+                await attributeModel.InsertCINameAttribute("Naemon Instance 01", cmdbLayerID, ciNaemon01, changeset.ID, trans);
+                await attributeModel.InsertCINameAttribute("Naemon Instance 02", cmdbLayerID, ciNaemon02, changeset.ID, trans);
+                await attributeModel.InsertAttribute("monitoring.naemon.instance_name", AttributeValueTextScalar.Build("Naemon Instance 01"), monitoringDefinitionsLayerID, ciNaemon01, changeset.ID, trans);
+                await attributeModel.InsertAttribute("monitoring.naemon.instance_name", AttributeValueTextScalar.Build("Naemon Instance 02"), monitoringDefinitionsLayerID, ciNaemon02, changeset.ID, trans);
+                //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("1.2.3.4"), cmdbLayerID, ciNaemon01, changeset.ID, trans);
+                //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("4.5.6.7"), cmdbLayerID, ciNaemon02, changeset.ID, trans);
 
                 ciMonModuleHost = await ciModel.CreateCIWithType("Monitoring Check Module", null);
                 ciMonModuleHostWindows = await ciModel.CreateCIWithType("Monitoring Check Module", null);
                 ciMonModuleHostLinux = await ciModel.CreateCIWithType("Monitoring Check Module", null);
-                await attributeModel.InsertAttribute("__name", AttributeValueTextScalar.Build("Monitoring Check Module Host"), monitoringDefinitionsLayerID, ciMonModuleHost, changeset.ID, trans);
-                await attributeModel.InsertAttribute("__name", AttributeValueTextScalar.Build("Monitoring Check Module Host Windows"), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset.ID, trans);
-                await attributeModel.InsertAttribute("__name", AttributeValueTextScalar.Build("Monitoring Check Module Host Linux"), monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset.ID, trans);
-                await attributeModel.InsertAttribute("monitoring.commands.check_host_cmd", AttributeValueTextScalar.Build("check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, ciMonModuleHost, changeset.ID, trans);
-                await attributeModel.InsertAttribute("monitoring.commands.check_windows_host_cmd", AttributeValueTextScalar.Build("check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset.ID, trans);
-                await attributeModel.InsertAttribute("monitoring.commands.check_linux_host_cmd", AttributeValueTextScalar.Build("check_linux_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo -value \"{{ target.att_1.value }}\""), monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset.ID, trans);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host", monitoringDefinitionsLayerID, ciMonModuleHost, changeset.ID, trans);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset.ID, trans);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset.ID, trans);
+                await attributeModel.InsertAttribute("monitoring.commands", AttributeValueTextArray.Build(new string[] {
+                "check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" --hostname \"{{ target.hostname.value }}\""
+                }), monitoringDefinitionsLayerID, ciMonModuleHost, changeset.ID, trans);
+                await attributeModel.InsertAttribute("monitoring.commands", AttributeValueTextArray.Build(new string[] {
+                "check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo --hostname \"{{ target.hostname.value }}\""
+                }), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset.ID, trans);
+                await attributeModel.InsertAttribute("monitoring.commands", AttributeValueTextArray.Build(new string[] {
+                "check_linux_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo --hostname \"{{ target.hostname.value }}\""
+                }), monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset.ID, trans);
                 trans.Commit();
             }
 
@@ -199,29 +228,29 @@ namespace Tests.DBInit
             }
 
             // create ansible groups
-            Guid ciAutomationAnsibleHostGroupTest;
-            Guid ciAutomationAnsibleHostGroupTest2;
-            using (var trans = conn.BeginTransaction())
-            {
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                ciAutomationAnsibleHostGroupTest = await ciModel.CreateCIWithType("Ansible Host Group", null);
-                ciAutomationAnsibleHostGroupTest2 = await ciModel.CreateCIWithType("Ansible Host Group", null);
-                await attributeModel.InsertAttribute("__name", AttributeValueTextScalar.Build("Ansible Host Group Test"), automationLayerID, ciAutomationAnsibleHostGroupTest, changeset.ID, trans);
-                await attributeModel.InsertAttribute("__name", AttributeValueTextScalar.Build("Ansible Host Group Test2"), automationLayerID, ciAutomationAnsibleHostGroupTest2, changeset.ID, trans);
-                await attributeModel.InsertAttribute("automation.ansible_group_name", AttributeValueTextScalar.Build("test_group"), automationLayerID, ciAutomationAnsibleHostGroupTest, changeset.ID, trans);
-                await attributeModel.InsertAttribute("automation.ansible_group_name", AttributeValueTextScalar.Build("test_group2"), automationLayerID, ciAutomationAnsibleHostGroupTest2, changeset.ID, trans);
-                trans.Commit();
-            }
+            //Guid ciAutomationAnsibleHostGroupTest;
+            //Guid ciAutomationAnsibleHostGroupTest2;
+            //using (var trans = conn.BeginTransaction())
+            //{
+            //    var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+            //    ciAutomationAnsibleHostGroupTest = await ciModel.CreateCIWithType("Ansible Host Group", null);
+            //    ciAutomationAnsibleHostGroupTest2 = await ciModel.CreateCIWithType("Ansible Host Group", null);
+            //    await attributeModel.InsertCINameAttribute("Ansible Host Group Test", automationLayerID, ciAutomationAnsibleHostGroupTest, changeset.ID, trans);
+            //    await attributeModel.InsertCINameAttribute("Ansible Host Group Test2", automationLayerID, ciAutomationAnsibleHostGroupTest2, changeset.ID, trans);
+            //    await attributeModel.InsertAttribute("automation.ansible_group_name", AttributeValueTextScalar.Build("test_group"), automationLayerID, ciAutomationAnsibleHostGroupTest, changeset.ID, trans);
+            //    await attributeModel.InsertAttribute("automation.ansible_group_name", AttributeValueTextScalar.Build("test_group2"), automationLayerID, ciAutomationAnsibleHostGroupTest2, changeset.ID, trans);
+            //    trans.Commit();
+            //}
 
-            // assign ansible groups
-            using (var trans = conn.BeginTransaction())
-            {
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await relationModel.InsertRelation(ciNaemon01, ciAutomationAnsibleHostGroupTest, "has_ansible_group", automationLayerID, changeset.ID, trans);
-                await relationModel.InsertRelation(ciNaemon02, ciAutomationAnsibleHostGroupTest, "has_ansible_group", automationLayerID, changeset.ID, trans);
-                await relationModel.InsertRelation(ciNaemon02, ciAutomationAnsibleHostGroupTest2, "has_ansible_group", automationLayerID, changeset.ID, trans);
-                trans.Commit();
-            }
+            //// assign ansible groups
+            //using (var trans = conn.BeginTransaction())
+            //{
+            //    var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+            //    await relationModel.InsertRelation(ciNaemon01, ciAutomationAnsibleHostGroupTest, "has_ansible_group", automationLayerID, changeset.ID, trans);
+            //    await relationModel.InsertRelation(ciNaemon02, ciAutomationAnsibleHostGroupTest, "has_ansible_group", automationLayerID, changeset.ID, trans);
+            //    await relationModel.InsertRelation(ciNaemon02, ciAutomationAnsibleHostGroupTest2, "has_ansible_group", automationLayerID, changeset.ID, trans);
+            //    trans.Commit();
+            //}
         }
     }
 }

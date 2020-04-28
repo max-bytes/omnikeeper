@@ -2,7 +2,9 @@
 using Landscape.Base.Entity.DTO;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace LandscapeRegistry.Entity.AttributeValues
 {
@@ -20,7 +22,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public bool IsArray { get; }
 
         IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum);
-        bool FullTextSearch(string searchString);
+        bool FullTextSearch(string searchString, CompareOptions compareOptions);
+        IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex);
     }
 
 

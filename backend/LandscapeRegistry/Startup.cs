@@ -108,6 +108,7 @@ namespace LandscapeRegistry
             services.AddScoped<CachedPredicateModel>();
             services.AddScoped<KeycloakModel>();
 
+            services.AddScoped<ITraitModel, TraitModel>();
             services.AddScoped<TraitModel>();
 
             services.AddScoped<AuthorizationService>();
@@ -122,7 +123,7 @@ namespace LandscapeRegistry
 
             services.AddScoped<MergedCIType>();
             services.AddScoped<RelationType>();
-            services.AddScoped<ISchema, LandscapeSchema>();
+            services.AddScoped<ISchema, RegistrySchema>();
 
             services.Configure<IISServerOptions>(options =>
             {

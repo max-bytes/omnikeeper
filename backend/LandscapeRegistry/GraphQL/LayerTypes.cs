@@ -22,7 +22,7 @@ namespace LandscapeRegistry.GraphQL
             Field<BooleanGraphType>("writable",
             resolve: (context) =>
             {
-                var userContext = context.UserContext as LandscapeUserContext;
+                var userContext = context.UserContext as RegistryUserContext;
                 var isWritable = userContext.User.WritableLayers.Any(l => l.ID == context.Source.ID);
                 return isWritable;
             });

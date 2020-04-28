@@ -17,7 +17,7 @@ function AddNewCI(props) {
   const { error: errorLayers, data: dataLayers } = useQuery(queries.Layers);
   
   const [error, setError] = useState("");
-  const [goToCIAfterCreation, setGoToCIAfterCreation] = useState(false);
+  const [goToCIAfterCreation, setGoToCIAfterCreation] = useState(true);
 
   const { data: dataCITypes } = useQuery(queries.CITypeList);
   const [createNewCI] = useMutation(mutations.CREATE_CI);
@@ -50,6 +50,7 @@ function AddNewCI(props) {
                 setError(e.message);
               });
             }}>
+            <h1>New CI</h1>
               
             <Form.Group as={Row} controlId="name">
               <Form.Label column>Name</Form.Label>
@@ -75,7 +76,7 @@ function AddNewCI(props) {
               </Col>
             </Form.Group>
             <Form.Group as={Row} controlId="type" style={{paddingLeft: "1.25rem"}}>
-              <Form.Check type='checkbox' label='Go to CI after creation' value={goToCIAfterCreation} onChange={e => setGoToCIAfterCreation(e.target.checked)} />
+              <Form.Check type='checkbox' label='Go to CI after creation' checked={goToCIAfterCreation} onChange={e => setGoToCIAfterCreation(e.target.checked)} />
             </Form.Group>
             <Button variant="primary" type="submit">Create New CI</Button>
             {error && <Message attached='bottom' error>

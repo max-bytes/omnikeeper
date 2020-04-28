@@ -29,25 +29,25 @@ namespace Tests.Integration.Model
                     Trait.Build("test_trait_1", new List<TraitAttribute>()
                     {
                         TraitAttribute.Build("a4",
-                            CIAttributeTemplate.BuildFromParams("a4", "this is a description", AttributeValueType.Text, false)
+                            CIAttributeTemplate.BuildFromParams("a4", AttributeValueType.Text, false)
                         )
                     }, new List<TraitAttribute>() { }, new List<TraitRelation>() { }),
                     Trait.Build("test_trait_2", new List<TraitAttribute>()
                     {
                         TraitAttribute.Build("a4",
-                            CIAttributeTemplate.BuildFromParams("a4", "this is a description", AttributeValueType.Text, false)
+                            CIAttributeTemplate.BuildFromParams("a4", AttributeValueType.Text, false)
                         ),
                         TraitAttribute.Build("a2",
-                            CIAttributeTemplate.BuildFromParams("a2", "this is a description", AttributeValueType.Text, false)
+                            CIAttributeTemplate.BuildFromParams("a2", AttributeValueType.Text, false)
                         )
                     }, new List<TraitAttribute>() { }, new List<TraitRelation>() { }),
                     Trait.Build("test_trait_3", new List<TraitAttribute>()
                     {
                         TraitAttribute.Build("a1",
-                            CIAttributeTemplate.BuildFromParams("a1", "this is a description", AttributeValueType.Text, false)
+                            CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false)
                         )
                     }, new List<TraitAttribute>() { }, new List<TraitRelation>() { })
-                }, trans);
+                });
             }
         }
 

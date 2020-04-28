@@ -25,7 +25,7 @@ namespace LandscapeRegistry.Model
         {
             // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
             var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(CIModel.NameAttribute, new AllCIIDsAttributeSelection(), false, layerSet, trans, atTime);
-            var foundCIIDs = ciNamesFromNameAttributes.Where(kv => kv.Value.Attribute.Value.FullTextSearch(searchString))
+            var foundCIIDs = ciNamesFromNameAttributes.Where(kv => kv.Value.Attribute.Value.FullTextSearch(searchString, System.Globalization.CompareOptions.IgnoreCase))
                 .ToDictionary(kv => kv.Key, kv => kv.Value.Attribute.Value.Value2String());
 
             if (Guid.TryParse(searchString, out var guid))

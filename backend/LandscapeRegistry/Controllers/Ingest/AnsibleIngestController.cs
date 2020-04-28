@@ -3,6 +3,7 @@ using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO.Ingest;
 using Landscape.Base.Model;
 using LandscapeRegistry.Entity.AttributeValues;
+using LandscapeRegistry.Model;
 using LandscapeRegistry.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -76,7 +77,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                     JValue2TextArrayAttribute(facts, "ansible_interfaces", "interfaces"),
                     //#  jq '.ansible_facts.ansible_eth0' setup_facts.json # foreach in ansible_interfaces // TODO
                     JValue2JSONAttribute(facts, "ansible_dns", "dns"),
-                    String2Attribute("__name", ciName),
+                    String2Attribute(CIModel.NameAttribute, ciName),
                     String2Attribute("fqdn", fqdn)
     //#  jq '.results' yum_installed.json
     //#  jq '.results' yum_repos.json
@@ -108,11 +109,11 @@ namespace LandscapeRegistry.Controllers.Ingest
                     JValue2IntegerAttribute(mount, "size_available"),
                     JValue2IntegerAttribute(mount, "size_total"),
                     JValue2TextAttribute(mount, "uuid"),
-                    String2Attribute("__name", ciNameMount)
+                    String2Attribute(CIModel.NameAttribute, ciNameMount)
                 };
                     cis.Add(tempMountCIID, CICandidate.Build(
                         // TODO: ansible mounts have an uuid, find out what that is and if they can be used for identification
-                        CIIdentificationMethodByData.Build(new string[] { "device", "mount", "__name" }), // TODO: do not use __name, rather maybe use its relation to the host for identification
+                        CIIdentificationMethodByData.Build(new string[] { "device", "mount", CIModel.NameAttribute }), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
                         BulkCICandidateAttributeData.Build(attributeFragmentsMount)));
 
                     relations.Add(RelationCandidate.Build(
@@ -132,10 +133,10 @@ namespace LandscapeRegistry.Controllers.Ingest
                     {
                         JValue2TextAttribute(@interface, "device"),
                         // TODO
-                        String2Attribute("__name", ciNameInterface)
+                        String2Attribute(CIModel.NameAttribute, ciNameInterface)
                     };
                     cis.Add(tempCIIDInterface, CICandidate.Build(
-                        CIIdentificationMethodByData.Build(new string[] { "__name" }), // TODO: do not use __name, rather maybe use its relation to the host for identification
+                        CIIdentificationMethodByData.Build(new string[] { CIModel.NameAttribute }), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
                         BulkCICandidateAttributeData.Build(attributeFragmentsInterface)));
 
                     relations.Add(RelationCandidate.Build(

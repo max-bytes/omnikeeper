@@ -75,7 +75,7 @@ namespace LandscapeRegistry.Controllers
                 options.Schema = _schema;
                 options.Query = query.Query;
                 options.Inputs = inputs;
-                options.UserContext = new LandscapeUserContext(user);
+                options.UserContext = new RegistryUserContext(user);
                 options.ValidationRules = DocumentValidator.CoreRules.Concat(_validationRules).ToList();
                 options.ExposeExceptions = _env.IsDevelopment();
             });

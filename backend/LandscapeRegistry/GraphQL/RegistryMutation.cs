@@ -11,9 +11,9 @@ using System.Linq;
 
 namespace LandscapeRegistry.GraphQL
 {
-    public class LandscapeMutation : ObjectGraphType
+    public class RegistryMutation : ObjectGraphType
     {
-        public LandscapeMutation(CIModel ciModel, AttributeModel attributeModel, LayerModel layerModel, RelationModel relationModel,
+        public RegistryMutation(CIModel ciModel, AttributeModel attributeModel, LayerModel layerModel, RelationModel relationModel,
             ChangesetModel changesetModel, PredicateModel predicateModel, KeycloakModel keycloakModel, AuthorizationService authorizationService, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
@@ -32,7 +32,7 @@ namespace LandscapeRegistry.GraphQL
                     var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>());
                     var removeRelations = context.GetArgument("RemoveRelations", new List<RemoveRelationInput>());
 
-                    var userContext = context.UserContext as LandscapeUserContext;
+                    var userContext = context.UserContext as RegistryUserContext;
 
                     var writeLayerIDs = insertAttributes.Select(a => a.LayerID)
                     .Concat(removeAttributes.Select(a => a.LayerID))
@@ -111,7 +111,7 @@ namespace LandscapeRegistry.GraphQL
                 {
                     var createCIs = context.GetArgument("cis", new List<CreateCIInput>());
 
-                    var userContext = context.UserContext as LandscapeUserContext;
+                    var userContext = context.UserContext as RegistryUserContext;
 
                     if (!authorizationService.CanUserCreateCI(userContext.User))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create CIs");
@@ -132,7 +132,7 @@ namespace LandscapeRegistry.GraphQL
                         else
                         ciid = await ciModel.CreateCI(transaction);
 
-                        await attributeModel.InsertAttribute(CIModel.NameAttribute, AttributeValueTextScalar.Build(ci.Name), ci.LayerIDForName, ciid, changeset.ID, transaction);
+                        await attributeModel.InsertCINameAttribute(ci.Name, ci.LayerIDForName, ciid, changeset.ID, transaction);
 
                         createdCIIDs.Add(ciid);
                     }
@@ -148,7 +148,7 @@ namespace LandscapeRegistry.GraphQL
                 resolve: async context =>
                 {
                     var createLayer = context.GetArgument<CreateLayerInput>("layer");
-                    var userContext = context.UserContext as LandscapeUserContext;
+                    var userContext = context.UserContext as RegistryUserContext;
 
                     if (!authorizationService.CanUserCreateLayer(userContext.User))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create Layers");
@@ -179,7 +179,7 @@ namespace LandscapeRegistry.GraphQL
               {
                   var layer = context.GetArgument<UpdateLayerInput>("layer");
 
-                  var userContext = context.UserContext as LandscapeUserContext;
+                  var userContext = context.UserContext as RegistryUserContext;
 
                   if (!authorizationService.CanUserUpdateLayer(userContext.User))
                       throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update Layers");
@@ -202,7 +202,7 @@ namespace LandscapeRegistry.GraphQL
               {
                   var predicate = context.GetArgument<UpsertPredicateInput>("predicate");
 
-                  var userContext = context.UserContext as LandscapeUserContext;
+                  var userContext = context.UserContext as RegistryUserContext;
 
                   if (!authorizationService.CanUserUpsertPredicate(userContext.User))
                       throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update or insert Predicates");
@@ -224,7 +224,7 @@ namespace LandscapeRegistry.GraphQL
               {
                   var ciType = context.GetArgument<UpsertCITypeInput>("citype");
 
-                  var userContext = context.UserContext as LandscapeUserContext;
+                  var userContext = context.UserContext as RegistryUserContext;
 
                   if (!authorizationService.CanUserUpsertCIType(userContext.User))
                       throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update or insert CI-Types");

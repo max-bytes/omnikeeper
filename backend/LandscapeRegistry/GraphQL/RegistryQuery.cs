@@ -9,9 +9,9 @@ using static Landscape.Base.Model.IRelationModel;
 
 namespace LandscapeRegistry.GraphQL
 {
-    public class LandscapeQuery : ObjectGraphType
+    public class RegistryQuery : ObjectGraphType
     {
-        public LandscapeQuery(CIModel ciModel, CachedLayerModel layerModel, CachedPredicateModel predicateModel, ChangesetModel changesetModel, ICISearchModel ciSearchModel)
+        public RegistryQuery(CIModel ciModel, CachedLayerModel layerModel, CachedPredicateModel predicateModel, ChangesetModel changesetModel, ICISearchModel ciSearchModel)
         {
             FieldAsync<MergedCIType>("ci",
                 arguments: new QueryArguments(new List<QueryArgument>
@@ -31,7 +31,7 @@ namespace LandscapeRegistry.GraphQL
                 }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as LandscapeUserContext;
+                    var userContext = context.UserContext as RegistryUserContext;
 
                     var ciid = context.GetArgument<Guid>("identity");
                     var layerStrings = context.GetArgument<string[]>("layers");
@@ -65,7 +65,7 @@ namespace LandscapeRegistry.GraphQL
                 }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as LandscapeUserContext;
+                    var userContext = context.UserContext as RegistryUserContext;
                     var layerStrings = context.GetArgument<string[]>("layers");
                     var ls = await layerModel.BuildLayerSet(layerStrings, null);
                     userContext.LayerSet = ls;
@@ -85,7 +85,7 @@ namespace LandscapeRegistry.GraphQL
                 }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as LandscapeUserContext;
+                    var userContext = context.UserContext as RegistryUserContext;
 
                     var ciid = context.GetArgument<Guid>("identity");
                     //var layerStrings = context.GetArgument<string[]>("layers");
@@ -114,7 +114,7 @@ namespace LandscapeRegistry.GraphQL
                 }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as LandscapeUserContext;
+                    var userContext = context.UserContext as RegistryUserContext;
 
                     var layerStrings = context.GetArgument<string[]>("layers");
                     var layerSet = layerStrings != null ? await layerModel.BuildLayerSet(layerStrings, null) : await layerModel.BuildLayerSet(null);
@@ -136,7 +136,7 @@ namespace LandscapeRegistry.GraphQL
                 }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as LandscapeUserContext;
+                    var userContext = context.UserContext as RegistryUserContext;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
                     var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
 
@@ -145,7 +145,7 @@ namespace LandscapeRegistry.GraphQL
             FieldAsync<ListGraphType<CITypeType>>("citypes",
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as LandscapeUserContext;
+                    var userContext = context.UserContext as RegistryUserContext;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
 
                     return await ciModel.GetCITypes(null, userContext.TimeThreshold);
@@ -199,7 +199,7 @@ namespace LandscapeRegistry.GraphQL
                 }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as LandscapeUserContext;
+                    var userContext = context.UserContext as RegistryUserContext;
                     var layerStrings = context.GetArgument<string[]>("layers");
                     userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, null);
 

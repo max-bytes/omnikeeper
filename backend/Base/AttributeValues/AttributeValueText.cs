@@ -3,7 +3,9 @@ using Landscape.Base.Entity.DTO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace LandscapeRegistry.Entity.AttributeValues
 {
@@ -22,7 +24,9 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public abstract bool Equals(IAttributeValue other);
 
         public abstract IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum);
-        public abstract bool FullTextSearch(string searchString);
+        public abstract IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex);
+        public abstract bool FullTextSearch(string searchString, CompareOptions compareOptions);
+
     }
 
     public class AttributeValueTextScalar : AttributeValueText, IEquatable<AttributeValueTextScalar>
@@ -51,8 +55,16 @@ namespace LandscapeRegistry.Entity.AttributeValues
             else if (minimum.HasValue && Value.Length < minimum)
                 yield return TemplateErrorAttributeGeneric.Build("Text too short!");
         }
+        public override IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex)
+        {
+            var match = regex.Match(Value);
+            if (!match.Success)
+                yield return TemplateErrorAttributeGeneric.Build($"Regex {regex} did not match text {Value}");
+        }
 
-        public override bool FullTextSearch(string searchString) => Value.Contains(searchString);
+        public override bool FullTextSearch(string searchString, CompareOptions compareOptions) 
+            => CultureInfo.InvariantCulture.CompareInfo.IndexOf(Value, searchString, compareOptions) >= 0;
+
     }
 
     public class AttributeValueTextArray : AttributeValueText, IEquatable<AttributeValueTextArray>
@@ -86,7 +98,17 @@ namespace LandscapeRegistry.Entity.AttributeValues
                     yield return TemplateErrorAttributeGeneric.Build($"Text[{i}] too short!");
             }
         }
+        public override IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex)
+        {
+            foreach (var value in Values)
+            {
+                var match = regex.Match(value);
+                if (!match.Success)
+                    yield return TemplateErrorAttributeGeneric.Build($"Regex {regex} did not match text {value}");
+            }
+        }
 
-        public override bool FullTextSearch(string searchString) => Values.Any(value => value.Contains(searchString));
+        public override bool FullTextSearch(string searchString, CompareOptions compareOptions) 
+            => Values.Any(value => CultureInfo.InvariantCulture.CompareInfo.IndexOf(value, searchString, compareOptions) >= 0);
     }
 }

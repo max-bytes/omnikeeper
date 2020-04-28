@@ -9,7 +9,7 @@ namespace Landscape.Base.Entity
     {
         public IImmutableDictionary<string, Trait> traits { get; private set; }
 
-        public async static Task<Traits> Build(IEnumerable<Trait> traits, NpgsqlTransaction trans)
+        public async static Task<Traits> Build(IEnumerable<Trait> traits)
         {
             return new Traits()
             {

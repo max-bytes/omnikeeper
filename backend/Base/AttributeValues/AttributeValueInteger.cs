@@ -3,7 +3,9 @@ using Landscape.Base.Entity.DTO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace LandscapeRegistry.Entity.AttributeValues
 {
@@ -15,13 +17,17 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public abstract bool IsArray { get; }
         public abstract AttributeValueDTO ToGeneric();
         public abstract bool Equals(IAttributeValue other);
-        public abstract bool FullTextSearch(string searchString);
+        public abstract bool FullTextSearch(string searchString, CompareOptions compareOptions);
 
         public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
         { // does not make sense for integer
             yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, Type);
         }
 
+        public IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex)
+        { // does not make sense for integer
+            yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, Type);
+        }
     }
 
     public class AttributeValueIntegerScalar : AttributeValueInteger, IEquatable<AttributeValueIntegerScalar>
@@ -33,7 +39,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueIntegerScalar);
         public bool Equals([AllowNull] AttributeValueIntegerScalar other) => other != null && Value == other.Value;
         public override int GetHashCode() => Value.GetHashCode();
-        public override bool FullTextSearch(string searchString) => Value.ToString().Contains(searchString);
+        public override bool FullTextSearch(string searchString, CompareOptions compareOptions) => CultureInfo.InvariantCulture.CompareInfo.IndexOf(Value.ToString(), searchString, compareOptions) >= 0;
 
         internal static AttributeValueIntegerScalar Build(string value)
         {
@@ -61,7 +67,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueIntegerArray);
         public bool Equals([AllowNull] AttributeValueIntegerArray other) => other != null && Values.SequenceEqual(other.Values);
         public override int GetHashCode() => Values.GetHashCode();
-        public override bool FullTextSearch(string searchString) => Values.Any(v => v.ToString().Contains(searchString));
+        public override bool FullTextSearch(string searchString, CompareOptions compareOptions) => Values.Any(v => CultureInfo.InvariantCulture.CompareInfo.IndexOf(v.ToString(), searchString, compareOptions) >= 0);
 
         public static AttributeValueIntegerArray Build(string[] values)
         {

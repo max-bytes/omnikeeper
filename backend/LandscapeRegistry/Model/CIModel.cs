@@ -283,7 +283,9 @@ namespace LandscapeRegistry.Model
 
         private Guid CreateCIID() => Guid.NewGuid();
 
+        [Obsolete]
         public async Task<Guid> CreateCIWithType(string typeID, NpgsqlTransaction trans) => await CreateCIWithType(typeID, trans, CreateCIID());
+        [Obsolete]
         public async Task<Guid> CreateCIWithType(string typeID, NpgsqlTransaction trans, Guid id)
         {
             var type = await CheckIfCITypeIDExists(typeID, trans, null);

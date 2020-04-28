@@ -45,15 +45,15 @@ namespace Landscape.Base.Entity
         public ImmutableList<TraitRelation> RequiredRelations { get; private set; }
         // TODO: implement optional relations
 
-        public static Trait Build(string name, IEnumerable<TraitAttribute> requiredAttributes, IEnumerable<TraitAttribute> optionalAttributes,
-            IEnumerable<TraitRelation> requiredRelations)
+        public static Trait Build(string name, IEnumerable<TraitAttribute> requiredAttributes = null, IEnumerable<TraitAttribute> optionalAttributes = null,
+            IEnumerable<TraitRelation> requiredRelations = null)
         {
             return new Trait()
             {
                 Name = name,
-                RequiredAttributes = requiredAttributes.ToImmutableList(),
-                OptionalAttributes = optionalAttributes.ToImmutableList(),
-                RequiredRelations = requiredRelations.ToImmutableList()
+                RequiredAttributes = requiredAttributes?.ToImmutableList() ?? ImmutableList<TraitAttribute>.Empty,
+                OptionalAttributes = optionalAttributes?.ToImmutableList() ?? ImmutableList<TraitAttribute>.Empty,
+                RequiredRelations = requiredRelations?.ToImmutableList() ?? ImmutableList<TraitRelation>.Empty
             };
         }
     }

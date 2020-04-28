@@ -24,25 +24,25 @@ namespace Landscape.Base.Entity
                     Template.Build("Application",
                             new List<CIAttributeTemplate>() {
                                 // TODO
-                                CIAttributeTemplate.BuildFromParams("name", "This is a description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                                CIAttributeTemplate.BuildFromParams("name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                             },
                             new List<RelationTemplate>() {},
                             new List<Trait>() {}
                     ),
-                    Template.Build("Naemon Instance",
-                            new List<CIAttributeTemplate>() {
-                                // TODO
-                                CIAttributeTemplate.BuildFromParams("name", "This is a description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                            },
-                            new List<RelationTemplate>() {},
-                            new List<Trait>()
-                            {
-                                traits.traits["ansible_can_deploy_to_it"]
-                            }
-                    ),
+                    //Template.Build("Naemon Instance",
+                    //        new List<CIAttributeTemplate>() {
+                    //            // TODO
+                    //            CIAttributeTemplate.BuildFromParams("monitoring.naemon.instance_name", "This is a description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                    //        },
+                    //        new List<RelationTemplate>() {},
+                    //        new List<Trait>()
+                    //        {
+                    //            traits.traits["ansible_can_deploy_to_it"]
+                    //        }
+                    //),
                     Template.Build("Ansible Host Group",
                             new List<CIAttributeTemplate>() {
-                                CIAttributeTemplate.BuildFromParams("automation.ansible_group_name", "This is a description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                                CIAttributeTemplate.BuildFromParams("automation.ansible_group_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                             },
                             new List<RelationTemplate>() {},
                             new List<Trait>() {}

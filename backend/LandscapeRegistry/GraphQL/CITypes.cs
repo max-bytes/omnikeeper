@@ -41,7 +41,7 @@ namespace LandscapeRegistry.GraphQL
             }),
             resolve: async (context) =>
             {
-                var userContext = context.UserContext as LandscapeUserContext;
+                var userContext = context.UserContext as RegistryUserContext;
                 var layerset = userContext.LayerSet;
                 if (layerset == null)
                     throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!");
@@ -83,14 +83,14 @@ namespace LandscapeRegistry.GraphQL
             FieldAsync<TemplateErrorsCIType>("templateErrors",
             resolve: async (context) =>
             {
-                var userContext = context.UserContext as LandscapeUserContext;
+                var userContext = context.UserContext as RegistryUserContext;
                 return await templateModel.CalculateTemplateErrors(context.Source, userContext.Transaction);
             });
 
             FieldAsync<ListGraphType<EffectiveTraitType>>("effectiveTraits",
             resolve: async (context) =>
             {
-                var userContext = context.UserContext as LandscapeUserContext;
+                var userContext = context.UserContext as RegistryUserContext;
 
                 var et = await traitModel.CalculateEffectiveTraitSetForCI(context.Source, userContext.Transaction);
                 return et.EffectiveTraits.Values;
@@ -120,7 +120,7 @@ namespace LandscapeRegistry.GraphQL
             FieldAsync<ListGraphType<LayerType>>("layerStack",
             resolve: async (context) =>
             {
-                var userContext = context.UserContext as LandscapeUserContext;
+                var userContext = context.UserContext as RegistryUserContext;
                 var layerstackIDs = context.Source.LayerStackIDs;
                 return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
             });

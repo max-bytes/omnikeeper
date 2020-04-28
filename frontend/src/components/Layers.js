@@ -27,6 +27,7 @@ function Layers(props) {
             </Icon.Group>&nbsp;
             <span style={{flexGrow: 1}}>
               <span style={((layer.visibility) ? {} : {color: '#ccc'})}>{layer.name} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
+              {layer.brainName !== "" && (<Icon fitted name='lightning' />)}
             </span>
             &nbsp;&nbsp;
               <Button basic size='mini' compact onClick={() => toggleLayerVisibility({variables: { id: layer.id }})}>

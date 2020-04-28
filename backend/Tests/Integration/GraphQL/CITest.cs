@@ -14,13 +14,13 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration.GraphQL
 {
-    class CITest : QueryTestBase<LandscapeSchema>
+    class CITest : QueryTestBase<RegistrySchema>
     {
         public CITest()
         {
             DBSetup.Setup();
 
-            Services.Register<LandscapeQuery>();
+            Services.Register<RegistryQuery>();
             Services.Register<MergedCIType>();
             Services.Register<CIModel>();
             Services.Register<AttributeModel>();
@@ -45,7 +45,7 @@ namespace Tests.Integration.GraphQL
 
             var sp = new SimpleContainerAdapter(Services);
             Services.Singleton<IServiceProvider>(sp);
-            Services.Singleton(new LandscapeSchema(sp));
+            Services.Singleton(new RegistrySchema(sp));
         }
 
         [OneTimeTearDown]
@@ -117,7 +117,7 @@ namespace Tests.Integration.GraphQL
                 }";
 
             var httpContext = new DefaultHttpContext();// new HttpContext(new HttpRequest(null, "http://tempuri.org", null), new HttpResponse(null));
-            AssertQuerySuccess(query, expected, inputs, userContext: new LandscapeUserContext(user));
+            AssertQuerySuccess(query, expected, inputs, userContext: new RegistryUserContext(user));
         }
     }
 }

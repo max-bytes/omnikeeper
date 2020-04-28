@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model
 {
-    public class TraitModel
+    public class TraitModel : ITraitModel
     {
         private readonly NpgsqlConnection conn;
 

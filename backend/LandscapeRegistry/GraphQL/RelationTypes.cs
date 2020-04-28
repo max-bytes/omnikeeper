@@ -20,7 +20,7 @@ namespace LandscapeRegistry.GraphQL
             FieldAsync<ListGraphType<LayerType>>("layerStack",
             resolve: async (context) =>
             {
-                var userContext = context.UserContext as LandscapeUserContext;
+                var userContext = context.UserContext as RegistryUserContext;
                 var layerstackIDs = context.Source.LayerStackIDs;
                 return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
             });

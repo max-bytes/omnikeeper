@@ -5,11 +5,11 @@ using System.Collections.Generic;
 
 namespace LandscapeRegistry.GraphQL
 {
-    public class LandscapeUserContext : Dictionary<string, object>
+    public class RegistryUserContext : Dictionary<string, object>
     {
         public User User { get; private set; }
 
-        public LandscapeUserContext(User user)
+        public RegistryUserContext(User user)
         {
             User = user;
         }

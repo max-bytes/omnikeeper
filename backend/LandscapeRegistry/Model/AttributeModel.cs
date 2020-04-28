@@ -278,6 +278,8 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
+        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans)
+            => await InsertAttribute(CIModel.NameAttribute, AttributeValueTextScalar.Build(nameValue), layerID, ciid, changesetID, trans);
 
         public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans)
         {
@@ -381,8 +383,6 @@ namespace LandscapeRegistry.Model
 
                 writer.Complete();
             }
-
-            // TODO: update template errors
 
             return true;
         }
