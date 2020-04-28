@@ -276,6 +276,10 @@ namespace LandscapeRegistry
             app.UseSwagger(c =>
             {
                 c.RouteTemplate = "swagger/{documentName}/swagger.json"; // TEST
+                c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
+                {
+                    swaggerDoc.Servers = new List<OpenApiServer> { new OpenApiServer { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}/backend" } };
+                });
             });
             app.UseSwaggerUI(c =>
             {
