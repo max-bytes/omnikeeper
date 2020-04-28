@@ -82,5 +82,10 @@ export const queries = {
         query SelectedTimeThreshold {
             selectedTimeThreshold @client
           }
-      `
+      `,
+    Traits: gql`
+    query traits {
+        traits
+      }
+    `,
 };

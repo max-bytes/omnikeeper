@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -18,7 +19,7 @@ namespace LandscapeRegistry.Model
         //    SP = sp;
         //}
 
-        public async Task<Traits> GetTraits(NpgsqlTransaction trans)
+        public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans)
         {
             //using var scope = SP.CreateScope();
             //var predicateModel = scope.ServiceProvider.GetRequiredService<IPredicateModel>();
@@ -89,20 +90,20 @@ namespace LandscapeRegistry.Model
                             )
                         })
                 };
-            return await Traits.Build(traits);
+            return traits.ToImmutableDictionary(t => t.Name);
         }
     }
 
     public class CachedTraitsProvider : ITraitsProvider
     {
         private readonly TraitsProvider TP;
-        private Traits cached;
+        private IImmutableDictionary<string, Trait> cached;
         public CachedTraitsProvider(TraitsProvider tp)
         {
             TP = tp;
             cached = null;
         }
-        public async Task<Traits> GetTraits(NpgsqlTransaction trans)
+        public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans)
         {
             if (cached == null)
             {

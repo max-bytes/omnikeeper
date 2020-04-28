@@ -7,6 +7,8 @@ export default function Manage(props) {
       <li><Link to="/manage/predicates">Manage Predicates</Link></li>
       <li><Link to="/manage/layers">Manage Layers</Link></li>
       <li><Link to="/manage/citypes">Manage CITypes</Link></li>
+      <li><Link to="/manage/traits">Manage Traits</Link></li>
+      
     </ul>
   </div>;
 }

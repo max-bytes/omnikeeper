@@ -3,6 +3,7 @@ using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Cached;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using static Landscape.Base.Model.IRelationModel;
@@ -11,7 +12,8 @@ namespace LandscapeRegistry.GraphQL
 {
     public class RegistryQuery : ObjectGraphType
     {
-        public RegistryQuery(CIModel ciModel, CachedLayerModel layerModel, CachedPredicateModel predicateModel, ChangesetModel changesetModel, ICISearchModel ciSearchModel)
+        public RegistryQuery(CIModel ciModel, CachedLayerModel layerModel, CachedPredicateModel predicateModel, 
+            ChangesetModel changesetModel, ICISearchModel ciSearchModel, ITraitsProvider traitsProvider)
         {
             FieldAsync<MergedCIType>("ci",
                 arguments: new QueryArguments(new List<QueryArgument>
@@ -212,6 +214,16 @@ namespace LandscapeRegistry.GraphQL
                     else
                         return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, IncludeRelationDirections.Both, null, limit);
                 });
+
+
+            FieldAsync<StringGraphType>("traits",
+                resolve: async context =>
+                {
+                    // TODO: implement properly, just showing json string for now
+                    var traitsJSON = JObject.FromObject(await traitsProvider.GetTraits(null));
+                    return traitsJSON.ToString();
+                });
+
         }
     }
 }

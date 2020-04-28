@@ -30,7 +30,7 @@ namespace LandscapeRegistry.Model
             var traits = await TraitsProvider.GetTraits(trans);
 
             var ret = new List<EffectiveTrait>();
-            foreach (var trait in traits.traits.Values)
+            foreach (var trait in traits.Values)
             {
                 var et = await CalculateEffectiveTrait(trait, ci, trans);
                 if (et != null) ret.Add(et);
@@ -41,7 +41,7 @@ namespace LandscapeRegistry.Model
         public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, DateTimeOffset atTime)
         {
             var traits = await TraitsProvider.GetTraits(trans);
-            var trait = traits.traits.GetValueOrDefault(traitName);
+            var trait = traits.GetValueOrDefault(traitName);
             if (trait == null) return null; // trait not found by name
             return await CalculateEffectiveTraitSetsForTrait(trait, layerSet, trans, atTime);
 

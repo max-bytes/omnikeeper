@@ -18,6 +18,7 @@ import env from "@beam-australia/react-env";
 import ManagePredicates from './components/manage/ManagePredicates';
 import ManageLayers from './components/manage/ManageLayers';
 import ManageCITypes from './components/manage/ManageCITypes';
+import ManageTraits from './components/manage/ManageTraits';
 
 const keycloak = new Keycloak({
   "realm": env("KEYCLOAK_REALM"),
@@ -81,6 +82,9 @@ function App() {
               </PrivateRoute>
               <PrivateRoute path="/manage/citypes">
                 <ApolloWrapper component={ManageCITypes} />
+              </PrivateRoute>
+              <PrivateRoute path="/manage/traits">
+                <ApolloWrapper component={ManageTraits} />
               </PrivateRoute>
               <PrivateRoute path="/manage">
                 <ApolloWrapper component={Manage} />

@@ -7,6 +7,7 @@ using Npgsql;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -22,9 +23,9 @@ namespace Tests.Integration.Model
 
         private class MockedTraitsProvider : ITraitsProvider
         {
-            public Task<Traits> GetTraits(NpgsqlTransaction trans)
+            public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans)
             {
-                return Traits.Build(new List<Trait>()
+                return new List<Trait>()
                 {
                     Trait.Build("test_trait_1", new List<TraitAttribute>()
                     {
@@ -47,7 +48,7 @@ namespace Tests.Integration.Model
                             CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false)
                         )
                     }, new List<TraitAttribute>() { }, new List<TraitRelation>() { })
-                });
+                }.ToImmutableDictionary(t => t.Name);
             }
         }
 

@@ -15,7 +15,7 @@ namespace LandscapeRegistry.GraphQL
         public EffectiveTraitType()
         {
             Field(x => x.UnderlyingTrait, type: typeof(TraitType));
-            Field(x => x.TraitAttributes.Values, type: typeof(ListGraphType<MergedCIAttributeType>));
+            Field("attributes", x => x.TraitAttributes.Values, type: typeof(ListGraphType<MergedCIAttributeType>)); // TODO: don't ignore/drop traitattribute identifier (=key of dict)
         }
     }
     public class TraitType : ObjectGraphType<Trait>

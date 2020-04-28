@@ -47,6 +47,9 @@ export const Fragments = {
         }
         effectiveTraits { 
             underlyingTrait {name}
+            attributes { 
+                ...FullMergedAttribute
+            }
         }
         templateErrors {
           attributeErrors {

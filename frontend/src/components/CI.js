@@ -5,7 +5,7 @@ import AddNewAttribute from './AddNewAttribute';
 import AttributeList from './AttributeList';
 import TemplateErrors from './TemplateErrors';
 import CIRelations from './CIRelations';
-import Traits from './Traits';
+import EffectiveTraits from './EffectiveTraits';
 import { Tab } from 'semantic-ui-react'
 
 function CI(props) {
@@ -31,8 +31,8 @@ function CI(props) {
     { menuItem: 'Relations', render: () => <Tab.Pane>
       <CIRelations visibleLayers={props.visibleLayers} timeThreshold={props.timeThreshold} related={props.ci.related} isEditable={props.isEditable} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ci.id} />
     </Tab.Pane> },
-    { menuItem: 'Traits', render: () => <Tab.Pane>
-      <Traits visibleLayers={props.visibleLayers} timeThreshold={props.timeThreshold} traits={props.ci.effectiveTraits} ciIdentity={props.ci.id} />
+    { menuItem: 'Effective Traits', render: () => <Tab.Pane>
+      <EffectiveTraits visibleLayers={props.visibleLayers} timeThreshold={props.timeThreshold} traits={props.ci.effectiveTraits} ciIdentity={props.ci.id} />
     </Tab.Pane> },
   ]
 

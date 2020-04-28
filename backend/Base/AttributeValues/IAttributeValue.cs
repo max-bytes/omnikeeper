@@ -54,7 +54,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
                     buffer.Append(c);
                 }
             }
-            if (buffer.Length > 0 || input[input.Length - 1] == separator) yield return buffer.Flush();
+            if (input.Length == 0) yield return input;
+            else if (buffer.Length > 0 || input[input.Length - 1] == separator) yield return buffer.Flush();
         }
 
         public static string Flush(this StringBuilder stringBuilder)
