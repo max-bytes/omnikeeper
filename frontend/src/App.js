@@ -52,7 +52,7 @@ function App() {
             <div style={{flexGrow: 1}}></div>
             <div style={{display:'flex'}}>
               <Route path="*">
-                <Menu.Item><Link to="/manage"><Icon name="wrench" /></Link></Menu.Item>
+                <Menu.Item><Link to="/manage"><Icon name="wrench" /> Manage</Link></Menu.Item>
                 <Menu.Item><Link to="/createCI">Create New CI</Link></Menu.Item>
                 <Menu.Item><Link to="/explorer">Search CI</Link></Menu.Item>
               </Route>

@@ -64,7 +64,7 @@ namespace Landscape.Base
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message); // TODO: proper error handling, use error handler(?)
+                logger.LogError(e, $"Running CLB {Name} failed");
                 return false;
             }
         }
