@@ -275,12 +275,12 @@ namespace LandscapeRegistry
 
             app.UseSwagger(c =>
             {
-                c.RouteTemplate = "backend/{documentName}/swagger.json"; // TEST
+                c.RouteTemplate = "backend/swagger/{documentName}/swagger.json"; // TEST
             });
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("v1/swagger.json", "Landscape Registry REST API V1");
-                c.RoutePrefix = "backend"; // TEST
+                c.RoutePrefix = "backend/swagger"; // TEST
                 //c.RoutePrefix = ((Configuration["BaseURL"].Length == 0) ? "" : Configuration["BaseURL"] + "/") + "swagger";
                 c.OAuthClientId("landscape-registry-api");
                 c.OAuthClientSecret(Configuration.GetSection("SwaggerUI")["OAuthClientSecret"]);
