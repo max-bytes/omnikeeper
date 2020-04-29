@@ -27,13 +27,16 @@ namespace LandscapeRegistry.Controllers.Ingest
         private readonly ILayerModel layerModel;
         private readonly ILogger<AnsibleIngestController> logger;
         private readonly ICurrentUserService currentUserService;
+        private readonly AuthorizationService authorizationService;
 
-        public AnsibleIngestController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService, ILogger<AnsibleIngestController> logger)
+        public AnsibleIngestController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService, 
+            AuthorizationService authorizationService, ILogger<AnsibleIngestController> logger)
         {
             this.ingestDataService = ingestDataService;
             this.layerModel = layerModel;
             this.logger = logger;
             this.currentUserService = currentUserService;
+            this.authorizationService = authorizationService;
         }
 
         [HttpPost("IngestAnsibleInventoryScan")]
@@ -44,6 +47,12 @@ namespace LandscapeRegistry.Controllers.Ingest
                 var searchLayers = new LayerSet(searchLayerIDs);
                 var writeLayer = await layerModel.GetLayer(writeLayerID, null);
                 var user = await currentUserService.GetCurrentUser(null);
+
+                // authorization
+                if (!authorizationService.CanUserWriteToLayer(user, writeLayer))
+                {
+                    return Forbid();
+                }
 
                 var cis = new Dictionary<Guid, CICandidate>();
                 var relations = new List<RelationCandidate>();
@@ -64,7 +73,6 @@ namespace LandscapeRegistry.Controllers.Ingest
                         JValue2JSONAttribute(facts, "ansible_cmdline", "ansible.inventory.cmdline"),
                         JValuePath2TextAttribute(facts, "ansible_date_time.iso8601", "ansible.inventory.last_scan_time"), // TODO: consider isodate value type?
                         JValue2JSONAttribute(facts, "ansible_default_ipv4", "default_ipv4"),
-                        // jq '.ansible_facts.ansible_lvm' setup_facts.json ? TODO
                         JValue2TextAttribute(facts, "ansible_hostname", "hostname"),
                         JValue2TextAttribute(facts, "ansible_os_family", "os_family"),
                         JValue2TextAttribute(facts, "ansible_distribution", "distribution"),
@@ -145,6 +153,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                     }
                 }
 
+                // yum related data
                 foreach(var kvInstalled in data.YumInstalled)
                 {
                     var hostID = kvInstalled.Key;
@@ -155,8 +164,6 @@ namespace LandscapeRegistry.Controllers.Ingest
 
                     var attributeFragments = new List<BulkCICandidateAttributeData.Fragment>()
                     {
-                        //JValue2JSONAttribute(kvInstalled.Value, "results", "yum.installed"),
-                        //JArray2JSONArrayAttribute(kvInstalled.Value["results"] as JArray, "yum.installed"),
                         JToken2JSONAttribute(kvInstalled.Value["results"], "yum.installed"),
                         String2Attribute(CIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
@@ -165,10 +172,42 @@ namespace LandscapeRegistry.Controllers.Ingest
                     var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }), attributes);
                     cis.Add(tempCIID, ciCandidate);
                 }
+                foreach (var kvRepos in data.YumRepos)
+                {
+                    var hostID = kvRepos.Key;
+                    var fqdn = hostID; // TODO: check if using the HostID as fqdn is ok
+                    var ciName = hostID;
 
-                // TODO: ingest other inventory data:
-                //#  jq '.results' yum_repos.json
-                //#  jq '.results' yum_updates.json
+                    var tempCIID = Guid.NewGuid();
+
+                    var attributeFragments = new List<BulkCICandidateAttributeData.Fragment>()
+                    {
+                        JToken2JSONAttribute(kvRepos.Value["results"], "yum.repos"),
+                        String2Attribute(CIModel.NameAttribute, ciName),
+                        String2Attribute("fqdn", fqdn)
+                    };
+                    var attributes = BulkCICandidateAttributeData.Build(attributeFragments);
+                    var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }), attributes);
+                    cis.Add(tempCIID, ciCandidate);
+                }
+                foreach (var kvUpdates in data.YumUpdates)
+                {
+                    var hostID = kvUpdates.Key;
+                    var fqdn = hostID; // TODO: check if using the HostID as fqdn is ok
+                    var ciName = hostID;
+
+                    var tempCIID = Guid.NewGuid();
+
+                    var attributeFragments = new List<BulkCICandidateAttributeData.Fragment>()
+                    {
+                        JToken2JSONAttribute(kvUpdates.Value["results"], "yum.updates"),
+                        String2Attribute(CIModel.NameAttribute, ciName),
+                        String2Attribute("fqdn", fqdn)
+                    };
+                    var attributes = BulkCICandidateAttributeData.Build(attributeFragments);
+                    var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }), attributes);
+                    cis.Add(tempCIID, ciCandidate);
+                }
 
                 var ingestData = IngestData.Build(cis, relations);
                 var (idMapping, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, searchLayers, user, logger);

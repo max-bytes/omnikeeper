@@ -1,6 +1,9 @@
-﻿using Landscape.Base.Entity;
+﻿using Hangfire.Common;
+using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -13,14 +16,17 @@ namespace LandscapeRegistry.Service
 {
     public class CurrentUserService : ICurrentUserService
     {
-        public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel, ILayerModel layerModel, AuthorizationService authorizationService)
+        public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel, 
+            ILayerModel layerModel, AuthorizationService authorizationService, IConfiguration configuration)
         {
             HttpContextAccessor = httpContextAccessor;
             UserModel = userModel;
             LayerModel = layerModel;
             AuthorizationService = authorizationService;
+            Configuration = configuration;
         }
 
+        private IConfiguration Configuration { get; }
         private AuthorizationService AuthorizationService { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
         private IUserInDatabaseModel UserModel { get; }
@@ -50,11 +56,17 @@ namespace LandscapeRegistry.Service
             else
             {
                 var guidString = claims.FirstOrDefault(c => c.Type == "id")?.Value;
-                var groups = claims.Where(c => c.Type == "groups").Select(c => c.Value).ToArray();
+                //var groups = claims.Where(c => c.Type == "groups").Select(c => c.Value).ToArray();
+
+                // extract client roles
+                var resourceAccessStr = claims.Where(c => c.Type == "resource_access").FirstOrDefault()?.Value;
+                var resourceAccess = JObject.Parse(resourceAccessStr);
+                var resourceName = Configuration.GetSection("Authentication")["Audience"];
+                var clientRoles = resourceAccess[resourceName]?["roles"]?.Select(tt => tt.Value<string>()).ToArray() ?? new string[] { };
 
                 var writableLayers = new List<Layer>();
-                foreach (var group in groups) {
-                    var layerName = AuthorizationService.ParseLayerNameFromWriteAccessGroupName(group);
+                foreach (var role in clientRoles) {
+                    var layerName = AuthorizationService.ParseLayerNameFromWriteAccessRoleName(role);
                     if (layerName != null)
                     {
                         var layer = await LayerModel.GetLayer(layerName, trans);
@@ -64,9 +76,9 @@ namespace LandscapeRegistry.Service
                 }
 
                 var usertype = UserType.Unknown;
-                if (groups.Contains("/humans"))
+                if (clientRoles.Contains("human"))
                     usertype = UserType.Human;
-                else if (groups.Contains("/robots"))
+                else if (clientRoles.Contains("robot"))
                     usertype = UserType.Robot;
 
                 var guid = new Guid(guidString); // TODO: check for null, handle case

@@ -161,8 +161,7 @@ namespace LandscapeRegistry
                     OnForbidden = c =>
                     {
                         var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<AuthorizationService>>();
-                        var userService = c.HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
-                        logger.LogInformation($"Rejected user {userService.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
+                        logger.LogInformation($"Rejected user");
                         return Task.CompletedTask;
                     },
                     OnTokenValidated = c =>
@@ -175,8 +174,7 @@ namespace LandscapeRegistry
                     OnAuthenticationFailed = c =>
                     {
                         var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<AuthorizationService>>();
-                        var userService = c.HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
-                        logger.LogError(c.Exception, $"Failure when trying to authenticate user {userService.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
+                        logger.LogError(c.Exception, $"Failure when trying to authenticate user");
                         return Task.CompletedTask;
                     }
                 };

@@ -13,5 +13,11 @@ namespace Landscape.Base.Entity.DTO.Ingest
 
         [Required]
         public IDictionary<string, JObject> YumInstalled { get; set; }
+
+        [Required]
+        public IDictionary<string, JObject> YumRepos { get; set; }
+
+        [Required]
+        public IDictionary<string, JObject> YumUpdates { get; set; }
     }
 }

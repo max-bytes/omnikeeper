@@ -9,21 +9,21 @@ namespace LandscapeRegistry.Service
 {
     public class AuthorizationService
     {
-        private static readonly string GROUP_NAME_LAYER_WRITE_ACCESS_PREFIX = "layer_writeaccess_";
+        private static readonly string ROLE_NAME_LAYER_WRITE_ACCESS_PREFIX = "layer_writeaccess_";
 
-        public string GetWriteAccessGroupNameFromLayerName(string layerName)
+        public string GetWriteAccessRoleNameFromLayerName(string layerName)
         {
-            return $"{GROUP_NAME_LAYER_WRITE_ACCESS_PREFIX}{layerName}"; // TODO: define allowed characters
+            return $"{ROLE_NAME_LAYER_WRITE_ACCESS_PREFIX}{layerName}"; // TODO: define allowed characters
         }
 
         /// <summary>
         ///
         /// </summary>
-        /// <param name="groupName">Must contain "/" as prefix</param>
+        /// <param name="roleName">Must contain "/" as prefix</param>
         /// <returns></returns>
-        public string ParseLayerNameFromWriteAccessGroupName(string groupName)
+        public string ParseLayerNameFromWriteAccessRoleName(string roleName)
         {
-            var match = Regex.Match(groupName, "^/layer_writeaccess_(.*)");
+            var match = Regex.Match(roleName, "^layer_writeaccess_(.*)");
             if (!match.Success) return null;
             var layerName = match.Groups[1];
             return layerName.Value;
