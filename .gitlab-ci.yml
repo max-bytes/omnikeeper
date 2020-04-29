@@ -19,7 +19,7 @@ build-backend:
   stage: build
   when: manual
   tags:
-    - h1bld01.mhx.local
+    - dockerbuild
   services:
     - docker:19.03.1-dind
   before_script:
@@ -34,7 +34,7 @@ build-frontend:
   stage: build
   when: manual
   tags:
-    - h1bld01.mhx.local
+    - dockerbuild
   services:
     - docker:19.03.1-dind
   before_script:
@@ -45,25 +45,3 @@ build-frontend:
 # - "docker build --cache-from $CI_REGISTRY/landscape/registry/frontend:latest -t $CI_REGISTRY/landscape/registry/frontend:latest ."
     - "docker build -t $CI_REGISTRY/landscape/registry/frontend:latest ."
     - "docker push $CI_REGISTRY/landscape/registry/frontend:latest"
-
-#test-deploy:
-#  image: docker-registry.mhx.at/infra-docker/builddeploy-php:7.2.1
-#  stage: deploy
-#  environment: mhx-test
-#  when: manual
-#  tags:
-#    - h1bld01.mhx.local
-#  script:
-#    # deploy
-#    - eval $(ssh-agent -s)
-#    - ssh-add <(echo "$STAGING_PRIVATE_KEY")
-#    - ssh cicdauto@10.131.1.13 hostname
-
-
-
-
-#test:
-#    stage: test
-#    script: 
-#        - "cd $test"
-#        - "dotnet test"
