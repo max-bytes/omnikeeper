@@ -13,19 +13,8 @@ namespace LandscapeRegistry.Model
 {
     public class TraitsProvider : ITraitsProvider
     {
-        //private readonly IServiceProvider SP;
-        //public TraitsProvider(IServiceProvider sp)
-        //{
-        //    SP = sp;
-        //}
-
         public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans)
         {
-            //using var scope = SP.CreateScope();
-            //var predicateModel = scope.ServiceProvider.GetRequiredService<IPredicateModel>();
-            //var ciModel = scope.ServiceProvider.GetRequiredService<ICIModel>();
-            //var predicates = await predicateModel.GetPredicates(trans, null, AnchorStateFilter.All);
-
             // TODO: move somewhere else
             var traits = new List<Trait>()
                 {
@@ -39,16 +28,18 @@ namespace LandscapeRegistry.Model
                         TraitAttribute.Build("hostname", // TODO: dependent traits (this ci can only be a windows host if it is also a host
                             CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         ),
-                        TraitAttribute.Build("system",
-                            CIAttributeTemplate.BuildFromParams("system", AttributeValueType.Text, false, CIAttributeValueConstraintTextRegex.Build(new Regex(@"Windows", RegexOptions.IgnoreCase)))
+                        TraitAttribute.Build("os_family",
+                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false, 
+                                CIAttributeValueConstraintTextRegex.Build(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                         )
                     }),
                     Trait.Build("linux_host", new List<TraitAttribute>() {
                         TraitAttribute.Build("hostname", // TODO: dependent traits (this ci can only be a windows host if it is also a host
                             CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         ),
-                        TraitAttribute.Build("system",
-                            CIAttributeTemplate.BuildFromParams("system", AttributeValueType.Text, false, CIAttributeValueConstraintTextRegex.Build(new Regex(@"Linux", RegexOptions.IgnoreCase)))
+                        TraitAttribute.Build("os_family",
+                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false, 
+                                CIAttributeValueConstraintTextRegex.Build(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
                         )
                     }),
 
