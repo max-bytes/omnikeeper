@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -34,6 +35,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace LandscapeRegistry
 {
@@ -65,7 +67,7 @@ namespace LandscapeRegistry
             // register compute layer brains
             services.AddScoped<IComputeLayerBrain, CLBMonitoring>();
 
-            services.AddCors(options => options.AddPolicy("AllowAllOrigins", builder =>
+            services.AddCors(options => options.AddPolicy("DefaultCORSPolicy", builder =>
                builder.WithOrigins(Configuration.GetSection("CORS")["AllowedHosts"].Split(","))
                .AllowCredentials()
                 .AllowAnyMethod()
@@ -138,6 +140,7 @@ namespace LandscapeRegistry
 
             services.AddSingleton<IDocumentExecuter, MyDocumentExecutor>(); // custom document executor that does serial queries, required by postgres
 
+
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -146,7 +149,7 @@ namespace LandscapeRegistry
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
-                {
+                { // TODO: is this needed? According to https://developer.okta.com/blog/2018/03/23/token-authentication-aspnetcore-complete-guide, this should work automatically
                     ValidateAudience = true,
                     ValidAudience = Configuration.GetSection("Authentication")["Audience"]
                 };
@@ -155,23 +158,27 @@ namespace LandscapeRegistry
                 options.RequireHttpsMetadata = false;
                 options.Events = new JwtBearerEvents()
                 {
-                    //OnForbidden = c =>
-                    //{
-                    //    Console.WriteLine(c);
-                    //    return c.Response.WriteAsync("blub");
-                    //},
-                    //OnAuthenticationFailed = c =>
-                    //{
-                    //    c.NoResult();
-
-                    //    c.Response.StatusCode = 500;
-                    //    c.Response.ContentType = "text/plain";
-                    //    if (CurrentEnvironment.IsDevelopment())
-                    //    {
-                    //        return c.Response.WriteAsync(c.Exception.ToString());
-                    //    }
-                    //    return c.Response.WriteAsync("An error occured processing your authentication.");
-                    //}
+                    OnForbidden = c =>
+                    {
+                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<AuthorizationService>>();
+                        var userService = c.HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
+                        logger.LogInformation($"Rejected user {userService.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
+                        return Task.CompletedTask;
+                    },
+                    OnTokenValidated = c =>
+                    {
+                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<AuthorizationService>>();
+                        var userService = c.HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
+                        logger.LogInformation($"Validated token for user {userService.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
+                        return Task.CompletedTask;
+                    },
+                    OnAuthenticationFailed = c =>
+                    {
+                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<AuthorizationService>>();
+                        var userService = c.HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
+                        logger.LogError(c.Exception, $"Failure when trying to authenticate user {userService.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
+                        return Task.CompletedTask;
+                    }
                 };
                 options.Validate();
             });
@@ -235,7 +242,8 @@ namespace LandscapeRegistry
         private IWebHostEnvironment CurrentEnvironment { get; set; }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory, IHostApplicationLifetime hostApplicationLifetime)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory, 
+            ILogger<Startup> logger)
         {
             // run database migrations
             // NOTE: is now run in own executable running before app itself starts
@@ -244,7 +252,7 @@ namespace LandscapeRegistry
             //if (!migrationResult.Successful)
             //    throw new Exception("Database migration failed!", migrationResult.Error);
 
-            app.UseCors("AllowAllOrigins");
+            app.UseCors("DefaultCORSPolicy");
 
             app.UseStaticFiles();
 

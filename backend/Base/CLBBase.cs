@@ -28,13 +28,6 @@ namespace Landscape.Base
 
         public string Name => GetType().FullName;
 
-        //public void RunSync(CLBSettings settings, ILogger logger)
-        //{
-        //    Console.WriteLine("Starting");
-        //    var task = Task.Run(async () => await Run(settings, logger));
-        //    var x = task.Result; // Must stay here, so the tasks actually gets completed before returning from this method
-        //}
-
         public async Task<bool> Run(CLBSettings settings, ILogger logger)
         {
             try

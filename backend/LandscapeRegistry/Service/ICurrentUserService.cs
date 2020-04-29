@@ -14,5 +14,6 @@ namespace LandscapeRegistry.Service
     public interface ICurrentUserService
     {
         Task<User> GetCurrentUser(NpgsqlTransaction trans);
+        string GetUsernameFromClaims(IEnumerable<Claim> claims);
     }
 }

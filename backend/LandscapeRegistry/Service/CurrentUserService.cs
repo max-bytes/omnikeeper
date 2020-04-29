@@ -32,9 +32,14 @@ namespace LandscapeRegistry.Service
             return await CreateUserFromClaims(HttpContextAccessor.HttpContext.User.Claims, trans);
         }
 
+        public string GetUsernameFromClaims(IEnumerable<Claim> claims)
+        {
+            return claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
+        }
+
         private async Task<User> CreateUserFromClaims(IEnumerable<Claim> claims, NpgsqlTransaction trans)
         {
-            var username = claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
+            var username = GetUsernameFromClaims(claims);
 
             if (username == null)
             {
