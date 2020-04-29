@@ -62,7 +62,7 @@ namespace LandscapeRegistry.Service
                 var resourceAccessStr = claims.Where(c => c.Type == "resource_access").FirstOrDefault()?.Value;
                 var resourceAccess = JObject.Parse(resourceAccessStr);
                 var resourceName = Configuration.GetSection("Authentication")["Audience"];
-                var clientRoles = resourceAccess[resourceName]?["roles"]?.Select(tt => tt.Value<string>()).ToArray() ?? new string[] { };
+                var clientRoles = resourceAccess?[resourceName]?["roles"]?.Select(tt => tt.Value<string>()).ToArray() ?? new string[] { };
 
                 var writableLayers = new List<Layer>();
                 foreach (var role in clientRoles) {

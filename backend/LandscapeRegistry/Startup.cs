@@ -281,17 +281,16 @@ namespace LandscapeRegistry
 
             app.UseSwagger(c =>
             {
-                c.RouteTemplate = "swagger/{documentName}/swagger.json"; // TODO: make configurable
+                c.RouteTemplate = "swagger/{documentName}/swagger.json";
                 c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
                 {
-                    swaggerDoc.Servers = new List<OpenApiServer> { new OpenApiServer { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}/backend" } }; // TODO: make configurable
+                    swaggerDoc.Servers = new List<OpenApiServer> { new OpenApiServer { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}{Configuration["BaseURL"]}" } };
                 });
             });
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/backend/swagger/v1/swagger.json", "Landscape Registry REST API V1"); // TODO: make configurable
+                c.SwaggerEndpoint($"{Configuration["BaseURL"]}/swagger/v1/swagger.json", "Landscape Registry REST API V1");
                 //c.RoutePrefix = "/"; // TEST
-                //c.RoutePrefix = ((Configuration["BaseURL"].Length == 0) ? "" : Configuration["BaseURL"] + "/") + "swagger";
                 c.OAuthClientId("landscape-registry-api");
                 c.OAuthClientSecret(Configuration.GetSection("SwaggerUI")["OAuthClientSecret"]);
             });
