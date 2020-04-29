@@ -23,7 +23,7 @@ function AttributeList(props) {
       return a.attribute.name.localeCompare(b.attribute.name);
     });
 
-    const title = (key === "") ? "__uncategorized" : key;
+    const title = (key === "") ? "__base" : key;
 
     const onTitleClick = (e, itemProps) => {
       const { index } = itemProps;

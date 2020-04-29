@@ -3,6 +3,7 @@ import Form from 'react-bootstrap/Form';
 import 'ace-builds';
 import 'ace-builds/webpack-resolver';
 import AceEditor from "react-ace";
+import ReactJson from 'react-json-view'
 
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-textmate";
@@ -37,6 +38,8 @@ function attributeType2InputProps(type) {
 
 export function InputControl(props) {
     if (props.type === 'JSON') {
+        // return <ReactJson name={false} src={JSON.parse(props.value)} enableClipboard={false} 
+        //     style={{flexGrow: 1, border: "1px solid #ced4da", borderRadius: ".25rem"}}/>; // TODO
         return <AceEditor
             value={props.value}
             editorProps={{autoScrollEditorIntoView: true}}
@@ -61,15 +64,14 @@ export function InputControl(props) {
         />;
     } else {
         // simple type, simple handling
-        if (props.isArray) {
-            return <Form.Control disabled={props.disabled} style={{flexGrow: 1}}
-                {...attributeType2InputProps(props.type)} placeholder="Enter value" value={props.value} 
-                autoFocus={props.autoFocus}
-                onChange={e => props.onChange(e.target.value)} />
-        } else {
+        // if (props.isArray) {
+        //     return <Form.Control autoFocus={props.autoFocus} disabled={props.disabled} style={{flexGrow: 1}}
+        //         {...attributeType2InputProps(props.type)} placeholder="Enter value" value={props.value} 
+        //         onChange={e => props.onChange(e.target.value)} />
+        // } else {
             return <Form.Control autoFocus={props.autoFocus} disabled={props.disabled} style={{flexGrow: 1}} 
                 {...attributeType2InputProps(props.type)} placeholder="Enter value" value={props.value} 
                 onChange={e => props.onChange(e.target.value)} />
-        }
+        // }
     }
   }

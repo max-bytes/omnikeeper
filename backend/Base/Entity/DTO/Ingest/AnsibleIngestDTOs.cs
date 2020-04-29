@@ -10,5 +10,8 @@ namespace Landscape.Base.Entity.DTO.Ingest
     {
         [Required]
         public IDictionary<string, JObject> SetupFacts { get; set; }
+
+        [Required]
+        public IDictionary<string, JObject> YumInstalled { get; set; }
     }
 }

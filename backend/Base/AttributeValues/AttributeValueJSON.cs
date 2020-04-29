@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
+using Landscape.Base.Utils;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -34,24 +35,25 @@ namespace LandscapeRegistry.Entity.AttributeValues
 
     public class AttributeValueJSONScalar : AttributeValueJSON, IEquatable<AttributeValueJSONScalar>
     {
-        public JObject Value { get; private set; }
+        public JToken Value { get; private set; }
         public override string Value2String() => Value.ToString();
         public override AttributeValueDTO ToGeneric() => AttributeValueDTO.Build(Value2String(), Type);
         public override bool IsArray => false;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueJSONScalar);
         public bool Equals([AllowNull] AttributeValueJSONScalar other) => other != null && JToken.DeepEquals(Value, other.Value);
         public override int GetHashCode() => Value.GetHashCode();
-        public override bool FullTextSearch(string searchString, CompareOptions compareOptions) 
-            => Value.Descendants().Where(d => d is JProperty && !(d as JProperty).HasValues).Any(d 
-                => CultureInfo.InvariantCulture.CompareInfo.IndexOf((d as JProperty).Value.ToString(), searchString, compareOptions) >= 0); // TODO: correct?
+        public override bool FullTextSearch(string searchString, CompareOptions compareOptions)
+        {
+            return Value.FullTextSearch(searchString, compareOptions);
+        }
 
         internal static AttributeValueJSONScalar Build(string value)
         {
-            var v = JObject.Parse(value); // TODO: throws JsonReaderException, handle, but how?
+            var v = JToken.Parse(value); // TODO: throws JsonReaderException, handle, but how?
             return Build(v);
         }
 
-        public static AttributeValueJSONScalar Build(JObject value)
+        public static AttributeValueJSONScalar Build(JToken value)
         {
             var n = new AttributeValueJSONScalar
             {
@@ -63,33 +65,32 @@ namespace LandscapeRegistry.Entity.AttributeValues
 
     public class AttributeValueJSONArray : AttributeValueJSON, IEquatable<AttributeValueJSONArray>
     {
-        public JObject[] Values { get; private set; }
+        public JToken[] Values { get; private set; }
         public override string Value2String() => string.Join(",", Values.Select(value => value.ToString().Replace(",", "\\,")));
         public override AttributeValueDTO ToGeneric() => AttributeValueDTO.Build(Values.Select(v => v.ToString()).ToArray(), Type);
         public override bool IsArray => true;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueJSONArray);
 
-        private class EqualityComparer : IEqualityComparer<JObject>
+        private class EqualityComparer : IEqualityComparer<JToken>
         {
-            public bool Equals(JObject x, JObject y) => JToken.DeepEquals(x, y);
-            public int GetHashCode(JObject obj) => obj.GetHashCode();
+            public bool Equals(JToken x, JToken y) => JToken.DeepEquals(x, y);
+            public int GetHashCode(JToken obj) => obj.GetHashCode();
         }
         private static readonly EqualityComparer ec = new EqualityComparer();
         public bool Equals([AllowNull] AttributeValueJSONArray other) 
             => other != null && Values.SequenceEqual(other.Values, ec);
         public override int GetHashCode() => Values.GetHashCode();
         public override bool FullTextSearch(string searchString, CompareOptions compareOptions) 
-            => Values.Any(value => value.Descendants().Where(d => d is JProperty && !(d as JProperty).HasValues).Any(d 
-                => CultureInfo.InvariantCulture.CompareInfo.IndexOf((d as JProperty).Value.ToString(), searchString, compareOptions) >= 0));
+            => Values.Any(value => value.FullTextSearch(searchString, compareOptions));
 
 
         public static AttributeValueJSONArray Build(string[] values)
         {
-            var jsonValues = values.Select(value => { return JObject.Parse(value); }).ToArray(); // TODO: throws JsonReaderException, handle, but how?
+            var jsonValues = values.Select(value => { return JToken.Parse(value); }).ToArray(); // TODO: throws JsonReaderException, handle, but how?
             return Build(jsonValues);
         }
 
-        public static AttributeValueJSONArray Build(JObject[] values)
+        public static AttributeValueJSONArray Build(JToken[] values)
         {
             var n = new AttributeValueJSONArray
             {

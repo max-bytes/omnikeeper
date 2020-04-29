@@ -61,7 +61,7 @@ function Attribute(props) {
     );
 
     input = (
-      <Form inline style={{alignItems: 'flex-start'}} onSubmit={e => {
+      <Form inline style={{alignItems: 'flex-start', flexFlow: 'row'}} onSubmit={e => {
           e.preventDefault();
           insertCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, value: {
             type: attribute.attribute.value.type,

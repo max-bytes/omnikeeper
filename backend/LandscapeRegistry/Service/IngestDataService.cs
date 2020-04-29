@@ -75,7 +75,7 @@ namespace LandscapeRegistry.Service
             }
         }
 
-        public async Task<Dictionary<Guid, Guid>> Ingest(IngestData data, Layer writeLayer, LayerSet searchableLayers, User user, ILogger logger)
+        public async Task<(Dictionary<Guid, Guid> idMapping, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, LayerSet searchableLayers, User user, ILogger logger)
         {
             using var trans = Connection.BeginTransaction();
             var changeset = await ChangesetModel.CreateChangeset(user.InDatabase.ID, trans);
@@ -125,7 +125,10 @@ namespace LandscapeRegistry.Service
                 // save ciid mapping
                 temp2finalCIIDMap.Add(cic.Key, ciid);
 
-                attributeData.Add(ciid, attributes);
+                if (attributeData.ContainsKey(ciid))
+                    attributeData[ciid] = attributeData[ciid].Concat(attributes);
+                else
+                    attributeData.Add(ciid, attributes);
             }
 
             var bulkAttributeData = BulkCIAttributeDataLayerScope.Build("", writeLayer.ID, attributeData.SelectMany(ad =>
@@ -151,7 +154,7 @@ namespace LandscapeRegistry.Service
 
             trans.Commit();
 
-            return temp2finalCIIDMap;
+            return (temp2finalCIIDMap, bulkRelationData.Fragments.Length);
         }
     }
 
@@ -206,6 +209,11 @@ namespace LandscapeRegistry.Service
             {
                 Fragments = fragments.ToArray()
             };
+        }
+
+        internal BulkCICandidateAttributeData Concat(BulkCICandidateAttributeData attributes)
+        {
+            return Build(Fragments.Concat(attributes.Fragments));
         }
     }
 
