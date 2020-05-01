@@ -27,14 +27,19 @@ namespace Landscape.Base.Entity
         public Trait UnderlyingTrait { get; private set; }
         public IImmutableDictionary<string, MergedCIAttribute> TraitAttributes { get; private set; }
         public IImmutableDictionary<string, IEnumerable<(Relation relation, MergedCI toCI)>> TraitRelations { get; private set; }
+        public IEnumerable<string> DependentTraits { get; private set; }
 
-        public static EffectiveTrait Build(Trait underlyingTrait, IDictionary<string, MergedCIAttribute> traitAttributes, IDictionary<string, IEnumerable<(Relation relation, MergedCI toCI)>> traitRelations)
+        public static EffectiveTrait Build(Trait underlyingTrait, 
+            IDictionary<string, MergedCIAttribute> traitAttributes, 
+            IDictionary<string, IEnumerable<(Relation relation, MergedCI toCI)>> traitRelations,
+            IEnumerable<string> dependentTraits)
         {
             return new EffectiveTrait
             {
                 UnderlyingTrait = underlyingTrait,
                 TraitAttributes = traitAttributes.ToImmutableDictionary(),
-                TraitRelations = traitRelations.ToImmutableDictionary()
+                TraitRelations = traitRelations.ToImmutableDictionary(),
+                DependentTraits = dependentTraits
             };
         }
     }

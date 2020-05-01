@@ -17,7 +17,7 @@ namespace LandscapeRegistry.Service
     public class CurrentUserService : ICurrentUserService
     {
         public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel, 
-            ILayerModel layerModel, AuthorizationService authorizationService, IConfiguration configuration)
+            ILayerModel layerModel, IRegistryAuthorizationService authorizationService, IConfiguration configuration)
         {
             HttpContextAccessor = httpContextAccessor;
             UserModel = userModel;
@@ -27,7 +27,7 @@ namespace LandscapeRegistry.Service
         }
 
         private IConfiguration Configuration { get; }
-        private AuthorizationService AuthorizationService { get; }
+        private IRegistryAuthorizationService AuthorizationService { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
         private IUserInDatabaseModel UserModel { get; }
         private ILayerModel LayerModel { get; }

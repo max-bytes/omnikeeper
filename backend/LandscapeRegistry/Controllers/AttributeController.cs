@@ -19,10 +19,10 @@ namespace LandscapeRegistry.Controllers
         private readonly IAttributeModel attributeModel;
         private readonly IChangesetModel changesetModel;
         private readonly ICurrentUserService currentUserService;
-        private readonly AuthorizationService authorizationService;
+        private readonly IRegistryAuthorizationService authorizationService;
         private readonly NpgsqlConnection conn;
 
-        public AttributeController(IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserService currentUserService, AuthorizationService authorizationService, NpgsqlConnection conn)
+        public AttributeController(IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserService currentUserService, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             this.conn = conn;
             this.changesetModel = changesetModel;

@@ -25,23 +25,18 @@ namespace LandscapeRegistry.Model
                         )
                     }),
                     Trait.Build("windows_host", new List<TraitAttribute>() {
-                        TraitAttribute.Build("hostname", // TODO: dependent traits (this ci can only be a windows host if it is also a host
-                            CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                        ),
                         TraitAttribute.Build("os_family",
                             CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false, 
                                 CIAttributeValueConstraintTextRegex.Build(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                         )
-                    }),
+                    }, requiredTraits: new string[] { "host" }),
+
                     Trait.Build("linux_host", new List<TraitAttribute>() {
-                        TraitAttribute.Build("hostname", // TODO: dependent traits (this ci can only be a windows host if it is also a host
-                            CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                        ),
                         TraitAttribute.Build("os_family",
                             CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false, 
                                 CIAttributeValueConstraintTextRegex.Build(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
                         )
-                    }),
+                    }, requiredTraits: new string[] { "host" }),
 
                     // applications
                     Trait.Build("application", new List<TraitAttribute>() {

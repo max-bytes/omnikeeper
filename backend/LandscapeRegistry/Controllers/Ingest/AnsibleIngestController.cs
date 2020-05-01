@@ -27,10 +27,10 @@ namespace LandscapeRegistry.Controllers.Ingest
         private readonly ILayerModel layerModel;
         private readonly ILogger<AnsibleIngestController> logger;
         private readonly ICurrentUserService currentUserService;
-        private readonly AuthorizationService authorizationService;
+        private readonly IRegistryAuthorizationService authorizationService;
 
         public AnsibleIngestController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService, 
-            AuthorizationService authorizationService, ILogger<AnsibleIngestController> logger)
+            IRegistryAuthorizationService authorizationService, ILogger<AnsibleIngestController> logger)
         {
             this.ingestDataService = ingestDataService;
             this.layerModel = layerModel;

@@ -71,6 +71,9 @@ namespace Tests.Ingest
             var user = User.Build(await userModel.UpsertUser(username, userGUID, UserType.Robot, null), new List<Layer>() { layer1 });
             mockCurrentUserService.Setup(_ => _.GetCurrentUser(It.IsAny<NpgsqlTransaction>())).ReturnsAsync(user);
 
+            var mockAuthorizationService = new Mock<IRegistryAuthorizationService>();
+            mockAuthorizationService.Setup(_ => _.CanUserWriteToLayer(user, layer1)).Returns(true);
+
             var insertLayer = layer1;
             var hosts = new string[] { "h1jmplx01.mhx.at", "h1lscapet01.mhx.local" };
             var layerSet = await layerModel.BuildLayerSet(null);
@@ -78,7 +81,7 @@ namespace Tests.Ingest
             await predicateModel.InsertOrUpdate("has_network_interface", "has network interface", "is network interface of host", AnchorState.Active, null);
             await predicateModel.InsertOrUpdate("has_mounted_device", "has mounted device", "is mounted at host", AnchorState.Active, null);
 
-            var controller = new AnsibleIngestController(ingestDataService, layerModel, mockCurrentUserService.Object, NullLogger<AnsibleIngestController>.Instance);
+            var controller = new AnsibleIngestController(ingestDataService, layerModel, mockCurrentUserService.Object, mockAuthorizationService.Object, NullLogger<AnsibleIngestController>.Instance);
             await PerformIngest(insertLayer.ID, layerSet.LayerIDs, hosts, controller);
 
             //var cis = await ciModel.GetMergedCIs(layerSet, false, null, DateTimeOffset.Now, ingestData.CICandidates.Select(cic => temp2finalCIIDMap[cic.Key]));

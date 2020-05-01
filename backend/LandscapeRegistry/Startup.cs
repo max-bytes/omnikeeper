@@ -113,7 +113,7 @@ namespace LandscapeRegistry
             services.AddScoped<ITraitModel, TraitModel>();
             services.AddScoped<TraitModel>();
 
-            services.AddScoped<AuthorizationService>();
+            services.AddScoped<IRegistryAuthorizationService, RegistryAuthorizationService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<MarkedForDeletionService>();
             services.AddScoped<IngestDataService>();
@@ -160,20 +160,20 @@ namespace LandscapeRegistry
                 {
                     OnForbidden = c =>
                     {
-                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<AuthorizationService>>();
+                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<IRegistryAuthorizationService>>();
                         logger.LogInformation($"Rejected user");
                         return Task.CompletedTask;
                     },
                     OnTokenValidated = c =>
                     {
-                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<AuthorizationService>>();
+                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<IRegistryAuthorizationService>>();
                         var userService = c.HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
                         logger.LogInformation($"Validated token for user {userService.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
                         return Task.CompletedTask;
                     },
                     OnAuthenticationFailed = c =>
                     {
-                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<AuthorizationService>>();
+                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<IRegistryAuthorizationService>>();
                         logger.LogError(c.Exception, $"Failure when trying to authenticate user");
                         return Task.CompletedTask;
                     }

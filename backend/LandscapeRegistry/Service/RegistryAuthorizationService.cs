@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace LandscapeRegistry.Service
 {
-    public class AuthorizationService
+    public class RegistryAuthorizationService : IRegistryAuthorizationService
     {
         private static readonly string ROLE_NAME_LAYER_WRITE_ACCESS_PREFIX = "layer_writeaccess_";
 
@@ -16,11 +16,6 @@ namespace LandscapeRegistry.Service
             return $"{ROLE_NAME_LAYER_WRITE_ACCESS_PREFIX}{layerName}"; // TODO: define allowed characters
         }
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="roleName">Must contain "/" as prefix</param>
-        /// <returns></returns>
         public string ParseLayerNameFromWriteAccessRoleName(string roleName)
         {
             var match = Regex.Match(roleName, "^layer_writeaccess_(.*)");
@@ -39,33 +34,33 @@ namespace LandscapeRegistry.Service
             return user.WritableLayers.Any(l => l.ID == layerID);
         }
 
-        internal bool CanUserWriteToLayers(User user, IEnumerable<long> writeLayerIDs)
+        public bool CanUserWriteToLayers(User user, IEnumerable<long> writeLayerIDs)
         {
             // writeLayerIDs must be subset of writable layers, otherwise user can't write to all passed layers
             return !writeLayerIDs.Except(user.WritableLayers.Select(l => l.ID)).Any();
         }
 
-        internal bool CanUserCreateCI(User user)
+        public bool CanUserCreateCI(User user)
         {
             return true; // TODO
         }
 
-        internal bool CanUserCreateLayer(User user)
+        public bool CanUserCreateLayer(User user)
         {
             return true; // TODO
         }
 
-        internal bool CanUserUpdateLayer(User user)
+        public bool CanUserUpdateLayer(User user)
         {
             return true; // TODO
         }
 
-        internal bool CanUserUpsertPredicate(User user)
+        public bool CanUserUpsertPredicate(User user)
         {
             return true; // TODO
         }
 
-        internal bool CanUserUpsertCIType(User user)
+        public bool CanUserUpsertCIType(User user)
         {
             return true; // TODO
         }
