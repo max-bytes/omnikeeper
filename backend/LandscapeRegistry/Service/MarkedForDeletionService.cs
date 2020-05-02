@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
@@ -18,7 +19,7 @@ namespace LandscapeRegistry.Service
         public async Task<bool> Run(ILogger logger)
         {
             // try to delete marked predicates
-            var toDeletePredicates = await predicateModel.GetPredicates(null, null, AnchorStateFilter.MarkedForDeletion);
+            var toDeletePredicates = await predicateModel.GetPredicates(null, TimeThreshold.BuildLatest(), AnchorStateFilter.MarkedForDeletion);
             foreach (var d in toDeletePredicates)
             {
                 var wasDeleted = await predicateModel.TryToDelete(d.Key, null);

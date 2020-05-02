@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using Npgsql;
 using System;
@@ -40,15 +41,16 @@ namespace Landscape.Base.Model
             public void AddParameters(NpgsqlParameterCollection p) { }
         }
 
-        Task<IDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? atTime);
-        Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? atTime);
-        Task<IEnumerable<CIAttribute>> GetAttributes(IAttributeSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime);
+        Task<IDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<IEnumerable<CIAttribute>> GetAttributes(IAttributeSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
+
+        Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime, Guid? ciid = null);
+        Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, IAttributeSelection selection, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
 
 
         Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans);
         Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans);
-        Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime, Guid? ciid = null);
-        Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, IAttributeSelection selection, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? atTime);
 
 
 

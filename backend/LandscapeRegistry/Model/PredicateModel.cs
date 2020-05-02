@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -78,7 +79,7 @@ namespace LandscapeRegistry.Model
             }
         }
 
-        public async Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, DateTimeOffset? atTime, AnchorStateFilter stateFilter)
+        public async Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, TimeThreshold atTime, AnchorStateFilter stateFilter)
         {
             var ret = new Dictionary<string, Predicate>();
             using var command = new NpgsqlCommand(@"
@@ -92,8 +93,7 @@ namespace LandscapeRegistry.Model
                     ON ps.predicate_id = p.id
                 WHERE (ps.state = ANY(@states) OR (ps.state IS NULL AND @default_state = ANY(@states)))
             ", conn, trans);
-            var finalTimeThreshold = atTime ?? DateTimeOffset.Now;
-            command.Parameters.AddWithValue("atTime", finalTimeThreshold);
+            command.Parameters.AddWithValue("atTime", atTime.Time);
             command.Parameters.AddWithValue("states", stateFilter.Filter2States());
             command.Parameters.AddWithValue("default_state", DefaultState);
             using (var s = await command.ExecuteReaderAsync())

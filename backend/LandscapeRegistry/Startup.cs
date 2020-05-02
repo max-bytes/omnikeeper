@@ -110,8 +110,8 @@ namespace LandscapeRegistry
             services.AddScoped<CachedPredicateModel>();
             services.AddScoped<KeycloakModel>();
 
-            services.AddScoped<ITraitModel, TraitModel>();
             services.AddScoped<TraitModel>();
+            services.AddScoped<ITraitModel, CachedTraitModel>();
 
             services.AddScoped<IRegistryAuthorizationService, RegistryAuthorizationService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -222,6 +222,8 @@ namespace LandscapeRegistry
                 c.CustomOperationIds(apiDesc => apiDesc.TryGetMethodInfo(out MethodInfo methodInfo) ? methodInfo.Name : null);
             });
             services.AddSwaggerGenNewtonsoftSupport();
+
+            services.AddMemoryCache();
         }
         public class AuthenticationRequirementsOperationFilter : IOperationFilter
         {

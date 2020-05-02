@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using Npgsql;
 using System;
@@ -34,7 +35,7 @@ namespace Landscape.Base
         // TODO: rewrite into using bulk replace?
         public async Task RemoveOutdatedErrors()
         {
-            var allAttributes = await attributeModel.FindAttributesByName($"{AttributeNamePrefix}%", false, clbLayerID, trans, DateTimeOffset.Now);
+            var allAttributes = await attributeModel.FindAttributesByName($"{AttributeNamePrefix}%", false, clbLayerID, trans, TimeThreshold.BuildLatest());
 
             var attributesToRemove = allAttributes.Where(a =>
             {

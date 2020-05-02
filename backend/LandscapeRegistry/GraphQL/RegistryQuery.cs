@@ -1,6 +1,7 @@
 ﻿using GraphQL.Types;
 using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Cached;
 using Newtonsoft.Json.Linq;
@@ -39,7 +40,7 @@ namespace LandscapeRegistry.GraphQL
                     var layerStrings = context.GetArgument<string[]>("layers");
                     var ls = await layerModel.BuildLayerSet(layerStrings, null);
                     userContext.LayerSet = ls;
-                    userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
+                    userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
 
                     var ci = await ciModel.GetMergedCI(ciid, userContext.LayerSet, null, userContext.TimeThreshold);
 
@@ -71,7 +72,7 @@ namespace LandscapeRegistry.GraphQL
                     var layerStrings = context.GetArgument<string[]>("layers");
                     var ls = await layerModel.BuildLayerSet(layerStrings, null);
                     userContext.LayerSet = ls;
-                    userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
+                    userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
 
                     var ciids = await ciModel.GetCompactCIs(userContext.LayerSet, null, userContext.TimeThreshold);
                     return ciids;
@@ -93,9 +94,9 @@ namespace LandscapeRegistry.GraphQL
                     //var layerStrings = context.GetArgument<string[]>("layers");
                     var ls = await layerModel.BuildLayerSet(null);
                     userContext.LayerSet = ls;
-                    userContext.TimeThreshold = DateTimeOffset.Now;
+                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    return await ciSearchModel.Search(context.GetArgument<string>("searchString"), ls, null);
+                    return await ciSearchModel.Search(context.GetArgument<string>("searchString"), ls, null, userContext.TimeThreshold);
                 });
 
             FieldAsync<ListGraphType<MergedCIType>>("cis",
@@ -121,7 +122,7 @@ namespace LandscapeRegistry.GraphQL
                     var layerStrings = context.GetArgument<string[]>("layers");
                     var layerSet = layerStrings != null ? await layerModel.BuildLayerSet(layerStrings, null) : await layerModel.BuildLayerSet(null);
                     userContext.LayerSet = layerSet;
-                    userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
+                    userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
 
                     var includeEmpty = context.GetArgument("includeEmpty", false);
 
@@ -139,7 +140,7 @@ namespace LandscapeRegistry.GraphQL
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as RegistryUserContext;
-                    userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
+                    userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
                     var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
 
                     return (await predicateModel.GetPredicates(null, userContext.TimeThreshold, stateFilter)).Values;
@@ -148,7 +149,7 @@ namespace LandscapeRegistry.GraphQL
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as RegistryUserContext;
-                    userContext.TimeThreshold = context.GetArgument("timeThreshold", DateTimeOffset.Now);
+                    userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
 
                     return await ciModel.GetCITypes(null, userContext.TimeThreshold);
                 });
@@ -219,8 +220,10 @@ namespace LandscapeRegistry.GraphQL
             FieldAsync<StringGraphType>("traits",
                 resolve: async context =>
                 {
+                    var userContext = context.UserContext as RegistryUserContext;
+                    userContext.TimeThreshold = TimeThreshold.BuildLatest();// context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
                     // TODO: implement properly, just showing json string for now
-                    var traitsJSON = JObject.FromObject(await traitsProvider.GetTraits(null));
+                    var traitsJSON = JObject.FromObject(await traitsProvider.GetTraits(null, userContext.TimeThreshold));
                     return traitsJSON.ToString();
                 });
 

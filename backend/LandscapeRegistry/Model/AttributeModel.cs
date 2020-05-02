@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Utils;
 using Npgsql;
@@ -21,13 +22,13 @@ namespace LandscapeRegistry.Model
             conn = connection;
         }
 
-        public async Task<IDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? atTime = null)
+        public async Task<IDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var d = await GetMergedAttributes(new Guid[] { ciid }, includeRemoved, layers, trans, atTime);
             return d.GetValueOrDefault(ciid, () => new Dictionary<string, MergedCIAttribute>());
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var ret = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
 
@@ -57,7 +58,7 @@ namespace LandscapeRegistry.Model
                 command.Parameters.AddWithValue("ci_identities", ciids.ToArray());
                 var excludedStates = (includeRemoved) ? new AttributeState[] { } : new AttributeState[] { AttributeState.Removed };
                 command.Parameters.AddWithValue("excluded_states", excludedStates);
-                command.Parameters.AddWithValue("time_threshold", atTime ?? DateTimeOffset.Now);
+                command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("layer_ids", layers.ToArray());
                 using var dr = command.ExecuteReader();
 
@@ -84,7 +85,7 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(IAttributeSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<IEnumerable<CIAttribute>> GetAttributes(IAttributeSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var ret = new List<CIAttribute>();
 
@@ -95,7 +96,7 @@ namespace LandscapeRegistry.Model
             ", conn, trans);
             selection.AddParameters(command.Parameters);
             command.Parameters.AddWithValue("layer_id", layerID);
-            command.Parameters.AddWithValue("time_threshold", atTime);
+            command.Parameters.AddWithValue("time_threshold", atTime.Time);
 
             using var dr = await command.ExecuteReaderAsync();
 
@@ -119,7 +120,7 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime, Guid? ciid = null)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime, Guid? ciid = null)
         {
             var ret = new List<CIAttribute>();
 
@@ -136,7 +137,7 @@ namespace LandscapeRegistry.Model
 
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("like_name", like);
-            command.Parameters.AddWithValue("time_threshold", atTime);
+            command.Parameters.AddWithValue("time_threshold", atTime.Time);
             if (ciid != null)
                 command.Parameters.AddWithValue("ci_id", ciid.Value);
 
@@ -161,7 +162,7 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, IAttributeSelection selection, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? atTime)
+        public async Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, IAttributeSelection selection, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var ret = new Dictionary<Guid, MergedCIAttribute>();
 
@@ -190,7 +191,7 @@ namespace LandscapeRegistry.Model
             {
                 var excludedStates = (includeRemoved) ? new AttributeState[] { } : new AttributeState[] { AttributeState.Removed };
                 command.Parameters.AddWithValue("excluded_states", excludedStates);
-                command.Parameters.AddWithValue("time_threshold", atTime ?? DateTimeOffset.Now);
+                command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("name", name);
                 command.Parameters.AddWithValue("layer_ids", layers.ToArray());
                 selection.AddParameters(command.Parameters);
@@ -215,7 +216,7 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        private async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, DateTimeOffset atTime)
+        private async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             using var command = new NpgsqlCommand(@"
             select id, ci_id, type, value, state, changeset_id FROM attribute 
@@ -226,7 +227,7 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("ci_id", ciid);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("name", name);
-            command.Parameters.AddWithValue("time_threshold", atTime);
+            command.Parameters.AddWithValue("time_threshold", atTime.Time);
 
             using var dr = await command.ExecuteReaderAsync();
 
@@ -246,7 +247,8 @@ namespace LandscapeRegistry.Model
 
         public async Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans)
         {
-            var currentAttribute = await GetAttribute(name, layerID, ciid, trans, DateTimeOffset.Now);
+            var readTS = TimeThreshold.BuildLatest();
+            var currentAttribute = await GetAttribute(name, layerID, ciid, trans, readTS);
 
             if (currentAttribute == null)
             {
@@ -258,6 +260,8 @@ namespace LandscapeRegistry.Model
                 // the attribute is already removed, no-op(?)
                 return currentAttribute;
             }
+
+            // TODO: remove now() in ALL!!! database queries, use application Now() as single point of truth, otherwise, strange things might start to occur
 
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
                 VALUES (@name, @ci_id, @type, @value, @layer_id, @state, now(), @changeset_id) returning id", conn, trans);
@@ -283,7 +287,8 @@ namespace LandscapeRegistry.Model
 
         public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans)
         {
-            var currentAttribute = await GetAttribute(name, layerID, ciid, trans, DateTimeOffset.Now);
+            var readTS = TimeThreshold.BuildLatest();
+            var currentAttribute = await GetAttribute(name, layerID, ciid, trans, readTS);
 
             var state = AttributeState.New;
             if (currentAttribute != null)
@@ -318,15 +323,18 @@ namespace LandscapeRegistry.Model
 
         public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, long changesetID, NpgsqlTransaction trans)
         {
+            var readTS = TimeThreshold.BuildLatest();
+
             var outdatedAttributes = (data switch
             {
-                BulkCIAttributeDataLayerScope d => (await FindAttributesByName($"{data.NamePrefix}%", false, data.LayerID, trans, DateTimeOffset.Now)),
-                BulkCIAttributeDataCIScope d => (await FindAttributesByName($"{data.NamePrefix}%", false, data.LayerID, trans, DateTimeOffset.Now, d.CIID)),
+                BulkCIAttributeDataLayerScope d => (await FindAttributesByName($"{data.NamePrefix}%", false, data.LayerID, trans, readTS)),
+                BulkCIAttributeDataCIScope d => (await FindAttributesByName($"{data.NamePrefix}%", false, data.LayerID, trans, readTS, d.CIID)),
                 _ => null
             }).ToDictionary(a => a.InformationHash);
 
 
             // get current timestamp in database
+            var writeTS = TimeThreshold.BuildLatest(); // TODO: use applications timestamp instead of database timestamp
             using var commandTime = new NpgsqlCommand(@"SELECT now()", conn, trans);
             var now = ((DateTime)(await commandTime.ExecuteScalarAsync()));
 

@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -14,13 +15,13 @@ namespace LandscapeRegistry.GraphQL
             User = user;
         }
 
-        public DateTimeOffset TimeThreshold
+        public TimeThreshold TimeThreshold
         {
             get
             {
                 TryGetValue("TimeThreshold", out var ls);
-                if (ls == null) return default;
-                return (DateTimeOffset)ls;
+                if (ls == null) return TimeThreshold.BuildLatest();
+                return (TimeThreshold)ls;
             }
             set
             {

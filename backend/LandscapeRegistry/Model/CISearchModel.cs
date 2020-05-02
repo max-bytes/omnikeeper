@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Utils;
 using Npgsql;
 using System;
@@ -21,7 +22,7 @@ namespace LandscapeRegistry.Model
             this.ciModel = ciModel;
         }
 
-        public async Task<IEnumerable<CompactCI>> Search(string searchString, LayerSet layerSet, NpgsqlTransaction trans, DateTimeOffset? atTime = null)
+        public async Task<IEnumerable<CompactCI>> Search(string searchString, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
             var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(CIModel.NameAttribute, new AllCIIDsAttributeSelection(), false, layerSet, trans, atTime);

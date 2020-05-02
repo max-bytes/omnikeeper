@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Service;
 using LandscapeRegistry.Utils;
 using Npgsql;
@@ -22,20 +23,20 @@ namespace LandscapeRegistry.Model
             CIModel = ciModel;
         }
 
-        public async Task<TemplateErrorsCI> CalculateTemplateErrors(Guid ciid, LayerSet layerset, ICIModel ciModel, NpgsqlTransaction trans)
+        public async Task<TemplateErrorsCI> CalculateTemplateErrors(Guid ciid, LayerSet layerset, ICIModel ciModel, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var ci = await ciModel.GetMergedCI(ciid, layerset, trans, DateTimeOffset.Now);
-            return await CalculateTemplateErrors(ci, trans);
+            var ci = await ciModel.GetMergedCI(ciid, layerset, trans, atTime);
+            return await CalculateTemplateErrors(ci, trans, atTime);
         }
 
-        public async Task<TemplateErrorsCI> CalculateTemplateErrors(MergedCI ci, NpgsqlTransaction trans)
+        public async Task<TemplateErrorsCI> CalculateTemplateErrors(MergedCI ci, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var templates = await TemplatesProvider.GetTemplates(trans);
             var template = templates.GetTemplate(ci.Type?.ID);
             var attributesTemplates = template?.AttributeTemplates;
             var relationTemplates = template?.RelationTemplates;
 
-            var relationsAndToCIs = (await RelationService.GetMergedForwardRelationsAndToCIs(ci, CIModel, RelationModel, trans))
+            var relationsAndToCIs = (await RelationService.GetMergedForwardRelationsAndToCIs(ci.ID, ci.Layers, CIModel, RelationModel, trans, atTime))
                 .ToLookup(t => t.relation.PredicateID);
 
             var errorsAttribute = new Dictionary<string, TemplateErrorsAttribute>();

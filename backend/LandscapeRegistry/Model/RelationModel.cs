@@ -2,6 +2,7 @@
 using Hangfire.States;
 using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,7 @@ namespace LandscapeRegistry.Model
 
         // TODO: make MergedRelation its own type
         // TODO: make it work with list of ciIdentities
-        private async Task<NpgsqlCommand> CreateMergedRelationCommand(Guid? ciid, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, string additionalWhereClause, NpgsqlTransaction trans, DateTimeOffset? timeThreshold)
+        private async Task<NpgsqlCommand> CreateMergedRelationCommand(Guid? ciid, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, string additionalWhereClause, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layerset, "temp_layerset", conn, trans);
 
@@ -65,18 +66,17 @@ namespace LandscapeRegistry.Model
                 command.Parameters.AddWithValue("ci_identity", ciid.Value);
             var excludedStates = (includeRemoved) ? new RelationState[] { } : new RelationState[] { RelationState.Removed };
             command.Parameters.AddWithValue("excluded_states", excludedStates);
-            var finalTimeThreshold = timeThreshold ?? DateTimeOffset.Now;
-            command.Parameters.AddWithValue("time_threshold", finalTimeThreshold);
+            command.Parameters.AddWithValue("time_threshold", atTime.Time);
             return command;
         }
 
-        public async Task<IEnumerable<Relation>> GetMergedRelations(Guid? ciid, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null)
+        public async Task<IEnumerable<Relation>> GetMergedRelations(Guid? ciid, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var ret = new List<Relation>();
 
-            var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.All);
+            var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 
-            using (var command = await CreateMergedRelationCommand(ciid, includeRemoved, layerset, ird, null, trans, timeThreshold))
+            using (var command = await CreateMergedRelationCommand(ciid, includeRemoved, layerset, ird, null, trans, atTime))
             {
                 using var dr = await command.ExecuteReaderAsync();
 
@@ -100,7 +100,7 @@ namespace LandscapeRegistry.Model
         }
 
 
-        private async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime)
+        private async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 
@@ -112,7 +112,7 @@ namespace LandscapeRegistry.Model
                 command.Parameters.AddWithValue("to_ci_id", toCIID);
                 command.Parameters.AddWithValue("predicate_id", predicateID);
                 command.Parameters.AddWithValue("layer_id", layerID);
-                command.Parameters.AddWithValue("time_threshold", atTime);
+                command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 using var dr = await command.ExecuteReaderAsync();
                 if (!await dr.ReadAsync())
                     return null;
@@ -127,13 +127,13 @@ namespace LandscapeRegistry.Model
             }
         }
 
-        public async Task<IEnumerable<Relation>> GetMergedRelationsWithPredicateID(LayerSet layerset, bool includeRemoved, string predicateID, NpgsqlTransaction trans, DateTimeOffset? timeThreshold = null)
+        public async Task<IEnumerable<Relation>> GetMergedRelationsWithPredicateID(LayerSet layerset, bool includeRemoved, string predicateID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var ret = new List<Relation>();
 
-            var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.All);
+            var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 
-            using (var command = await CreateMergedRelationCommand(null, includeRemoved, layerset, IncludeRelationDirections.Both, $"predicate_id = '{predicateID}'", trans, timeThreshold))
+            using (var command = await CreateMergedRelationCommand(null, includeRemoved, layerset, IncludeRelationDirections.Both, $"predicate_id = '{predicateID}'", trans, atTime))
             {
                 using var dr = await command.ExecuteReaderAsync();
 
@@ -159,7 +159,8 @@ namespace LandscapeRegistry.Model
 
         public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, long changesetID, NpgsqlTransaction trans)
         {
-            var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, DateTimeOffset.Now);
+            var timeThreshold = TimeThreshold.BuildLatest();
+            var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, timeThreshold);
 
             if (currentRelation == null)
             {
@@ -172,7 +173,7 @@ namespace LandscapeRegistry.Model
                 return currentRelation;
             }
 
-            var predicates = await predicateModel.GetPredicates(trans, DateTimeOffset.Now, AnchorStateFilter.All);
+            var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.All);
 
             using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
                 VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, now()) returning id", conn, trans);
@@ -194,7 +195,8 @@ namespace LandscapeRegistry.Model
 
         public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, long changesetID, NpgsqlTransaction trans)
         {
-            var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, DateTimeOffset.Now);
+            var timeThreshold = TimeThreshold.BuildLatest();
+            var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, timeThreshold);
 
             if (fromCIID == toCIID)
                 throw new Exception("From and To CIID must not be the same!");
@@ -211,7 +213,7 @@ namespace LandscapeRegistry.Model
                 }
             }
 
-            var predicates = await predicateModel.GetPredicates(trans, DateTimeOffset.Now, AnchorStateFilter.ActiveOnly); // only active predicates allowed
+            var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.ActiveOnly); // only active predicates allowed
 
             using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
                 VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, now()) returning id", conn, trans);
@@ -233,10 +235,11 @@ namespace LandscapeRegistry.Model
 
         public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, long changesetID, NpgsqlTransaction trans)
         {
+            var timeThreshold = TimeThreshold.BuildLatest();
             var layerSet = new LayerSet(data.LayerID);
             var outdatedRelations = (data switch {
-                BulkRelationDataPredicateScope p => (await GetMergedRelationsWithPredicateID(layerSet, false, p.PredicateID, trans)),
-                BulkRelationDataLayerScope l => (await GetMergedRelations(null, false, layerSet, IncludeRelationDirections.Both, trans)),
+                BulkRelationDataPredicateScope p => (await GetMergedRelationsWithPredicateID(layerSet, false, p.PredicateID, trans, timeThreshold)),
+                BulkRelationDataLayerScope l => (await GetMergedRelations(null, false, layerSet, IncludeRelationDirections.Both, trans, timeThreshold)),
                 _ => null
             }).ToDictionary(r => r.InformationHash);
 
@@ -278,7 +281,7 @@ namespace LandscapeRegistry.Model
 
             // remove outdated 
             foreach (var outdatedRelation in outdatedRelations.Values)
-                await RemoveRelation(outdatedRelation.FromCIID, outdatedRelation.ToCIID, outdatedRelation.PredicateID, data.LayerID, changesetID, trans);
+                await RemoveRelation(outdatedRelation.FromCIID, outdatedRelation.ToCIID, outdatedRelation.PredicateID, data.LayerID, changesetID, trans); // TODO: proper timethreshold
 
             return true;
         }

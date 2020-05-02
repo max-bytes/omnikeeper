@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Cached;
@@ -38,9 +39,9 @@ namespace Tests.DBInit
 
             var user = await DBSetup.SetupUser(userModel, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
 
-            var numApplicationCIs = 10;
-            var numHostCIs = 10;
-            var numRunsOnRelations = 5;
+            var numApplicationCIs = 10000;
+            var numHostCIs = 1000;
+            var numRunsOnRelations = 20000;
             int numAttributesPerCIFrom = 20;
             int numAttributesPerCITo = 40;
             //var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
@@ -208,7 +209,7 @@ namespace Tests.DBInit
             }
 
             // create monitoring relations
-            var windowsHosts = await ciModel.GetMergedCIsByType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, DateTimeOffset.Now, "Host Windows");
+            var windowsHosts = await ciModel.GetMergedCIsByType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, TimeThreshold.BuildLatest(), "Host Windows");
             foreach (var ci in windowsHosts)
             {
                 using var trans = conn.BeginTransaction();
@@ -217,7 +218,7 @@ namespace Tests.DBInit
                 await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset.ID, trans);
                 trans.Commit();
             }
-            var linuxHosts = await ciModel.GetMergedCIsByType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, DateTimeOffset.Now, "Host Linux");
+            var linuxHosts = await ciModel.GetMergedCIsByType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, TimeThreshold.BuildLatest(), "Host Linux");
             foreach (var ci in linuxHosts)
             {
                 using var trans = conn.BeginTransaction();

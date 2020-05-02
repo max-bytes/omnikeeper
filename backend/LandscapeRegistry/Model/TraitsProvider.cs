@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -13,13 +14,15 @@ namespace LandscapeRegistry.Model
 {
     public class TraitsProvider : ITraitsProvider
     {
-        public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans)
+        public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans, TimeThreshold timeThreshold)
         {
+            Console.WriteLine("Getting traits...");
             // TODO: move somewhere else
+            // TODO: consider time
             var traits = new List<Trait>()
                 {
-                    // hosts
-                    Trait.Build("host", new List<TraitAttribute>() {
+                // hosts
+                Trait.Build("host", new List<TraitAttribute>() {
                         TraitAttribute.Build("hostname",
                             CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
@@ -88,12 +91,16 @@ namespace LandscapeRegistry.Model
         {
             TP = tp;
             cached = null;
+            Console.WriteLine("Created cached traits provider");
         }
-        public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans)
+        public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans, TimeThreshold timeThreshold)
         {
+            Console.WriteLine("Getting cached traits...");
+            // TODO: consider time
             if (cached == null)
             {
-                cached = await TP.GetTraits(trans);
+                Console.WriteLine("Cache miss");
+                cached = await TP.GetTraits(trans, timeThreshold);
             }
             return cached;
         }

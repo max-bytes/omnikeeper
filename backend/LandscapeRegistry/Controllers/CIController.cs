@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,7 +32,7 @@ namespace LandscapeRegistry.Controllers
         [HttpGet("getAllCITypes")]
         public async Task<ActionResult<IEnumerable<CITypeDTO>>> GetAllCITypes()
         {
-            return Ok((await ciModel.GetCITypes(null, null)).Select(t => CITypeDTO.Build(t)));
+            return Ok((await ciModel.GetCITypes(null, TimeThreshold.BuildLatest())).Select(t => CITypeDTO.Build(t)));
         }
 
         /// <summary>
@@ -69,7 +70,7 @@ namespace LandscapeRegistry.Controllers
         public async Task<ActionResult<IEnumerable<CIDTO>>> GetCIsByType([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string[] CITypeIDs, [FromQuery]DateTimeOffset? atTime = null)
         {
             var layerset = new LayerSet(layerIDs);
-            var cis = await ciModel.GetMergedCIsByType(layerset, null, atTime ?? DateTimeOffset.Now, CITypeIDs);
+            var cis = await ciModel.GetMergedCIsByType(layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest(), CITypeIDs);
             return Ok(cis.Select(ci => CIDTO.Build(ci)));
         }
 
@@ -84,7 +85,7 @@ namespace LandscapeRegistry.Controllers
         public async Task<ActionResult<CIDTO>> GetCIByID([FromQuery, Required]long[] layerIDs, [FromQuery, Required]Guid CIID, [FromQuery]DateTimeOffset? atTime = null)
         {
             var layerset = new LayerSet(layerIDs);
-            var ci = await ciModel.GetMergedCI(CIID, layerset, null, atTime ?? DateTimeOffset.Now);
+            var ci = await ciModel.GetMergedCI(CIID, layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
             if (ci == null) return NotFound();
             return Ok(CIDTO.Build(ci));
         }
@@ -102,7 +103,7 @@ namespace LandscapeRegistry.Controllers
         public async Task<ActionResult<IEnumerable<CIDTO>>> GetCIsByID([FromQuery, Required]long[] layerIDs, [FromQuery, Required]Guid[] CIIDs, [FromQuery]DateTimeOffset? atTime = null)
         {
             var layerset = new LayerSet(layerIDs);
-            var cis = await ciModel.GetMergedCIs(layerset, true, null, atTime ?? DateTimeOffset.Now, CIIDs);
+            var cis = await ciModel.GetMergedCIs(layerset, true, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest(), CIIDs);
             return Ok(cis.Select(ci => CIDTO.Build(ci)));
         }
     }

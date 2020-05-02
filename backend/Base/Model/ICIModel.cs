@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -12,15 +13,15 @@ namespace Landscape.Base.Model
 
         Task<IEnumerable<Guid>> GetCIIDs(NpgsqlTransaction trans);
 
-        Task<CIType> GetCITypeByID(string typeID, NpgsqlTransaction trans, DateTimeOffset? atTime);
-        Task<CIType> GetTypeOfCI(Guid ciid, NpgsqlTransaction trans, DateTimeOffset? atTime);
-        Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? atTime);
-        Task<CI> GetCI(Guid ciid, long layerID, NpgsqlTransaction trans, DateTimeOffset atTime);
-        Task<IEnumerable<CI>> GetCIs(long layerID, bool includeEmptyCIs, NpgsqlTransaction trans, DateTimeOffset atTime);
-        Task<IEnumerable<MergedCI>> GetMergedCIsByType(LayerSet layers, NpgsqlTransaction trans, DateTimeOffset? atTime, string typeID);
-        Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, DateTimeOffset? atTime = null, IEnumerable<Guid> CIIDs = null);
-        Task<IEnumerable<CompactCI>> GetCompactCIs(LayerSet visibleLayers, NpgsqlTransaction trans, DateTimeOffset? atTime, IEnumerable<Guid> CIIDs = null);
+        Task<CIType> GetCITypeByID(string typeID, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<CIType> GetTypeOfCI(Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<CI> GetCI(Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<IEnumerable<CI>> GetCIs(long layerID, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<IEnumerable<MergedCI>> GetMergedCIsByType(LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime, string typeID);
+        Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs = null);
+        Task<IEnumerable<CompactCI>> GetCompactCIs(LayerSet visibleLayers, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs = null);
 
-        Task<IDictionary<Guid, string>> GetCINames(IEnumerable<Guid> ciids, LayerSet layerset, NpgsqlTransaction trans, DateTimeOffset? atTime);
+        Task<IDictionary<Guid, string>> GetCINames(IEnumerable<Guid> ciids, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime);
     }
 }

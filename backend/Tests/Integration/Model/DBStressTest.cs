@@ -1,4 +1,5 @@
-﻿using LandscapeRegistry.Entity.AttributeValues;
+﻿using Landscape.Base.Utils;
+using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Utils;
 using NUnit.Framework;
@@ -102,7 +103,7 @@ namespace Tests.Integration.Model
             timer.Start();
             foreach (var ciName in ciNames)
             {
-                var a1 = await attributeModel.GetMergedAttributes(ciName, false, layerset, trans, DateTimeOffset.Now);
+                var a1 = await attributeModel.GetMergedAttributes(ciName, false, layerset, trans, TimeThreshold.BuildLatest());
 
                 //Console.WriteLine($"{ciName} count: {a1.Count()}");
                 //foreach (var aa in a1)

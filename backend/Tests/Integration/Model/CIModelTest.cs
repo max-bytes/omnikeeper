@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Utils;
@@ -77,14 +78,14 @@ namespace Tests.Integration.Model
             using (var trans = conn.BeginTransaction())
             {
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                var cis1 = await model.GetCIs(layerID1, false, trans, DateTimeOffset.Now);
+                var cis1 = await model.GetCIs(layerID1, false, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(2, cis1.Count());
                 Assert.AreEqual(1, cis1.Count(c => c.ID == ciid1 && c.Attributes.Any(a => a.Name == "a1")));
                 Assert.AreEqual(1, cis1.Count(c => c.ID == ciid2 && c.Attributes.Any(a => a.Name == "a2")));
-                var cis2 = await model.GetCIs(layerID2, false, trans, DateTimeOffset.Now);
+                var cis2 = await model.GetCIs(layerID2, false, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, cis2.Count());
                 Assert.AreEqual(1, cis2.Count(c => c.ID == ciid1 && c.Attributes.Any(a => a.Name == "a3")));
-                var cis3 = await model.GetCIs(layerID2, true, trans, DateTimeOffset.Now);
+                var cis3 = await model.GetCIs(layerID2, true, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(3, cis3.Count());
                 Assert.AreEqual(1, cis3.Count(c => c.ID == ciid1 && c.Attributes.Any(a => a.Name == "a3")));
                 Assert.AreEqual(1, cis3.Count(c => c.ID == ciid2 && c.Attributes.Count() == 0));
@@ -118,19 +119,19 @@ namespace Tests.Integration.Model
             await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid1, changeset.ID, trans);
             await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("textL2"), layer2.ID, ciid1, changeset.ID, trans);
 
-            var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset1, trans, DateTimeOffset.Now);
+            var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset1, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a1.Count());
             Assert.AreEqual(AttributeValueTextScalar.Build("textL1"), a1.First().Value.Attribute.Value);
 
-            var a2 = await attributeModel.GetMergedAttributes(ciid1, false, layerset2, trans, DateTimeOffset.Now);
+            var a2 = await attributeModel.GetMergedAttributes(ciid1, false, layerset2, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a2.Count());
             Assert.AreEqual(AttributeValueTextScalar.Build("textL2"), a2.First().Value.Attribute.Value);
 
-            var a3 = await attributeModel.GetMergedAttributes(ciid1, false, layerset3, trans, DateTimeOffset.Now);
+            var a3 = await attributeModel.GetMergedAttributes(ciid1, false, layerset3, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a3.Count());
             Assert.AreEqual(AttributeValueTextScalar.Build("textL1"), a3.First().Value.Attribute.Value);
 
-            var a4 = await attributeModel.GetMergedAttributes(ciid1, false, layerset4, trans, DateTimeOffset.Now);
+            var a4 = await attributeModel.GetMergedAttributes(ciid1, false, layerset4, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a4.Count());
             Assert.AreEqual(AttributeValueTextScalar.Build("textL2"), a4.First().Value.Attribute.Value);
         }
@@ -169,7 +170,7 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
 
-            var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset1, null, DateTimeOffset.Now);
+            var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset1, null, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a1.Count()); // layerID1 shines through deleted
             Assert.AreEqual(AttributeValueTextScalar.Build("textL1"), a1.First().Value.Attribute.Value);
         }
@@ -189,12 +190,12 @@ namespace Tests.Integration.Model
             {
                 // test setting and getting of citype
                 var ciType1 = await model.InsertCIType("T1", trans);
-                Assert.AreEqual("T1", (await model.GetCITypeByID("T1", trans, null)).ID);
+                Assert.AreEqual("T1", (await model.GetCITypeByID("T1", trans, TimeThreshold.BuildLatest())).ID);
 
                 // test CI creation
                 ciid1 = await model.CreateCIWithType(ciType1.ID, trans);
                 Assert.AreEqual(ciid1, ciid1);
-                var ciType = await model.GetTypeOfCI(ciid1, trans, null);
+                var ciType = await model.GetTypeOfCI(ciid1, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual("T1", ciType.ID);
 
                 trans.Commit();
@@ -210,7 +211,7 @@ namespace Tests.Integration.Model
                 // test overriding of type
                 var ciTypeID2 = await model.InsertCIType("T2", trans);
                 await model.UpdateCI(ciid1, "T2", trans);
-                var ciType = await model.GetTypeOfCI(ciid1, trans, null);
+                var ciType = await model.GetTypeOfCI(ciid1, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual("T2", ciType.ID);
                 trans.Commit();
             }
@@ -222,8 +223,8 @@ namespace Tests.Integration.Model
                 var layerset1 = new LayerSet(new long[] { layer1.ID });
                 var ciid2 = await model.CreateCIWithType("T1", trans);
                 var ciid3 = await model.CreateCIWithType("T2", trans);
-                Assert.AreEqual(1, (await model.GetMergedCIsByType(layerset1, trans, DateTimeOffset.Now, "T1")).Count());
-                Assert.AreEqual(2, (await model.GetMergedCIsByType(layerset1, trans, DateTimeOffset.Now, "T2")).Count());
+                Assert.AreEqual(1, (await model.GetMergedCIsByType(layerset1, trans, TimeThreshold.BuildLatest(), "T1")).Count());
+                Assert.AreEqual(2, (await model.GetMergedCIsByType(layerset1, trans, TimeThreshold.BuildLatest(), "T2")).Count());
             }
         }
     }

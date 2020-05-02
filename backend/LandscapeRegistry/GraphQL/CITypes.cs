@@ -26,7 +26,7 @@ namespace LandscapeRegistry.GraphQL
 
     public class MergedCIType : ObjectGraphType<MergedCI>
     {
-        public MergedCIType(RelationModel relationModel, TemplateModel templateModel, TraitModel traitModel, ICIModel ciModel)
+        public MergedCIType(RelationModel relationModel, TemplateModel templateModel, ITraitModel traitModel, ICIModel ciModel)
         {
             Field("id", x => x.ID);
             Field("name", x => x.Name, nullable: true);
@@ -84,7 +84,7 @@ namespace LandscapeRegistry.GraphQL
             resolve: async (context) =>
             {
                 var userContext = context.UserContext as RegistryUserContext;
-                return await templateModel.CalculateTemplateErrors(context.Source, userContext.Transaction);
+                return await templateModel.CalculateTemplateErrors(context.Source, userContext.Transaction, userContext.TimeThreshold);
             });
 
             FieldAsync<ListGraphType<EffectiveTraitType>>("effectiveTraits",
@@ -92,7 +92,7 @@ namespace LandscapeRegistry.GraphQL
             {
                 var userContext = context.UserContext as RegistryUserContext;
 
-                var et = await traitModel.CalculateEffectiveTraitSetForCI(context.Source, userContext.Transaction);
+                var et = await traitModel.CalculateEffectiveTraitSetForCI(context.Source, userContext.Transaction, userContext.TimeThreshold);
                 return et.EffectiveTraits.Values;
             });
         }

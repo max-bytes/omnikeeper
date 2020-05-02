@@ -1,4 +1,5 @@
 ﻿using GraphQL;
+using Hangfire;
 using Landscape.Base;
 using Landscape.Base.Model;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,7 @@ namespace LandscapeRegistry.Runners
             this.logger = logger;
         }
 
+        //[DisableConcurrentExecution(timeoutInSeconds: 2 * 60)]
         public void Run()
         {
             RunAsync().GetAwaiter().GetResult();

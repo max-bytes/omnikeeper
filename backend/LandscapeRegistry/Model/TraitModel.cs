@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Service;
 using LandscapeRegistry.Utils;
 using Microsoft.Extensions.Logging;
@@ -28,25 +29,25 @@ namespace LandscapeRegistry.Model
             this.logger = logger;
         }
 
-        public async Task<EffectiveTraitSet> CalculateEffectiveTraitSetForCI(MergedCI ci, NpgsqlTransaction trans)
+        public async Task<EffectiveTraitSet> CalculateEffectiveTraitSetForCI(MergedCI ci, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var traits = await traitsProvider.GetTraits(trans);
+            var traits = await traitsProvider.GetTraits(trans, atTime);
 
             var candidates = traits.Values.Select(t => new EffectiveTraitCandidate(t, ci)).ToList();
-            var ret = await ResolveETCandidates(candidates, traits, trans);
+            var ret = await ResolveETCandidates(candidates, traits, trans, atTime);
             return ret.FirstOrDefault();
         }
 
-        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, DateTimeOffset atTime)
+        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var traits = await traitsProvider.GetTraits(trans);
+            var traits = await traitsProvider.GetTraits(trans, atTime);
             var trait = traits.GetValueOrDefault(traitName);
             if (trait == null) return null; // trait not found by name
             return await CalculateEffectiveTraitSetsForTrait(trait, layerSet, trans, atTime);
 
         }
 
-        private async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, DateTimeOffset atTime)
+        private async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             // do a precursor filtering based on required attribute names
             var requiredAttributeNames = trait.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
@@ -71,7 +72,7 @@ namespace LandscapeRegistry.Model
                 group by a.ci_id
                 having count(a.ci_id) = cardinality(@required_attributes)", conn, trans))
             {
-                command.Parameters.AddWithValue("time_threshold", atTime);
+                command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("layer_ids", layerSet.ToArray());
                 command.Parameters.AddWithValue("required_attributes", requiredAttributeNames.ToArray());
                 using var dr = command.ExecuteReader();
@@ -89,12 +90,13 @@ namespace LandscapeRegistry.Model
 
             // TODO: check that if the current trait has depedent traits that they are properly resolved too
             var candidates = cis.Select(ci => new EffectiveTraitCandidate(trait, ci)).ToList();
-            var traits = await traitsProvider.GetTraits(trans);
-            var ret = await ResolveETCandidates(candidates, traits, trans);
+            var traits = await traitsProvider.GetTraits(trans, atTime);
+            var ret = await ResolveETCandidates(candidates, traits, trans, atTime);
             return ret;
         }
 
-        private async Task<IEnumerable<EffectiveTraitSet>> ResolveETCandidates(IEnumerable<EffectiveTraitCandidate> candidates, IImmutableDictionary<string, Trait> traits, NpgsqlTransaction trans)
+        private async Task<IEnumerable<EffectiveTraitSet>> ResolveETCandidates(IEnumerable<EffectiveTraitCandidate> candidates, 
+            IImmutableDictionary<string, Trait> traits, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             // HACK: this is probably a pathetic, iterative implementation of a dependency graph resolver; it works, but is probably not optimal
             // consider researching for a better implementation
@@ -113,7 +115,7 @@ namespace LandscapeRegistry.Model
                 for (int i = 0;i < unresolvedCandidates.Count;i++)
                 {
                     var candidate = unresolvedCandidates[i];
-                    var newCandidates = await TryToResolve(candidate, traits, lookup, trans);
+                    var newCandidates = await TryToResolve(candidate, traits, lookup, trans, atTime);
                     if (newCandidates != null && newCandidates.Count() > 0)
                     {
                         addedNewCandidates = true;
@@ -145,7 +147,7 @@ namespace LandscapeRegistry.Model
         }
 
         private async Task<IEnumerable<EffectiveTraitCandidate>> TryToResolve(EffectiveTraitCandidate et, IImmutableDictionary<string, Trait> traits,
-            IDictionary<(Guid ciid, string traitName), EffectiveTraitCandidate> all, NpgsqlTransaction trans)
+            IDictionary<(Guid ciid, string traitName), EffectiveTraitCandidate> all, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             if (et.IsResolved) throw new Exception("Trying to resolve an already resolved ETCandidate");
 
@@ -188,7 +190,7 @@ namespace LandscapeRegistry.Model
             // assume dependent traits are resolved
             var resolvedDependentTraitNames = requiredTraits.Select(rt => rt.Trait.Name).ToList();
 
-            var relationsAndToCIs = (await RelationService.GetMergedForwardRelationsAndToCIs(ci, ciModel, relationModel, trans))
+            var relationsAndToCIs = (await RelationService.GetMergedForwardRelationsAndToCIs(ci.ID, ci.Layers, ciModel, relationModel, trans, atTime))
                 .ToLookup(t => t.relation.PredicateID);
 
             var requiredEffectiveTraitAttributes = trait.RequiredAttributes.Select(ta =>

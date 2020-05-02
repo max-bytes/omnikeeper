@@ -15,7 +15,7 @@ namespace Landscape.Base.Entity
 
         public async static Task<Templates> Build(ICIModel ciModel, ITraitsProvider traitsProvider, NpgsqlTransaction trans)
         {
-            var traits = await traitsProvider.GetTraits(trans);
+            //var traits = await traitsProvider.GetTraits(trans);
             // TODO: move the actual data creation somewhere else
             return new Templates()
             {

@@ -1,6 +1,7 @@
 ﻿using GraphQL;
 using GraphQL.Types;
 using Landscape.Base.Entity;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Service;
@@ -43,11 +44,10 @@ namespace LandscapeRegistry.GraphQL
 
                     using var transaction = await conn.BeginTransactionAsync();
                     userContext.Transaction = transaction;
+                    userContext.LayerSet = layers != null ? await layerModel.BuildLayerSet(layers, transaction) : null;
+                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
                     var changeset = await changesetModel.CreateChangeset(userContext.User.InDatabase.ID, transaction);
-
-                    userContext.LayerSet = layers != null ? await layerModel.BuildLayerSet(layers, transaction) : null;
-                    userContext.TimeThreshold = changeset.Timestamp;
 
                     var groupedInsertAttributes = insertAttributes.GroupBy(a => a.CI);
                     var insertedAttributes = new List<CIAttribute>();
@@ -95,7 +95,7 @@ namespace LandscapeRegistry.GraphQL
                         .Concat(insertedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
                         .Concat(removedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
                         .Distinct();
-                        affectedCIs = await ciModel.GetMergedCIs(userContext.LayerSet, true, transaction, changeset.Timestamp, affectedCIIDs);
+                        affectedCIs = await ciModel.GetMergedCIs(userContext.LayerSet, true, transaction, userContext.TimeThreshold, affectedCIIDs);
                     }
 
                     await transaction.CommitAsync();

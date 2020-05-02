@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace LandscapeRegistry.Model.Cached
     {
         private IPredicateModel Model { get; }
 
-        private IDictionary<string, Predicate> PredicateCacheForNullTime = null;
+        private IDictionary<string, Predicate> PredicateCacheForLatestTime = null;
 
         private IDictionary<DateTimeOffset, IDictionary<string, Predicate>> AllPredicatesCache = new Dictionary<DateTimeOffset, IDictionary<string, Predicate>>();
 
@@ -20,20 +21,20 @@ namespace LandscapeRegistry.Model.Cached
             Model = model;
         }
 
-        public async Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, DateTimeOffset? atTime, AnchorStateFilter stateFilter)
+        public async Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, TimeThreshold atTime, AnchorStateFilter stateFilter)
         {
             IDictionary<string, Predicate> value;
-            if (atTime.HasValue)
-                AllPredicatesCache.TryGetValue(atTime.Value, out value);
+            if (!atTime.IsLatest)
+                AllPredicatesCache.TryGetValue(atTime.Time, out value);
             else
-                value = PredicateCacheForNullTime;
+                value = PredicateCacheForLatestTime;
             if (value == null)
             {
                 value = await Model.GetPredicates(trans, atTime, stateFilter);
-                if (atTime.HasValue)
-                    AllPredicatesCache.Add(atTime.Value, value);
+                if (!atTime.IsLatest)
+                    AllPredicatesCache.Add(atTime.Time, value);
                 else
-                    PredicateCacheForNullTime = value;
+                    PredicateCacheForLatestTime = value;
             }
             return value;
         }

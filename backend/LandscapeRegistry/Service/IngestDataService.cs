@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Utils;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
@@ -36,18 +37,20 @@ namespace LandscapeRegistry.Service
             private readonly IDictionary<string, IDictionary<Guid, MergedCIAttribute>> attributeCache = new Dictionary<string, IDictionary<Guid, MergedCIAttribute>>();
             private readonly IAttributeModel attributeModel;
             private readonly LayerSet searchableLayers;
+            private readonly TimeThreshold atTime;
 
-            public DataIdentifier(IAttributeModel attributeModel, LayerSet searchableLayers)
+            public DataIdentifier(IAttributeModel attributeModel, LayerSet searchableLayers, TimeThreshold atTime)
             {
                 this.attributeModel = attributeModel;
                 this.searchableLayers = searchableLayers;
+                this.atTime = atTime;
             }
 
             private async Task<IDictionary<Guid, MergedCIAttribute>> GetMergedAttributesByAttributeNameAndValue(string name, IAttributeValue value, NpgsqlTransaction trans)
             {
                 if (!attributeCache.ContainsKey(name))
                 {
-                    attributeCache[name] = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsAttributeSelection(), false, searchableLayers, trans, DateTimeOffset.Now);
+                    attributeCache[name] = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsAttributeSelection(), false, searchableLayers, trans, atTime);
                 }
                 var found = attributeCache[name].Where(kv => kv.Value.Attribute.Value.Equals(value)).ToDictionary(kv => kv.Key, kv => kv.Value);
                 return found;
@@ -80,7 +83,8 @@ namespace LandscapeRegistry.Service
             using var trans = Connection.BeginTransaction();
             var changeset = await ChangesetModel.CreateChangeset(user.InDatabase.ID, trans);
 
-            var dataIdentifier = new DataIdentifier(AttributeModel, searchableLayers);
+            var timeThreshold = TimeThreshold.BuildLatest();
+            var dataIdentifier = new DataIdentifier(AttributeModel, searchableLayers, timeThreshold);
             var temp2finalCIIDMap = new Dictionary<Guid, Guid>();
 
             var attributeData = new Dictionary<Guid, BulkCICandidateAttributeData>();

@@ -1,5 +1,7 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
+using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,9 +19,9 @@ namespace LandscapeRegistry.Controllers
     [Authorize]
     public class TraitController : ControllerBase
     {
-        private readonly TraitModel traitModel;
+        private readonly ITraitModel traitModel;
 
-        public TraitController(TraitModel traitModel)
+        public TraitController(ITraitModel traitModel)
         {
             this.traitModel = traitModel;
         }
@@ -28,7 +30,7 @@ namespace LandscapeRegistry.Controllers
         public async Task<ActionResult<IEnumerable<EffectiveTraitSetDTO>>> GetEffectiveTraitSetsForTraitName([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string traitName, [FromQuery]DateTimeOffset? atTime = null)
         {
             var layerset = new LayerSet(layerIDs);
-            var traitSets = await traitModel.CalculateEffectiveTraitSetsForTraitName(traitName, layerset, null, atTime ?? DateTimeOffset.Now);
+            var traitSets = await traitModel.CalculateEffectiveTraitSetsForTraitName(traitName, layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
             return Ok(traitSets.Select(traitSet => EffectiveTraitSetDTO.Build(traitSet)));
         }
     }
