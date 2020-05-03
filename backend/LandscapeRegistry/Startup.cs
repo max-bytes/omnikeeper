@@ -13,7 +13,7 @@ using Landscape.Base;
 using Landscape.Base.Model;
 using LandscapeRegistry.GraphQL;
 using LandscapeRegistry.Model;
-using LandscapeRegistry.Model.Cached;
+using LandscapeRegistry.Model.Decorators;
 using LandscapeRegistry.Runners;
 using LandscapeRegistry.Service;
 using LandscapeRegistry.Utils;
@@ -52,7 +52,9 @@ namespace LandscapeRegistry
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddScoped<IServiceProvider>(x => new FuncServiceProvider(x.GetRequiredService)); // graphql needs this
+            services.AddScoped<IServiceProvider>(x => 
+                new FuncServiceProvider(x.GetRequiredService)
+                ); // graphql needs this
 
             services.AddApiVersioning();
 
@@ -93,7 +95,7 @@ namespace LandscapeRegistry
             services.AddScoped<ICIModel, CIModel>();
             services.AddScoped<CIModel>();
             services.AddScoped<IAttributeModel, AttributeModel>();
-            services.AddScoped<AttributeModel>();
+            services.Decorate<IAttributeModel, CacheInvalidatingAttributeModel>();
             services.AddScoped<IUserInDatabaseModel, UserInDatabaseModel>();
             services.AddScoped<UserInDatabaseModel>();
             services.AddScoped<ILayerModel, LayerModel>();
@@ -106,22 +108,21 @@ namespace LandscapeRegistry
             services.AddScoped<ITemplateModel, TemplateModel>();
             services.AddScoped<TemplateModel>();
             services.AddScoped<IPredicateModel, PredicateModel>();
-            services.AddScoped<PredicateModel>();
-            services.AddScoped<CachedPredicateModel>();
+            services.Decorate<IPredicateModel, CachedPredicateModel>();
             services.AddScoped<KeycloakModel>();
 
-            services.AddScoped<TraitModel>();
-            services.AddScoped<ITraitModel, CachedTraitModel>();
+            services.AddScoped<ITraitModel, TraitModel>();
+            services.Decorate<ITraitModel, CachedTraitModel>();
 
             services.AddScoped<IRegistryAuthorizationService, RegistryAuthorizationService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<MarkedForDeletionService>();
             services.AddScoped<IngestDataService>();
 
-            services.AddSingleton<ITemplatesProvider, CachedTemplatesProvider>(); // can be singleton because it does not depend on any scoped services
-            services.AddSingleton<TemplatesProvider>(); // can be singleton because it does not depend on any scoped services
-            services.AddSingleton<ITraitsProvider, CachedTraitsProvider>(); // can be singleton because it does not depend on any scoped services
-            services.AddSingleton<TraitsProvider>(); // can be singleton because it does not depend on any scoped services
+            services.AddScoped<ITemplatesProvider, TemplatesProvider>();
+            services.Decorate<ITemplatesProvider, CachedTemplatesProvider>();
+            services.AddScoped<ITraitsProvider, TraitsProvider>();
+            services.Decorate<ITraitsProvider, CachedTraitsProvider>();
 
             services.AddScoped<MergedCIType>();
             services.AddScoped<RelationType>();

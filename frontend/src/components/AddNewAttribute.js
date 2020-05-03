@@ -12,12 +12,14 @@ import EditableAttributeValue from "./EditableAttributeValue";
 import { Dropdown, Segment, Button, Icon } from 'semantic-ui-react'
 import LayerDropdown from "./LayerDropdown";
 import { ErrorPopupButton } from "./ErrorPopupButton";
+import { useLayers } from '../utils/useLayers';
 
 function AddNewAttribute(props) {
   const [insertError, setInsertError] = useState(undefined);
-  const canBeEdited = props.isEditable && props.visibleAndWritableLayers.length > 0;
+  const { data: visibleAndWritableLayers } = useLayers(true, true);
+  const canBeEdited = props.isEditable && visibleAndWritableLayers.length > 0;
   let initialAttribute = {name: '', type: 'TEXT', values: [''], isArray: false};
-  const [selectedLayer, setSelectedLayer] = useState(props.visibleAndWritableLayers[0]);
+  const [selectedLayer, setSelectedLayer] = useState(visibleAndWritableLayers[0]);
   const [isOpen, setOpen] = useState(false);
   const [newAttribute, setNewAttribute] = useState(initialAttribute);
   const [valueAutofocussed, setValueAutofocussed] = useState(false);
@@ -46,7 +48,7 @@ function AddNewAttribute(props) {
         <Form onSubmit={e => {
             e.preventDefault();
             setInsertError(undefined);
-            insertCIAttribute({ variables: { layers: props.visibleAndWritableLayers.map(l => l.name), ciIdentity: props.ciIdentity, name: newAttribute.name, layerID: selectedLayer.id, value: {
+            insertCIAttribute({ variables: { layers: visibleAndWritableLayers.map(l => l.name), ciIdentity: props.ciIdentity, name: newAttribute.name, layerID: selectedLayer.id, value: {
               type: newAttribute.type,
               isArray: newAttribute.isArray,
               values: newAttribute.values
@@ -62,7 +64,7 @@ function AddNewAttribute(props) {
           <Form.Group as={Row} controlId="layer">
             <Form.Label column>Layer</Form.Label>
             <Col sm={10}>
-              <LayerDropdown layers={props.visibleAndWritableLayers} selectedLayer={selectedLayer} onSetSelectedLayer={l => setSelectedLayer(l)} />
+              <LayerDropdown layers={visibleAndWritableLayers} selectedLayer={selectedLayer} onSetSelectedLayer={l => setSelectedLayer(l)} />
             </Col>
           </Form.Group>
 

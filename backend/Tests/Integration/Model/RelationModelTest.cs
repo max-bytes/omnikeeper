@@ -1,7 +1,7 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Model;
-using LandscapeRegistry.Model.Cached;
+using LandscapeRegistry.Model.Decorators;
 using LandscapeRegistry.Utils;
 using NUnit.Framework;
 using System;

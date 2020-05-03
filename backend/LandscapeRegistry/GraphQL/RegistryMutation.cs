@@ -1,6 +1,7 @@
 ﻿using GraphQL;
 using GraphQL.Types;
 using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
@@ -14,8 +15,8 @@ namespace LandscapeRegistry.GraphQL
 {
     public class RegistryMutation : ObjectGraphType
     {
-        public RegistryMutation(CIModel ciModel, AttributeModel attributeModel, LayerModel layerModel, RelationModel relationModel,
-            ChangesetModel changesetModel, PredicateModel predicateModel, KeycloakModel keycloakModel, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
+        public RegistryMutation(CIModel ciModel, IAttributeModel attributeModel, LayerModel layerModel, RelationModel relationModel,
+            ChangesetModel changesetModel, IPredicateModel predicateModel, KeycloakModel keycloakModel, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(

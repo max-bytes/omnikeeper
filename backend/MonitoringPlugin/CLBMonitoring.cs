@@ -59,7 +59,7 @@ namespace MonitoringPlugin
                 logger.LogDebug("Process mm relation...");
 
                 var monitoringModuleCI = monitoringModuleCIs[p.ToCIID];
-                var monitoringModuleET = await traitModel.CalculateEffectiveTraitSetForCI(monitoringModuleCI, trans, timeThreshold);
+                var monitoringModuleET = await traitModel.CalculateEffectiveTraitSetForCI(monitoringModuleCI, trans, timeThreshold); // TODO: move outside of loop, prefetch
                 if (!monitoringModuleET.EffectiveTraits.ContainsKey("monitoring_check_module"))
                 {
                     logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"monitoring_check_module\"");

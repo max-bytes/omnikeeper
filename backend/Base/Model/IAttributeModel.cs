@@ -51,6 +51,7 @@ namespace Landscape.Base.Model
 
         Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans);
         Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans);
+        Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans);
 
 
 

@@ -8,26 +8,12 @@ import PropTypes from 'prop-types'
 function SearchCI(props) {
   const initialState = { results: [], value: '' }
 
-  const [search, { loading, data: dataCIs }] = useLazyQuery(queries.SearchCIs);
+  const { loading, data: dataCIs, refetch: search } = useQuery(queries.SearchCIs, {variables: {searchString: initialState.value}});
   const [state, setState] = useState(initialState);
-  useEffect(() => {
-
-    if (dataCIs && state.value !== '') {
-      setState(s => ({...s, results: dataCIs.searchCIs.map(d => {
-        var nd = { id: d.id, title: d.name ?? '[UNNAMED]' };
-        return nd;
-      })}));
-    } else {
-      setState(s => ({...s, results: []}));
-    }
-
-}, [dataCIs, loading, state.value]);
 
   const handleSearchChange = (e, { value }) => {
-    if (value.length < 1) return setState(initialState);
     setState({...state, value: value});
-
-    search({variables: {searchString: value}});
+    search({searchString: value});
   };
 
   return (
@@ -36,14 +22,16 @@ function SearchCI(props) {
         <Input icon='search' placeholder='Search...' loading={loading} value={state.value} onChange={handleSearchChange} />
       </div>
       <div style={{flexGrow: 1, overflowY: 'auto', margin: '20px auto', minWidth: '50%'}}>
-        {state.results.map((result, index) => {
-          return (
-            <Link key={result.id} to={`/explorer/${result.id}`}>
-              <div style={{display: 'flex', padding: '10px', backgroundColor: ((index % 2 === 0) ? '#eee' : '#fff')}}>
-                <div style={{flexGrow: '2', fontWeight: 'bold', flexBasis: '0'}}>{result.title}</div><div style={{flexGrow: '2', flexBasis: '0'}}>{result.id}</div>
-              </div>
-            </Link>);
-        })}
+        {dataCIs &&
+          dataCIs.searchCIs.map((result, index) => {
+            return (
+              <Link key={result.id} to={`/explorer/${result.id}`}>
+                <div style={{display: 'flex', padding: '10px', backgroundColor: ((index % 2 === 0) ? '#eee' : '#fff')}}>
+                  <div style={{flexGrow: '2', fontWeight: 'bold', flexBasis: '0'}}>{result.name ?? '[UNNAMED]'}</div><div style={{flexGrow: '2', flexBasis: '0'}}>{result.id}</div>
+                </div>
+              </Link>);
+          })
+        }
       </div>
     </div>
   );

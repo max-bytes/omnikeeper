@@ -1,5 +1,5 @@
 ﻿using Landscape.Base.Entity.DTO;
-using LandscapeRegistry.Model.Cached;
+using LandscapeRegistry.Model.Decorators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;

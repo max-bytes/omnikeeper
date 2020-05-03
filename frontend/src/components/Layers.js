@@ -6,16 +6,18 @@ import { useMutation } from '@apollo/react-hooks';
 import { Icon } from 'semantic-ui-react'
 import { Button } from 'semantic-ui-react'
 import { Flipper, Flipped } from 'react-flip-toolkit'
+import { useLayers } from '../utils/useLayers'
 
 function Layers(props) {
 
   // TODO: loading
   const [toggleLayerVisibility] = useMutation(mutations.TOGGLE_LAYER_VISIBILITY);
   const [changeLayerSortOrder] = useMutation(mutations.CHANGE_LAYER_SORT_ORDER);
+  const { data: layers } = useLayers();
 
   return (<ul style={{listStyle: 'none', paddingLeft: '0px', marginBottom: '0px'}}>
-    <Flipper flipKey={props.layers.map(a => a.id + ";" + a.visibility).join(' ')}>
-    {props.layers.map(layer => (
+    <Flipper flipKey={layers.map(a => a.id + ";" + a.visibility).join(' ')}>
+    {layers.map(layer => (
       <Flipped key={layer.id} flipId={layer.id}>
         <li style={{paddingBottom: '5px', display: 'flex'}}>
           <LayerIcon layer={layer}></LayerIcon>
@@ -45,17 +47,6 @@ function Layers(props) {
       </Flipped>))}
     </Flipper>
     </ul>);
-}
-
-Layers.propTypes = {
-  layers: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      name: PropTypes.string.isRequired,
-      visibility: PropTypes.bool.isRequired,
-      color: PropTypes.string.isRequired
-    }).isRequired
-  ).isRequired,
 }
 
 export default Layers;

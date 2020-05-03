@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace LandscapeRegistry.Model.Cached
+namespace LandscapeRegistry.Model.Decorators
 {
     public class CachedPredicateModel : IPredicateModel
     {

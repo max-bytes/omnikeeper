@@ -222,7 +222,6 @@ namespace LandscapeRegistry.Model
             select id, ci_id, type, value, state, changeset_id FROM attribute 
             where timestamp <= @time_threshold and ci_id = @ci_id and layer_id = @layer_id and name = @name
             order by timestamp DESC LIMIT 1
-
             ", conn, trans);
             command.Parameters.AddWithValue("ci_id", ciid);
             command.Parameters.AddWithValue("layer_id", layerID);

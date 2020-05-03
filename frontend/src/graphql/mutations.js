@@ -3,7 +3,7 @@ import { Fragments } from './fragments';
 
 export const mutations = {
     INSERT_CI_ATTRIBUTE: gql`
-    mutation InsertCIAttribute($ciIdentity: Guid!, $name: String!, $layerID: Long!, $value: AttributeValueDTOInputType!) {
+    mutation InsertCIAttribute($ciIdentity: Guid!, $name: String!, $layerID: Long!, $value: AttributeValueDTOInputType!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
       mutateCIs(insertAttributes: [
         {
           ci: $ciIdentity,
@@ -11,13 +11,22 @@ export const mutations = {
           layerID: $layerID,
           value: $value
         }
-      ]) {
+      ], layers: $layers) {
         __typename
+        affectedCIs {
+          ...FullCI
+        }
       }
     }
+    ${Fragments.relatedCI}
+    ${Fragments.fullPredicate}
+    ${Fragments.mergedAttribute}
+    ${Fragments.attribute}
+    ${Fragments.relation}
+    ${Fragments.fullCI}
   `,
   REMOVE_CI_ATTRIBUTE: gql`
-    mutation RemoveCIAttribute($ciIdentity: Guid!, $name: String!, $layerID: Long!, $includeAttributes: Boolean = false, $includeRelated: Boolean = false) {
+    mutation RemoveCIAttribute($ciIdentity: Guid!, $name: String!, $layerID: Long!, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
       mutateCIs(removeAttributes: [
         {
           ci: $ciIdentity,
@@ -51,6 +60,12 @@ export const mutations = {
       __typename
     }
   }
+  ${Fragments.relatedCI}
+  ${Fragments.fullPredicate}
+  ${Fragments.mergedAttribute}
+  ${Fragments.attribute}
+  ${Fragments.relation}
+  ${Fragments.fullCI}
 `,
 
 REMOVE_RELATION: gql`

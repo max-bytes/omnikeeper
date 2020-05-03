@@ -3,9 +3,10 @@ using GraphQL.Types;
 using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
-using LandscapeRegistry.Model.Cached;
+using LandscapeRegistry.Model.Decorators;
 using Microsoft.AspNetCore.Server.IIS.Core;
 using System;
 using System.Collections.Generic;
@@ -31,7 +32,7 @@ namespace LandscapeRegistry.GraphQL
             Field("id", x => x.ID);
             Field("name", x => x.Name, nullable: true);
             Field("layerhash", x => x.Layers.LayerHash);
-            Field(x => x.AtTime);
+            Field(x => x.AtTime, type: typeof(TimeThresholdType));
             Field(x => x.Type, type: typeof(CITypeType));
             Field(x => x.MergedAttributes, type: typeof(ListGraphType<MergedCIAttributeType>));
             FieldAsync<ListGraphType<RelatedCIType>>("related",
@@ -105,7 +106,7 @@ namespace LandscapeRegistry.GraphQL
         {
             Field("id", x => x.ID);
             Field("name", x => x.Name, nullable: true);
-            Field(x => x.AtTime);
+            Field(x => x.AtTime, type: typeof(TimeThresholdType));
             Field(x => x.Type, type: typeof(CITypeType));
         }
     }
@@ -157,6 +158,15 @@ namespace LandscapeRegistry.GraphQL
             Field("Value", x => x.Values[0]);
             Field(x => x.Values);
             Field(x => x.IsArray);
+        }
+    }
+
+    public class TimeThresholdType : ObjectGraphType<TimeThreshold>
+    {
+        public TimeThresholdType()
+        {
+            Field(x => x.Time);
+            Field(x => x.IsLatest);
         }
     }
 }

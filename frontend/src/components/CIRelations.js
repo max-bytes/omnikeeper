@@ -7,11 +7,15 @@ import { Flipper, Flipped } from 'react-flip-toolkit'
 import { onAppear, onExit } from '../utils/animation';
 import { queries } from '../graphql/queries'
 import { ErrorView } from './ErrorView';
+import { useLayers } from '../utils/useLayers';
 
 function CIRelations(props) {
 
+  const { data: visibleAndWritableLayers } = useLayers(true, true);
+  const { data: visibleLayers } = useLayers(true);
+
   const { loading: loadingCI, error: errorCI, data: dataCI } = useQuery(queries.FullCI, {
-    variables: { identity: props.ciIdentity, layers: props.visibleLayers, timeThreshold: props.timeThreshold, includeRelated: true, includeAttributes: false }
+    variables: { identity: props.ciIdentity, layers: visibleLayers.map(l => l.name), timeThreshold: props.timeThreshold, includeRelated: true, includeAttributes: false }
   });
 
   if (dataCI) {
@@ -26,14 +30,14 @@ function CIRelations(props) {
     return (<>
     <Row>
       <Col>
-        <AddNewRelation isEditable={props.isEditable} visibleLayers={props.visibleLayers} visibleAndWritableLayers={props.visibleAndWritableLayers} ciIdentity={props.ciIdentity}></AddNewRelation>
+        <AddNewRelation isEditable={props.isEditable} visibleLayers={visibleLayers.map(l => l.name)} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ciIdentity}></AddNewRelation>
       </Col>
     </Row>
     <Row>
       <Col>
         <Flipper flipKey={sortedRelatedCIs.map(r => r.relation.layerStackIDs).join(' ')}>
           {sortedRelatedCIs.map(r => {
-            var isLayerWritable = props.visibleAndWritableLayers.some(l => l.id === r.relation.layerID);
+            var isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.relation.layerID);
 
             return (<Flipped key={r.relation.id} flipId={r.relation.predicateID} onAppear={onAppear} onExit={onExit}>
                 <RelatedCI related={r} ciIdentity={props.ciIdentity} isEditable={props.isEditable && isLayerWritable}></RelatedCI>

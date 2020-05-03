@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using System;
@@ -9,35 +10,27 @@ namespace LandscapeRegistry.Model
 {
     public class TemplatesProvider : ITemplatesProvider
     {
-        private readonly IServiceProvider SP;
-        public TemplatesProvider(IServiceProvider sp)
-        {
-            SP = sp;
-        }
-
         public async Task<Templates> GetTemplates(NpgsqlTransaction trans)
         {
-            using var scope = SP.CreateScope();
-            return await Templates.Build(scope.ServiceProvider.GetRequiredService<CIModel>(), scope.ServiceProvider.GetRequiredService<ITraitsProvider>(), trans);
+            return await Templates.Build();
         }
     }
 
     public class CachedTemplatesProvider : ITemplatesProvider
     {
-        private readonly TemplatesProvider TP;
-        private Templates cached;
-        public CachedTemplatesProvider(TemplatesProvider tp)
+        private readonly ITemplatesProvider TP;
+        private readonly IMemoryCache memoryCache;
+        public CachedTemplatesProvider(ITemplatesProvider tp, IMemoryCache memoryCache)
         {
             TP = tp;
-            cached = null;
+            this.memoryCache = memoryCache;
         }
         public async Task<Templates> GetTemplates(NpgsqlTransaction trans)
         {
-            if (cached == null)
+            return await memoryCache.GetOrCreateAsync("templates", async (ce) =>
             {
-                cached = await TP.GetTemplates(trans);
-            }
-            return cached;
+                return await TP.GetTemplates(trans);
+            });
         }
     }
 }

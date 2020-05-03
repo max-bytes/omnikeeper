@@ -41,7 +41,10 @@ export const Fragments = {
         id
         name
         layerhash
-        atTime
+        atTime {
+            time
+            isLatest
+        }
         type {
             id
         }

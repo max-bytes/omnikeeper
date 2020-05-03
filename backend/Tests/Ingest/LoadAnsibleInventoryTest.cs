@@ -2,7 +2,7 @@
 using LandscapeRegistry.Controllers.Ingest;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
-using LandscapeRegistry.Model.Cached;
+using LandscapeRegistry.Model.Decorators;
 using LandscapeRegistry.Service;
 using LandscapeRegistry.Utils;
 using Microsoft.AspNetCore.Http;

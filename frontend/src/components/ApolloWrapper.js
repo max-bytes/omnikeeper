@@ -71,9 +71,10 @@ function ApolloWrapper({ component: Component, ...rest }) {
         Mutation: {
             setSelectedTimeThreshold: (_root, variables, { cache, getCacheKey }) => {
                 cache.writeQuery({query: queries.SelectedTimeThreshold, data: {
-                    selectedTimeThreshold: { 
-                        time: variables.newTimeThreshold || moment().add(1, 'year').format('YYYY-MM-DD HH:mm:ss'),
-                        isLatest: variables.isLatest
+                    selectedTimeThreshold: {
+                        time: variables.newTimeThreshold,// || moment().add(1, 'year').format('YYYY-MM-DD HH:mm:ss'),
+                        isLatest: variables.isLatest,
+                        refreshNonce: (variables.isLatest) ? moment().format('YYYY-MM-DD HH:mm:ss') : undefined
                     }
                 }});
                 return null;
@@ -165,7 +166,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
         },
         dataIdFromObject: object => {
             switch (object.__typename) {
-            case 'MergedCIType': return `MergedCIType:${object.id}:${object.layerhash}:${object.atTime}`; 
+            case 'MergedCIType': return `MergedCIType:${object.id}:${object.layerhash}:${((object.atTime.isLatest) ? 'latest' : object.atTime.time)}`; 
             case 'MergedCIAttributeType': return `MergedCIAttributeType:${object.attribute.id}:ls${object.layerStackIDs.join(',')}`;
             case 'CIAttributeType': return `CIAttributeType:${object.id}}`;
             case 'RelationType': return `RelationType:${object.id}:ls${object.layerStackIDs.join(',')}`;

@@ -9,12 +9,13 @@ import Row from 'react-bootstrap/Row'
 import { Dropdown, Message, Icon } from 'semantic-ui-react'
 import { withRouter } from 'react-router-dom'
 import LayerDropdown from "./LayerDropdown";
+import { useLayers } from '../utils/useLayers';
 
 function AddNewCI(props) {
 
   let initialNewCI = {name: "", layerForName: null, typeID: null };
   const [newCI, setNewCI] = useState(initialNewCI);
-  const { error: errorLayers, data: dataLayers } = useQuery(queries.Layers);
+  const { error: errorLayers, data: sortedLayers } = useLayers();
   
   const [error, setError] = useState("");
   const [goToCIAfterCreation, setGoToCIAfterCreation] = useState(true);
@@ -22,16 +23,9 @@ function AddNewCI(props) {
   const { data: dataCITypes } = useQuery(queries.CITypeList);
   const [createNewCI] = useMutation(mutations.CREATE_CI);
   
-  if (!dataCITypes || !dataLayers)
+  if (!dataCITypes || !sortedLayers)
     return "Loading";
   else {
-    // sort based on order
-    let sortedLayers = dataLayers.layers.concat();
-    sortedLayers.sort((a,b) => {
-      var o = b.sort - a.sort;
-      if (o === 0) return ('' + a.name).localeCompare(b.name);
-      return o;
-    });
 
     let visibleAndWritableLayers = sortedLayers.filter(l => l.visibility && l.writable && l.state === 'ACTIVE');
 

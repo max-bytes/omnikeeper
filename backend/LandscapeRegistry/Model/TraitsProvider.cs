@@ -2,6 +2,7 @@
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using System;
@@ -16,13 +17,12 @@ namespace LandscapeRegistry.Model
     {
         public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans, TimeThreshold timeThreshold)
         {
-            Console.WriteLine("Getting traits...");
             // TODO: move somewhere else
             // TODO: consider time
             var traits = new List<Trait>()
                 {
-                // hosts
-                Trait.Build("host", new List<TraitAttribute>() {
+                    // hosts
+                    Trait.Build("host", new List<TraitAttribute>() {
                         TraitAttribute.Build("hostname",
                             CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
@@ -85,24 +85,21 @@ namespace LandscapeRegistry.Model
 
     public class CachedTraitsProvider : ITraitsProvider
     {
-        private readonly TraitsProvider TP;
-        private IImmutableDictionary<string, Trait> cached;
-        public CachedTraitsProvider(TraitsProvider tp)
+        private readonly ITraitsProvider TP;
+        private readonly IMemoryCache memoryCache;
+
+        public CachedTraitsProvider(ITraitsProvider tp, IMemoryCache memoryCache)
         {
             TP = tp;
-            cached = null;
-            Console.WriteLine("Created cached traits provider");
+            this.memoryCache = memoryCache;
         }
         public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans, TimeThreshold timeThreshold)
         {
-            Console.WriteLine("Getting cached traits...");
-            // TODO: consider time
-            if (cached == null)
+            return await memoryCache.GetOrCreateAsync("traits", async (ce) =>
             {
-                Console.WriteLine("Cache miss");
-                cached = await TP.GetTraits(trans, timeThreshold);
-            }
-            return cached;
+                // TODO: consider time
+                return await TP.GetTraits(trans, timeThreshold);
+            });
         }
     }
 }

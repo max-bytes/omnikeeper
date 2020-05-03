@@ -8,15 +8,15 @@ import Button from 'react-bootstrap/Button';
 import LayerStackIcons from "./LayerStackIcons";
 import ChangesetPopup from "./ChangesetPopup";
 import EditableAttributeValue from "./EditableAttributeValue";
-
+import { useLayers } from '../utils/useLayers';
 
 function Attribute(props) {
 
-  var {ciIdentity, layers, attribute, isEditable, ...rest} = props;
+  var {ciIdentity, attribute, isEditable, ...rest} = props;
   
-
   const isArray = attribute.attribute.value.isArray;
 
+  const { data: visibleLayers } = useLayers(true);
   var [hasErrors, setHasErrors] = useState(false);
   const [values, setValues] = useState(attribute.attribute.value.values);
   React.useEffect(() => setValues(attribute.attribute.value.values), [attribute.attribute.value.values])
@@ -63,7 +63,7 @@ function Attribute(props) {
     input = (
       <Form inline style={{alignItems: 'flex-start', flexFlow: 'row'}} onSubmit={e => {
           e.preventDefault();
-          insertCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, value: {
+          insertCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, layers: visibleLayers.map(l => l.name), value: {
             type: attribute.attribute.value.type,
             values: values,
             isArray: isArray

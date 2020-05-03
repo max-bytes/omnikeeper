@@ -2,7 +2,7 @@
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
-using LandscapeRegistry.Model.Cached;
+using LandscapeRegistry.Model.Decorators;
 using LandscapeRegistry.Utils;
 using Microsoft.Extensions.Hosting;
 using NUnit.Framework;

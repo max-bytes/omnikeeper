@@ -13,7 +13,7 @@ namespace Landscape.Base.Entity
 
         public Template GetTemplate(string ciTypeID) => templates.GetValueOrDefault(ciTypeID, null);
 
-        public async static Task<Templates> Build(ICIModel ciModel, ITraitsProvider traitsProvider, NpgsqlTransaction trans)
+        public async static Task<Templates> Build()
         {
             //var traits = await traitsProvider.GetTraits(trans);
             // TODO: move the actual data creation somewhere else

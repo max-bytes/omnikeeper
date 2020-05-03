@@ -35,7 +35,7 @@ namespace LandscapeRegistry.Model
 
             var candidates = traits.Values.Select(t => new EffectiveTraitCandidate(t, ci)).ToList();
             var ret = await ResolveETCandidates(candidates, traits, trans, atTime);
-            return ret.FirstOrDefault();
+            return ret.FirstOrDefault() ?? EffectiveTraitSet.Build(ci, ImmutableList<EffectiveTrait>.Empty);
         }
 
         public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime)
@@ -44,7 +44,6 @@ namespace LandscapeRegistry.Model
             var trait = traits.GetValueOrDefault(traitName);
             if (trait == null) return null; // trait not found by name
             return await CalculateEffectiveTraitSetsForTrait(trait, layerSet, trans, atTime);
-
         }
 
         private async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime)

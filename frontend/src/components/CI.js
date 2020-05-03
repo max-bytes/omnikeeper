@@ -7,32 +7,32 @@ import TemplateErrors from './TemplateErrors';
 import CIRelations from './CIRelations';
 import EffectiveTraits from './EffectiveTraits';
 import { Tab } from 'semantic-ui-react'
+import { useLayers } from '../utils/useLayers';
 
 function CI(props) {
 
   const [selectedTab, setSelectedTab] = useState(0);
   const [createNewAttribute, setCreateNewAttribute] = useState(undefined);
+  const { data: visibleAndWritableLayers } = useLayers(true, true);
     
-  let visibleAndWritableLayers = props.layers.filter(l => l.visibility && l.writable && l.state === 'ACTIVE');
-
   const panes = [
     { menuItem: 'Attributes', render: () => <Tab.Pane>
       <Row>
         <Col>
-          <AddNewAttribute prefilled={createNewAttribute} isEditable={props.isEditable} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ci.id}></AddNewAttribute>
+          <AddNewAttribute prefilled={createNewAttribute} isEditable={props.isEditable} ciIdentity={props.ci.id}></AddNewAttribute>
         </Col>
       </Row>
       <Row>
         <Col>
-          <AttributeList mergedAttributes={props.ci.mergedAttributes} isEditable={props.isEditable} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ci.id}></AttributeList>
+          <AttributeList mergedAttributes={props.ci.mergedAttributes} isEditable={props.isEditable} ciIdentity={props.ci.id}></AttributeList>
         </Col>
       </Row>
     </Tab.Pane> },
     { menuItem: 'Relations', render: () => <Tab.Pane>
-      <CIRelations visibleLayers={props.visibleLayers} timeThreshold={props.timeThreshold} related={props.ci.related} isEditable={props.isEditable} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ci.id} />
+      <CIRelations timeThreshold={props.timeThreshold} related={props.ci.related} isEditable={props.isEditable} ciIdentity={props.ci.id} />
     </Tab.Pane> },
     { menuItem: 'Effective Traits', render: () => <Tab.Pane>
-      <EffectiveTraits visibleLayers={props.visibleLayers} timeThreshold={props.timeThreshold} traits={props.ci.effectiveTraits} ciIdentity={props.ci.id} />
+      <EffectiveTraits timeThreshold={props.timeThreshold} traits={props.ci.effectiveTraits} ciIdentity={props.ci.id} />
     </Tab.Pane> },
   ]
 
@@ -60,13 +60,6 @@ function CI(props) {
 
 CI.propTypes = {
   isEditable: PropTypes.bool.isRequired,
-  layers: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      name: PropTypes.string.isRequired,
-      visibility: PropTypes.bool.isRequired
-    }).isRequired
-  ).isRequired,
   ci: PropTypes.shape({
     id: PropTypes.string.isRequired,
     name: PropTypes.string,

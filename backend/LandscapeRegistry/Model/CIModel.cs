@@ -80,7 +80,7 @@ namespace LandscapeRegistry.Model
             var type = await GetTypeOfCI(ciid, trans, atTime);
             var attributes = await attributeModel.GetMergedAttributes(ciid, false, layers, trans, atTime);
             var name = GetNameFromAttributes(attributes);
-            return MergedCI.Build(ciid, name, type, layers, atTime.Time, attributes);
+            return MergedCI.Build(ciid, name, type, layers, atTime, attributes);
         }
 
         public async Task<CI> GetCI(Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
@@ -88,7 +88,7 @@ namespace LandscapeRegistry.Model
             var type = await GetTypeOfCI(ciid, trans, atTime);
             var attributes = await attributeModel.GetAttributes(new SingleCIIDAttributeSelection(ciid), false, layerID, trans, atTime);
             var name = GetNameFromAttributes(attributes);
-            return CI.Build(ciid, name, type, layerID, atTime.Time, attributes);
+            return CI.Build(ciid, name, type, layerID, atTime, attributes);
         }
 
         public async Task<IEnumerable<CI>> GetCIs(long layerID, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
@@ -105,7 +105,7 @@ namespace LandscapeRegistry.Model
             var t = groupedAttributes.Select(ga => {
                 var att = ga.Value;
                 var name = GetNameFromAttributes(att);
-                return CI.Build(ga.Key, name, ciTypes[ga.Key], layerID, atTime.Time, att);
+                return CI.Build(ga.Key, name, ciTypes[ga.Key], layerID, atTime, att);
             });
             return t;
         }
@@ -215,7 +215,7 @@ namespace LandscapeRegistry.Model
             var ciTypes = await GetTypeOfCIs(CIIDs, trans, atTime);
             var ciNames = await GetCINames(CIIDs, visibleLayers, trans, atTime);
 
-            return CIIDs.Select(ciid => CompactCI.Build(ciid, ciNames[ciid], ciTypes[ciid], atTime.Time));
+            return CIIDs.Select(ciid => CompactCI.Build(ciid, ciNames[ciid], ciTypes[ciid], atTime));
         }
 
         public async Task<IEnumerable<Guid>> GetCIIDs(NpgsqlTransaction trans)
@@ -258,7 +258,7 @@ namespace LandscapeRegistry.Model
             {
                 var att = ga.Value;
                 var name = GetNameFromAttributes(att);
-                ret.Add(MergedCI.Build(ga.Key, name, ciTypes[ga.Key], layers, atTime.Time, att));
+                ret.Add(MergedCI.Build(ga.Key, name, ciTypes[ga.Key], layers, atTime, att));
             }
             return ret;
         }

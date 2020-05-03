@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactJson from 'react-json-view'
 import _ from 'lodash';
-import { Accordion, Icon } from 'semantic-ui-react'
 
 function EffectiveTraits(props) {
   return <div>
@@ -10,10 +9,10 @@ function EffectiveTraits(props) {
       return (<div key={index}>
         
         <h3>{t.underlyingTrait.name}</h3>
-        {t.attributes.map(a => (<>
+        {t.attributes.map(a => (<div key={a.attribute.name}>
           <div>{a.attribute.name}:</div>
           <ReactJson name={false} src={_.pick(a.attribute.value, ['type', 'isArray', 'values'])} enableClipboard={false} />
-          </>))}
+          </div>))}
         </div>);
       })}
     </div>;

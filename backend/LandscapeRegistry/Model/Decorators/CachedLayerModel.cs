@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LandscapeRegistry.Model.Cached
+namespace LandscapeRegistry.Model.Decorators
 {
     public class CachedLayerModel : ILayerModel
     {

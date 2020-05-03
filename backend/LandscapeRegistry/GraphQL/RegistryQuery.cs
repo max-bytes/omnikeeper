@@ -3,7 +3,7 @@ using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Model;
-using LandscapeRegistry.Model.Cached;
+using LandscapeRegistry.Model.Decorators;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ namespace LandscapeRegistry.GraphQL
 {
     public class RegistryQuery : ObjectGraphType
     {
-        public RegistryQuery(CIModel ciModel, CachedLayerModel layerModel, CachedPredicateModel predicateModel, 
+        public RegistryQuery(CIModel ciModel, CachedLayerModel layerModel, IPredicateModel predicateModel, 
             ChangesetModel changesetModel, ICISearchModel ciSearchModel, ITraitsProvider traitsProvider)
         {
             FieldAsync<MergedCIType>("ci",
@@ -40,7 +40,8 @@ namespace LandscapeRegistry.GraphQL
                     var layerStrings = context.GetArgument<string[]>("layers");
                     var ls = await layerModel.BuildLayerSet(layerStrings, null);
                     userContext.LayerSet = ls;
-                    userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
+                    var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
+                    userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
 
                     var ci = await ciModel.GetMergedCI(ciid, userContext.LayerSet, null, userContext.TimeThreshold);
 
@@ -72,7 +73,8 @@ namespace LandscapeRegistry.GraphQL
                     var layerStrings = context.GetArgument<string[]>("layers");
                     var ls = await layerModel.BuildLayerSet(layerStrings, null);
                     userContext.LayerSet = ls;
-                    userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
+                    var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
+                    userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
 
                     var ciids = await ciModel.GetCompactCIs(userContext.LayerSet, null, userContext.TimeThreshold);
                     return ciids;
@@ -122,7 +124,8 @@ namespace LandscapeRegistry.GraphQL
                     var layerStrings = context.GetArgument<string[]>("layers");
                     var layerSet = layerStrings != null ? await layerModel.BuildLayerSet(layerStrings, null) : await layerModel.BuildLayerSet(null);
                     userContext.LayerSet = layerSet;
-                    userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
+                    var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
+                    userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
 
                     var includeEmpty = context.GetArgument("includeEmpty", false);
 
