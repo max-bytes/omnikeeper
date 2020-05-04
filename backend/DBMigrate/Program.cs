@@ -42,6 +42,7 @@ namespace DBMigrations
                     Console.ResetColor();
                     Thread.Sleep(TimeSpan.FromSeconds(5).Milliseconds);
                 }
+                numRetries--;
             } while (numRetries > 0 && !succeeded);
 
             if (!succeeded) return -1;
