@@ -15,9 +15,8 @@ function UserBar(props) {
 
   let items;
   if (userProfile) {
-
     items = <div style={{display: 'flex'}}>
-      <Menu.Item>Logged in as user {userProfile.username} </Menu.Item>
+      <Menu.Item>{userProfile.firstName} {userProfile.lastName} </Menu.Item>
       <Menu.Item>
         <Button onClick={() => keycloak.logout()}>Logout</Button>
       </Menu.Item>
