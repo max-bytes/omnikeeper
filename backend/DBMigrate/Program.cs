@@ -26,7 +26,7 @@ namespace DBMigrations
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine(result.Error);
                         Console.ResetColor();
-                        Thread.Sleep(TimeSpan.FromSeconds(5).Milliseconds);
+                        Thread.Sleep((int)TimeSpan.FromSeconds(5).TotalMilliseconds);
                     }
                     else
                     {
@@ -40,7 +40,7 @@ namespace DBMigrations
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine(e.Message);
                     Console.ResetColor();
-                    Thread.Sleep(TimeSpan.FromSeconds(5).Milliseconds);
+                    Thread.Sleep((int)TimeSpan.FromSeconds(5).TotalMilliseconds);
                 }
                 numRetries--;
             } while (numRetries > 0 && !succeeded);
