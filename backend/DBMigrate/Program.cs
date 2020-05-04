@@ -17,22 +17,30 @@ namespace DBMigrations
             var succeeded = false;
             do
             {
-                var result = DBMigration.Migrate(connectionString);
+                try
+                {
+                    var result = DBMigration.Migrate(connectionString);
 
-                if (!result.Successful)
+                    if (!result.Successful)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(result.Error);
+                        Console.ResetColor();
+                        Thread.Sleep(TimeSpan.FromSeconds(5).Milliseconds);
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("Success!");
+                        Console.ResetColor();
+                        succeeded = true;
+                    }
+                } catch (Exception e)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(result.Error);
+                    Console.WriteLine(e.Message);
                     Console.ResetColor();
-
                     Thread.Sleep(TimeSpan.FromSeconds(5).Milliseconds);
-                }
-                else
-                {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("Success!");
-                    Console.ResetColor();
-                    succeeded = true;
                 }
             } while (numRetries > 0 && !succeeded);
 
