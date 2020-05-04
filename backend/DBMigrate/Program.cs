@@ -8,7 +8,6 @@ namespace DBMigrations
     {
         static int Main(string[] args)
         {
-            // TODO
             var connectionString = args.FirstOrDefault();
 
             if (connectionString == null)

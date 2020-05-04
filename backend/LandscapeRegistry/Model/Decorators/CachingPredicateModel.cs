@@ -24,22 +24,28 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, TimeThreshold atTime, AnchorStateFilter stateFilter)
         {
-            return await memoryCache.GetOrCreateAsync(CacheKeyService.Predicates(atTime), async (ce) =>
-            {
-                return await Model.GetPredicates(trans, atTime, stateFilter);
-            });
+            if (atTime.IsLatest)
+                return await memoryCache.GetOrCreateAsync(CacheKeyService.Predicates(stateFilter), async (ce) =>
+                {
+                    var predicatesChangeToken = memoryCache.GetOrCreatePredicatesCancellationChangeToken();
+                    ce.AddExpirationToken(predicatesChangeToken);
+                    return await Model.GetPredicates(trans, atTime, stateFilter);
+                });
+            else return await Model.GetPredicates(trans, atTime, stateFilter);
         }
 
         public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, NpgsqlTransaction trans)
         {
-            memoryCache.Remove(CacheKeyService.PredicatesLatest());
+            memoryCache.CancelPredicatesChangeToken();
             return await Model.InsertOrUpdate(id, wordingFrom, wordingTo, state, trans);
         }
 
         public async Task<bool> TryToDelete(string id, NpgsqlTransaction trans)
         {
-            memoryCache.Remove(CacheKeyService.PredicatesLatest());
-            return await Model.TryToDelete(id, trans);
+            var success = await Model.TryToDelete(id, trans);
+            if (success)
+                memoryCache.CancelPredicatesChangeToken();
+            return success;
         }
     }
 }
