@@ -6,7 +6,7 @@ namespace LandscapeRegistry.GraphQL
 {
     public class RelationType : ObjectGraphType<Relation>
     {
-        public RelationType(CachedLayerModel layerModel)
+        public RelationType(CachingLayerModel layerModel)
         {
             Field("id", x => x.ID);
             Field(x => x.FromCIID);

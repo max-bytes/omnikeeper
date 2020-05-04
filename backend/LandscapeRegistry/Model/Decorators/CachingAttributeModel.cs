@@ -12,12 +12,12 @@ using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model.Decorators
 {
-    public class CacheInvalidatingAttributeModel : IAttributeModel
+    public class CachingAttributeModel : IAttributeModel
     {
         private readonly IAttributeModel model;
         private readonly IMemoryCache memoryCache;
 
-        public CacheInvalidatingAttributeModel(IAttributeModel model, IMemoryCache memoryCache)
+        public CachingAttributeModel(IAttributeModel model, IMemoryCache memoryCache)
         {
             this.model = model;
             this.memoryCache = memoryCache;

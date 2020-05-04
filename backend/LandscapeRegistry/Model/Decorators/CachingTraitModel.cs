@@ -13,14 +13,14 @@ using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model.Decorators
 {
-    public class CachedTraitModel : ITraitModel
+    public class CachingTraitModel : ITraitModel
     {
-        private readonly ITraitModel traitModel;
+        private readonly ITraitModel model;
         private readonly IMemoryCache memoryCache;
 
-        public CachedTraitModel(ITraitModel traitModel, IMemoryCache memoryCache)
+        public CachingTraitModel(ITraitModel model, IMemoryCache memoryCache)
         {
-            this.traitModel = traitModel;
+            this.model = model;
             this.memoryCache = memoryCache;
         }
 
@@ -32,16 +32,16 @@ namespace LandscapeRegistry.Model.Decorators
                 {
                     var ciChangeToken = memoryCache.GetOrCreateCICancellationChangeToken(ci.ID);
                     ce.AddExpirationToken(ciChangeToken);
-                    return await traitModel.CalculateEffectiveTraitSetForCI(ci, trans, atTime);
+                    return await model.CalculateEffectiveTraitSetForCI(ci, trans, atTime);
                 });
             }
-            else return await traitModel.CalculateEffectiveTraitSetForCI(ci, trans, atTime);
+            else return await model.CalculateEffectiveTraitSetForCI(ci, trans, atTime);
         }
 
         public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             // TODO: caching
-            return await traitModel.CalculateEffectiveTraitSetsForTraitName(traitName, layerSet, trans, atTime);
+            return await model.CalculateEffectiveTraitSetsForTraitName(traitName, layerSet, trans, atTime);
         }
     }
 }

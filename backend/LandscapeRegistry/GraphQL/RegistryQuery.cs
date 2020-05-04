@@ -13,7 +13,7 @@ namespace LandscapeRegistry.GraphQL
 {
     public class RegistryQuery : ObjectGraphType
     {
-        public RegistryQuery(CIModel ciModel, CachedLayerModel layerModel, IPredicateModel predicateModel, 
+        public RegistryQuery(ICIModel ciModel, CachingLayerModel layerModel, IPredicateModel predicateModel, 
             ChangesetModel changesetModel, ICISearchModel ciSearchModel, ITraitsProvider traitsProvider)
         {
             FieldAsync<MergedCIType>("ci",

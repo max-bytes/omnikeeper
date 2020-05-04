@@ -27,7 +27,7 @@ namespace LandscapeRegistry.GraphQL
 
     public class MergedCIType : ObjectGraphType<MergedCI>
     {
-        public MergedCIType(RelationModel relationModel, TemplateModel templateModel, ITraitModel traitModel, ICIModel ciModel)
+        public MergedCIType(IRelationModel relationModel, TemplateModel templateModel, ITraitModel traitModel, ICIModel ciModel)
         {
             Field("id", x => x.ID);
             Field("name", x => x.Name, nullable: true);
@@ -113,7 +113,7 @@ namespace LandscapeRegistry.GraphQL
 
     public class MergedCIAttributeType : ObjectGraphType<MergedCIAttribute>
     {
-        public MergedCIAttributeType(CachedLayerModel layerModel)
+        public MergedCIAttributeType(CachingLayerModel layerModel)
         {
             Field(x => x.LayerStackIDs);
             Field(x => x.Attribute, type: typeof(CIAttributeType));

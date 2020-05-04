@@ -93,26 +93,26 @@ namespace LandscapeRegistry
             // TODO: remove AddScoped<Model>(), only use AddScoped<IModel, Model>()
             services.AddScoped<ICISearchModel, CISearchModel>();
             services.AddScoped<ICIModel, CIModel>();
-            services.AddScoped<CIModel>();
+            services.Decorate<ICIModel, CachingCIModel>();
             services.AddScoped<IAttributeModel, AttributeModel>();
-            services.Decorate<IAttributeModel, CacheInvalidatingAttributeModel>();
+            services.Decorate<IAttributeModel, CachingAttributeModel>();
             services.AddScoped<IUserInDatabaseModel, UserInDatabaseModel>();
             services.AddScoped<UserInDatabaseModel>();
             services.AddScoped<ILayerModel, LayerModel>();
             services.AddScoped<LayerModel>();
-            services.AddScoped<CachedLayerModel>();
+            services.AddScoped<CachingLayerModel>();
             services.AddScoped<IRelationModel, RelationModel>();
-            services.AddScoped<RelationModel>();
+            services.Decorate<IRelationModel, CachingRelationModel>();
             services.AddScoped<IChangesetModel, ChangesetModel>();
             services.AddScoped<ChangesetModel>();
             services.AddScoped<ITemplateModel, TemplateModel>();
             services.AddScoped<TemplateModel>();
             services.AddScoped<IPredicateModel, PredicateModel>();
-            services.Decorate<IPredicateModel, CachedPredicateModel>();
+            services.Decorate<IPredicateModel, CachingPredicateModel>();
             services.AddScoped<KeycloakModel>();
 
             services.AddScoped<ITraitModel, TraitModel>();
-            services.Decorate<ITraitModel, CachedTraitModel>();
+            services.Decorate<ITraitModel, CachingTraitModel>();
 
             services.AddScoped<IRegistryAuthorizationService, RegistryAuthorizationService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();

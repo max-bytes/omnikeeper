@@ -15,7 +15,7 @@ namespace LandscapeRegistry.GraphQL
 {
     public class RegistryMutation : ObjectGraphType
     {
-        public RegistryMutation(CIModel ciModel, IAttributeModel attributeModel, LayerModel layerModel, RelationModel relationModel,
+        public RegistryMutation(ICIModel ciModel, IAttributeModel attributeModel, LayerModel layerModel, IRelationModel relationModel,
             ChangesetModel changesetModel, IPredicateModel predicateModel, KeycloakModel keycloakModel, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutateCIs",

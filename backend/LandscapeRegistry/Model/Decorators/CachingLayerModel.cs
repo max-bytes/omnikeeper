@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model.Decorators
 {
-    public class CachedLayerModel : ILayerModel
+    public class CachingLayerModel : ILayerModel
     {
         private ILayerModel Model { get; }
 
@@ -15,7 +15,7 @@ namespace LandscapeRegistry.Model.Decorators
         private readonly Dictionary<string, Layer> NameLayerCache = new Dictionary<string, Layer>();
         private IEnumerable<Layer> AllLayersCache = null;
 
-        public CachedLayerModel(ILayerModel model)
+        public CachingLayerModel(ILayerModel model)
         {
             Model = model;
         }

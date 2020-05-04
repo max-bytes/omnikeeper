@@ -3,6 +3,8 @@ using Landscape.Base.Utils;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Decorators;
 using LandscapeRegistry.Utils;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -29,7 +31,7 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel, conn);
             var attributeModel = new AttributeModel(conn);
             var ciModel = new CIModel(attributeModel, conn);
-            var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
+            var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
             var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
@@ -101,7 +103,7 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel, conn);
             var attributeModel = new AttributeModel(conn);
             var ciModel = new CIModel(attributeModel, conn);
-            var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
+            var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
             var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
@@ -137,7 +139,7 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel, conn);
             var attributeModel = new AttributeModel(conn);
             var ciModel = new CIModel(attributeModel, conn);
-            var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
+            var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
             var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
@@ -174,7 +176,7 @@ namespace Tests.Integration.Model
 
             var attributeModel = new AttributeModel(conn);
             var ciModel = new CIModel(attributeModel, conn);
-            var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
+            var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
             var relationModel = new RelationModel(predicateModel, conn);
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
@@ -233,7 +235,7 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel, conn);
             var attributeModel = new AttributeModel(conn);
             var ciModel = new CIModel(attributeModel, conn);
-            var predicateModel = new CachedPredicateModel(new PredicateModel(conn));
+            var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
             var relationModel = new RelationModel(predicateModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);

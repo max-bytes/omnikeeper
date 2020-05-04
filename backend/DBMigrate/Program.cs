@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 
 namespace DBMigrations
 {
@@ -13,19 +14,30 @@ namespace DBMigrations
             if (connectionString == null)
                 throw new Exception("No connection string provided");
 
-            var result = DBMigration.Migrate(connectionString);
-
-            if (!result.Successful)
+            var numRetries = 3;
+            var succeeded = false;
+            do
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(result.Error);
-                Console.ResetColor();
-                return -1;
-            }
+                var result = DBMigration.Migrate(connectionString);
 
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Success!");
-            Console.ResetColor();
+                if (!result.Successful)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(result.Error);
+                    Console.ResetColor();
+
+                    Thread.Sleep(TimeSpan.FromSeconds(5).Milliseconds);
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("Success!");
+                    Console.ResetColor();
+                    succeeded = true;
+                }
+            } while (numRetries > 0 && !succeeded);
+
+            if (!succeeded) return -1;
             return 0;
         }
     }

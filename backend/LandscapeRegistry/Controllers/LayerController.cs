@@ -15,9 +15,9 @@ namespace LandscapeRegistry.Controllers
     [Authorize]
     public class LayerController : ControllerBase
     {
-        private readonly CachedLayerModel layerModel;
+        private readonly CachingLayerModel layerModel;
 
-        public LayerController(CachedLayerModel layerModel)
+        public LayerController(CachingLayerModel layerModel)
         {
             this.layerModel = layerModel;
         }

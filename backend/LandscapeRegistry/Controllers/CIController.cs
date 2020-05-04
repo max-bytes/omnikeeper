@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
+using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Model;
 using Microsoft.AspNetCore.Authorization;
@@ -18,9 +19,9 @@ namespace LandscapeRegistry.Controllers
     [Authorize]
     public class CIController : ControllerBase
     {
-        private readonly CIModel ciModel;
+        private readonly ICIModel ciModel;
 
-        public CIController(CIModel ciModel)
+        public CIController(ICIModel ciModel)
         {
             this.ciModel = ciModel;
         }
