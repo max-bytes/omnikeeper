@@ -13,7 +13,7 @@ namespace DBMigrations
             if (connectionString == null)
                 throw new Exception("No connection string provided");
 
-            var numRetries = 3;
+            var numRetries = 10;
             var succeeded = false;
             do
             {

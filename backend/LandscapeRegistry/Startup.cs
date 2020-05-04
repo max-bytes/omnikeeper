@@ -247,13 +247,6 @@ namespace LandscapeRegistry
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory, 
             ILogger<Startup> logger)
         {
-            // run database migrations
-            // NOTE: is now run in own executable running before app itself starts
-            //var cs = Configuration.GetConnectionString("LandscapeDatabaseConnection");
-            //var migrationResult = DBMigration.Migrate(cs);
-            //if (!migrationResult.Successful)
-            //    throw new Exception("Database migration failed!", migrationResult.Error);
-
             app.UseCors("DefaultCORSPolicy");
 
             // make application properly consider headers (and populate httprequest object) when behind reverse proxy
