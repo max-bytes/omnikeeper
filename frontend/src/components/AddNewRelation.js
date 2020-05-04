@@ -20,7 +20,7 @@ function AddNewRelation(props) {
   React.useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
 
   // TODO: loading
-  const { data: dataCIs } = useQuery(queries.CIList, { variables: {layers: props.visibleLayers} });
+  const { data: dataCIs } = useQuery(queries.CIList, { variables: {layers: props.visibleLayers } });
   const { data: dataPredicates } = useQuery(queries.PredicateList, {
     variables: {stateFilter: 'ACTIVE_AND_DEPRECATED'}
   });
@@ -47,7 +47,7 @@ function AddNewRelation(props) {
       <Segment raised>
         <Form onSubmit={e => {
             e.preventDefault();
-            insertRelation({ variables: { fromCIID: props.ciIdentity, toCIID: newRelation.toCIID, predicateID: newRelation.predicateID, layerID: newRelation.layer.id} }).then(d => {
+            insertRelation({ variables: { fromCIID: props.ciIdentity, toCIID: newRelation.toCIID, predicateID: newRelation.predicateID, layerID: newRelation.layer.id, layers: props.visibleLayers} }).then(d => {
               setOpen(false);
               setNewRelation(initialRelation);
               setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }});

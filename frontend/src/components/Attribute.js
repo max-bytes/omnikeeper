@@ -55,7 +55,7 @@ function Attribute(props) {
     const removeButton = (
       <Button variant="danger" onClick={e => {
         e.preventDefault();
-        removeCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID } })
+        removeCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, layers: visibleLayers.map(l => l.name) } })
         .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
       }}>Remove</Button>
     );

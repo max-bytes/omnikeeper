@@ -26,14 +26,14 @@ export const mutations = {
     ${Fragments.fullCI}
   `,
   REMOVE_CI_ATTRIBUTE: gql`
-    mutation RemoveCIAttribute($ciIdentity: Guid!, $name: String!, $layerID: Long!, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
+    mutation RemoveCIAttribute($ciIdentity: Guid!, $name: String!, $layerID: Long!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
       mutateCIs(removeAttributes: [
         {
           ci: $ciIdentity,
           name: $name,
           layerID: $layerID
         }
-      ]) {
+      ], layers: $layers) {
         affectedCIs {
           ...FullCI
         }
@@ -48,7 +48,7 @@ export const mutations = {
   `,
 
   INSERT_RELATION: gql`
-  mutation InsertRelation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: Long!) {
+  mutation InsertRelation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: Long!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
     mutateCIs(insertRelations: [
       {
         fromCIID: $fromCIID,
@@ -56,8 +56,10 @@ export const mutations = {
         predicateID: $predicateID,
         layerID: $layerID
       }
-    ]) {
-      __typename
+    ], layers: $layers) {
+      affectedCIs {
+        ...FullCI
+      }
     }
   }
   ${Fragments.relatedCI}
@@ -69,7 +71,7 @@ export const mutations = {
 `,
 
 REMOVE_RELATION: gql`
-mutation RemoveRelation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: Long!, $includeAttributes: Boolean = false, $includeRelated: Boolean = false) {
+mutation RemoveRelation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: Long!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
   mutateCIs(removeRelations: [
     {
       fromCIID: $fromCIID,
@@ -77,7 +79,7 @@ mutation RemoveRelation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!,
       predicateID: $predicateID,
       layerID: $layerID
     }
-  ]) {
+  ], layers: $layers) {
     affectedCIs {
       ...FullCI
     }

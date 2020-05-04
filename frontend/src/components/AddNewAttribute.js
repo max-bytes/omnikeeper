@@ -17,6 +17,7 @@ import { useLayers } from '../utils/useLayers';
 function AddNewAttribute(props) {
   const [insertError, setInsertError] = useState(undefined);
   const { data: visibleAndWritableLayers } = useLayers(true, true);
+  const { data: visibleLayers } = useLayers(true);
   const canBeEdited = props.isEditable && visibleAndWritableLayers.length > 0;
   let initialAttribute = {name: '', type: 'TEXT', values: [''], isArray: false};
   const [selectedLayer, setSelectedLayer] = useState(visibleAndWritableLayers[0]);
@@ -48,7 +49,7 @@ function AddNewAttribute(props) {
         <Form onSubmit={e => {
             e.preventDefault();
             setInsertError(undefined);
-            insertCIAttribute({ variables: { layers: visibleAndWritableLayers.map(l => l.name), ciIdentity: props.ciIdentity, name: newAttribute.name, layerID: selectedLayer.id, value: {
+            insertCIAttribute({ variables: { layers: visibleLayers.map(l => l.name), ciIdentity: props.ciIdentity, name: newAttribute.name, layerID: selectedLayer.id, value: {
               type: newAttribute.type,
               isArray: newAttribute.isArray,
               values: newAttribute.values

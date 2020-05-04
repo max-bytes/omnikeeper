@@ -7,9 +7,11 @@ import LayerStackIcons from "./LayerStackIcons";
 import Form from 'react-bootstrap/Form';
 import { Link  } from 'react-router-dom'
 import ChangesetPopup from "./ChangesetPopup";
+import { useLayers } from '../utils/useLayers';
 
 function RelatedCI(props) {
 
+  const { data: visibleLayers } = useLayers(true);
   // TODO: loading
   const [removeRelation] = useMutation(mutations.REMOVE_RELATION, { 
     update: (cache, data) => {
@@ -39,7 +41,7 @@ function RelatedCI(props) {
   if (props.isEditable) {
     removeButton = <Button variant="danger" onClick={e => {
       e.preventDefault();
-      removeRelation({ variables: { fromCIID: props.related.relation.fromCIID, toCIID: props.related.relation.toCIID, predicateID: props.related.relation.predicate.id, layerID: props.related.relation.layerID } })
+      removeRelation({ variables: { fromCIID: props.related.relation.fromCIID, toCIID: props.related.relation.toCIID, predicateID: props.related.relation.predicate.id, layerID: props.related.relation.layerID, layers: visibleLayers.map(l => l.name) } })
       .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
     }}>Remove</Button>;
   }
