@@ -36,7 +36,7 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, NpgsqlTransaction trans)
         {
-            memoryCache.CancelPredicatesChangeToken();
+            memoryCache.CancelPredicatesChangeToken(); // TODO: only evict cache when insert changes
             return await Model.InsertOrUpdate(id, wordingFrom, wordingTo, state, trans);
         }
 

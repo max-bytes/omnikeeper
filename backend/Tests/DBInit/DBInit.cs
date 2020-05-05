@@ -42,7 +42,7 @@ namespace Tests.DBInit
             var user = await DBSetup.SetupUser(userModel, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
 
             var numApplicationCIs = 10000;
-            var numHostCIs = 1000;
+            var numHostCIs = 10000;
             var numRunsOnRelations = 20000;
             int numAttributesPerCIFrom = 20;
             int numAttributesPerCITo = 40;
@@ -131,7 +131,7 @@ namespace Tests.DBInit
                     await ciModel.CreateCIWithType(ciType, trans, ciid);
                     await attributeModel.InsertCINameAttribute($"{ciType}_{index}", cmdbLayerID, ciid, changeset.ID, trans);
                     await attributeModel.InsertAttribute("hostname", AttributeValueTextScalar.Build($"hostname_{index}.domain"), cmdbLayerID, ciid, changeset.ID, trans);
-                    await attributeModel.InsertAttribute("system", AttributeValueTextScalar.Build($"{((ciType == "Host Linux") ? "Linux" : "Windows")}"), cmdbLayerID, ciid, changeset.ID, trans);
+                    await attributeModel.InsertAttribute("system", AttributeValueTextScalar.Build($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), cmdbLayerID, ciid, changeset.ID, trans);
                     index++;
                 }
 

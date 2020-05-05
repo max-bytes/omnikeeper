@@ -3,7 +3,9 @@ using Hangfire;
 using Landscape.Base;
 using Landscape.Base.Model;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -40,7 +42,15 @@ namespace LandscapeRegistry.Runners
                 }
                 else
                 {
+                    logger.LogInformation($"Running CLB {l.ComputeLayerBrain.Name} on layer {l.Name}");
+
+                    Stopwatch stopWatch = new Stopwatch();
+                    stopWatch.Start();
                     await clb.Run(new CLBSettings(l.Name), logger);
+                    stopWatch.Stop();
+                    TimeSpan ts = stopWatch.Elapsed;
+                    string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                    logger.LogInformation($"Done in {elapsedTime}");
                 }
             }
 
