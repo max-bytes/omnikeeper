@@ -15,9 +15,10 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public AttributeValueType Type => AttributeValueType.Integer;
         public abstract string Value2String();
         public abstract bool IsArray { get; }
-        public abstract AttributeValueDTO ToGeneric();
+        public abstract AttributeValueDTO ToDTO();
         public abstract bool Equals(IAttributeValue other);
         public abstract bool FullTextSearch(string searchString, CompareOptions compareOptions);
+        public abstract object ToGenericObject();
 
         public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
         { // does not make sense for integer
@@ -28,13 +29,15 @@ namespace LandscapeRegistry.Entity.AttributeValues
         { // does not make sense for integer
             yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, Type);
         }
+
     }
 
     public class AttributeValueIntegerScalar : AttributeValueInteger, IEquatable<AttributeValueIntegerScalar>
     {
         public long Value { get; private set; }
         public override string Value2String() => Value.ToString();
-        public override AttributeValueDTO ToGeneric() => AttributeValueDTO.Build(Value2String(), Type);
+        public override AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Value2String(), Type);
+        public override object ToGenericObject() => Value;
         public override bool IsArray => false;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueIntegerScalar);
         public bool Equals([AllowNull] AttributeValueIntegerScalar other) => other != null && Value == other.Value;
@@ -62,7 +65,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
     {
         public long[] Values { get; private set; }
         public override string Value2String() => string.Join(",", Values.Select(value => value.ToString().Replace(",", "\\,")));
-        public override AttributeValueDTO ToGeneric() => AttributeValueDTO.Build(Values.Select(v => v.ToString()).ToArray(), Type);
+        public override AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Values.Select(v => v.ToString()).ToArray(), Type);
+        public override object ToGenericObject() => Values;
         public override bool IsArray => true;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueIntegerArray);
         public bool Equals([AllowNull] AttributeValueIntegerArray other) => other != null && Values.SequenceEqual(other.Values);

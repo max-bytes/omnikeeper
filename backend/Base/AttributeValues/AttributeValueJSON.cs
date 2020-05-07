@@ -1,7 +1,9 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
 using Landscape.Base.Utils;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Scriban.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -17,7 +19,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public AttributeValueType Type => AttributeValueType.JSON;
         public abstract string Value2String();
         public abstract bool IsArray { get; }
-        public abstract AttributeValueDTO ToGeneric();
+        public abstract AttributeValueDTO ToDTO();
+        public abstract object ToGenericObject();
         public abstract bool Equals(IAttributeValue other);
         public abstract bool FullTextSearch(string searchString, CompareOptions compareOptions);
 
@@ -37,7 +40,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
     {
         public JToken Value { get; private set; }
         public override string Value2String() => Value.ToString();
-        public override AttributeValueDTO ToGeneric() => AttributeValueDTO.Build(Value2String(), Type);
+        public override AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Value2String(), Type);
+        public override object ToGenericObject() => Value;
         public override bool IsArray => false;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueJSONScalar);
         public bool Equals([AllowNull] AttributeValueJSONScalar other) => other != null && JToken.DeepEquals(Value, other.Value);
@@ -61,13 +65,15 @@ namespace LandscapeRegistry.Entity.AttributeValues
             };
             return n;
         }
+
     }
 
     public class AttributeValueJSONArray : AttributeValueJSON, IEquatable<AttributeValueJSONArray>
     {
         public JToken[] Values { get; private set; }
         public override string Value2String() => string.Join(",", Values.Select(value => value.ToString().Replace(",", "\\,")));
-        public override AttributeValueDTO ToGeneric() => AttributeValueDTO.Build(Values.Select(v => v.ToString()).ToArray(), Type);
+        public override AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Values.Select(v => v.ToString()).ToArray(), Type);
+        public override object ToGenericObject() => Values;
         public override bool IsArray => true;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueJSONArray);
 

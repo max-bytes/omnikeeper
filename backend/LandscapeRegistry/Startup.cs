@@ -69,6 +69,7 @@ namespace LandscapeRegistry
 
             // register compute layer brains
             services.AddScoped<IComputeLayerBrain, CLBMonitoring>();
+            services.AddScoped<IComputeLayerBrain, CLBNaemonMonitoring>();
 
             services.AddCors(options => options.AddPolicy("DefaultCORSPolicy", builder =>
                builder.WithOrigins(Configuration.GetSection("CORS")["AllowedHosts"].Split(","))

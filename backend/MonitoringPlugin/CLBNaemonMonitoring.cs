@@ -1,4 +1,4 @@
-﻿using DotLiquid;
+﻿using Scriban;
 using Landscape.Base;
 using Landscape.Base.Entity;
 using Landscape.Base.Model;
@@ -11,16 +11,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Scriban.Runtime;
+using static Landscape.Base.Templating.ScribanVariableService;
 
 namespace MonitoringPlugin
 {
-    public class CLBMonitoring : CLBBase
+    public class CLBNaemonMonitoring : CLBBase
     {
         private readonly IRelationModel relationModel;
         private readonly ICIModel ciModel;
         private readonly ITraitModel traitModel;
 
-        public CLBMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, ITraitModel traitModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
+        public CLBNaemonMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, ITraitModel traitModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
             : base(atributeModel, layerModel, changesetModel, userModel, conn)
         {
             this.ciModel = ciModel;
@@ -53,36 +55,43 @@ namespace MonitoringPlugin
             logger.LogDebug("Prep");
 
             // find and parse commands, insert into monitored CIs
-            var renderedCommands = new List<(Guid ciid, string command)>();
+            var renderedTemplateSegments = new List<(Guid ciid, string command)>();
             foreach (var p in allHasMonitoringModuleRelations)
             {
                 logger.LogDebug("Process mm relation...");
 
                 var monitoringModuleCI = monitoringModuleCIs[p.ToCIID];
                 var monitoringModuleET = await traitModel.CalculateEffectiveTraitSetForCI(monitoringModuleCI, trans, timeThreshold); // TODO: move outside of loop, prefetch
-                if (!monitoringModuleET.EffectiveTraits.ContainsKey("monitoring_check_module"))
+                if (!monitoringModuleET.EffectiveTraits.ContainsKey("naemon_service_module"))
                 {
-                    logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"monitoring_check_module\"");
-                    await errorHandler.LogError(monitoringModuleCI.ID, "error", "Expected this CI to have trait \"monitoring_check_module\"");
+                    logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"naemon_service_module\"");
+                    await errorHandler.LogError(monitoringModuleCI.ID, "error", "Expected this CI to have trait \"naemon_service_module\"");
                     continue;
                 }
                 logger.LogDebug("  Fetched effective traits");
 
                 var monitoredCI = monitoredCIs[p.FromCIID];
-                var monitoringCommands = monitoringModuleET.EffectiveTraits["monitoring_check_module"].TraitAttributes["commands"].Attribute.Value as AttributeValueTextArray;
-
-                // add/collect variables
-                var variables = new Dictionary<string, object>() { { "target", LiquidVariableService.CreateVariablesFromCI(monitoredCI) } };
-
-                logger.LogDebug("  Parse/Render commands");
-                // template parsing and rendering
-                foreach (var commandStr in monitoringCommands.Values)
+                var monitoringCommandsAV = monitoringModuleET.EffectiveTraits["naemon_service_module"].TraitAttributes["config_template"].Attribute.Value;
+                //var monitoringCommands = new string[0];
+                var monitoringCommands = monitoringCommandsAV switch
                 {
-                    string finalCommand;
+                    AttributeValueTextArray ata => ata.Values,
+                    AttributeValueTextScalar ats => new string[] { ats.Value },
+                    _ => new string[0], // TODO: error handling
+                };
+
+                // create template context based on monitored CI, so that any template can access all the related variables
+                var context = ScribanVariableService.CreateCIBasedTemplateContext(monitoredCI, layerSetAll, timeThreshold, null, ciModel, relationModel);
+
+                logger.LogDebug("  Parse/Render config segments");
+                // template parsing and rendering
+                foreach (var templateStr in monitoringCommands)
+                {
                     try
                     {
-                        var template = DotLiquid.Template.Parse(commandStr);
-                        finalCommand = template.Render(Hash.FromDictionary(variables));
+                        var template = Scriban.Template.Parse(templateStr);
+                        string templateSegment = template.Render(context);
+                        renderedTemplateSegments.Add((p.FromCIID, templateSegment));
                     }
                     catch (Exception e)
                     {
@@ -90,14 +99,13 @@ namespace MonitoringPlugin
                         await errorHandler.LogError(monitoringModuleCI.ID, "error", $"Error parsing or rendering command: {e.Message}");
                         continue;
                     }
-                    renderedCommands.Add((p.FromCIID, finalCommand));
                 }
                 logger.LogDebug("Processed mm relation");
             }
 
-            var monitoringCommandFragments = renderedCommands.GroupBy(t => t.ciid)
-                .Select(tt => BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeValueTextArray.Build(tt.Select(ttt => ttt.command).ToArray()), tt.Key));
-            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.executing_commands", targetLayer.ID, monitoringCommandFragments), changeset.ID, trans);
+            var monitoringCommandFragments = renderedTemplateSegments.GroupBy(t => t.ciid)
+                .Select(tt => BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeValueTextScalar.Build(string.Join('\n', tt.Select(ttt => ttt.command)), true), tt.Key));
+            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.naemon.rendered_config", targetLayer.ID, monitoringCommandFragments), changeset.ID, trans);
 
             logger.LogDebug("Updated executed commands per monitored CI");
 
@@ -121,7 +129,7 @@ namespace MonitoringPlugin
             {
                 var naemonInstance = kv.Key;
                 var cis = kv.Value;
-                var commands = monitoringCommandFragments.Where(f => cis.Contains(f.CIID)).Select(f => string.Join("\n", (f.Value as AttributeValueTextArray).Values));
+                var commands = monitoringCommandFragments.Where(f => cis.Contains(f.CIID)).Select(f => (f.Value as AttributeValueTextScalar).Value);
                 var finalConfig = string.Join("\n", commands);
                 monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeValueTextScalar.Build(finalConfig, true), naemonInstance));
             }

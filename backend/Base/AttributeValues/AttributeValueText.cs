@@ -20,7 +20,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
 
         public abstract string Value2String();
         public abstract bool IsArray { get; }
-        public abstract AttributeValueDTO ToGeneric();
+        public abstract AttributeValueDTO ToDTO();
+        public abstract object ToGenericObject();
         public abstract bool Equals(IAttributeValue other);
 
         public abstract IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum);
@@ -33,7 +34,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
     {
         public string Value { get; private set; }
         public override string Value2String() => Value;
-        public override AttributeValueDTO ToGeneric() => AttributeValueDTO.Build(Value, Type);
+        public override AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Value, Type);
+        public override object ToGenericObject() => Value;
         public override bool IsArray => false;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueTextScalar);
         public bool Equals([AllowNull] AttributeValueTextScalar other) => other != null && Value == other.Value && Multiline == other.Multiline;
@@ -71,7 +73,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
     {
         public string[] Values { get; private set; }
         public override string Value2String() => string.Join(",", Values.Select(value => value.Replace(",", "\\,")));
-        public override AttributeValueDTO ToGeneric() => AttributeValueDTO.Build(Values, Type);
+        public override AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Values, Type);
+        public override object ToGenericObject() => Values;
         public override bool IsArray => true;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueTextArray);
         public bool Equals([AllowNull] AttributeValueTextArray other) => other != null && Values.SequenceEqual(other.Values) && Multiline == other.Multiline;

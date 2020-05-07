@@ -36,17 +36,16 @@ export const queries = {
     `,
 
     FullCI: gql`
-        query ci($identity: Guid!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
+        query ci($identity: Guid!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
             ci(identity: $identity, layers: $layers, timeThreshold: $timeThreshold) {
                 ...FullCI
             }
         }
+        ${Fragments.compactCI}
         ${Fragments.relatedCI}
         ${Fragments.fullCI}
         ${Fragments.mergedAttribute}
         ${Fragments.attribute}
-        ${Fragments.relation}
-        ${Fragments.fullPredicate}
     `,
     Layers: gql`
     query layers {

@@ -1,9 +1,12 @@
 ﻿using Landscape.Base.Entity;
+using Scriban;
+using Scriban.Parsing;
+using Scriban.Runtime;
 using System.Collections.Generic;
 
 namespace Landscape.Base.Templating
 {
-    public static class VariableService
+    public static class LiquidVariableService
     {
         // transform dots in variable name into corresponding object structure
         private static void AddNested(Dictionary<string, object> dict, string key, string value)

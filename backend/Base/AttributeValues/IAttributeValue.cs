@@ -17,7 +17,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
     {
         public string Value2String();
         public int GetHashCode();
-        public AttributeValueDTO ToGeneric();
+        public AttributeValueDTO ToDTO();
+        public object ToGenericObject();
         public AttributeValueType Type { get; }
         public bool IsArray { get; }
 
@@ -58,12 +59,23 @@ namespace LandscapeRegistry.Entity.AttributeValues
             else if (buffer.Length > 0 || input[input.Length - 1] == separator) yield return buffer.Flush();
         }
 
-        public static string Flush(this StringBuilder stringBuilder)
+        private static string Flush(this StringBuilder stringBuilder)
         {
             string result = stringBuilder.ToString();
             stringBuilder.Clear();
             return result;
         }
+
+
+        //public static object ToGenericObject(this IAttributeValue attributeValue)
+        //{
+        //    return attributeValue switch
+        //    {
+        //        AttributeValueIntegerArray i => i.Values,
+        //        AttributeValueJSONArray i => i.Values,
+        //        _ => throw new NotImplementedException(),
+        //    };
+        //}
     }
 
     public static class AttributeValueBuilder

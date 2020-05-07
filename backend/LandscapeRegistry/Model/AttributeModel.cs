@@ -268,7 +268,7 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("name", name);
             command.Parameters.AddWithValue("ci_id", ciid);
             command.Parameters.AddWithValue("type", currentAttribute.Value.Type);
-            command.Parameters.AddWithValue("value", currentAttribute.Value.ToGeneric().Value2DatabaseString());
+            command.Parameters.AddWithValue("value", currentAttribute.Value.ToDTO().Value2DatabaseString());
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", AttributeState.Removed);
             command.Parameters.AddWithValue("changeset_id", changesetID);
@@ -309,7 +309,7 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("name", name);
             command.Parameters.AddWithValue("ci_id", ciid);
             command.Parameters.AddWithValue("type", value.Type);
-            command.Parameters.AddWithValue("value", value.ToGeneric().Value2DatabaseString());
+            command.Parameters.AddWithValue("value", value.ToDTO().Value2DatabaseString());
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", state);
             command.Parameters.AddWithValue("changeset_id", changesetID);
@@ -367,7 +367,7 @@ namespace LandscapeRegistry.Model
                     writer.Write(fullName);
                     writer.Write(ciid);
                     writer.Write(value.Type, "attributevaluetype");
-                    writer.Write(value.ToGeneric().Value2DatabaseString());
+                    writer.Write(value.ToDTO().Value2DatabaseString());
                     writer.Write(data.LayerID);
                     writer.Write(state, "attributestate");
                     writer.Write(now, NpgsqlDbType.TimestampTz);
@@ -381,7 +381,7 @@ namespace LandscapeRegistry.Model
                     writer.Write(outdatedAttribute.Name);
                     writer.Write(outdatedAttribute.CIID);
                     writer.Write(outdatedAttribute.Value.Type, "attributevaluetype");
-                    writer.Write(outdatedAttribute.Value.ToGeneric().Value2DatabaseString());
+                    writer.Write(outdatedAttribute.Value.ToDTO().Value2DatabaseString());
                     writer.Write(data.LayerID);
                     writer.Write(AttributeState.Removed, "attributestate");
                     writer.Write(now, NpgsqlDbType.TimestampTz);

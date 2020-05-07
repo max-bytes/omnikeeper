@@ -14,7 +14,7 @@ namespace Landscape.Base.Entity.DTO
 
         public static CIAttributeDTO Build(MergedCIAttribute attribute)
         {
-            return Build(attribute.Attribute.Name, attribute.Attribute.Value.ToGeneric(), attribute.Attribute.State);
+            return Build(attribute.Attribute.Name, attribute.Attribute.Value.ToDTO(), attribute.Attribute.State);
         }
         public static CIAttributeDTO Build(string name, AttributeValueDTO value, AttributeState state)
         {

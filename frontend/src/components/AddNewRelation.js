@@ -43,11 +43,13 @@ function AddNewRelation(props) {
       return { key: d.id, value: d.id, text: d.labelWordingFrom, disabled: isDisabled };
     });
 
+    // move add functionality into on-prop
     addRelation = 
       <Segment raised>
         <Form onSubmit={e => {
             e.preventDefault();
-            insertRelation({ variables: { fromCIID: props.ciIdentity, toCIID: newRelation.toCIID, predicateID: newRelation.predicateID, layerID: newRelation.layer.id, layers: props.visibleLayers} }).then(d => {
+            insertRelation({ variables: { fromCIID: props.ciIdentity, toCIID: newRelation.toCIID, predicateID: newRelation.predicateID, 
+              includeRelated: props.perPredicateLimit, layerID: newRelation.layer.id, layers: props.visibleLayers} }).then(d => {
               setOpen(false);
               setNewRelation(initialRelation);
               setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }});

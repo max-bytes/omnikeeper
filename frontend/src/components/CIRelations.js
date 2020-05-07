@@ -14,36 +14,41 @@ function CIRelations(props) {
   const { data: visibleAndWritableLayers } = useLayers(true, true);
   const { data: visibleLayers } = useLayers(true);
 
+  const perPredicateLimit = 100;
+
   const { loading: loadingCI, error: errorCI, data: dataCI } = useQuery(queries.FullCI, {
-    variables: { identity: props.ciIdentity, layers: visibleLayers.map(l => l.name), timeThreshold: props.timeThreshold, includeRelated: true, includeAttributes: false }
+    variables: { identity: props.ciIdentity, layers: visibleLayers.map(l => l.name), timeThreshold: props.timeThreshold, includeRelated: perPredicateLimit, includeAttributes: false }
   });
 
   if (dataCI) {
-    var sortedRelatedCIs = [...dataCI.ci.related];
-    sortedRelatedCIs.sort((a,b) => {
-      const predicateCompare = a.relation.predicate.id.localeCompare(b.relation.predicate.id);
-      if (predicateCompare !== 0)
-        return predicateCompare;
-      return a.ciid.localeCompare(b.ciid);
-    });
+    // var sortedRelatedCIs = [...dataCI.ci.related];
+    // sortedRelatedCIs.sort((a,b) => {
+    //   const predicateCompare = a.predicateID.localeCompare(b.predicateID);
+    //   if (predicateCompare !== 0)
+    //     return predicateCompare;
+    //   return a.ci.id.localeCompare(b.ci.id);
+    // });
+
+    var sortedRelatedCIs = dataCI.ci.related;
   
     return (<>
     <Row>
       <Col>
-        <AddNewRelation isEditable={props.isEditable} visibleLayers={visibleLayers.map(l => l.name)} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ciIdentity}></AddNewRelation>
+        <AddNewRelation isEditable={props.isEditable} perPredicateLimit={perPredicateLimit} visibleLayers={visibleLayers.map(l => l.name)} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ciIdentity}></AddNewRelation>
       </Col>
     </Row>
     <Row>
       <Col>
-        <Flipper flipKey={sortedRelatedCIs.map(r => r.relation.layerStackIDs).join(' ')}>
+        <Flipper flipKey={sortedRelatedCIs.map(r => r.layerStackIDs).join(' ')}>
           {sortedRelatedCIs.map(r => {
-            var isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.relation.layerID);
+            var isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.layerID);
 
-            return (<Flipped key={r.relation.id} flipId={r.relation.predicateID} onAppear={onAppear} onExit={onExit}>
-                <RelatedCI related={r} ciIdentity={props.ciIdentity} isEditable={props.isEditable && isLayerWritable}></RelatedCI>
+            return (<Flipped key={r.predicateID + "_" + r.ci.id} flipId={r.predicateID} onAppear={onAppear} onExit={onExit}>
+                <RelatedCI related={r} perPredicateLimit={perPredicateLimit} ciIdentity={props.ciIdentity} isEditable={props.isEditable && isLayerWritable}></RelatedCI>
               </Flipped>);
           })}
         </Flipper>
+        (Showing first {perPredicateLimit} relations per predicate)
       </Col>
     </Row>
     </>);

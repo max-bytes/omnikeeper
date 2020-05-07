@@ -76,8 +76,8 @@ namespace LandscapeRegistry.GraphQL
                     var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
                     userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
 
-                    var ciids = await ciModel.GetCompactCIs(userContext.LayerSet, null, userContext.TimeThreshold);
-                    return ciids;
+                    var cis = await ciModel.GetCompactCIs(userContext.LayerSet, null, userContext.TimeThreshold);
+                    return cis;
                 });
 
             FieldAsync<ListGraphType<CompactCIType>>("searchCIs",

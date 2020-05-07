@@ -68,9 +68,9 @@ namespace LandscapeRegistry.Model
                     ),
 
                     // monitoring / naemon
-                    Trait.Build("monitoring_check_module", new List<TraitAttribute>() {
-                            TraitAttribute.Build("commands",
-                                CIAttributeTemplate.BuildFromParams("monitoring.commands", AttributeValueType.Text, true, CIAttributeValueConstraintTextLength.Build(1, null))
+                    Trait.Build("naemon_service_module", new List<TraitAttribute>() {
+                            TraitAttribute.Build("config_template",
+                                CIAttributeTemplate.BuildFromParams("monitoring.naemon.config_template", AttributeValueType.MultilineText, null, CIAttributeValueConstraintTextLength.Build(1, null))
                             )
                         }),
                     Trait.Build("naemon_instance", new List<TraitAttribute>() {

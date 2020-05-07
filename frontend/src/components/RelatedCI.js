@@ -28,20 +28,17 @@ function RelatedCI(props) {
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
   // const otherCIButton = <Button variant="link" onClick={() => setSelectedCI({variables: { newSelectedCI: props.related.ci.identity }})}>{props.related.ci.identity}</Button>;
-  const otherCIButton = <Link to={"/explorer/" + props.related.ciid}>{props.related.ciName ?? "[UNNAMED]"}</Link>;
+  const otherCIButton = <Link to={"/explorer/" + props.related.ci.id}>{props.related.ci.name ?? "[UNNAMED]"}</Link>;
 
-  let written;
-  if (props.related.isForward) {
-    written = <span>{`This CI "${props.related.relation.predicate.labelWordingFrom}" `}{otherCIButton}</span>;
-  } else {
-    written = <span>{`This CI "${props.related.relation.predicate.wordingTo}" `}{otherCIButton}</span>;
-  }
+  const written = <span>{`This CI "${props.related.predicateWording}" `}{otherCIButton}</span>;
 
+  // move remove functionality into on-prop
   let removeButton;
   if (props.isEditable) {
     removeButton = <Button variant="danger" onClick={e => {
       e.preventDefault();
-      removeRelation({ variables: { fromCIID: props.related.relation.fromCIID, toCIID: props.related.relation.toCIID, predicateID: props.related.relation.predicate.id, layerID: props.related.relation.layerID, layers: visibleLayers.map(l => l.name) } })
+      removeRelation({ variables: { fromCIID: props.related.fromCIID, toCIID: props.related.toCIID, includeRelated: props.perPredicateLimit,
+        predicateID: props.related.predicateID, layerID: props.related.layerID, layers: visibleLayers.map(l => l.name) } })
       .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
     }}>Remove</Button>;
   }
@@ -49,9 +46,9 @@ function RelatedCI(props) {
   return (
     <div style={{margin: "5px"}}>
       <Form inline onSubmit={e => e.preventDefault()}>
-        <LayerStackIcons layerStack={props.related.relation.layerStack}></LayerStackIcons>
-        <ChangesetPopup changesetID={props.related.relation.changesetID} />
-        <Form.Group controlId={`value:${props.related.relation.predicate.id}`} style={{flexGrow: 1}}>
+        <LayerStackIcons layerStack={props.related.layerStack}></LayerStackIcons>
+        <ChangesetPopup changesetID={props.related.changesetID} />
+        <Form.Group controlId={`value:${props.related.predicateID}`} style={{flexGrow: 1}}>
           <Form.Label className={"pr-1"} style={{flexBasis: '400px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{written}</Form.Label>
           {removeButton}
         </Form.Group>

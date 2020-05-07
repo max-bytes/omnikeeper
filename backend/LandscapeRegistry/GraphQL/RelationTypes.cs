@@ -1,12 +1,13 @@
 ﻿using GraphQL.Types;
 using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using LandscapeRegistry.Model.Decorators;
 
 namespace LandscapeRegistry.GraphQL
 {
     public class RelationType : ObjectGraphType<Relation>
     {
-        public RelationType(CachingLayerModel layerModel)
+        public RelationType(ILayerModel layerModel)
         {
             Field("id", x => x.ID);
             Field(x => x.FromCIID);
@@ -31,14 +32,25 @@ namespace LandscapeRegistry.GraphQL
     {
     }
 
-    public class RelatedCIType : ObjectGraphType<RelatedCI>
+    public class CompactRelatedCIType : ObjectGraphType<CompactRelatedCI>
     {
-        public RelatedCIType()
+        public CompactRelatedCIType(ILayerModel layerModel)
         {
-            Field(x => x.Relation, type: typeof(RelationType));
-            Field("ciid", x => x.CIID);
-            Field(x => x.IsForward);
-            Field("ciName", x => x.CIName, nullable: true);
+            Field("ci", x => x.CI, type: typeof(CompactCIType));
+            Field(x => x.FromCIID);
+            Field(x => x.ToCIID);
+            Field(x => x.PredicateID);
+            Field(x => x.PredicateWording);
+            Field(x => x.ChangesetID);
+            Field(x => x.LayerID);
+            Field(x => x.LayerStackIDs);
+            FieldAsync<ListGraphType<LayerType>>("layerStack",
+            resolve: async (context) =>
+            {
+                var userContext = context.UserContext as RegistryUserContext;
+                var layerstackIDs = context.Source.LayerStackIDs;
+                return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
+            });
         }
     }
 

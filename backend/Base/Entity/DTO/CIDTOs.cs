@@ -28,7 +28,7 @@ namespace Landscape.Base.Entity.DTO
                 ID = ci.ID,
                 Type = CITypeDTO.Build(ci.Type),
                 Attributes = ci.MergedAttributes.Select(ma =>
-                    CIAttributeDTO.Build(ma.Attribute.Name, ma.Attribute.Value.ToGeneric(), ma.Attribute.State)
+                    CIAttributeDTO.Build(ma.Attribute.Name, ma.Attribute.Value.ToDTO(), ma.Attribute.State)
                 ).ToDictionary(a => a.Name)
             };
         }

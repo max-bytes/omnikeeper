@@ -41,9 +41,9 @@ namespace Tests.DBInit
 
             var user = await DBSetup.SetupUser(userModel, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
 
-            var numApplicationCIs = 10000;
-            var numHostCIs = 10000;
-            var numRunsOnRelations = 20000;
+            var numApplicationCIs = 1;
+            var numHostCIs = 1;
+            var numRunsOnRelations = 1;
             int numAttributesPerCIFrom = 20;
             int numAttributesPerCITo = 40;
             //var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
@@ -93,7 +93,7 @@ namespace Tests.DBInit
                 await layerModel.CreateLayer("Inventory Scan", trans);
                 var monitoringDefinitionsLayer = await layerModel.CreateLayer("Monitoring Definitions", trans);
                 monitoringDefinitionsLayerID = monitoringDefinitionsLayer.ID;
-                await layerModel.CreateLayer("Monitoring", AnchorState.Active, ComputeLayerBrain.Build("MonitoringPlugin.CLBMonitoring"), trans);
+                await layerModel.CreateLayer("Monitoring", AnchorState.Active, ComputeLayerBrain.Build("MonitoringPlugin.CLBNaemonMonitoring"), trans);
                 var automationLayer = await layerModel.CreateLayer("Automation", trans);
                 automationLayerID = automationLayer.ID;
                 trans.Commit();
@@ -198,15 +198,19 @@ namespace Tests.DBInit
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host", monitoringDefinitionsLayerID, ciMonModuleHost, changeset.ID, trans);
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset.ID, trans);
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset.ID, trans);
-                await attributeModel.InsertAttribute("monitoring.commands", AttributeValueTextArray.Build(new string[] {
-                "check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" --hostname \"{{ target.hostname.value }}\""
-                }), monitoringDefinitionsLayerID, ciMonModuleHost, changeset.ID, trans);
-                await attributeModel.InsertAttribute("monitoring.commands", AttributeValueTextArray.Build(new string[] {
-                "check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo --hostname \"{{ target.hostname.value }}\""
-                }), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset.ID, trans);
-                await attributeModel.InsertAttribute("monitoring.commands", AttributeValueTextArray.Build(new string[] {
-                "check_linux_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo --hostname \"{{ target.hostname.value }}\""
-                }), monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset.ID, trans);
+                await attributeModel.InsertAttribute("monitoring.naemon.config_template",
+                    AttributeValueTextScalar.Build("check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" --hostname \"{{ target.attributes.hostname }}\"", true), monitoringDefinitionsLayerID, ciMonModuleHost, changeset.ID, trans);
+                await attributeModel.InsertAttribute("monitoring.naemon.config_template",
+                    AttributeValueTextScalar.Build("check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo --hostname \"{{ target.attributes.hostname }}\"", true), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset.ID, trans);
+                await attributeModel.InsertAttribute("monitoring.naemon.config_template", 
+                    AttributeValueTextScalar.Build(
+@"{%{{}%}{{ for related_ci in target.relations.back.runs_on }}
+    {
+        ""name"": ""service_name""
+        ""command"": ""check_command {{ related_ci.attributes.application_name}}"" 
+    }
+{{ end }}{%{}}%}"
+                        , true), monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset.ID, trans);
                 trans.Commit();
             }
 

@@ -74,7 +74,7 @@ export const Fragments = {
                 }
             }
         }
-        related @include(if: $includeRelated) {
+        related(perPredicateLimit: $includeRelated) {
             ...RelatedCI
         }
         mergedAttributes @include(if: $includeAttributes) {
@@ -82,14 +82,24 @@ export const Fragments = {
         }
     }
   `,
-  relatedCI: gql` 
-  fragment RelatedCI on RelatedCIType {
-        relation {
-            ...FullRelation
+  relatedCI: gql`
+  fragment RelatedCI on CompactRelatedCIType {
+        ci {
+            ...CompactCI
         }
-        ciid
-        isForward
-        ciName
+        fromCIID
+        toCIID
+        predicateID
+        predicateWording
+        layerID
+        changesetID
+        layerStackIDs
+        layerStack {
+            id
+            name
+            visibility @client
+            color @client
+        }
     }
   `,
   fullLayer: gql`
@@ -104,7 +114,8 @@ export const Fragments = {
     color @client
   }
   `,
-  relation: gql`
+  // TODO: needed?
+  fullRelation: gql`
     fragment FullRelation on RelationType {
         id
         fromCIID
@@ -123,6 +134,7 @@ export const Fragments = {
         }
     }
   `,
+  // TODO: needed?
   fullPredicate: gql`
   fragment FullPredicate on PredicateType {
     id,

@@ -2,21 +2,30 @@
 
 namespace Landscape.Base.Entity
 {
-    public class RelatedCI
+    public class CompactRelatedCI
     {
-        public Relation Relation { get; private set; }
-        public string CIName { get; private set; }
-        public Guid CIID { get; private set; }
-        public bool IsForward { get; private set; }
+        public CompactCI CI { get; private set; }
+        public Guid FromCIID { get; private set; }
+        public Guid ToCIID { get; private set; }
+        public string PredicateID { get; private set; }
+        public string PredicateWording { get; private set; }
+        public long ChangesetID { get; private set; }
+        public long LayerID { get => LayerStackIDs[^1]; }
+        public long[] LayerStackIDs { get; private set; }
+        public bool IsForwardRelation { get; private set; }
 
-        public static RelatedCI Build(Relation relation, Guid ciid, string ciName, bool isForward)
+        public static CompactRelatedCI Build(CompactCI ci, Guid fromCIID, Guid toCIID, long changesetID, string predicateID, bool isForwardRelation, string predicateWording, long[] layerStackIDs)
         {
-            var r = new RelatedCI
+            var r = new CompactRelatedCI
             {
-                Relation = relation,
-                CIID = ciid,
-                CIName = ciName,
-                IsForward = isForward
+                CI = ci,
+                FromCIID = fromCIID,
+                ToCIID = toCIID,
+                ChangesetID = changesetID,
+                PredicateID = predicateID,
+                PredicateWording = predicateWording,
+                LayerStackIDs = layerStackIDs,
+                IsForwardRelation = isForwardRelation
             };
             return r;
         }

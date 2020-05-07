@@ -3,10 +3,12 @@ using GraphQL.Types;
 using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
 using Landscape.Base.Model;
+using Landscape.Base.Service;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Decorators;
+using LandscapeRegistry.Service;
 using Microsoft.AspNetCore.Server.IIS.Core;
 using System;
 using System.Collections.Generic;
@@ -35,10 +37,11 @@ namespace LandscapeRegistry.GraphQL
             Field(x => x.AtTime, type: typeof(TimeThresholdType));
             Field(x => x.Type, type: typeof(CITypeType));
             Field(x => x.MergedAttributes, type: typeof(ListGraphType<MergedCIAttributeType>));
-            FieldAsync<ListGraphType<RelatedCIType>>("related",
+            FieldAsync<ListGraphType<CompactRelatedCIType>>("related",
             arguments: new QueryArguments(new List<QueryArgument>
             {
                 new QueryArgument<StringGraphType> { Name = "where" },
+                new QueryArgument<IntGraphType> { Name = "perPredicateLimit" },
             }),
             resolve: async (context) =>
             {
@@ -47,25 +50,13 @@ namespace LandscapeRegistry.GraphQL
                 if (layerset == null)
                     throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!");
 
+                var perPredicateLimit = context.GetArgument<int?>("perPredicateLimit");
+                if (perPredicateLimit.HasValue && perPredicateLimit.Value <= 0)
+                    return new List<CompactRelatedCI>();
+
                 var CIIdentity = context.Source.ID;
-                var relations = await relationModel.GetMergedRelations(CIIdentity, false, layerset, IncludeRelationDirections.Both, userContext.Transaction, userContext.TimeThreshold);
 
-                var relatedCIs = new List<RelatedCI>();
-
-                var relationTuples = relations.Select(r =>
-                {
-                    var isForwardRelation = r.FromCIID == CIIdentity;
-                    var relatedCIID = (isForwardRelation) ? r.ToCIID : r.FromCIID;
-                    return (relation: r, relatedCIID, isForwardRelation);
-                });
-
-                // TODO: consider packing the actual CIs into its own resolver so they can be queried when necessary... but that would open up the 1+N problem again :(
-                var relatedCINames = await ciModel.GetCINames(relationTuples.Select(t => t.relatedCIID).Distinct(), layerset, userContext.Transaction, userContext.TimeThreshold);
-                foreach ((var relation, var relatedCIID, var isForwardRelation) in relationTuples)
-                {
-                    relatedCINames.TryGetValue(relatedCIID, out var ciName);
-                    relatedCIs.Add(RelatedCI.Build(relation, relatedCIID, ciName, isForwardRelation)); // TODO: rewrite to use CompactCI
-                }
+                var relatedCIs = await RelationService.GetCompactRelatedCIs(CIIdentity, layerset, ciModel, relationModel, perPredicateLimit, userContext.Transaction, userContext.TimeThreshold);
 
                 var wStr = context.GetArgument<string>("where"); // TODO: develop further
                 if (wStr != null)
@@ -137,7 +128,7 @@ namespace LandscapeRegistry.GraphQL
             Field(x => x.ChangesetID);
             Field(x => x.Name);
             Field(x => x.State, type: typeof(AttributeStateType));
-            Field("value", x => x.Value.ToGeneric(), type: typeof(AttributeValueDTOType));
+            Field("value", x => x.Value.ToDTO(), type: typeof(AttributeValueDTOType));
         }
     }
 

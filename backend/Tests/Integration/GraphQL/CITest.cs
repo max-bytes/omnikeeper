@@ -29,7 +29,6 @@ namespace Tests.Integration.GraphQL
             Services.Register<LayerModel>();
             Services.Register<ILayerModel, LayerModel>();
             Services.Register<RelationModel>();
-            Services.Register<RelatedCIType>();
             Services.Register<IPredicateModel, PredicateModel>();
             Services.Register<ITemplatesProvider, CachedTemplatesProvider>();
             Services.Register<TemplatesProvider>();
