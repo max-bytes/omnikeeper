@@ -250,7 +250,7 @@ namespace LandscapeRegistry
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory, 
             ILogger<MyNpgsqlLogger> npgsqlLogger)
         {
-            //NpgsqlLogManager.Provider = new NpgsqlLoggingProvider(npgsqlLogger);
+            NpgsqlLogManager.Provider = new NpgsqlLoggingProvider(npgsqlLogger);
 
             app.UseCors("DefaultCORSPolicy");
 
