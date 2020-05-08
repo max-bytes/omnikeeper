@@ -11,6 +11,7 @@ using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using Landscape.Base;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using LandscapeRegistry.GraphQL;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Decorators;
@@ -30,6 +31,7 @@ using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MonitoringPlugin;
+using Npgsql.Logging;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
@@ -188,7 +190,7 @@ namespace LandscapeRegistry
             {
                 //options.AddPolicy("AuthenticatedUser", _ => _.AddRequirements(new AuthenticatedUserRequirement()));
                 //options.AddPolicy("Accounting", policy =>
-                //policy.RequireClaim("member_of", "[accounting]")); //this claim value is an array. Any suggestions how to extract just single role? This still works.
+                //policy.RequireClaim("member_of", "[accounting]"));
             });
 
             services.AddHangfire(config =>
@@ -246,8 +248,10 @@ namespace LandscapeRegistry
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory, 
-            ILogger<Startup> logger)
+            ILogger<MyNpgsqlLogger> npgsqlLogger)
         {
+            //NpgsqlLogManager.Provider = new NpgsqlLoggingProvider(npgsqlLogger);
+
             app.UseCors("DefaultCORSPolicy");
 
             // make application properly consider headers (and populate httprequest object) when behind reverse proxy
