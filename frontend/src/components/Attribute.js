@@ -56,7 +56,7 @@ function Attribute(props) {
       <Button variant="danger" onClick={e => {
         e.preventDefault();
         removeCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, layers: visibleLayers.map(l => l.name) } })
-        .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
+        .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
       }}>Remove</Button>
     );
 
@@ -68,7 +68,7 @@ function Attribute(props) {
             values: values,
             isArray: isArray
           } } })
-          .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
+          .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
         }}>
           {leftPart}
           <Form.Group controlId={`value:${attribute.attribute.name}`} style={{flexGrow: 1, alignItems: 'flex-start'}}>

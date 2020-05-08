@@ -52,7 +52,7 @@ function AddNewRelation(props) {
               includeRelated: props.perPredicateLimit, layerID: newRelation.layer.id, layers: props.visibleLayers} }).then(d => {
               setOpen(false);
               setNewRelation(initialRelation);
-              setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }});
+              setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }});
             });
           }}>
 

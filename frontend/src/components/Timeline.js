@@ -27,7 +27,7 @@ function Timeline(props) {
     variables: { from: from, to: to, ciid: ciid, layers: layers.map(l => l.name), limit: limit }
   });
 
-  React.useEffect(() => { if (selectedTime.isLatest) refetchChangesets(); }, [selectedTime, refetchChangesets]);
+  React.useEffect(() => { if (selectedTime.refreshNonceTimeline) refetchChangesets({fetchPolicy: 'network-only'}); }, [selectedTime, refetchChangesets]);
 
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
@@ -57,7 +57,7 @@ function Timeline(props) {
     const latestChangeset = changesets.find(e => true);
   
     const refreshButton = (<SemanticButton basic size='mini' compact onClick={() => {
-        setSelectedTimeThreshold({variables: { newTimeThreshold: null, isLatest: true }});
+        setSelectedTimeThreshold({variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true, refreshCI: true }});
     }}><Icon loading={loadingChangesets} fitted name={'sync'} /></SemanticButton>)
 
     return (

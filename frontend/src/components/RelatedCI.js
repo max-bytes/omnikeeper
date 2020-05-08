@@ -39,7 +39,7 @@ function RelatedCI(props) {
       e.preventDefault();
       removeRelation({ variables: { fromCIID: props.related.fromCIID, toCIID: props.related.toCIID, includeRelated: props.perPredicateLimit,
         predicateID: props.related.predicateID, layerID: props.related.layerID, layers: visibleLayers.map(l => l.name) } })
-      .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true }}));
+      .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refresh: true }}));
     }}>Remove</Button>;
   }
 

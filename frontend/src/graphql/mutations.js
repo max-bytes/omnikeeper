@@ -155,8 +155,8 @@ CREATE_CI: gql`
   `,
 
   SET_SELECTED_TIME_THRESHOLD: gql`
-  mutation SetSelectedTimeThreshold($newTimeThreshold: DateTimeOffset, $isLatest: Bool) {
-    setSelectedTimeThreshold(newTimeThreshold: $newTimeThreshold, isLatest: $isLatest) @client
+  mutation SetSelectedTimeThreshold($newTimeThreshold: DateTimeOffset, $isLatest: Bool, $refreshTimeline: Bool = false, $refreshCI: bool = false) {
+    setSelectedTimeThreshold(newTimeThreshold: $newTimeThreshold, isLatest: $isLatest, refreshTimeline: $refreshTimeline, refreshCI: $refreshCI) @client
   }
   `
 };

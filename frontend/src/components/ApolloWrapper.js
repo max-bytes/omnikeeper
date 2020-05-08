@@ -72,9 +72,10 @@ function ApolloWrapper({ component: Component, ...rest }) {
             setSelectedTimeThreshold: (_root, variables, { cache, getCacheKey }) => {
                 cache.writeQuery({query: queries.SelectedTimeThreshold, data: {
                     selectedTimeThreshold: {
-                        time: variables.newTimeThreshold,// || moment().add(1, 'year').format('YYYY-MM-DD HH:mm:ss'),
+                        time: variables.newTimeThreshold,
                         isLatest: variables.isLatest,
-                        refreshNonce: (variables.isLatest) ? moment().format('YYYY-MM-DD HH:mm:ss') : undefined
+                        refreshNonceTimeline: (variables.refreshTimeline) ? moment().format('YYYY-MM-DD HH:mm:ss') : null,
+                        refreshNonceCI: (variables.refreshCI) ? moment().format('YYYY-MM-DD HH:mm:ss') : null
                     }
                 }});
                 return null;
