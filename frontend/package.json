@@ -12,6 +12,7 @@
     "ag-grid-community": "^23.0.2",
     "ag-grid-react": "^23.0.3",
     "apollo-client": "^2.6.8",
+    "apollo-link-context": "^1.0.20",
     "bootstrap": "^4.4.1",
     "env-cmd": "^10.1.0",
     "graphql": "^14.6.0",

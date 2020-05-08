@@ -2,7 +2,7 @@ import React from 'react';
 import { queries } from '../graphql/queries'
 import { ApolloProvider, ApolloClient, createHttpLink, InMemoryCache,gql,defaultDataIdFromObject  } from '@apollo/client';
 import { ApolloProvider as ApolloHooksProvider } from '@apollo/react-hooks'
-import { useKeycloak } from '@react-keycloak/web'
+import { setContext } from "apollo-link-context";
 import moment from 'moment'
 import env from "@beam-australia/react-env";
 
@@ -34,11 +34,6 @@ let toHSL = function(string, opts) {
 }
 
 function ApolloWrapper({ component: Component, ...rest }) {
-
-    const [ keycloak, keycloakInitialized ] = useKeycloak()
-
-    if (!keycloakInitialized)
-        return <div>Loading</div>;
 
     const typeDefs = gql`
         type LayerSortingAndVisibility {
@@ -80,10 +75,6 @@ function ApolloWrapper({ component: Component, ...rest }) {
                 }});
                 return null;
             },
-            // setSelectedCI: (_root, variables, { cache, getCacheKey }) => {
-            //     cache.writeQuery({query: queries.SelectedCI, data: {selectedCI: variables.newSelectedCI } });
-            //     return null;
-            // },
             toggleLayerVisibility: (_root, variables, { cache, getCacheKey }) => {
                 const id = getCacheKey({ __typename: 'LayerType', id: variables.id })
                 const fragment = gql`
@@ -177,17 +168,27 @@ function ApolloWrapper({ component: Component, ...rest }) {
         }
     });
 
+    const authLink = setContext((_, { headers }) => {
+        // get the authentication token from local storage if it exists
+        const token = localStorage.getItem('token');
+        // return the headers to the context so httpLink can read them
+        return {
+          headers: {
+            ...headers,
+            ...(token ? {authorization: `Bearer ${token}`} : {}),
+            // authorization: token ? `Bearer ${token}` : "",
+          }
+        }
+      });
+
     const httpLink = createHttpLink({
       uri: env('BACKEND_URL'),
-      credentials: 'include',
-      headers: {
-        "Authorization": "Bearer " + ((keycloak.token) ? keycloak.token : "")
-      }
+      credentials: 'include'
     });
 
     const client = new ApolloClient({
       cache,
-      link: httpLink,
+      link: authLink.concat(httpLink),
       typeDefs: typeDefs,
       resolvers: resolvers,
     //   defaultOptions: {

@@ -19,6 +19,17 @@ import ManagePredicates from './components/manage/ManagePredicates';
 import ManageLayers from './components/manage/ManageLayers';
 import ManageCITypes from './components/manage/ManageCITypes';
 import ManageTraits from './components/manage/ManageTraits';
+import { useKeycloak } from '@react-keycloak/web'
+import { useEffect } from 'react';
+
+  // TODO: move?
+function KeycloakTokenSetter() {
+  const [ keycloak ] = useKeycloak();
+  useEffect(() => {
+      localStorage.setItem('token', keycloak.token);
+  }, [keycloak.token]);
+  return null;
+}
 
 const keycloak = new Keycloak({
   "realm": env("KEYCLOAK_REALM"),
@@ -37,13 +48,16 @@ const keycloakProviderInitConfig = {
   // workaround, disabling of checking iframe cookie, because its a cross-site one, and chrome stopped accepting them
   // when they don't have SameSite=None set... and keycloak doesn't send a proper cookie yet: 
   // https://issues.redhat.com/browse/KEYCLOAK-12125
-  "checkLoginIframe": false 
+  "checkLoginIframe": false,
+  onLoad: 'check-sso',
+  promiseType: 'native'
 }
 //'/landscape/registry'
 function App() {
   return (
     <KeycloakProvider keycloak={keycloak} initConfig={keycloakProviderInitConfig}>
       <div style={{height: '100%'}}>
+        <KeycloakTokenSetter />
         <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
           <Menu fixed='top' inverted style={{display: 'flex', justifyContent: 'space-between'}}>
             <div>

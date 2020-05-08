@@ -4,7 +4,7 @@ import { Redirect, withRouter } from 'react-router-dom'
 import { withKeycloak } from '@react-keycloak/web'
 
 const LoginPage = withRouter(
-  withKeycloak(({ keycloak, location }) => {
+  withKeycloak(({ keycloak, location }) => { // rewrite to useKeycloak
 
     const { from } = location.state || { from: { pathname: '/' } }
     if (keycloak.authenticated) {

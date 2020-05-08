@@ -26,8 +26,6 @@ function MainAreaCI(props) {
   React.useEffect(() => { if (selectedTime.refreshNonceCI) refetchCI({fetchPolicy: 'network-only'}); }, [selectedTime, refetchCI]);
 
 
-  console.log(selectedTime);
-
   if (dataCI) return (<LoadingOverlay active={loadingCI} spinner>
       <Container fluid>
         <CI timeThreshold={timeThreshold} ci={dataCI.ci} isEditable={isEditable} ></CI>
