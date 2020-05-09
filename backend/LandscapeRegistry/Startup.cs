@@ -86,9 +86,10 @@ namespace LandscapeRegistry
                 options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
             });
 
-            services.AddScoped((sp) =>
+            services.AddSingleton<DBConnectionBuilder>();
+            services.AddSingleton((sp) =>
             {
-                var dbcb = new DBConnectionBuilder();
+                var dbcb = sp.GetRequiredService<DBConnectionBuilder>();
                 return dbcb.Build(Configuration);
             });
 
@@ -131,6 +132,11 @@ namespace LandscapeRegistry
             services.AddScoped<MergedCIType>();
             services.AddScoped<RelationType>();
             services.AddScoped<ISchema, RegistrySchema>();
+
+            services.AddSingleton<NpgsqlLoggingProvider>();
+            //((sp => {
+            //    return new NpgsqlLoggingProvider(npgsqlLogger);
+            //});
 
             services.Configure<IISServerOptions>(options =>
             {
@@ -247,10 +253,10 @@ namespace LandscapeRegistry
         private IWebHostEnvironment CurrentEnvironment { get; set; }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory, 
-            ILogger<MyNpgsqlLogger> npgsqlLogger)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory,
+            NpgsqlLoggingProvider npgsqlLoggingProvider)
         {
-            NpgsqlLogManager.Provider = new NpgsqlLoggingProvider(npgsqlLogger);
+            NpgsqlLogManager.Provider = npgsqlLoggingProvider;
 
             app.UseCors("DefaultCORSPolicy");
 

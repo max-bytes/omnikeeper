@@ -2,19 +2,25 @@
 using LandscapeRegistry.Entity.AttributeValues;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
+using System.Collections.Generic;
 
-namespace LandscapeRegistry.Utils
+namespace Landscape.Base.Utils
 {
     public class DBConnectionBuilder
     {
+        private ISet<int> connectorIDs = new HashSet<int>();
+
         public NpgsqlConnection Build(IConfiguration configuration)
         {
             var cs = configuration.GetConnectionString("LandscapeDatabaseConnection");
             NpgsqlConnection conn = new NpgsqlConnection(cs);
             conn.Open();
+            connectorIDs.Add(conn.ProcessID);
             MapEnums(conn);
             return conn;
         }
+
+        public bool HasConnectorID(int id) => connectorIDs.Contains(id);
 
         public NpgsqlConnection Build(string dbName, bool pooling = true, bool reloadTypes = false)
         {

@@ -8,36 +8,46 @@ namespace Landscape.Base.Utils
 {
     public class NpgsqlLoggingProvider : INpgsqlLoggingProvider
     {
-        public NpgsqlLoggingProvider(ILogger<MyNpgsqlLogger> logger)
-        {
-            Logger = logger;
-        }
+        private readonly ILoggerFactory loggerFactory;
+        private readonly DBConnectionBuilder dBConnectionBuilder;
 
-        public ILogger<MyNpgsqlLogger> Logger { get; }
+        public NpgsqlLoggingProvider(ILoggerFactory loggerFactory, DBConnectionBuilder dBConnectionBuilder)
+        {
+            this.loggerFactory = loggerFactory;
+            this.dBConnectionBuilder = dBConnectionBuilder;
+        }
 
         public NpgsqlLogger CreateLogger(string name)
         {
-            return new MyNpgsqlLogger(name, Logger);
+            return new MyNpgsqlLogger(loggerFactory, dBConnectionBuilder);
         }
     }
 
     public class MyNpgsqlLogger : NpgsqlLogger
     {
-        readonly ILogger<MyNpgsqlLogger> logger;
+        private readonly ILogger applicationLogger;
+        private readonly ILogger otherLogger;
+        private readonly DBConnectionBuilder dBConnectionBuilder;
 
-        internal MyNpgsqlLogger(string name, ILogger<MyNpgsqlLogger> logger)
+        internal MyNpgsqlLogger(ILoggerFactory loggerFactory, DBConnectionBuilder dBConnectionBuilder)
         {
-            this.logger = logger;
+            applicationLogger = loggerFactory.CreateLogger("npgsql.application");
+            otherLogger = loggerFactory.CreateLogger("npgsql.other");
+            this.dBConnectionBuilder = dBConnectionBuilder;
         }
 
         public override bool IsEnabled(NpgsqlLogLevel level)
         {
-            return logger.IsEnabled(ToMSLogLevel(level));
+            var msLevel = ToMSLogLevel(level);
+            return applicationLogger.IsEnabled(msLevel) || otherLogger.IsEnabled(msLevel);
         }
 
         public override void Log(NpgsqlLogLevel level, int connectorId, string msg, Exception exception = null)
         {
-            logger.Log(ToMSLogLevel(level), exception, msg);
+            if (dBConnectionBuilder.HasConnectorID(connectorId))
+                applicationLogger.Log(ToMSLogLevel(level), exception, msg);
+            else
+                otherLogger.Log(ToMSLogLevel(level), exception, msg);
         }
 
         static LogLevel ToMSLogLevel(NpgsqlLogLevel level)
