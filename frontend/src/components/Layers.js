@@ -1,6 +1,5 @@
 import { mutations } from '../graphql/mutations'
 import React from 'react';
-import PropTypes from 'prop-types'
 import LayerIcon from './LayerIcon';
 import { useMutation } from '@apollo/react-hooks';
 import { Icon } from 'semantic-ui-react'
@@ -8,7 +7,7 @@ import { Button } from 'semantic-ui-react'
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import { useLayers } from '../utils/useLayers'
 
-function Layers(props) {
+function Layers() {
 
   // TODO: loading
   const [toggleLayerVisibility] = useMutation(mutations.TOGGLE_LAYER_VISIBILITY);

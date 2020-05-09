@@ -1,9 +1,8 @@
-import { useQuery, useLazyQuery } from '@apollo/client';
-import React, { useState, useEffect } from 'react';
+import { useQuery } from '@apollo/client';
+import React, { useState } from 'react';
 import { queries } from '../graphql/queries'
-import { Search, Input } from 'semantic-ui-react'
+import { Input } from 'semantic-ui-react'
 import { withRouter, Link } from 'react-router-dom'
-import PropTypes from 'prop-types'
 
 function SearchCI(props) {
   const initialState = { results: [], value: '' }

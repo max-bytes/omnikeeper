@@ -40,7 +40,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
     {
         public JToken Value { get; private set; }
         public override string Value2String() => Value.ToString();
-        public override AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Value2String(), Type);
+        public override AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Value.ToString(), Type);
         public override object ToGenericObject() => Value;
         public override bool IsArray => false;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueJSONScalar);

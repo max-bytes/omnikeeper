@@ -1,13 +1,10 @@
-import { useQuery } from '@apollo/client';
 import React from 'react';
 import Layers from './Layers';
 import MainAreaCI from './MainAreaCI';
-import { queries } from '../graphql/queries'
 import Timeline from './Timeline';
 import { useParams } from 'react-router-dom'
-import { ErrorView } from './ErrorView';
 
-function Explorer(props) {
+function Explorer() {
   const { ciid } = useParams();
 
   return (

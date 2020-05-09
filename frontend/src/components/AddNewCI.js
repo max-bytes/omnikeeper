@@ -15,7 +15,7 @@ function AddNewCI(props) {
 
   let initialNewCI = {name: "", layerForName: null, typeID: null };
   const [newCI, setNewCI] = useState(initialNewCI);
-  const { error: errorLayers, data: sortedLayers } = useLayers();
+  const { data: sortedLayers } = useLayers();
   
   const [error, setError] = useState("");
   const [goToCIAfterCreation, setGoToCIAfterCreation] = useState(true);

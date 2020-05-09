@@ -6,7 +6,7 @@ export function PrivateRoute(props) {
 
   const { children, ...rest} = props;
 
-  const [keycloak, initialized] = useKeycloak();
+  const [keycloak] = useKeycloak();
 
   return (
     <Route

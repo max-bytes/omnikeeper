@@ -1,16 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link  } from 'react-router-dom'
 import { Icon } from 'semantic-ui-react';
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { queries } from '../../graphql/queries'
-import { mutations } from '../../graphql/mutations'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import ReactJson from 'react-json-view'
 
-export default function ManageCITypes(props) {
+export default function ManageCITypes() {
 
-  const { loading, data } = useQuery(queries.Traits);
+  const { data } = useQuery(queries.Traits);
 
   if (!data) return "Loading";
 

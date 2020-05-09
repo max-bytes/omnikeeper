@@ -3,9 +3,9 @@ import Form from 'react-bootstrap/Form';
 import 'ace-builds';
 import 'ace-builds/webpack-resolver';
 import AceEditor from "react-ace";
-import ReactJson from 'react-json-view'
 
-import "ace-builds/src-noconflict/mode-java";
+import "ace-builds/src-noconflict/mode-json";
+import "ace-builds/src-noconflict/mode-yaml";
 import "ace-builds/src-noconflict/theme-textmate";
 
 export const AttributeTypes = [
@@ -24,32 +24,34 @@ export const AttributeTypes = [
     {
         id: 'JSON',
         name: 'JSON'
+    },
+    {
+        id: 'YAML',
+        name: 'YAML'
     }
 ];
 
 function attributeType2InputProps(type) {
     switch(type) {
       case 'INTEGER': return {type: 'number' };
-      case 'JSON': return {type: 'text' };
       case 'MULTILINE_TEXT': return {type: 'text', as: 'textarea', rows: 7 };
       default: return {type: 'text' };
     }
 };
 
 export function InputControl(props) {
-    if (props.type === 'JSON') {
+    if (props.type === 'JSON' || props.type === 'YAML') {
         // return <ReactJson name={false} src={JSON.parse(props.value)} enableClipboard={false} 
         //     style={{flexGrow: 1, border: "1px solid #ced4da", borderRadius: ".25rem"}}/>; // TODO
         return <AceEditor
             value={props.value}
             editorProps={{autoScrollEditorIntoView: true}}
-            // onLoad={function(editor){ editor.renderer.setPadding(10); editor.renderer.setScrollMargin(10); }}
             onValidate={a => {
                 const e = a.filter(a => a.type === 'error').length > 0;
                 props.setHasErrors(e);
             }}
             readOnly={props.disabled}
-            mode="json"
+            mode={((props.type === "JSON") ? "json" : "yaml")}
             theme="textmate"
             onChange={newValue => props.onChange(newValue)}
             name={props.name}
@@ -58,8 +60,7 @@ export function InputControl(props) {
             width={'unset'}
             style={{flexGrow: 1, border: "1px solid #ced4da", borderRadius: ".25rem"}}
             setOptions={{ 
-                showPrintMargin: false,
-                // autoScrollEditorIntoView: true
+                showPrintMargin: false
              }}
         />;
     } else {

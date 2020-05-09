@@ -10,7 +10,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
 {
     public enum AttributeValueType
     {
-        Text, MultilineText, Integer, JSON
+        Text, MultilineText, Integer, JSON, YAML
     }
 
     public interface IAttributeValue : IEquatable<IAttributeValue>
@@ -56,7 +56,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
                 }
             }
             if (input.Length == 0) yield return input;
-            else if (buffer.Length > 0 || input[input.Length - 1] == separator) yield return buffer.Flush();
+            else if (buffer.Length > 0 || input[^1] == separator) yield return buffer.Flush();
         }
 
         private static string Flush(this StringBuilder stringBuilder)
@@ -65,17 +65,6 @@ namespace LandscapeRegistry.Entity.AttributeValues
             stringBuilder.Clear();
             return result;
         }
-
-
-        //public static object ToGenericObject(this IAttributeValue attributeValue)
-        //{
-        //    return attributeValue switch
-        //    {
-        //        AttributeValueIntegerArray i => i.Values,
-        //        AttributeValueJSONArray i => i.Values,
-        //        _ => throw new NotImplementedException(),
-        //    };
-        //}
     }
 
     public static class AttributeValueBuilder
@@ -95,6 +84,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
                 AttributeValueType.MultilineText => AttributeValueTextScalar.Build(value, true),
                 AttributeValueType.Integer => AttributeValueIntegerScalar.Build(value),
                 AttributeValueType.JSON => AttributeValueJSONScalar.Build(value),
+                AttributeValueType.YAML => AttributeValueYAMLScalar.Build(value),
                 _ => throw new Exception($"Unknown type {type} encountered"),
             };
         }
@@ -106,6 +96,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
                 AttributeValueType.MultilineText => AttributeValueTextArray.Build(values, true),
                 AttributeValueType.Integer => AttributeValueIntegerArray.Build(values),
                 AttributeValueType.JSON => AttributeValueJSONArray.Build(values),
+                AttributeValueType.YAML => AttributeValueYAMLArray.Build(values),
                 _ => throw new Exception($"Unknown type {type} encountered"),
             };
         }
