@@ -36,16 +36,18 @@ namespace LandscapeRegistry.Model
 
             // set state
             using var commandState = new NpgsqlCommand(@"INSERT INTO layer_state (layer_id, state, ""timestamp"")
-                    VALUES (@layer_id, @state, now())", conn, trans);
+                    VALUES (@layer_id, @state, @timestamp)", conn, trans);
             commandState.Parameters.AddWithValue("layer_id", id);
             commandState.Parameters.AddWithValue("state", state);
+            commandState.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
             await commandState.ExecuteNonQueryAsync();
 
             // set clb
             using var commandCLB = new NpgsqlCommand(@"INSERT INTO layer_computelayerbrain (layer_id, brainname, ""timestamp"")
-                    VALUES (@layer_id, @brainname, now())", conn, trans);
+                    VALUES (@layer_id, @brainname, @timestamp)", conn, trans);
             commandCLB.Parameters.AddWithValue("layer_id", id);
             commandCLB.Parameters.AddWithValue("brainname", computeLayerBrain.Name);
+            commandCLB.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
             await commandCLB.ExecuteNonQueryAsync();
 
             return Layer.Build(name, id, state, computeLayerBrain);
@@ -63,9 +65,10 @@ namespace LandscapeRegistry.Model
             if (current.State != state)
             {
                 using var commandState = new NpgsqlCommand(@"INSERT INTO layer_state (layer_id, state, ""timestamp"")
-                    VALUES (@layer_id, @state, now())", conn, trans);
+                    VALUES (@layer_id, @state, @timestamp)", conn, trans);
                 commandState.Parameters.AddWithValue("layer_id", id);
                 commandState.Parameters.AddWithValue("state", state);
+                commandState.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandState.ExecuteNonQueryAsync();
                 current = Layer.Build(current.Name, current.ID, state, current.ComputeLayerBrain);
             }
@@ -74,9 +77,10 @@ namespace LandscapeRegistry.Model
             if (!current.ComputeLayerBrain.Equals(computeLayerBrain))
             {
                 using var commandCLB = new NpgsqlCommand(@"INSERT INTO layer_computelayerbrain (layer_id, brainname, ""timestamp"")
-                    VALUES (@layer_id, @brainname, now())", conn, trans);
+                    VALUES (@layer_id, @brainname, @timestamp)", conn, trans);
                 commandCLB.Parameters.AddWithValue("layer_id", id);
                 commandCLB.Parameters.AddWithValue("brainname", computeLayerBrain.Name);
+                commandCLB.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandCLB.ExecuteNonQueryAsync();
                 current = Layer.Build(current.Name, current.ID, current.State, computeLayerBrain);
             }

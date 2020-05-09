@@ -176,7 +176,7 @@ namespace LandscapeRegistry.Model
             var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.All);
 
             using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
-                VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, now()) returning id", conn, trans);
+                VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp) returning id", conn, trans);
 
             command.Parameters.AddWithValue("from_ci_id", fromCIID);
             command.Parameters.AddWithValue("to_ci_id", toCIID);
@@ -184,6 +184,7 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", RelationState.Removed);
             command.Parameters.AddWithValue("changeset_id", changesetID);
+            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
 
             var layerStack = new long[] { layerID }; // TODO: calculate proper layerstack(?)
 
@@ -216,7 +217,7 @@ namespace LandscapeRegistry.Model
             var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.ActiveOnly); // only active predicates allowed
 
             using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
-                VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, now()) returning id", conn, trans);
+                VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp) returning id", conn, trans);
 
             command.Parameters.AddWithValue("from_ci_id", fromCIID);
             command.Parameters.AddWithValue("to_ci_id", toCIID);
@@ -224,6 +225,7 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", state);
             command.Parameters.AddWithValue("changeset_id", changesetID);
+            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
 
             var layerStack = new long[] { layerID }; // TODO: calculate proper layerstack(?)
 
@@ -267,7 +269,7 @@ namespace LandscapeRegistry.Model
                 }
 
                 using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
-                    VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, now()) returning id", conn, trans);
+                    VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp) returning id", conn, trans);
 
                 command.Parameters.AddWithValue("from_ci_id", fromCIID);
                 command.Parameters.AddWithValue("to_ci_id", toCIID);
@@ -275,6 +277,7 @@ namespace LandscapeRegistry.Model
                 command.Parameters.AddWithValue("layer_id", data.LayerID);
                 command.Parameters.AddWithValue("state", state);
                 command.Parameters.AddWithValue("changeset_id", changesetID);
+                command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
 
                 var id = (long)await command.ExecuteScalarAsync();
             }

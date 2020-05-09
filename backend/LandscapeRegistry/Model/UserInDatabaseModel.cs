@@ -22,8 +22,9 @@ namespace LandscapeRegistry.Model
             if (existingUser != null && existingUser.UserType == type)
                 return existingUser;
 
-            using var command = new NpgsqlCommand(@"INSERT INTO ""user"" (keycloak_id, timestamp, type, username) VALUES (@uuid, now(), @type, @username) returning id, timestamp", conn, trans);
+            using var command = new NpgsqlCommand(@"INSERT INTO ""user"" (keycloak_id, timestamp, type, username) VALUES (@uuid, @timestamp, @type, @username) returning id, timestamp", conn, trans);
             command.Parameters.AddWithValue("uuid", uuid);
+            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
             command.Parameters.AddWithValue("username", username);
             command.Parameters.AddWithValue("type", type);
             using var reader = await command.ExecuteReaderAsync();

@@ -42,10 +42,11 @@ namespace LandscapeRegistry.Model
             if (current.WordingFrom != wordingFrom || current.WordingTo != wordingTo)
             {
                 using var commandWording = new NpgsqlCommand(@"INSERT INTO predicate_wording (predicate_id, wording_from, wording_to, ""timestamp"")
-                    VALUES (@predicate_id, @wording_from, @wording_to, now())", conn, trans);
+                    VALUES (@predicate_id, @wording_from, @wording_to, @timestamp)", conn, trans);
                 commandWording.Parameters.AddWithValue("predicate_id", id);
                 commandWording.Parameters.AddWithValue("wording_from", wordingFrom);
                 commandWording.Parameters.AddWithValue("wording_to", wordingTo);
+                commandWording.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandWording.ExecuteNonQueryAsync();
                 current = Predicate.Build(id, wordingFrom, wordingTo, current.State);
             }
@@ -54,9 +55,10 @@ namespace LandscapeRegistry.Model
             if (current.State != state)
             {
                 using var commandState = new NpgsqlCommand(@"INSERT INTO predicate_state (predicate_id, state, ""timestamp"")
-                    VALUES (@predicate_id, @state, now())", conn, trans);
+                    VALUES (@predicate_id, @state, @timestamp)", conn, trans);
                 commandState.Parameters.AddWithValue("predicate_id", id);
                 commandState.Parameters.AddWithValue("state", state);
+                commandState.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandState.ExecuteNonQueryAsync();
                 current = Predicate.Build(id, current.WordingFrom, current.WordingTo, state);
             }

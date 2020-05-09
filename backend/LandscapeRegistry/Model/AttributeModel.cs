@@ -260,10 +260,8 @@ namespace LandscapeRegistry.Model
                 return currentAttribute;
             }
 
-            // TODO: remove now() in ALL!!! database queries, use application Now() as single point of truth, otherwise, strange things might start to occur
-
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
-                VALUES (@name, @ci_id, @type, @value, @layer_id, @state, now(), @changeset_id) returning id", conn, trans);
+                VALUES (@name, @ci_id, @type, @value, @layer_id, @state, @timestamp, @changeset_id) returning id", conn, trans);
 
             command.Parameters.AddWithValue("name", name);
             command.Parameters.AddWithValue("ci_id", ciid);
@@ -271,6 +269,7 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("value", currentAttribute.Value.ToDTO().Value2DatabaseString());
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", AttributeState.Removed);
+            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
             command.Parameters.AddWithValue("changeset_id", changesetID);
 
             using var reader = await command.ExecuteReaderAsync();
@@ -304,7 +303,7 @@ namespace LandscapeRegistry.Model
                 return currentAttribute;
 
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
-                VALUES (@name, @ci_id, @type, @value, @layer_id, @state, now(), @changeset_id) returning id", conn, trans);
+                VALUES (@name, @ci_id, @type, @value, @layer_id, @state, @timestamp, @changeset_id) returning id", conn, trans);
 
             command.Parameters.AddWithValue("name", name);
             command.Parameters.AddWithValue("ci_id", ciid);
@@ -312,6 +311,7 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("value", value.ToDTO().Value2DatabaseString());
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", state);
+            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
             command.Parameters.AddWithValue("changeset_id", changesetID);
 
             using var reader = await command.ExecuteReaderAsync();
@@ -333,9 +333,7 @@ namespace LandscapeRegistry.Model
 
 
             // get current timestamp in database
-            var writeTS = TimeThreshold.BuildLatest(); // TODO: use applications timestamp instead of database timestamp
-            using var commandTime = new NpgsqlCommand(@"SELECT now()", conn, trans);
-            var now = ((DateTime)(await commandTime.ExecuteScalarAsync()));
+            var writeTS = TimeThreshold.BuildLatest();
 
             // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
             using (var writer = conn.BeginBinaryImport(@"COPY attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)"))
@@ -370,7 +368,7 @@ namespace LandscapeRegistry.Model
                     writer.Write(value.ToDTO().Value2DatabaseString());
                     writer.Write(data.LayerID);
                     writer.Write(state, "attributestate");
-                    writer.Write(now, NpgsqlDbType.TimestampTz);
+                    writer.Write(writeTS.Time, NpgsqlDbType.TimestampTz);
                     writer.Write(changesetID);
                 }
 
@@ -384,7 +382,7 @@ namespace LandscapeRegistry.Model
                     writer.Write(outdatedAttribute.Value.ToDTO().Value2DatabaseString());
                     writer.Write(data.LayerID);
                     writer.Write(AttributeState.Removed, "attributestate");
-                    writer.Write(now, NpgsqlDbType.TimestampTz);
+                    writer.Write(writeTS.Time, NpgsqlDbType.TimestampTz);
                     writer.Write(changesetID);
                 }
 

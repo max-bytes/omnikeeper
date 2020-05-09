@@ -24,8 +24,9 @@ namespace LandscapeRegistry.Model
             var user = await userModel.GetUser(userID, trans);
             if (user == null)
                 return null;
-            using var command = new NpgsqlCommand(@"INSERT INTO changeset (timestamp, user_id) VALUES (now(), @user_id) returning id, timestamp", conn, trans);
+            using var command = new NpgsqlCommand(@"INSERT INTO changeset (timestamp, user_id) VALUES (@timestamp, @user_id) returning id, timestamp", conn, trans);
             command.Parameters.AddWithValue("user_id", userID);
+            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
             var id = reader.GetInt64(0);

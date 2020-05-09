@@ -44,9 +44,10 @@ namespace LandscapeRegistry.Model
             if (current.State != state)
             {
                 using var commandState = new NpgsqlCommand(@"INSERT INTO citype_state (citype_id, state, ""timestamp"")
-                    VALUES (@citype_id, @state, now())", conn, trans);
+                    VALUES (@citype_id, @state, @timestamp)", conn, trans);
                 commandState.Parameters.AddWithValue("citype_id", typeID);
                 commandState.Parameters.AddWithValue("state", state);
+                commandState.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandState.ExecuteNonQueryAsync();
                 current = CIType.Build(typeID, state);
             }
@@ -298,9 +299,10 @@ namespace LandscapeRegistry.Model
             await command.ExecuteNonQueryAsync();
 
             using var commandAssignment = new NpgsqlCommand(@"INSERT INTO citype_assignment (ci_id, citype_id, timestamp) VALUES
-                (@ci_id, @citype_id, NOW())", conn, trans);
+                (@ci_id, @citype_id, @timestamp)", conn, trans);
             commandAssignment.Parameters.AddWithValue("ci_id", id);
             commandAssignment.Parameters.AddWithValue("citype_id", type.ID);
+            commandAssignment.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
             await commandAssignment.ExecuteNonQueryAsync();
 
             return id;
@@ -323,9 +325,10 @@ namespace LandscapeRegistry.Model
                 throw new Exception($"Could not find CI-Type {typeID} in database");
 
             using var command = new NpgsqlCommand(@"INSERT INTO citype_assignment (ci_id, citype_id, timestamp) VALUES
-                (@ci_id, @citype_id, NOW())", conn, trans);
+                (@ci_id, @citype_id, @timestamp)", conn, trans);
             command.Parameters.AddWithValue("ci_id", id);
             command.Parameters.AddWithValue("citype_id", type.ID);
+            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
             await command.ExecuteNonQueryAsync();
             return true;
         }

@@ -23,7 +23,8 @@ namespace Tests.Integration.GraphQL
 
             Services.Register<RegistryQuery>();
             Services.Register<MergedCIType>();
-            Services.Register<CIModel>();
+            Services.Register<ICIModel, CIModel>();
+            Services.Register<ICISearchModel, CISearchModel>();
             Services.Register<AttributeModel>();
             Services.Register<IAttributeModel, AttributeModel>();
             Services.Register<UserInDatabaseModel>();
