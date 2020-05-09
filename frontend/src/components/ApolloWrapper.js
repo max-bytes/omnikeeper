@@ -83,8 +83,8 @@ function ApolloWrapper({ component: Component, ...rest }) {
                 }
                 `;
                 const layer = cache.readFragment({ fragment, id });
-                const data = { ...layer, visibility: !layer.visibility }; 
-                cache.writeData({ id, data });
+                // const data = { ...layer, visibility: !layer.visibility }; 
+                cache.modify(id, { visibility() { return !layer.visibility; }});
                 return null;
             },
             changeLayerSortOrder: (_root, variables, { cache, getCacheKey }) => {
@@ -103,19 +103,19 @@ function ApolloWrapper({ component: Component, ...rest }) {
                 var pushedLayers = layers.filter(l => l.sort === newSortOrder && l.id !== variables.id);
 
                 if (pushedLayers.length === 0)
-                return null;
+                    return null;
 
                 pushedLayers.forEach(l => {
-                const d = { ...l, sort: l.sort - sortOrderChange }; 
-                var cacheKey = getCacheKey({ __typename: 'LayerType', id: l.id });
-                // console.log("Moving layer " + l.id + " (" + cacheKey +  ") from sort " + l.sort + " to sort " + d.sort);
-                cache.writeData({ id: cacheKey, data: d });
-                // console.log({ id: cacheKey, data: d });
+                    // const d = { ...l, sort: l.sort - sortOrderChange }; 
+                    var cacheKey = getCacheKey({ __typename: 'LayerType', id: l.id });
+                    // console.log("Moving layer " + l.id + " (" + cacheKey +  ") from sort " + l.sort + " to sort " + d.sort);
+                    cache.modify(cacheKey, { sort() { return l.sort - sortOrderChange; } });
+                    // console.log({ id: cacheKey, data: d });
                 });
 
                 // console.log("Moving layer " + variables.id + " (" + id + ") from sort " + layer.sort + " to sort " + (layer.sort + sortOrderChange));
-                const data = { ...layer, sort: layer.sort + sortOrderChange }; 
-                cache.writeData({ id, data });
+                // const data = { ...layer, sort: layer.sort + sortOrderChange }; 
+                cache.modify(id, { sort() { return layer.sort + sortOrderChange; } });
                 // console.log({ id, data });
                 return null;
             },
@@ -199,15 +199,25 @@ function ApolloWrapper({ component: Component, ...rest }) {
     });
 
     var initialState = {
-      data: {
         selectedTimeThreshold: {
           time: null,
           isLatest: true
         },
         '__typename': 'LocalState!'
-      }
     };
-    cache.writeData(initialState);
+    // cache.writeData(initialState);
+
+    cache.writeQuery({
+        query: gql`
+        query LocalState {
+            selectedTimeThreshold {
+                time
+                isLatest
+            }
+        }
+        `,
+        data: initialState
+    })
 
     return (
         <ApolloProvider client={client}>
