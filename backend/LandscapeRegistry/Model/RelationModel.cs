@@ -157,7 +157,7 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, long changesetID, NpgsqlTransaction trans)
+        public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, Changeset changeset, NpgsqlTransaction trans)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, timeThreshold);
@@ -183,18 +183,18 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("predicate_id", predicateID);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", RelationState.Removed);
-            command.Parameters.AddWithValue("changeset_id", changesetID);
-            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
+            command.Parameters.AddWithValue("changeset_id", changeset.ID);
+            command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
 
             var layerStack = new long[] { layerID }; // TODO: calculate proper layerstack(?)
 
             var predicate = predicates[predicateID]; // TODO: only get one predicate?
 
             var id = (long)await command.ExecuteScalarAsync();
-            return Relation.Build(id, fromCIID, toCIID, predicate, layerStack, RelationState.Removed, changesetID);
+            return Relation.Build(id, fromCIID, toCIID, predicate, layerStack, RelationState.Removed, changeset.ID);
         }
 
-        public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, long changesetID, NpgsqlTransaction trans)
+        public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, Changeset changeset, NpgsqlTransaction trans)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, timeThreshold);
@@ -224,18 +224,18 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("predicate_id", predicateID);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", state);
-            command.Parameters.AddWithValue("changeset_id", changesetID);
-            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
+            command.Parameters.AddWithValue("changeset_id", changeset.ID);
+            command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
 
             var layerStack = new long[] { layerID }; // TODO: calculate proper layerstack(?)
 
             var predicate = predicates[predicateID]; // TODO: only get one predicate?
 
             var id = (long)await command.ExecuteScalarAsync();
-            return Relation.Build(id, fromCIID, toCIID, predicate, layerStack, state, changesetID);
+            return Relation.Build(id, fromCIID, toCIID, predicate, layerStack, state, changeset.ID);
         }
 
-        public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, long changesetID, NpgsqlTransaction trans)
+        public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, Changeset changeset, NpgsqlTransaction trans)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var layerSet = new LayerSet(data.LayerID);
@@ -276,15 +276,15 @@ namespace LandscapeRegistry.Model
                 command.Parameters.AddWithValue("predicate_id", predicateID);
                 command.Parameters.AddWithValue("layer_id", data.LayerID);
                 command.Parameters.AddWithValue("state", state);
-                command.Parameters.AddWithValue("changeset_id", changesetID);
-                command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
+                command.Parameters.AddWithValue("changeset_id", changeset.ID);
+                command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
 
                 var id = (long)await command.ExecuteScalarAsync();
             }
 
             // remove outdated 
             foreach (var outdatedRelation in outdatedRelations.Values)
-                await RemoveRelation(outdatedRelation.FromCIID, outdatedRelation.ToCIID, outdatedRelation.PredicateID, data.LayerID, changesetID, trans); // TODO: proper timethreshold
+                await RemoveRelation(outdatedRelation.FromCIID, outdatedRelation.ToCIID, outdatedRelation.PredicateID, data.LayerID, changeset, trans); // TODO: proper timethreshold
 
             return true;
         }

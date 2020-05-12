@@ -76,7 +76,7 @@ namespace Tests.Integration.Model
                     var value = AttributeValueTextScalar.Build("V" + RandomString.Generate(8, random));
                     var layer = layers.GetRandom(random);
                     var ciid = cis.GetRandom(random).Item1;
-                    return attributeModel.InsertAttribute(name, value, layer.ID, ciid, changeset.ID, trans).GetAwaiter().GetResult();
+                    return attributeModel.InsertAttribute(name, value, layer.ID, ciid, changeset, trans).GetAwaiter().GetResult();
                 }).ToList();
 
                 await trans.CommitAsync();

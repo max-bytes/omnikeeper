@@ -244,7 +244,7 @@ namespace LandscapeRegistry.Model
             return att;
         }
 
-        public async Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans)
+        public async Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, Changeset changeset, NpgsqlTransaction trans)
         {
             var readTS = TimeThreshold.BuildLatest();
             var currentAttribute = await GetAttribute(name, layerID, ciid, trans, readTS);
@@ -269,21 +269,21 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("value", currentAttribute.Value.ToDTO().Value2DatabaseString());
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", AttributeState.Removed);
-            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
-            command.Parameters.AddWithValue("changeset_id", changesetID);
+            command.Parameters.AddWithValue("timestamp",  changeset.Timestamp);
+            command.Parameters.AddWithValue("changeset_id", changeset.ID);
 
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
             var id = reader.GetInt64(0);
-            var ret = CIAttribute.Build(id, name, ciid, currentAttribute.Value, AttributeState.Removed, changesetID);
+            var ret = CIAttribute.Build(id, name, ciid, currentAttribute.Value, AttributeState.Removed, changeset.ID);
 
             return ret;
         }
 
-        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans)
-            => await InsertAttribute(CIModel.NameAttribute, AttributeValueTextScalar.Build(nameValue), layerID, ciid, changesetID, trans);
+        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, Changeset changeset, NpgsqlTransaction trans)
+            => await InsertAttribute(CIModel.NameAttribute, AttributeValueTextScalar.Build(nameValue), layerID, ciid, changeset, trans);
 
-        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans)
+        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, Changeset changeset, NpgsqlTransaction trans)
         {
             var readTS = TimeThreshold.BuildLatest();
             var currentAttribute = await GetAttribute(name, layerID, ciid, trans, readTS);
@@ -311,16 +311,16 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("value", value.ToDTO().Value2DatabaseString());
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", state);
-            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
-            command.Parameters.AddWithValue("changeset_id", changesetID);
+            command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
+            command.Parameters.AddWithValue("changeset_id", changeset.ID);
 
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
             var id = reader.GetInt64(0);
-            return CIAttribute.Build(id, name, ciid, value, state, changesetID);
+            return CIAttribute.Build(id, name, ciid, value, state, changeset.ID);
         }
 
-        public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, long changesetID, NpgsqlTransaction trans)
+        public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, Changeset changeset, NpgsqlTransaction trans)
         {
             var readTS = TimeThreshold.BuildLatest();
 
@@ -331,9 +331,6 @@ namespace LandscapeRegistry.Model
                 _ => null
             }).ToDictionary(a => a.InformationHash);
 
-
-            // get current timestamp in database
-            var writeTS = TimeThreshold.BuildLatest();
 
             // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
             using (var writer = conn.BeginBinaryImport(@"COPY attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)"))
@@ -368,8 +365,8 @@ namespace LandscapeRegistry.Model
                     writer.Write(value.ToDTO().Value2DatabaseString());
                     writer.Write(data.LayerID);
                     writer.Write(state, "attributestate");
-                    writer.Write(writeTS.Time, NpgsqlDbType.TimestampTz);
-                    writer.Write(changesetID);
+                    writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
+                    writer.Write(changeset.ID);
                 }
 
                 // remove outdated 
@@ -382,8 +379,8 @@ namespace LandscapeRegistry.Model
                     writer.Write(outdatedAttribute.Value.ToDTO().Value2DatabaseString());
                     writer.Write(data.LayerID);
                     writer.Write(AttributeState.Removed, "attributestate");
-                    writer.Write(writeTS.Time, NpgsqlDbType.TimestampTz);
-                    writer.Write(changesetID);
+                    writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
+                    writer.Write(changeset.ID);
                 }
 
                 writer.Complete();

@@ -53,27 +53,27 @@ namespace LandscapeRegistry.Model.Decorators
             return await model.GetMergedAttributes(ciids, includeRemoved, layers, trans, atTime);
         }
 
-        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans)
+        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, Changeset changeset, NpgsqlTransaction trans)
         {
             memoryCache.CancelCIChangeToken(ciid);
-            return await model.InsertAttribute(name, value, layerID, ciid, changesetID, trans);
+            return await model.InsertAttribute(name, value, layerID, ciid, changeset, trans);
         }
 
-        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans)
+        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, Changeset changeset, NpgsqlTransaction trans)
         {
             memoryCache.CancelCIChangeToken(ciid);
-            return await model.InsertCINameAttribute(nameValue, layerID, ciid, changesetID, trans);
+            return await model.InsertCINameAttribute(nameValue, layerID, ciid, changeset, trans);
         }
 
-        public async Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, long changesetID, NpgsqlTransaction trans)
+        public async Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, Changeset changeset, NpgsqlTransaction trans)
         {
             memoryCache.CancelCIChangeToken(ciid);
-            return await model.RemoveAttribute(name, layerID, ciid, changesetID, trans);
+            return await model.RemoveAttribute(name, layerID, ciid, changeset, trans);
         }
 
-        public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, long changesetID, NpgsqlTransaction trans)
+        public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, Changeset changeset, NpgsqlTransaction trans)
         {
-            var success = await model.BulkReplaceAttributes(data, changesetID, trans);
+            var success = await model.BulkReplaceAttributes(data, changeset, trans);
             if (success)
                 foreach (var f in data.Fragments) memoryCache.CancelCIChangeToken(data.GetCIID(f));
             return success;

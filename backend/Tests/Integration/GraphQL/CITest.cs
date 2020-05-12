@@ -71,7 +71,7 @@ namespace Tests.Integration.GraphQL
             //var layerID2 = await layerModel.CreateLayer("layer_2", trans);
             var user = User.Build(await userModel.UpsertUser(username, userGUID, UserType.Robot, trans), new List<Layer>());
             var changeset = await changesetModel.CreateChangeset(user.InDatabase.ID, trans);
-            await attributeModel.InsertAttribute("a1", AttributeValueIntegerScalar.Build(3), layer1.ID, ciid1, changeset.ID, trans);
+            await attributeModel.InsertAttribute("a1", AttributeValueIntegerScalar.Build(3), layer1.ID, ciid1, changeset, trans);
             trans.Commit();
 
             string query = @"

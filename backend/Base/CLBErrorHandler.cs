@@ -15,17 +15,17 @@ namespace Landscape.Base
         private readonly NpgsqlTransaction trans;
         private readonly string clbName;
         private readonly long clbLayerID;
-        private readonly long changesetID;
+        private readonly Changeset changeset;
         private readonly IAttributeModel attributeModel;
 
         private readonly IList<CIAttribute> writtenErrors = new List<CIAttribute>();
 
-        public CLBErrorHandler(NpgsqlTransaction trans, string clbName, long clbLayerID, long changesetID, IAttributeModel attributeModel)
+        public CLBErrorHandler(NpgsqlTransaction trans, string clbName, long clbLayerID, Changeset changeset, IAttributeModel attributeModel)
         {
             this.trans = trans;
             this.clbName = clbName;
             this.clbLayerID = clbLayerID;
-            this.changesetID = changesetID;
+            this.changeset = changeset;
             this.attributeModel = attributeModel;
         }
 
@@ -44,13 +44,13 @@ namespace Landscape.Base
 
             foreach (var remove in attributesToRemove)
             {
-                await attributeModel.RemoveAttribute(remove.Name, clbLayerID, remove.CIID, changesetID, trans);
+                await attributeModel.RemoveAttribute(remove.Name, clbLayerID, remove.CIID, changeset, trans);
             }
         }
 
         public async Task LogError(Guid ciid, string name, string message)
         {
-            var a = await attributeModel.InsertAttribute($"{AttributeNamePrefix}.{name}", AttributeValueTextScalar.Build(message), clbLayerID, ciid, changesetID, trans);
+            var a = await attributeModel.InsertAttribute($"{AttributeNamePrefix}.{name}", AttributeValueTextScalar.Build(message), clbLayerID, ciid, changeset, trans);
             writtenErrors.Add(a);
         }
     }

@@ -138,7 +138,7 @@ namespace LandscapeRegistry.Service
             var bulkAttributeData = BulkCIAttributeDataLayerScope.Build("", writeLayer.ID, attributeData.SelectMany(ad =>
                 ad.Value.Fragments.Select(f => BulkCIAttributeDataLayerScope.Fragment.Build(f.Name, f.Value, ad.Key))
             ));
-            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changeset.ID, trans);
+            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changeset, trans);
 
 
             var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
@@ -154,7 +154,7 @@ namespace LandscapeRegistry.Service
                 relationFragments.Add(BulkRelationDataLayerScope.Fragment.Build(fromCIID, toCIID, cic.PredicateID));
             }
             var bulkRelationData = BulkRelationDataLayerScope.Build(writeLayer.ID, relationFragments.ToArray());
-            await RelationModel.BulkReplaceRelations(bulkRelationData, changeset.ID, trans);
+            await RelationModel.BulkReplaceRelations(bulkRelationData, changeset, trans);
 
             trans.Commit();
 

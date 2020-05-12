@@ -42,7 +42,7 @@ namespace Landscape.Base
                 var user = await userModel.UpsertUser(username, guid, UserType.Robot, trans);
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
 
-                var errorHandler = new CLBErrorHandler(trans, Name, layer.ID, changeset.ID, attributeModel);
+                var errorHandler = new CLBErrorHandler(trans, Name, layer.ID, changeset, attributeModel);
 
                 var result = await Run(layer, changeset, errorHandler, trans, logger);
 

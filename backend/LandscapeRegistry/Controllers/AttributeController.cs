@@ -46,7 +46,7 @@ namespace LandscapeRegistry.Controllers
             using var trans = conn.BeginTransaction();
             var changeset = await changesetModel.CreateChangeset(user.InDatabase.ID, trans);
             var data = BulkCIAttributeDataLayerScope.BuildFromDTO(dto);
-            var success = await attributeModel.BulkReplaceAttributes(data, changeset.ID, trans);
+            var success = await attributeModel.BulkReplaceAttributes(data, changeset, trans);
             if (success)
             {
                 trans.Commit();

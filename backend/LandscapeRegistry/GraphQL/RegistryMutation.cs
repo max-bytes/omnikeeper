@@ -60,7 +60,7 @@ namespace LandscapeRegistry.GraphQL
                         {
                             var nonGenericAttributeValue = AttributeValueBuilder.Build(attribute.Value);
 
-                            insertedAttributes.Add(await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, attribute.LayerID, ciIdentity, changeset.ID, transaction));
+                            insertedAttributes.Add(await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, attribute.LayerID, ciIdentity, changeset, transaction));
                         }
                     }
 
@@ -72,20 +72,20 @@ namespace LandscapeRegistry.GraphQL
                         var ciIdentity = attributeGroup.Key;
                         foreach (var attribute in attributeGroup)
                         {
-                            removedAttributes.Add(await attributeModel.RemoveAttribute(attribute.Name, attribute.LayerID, ciIdentity, changeset.ID, transaction));
+                            removedAttributes.Add(await attributeModel.RemoveAttribute(attribute.Name, attribute.LayerID, ciIdentity, changeset, transaction));
                         }
                     }
 
                     var insertedRelations = new List<Relation>();
                     foreach (var insertRelation in insertRelations)
                     {
-                        insertedRelations.Add(await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.LayerID, changeset.ID, transaction));
+                        insertedRelations.Add(await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.LayerID, changeset, transaction));
                     }
 
                     var removedRelations = new List<Relation>();
                     foreach (var removeRelation in removeRelations)
                     {
-                        removedRelations.Add(await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, removeRelation.LayerID, changeset.ID, transaction));
+                        removedRelations.Add(await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, removeRelation.LayerID, changeset, transaction));
                     }
 
                     IEnumerable<MergedCI> affectedCIs = null;
@@ -133,7 +133,7 @@ namespace LandscapeRegistry.GraphQL
                         else
                         ciid = await ciModel.CreateCI(transaction);
 
-                        await attributeModel.InsertCINameAttribute(ci.Name, ci.LayerIDForName, ciid, changeset.ID, transaction);
+                        await attributeModel.InsertCINameAttribute(ci.Name, ci.LayerIDForName, ciid, changeset, transaction);
 
                         createdCIIDs.Add(ciid);
                     }

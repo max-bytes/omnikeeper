@@ -123,8 +123,8 @@ namespace Tests.DBInit
                 foreach (var ciid in applicationCIIDs)
                 {
                     await ciModel.CreateCIWithType("Application", trans, ciid);
-                    await attributeModel.InsertCINameAttribute($"Application_{index}", cmdbLayerID, ciid, changeset.ID, trans); 
-                    await attributeModel.InsertAttribute("application_name", AttributeValueTextScalar.Build($"Application_{index}"), cmdbLayerID, ciid, changeset.ID, trans);
+                    await attributeModel.InsertCINameAttribute($"Application_{index}", cmdbLayerID, ciid, changeset, trans); 
+                    await attributeModel.InsertAttribute("application_name", AttributeValueTextScalar.Build($"Application_{index}"), cmdbLayerID, ciid, changeset, trans);
                     index++;
                 }
                 index = 0;
@@ -136,9 +136,9 @@ namespace Tests.DBInit
                         linuxHostCIIds.Add(hostCIID);
                     else
                         windowsHostCIIds.Add(hostCIID);
-                    await attributeModel.InsertCINameAttribute($"{ciType}_{index}", cmdbLayerID, ciid, changeset.ID, trans);
-                    await attributeModel.InsertAttribute("hostname", AttributeValueTextScalar.Build($"hostname_{index}.domain"), cmdbLayerID, ciid, changeset.ID, trans);
-                    await attributeModel.InsertAttribute("system", AttributeValueTextScalar.Build($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), cmdbLayerID, ciid, changeset.ID, trans);
+                    await attributeModel.InsertCINameAttribute($"{ciType}_{index}", cmdbLayerID, ciid, changeset, trans);
+                    await attributeModel.InsertAttribute("hostname", AttributeValueTextScalar.Build($"hostname_{index}.domain"), cmdbLayerID, ciid, changeset, trans);
+                    await attributeModel.InsertAttribute("system", AttributeValueTextScalar.Build($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), cmdbLayerID, ciid, changeset, trans);
                     index++;
                 }
 
@@ -164,7 +164,7 @@ namespace Tests.DBInit
                     var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                     var name = regularAttributeNames.GetRandom(random);
                     var value = regularAttributeValues.GetRandom(random);
-                    await attributeModel.InsertAttribute(name, value, cmdbLayerID, ciid, changeset.ID, trans);
+                    await attributeModel.InsertAttribute(name, value, cmdbLayerID, ciid, changeset, trans);
                     // TODO: attribute removals
                     trans.Commit();
                 }
@@ -177,7 +177,7 @@ namespace Tests.DBInit
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 var ciid1 = applicationCIIDs.GetRandom(random);
                 var ciid2 = hostCIIDs.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
-                await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, cmdbLayerID, changeset.ID, trans);
+                await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, cmdbLayerID, changeset, trans);
                 trans.Commit();
             }
 
@@ -192,23 +192,23 @@ namespace Tests.DBInit
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 ciNaemon01 = await ciModel.CreateCIWithType("Naemon Instance", null);
                 ciNaemon02 = await ciModel.CreateCIWithType("Naemon Instance", null);
-                await attributeModel.InsertCINameAttribute("Naemon Instance 01", cmdbLayerID, ciNaemon01, changeset.ID, trans);
-                await attributeModel.InsertCINameAttribute("Naemon Instance 02", cmdbLayerID, ciNaemon02, changeset.ID, trans);
-                await attributeModel.InsertAttribute("monitoring.naemon.instance_name", AttributeValueTextScalar.Build("Naemon Instance 01"), monitoringDefinitionsLayerID, ciNaemon01, changeset.ID, trans);
-                await attributeModel.InsertAttribute("monitoring.naemon.instance_name", AttributeValueTextScalar.Build("Naemon Instance 02"), monitoringDefinitionsLayerID, ciNaemon02, changeset.ID, trans);
+                await attributeModel.InsertCINameAttribute("Naemon Instance 01", cmdbLayerID, ciNaemon01, changeset, trans);
+                await attributeModel.InsertCINameAttribute("Naemon Instance 02", cmdbLayerID, ciNaemon02, changeset, trans);
+                await attributeModel.InsertAttribute("monitoring.naemon.instance_name", AttributeValueTextScalar.Build("Naemon Instance 01"), monitoringDefinitionsLayerID, ciNaemon01, changeset, trans);
+                await attributeModel.InsertAttribute("monitoring.naemon.instance_name", AttributeValueTextScalar.Build("Naemon Instance 02"), monitoringDefinitionsLayerID, ciNaemon02, changeset, trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("1.2.3.4"), cmdbLayerID, ciNaemon01, changeset.ID, trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("4.5.6.7"), cmdbLayerID, ciNaemon02, changeset.ID, trans);
 
                 ciMonModuleHost = await ciModel.CreateCIWithType("Monitoring Check Module", null);
                 ciMonModuleHostWindows = await ciModel.CreateCIWithType("Monitoring Check Module", null);
                 ciMonModuleHostLinux = await ciModel.CreateCIWithType("Monitoring Check Module", null);
-                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host", monitoringDefinitionsLayerID, ciMonModuleHost, changeset.ID, trans);
-                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset.ID, trans);
-                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset.ID, trans);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host", monitoringDefinitionsLayerID, ciMonModuleHost, changeset, trans);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset, trans);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset, trans);
                 await attributeModel.InsertAttribute("monitoring.naemon.config_template",
-                    AttributeValueTextScalar.Build("check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" --hostname \"{{ target.attributes.hostname }}\"", true), monitoringDefinitionsLayerID, ciMonModuleHost, changeset.ID, trans);
+                    AttributeValueTextScalar.Build("check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" --hostname \"{{ target.attributes.hostname }}\"", true), monitoringDefinitionsLayerID, ciMonModuleHost, changeset, trans);
                 await attributeModel.InsertAttribute("monitoring.naemon.config_template",
-                    AttributeValueTextScalar.Build("check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo --hostname \"{{ target.attributes.hostname }}\"", true), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset.ID, trans);
+                    AttributeValueTextScalar.Build("check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo --hostname \"{{ target.attributes.hostname }}\"", true), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset, trans);
                 await attributeModel.InsertAttribute("monitoring.naemon.config_template", 
                     AttributeValueTextScalar.Build(
 @"{%{{}%}{{ for related_ci in target.relations.back.runs_on }}
@@ -217,7 +217,7 @@ namespace Tests.DBInit
         ""command"": ""check_command {{ related_ci.attributes.application_name}}"" 
     }
 {{ end }}{%{}}%}"
-                        , true), monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset.ID, trans);
+                        , true), monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset, trans);
                 trans.Commit();
             }
 
@@ -227,8 +227,8 @@ namespace Tests.DBInit
             {
                 using var trans = conn.BeginTransaction();
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset.ID, trans);
-                await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset.ID, trans);
+                await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
+                await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                 trans.Commit();
             }
             var linuxHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), true, null, TimeThreshold.BuildLatest(), linuxHostCIIds);
@@ -236,8 +236,8 @@ namespace Tests.DBInit
             {
                 using var trans = conn.BeginTransaction();
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset.ID, trans);
-                await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset.ID, trans);
+                await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
+                await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                 trans.Commit();
             }
 

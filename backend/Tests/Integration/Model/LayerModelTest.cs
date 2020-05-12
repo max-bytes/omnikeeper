@@ -66,7 +66,7 @@ namespace Tests.Integration.Model
             var ciid = await ciModel.CreateCI(null);
             var changeset = await changesetModel.CreateChangeset(user.ID, null);
 
-            await attributeModel.InsertAttribute("attribute", AttributeValueTextScalar.Build("foo"), layerC.ID, ciid, changeset.ID, null);
+            await attributeModel.InsertAttribute("attribute", AttributeValueTextScalar.Build("foo"), layerC.ID, ciid, changeset, null);
 
             Assert.AreEqual(true, await layerModel.TryToDelete(layerA.ID, null));
             Assert.AreEqual(true, await layerModel.TryToDelete(layerB.ID, null));

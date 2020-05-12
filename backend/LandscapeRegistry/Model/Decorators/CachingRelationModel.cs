@@ -24,9 +24,9 @@ namespace LandscapeRegistry.Model.Decorators
             this.memoryCache = memoryCache;
         }
 
-        public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, long changesetID, NpgsqlTransaction trans)
+        public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, Changeset changeset, NpgsqlTransaction trans)
         {
-            var success = await model.BulkReplaceRelations(data, changesetID, trans);
+            var success = await model.BulkReplaceRelations(data, changeset, trans);
             if (success)
                 foreach (var f in data.Fragments)
                 {
@@ -46,18 +46,18 @@ namespace LandscapeRegistry.Model.Decorators
             return await model.GetMergedRelationsWithPredicateID(layerset, includeRemoved, predicate, trans, atTime);
         }
 
-        public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, long changesetID, NpgsqlTransaction trans)
+        public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, Changeset changeset, NpgsqlTransaction trans)
         {
             memoryCache.CancelCIChangeToken(fromCIID);
             memoryCache.CancelCIChangeToken(toCIID);
-            return await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetID, trans);
+            return await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changeset, trans);
         }
 
-        public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, long changesetID, NpgsqlTransaction trans)
+        public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, Changeset changeset, NpgsqlTransaction trans)
         {
             memoryCache.CancelCIChangeToken(fromCIID);
             memoryCache.CancelCIChangeToken(toCIID);
-            return await model.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetID, trans);
+            return await model.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changeset, trans);
         }
     }
 }

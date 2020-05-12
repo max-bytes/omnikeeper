@@ -47,21 +47,21 @@ namespace Tests.Integration.Model
             var layer1 = await layerModel.CreateLayer("l1", trans2);
             var layerset = new LayerSet(new long[] { layer1.ID });
             var changeset1 = await changesetModel.CreateChangeset(user.ID, trans2);
-            await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid2, changeset1.ID, trans2);
+            await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid2, changeset1, trans2);
             trans2.Commit();
 
             Thread.Sleep(500);
 
             using var trans3 = conn.BeginTransaction();
             var changeset2 = await changesetModel.CreateChangeset(user.ID, trans3);
-            await attributeModel.InsertAttribute("a2", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid3, changeset2.ID, trans3);
+            await attributeModel.InsertAttribute("a2", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid3, changeset2, trans3);
             trans3.Commit();
 
             var t2 = DateTimeOffset.Now;
 
             using var trans4 = conn.BeginTransaction();
             var changeset3 = await changesetModel.CreateChangeset(user.ID, trans4);
-            await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid3, changeset3.ID, trans4);
+            await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid3, changeset3, trans4);
             trans4.Commit();
 
             var t3 = DateTimeOffset.Now;
@@ -76,7 +76,7 @@ namespace Tests.Integration.Model
             using (var trans = conn.BeginTransaction())
             {
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid2, changeset3.ID, trans);
+                await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid2, changeset3, trans);
                 trans.Commit();
             }
             var t4 = DateTimeOffset.Now;
@@ -118,7 +118,7 @@ namespace Tests.Integration.Model
             var layer1 = await layerModel.CreateLayer("l1", trans2);
             var layerset = new LayerSet(new long[] { layer1.ID });
             var changeset1 = await changesetModel.CreateChangeset(user.ID, trans2);
-            await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset1.ID, trans2);
+            await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset1, trans2);
             trans2.Commit();
 
             Thread.Sleep(500);
@@ -126,7 +126,7 @@ namespace Tests.Integration.Model
 
             using var trans3 = conn.BeginTransaction();
             var changeset2 = await changesetModel.CreateChangeset(user.ID, trans3);
-            await relationModel.InsertRelation(ciid2, ciid1, predicate2.ID, layer1.ID, changeset2.ID, trans3);
+            await relationModel.InsertRelation(ciid2, ciid1, predicate2.ID, layer1.ID, changeset2, trans3);
             trans3.Commit();
 
             Thread.Sleep(500);
