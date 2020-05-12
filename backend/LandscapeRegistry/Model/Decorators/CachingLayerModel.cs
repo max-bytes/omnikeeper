@@ -1,5 +1,7 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using LandscapeRegistry.Service;
+using Microsoft.Extensions.Caching.Memory;
 using Npgsql;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,71 +11,114 @@ namespace LandscapeRegistry.Model.Decorators
 {
     public class CachingLayerModel : ILayerModel
     {
+        private readonly IMemoryCache memoryCache;
+
         private ILayerModel Model { get; }
 
-        private readonly Dictionary<long, Layer> IDLayerCache = new Dictionary<long, Layer>();
-        private readonly Dictionary<string, Layer> NameLayerCache = new Dictionary<string, Layer>();
-        private IEnumerable<Layer> AllLayersCache = null;
-
-        public CachingLayerModel(ILayerModel model)
+        public CachingLayerModel(ILayerModel model, IMemoryCache cache)
         {
             Model = model;
+            memoryCache = cache;
         }
 
-        private Layer AddToCache(Layer l)
+        public async Task<LayerSet> BuildLayerSet(string[] layerNames, NpgsqlTransaction trans)
         {
-            if (l != null)
+            return await memoryCache.GetOrCreateAsync(CacheKeyService.LayerSet(layerNames), async (ce) =>
             {
-                IDLayerCache.Add(l.ID, l);
-                NameLayerCache.Add(l.Name, l);
-            }
-            return l;
+                var changeToken = memoryCache.GetLayersCancellationChangeToken();
+                ce.AddExpirationToken(changeToken);
+                return await Model.BuildLayerSet(layerNames, trans);
+            });
         }
-
-        public async Task<LayerSet> BuildLayerSet(string[] layerNames, NpgsqlTransaction trans) => await Model.BuildLayerSet(layerNames, trans);
-        public async Task<LayerSet> BuildLayerSet(NpgsqlTransaction trans) => await Model.BuildLayerSet(trans);
+        public async Task<LayerSet> BuildLayerSet(NpgsqlTransaction trans)
+        {
+            return await memoryCache.GetOrCreateAsync(CacheKeyService.AllLayersSet(), async (ce) =>
+            {
+                var changeToken = memoryCache.GetLayersCancellationChangeToken();
+                ce.AddExpirationToken(changeToken);
+                return await Model.BuildLayerSet(trans);
+            });
+        }
 
         public async Task<Layer> GetLayer(long layerID, NpgsqlTransaction trans)
         {
-            IDLayerCache.TryGetValue(layerID, out var ret);
-            return ret ?? AddToCache(await Model.GetLayer(layerID, trans));
+            return await memoryCache.GetOrCreateAsync(CacheKeyService.LayerById(layerID), async (ce) =>
+            {
+                var changeToken = memoryCache.GetLayersCancellationChangeToken();
+                ce.AddExpirationToken(changeToken);
+                return await Model.GetLayer(layerID, trans);
+            });
         }
 
         public async Task<Layer> GetLayer(string layerName, NpgsqlTransaction trans)
         {
-            NameLayerCache.TryGetValue(layerName, out var ret);
-            return ret ?? AddToCache(await Model.GetLayer(layerName, trans));
+            return await memoryCache.GetOrCreateAsync(CacheKeyService.LayerByName(layerName), async (ce) =>
+            {
+                var changeToken = memoryCache.GetLayersCancellationChangeToken();
+                ce.AddExpirationToken(changeToken);
+                return await Model.GetLayer(layerName, trans);
+            });
         }
 
         public async Task<IEnumerable<Layer>> GetLayers(long[] layerIDs, NpgsqlTransaction trans)
         {
-            var tmp = layerIDs.Select(id =>
+            return await memoryCache.GetOrCreateAsync(CacheKeyService.LayersByIDs(layerIDs), async (ce) =>
             {
-                IDLayerCache.TryGetValue(id, out var ret);
-                return (id, ret);
+                var changeToken = memoryCache.GetLayersCancellationChangeToken();
+                ce.AddExpirationToken(changeToken);
+                return await Model.GetLayers(layerIDs, trans);
             });
-            // TODO: probably not the most performant implementation
-            var notInCache = await Model.GetLayers(tmp.Where(t => t.ret == null).Select(t => t.id).ToArray(), trans);
-            return tmp.Select(t => t.ret ?? AddToCache(notInCache.FirstOrDefault(l => l.ID == t.id)));
         }
 
         public async Task<IEnumerable<Layer>> GetLayers(NpgsqlTransaction trans)
         {
-            if (AllLayersCache == null)
+            return await memoryCache.GetOrCreateAsync(CacheKeyService.AllLayers(), async (ce) =>
             {
-                AllLayersCache = await Model.GetLayers(trans);
-            }
-            return AllLayersCache;
+                var changeToken = memoryCache.GetLayersCancellationChangeToken();
+                ce.AddExpirationToken(changeToken);
+                return await Model.GetLayers(trans);
+            });
         }
 
         public async Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, NpgsqlTransaction trans)
         {
-            return await Model.GetLayers(stateFilter, trans); // TODO: caching
+            return await memoryCache.GetOrCreateAsync(CacheKeyService.LayersByStateFilter(stateFilter), async (ce) =>
+            {
+                var changeToken = memoryCache.GetLayersCancellationChangeToken();
+                ce.AddExpirationToken(changeToken);
+                return await Model.GetLayers(stateFilter, trans);
+            });
         }
 
         public async Task<bool> TryToDelete(long id, NpgsqlTransaction trans)
         {
-            return await Model.TryToDelete(id, trans); // TODO: caching
+            var succeeded = await Model.TryToDelete(id, trans);
+            if (succeeded)
+            {
+                CacheKeyService.CancelLayersChangeTokens(memoryCache);
+            }
+            return succeeded;
+        }
+
+        public async Task<Layer> CreateLayer(string name, NpgsqlTransaction trans)
+        {
+            var layer = await Model.CreateLayer(name, trans);
+            if (layer != null) CacheKeyService.CancelLayersChangeTokens(memoryCache);
+            return layer;
+        }
+
+        public async Task<Layer> CreateLayer(string name, AnchorState state, ComputeLayerBrain computeLayerBrain, NpgsqlTransaction trans)
+        {
+            var layer = await Model.CreateLayer(name, state, computeLayerBrain, trans);
+            if (layer != null) CacheKeyService.CancelLayersChangeTokens(memoryCache);
+            return layer;
+        }
+
+        public async Task<Layer> Update(long id, AnchorState state, ComputeLayerBrain computeLayerBrain, NpgsqlTransaction trans)
+        {
+            var layer = await Model.Update(id, state, computeLayerBrain, trans);
+            if (layer != null) CacheKeyService.CancelLayersChangeTokens(memoryCache);
+            return layer;
         }
     }
 }

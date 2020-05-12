@@ -87,7 +87,7 @@ namespace LandscapeRegistry
             });
 
             services.AddSingleton<DBConnectionBuilder>();
-            services.AddSingleton((sp) =>
+            services.AddScoped((sp) =>
             {
                 var dbcb = sp.GetRequiredService<DBConnectionBuilder>();
                 return dbcb.Build(Configuration);
@@ -95,26 +95,21 @@ namespace LandscapeRegistry
 
             services.AddHttpContextAccessor();
 
-            // TODO: remove AddScoped<Model>(), only use AddScoped<IModel, Model>()
             services.AddScoped<ICISearchModel, CISearchModel>();
             services.AddScoped<ICIModel, CIModel>();
             services.Decorate<ICIModel, CachingCIModel>();
             services.AddScoped<IAttributeModel, AttributeModel>();
             services.Decorate<IAttributeModel, CachingAttributeModel>();
             services.AddScoped<IUserInDatabaseModel, UserInDatabaseModel>();
-            services.AddScoped<UserInDatabaseModel>();
             services.AddScoped<ILayerModel, LayerModel>();
-            services.AddScoped<LayerModel>();
-            services.AddScoped<CachingLayerModel>();
+            services.Decorate<ILayerModel, CachingLayerModel>();
             services.AddScoped<IRelationModel, RelationModel>();
             services.Decorate<IRelationModel, CachingRelationModel>();
             services.AddScoped<IChangesetModel, ChangesetModel>();
-            services.AddScoped<ChangesetModel>();
             services.AddScoped<ITemplateModel, TemplateModel>();
-            services.AddScoped<TemplateModel>();
             services.AddScoped<IPredicateModel, PredicateModel>();
             services.Decorate<IPredicateModel, CachingPredicateModel>();
-            services.AddScoped<KeycloakModel>();
+            //services.AddScoped<KeycloakModel>();
 
             services.AddScoped<ITraitModel, TraitModel>();
             services.Decorate<ITraitModel, CachingTraitModel>();
@@ -134,9 +129,6 @@ namespace LandscapeRegistry
             services.AddScoped<ISchema, RegistrySchema>();
 
             services.AddSingleton<NpgsqlLoggingProvider>();
-            //((sp => {
-            //    return new NpgsqlLoggingProvider(npgsqlLogger);
-            //});
 
             services.Configure<IISServerOptions>(options =>
             {
@@ -202,7 +194,12 @@ namespace LandscapeRegistry
             services.AddHangfire(config =>
             {
                 var cs = Configuration.GetConnectionString("HangfireConnection");
-                config.UsePostgreSqlStorage(cs);
+                config.UsePostgreSqlStorage(cs, new PostgreSqlStorageOptions()
+                {
+                    InvisibilityTimeout = TimeSpan.FromMinutes(5),
+                    QueuePollInterval = TimeSpan.FromSeconds(5),
+                    DistributedLockTimeout = TimeSpan.FromMinutes(1),
+                });
                 //config.UseConsole(); //TODO
             });
 

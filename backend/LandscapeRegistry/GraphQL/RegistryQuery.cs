@@ -13,8 +13,8 @@ namespace LandscapeRegistry.GraphQL
 {
     public class RegistryQuery : ObjectGraphType
     {
-        public RegistryQuery(ICIModel ciModel, CachingLayerModel layerModel, IPredicateModel predicateModel, 
-            ChangesetModel changesetModel, ICISearchModel ciSearchModel, ITraitsProvider traitsProvider)
+        public RegistryQuery(ICIModel ciModel, ILayerModel layerModel, IPredicateModel predicateModel, 
+            IChangesetModel changesetModel, ICISearchModel ciSearchModel, ITraitsProvider traitsProvider)
         {
             FieldAsync<MergedCIType>("ci",
                 arguments: new QueryArguments(new List<QueryArgument>
@@ -101,37 +101,37 @@ namespace LandscapeRegistry.GraphQL
                     return await ciSearchModel.Search(context.GetArgument<string>("searchString"), ls, null, userContext.TimeThreshold);
                 });
 
-            FieldAsync<ListGraphType<MergedCIType>>("cis",
-                arguments: new QueryArguments(new List<QueryArgument>
-                {
-                    new QueryArgument<ListGraphType<StringGraphType>>
-                    {
-                        Name = "layers"
-                    },
-                    new QueryArgument<DateTimeOffsetGraphType>
-                    {
-                        Name = "timeThreshold"
-                    },
-                    new QueryArgument<BooleanGraphType>
-                    {
-                        Name = "includeEmpty"
-                    },
-                }),
-                resolve: async context =>
-                {
-                    var userContext = context.UserContext as RegistryUserContext;
+            //FieldAsync<ListGraphType<MergedCIType>>("cis",
+            //    arguments: new QueryArguments(new List<QueryArgument>
+            //    {
+            //        new QueryArgument<ListGraphType<StringGraphType>>
+            //        {
+            //            Name = "layers"
+            //        },
+            //        new QueryArgument<DateTimeOffsetGraphType>
+            //        {
+            //            Name = "timeThreshold"
+            //        },
+            //        new QueryArgument<BooleanGraphType>
+            //        {
+            //            Name = "includeEmpty"
+            //        },
+            //    }),
+            //    resolve: async context =>
+            //    {
+            //        var userContext = context.UserContext as RegistryUserContext;
 
-                    var layerStrings = context.GetArgument<string[]>("layers");
-                    var layerSet = layerStrings != null ? await layerModel.BuildLayerSet(layerStrings, null) : await layerModel.BuildLayerSet(null);
-                    userContext.LayerSet = layerSet;
-                    var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
-                    userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
+            //        var layerStrings = context.GetArgument<string[]>("layers");
+            //        var layerSet = layerStrings != null ? await layerModel.BuildLayerSet(layerStrings, null) : await layerModel.BuildLayerSet(null);
+            //        userContext.LayerSet = layerSet;
+            //        var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
+            //        userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
 
-                    var includeEmpty = context.GetArgument("includeEmpty", false);
+            //        var includeEmpty = context.GetArgument("includeEmpty", false);
 
-                    var cis = await ciModel.GetMergedCIs(userContext.LayerSet, includeEmpty, null, userContext.TimeThreshold);
-                    return cis;
-                });
+            //        var cis = await ciModel.GetMergedCIs(userContext.LayerSet, includeEmpty, null, userContext.TimeThreshold);
+            //        return cis;
+            //    });
             FieldAsync<ListGraphType<PredicateType>>("predicates",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {

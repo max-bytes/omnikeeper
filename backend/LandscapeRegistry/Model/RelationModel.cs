@@ -40,7 +40,7 @@ namespace LandscapeRegistry.Model
                 });
             if (additionalWhereClause != null)
                 innerWhereClauses.Add(additionalWhereClause);
-            var innerWhereClause = String.Join(" AND ", innerWhereClauses);
+            var innerWhereClause = string.Join(" AND ", innerWhereClauses);
             if (innerWhereClause == "") innerWhereClause = "1=1";
             var query = $@"
             select distinct

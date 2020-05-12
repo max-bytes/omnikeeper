@@ -24,11 +24,11 @@ namespace LandscapeRegistry.Model
             CIModel = ciModel;
         }
 
-        public async Task<TemplateErrorsCI> CalculateTemplateErrors(Guid ciid, LayerSet layerset, ICIModel ciModel, NpgsqlTransaction trans, TimeThreshold atTime)
-        {
-            var ci = await ciModel.GetMergedCI(ciid, layerset, trans, atTime);
-            return await CalculateTemplateErrors(ci, trans, atTime);
-        }
+        //public async Task<TemplateErrorsCI> CalculateTemplateErrors(Guid ciid, LayerSet layerset, ICIModel ciModel, NpgsqlTransaction trans, TimeThreshold atTime)
+        //{
+        //    var ci = await ciModel.GetMergedCI(ciid, layerset, trans, atTime);
+        //    return await CalculateTemplateErrors(ci, trans, atTime);
+        //}
 
         public async Task<TemplateErrorsCI> CalculateTemplateErrors(MergedCI ci, NpgsqlTransaction trans, TimeThreshold atTime)
         {

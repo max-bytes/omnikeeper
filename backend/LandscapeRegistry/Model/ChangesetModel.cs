@@ -11,9 +11,9 @@ namespace LandscapeRegistry.Model
     public class ChangesetModel : IChangesetModel
     {
         private readonly NpgsqlConnection conn;
-        private readonly UserInDatabaseModel userModel;
+        private readonly IUserInDatabaseModel userModel;
 
-        public ChangesetModel(UserInDatabaseModel userModel, NpgsqlConnection connection)
+        public ChangesetModel(IUserInDatabaseModel userModel, NpgsqlConnection connection)
         {
             conn = connection;
             this.userModel = userModel;
@@ -23,7 +23,7 @@ namespace LandscapeRegistry.Model
         {
             var user = await userModel.GetUser(userID, trans);
             if (user == null)
-                return null;
+                throw new Exception($"Could not find user with ID {userID}");
             using var command = new NpgsqlCommand(@"INSERT INTO changeset (timestamp, user_id) VALUES (@timestamp, @user_id) returning id, timestamp", conn, trans);
             command.Parameters.AddWithValue("user_id", userID);
             command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);

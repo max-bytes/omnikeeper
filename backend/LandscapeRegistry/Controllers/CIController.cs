@@ -67,13 +67,13 @@ namespace LandscapeRegistry.Controllers
         /// <param name="CITypeIDs"></param>
         /// <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
         /// <returns></returns>
-        [HttpGet("getCIsByType")]
-        public async Task<ActionResult<IEnumerable<CIDTO>>> GetCIsByType([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string[] CITypeIDs, [FromQuery]DateTimeOffset? atTime = null)
-        {
-            var layerset = new LayerSet(layerIDs);
-            var cis = await ciModel.GetMergedCIsByType(layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest(), CITypeIDs);
-            return Ok(cis.Select(ci => CIDTO.Build(ci)));
-        }
+        //[HttpGet("getCIsByType")]
+        //public async Task<ActionResult<IEnumerable<CIDTO>>> GetCIsByType([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string[] CITypeIDs, [FromQuery]DateTimeOffset? atTime = null)
+        //{
+        //    var layerset = new LayerSet(layerIDs);
+        //    var cis = await ciModel.GetMergedCIsByType(layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest(), CITypeIDs);
+        //    return Ok(cis.Select(ci => CIDTO.Build(ci)));
+        //}
 
         /// <summary>
         /// single CI by CI-ID

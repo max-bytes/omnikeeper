@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Tests.Integration;
@@ -113,6 +114,8 @@ namespace Tests.DBInit
             }
 
             // create regular CIs
+            var windowsHostCIIds = new List<Guid>();
+            var linuxHostCIIds = new List<Guid>();
             using (var trans = conn.BeginTransaction())
             {
                 var index = 0;
@@ -128,7 +131,11 @@ namespace Tests.DBInit
                 foreach (var ciid in hostCIIDs)
                 {
                     var ciType = new string[] { "Host Linux", "Host Windows" }.GetRandom(random);
-                    await ciModel.CreateCIWithType(ciType, trans, ciid);
+                    var hostCIID = await ciModel.CreateCIWithType(ciType, trans, ciid);
+                    if (ciType.Equals("Host Linux"))
+                        linuxHostCIIds.Add(hostCIID);
+                    else
+                        windowsHostCIIds.Add(hostCIID);
                     await attributeModel.InsertCINameAttribute($"{ciType}_{index}", cmdbLayerID, ciid, changeset.ID, trans);
                     await attributeModel.InsertAttribute("hostname", AttributeValueTextScalar.Build($"hostname_{index}.domain"), cmdbLayerID, ciid, changeset.ID, trans);
                     await attributeModel.InsertAttribute("system", AttributeValueTextScalar.Build($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), cmdbLayerID, ciid, changeset.ID, trans);
@@ -215,7 +222,7 @@ namespace Tests.DBInit
             }
 
             // create monitoring relations
-            var windowsHosts = await ciModel.GetMergedCIsByType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, TimeThreshold.BuildLatest(), "Host Windows");
+            var windowsHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), true, null, TimeThreshold.BuildLatest(), windowsHostCIIds);
             foreach (var ci in windowsHosts)
             {
                 using var trans = conn.BeginTransaction();
@@ -224,7 +231,7 @@ namespace Tests.DBInit
                 await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset.ID, trans);
                 trans.Commit();
             }
-            var linuxHosts = await ciModel.GetMergedCIsByType(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), null, TimeThreshold.BuildLatest(), "Host Linux");
+            var linuxHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), true, null, TimeThreshold.BuildLatest(), linuxHostCIIds);
             foreach (var ci in linuxHosts)
             {
                 using var trans = conn.BeginTransaction();

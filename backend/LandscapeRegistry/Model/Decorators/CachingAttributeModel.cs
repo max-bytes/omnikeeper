@@ -23,14 +23,6 @@ namespace LandscapeRegistry.Model.Decorators
             this.memoryCache = memoryCache;
         }
 
-        public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, long changesetID, NpgsqlTransaction trans)
-        {
-            var success = await model.BulkReplaceAttributes(data, changesetID, trans);
-            if (success)
-                foreach (var f in data.Fragments) memoryCache.CancelCIChangeToken(data.GetCIID(f));
-            return success;
-        }
-
         public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime, Guid? ciid = null)
         {
             return await model.FindAttributesByName(like, includeRemoved, layerID, trans, atTime, ciid);
@@ -39,6 +31,11 @@ namespace LandscapeRegistry.Model.Decorators
         public async Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, IAttributeModel.IAttributeSelection selection, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             return await model.FindMergedAttributesByFullName(name, selection, includeRemoved, layers, trans, atTime);
+        }
+
+        public async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            return await model.GetAttribute(name, layerID, ciid, trans, atTime);
         }
 
         public async Task<IEnumerable<CIAttribute>> GetAttributes(IAttributeModel.IAttributeSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
@@ -73,5 +70,14 @@ namespace LandscapeRegistry.Model.Decorators
             memoryCache.CancelCIChangeToken(ciid);
             return await model.RemoveAttribute(name, layerID, ciid, changesetID, trans);
         }
+
+        public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, long changesetID, NpgsqlTransaction trans)
+        {
+            var success = await model.BulkReplaceAttributes(data, changesetID, trans);
+            if (success)
+                foreach (var f in data.Fragments) memoryCache.CancelCIChangeToken(data.GetCIID(f));
+            return success;
+        }
+
     }
 }

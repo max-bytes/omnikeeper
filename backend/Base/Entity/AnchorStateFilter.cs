@@ -20,7 +20,7 @@ namespace Landscape.Base.Entity
                 AnchorStateFilter.ActiveAndDeprecated => new AnchorState[] { AnchorState.Active, AnchorState.Deprecated },
                 AnchorStateFilter.All => (AnchorState[])Enum.GetValues(typeof(AnchorState)),
                 AnchorStateFilter.MarkedForDeletion => new AnchorState[] { AnchorState.MarkedForDeletion },
-                _ => null
+                _ => throw new Exception("Invalid AnchorStateFilter")
             };
             return states;
         }

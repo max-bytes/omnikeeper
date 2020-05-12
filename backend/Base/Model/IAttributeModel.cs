@@ -56,5 +56,7 @@ namespace Landscape.Base.Model
 
 
         Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, long changesetID, NpgsqlTransaction trans);
+
+        Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime);
     }
 }

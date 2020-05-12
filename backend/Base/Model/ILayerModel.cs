@@ -10,6 +10,10 @@ namespace Landscape.Base.Model
         Task<LayerSet> BuildLayerSet(string[] layerNames, NpgsqlTransaction trans);
         Task<LayerSet> BuildLayerSet(NpgsqlTransaction trans);
 
+
+        Task<Layer> CreateLayer(string name, NpgsqlTransaction trans);
+        Task<Layer> CreateLayer(string name, AnchorState state, ComputeLayerBrain computeLayerBrain, NpgsqlTransaction trans);
+        Task<Layer> Update(long id, AnchorState state, ComputeLayerBrain computeLayerBrain, NpgsqlTransaction trans);
         Task<bool> TryToDelete(long id, NpgsqlTransaction trans);
 
         Task<Layer> GetLayer(long layerID, NpgsqlTransaction trans);

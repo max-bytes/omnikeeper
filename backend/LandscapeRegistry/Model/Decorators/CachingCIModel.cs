@@ -25,83 +25,84 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<Guid> CreateCI(NpgsqlTransaction trans, Guid id)
         {
+            // we assume there is no cache entry for a ci that gets created
             return await model.CreateCI(trans, id);
         }
 
         public async Task<Guid> CreateCI(NpgsqlTransaction trans)
         {
+            // we assume there is no cache entry for a ci that gets created
             return await model.CreateCI(trans);
         }
 
         public async Task<Guid> CreateCIWithType(string typeID, NpgsqlTransaction trans)
         {
+            // we assume there is no cache entry for a ci that gets created
             return await model.CreateCIWithType(typeID, trans);
         }
 
         public async Task<CI> GetCI(Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            return await model.GetCI(ciid, layerID, trans, atTime);
+            if (atTime.IsLatest)
+            {
+                return await memoryCache.GetOrCreateAsync(CacheKeyService.CIOnLayer(ciid, layerID), async (ce) =>
+                {
+                    var changeToken = memoryCache.GetCICancellationChangeToken(ciid);
+                    ce.AddExpirationToken(changeToken);
+                    return await model.GetCI(ciid, layerID, trans, atTime);
+                });
+            }
+            else return await model.GetCI(ciid, layerID, trans, atTime);
         }
 
         public async Task<IEnumerable<Guid>> GetCIIDs(NpgsqlTransaction trans)
         {
+            // cannot be cached well... or can it?
             return await model.GetCIIDs(trans);
-        }
-
-        public async Task<IDictionary<Guid, string>> GetCINames(IEnumerable<Guid> ciids, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
-        {
-            return await model.GetCINames(ciids, layerset, trans, atTime);
         }
 
         public async Task<IEnumerable<CI>> GetCIs(long layerID, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
         {
+            // cannot be cached well... or can it?
             return await model.GetCIs(layerID, includeEmptyCIs, trans, atTime);
-        }
-
-        public async Task<CIType> GetCITypeByID(string typeID, NpgsqlTransaction trans, TimeThreshold atTime)
-        {
-            return await model.GetCITypeByID(typeID, trans, atTime);
         }
 
         public async Task<CIType> UpsertCIType(string typeID, AnchorState state, NpgsqlTransaction trans)
         {
-            // TODO: evict CITypes, once implemented
+            // TODO: this would actually need to remove ALL CIs in cache, but we just ignore it for now because CITypes are supposed to be removed anyway
             return await model.UpsertCIType(typeID, state, trans);
         }
 
         public async Task<IEnumerable<CIType>> GetCITypes(NpgsqlTransaction trans, TimeThreshold atTime)
         {
+            // we don't cache it because we hope to get rid of it soon anyway
             return await model.GetCITypes(trans, atTime);
         }
 
         public async Task<IEnumerable<CompactCI>> GetCompactCIs(LayerSet visibleLayers, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs = null)
         {
+            // cannot be cached well... or can it?
             return await model.GetCompactCIs(visibleLayers, trans, atTime, CIIDs);
         }
 
         public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            return await model.GetMergedCI(ciid, layers, trans, atTime);
+            if (atTime.IsLatest)
+            {
+                return await memoryCache.GetOrCreateAsync(CacheKeyService.MergedCI(ciid, layers), async (ce) =>
+                {
+                    var changeToken = memoryCache.GetCICancellationChangeToken(ciid);
+                    ce.AddExpirationToken(changeToken);
+                    return await model.GetMergedCI(ciid, layers, trans, atTime);
+                });
+            }
+            else return await model.GetMergedCI(ciid, layers, trans, atTime);
         }
 
-        public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs = null)
+        public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs)
         {
+            // cannot be cached well... or can it?
             return await model.GetMergedCIs(layers, includeEmptyCIs, trans, atTime, CIIDs);
-        }
-
-        public async Task<IEnumerable<MergedCI>> GetMergedCIsByType(LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime, string typeID)
-        {
-            return await model.GetMergedCIsByType(layers, trans, atTime, typeID);
-        }
-
-        public async Task<IEnumerable<MergedCI>> GetMergedCIsByType(LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<string> typeIDs)
-        {
-            return await model.GetMergedCIsByType(layers, trans, atTime, typeIDs);
-        }
-
-        public async Task<CIType> GetTypeOfCI(Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
-        {
-            return await model.GetTypeOfCI(ciid, trans, atTime);
         }
     }
 }

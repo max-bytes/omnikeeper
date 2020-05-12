@@ -66,7 +66,7 @@ namespace LandscapeRegistry.Model
             return nameA?.Value.Value2String(); // TODO
         }
 
-        public async Task<IDictionary<Guid, string>> GetCINames(IEnumerable<Guid> ciids, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
+        private async Task<IDictionary<Guid, string>> GetCINames(IEnumerable<Guid> ciids, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var attributes = await attributeModel.FindMergedAttributesByFullName(NameAttribute, new MultiCIIDsAttributeSelection(ciids.ToArray()), false, layerset, trans, atTime);
             return ciids.Select(ciid =>
@@ -111,14 +111,14 @@ namespace LandscapeRegistry.Model
             return t;
         }
 
-        public async Task<CIType> GetTypeOfCI(Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
+        private async Task<CIType> GetTypeOfCI(Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             // TODO: performance improvements?
             var r = await GetTypeOfCIs(new Guid[] { ciid }, trans, atTime);
             return r.Values.FirstOrDefault();
         }
 
-        public async Task<IDictionary<Guid, CIType>> GetTypeOfCIs(IEnumerable<Guid> ciids, NpgsqlTransaction trans, TimeThreshold atTime)
+        private async Task<IDictionary<Guid, CIType>> GetTypeOfCIs(IEnumerable<Guid> ciids, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             using var command = new NpgsqlCommand(@"SELECT DISTINCT ON (cta.ci_id) cta.ci_id, inn.id, inn.state FROM citype_assignment cta
                 INNER JOIN 
@@ -153,7 +153,7 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<CIType> GetCITypeByID(string typeID, NpgsqlTransaction trans, TimeThreshold atTime)
+        private async Task<CIType> GetCITypeByID(string typeID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             using var command = new NpgsqlCommand(@"SELECT ct.id, cis.state FROM citype ct
                 LEFT JOIN (SELECT DISTINCT ON (citype_id) citype_id, state FROM citype_state WHERE timestamp <= @atTime ORDER BY citype_id, timestamp DESC) cis ON cis.citype_id = ct.id
@@ -196,18 +196,18 @@ namespace LandscapeRegistry.Model
             return (await GetCITypes(trans, atTime)).FirstOrDefault(t => t.ID == typeID); 
         }
 
-        public async Task<IEnumerable<MergedCI>> GetMergedCIsByType(LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime, string typeID)
-        {
-            // TODO: performance improvements
-            var cis = await GetMergedCIs(layers, true, trans, atTime);
-            return cis.Where(ci => ci.Type.ID == typeID);
-        }
-        public async Task<IEnumerable<MergedCI>> GetMergedCIsByType(LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<string> typeIDs)
-        {
-            // TODO: performance improvements
-            var cis = await GetMergedCIs(layers, true, trans, atTime);
-            return cis.Where(ci => typeIDs.Contains(ci.Type.ID));
-        }
+        //public async Task<IEnumerable<MergedCI>> GetMergedCIsByType(LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime, string typeID)
+        //{
+        //    // TODO: performance improvements
+        //    var cis = await GetMergedCIs(layers, true, trans, atTime);
+        //    return cis.Where(ci => ci.Type.ID == typeID);
+        //}
+        //public async Task<IEnumerable<MergedCI>> GetMergedCIsByType(LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<string> typeIDs)
+        //{
+        //    // TODO: performance improvements
+        //    var cis = await GetMergedCIs(layers, true, trans, atTime);
+        //    return cis.Where(ci => typeIDs.Contains(ci.Type.ID));
+        //}
 
         public async Task<IEnumerable<CompactCI>> GetCompactCIs(LayerSet visibleLayers, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs = null)
         {
@@ -240,12 +240,9 @@ namespace LandscapeRegistry.Model
             return true;
         }
 
-        public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs = null)
+        public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs)
         {
-            if (CIIDs == null) CIIDs = await GetCIIDs(trans);
             var attributes = await attributeModel.GetMergedAttributes(CIIDs, false, layers, trans, atTime);
-
-            //var groupedAttributes = attributes.GroupBy(a => a.Attribute.CIID).ToDictionary(a => a.Key, a => a.ToList());
 
             if (includeEmptyCIs)
             {

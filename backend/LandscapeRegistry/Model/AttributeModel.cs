@@ -216,7 +216,7 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        private async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             using var command = new NpgsqlCommand(@"
             select id, ci_id, type, value, state, changeset_id FROM attribute 

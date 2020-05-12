@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity.DTO;
+using Landscape.Base.Model;
 using LandscapeRegistry.Model.Decorators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,9 +16,9 @@ namespace LandscapeRegistry.Controllers
     [Authorize]
     public class LayerController : ControllerBase
     {
-        private readonly CachingLayerModel layerModel;
+        private readonly ILayerModel layerModel;
 
-        public LayerController(CachingLayerModel layerModel)
+        public LayerController(ILayerModel layerModel)
         {
             this.layerModel = layerModel;
         }

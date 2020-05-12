@@ -27,8 +27,8 @@ namespace LandscapeRegistry.Model.Decorators
             if (atTime.IsLatest)
                 return await memoryCache.GetOrCreateAsync(CacheKeyService.Predicates(stateFilter), async (ce) =>
                 {
-                    var predicatesChangeToken = memoryCache.GetOrCreatePredicatesCancellationChangeToken();
-                    ce.AddExpirationToken(predicatesChangeToken);
+                    var changeToken = memoryCache.GetPredicatesCancellationChangeToken();
+                    ce.AddExpirationToken(changeToken);
                     return await Model.GetPredicates(trans, atTime, stateFilter);
                 });
             else return await Model.GetPredicates(trans, atTime, stateFilter);
