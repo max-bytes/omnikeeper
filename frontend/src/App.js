@@ -49,7 +49,7 @@ const keycloakProviderInitConfig = {
   // when they don't have SameSite=None set... and keycloak doesn't send a proper cookie yet: 
   // https://issues.redhat.com/browse/KEYCLOAK-12125
   "checkLoginIframe": false,
-  // onLoad: 'check-sso',
+  onLoad: 'check-sso',
   // promiseType: 'native'
 }
 //'/landscape/registry'

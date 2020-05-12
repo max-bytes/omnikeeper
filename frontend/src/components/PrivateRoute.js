@@ -6,7 +6,9 @@ export function PrivateRoute(props) {
 
   const { children, ...rest} = props;
 
-  const [keycloak] = useKeycloak();
+  const [keycloak, initialized] = useKeycloak();
+
+  if (!initialized) return "Loading...";
 
   return (
     <Route
