@@ -50,10 +50,10 @@ namespace Landscape.Base.Model
         Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, IAttributeSelection selection, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
 
 
-        Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, Changeset changeset, NpgsqlTransaction trans);
-        Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, Changeset changeset, NpgsqlTransaction trans);
-        Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, Changeset changeset, NpgsqlTransaction trans);
-        Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, Changeset changeset, NpgsqlTransaction trans);
+        Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, IChangesetProxy changeset, NpgsqlTransaction trans);
+        Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, IChangesetProxy changeset, NpgsqlTransaction trans);
+        Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, IChangesetProxy changeset, NpgsqlTransaction trans);
+        Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, NpgsqlTransaction trans);
 
     }
 }

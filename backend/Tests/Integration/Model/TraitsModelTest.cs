@@ -164,7 +164,7 @@ namespace Tests.Integration.Model
 
             using (var trans = conn.BeginTransaction())
             {
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("text1"), layer1.ID, ciid1, changeset, trans);
                 await attributeModel.InsertAttribute("a2", AttributeValueTextScalar.Build("text2"), layer1.ID, ciid1, changeset, trans);
                 await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("text3"), layer1.ID, ciid1, changeset, trans);

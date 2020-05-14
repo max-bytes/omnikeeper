@@ -157,7 +157,7 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, Changeset changeset, NpgsqlTransaction trans)
+        public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, timeThreshold);
@@ -178,6 +178,8 @@ namespace LandscapeRegistry.Model
             using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
                 VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp) returning id", conn, trans);
 
+            var changeset = await changesetProxy.GetChangeset(trans);
+
             command.Parameters.AddWithValue("from_ci_id", fromCIID);
             command.Parameters.AddWithValue("to_ci_id", toCIID);
             command.Parameters.AddWithValue("predicate_id", predicateID);
@@ -194,7 +196,7 @@ namespace LandscapeRegistry.Model
             return Relation.Build(id, fromCIID, toCIID, predicate, layerStack, RelationState.Removed, changeset.ID);
         }
 
-        public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, Changeset changeset, NpgsqlTransaction trans)
+        public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, timeThreshold);
@@ -219,6 +221,8 @@ namespace LandscapeRegistry.Model
             using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
                 VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp) returning id", conn, trans);
 
+            var changeset = await changesetProxy.GetChangeset(trans);
+
             command.Parameters.AddWithValue("from_ci_id", fromCIID);
             command.Parameters.AddWithValue("to_ci_id", toCIID);
             command.Parameters.AddWithValue("predicate_id", predicateID);
@@ -235,7 +239,7 @@ namespace LandscapeRegistry.Model
             return Relation.Build(id, fromCIID, toCIID, predicate, layerStack, state, changeset.ID);
         }
 
-        public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, Changeset changeset, NpgsqlTransaction trans)
+        public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var layerSet = new LayerSet(data.LayerID);
@@ -271,6 +275,8 @@ namespace LandscapeRegistry.Model
                 using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
                     VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp) returning id", conn, trans);
 
+                var changeset = await changesetProxy.GetChangeset(trans);
+
                 command.Parameters.AddWithValue("from_ci_id", fromCIID);
                 command.Parameters.AddWithValue("to_ci_id", toCIID);
                 command.Parameters.AddWithValue("predicate_id", predicateID);
@@ -284,7 +290,9 @@ namespace LandscapeRegistry.Model
 
             // remove outdated 
             foreach (var outdatedRelation in outdatedRelations.Values)
-                await RemoveRelation(outdatedRelation.FromCIID, outdatedRelation.ToCIID, outdatedRelation.PredicateID, data.LayerID, changeset, trans); // TODO: proper timethreshold
+            {
+                await RemoveRelation(outdatedRelation.FromCIID, outdatedRelation.ToCIID, outdatedRelation.PredicateID, data.LayerID, changesetProxy, trans); // TODO: proper timethreshold
+            }
 
             return true;
         }

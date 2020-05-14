@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
@@ -64,7 +65,7 @@ namespace Tests.Integration.Model
             var user = await userModel.UpsertUser("testuser", Guid.NewGuid(), UserType.Human, null);
 
             var ciid = await ciModel.CreateCI(null);
-            var changeset = await changesetModel.CreateChangeset(user.ID, null);
+            var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
 
             await attributeModel.InsertAttribute("attribute", AttributeValueTextScalar.Build("foo"), layerC.ID, ciid, changeset, null);
 

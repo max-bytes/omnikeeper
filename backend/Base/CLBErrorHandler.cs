@@ -15,12 +15,12 @@ namespace Landscape.Base
         private readonly NpgsqlTransaction trans;
         private readonly string clbName;
         private readonly long clbLayerID;
-        private readonly Changeset changeset;
+        private readonly IChangesetProxy changeset;
         private readonly IAttributeModel attributeModel;
 
         private readonly IList<CIAttribute> writtenErrors = new List<CIAttribute>();
 
-        public CLBErrorHandler(NpgsqlTransaction trans, string clbName, long clbLayerID, Changeset changeset, IAttributeModel attributeModel)
+        public CLBErrorHandler(NpgsqlTransaction trans, string clbName, long clbLayerID, IChangesetProxy changeset, IAttributeModel attributeModel)
         {
             this.trans = trans;
             this.clbName = clbName;

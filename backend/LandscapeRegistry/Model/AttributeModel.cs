@@ -244,7 +244,7 @@ namespace LandscapeRegistry.Model
             return att;
         }
 
-        public async Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, Changeset changeset, NpgsqlTransaction trans)
+        public async Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var readTS = TimeThreshold.BuildLatest();
             var currentAttribute = await GetAttribute(name, layerID, ciid, trans, readTS);
@@ -259,6 +259,8 @@ namespace LandscapeRegistry.Model
                 // the attribute is already removed, no-op(?)
                 return currentAttribute;
             }
+
+            var changeset = await changesetProxy.GetChangeset(trans);
 
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
                 VALUES (@name, @ci_id, @type, @value, @layer_id, @state, @timestamp, @changeset_id) returning id", conn, trans);
@@ -280,10 +282,10 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, Changeset changeset, NpgsqlTransaction trans)
-            => await InsertAttribute(CIModel.NameAttribute, AttributeValueTextScalar.Build(nameValue), layerID, ciid, changeset, trans);
+        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+            => await InsertAttribute(CIModel.NameAttribute, AttributeValueTextScalar.Build(nameValue), layerID, ciid, changesetProxy, trans);
 
-        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, Changeset changeset, NpgsqlTransaction trans)
+        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var readTS = TimeThreshold.BuildLatest();
             var currentAttribute = await GetAttribute(name, layerID, ciid, trans, readTS);
@@ -301,6 +303,8 @@ namespace LandscapeRegistry.Model
             // which user it is does not make any difference; if the data is the same, no insert is made
             if (currentAttribute != null && currentAttribute.State != AttributeState.Removed && currentAttribute.Value.Equals(value))
                 return currentAttribute;
+
+            var changeset = await changesetProxy.GetChangeset(trans);
 
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
                 VALUES (@name, @ci_id, @type, @value, @layer_id, @state, @timestamp, @changeset_id) returning id", conn, trans);
@@ -320,7 +324,7 @@ namespace LandscapeRegistry.Model
             return CIAttribute.Build(id, name, ciid, value, state, changeset.ID);
         }
 
-        public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, Changeset changeset, NpgsqlTransaction trans)
+        public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var readTS = TimeThreshold.BuildLatest();
 
@@ -331,6 +335,8 @@ namespace LandscapeRegistry.Model
                 _ => null
             }).ToDictionary(a => a.InformationHash);
 
+            // TODO: rework so changeset is only created when there is actually anything inserted
+            Changeset changeset = await changesetProxy.GetChangeset(trans);
 
             // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
             using (var writer = conn.BeginBinaryImport(@"COPY attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)"))

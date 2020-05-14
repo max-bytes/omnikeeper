@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Decorators;
@@ -39,10 +40,10 @@ namespace Tests.Integration.Model
             Guid ciid1;
             Guid ciid3;
             long layerID1;
-            Changeset changeset;
+            ChangesetProxy changeset;
             using (var trans = conn.BeginTransaction())
             {
-                changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
 
                 ciid1 = await ciModel.CreateCI(trans);
                 var ciid2 = await ciModel.CreateCI(trans);
@@ -63,7 +64,7 @@ namespace Tests.Integration.Model
                 Assert.AreEqual(ciid2, rr1.ToCIID);
                 Assert.AreEqual(layerID1, rr1.LayerID);
                 Assert.AreEqual(RelationState.New, rr1.State);
-                Assert.AreEqual(changeset.ID, rr1.ChangesetID);
+                Assert.AreEqual((await changeset.GetChangeset(trans)).ID, rr1.ChangesetID);
 
                 // test repeated insertion
                 var i2 = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layerID1, changeset, trans);
@@ -84,7 +85,7 @@ namespace Tests.Integration.Model
                 Assert.AreEqual(ciid3, rr2.ToCIID);
                 Assert.AreEqual(layerID1, rr2.LayerID);
                 Assert.AreEqual(RelationState.New, rr2.State);
-                Assert.AreEqual(changeset.ID, rr2.ChangesetID);
+                Assert.AreEqual((await changeset.GetChangeset(trans)).ID, rr2.ChangesetID);
             }
 
             using (var trans2 = conn.BeginTransaction())
@@ -108,7 +109,7 @@ namespace Tests.Integration.Model
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
 
-            var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+            var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
 
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
@@ -144,7 +145,7 @@ namespace Tests.Integration.Model
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
 
-            var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+            var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
 
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
@@ -192,7 +193,7 @@ namespace Tests.Integration.Model
 
             using (var trans = conn.BeginTransaction())
             {
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 var i1 = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset, trans);
                 var i2 = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer2.ID, changeset, trans);
                 Assert.AreEqual(predicate1.ID, i1.PredicateID);
@@ -202,7 +203,7 @@ namespace Tests.Integration.Model
 
             using (var trans = conn.BeginTransaction())
             {
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 var removedRelation = await relationModel.RemoveRelation(ciid1, ciid2, predicate1.ID, layer2.ID, changeset, trans);
                 Assert.IsNotNull(removedRelation);
                 var r1 = await relationModel.GetMergedRelations(ciid1, false, layerset, IncludeRelationDirections.Forward, trans, TimeThreshold.BuildLatest());
@@ -215,7 +216,7 @@ namespace Tests.Integration.Model
             // add relation again
             using (var trans = conn.BeginTransaction())
             {
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer2.ID, changeset, trans);
                 var r2 = await relationModel.GetMergedRelations(ciid1, false, layerset, IncludeRelationDirections.Forward, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, r2.Count());
@@ -241,7 +242,7 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel);
 
             using var trans = conn.BeginTransaction();
-            var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+            var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
 
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
@@ -258,7 +259,7 @@ namespace Tests.Integration.Model
 
             // test bulk replace
             using var trans2 = conn.BeginTransaction();
-            var changeset2 = await changesetModel.CreateChangeset(user.ID, trans2);
+            var changeset2 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
             await relationModel.BulkReplaceRelations(BulkRelationDataPredicateScope.Build(predicateID1.ID, layer1.ID, new BulkRelationDataPredicateScope.Fragment[] {
                     BulkRelationDataPredicateScope.Fragment.Build(ciid1, ciid2),
                     BulkRelationDataPredicateScope.Fragment.Build(ciid2, ciid1),

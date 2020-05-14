@@ -1,4 +1,5 @@
-﻿using Landscape.Base.Utils;
+﻿using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Utils;
@@ -55,7 +56,7 @@ namespace Tests.Integration.Model
                     return identity;
                 }).ToList();
 
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
 
 
                 //Console.WriteLine(ciNames.Count());

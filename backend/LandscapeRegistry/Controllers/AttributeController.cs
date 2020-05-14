@@ -5,6 +5,7 @@ using LandscapeRegistry.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
@@ -44,9 +45,9 @@ namespace LandscapeRegistry.Controllers
                 return BadRequest($"User \"{user.Username}\" does not have permission to write to layer ID {dto.LayerID}");
 
             using var trans = conn.BeginTransaction();
-            var changeset = await changesetModel.CreateChangeset(user.InDatabase.ID, trans);
+            var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
             var data = BulkCIAttributeDataLayerScope.BuildFromDTO(dto);
-            var success = await attributeModel.BulkReplaceAttributes(data, changeset, trans);
+            var success = await attributeModel.BulkReplaceAttributes(data, changesetProxy, trans);
             if (success)
             {
                 trans.Commit();

@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
@@ -67,7 +68,7 @@ namespace Tests.Integration.Model
 
             using (var trans = conn.BeginTransaction())
             {
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 var i1 = await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("text1"), layerID1, ciid1, changeset, trans);
                 var i2 = await attributeModel.InsertAttribute("a2", AttributeValueTextScalar.Build("text1"), layerID1, ciid2, changeset, trans);
                 var i3 = await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("text1"), layerID2, ciid1, changeset, trans);
@@ -115,7 +116,7 @@ namespace Tests.Integration.Model
             var layerset3 = new LayerSet(new long[] { layer1.ID, layer2.ID });
             var layerset4 = new LayerSet(new long[] { layer2.ID, layer1.ID });
 
-            var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+            var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
             await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid1, changeset, trans);
             await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("textL2"), layer2.ID, ciid1, changeset, trans);
 
@@ -154,10 +155,10 @@ namespace Tests.Integration.Model
             using (var trans = conn.BeginTransaction())
             {
 
-                var changeset1 = await changesetModel.CreateChangeset(user.ID, trans);
+                var changeset1 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("textL1"), layer1.ID, ciid1, changeset1, trans);
 
-                var changeset2 = await changesetModel.CreateChangeset(user.ID, trans);
+                var changeset2 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("textL2"), layer2.ID, ciid1, changeset2, trans);
 
                 trans.Commit();
@@ -165,7 +166,7 @@ namespace Tests.Integration.Model
 
             using (var trans = conn.BeginTransaction())
             {
-                var changeset3 = await changesetModel.CreateChangeset(user.ID, trans);
+                var changeset3 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 await attributeModel.RemoveAttribute("a1", layer2.ID, ciid1, changeset3, trans);
                 trans.Commit();
             }

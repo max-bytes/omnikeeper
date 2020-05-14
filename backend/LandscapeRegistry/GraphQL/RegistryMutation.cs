@@ -48,7 +48,7 @@ namespace LandscapeRegistry.GraphQL
                     userContext.LayerSet = layers != null ? await layerModel.BuildLayerSet(layers, transaction) : null;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var changeset = await changesetModel.CreateChangeset(userContext.User.InDatabase.ID, transaction, userContext.TimeThreshold.Time);
+                    var changeset = ChangesetProxy.Build(userContext.User.InDatabase, userContext.TimeThreshold.Time, changesetModel); //await changesetModel.CreateChangeset(userContext.User.InDatabase.ID, transaction, userContext.TimeThreshold.Time);
 
                     var groupedInsertAttributes = insertAttributes.GroupBy(a => a.CI);
                     var insertedAttributes = new List<CIAttribute>();
@@ -121,8 +121,9 @@ namespace LandscapeRegistry.GraphQL
 
                     using var transaction = await conn.BeginTransactionAsync();
                     userContext.Transaction = transaction;
+                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var changeset = await changesetModel.CreateChangeset(userContext.User.InDatabase.ID, transaction);
+                    var changeset = ChangesetProxy.Build(userContext.User.InDatabase, userContext.TimeThreshold.Time, changesetModel);
 
                     var createdCIIDs = new List<Guid>();
                     foreach (var ci in createCIs)

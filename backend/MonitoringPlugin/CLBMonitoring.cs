@@ -28,7 +28,7 @@ namespace MonitoringPlugin
             this.traitModel = traitModel;
         }
 
-        public override async Task<bool> Run(Layer targetLayer, Changeset changeset, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger)
+        public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger)
         {
             logger.LogDebug("Start clbMonitoring");
             var layerSetMonitoringDefinitionsOnly = await layerModel.BuildLayerSet(new[] { "Monitoring Definitions" }, trans);
@@ -97,7 +97,7 @@ namespace MonitoringPlugin
 
             var monitoringCommandFragments = renderedCommands.GroupBy(t => t.ciid)
                 .Select(tt => BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeValueTextArray.Build(tt.Select(ttt => ttt.command).ToArray()), tt.Key));
-            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.executing_commands", targetLayer.ID, monitoringCommandFragments), changeset, trans);
+            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.executing_commands", targetLayer.ID, monitoringCommandFragments), changesetProxy, trans);
 
             logger.LogDebug("Updated executed commands per monitored CI");
 
@@ -107,7 +107,7 @@ namespace MonitoringPlugin
             foreach (var naemonInstance in naemonInstancesTS)
                 foreach (var monitoredCI in monitoredCIs)
                     monitoredByCIIDFragments.Add(BulkRelationDataPredicateScope.Fragment.Build(monitoredCI.Value.ID, naemonInstance.UnderlyingCI.ID));
-            await relationModel.BulkReplaceRelations(BulkRelationDataPredicateScope.Build("is_monitored_by", targetLayer.ID, monitoredByCIIDFragments.ToArray()), changeset, trans);
+            await relationModel.BulkReplaceRelations(BulkRelationDataPredicateScope.Build("is_monitored_by", targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, trans);
 
             logger.LogDebug("Assigned CIs to naemon instances");
 
@@ -125,7 +125,7 @@ namespace MonitoringPlugin
                 var finalConfig = string.Join("\n", commands);
                 monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeValueTextScalar.Build(finalConfig, true), naemonInstance));
             }
-            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.naemonConfig", targetLayer.ID, monitoringConfigs), changeset, trans);
+            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.naemonConfig", targetLayer.ID, monitoringConfigs), changesetProxy, trans);
 
             logger.LogDebug("End clbMonitoring");
             return true;

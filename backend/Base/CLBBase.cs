@@ -40,11 +40,11 @@ namespace Landscape.Base
                 var username = Name; // HACK: make username the same as CLB name
                 var guid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1"); // TODO
                 var user = await userModel.UpsertUser(username, guid, UserType.Robot, trans);
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                var changesetProxy = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
 
-                var errorHandler = new CLBErrorHandler(trans, Name, layer.ID, changeset, attributeModel);
+                var errorHandler = new CLBErrorHandler(trans, Name, layer.ID, changesetProxy, attributeModel);
 
-                var result = await Run(layer, changeset, errorHandler, trans, logger);
+                var result = await Run(layer, changesetProxy, errorHandler, trans, logger);
 
                 if (result)
                 {
@@ -62,7 +62,7 @@ namespace Landscape.Base
             }
         }
 
-        public abstract Task<bool> Run(Layer targetLayer, Changeset changeset, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger);
+        public abstract Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger);
 
     }
 }

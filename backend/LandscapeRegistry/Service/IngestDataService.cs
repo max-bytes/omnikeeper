@@ -81,7 +81,7 @@ namespace LandscapeRegistry.Service
         public async Task<(Dictionary<Guid, Guid> idMapping, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, LayerSet searchableLayers, User user, ILogger logger)
         {
             using var trans = Connection.BeginTransaction();
-            var changeset = await ChangesetModel.CreateChangeset(user.InDatabase.ID, trans);
+            var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, ChangesetModel);
 
             var timeThreshold = TimeThreshold.BuildLatest();
             var dataIdentifier = new DataIdentifier(AttributeModel, searchableLayers, timeThreshold);
@@ -138,7 +138,7 @@ namespace LandscapeRegistry.Service
             var bulkAttributeData = BulkCIAttributeDataLayerScope.Build("", writeLayer.ID, attributeData.SelectMany(ad =>
                 ad.Value.Fragments.Select(f => BulkCIAttributeDataLayerScope.Fragment.Build(f.Name, f.Value, ad.Key))
             ));
-            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changeset, trans);
+            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, trans);
 
 
             var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
@@ -154,7 +154,7 @@ namespace LandscapeRegistry.Service
                 relationFragments.Add(BulkRelationDataLayerScope.Fragment.Build(fromCIID, toCIID, cic.PredicateID));
             }
             var bulkRelationData = BulkRelationDataLayerScope.Build(writeLayer.ID, relationFragments.ToArray());
-            await RelationModel.BulkReplaceRelations(bulkRelationData, changeset, trans);
+            await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, trans);
 
             trans.Commit();
 

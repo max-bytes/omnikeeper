@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
@@ -119,7 +120,7 @@ namespace Tests.DBInit
             using (var trans = conn.BeginTransaction())
             {
                 var index = 0;
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 foreach (var ciid in applicationCIIDs)
                 {
                     await ciModel.CreateCIWithType("Application", trans, ciid);
@@ -161,7 +162,7 @@ namespace Tests.DBInit
                 for (int i = 0; i < numAttributeChanges; i++)
                 {
                     using var trans = conn.BeginTransaction();
-                    var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                    var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                     var name = regularAttributeNames.GetRandom(random);
                     var value = regularAttributeValues.GetRandom(random);
                     await attributeModel.InsertAttribute(name, value, cmdbLayerID, ciid, changeset, trans);
@@ -174,7 +175,7 @@ namespace Tests.DBInit
             for (var i = 0; i < numRunsOnRelations; i++)
             {
                 using var trans = conn.BeginTransaction();
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 var ciid1 = applicationCIIDs.GetRandom(random);
                 var ciid2 = hostCIIDs.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
                 await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, cmdbLayerID, changeset, trans);
@@ -189,7 +190,7 @@ namespace Tests.DBInit
             Guid ciNaemon02;
             using (var trans = conn.BeginTransaction())
             {
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 ciNaemon01 = await ciModel.CreateCIWithType("Naemon Instance", null);
                 ciNaemon02 = await ciModel.CreateCIWithType("Naemon Instance", null);
                 await attributeModel.InsertCINameAttribute("Naemon Instance 01", cmdbLayerID, ciNaemon01, changeset, trans);
@@ -224,7 +225,7 @@ namespace Tests.DBInit
             foreach (var ci in windowsHosts)
             {
                 using var trans = conn.BeginTransaction();
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                 await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                 trans.Commit();
@@ -233,7 +234,7 @@ namespace Tests.DBInit
             foreach (var ci in linuxHosts)
             {
                 using var trans = conn.BeginTransaction();
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
+                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                 await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                 trans.Commit();
