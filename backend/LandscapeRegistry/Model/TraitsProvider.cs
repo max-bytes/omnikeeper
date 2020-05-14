@@ -77,6 +77,11 @@ namespace LandscapeRegistry.Model
                             TraitAttribute.Build("name",
                                 CIAttributeTemplate.BuildFromParams("monitoring.naemon.instance_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                             )
+                        }),
+                    Trait.Build("naemon_contactgroup", new List<TraitAttribute>() {
+                            TraitAttribute.Build("name",
+                                CIAttributeTemplate.BuildFromParams("monitoring.naemon.contactgroup_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                            )
                         })
                 };
             return traits.ToImmutableDictionary(t => t.Name);

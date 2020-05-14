@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -53,10 +54,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
             throw new NotImplementedException("FullTextSearch not implemented yet for YAML");
         }
 
-        internal static AttributeValueYAMLScalar Build(string value)
+        public static AttributeValueYAMLScalar Build(string value)
         {
-            //var deserializer = new DeserializerBuilder().Build();
-            //var yamlObject = deserializer.Deserialize<YamlDocument>(value);
             var stream = new YamlStream();
             stream.Load(new StringReader(value));
             var document = stream.Documents.FirstOrDefault();
@@ -68,13 +67,28 @@ namespace LandscapeRegistry.Entity.AttributeValues
             };
         }
 
+        public static AttributeValueYAMLScalar Build(YamlDocument document)
+        {
+            var yamlStream = new YamlStream(document);
+            var buffer = new StringBuilder();
+            using var writer = new StringWriter(buffer);
+            yamlStream.Save(writer, false);
+            return new AttributeValueYAMLScalar
+            {
+                Value = document,
+                ValueStr = writer.ToString()
+            };
+
+        }
+
     }
 
     public class AttributeValueYAMLArray : AttributeValueYAML, IEquatable<AttributeValueYAMLArray>
     {
         public YamlDocument[] Values { get; private set; }
-        public override string Value2String() => string.Join(",", Values.Select(value => value.ToString().Replace(",", "\\,")));
-        public override AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Values.Select(v => v.ToString()).ToArray(), Type);
+        public string[] ValuesStr { get; private set; }
+        public override string Value2String() => string.Join(",", ValuesStr.Select(value => value.Replace(",", "\\,")));
+        public override AttributeValueDTO ToDTO() => AttributeValueDTO.Build(ValuesStr.Select(v => v).ToArray(), Type);
         public override object ToGenericObject() => Values;
         public override bool IsArray => true;
         public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueYAMLArray);
@@ -103,14 +117,16 @@ namespace LandscapeRegistry.Entity.AttributeValues
                 if (document == null) throw new Exception("Could not parse YAML");
                 return document;
             }).ToArray();
-            return Build(yamlDocuments);
+            return Build(yamlDocuments, values);
         }
 
-        public static AttributeValueYAMLArray Build(YamlDocument[] values)
+        public static AttributeValueYAMLArray Build(YamlDocument[] values, string[] valuesStr)
         {
+            if (values.Length != valuesStr.Length) throw new Exception("Values and valuesStr must be equal length");
             var n = new AttributeValueYAMLArray
             {
-                Values = values
+                Values = values,
+                ValuesStr = valuesStr
             };
             return n;
         }

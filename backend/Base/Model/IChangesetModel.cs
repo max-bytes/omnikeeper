@@ -9,7 +9,7 @@ namespace Landscape.Base.Model
 {
     public interface IChangesetModel
     {
-        Task<Changeset> CreateChangeset(long userID, NpgsqlTransaction trans);
+        Task<Changeset> CreateChangeset(long userID, NpgsqlTransaction trans, DateTimeOffset? timestamp = null);
         Task<Changeset> GetChangeset(long id, NpgsqlTransaction trans);
         Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IncludeRelationDirections ird, Guid ciid, NpgsqlTransaction trans, int? limit = null);
         Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IncludeRelationDirections ird, NpgsqlTransaction trans, int? limit = null);    }

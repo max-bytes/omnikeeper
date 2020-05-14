@@ -211,12 +211,10 @@ namespace Tests.DBInit
                     AttributeValueTextScalar.Build("check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo --hostname \"{{ target.attributes.hostname }}\"", true), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset, trans);
                 await attributeModel.InsertAttribute("monitoring.naemon.config_template", 
                     AttributeValueTextScalar.Build(
-@"{%{{}%}{{ for related_ci in target.relations.back.runs_on }}
-    {
-        ""name"": ""service_name""
-        ""command"": ""check_command {{ related_ci.attributes.application_name}}"" 
-    }
-{{ end }}{%{}}%}"
+@"{{~ for related_ci in target.relations.back.runs_on ~}}
+- name: service_name
+  command: check_command {{ related_ci.attributes.application_name}}
+{{~ end ~}}"
                         , true), monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset, trans);
                 trans.Commit();
             }

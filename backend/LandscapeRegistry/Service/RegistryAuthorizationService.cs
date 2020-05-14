@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,12 @@ namespace LandscapeRegistry.Service
     public class RegistryAuthorizationService : IRegistryAuthorizationService
     {
         private static readonly string ROLE_NAME_LAYER_WRITE_ACCESS_PREFIX = "layer_writeaccess_";
+        private readonly bool debugAllowAll;
+
+        public RegistryAuthorizationService(IConfiguration configuration)
+        {
+            debugAllowAll = configuration.GetSection("Authorization").GetValue("debugAllowAll", false);
+        }
 
         public string GetWriteAccessRoleNameFromLayerName(string layerName)
         {
@@ -26,18 +33,18 @@ namespace LandscapeRegistry.Service
 
         public bool CanUserWriteToLayer(User user, Layer layer)
         {
-            return user.WritableLayers.Contains(layer);
+            return debugAllowAll || user.WritableLayers.Contains(layer);
         }
 
         public bool CanUserWriteToLayer(User user, long layerID)
         {
-            return user.WritableLayers.Any(l => l.ID == layerID);
+            return debugAllowAll || user.WritableLayers.Any(l => l.ID == layerID);
         }
 
         public bool CanUserWriteToLayers(User user, IEnumerable<long> writeLayerIDs)
         {
             // writeLayerIDs must be subset of writable layers, otherwise user can't write to all passed layers
-            return !writeLayerIDs.Except(user.WritableLayers.Select(l => l.ID)).Any();
+            return debugAllowAll || !writeLayerIDs.Except(user.WritableLayers.Select(l => l.ID)).Any();
         }
 
         public bool CanUserCreateCI(User user)

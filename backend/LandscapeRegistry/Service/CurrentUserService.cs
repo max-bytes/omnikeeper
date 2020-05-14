@@ -50,7 +50,7 @@ namespace LandscapeRegistry.Service
             if (username == null)
             {
                 var anonymousGuid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef2"); // TODO: ?
-                var userInDatabase = UserInDatabase.Build(-1L, anonymousGuid, "anonymous", UserType.Unknown, DateTimeOffset.Now);
+                var userInDatabase = await UserModel.UpsertUser("anonymous", anonymousGuid, UserType.Unknown, null);
                 return User.Build(userInDatabase, new List<Layer>());
             }
             else

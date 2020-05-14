@@ -50,7 +50,7 @@ namespace Landscape.Base
 
         public async Task LogError(Guid ciid, string name, string message)
         {
-            var a = await attributeModel.InsertAttribute($"{AttributeNamePrefix}.{name}", AttributeValueTextScalar.Build(message), clbLayerID, ciid, changeset, trans);
+            var a = await attributeModel.InsertAttribute($"{AttributeNamePrefix}.{name}", AttributeValueTextScalar.Build(message, true), clbLayerID, ciid, changeset, trans);
             writtenErrors.Add(a);
         }
     }

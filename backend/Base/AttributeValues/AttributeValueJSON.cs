@@ -15,6 +15,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
 {
     public abstract class AttributeValueJSON : IAttributeValue
     {
+        protected static JToken ErrorValue(string message) => JToken.Parse($"{{\"error\": \"{message}\" }}");
+
         public override string ToString() => $"AV-JSON: {Value2String()}";
         public AttributeValueType Type => AttributeValueType.JSON;
         public abstract string Value2String();
@@ -53,8 +55,15 @@ namespace LandscapeRegistry.Entity.AttributeValues
 
         internal static AttributeValueJSONScalar Build(string value)
         {
-            var v = JToken.Parse(value); // TODO: throws JsonReaderException, handle, but how?
-            return Build(v);
+            try
+            {
+                var v = JToken.Parse(value);
+                return Build(v);
+            }
+            catch (JsonReaderException e)
+            {
+                return Build(ErrorValue(e.Message));
+            }
         }
 
         public static AttributeValueJSONScalar Build(JToken value)
@@ -83,16 +92,23 @@ namespace LandscapeRegistry.Entity.AttributeValues
             public int GetHashCode(JToken obj) => obj.GetHashCode();
         }
         private static readonly EqualityComparer ec = new EqualityComparer();
-        public bool Equals([AllowNull] AttributeValueJSONArray other) 
+        public bool Equals([AllowNull] AttributeValueJSONArray other)
             => other != null && Values.SequenceEqual(other.Values, ec);
         public override int GetHashCode() => Values.GetHashCode();
-        public override bool FullTextSearch(string searchString, CompareOptions compareOptions) 
+        public override bool FullTextSearch(string searchString, CompareOptions compareOptions)
             => Values.Any(value => value.FullTextSearch(searchString, compareOptions));
-
 
         public static AttributeValueJSONArray Build(string[] values)
         {
-            var jsonValues = values.Select(value => { return JToken.Parse(value); }).ToArray(); // TODO: throws JsonReaderException, handle, but how?
+            var jsonValues = values.Select(value => {
+                try
+                {
+                    return JToken.Parse(value);
+                } catch (JsonReaderException e)
+                {
+                    return ErrorValue(e.Message);
+                }
+            }).ToArray();
             return Build(jsonValues);
         }
 

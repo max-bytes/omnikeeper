@@ -48,7 +48,7 @@ namespace LandscapeRegistry.GraphQL
                     userContext.LayerSet = layers != null ? await layerModel.BuildLayerSet(layers, transaction) : null;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var changeset = await changesetModel.CreateChangeset(userContext.User.InDatabase.ID, transaction);
+                    var changeset = await changesetModel.CreateChangeset(userContext.User.InDatabase.ID, transaction, userContext.TimeThreshold.Time);
 
                     var groupedInsertAttributes = insertAttributes.GroupBy(a => a.CI);
                     var insertedAttributes = new List<CIAttribute>();

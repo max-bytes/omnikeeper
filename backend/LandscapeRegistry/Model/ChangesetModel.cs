@@ -19,19 +19,19 @@ namespace LandscapeRegistry.Model
             this.userModel = userModel;
         }
 
-        public async Task<Changeset> CreateChangeset(long userID, NpgsqlTransaction trans)
+        public async Task<Changeset> CreateChangeset(long userID, NpgsqlTransaction trans, DateTimeOffset? timestamp = null)
         {
             var user = await userModel.GetUser(userID, trans);
             if (user == null)
                 throw new Exception($"Could not find user with ID {userID}");
             using var command = new NpgsqlCommand(@"INSERT INTO changeset (timestamp, user_id) VALUES (@timestamp, @user_id) returning id, timestamp", conn, trans);
             command.Parameters.AddWithValue("user_id", userID);
-            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
+            command.Parameters.AddWithValue("timestamp", timestamp.GetValueOrDefault(DateTimeOffset.Now));
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
             var id = reader.GetInt64(0);
-            var timestamp = reader.GetDateTime(1);
-            return Changeset.Build(id, user, timestamp);
+            var timestampR = reader.GetDateTime(1);
+            return Changeset.Build(id, user, timestampR);
         }
 
         public async Task<Changeset> GetChangeset(long id, NpgsqlTransaction trans)

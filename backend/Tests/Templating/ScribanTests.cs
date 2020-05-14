@@ -10,6 +10,7 @@ using NUnit.Framework;
 using Scriban;
 using Scriban.Parsing;
 using Scriban.Runtime;
+using Scriban.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -53,20 +54,51 @@ namespace Tests.Templating
                 var context = ScribanVariableService.CreateCIBasedTemplateContext(testCIA, new LayerSet(), atTime, null, ciModel.Object, relationModel.Object);
 
                 // scriban cannot deal with JTokens out of the box, TODO
-                var t = @"name: {{target.name}}
-                          a: {{target.attributes.a}}
-                          b: {{target.attributes.a.b}}
-                          x: {{target.attributes.a.x}}
-                          c: {{target.attributes.a.c[1]}}
-                          json: {{target.attributes.a.json}}
-                            {{for related_ci in target.relations.forward.p_a}} 
-                                related-x: {{related_ci.name}}
-                            {{end}}
-                          ";
+                //var t = @"name: {{target.name}}
+                //          a: {{target.attributes.a}}
+                //          b: {{target.attributes.a.b}}
+                //          x: {{target.attributes.a.x}}
+                //          c: {{target.attributes.a.c[1]}}
+                //          json: {{target.attributes.a.json}}
+                //            {{for related_ci in target.relations.forward.p_a}} 
+                //                related-x: {{related_ci.name}}
+                //            {{end}}
+                //          ";
+
+                var t = @"
+                    {{ output = [] }}
+                    {{~ for related_ci in [1,2,3] ~}}
+                    {{~ capture item ~}}{
+                      ""type"": ""service"",
+                      ""description"": ""20 generic application"",
+                      ""command"": {
+                                        ""executable"": ""check_application""
+                        ""parameters"": ""--application-name ""
+                      }
+                    }{{~ end ~}}
+                    {{~ output = output | array.add item ~}}
+                    {{~ end ~}}
+                    {{ output | array.join "","" }}
+                    ";
                 var template = Scriban.Template.Parse(t);
                 var r = template.Render(context);
                 Console.WriteLine(r);
             }
+        }
+
+        [Test]
+        public void TestNestedStuff()
+        {
+            //var so = new ScriptObjectCI(ci, new ScriptObjectContext(layerSet, trans, atTime, ciModel, relationModel));
+            var context = new TemplateContext();
+            context.StrictVariables = true;
+            context.PushGlobal(new ScriptObject() { { "a", new object[] { new { name = "value-a" }, new { name = "value-b" } } } });
+
+
+            var t = @"{{ a | array.map ""name"" }}";
+            var template = Scriban.Template.Parse(t);
+            var r = template.Render(context);
+            Console.WriteLine(r);
         }
     }
 }
