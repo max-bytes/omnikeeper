@@ -21,6 +21,7 @@ using Newtonsoft.Json.Serialization;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using JsonSubTypes;
+using DotLiquid.Util;
 
 namespace MonitoringPlugin
 {
@@ -175,6 +176,25 @@ namespace MonitoringPlugin
             // write final naemon config
             var naemonInstance2MonitoredCILookup = monitoredByCIIDFragments.GroupBy(t => t.To).ToDictionary(t => t.Key, t => t.Select(t => t.From));
             var monitoringConfigs = new List<BulkCIAttributeDataLayerScope.Fragment>();
+
+            // prepare contact groups
+            var contactGroupRelations = await relationModel.GetMergedRelationsWithPredicateID(layerSetAll, false, "belongs_to_naemon_contactgroup", trans, timeThreshold); // TODO: correct name?
+
+            // TODO: this needs to be made much more straitforward!
+            var contactGroupCIIDs = contactGroupRelations.Select(r => r.ToCIID);
+            var contactGroupCIs = (await ciModel.GetMergedCIs(layerSetAll, false, trans, timeThreshold, contactGroupCIIDs)).ToDictionary(t => t.ID);
+            var contactGroups = contactGroupRelations.GroupBy(r => r.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.ToCIID]));
+            var contactGroupNames = new Dictionary<Guid, string>();
+            foreach(var ci in contactGroups.Values.SelectMany(t => t).Distinct())
+            {
+                var ets = await traitModel.CalculateEffectiveTraitSetForCI(ci, trans, timeThreshold);
+                if (ets.EffectiveTraits.TryGetValue("naemon_contactgroup", out var et))
+                {
+                    var name = (et.TraitAttributes["name"].Attribute.Value as AttributeValueTextScalar).Value;
+                    contactGroupNames.Add(ci.ID, name);
+                }
+            }
+
             foreach (var kv in naemonInstance2MonitoredCILookup)
             {
                 var naemonInstance = kv.Key;
@@ -185,17 +205,33 @@ namespace MonitoringPlugin
                 var naemonHosts = templates.GroupBy(t => t.ciid)
                     .Select(t =>
                     {
+                        var hostTemplate = t.SelectMany(t => t.hostTemplates).FirstOrDefault();
+                        // look up contactgroups for host
+                        IEnumerable<string> cts = new string[0];
+                        if (hostTemplate != null && contactGroups.TryGetValue(hostTemplate.ContactgroupSource, out var ctCIs))
+                            cts = ctCIs.Select(ctCI => contactGroupNames[ctCI.ID]);
                         var naemonHost = new NaemonHost()
                         {
                             Name = monitoredCIs[t.Key].Name,
                             ID = t.Key,
+                            Contactgroups = cts.ToArray(),
                             // we pick the first host command we can find
-                            Command = t.SelectMany(t => t.hostTemplates).FirstOrDefault()?.Command.ToFullCommandString() ?? "",
+                            Command = hostTemplate?.Command.ToFullCommandString() ?? "",
                             // TODO, HACK: handle duplicates in description
-                            Services = t.SelectMany(t => t.serviceTemplates).ToDictionary(t => t.Description, t => new NaemonService() { Command = t.Command.ToFullCommandString() })//new Dictionary<string, NaemonService>()
+                            Services = t.SelectMany(t => t.serviceTemplates).ToDictionary(t => t.Description, t =>
+                            {
+                                // look up contactgroups for service
+                                IEnumerable<string> cts = new string[0];
+                                if (hostTemplate != null && contactGroups.TryGetValue(t.ContactgroupSource, out var ctCIs))
+                                    cts = ctCIs.Select(ctCI => contactGroupNames[ctCI.ID]);
+                                return new NaemonService() { 
+                                    Command = t.Command.ToFullCommandString(),
+                                    Contactgroups = cts.ToArray()
+                                };
+                            })
                         };
                         return naemonHost;
-                    });
+                    }).ToList();
 
                 monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeValueJSONArray.Build(
                     naemonHosts.Select(t => JsonConvert.SerializeObject(t, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() })).ToArray()), naemonInstance));
@@ -229,15 +265,17 @@ namespace MonitoringPlugin
     internal class NaemonServiceTemplate : INaemonFragmentTemplate
     {
         [JsonProperty(Required = Required.Always)]
-        public string Description { get; set; }
-        [JsonProperty(Required = Required.Always)]
         public Guid ContactgroupSource { get; set; }
+        [JsonProperty(Required = Required.Always)]
+        public string Description { get; set; }
         [JsonProperty(Required = Required.Always)]
         public NaemonCommandTemplate Command { get; set; }
         public string type { get; } = "service";
     }
     internal class NaemonHostTemplate : INaemonFragmentTemplate
     {
+        [JsonProperty(Required = Required.Always)]
+        public Guid ContactgroupSource { get; set; }
         [JsonProperty(Required = Required.Always)]
         public NaemonCommandTemplate Command { get; set; }
         public string type { get; } = "host";
@@ -258,6 +296,7 @@ namespace MonitoringPlugin
     internal class NaemonHost
     {
         public string Name { get; set; }
+        public string[] Contactgroups { get; set; }
         public Guid ID { get; set; }
         public string Command { get; set; }
         public IDictionary<string, NaemonService> Services { get; set; }
@@ -266,5 +305,6 @@ namespace MonitoringPlugin
     internal class NaemonService
     {
         public string Command { get; set; }
+        public string[] Contactgroups { get; set; }
     }
 }
