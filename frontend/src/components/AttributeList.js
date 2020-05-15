@@ -19,8 +19,8 @@ function AttributeList(props) {
   let index = 0;
   const [openAttributeSegments, setOpenAttributeSegments] = useState(_.range(_.size(nestedAttributes)));
 
-  // TODO: switch from index based to key based
-  const attributeAccordionItems = _.map(nestedAttributes, (na, key) => {
+  const attributeAccordionItems = [];
+  _.forEach(nestedAttributes, (na, key) => {
     var sortedAttributes = [...na];
     sortedAttributes.sort((a,b) => {
       return a.attribute.name.localeCompare(b.attribute.name);
@@ -38,7 +38,7 @@ function AttributeList(props) {
 
     const active = openAttributeSegments.indexOf(index) !== -1;
 
-    const ret = (<div key={index}><Accordion.Title active={active} onClick={onTitleClick} index={index}>
+    const ret = (<div key={key}><Accordion.Title active={active} onClick={onTitleClick} index={index}>
         <Icon name='dropdown' /> {title}
       </Accordion.Title>
       <Accordion.Content active={active}>
@@ -54,12 +54,18 @@ function AttributeList(props) {
 
       index++;
 
-      return ret;
+      attributeAccordionItems[key] = ret;
   });
+
+  // sort associative array
+  let attributeAccordionItemsSorted = [];
+  _.forEach(Object.keys(attributeAccordionItems).sort(), (value) => {
+    attributeAccordionItemsSorted[value] = attributeAccordionItems[value];
+  })
 
   return (
     <Accordion styled exclusive={false} fluid>
-        {attributeAccordionItems}
+        {_.values(attributeAccordionItemsSorted)}
     </Accordion>
   );
 }
