@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import Attribute from './Attribute';
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import _ from 'lodash';
-import { Accordion, Icon } from 'semantic-ui-react'
+import { Accordion, Button, Icon } from 'semantic-ui-react'
 import { onAppear, onExit } from '../utils/animation';
 import { useLayers } from '../utils/useLayers';
 
@@ -16,8 +16,7 @@ function AttributeList(props) {
     if (splits.length <= 1) return "";
     else return splits.slice(0, -1).join(".");
   });
-  let index = 0;
-  const [openAttributeSegments, setOpenAttributeSegments] = useState(_.range(_.size(nestedAttributes)));
+  const [openAttributeSegments, setOpenAttributeSegments] = useState([]);
 
   const attributeAccordionItems = [];
   _.forEach(nestedAttributes, (na, key) => {
@@ -36,9 +35,9 @@ function AttributeList(props) {
         setOpenAttributeSegments(openAttributeSegments.filter(i => i !== index));
     };
 
-    const active = openAttributeSegments.indexOf(index) !== -1;
+    const active = openAttributeSegments.includes(key) ? true : false;
 
-    const ret = (<div key={key}><Accordion.Title active={active} onClick={onTitleClick} index={index}>
+    const ret = (<div key={key}><Accordion.Title active={active} onClick={onTitleClick} index={key}>
         <Icon name='dropdown' /> {title}
       </Accordion.Title>
       <Accordion.Content active={active}>
@@ -52,8 +51,6 @@ function AttributeList(props) {
         </Flipper>
       </Accordion.Content></div>);
 
-      index++;
-
       attributeAccordionItems[key] = ret;
   });
 
@@ -63,10 +60,27 @@ function AttributeList(props) {
     attributeAccordionItemsSorted[value] = attributeAccordionItems[value];
   })
 
+  const [expanded, setExpanded] = useState(false);
+  const expandeCollapseAll = () => {
+    const newOpenAttributeSegments = expanded ? [] : _.keys(attributeAccordionItemsSorted);
+    setOpenAttributeSegments(newOpenAttributeSegments);
+    setExpanded(!expanded);
+  };
+
   return (
-    <Accordion styled exclusive={false} fluid>
-        {_.values(attributeAccordionItemsSorted)}
-    </Accordion>
+    <>
+       <div className={"d-flex align-items-end flex-column"} >
+            <Button
+                size={"tiny"}
+                onClick={() => expandeCollapseAll()}
+            >
+                Expand/Collapse All
+            </Button>
+        </div>
+        <Accordion styled exclusive={false} fluid>
+            {_.values(attributeAccordionItemsSorted)}
+        </Accordion>
+    </>
   );
 }
 
