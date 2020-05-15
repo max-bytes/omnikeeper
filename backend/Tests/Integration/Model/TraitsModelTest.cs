@@ -25,7 +25,7 @@ namespace Tests.Integration.Model
 
         private class MockedTraitsProvider : ITraitsProvider
         {
-            public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans, TimeThreshold timeThreshold)
+            public IImmutableDictionary<string, Trait> GetTraits()
             {
                 return new List<Trait>()
                 {
@@ -64,11 +64,16 @@ namespace Tests.Integration.Model
                     }, requiredTraits: new List<string>() { "test_trait_4" })
                 }.ToImmutableDictionary(t => t.Name);
             }
+
+            public void Register(string source, Trait[] t)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private class MockedTraitsProviderWithLoop : ITraitsProvider
         {
-            public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans, TimeThreshold timeThreshold)
+            public IImmutableDictionary<string, Trait> GetTraits()
             {
                 return new List<Trait>()
                 {
@@ -94,6 +99,11 @@ namespace Tests.Integration.Model
                         )
                     }, requiredTraits: new List<string>() { "test_trait_1" })
                 }.ToImmutableDictionary(t => t.Name);
+            }
+
+            public void Register(string source, Trait[] t)
+            {
+                throw new NotImplementedException();
             }
         }
 

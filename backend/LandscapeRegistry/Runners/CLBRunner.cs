@@ -59,6 +59,7 @@ namespace LandscapeRegistry.Runners
 
         private readonly IDictionary<string, IComputeLayerBrain> existingComputeLayerBrains;
         private readonly ILayerModel layerModel;
+        private readonly IPredicateModel predicateModel;
         private readonly ILogger<CLBRunner> logger;
     }
 }

@@ -22,6 +22,7 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using JsonSubTypes;
 using DotLiquid.Util;
+using System.Reflection;
 
 namespace MonitoringPlugin
 {
@@ -31,25 +32,57 @@ namespace MonitoringPlugin
         private readonly ICIModel ciModel;
         private readonly ITraitModel traitModel;
 
-        public CLBNaemonMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, ITraitModel traitModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
-            : base(atributeModel, layerModel, changesetModel, userModel, conn)
+        public CLBNaemonMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, ITraitModel traitModel, IRelationModel relationModel,
+            IPredicateModel predicateModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
+            : base(atributeModel, layerModel, predicateModel, changesetModel, userModel, conn)
         {
             this.ciModel = ciModel;
             this.relationModel = relationModel;
             this.traitModel = traitModel;
         }
 
+        private readonly string hasMonitoringModulePredicate = "has_monitoring_module";
+        private readonly string isMonitoredByPredicate = "is_monitored_by";
+        private readonly string belongsToNaemonContactgroup = "belongs_to_naemon_contactgroup";
+        public override string[] RequiredPredicates => new string[]
+        {
+            hasMonitoringModulePredicate,
+            isMonitoredByPredicate,
+            belongsToNaemonContactgroup
+        };
+
+        private readonly Trait moduleTrait = Trait.Build("naemon_service_module", new List<TraitAttribute>() {
+            TraitAttribute.Build("template",
+                CIAttributeTemplate.BuildFromParams("monitoring.naemon.config_template", AttributeValueType.MultilineText, null, CIAttributeValueConstraintTextLength.Build(1, null))
+            )
+        });
+        private readonly Trait naemonInstanceTrait = Trait.Build("naemon_instance", new List<TraitAttribute>() {
+            TraitAttribute.Build("name",
+                CIAttributeTemplate.BuildFromParams("monitoring.naemon.instance_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+            )
+        });
+        private readonly Trait contactgroupTrait = Trait.Build("naemon_contactgroup", new List<TraitAttribute>() {
+            TraitAttribute.Build("name",
+                CIAttributeTemplate.BuildFromParams("monitoring.naemon.contactgroup_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+            )
+        });
+
+        public override Trait[] DefinedTraits => new Trait[] { moduleTrait, naemonInstanceTrait, contactgroupTrait };
+
         public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger)
         {
             logger.LogDebug("Start clbMonitoring");
             var layerSetMonitoringDefinitionsOnly = await layerModel.BuildLayerSet(new[] { "Monitoring Definitions" }, trans);
 
-            var timeThreshold = TimeThreshold.BuildLatest(); // TODO: can we really work with a single timethreshold?
+            var timeThreshold = TimeThreshold.BuildLatestAtTime(changesetProxy.Timestamp);
 
             // TODO: make configurable
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
 
-            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelationsWithPredicateID(layerSetMonitoringDefinitionsOnly, false, "has_monitoring_module", trans, timeThreshold);
+            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelationsWithPredicateID(layerSetMonitoringDefinitionsOnly, false, hasMonitoringModulePredicate, trans, timeThreshold);
+
+            // prepare contact groups
+            var contactGroupRelations = await relationModel.GetMergedRelationsWithPredicateID(layerSetMonitoringDefinitionsOnly, false, belongsToNaemonContactgroup, trans, timeThreshold);
 
             // prepare list of all monitored cis
             var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.FromCIID).Distinct();
@@ -70,49 +103,37 @@ namespace MonitoringPlugin
                 logger.LogDebug("Process mm relation...");
 
                 var monitoringModuleCI = monitoringModuleCIs[p.ToCIID];
-                var monitoringModuleET = await traitModel.CalculateEffectiveTraitSetForCI(monitoringModuleCI, trans, timeThreshold); // TODO: move outside of loop, prefetch
-                if (!monitoringModuleET.EffectiveTraits.ContainsKey("naemon_service_module"))
+
+                var monitoringModuleET = await traitModel.CalculateEffectiveTraitForCI(monitoringModuleCI, moduleTrait, trans, timeThreshold);
+                if (monitoringModuleET == null)
                 {
-                    logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"naemon_service_module\"");
-                    await errorHandler.LogError(monitoringModuleCI.ID, "error", "Expected this CI to have trait \"naemon_service_module\"");
+                    logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{moduleTrait.Name}\"");
+                    await errorHandler.LogError(monitoringModuleCI.ID, "error", $"Expected this CI to have trait \"{moduleTrait.Name}\"");
                     continue;
                 }
                 logger.LogDebug("  Fetched effective traits");
-
-                var monitoredCI = monitoredCIs[p.FromCIID];
-                var monitoringCommandsAV = monitoringModuleET.EffectiveTraits["naemon_service_module"].TraitAttributes["config_template"].Attribute.Value;
-                //var monitoringCommands = new string[0];
-                var monitoringCommands = monitoringCommandsAV switch
-                {
-                    AttributeValueTextArray ata => ata.Values,
-                    AttributeValueTextScalar ats => new string[] { ats.Value },
-                    _ => new string[0], // TODO: error handling
-                };
+                var templateStr = (monitoringModuleET.TraitAttributes["template"].Attribute.Value as AttributeValueTextScalar).Value;
 
                 // create template context based on monitored CI, so that the templates can access all the related variables
-                var context = ScribanVariableService.CreateCIBasedTemplateContext(monitoredCI, layerSetAll, timeThreshold, null, ciModel, relationModel);
+                var context = ScribanVariableService.CreateCIBasedTemplateContext(monitoredCIs[p.FromCIID], layerSetAll, timeThreshold, null, ciModel, relationModel);
 
                 logger.LogDebug("  Parse/Render config segments");
                 // template parsing and rendering
-                foreach (var templateStr in monitoringCommands)
+                try
                 {
-                    try
-                    {
-                        logger.LogDebug($"  Parsing template:\n{templateStr}");
+                    logger.LogDebug($"  Parsing template:\n{templateStr}");
 
-                        var template = Scriban.Template.Parse(templateStr);
-                        string templateSegment = template.Render(context);
-                        logger.LogDebug($"  Rendered template:\n{templateSegment}");
-                        renderedTemplateSegments.Add((p.FromCIID, monitoringModuleCI.Name, templateSegment));
-                    }
-                    catch (Exception e)
-                    {
-                        logger.LogError($"Error parsing or rendering command from monitoring module \"{monitoringModuleCI.ID}\": {e.Message}");
-                        await errorHandler.LogError(monitoringModuleCI.ID, "error", $"Error parsing or rendering command: {e.Message}");
-                        continue;
-                    }
+                    var template = Scriban.Template.Parse(templateStr);
+                    string templateSegment = template.Render(context);
+                    logger.LogDebug($"  Rendered template:\n{templateSegment}");
+                    renderedTemplateSegments.Add((p.FromCIID, monitoringModuleCI.Name, templateSegment));
                 }
-                logger.LogDebug("Processed mm relation");
+                catch (Exception e)
+                {
+                    logger.LogError($"Error parsing or rendering command from monitoring module \"{monitoringModuleCI.ID}\": {e.Message}");
+                    await errorHandler.LogError(monitoringModuleCI.ID, "error", $"Error parsing or rendering command: {e.Message}");
+                }
+                logger.LogDebug("  Processed mm relation");
             }
 
             var parseErrors = new List<(Guid ciid, string template, string error)>();
@@ -167,9 +188,9 @@ namespace MonitoringPlugin
             foreach (var naemonInstance in naemonInstancesTS)
                 foreach (var monitoredCI in monitoredCIs)
                     monitoredByCIIDFragments.Add(BulkRelationDataPredicateScope.Fragment.Build(monitoredCI.Value.ID, naemonInstance.UnderlyingCI.ID));
-            await relationModel.BulkReplaceRelations(BulkRelationDataPredicateScope.Build("is_monitored_by", targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, trans);
-
+            await relationModel.BulkReplaceRelations(BulkRelationDataPredicateScope.Build(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, trans);
             logger.LogDebug("Assigned CIs to naemon instances");
+
 
             logger.LogDebug("Writing final naemon config");
 
@@ -177,18 +198,15 @@ namespace MonitoringPlugin
             var naemonInstance2MonitoredCILookup = monitoredByCIIDFragments.GroupBy(t => t.To).ToDictionary(t => t.Key, t => t.Select(t => t.From));
             var monitoringConfigs = new List<BulkCIAttributeDataLayerScope.Fragment>();
 
-            // prepare contact groups
-            var contactGroupRelations = await relationModel.GetMergedRelationsWithPredicateID(layerSetAll, false, "belongs_to_naemon_contactgroup", trans, timeThreshold); // TODO: correct name?
-
-            // TODO: this needs to be made much more straitforward!
+            // TODO: this needs to be made much more straightforward!
             var contactGroupCIIDs = contactGroupRelations.Select(r => r.ToCIID);
             var contactGroupCIs = (await ciModel.GetMergedCIs(layerSetAll, false, trans, timeThreshold, contactGroupCIIDs)).ToDictionary(t => t.ID);
             var contactGroups = contactGroupRelations.GroupBy(r => r.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.ToCIID]));
             var contactGroupNames = new Dictionary<Guid, string>();
             foreach(var ci in contactGroups.Values.SelectMany(t => t).Distinct())
             {
-                var ets = await traitModel.CalculateEffectiveTraitSetForCI(ci, trans, timeThreshold);
-                if (ets.EffectiveTraits.TryGetValue("naemon_contactgroup", out var et))
+                var et = await traitModel.CalculateEffectiveTraitForCI(ci, contactgroupTrait, trans, timeThreshold);
+                if (et != null)
                 {
                     var name = (et.TraitAttributes["name"].Attribute.Value as AttributeValueTextScalar).Value;
                     contactGroupNames.Add(ci.ID, name);

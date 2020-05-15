@@ -23,5 +23,10 @@ namespace Landscape.Base.Utils
         {
             return new TimeThreshold(false, time);
         }
+
+        public static TimeThreshold BuildLatestAtTime(DateTimeOffset time)
+        {
+            return new TimeThreshold(true, time);
+        }
     }
 }

@@ -20,13 +20,18 @@ namespace MonitoringPlugin
         private readonly ICIModel ciModel;
         private readonly ITraitModel traitModel;
 
-        public CLBMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, ITraitModel traitModel, IRelationModel relationModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
-            : base(atributeModel, layerModel, changesetModel, userModel, conn)
+        public CLBMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, ITraitModel traitModel, IRelationModel relationModel, IPredicateModel predicateModel, 
+            IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
+            : base(atributeModel, layerModel, predicateModel, changesetModel, userModel, conn)
         {
             this.ciModel = ciModel;
             this.relationModel = relationModel;
             this.traitModel = traitModel;
         }
+
+        public override string[] RequiredPredicates => new string[] { }; // TODO
+
+        public override Trait[] DefinedTraits => new Trait[] { }; // TODO
 
         public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger)
         {

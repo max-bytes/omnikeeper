@@ -32,16 +32,24 @@ namespace LandscapeRegistry.Model
 
         public async Task<EffectiveTraitSet> CalculateEffectiveTraitSetForCI(MergedCI ci, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var traits = await traitsProvider.GetTraits(trans, atTime);
+            var traits = traitsProvider.GetTraits();
 
             var candidates = traits.Values.Select(t => new EffectiveTraitCandidate(t, ci)).ToList();
             var ret = await ResolveETCandidates(candidates, traits, trans, atTime);
             return ret.FirstOrDefault() ?? EffectiveTraitSet.Build(ci, ImmutableList<EffectiveTrait>.Empty);
         }
 
+
+        public async Task<EffectiveTrait> CalculateEffectiveTraitForCI(MergedCI ci, Trait trait, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            var traits = traitsProvider.GetTraits();
+            var ret = await ResolveETCandidates(new List<EffectiveTraitCandidate>() { new EffectiveTraitCandidate(trait, ci) }, traits, trans, atTime);
+            return ret.FirstOrDefault()?.EffectiveTraits[trait.Name]; // TODO: this whole thing can be structured better
+        }
+
         public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var traits = await traitsProvider.GetTraits(trans, atTime);
+            var traits = traitsProvider.GetTraits();
             var trait = traits.GetValueOrDefault(traitName);
             if (trait == null) return null; // trait not found by name
             return await CalculateEffectiveTraitSetsForTrait(trait, layerSet, trans, atTime);
@@ -90,7 +98,7 @@ namespace LandscapeRegistry.Model
 
             // TODO: check that if the current trait has depedent traits that they are properly resolved too
             var candidates = cis.Select(ci => new EffectiveTraitCandidate(trait, ci)).ToList();
-            var traits = await traitsProvider.GetTraits(trans, atTime);
+            var traits = traitsProvider.GetTraits();
             var ret = await ResolveETCandidates(candidates, traits, trans, atTime);
             return ret;
         }

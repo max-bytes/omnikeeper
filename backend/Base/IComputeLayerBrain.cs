@@ -9,6 +9,9 @@ namespace Landscape.Base
     {
         string Name { get; }
 
+        string[] RequiredPredicates { get; }
+        Trait[] DefinedTraits { get; }
+
         Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, Npgsql.NpgsqlTransaction trans, ILogger logger);
         Task<bool> Run(CLBSettings settings, ILogger logger);
     }

@@ -24,6 +24,16 @@ namespace LandscapeRegistry.Model.Decorators
             this.memoryCache = memoryCache;
         }
 
+        // TODO: does caching effective traits make sense even?
+        // if we gave up caching traits, they could become much more powerful -> nested relation-requirements, nested traits-requirements
+        // caching the underlying structures instead (attributes, relations, ...) we can still keep this feasible
+
+        public async Task<EffectiveTrait> CalculateEffectiveTraitForCI(MergedCI ci, Trait trait, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            // TODO: caching
+            return await model.CalculateEffectiveTraitForCI(ci, trait, trans, atTime);
+        }
+
         public async Task<EffectiveTraitSet> CalculateEffectiveTraitSetForCI(MergedCI ci, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             if (atTime.IsLatest)
