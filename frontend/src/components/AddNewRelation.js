@@ -10,10 +10,12 @@ import { queries } from '../graphql/queries'
 import { Row } from "react-bootstrap";
 import { Dropdown, Button, Icon, Segment } from 'semantic-ui-react';
 import LayerDropdown from "./LayerDropdown";
+import { ErrorPopupButton } from "./ErrorPopupButton";
 
 function AddNewRelation(props) {
+  const [insertError, setInsertError] = useState(undefined);
   const canBeEdited = props.isEditable && props.visibleAndWritableLayers.length > 0;
-  let initialRelation = {predicateID: null, toCIID: null, layer: null };
+  let initialRelation = {predicateID: null, targetCIID: null, forward: true, layer: null };
   // const [selectedLayer, setSelectedLayer] = useState(undefined);
   const [isOpen, setOpen] = useState(false);
   const [newRelation, setNewRelation] = useState(initialRelation);
@@ -38,9 +40,14 @@ function AddNewRelation(props) {
     });
     const sortedPredicates = [...dataPredicates.predicates]
     sortedPredicates.sort((a,b) => (a.state + "_" + a.wordingFrom).localeCompare(b.state + "_" + b.wordingFrom));
-    var predicateList = sortedPredicates.map(d => {
+    var predicateList = sortedPredicates.flatMap(d => {
       const isDisabled = d.state !== "ACTIVE";
-      return { key: d.id, value: d.id, text: d.labelWordingFrom, disabled: isDisabled };
+      return [
+        { key: `${d.id}$$$$forward`, value: `${d.id}$$$$forward`, disabled: isDisabled, text: `${d.labelWordingFrom}...`,
+          content: (<><b>{d.labelWordingFrom}</b>... <span className="text-muted"><br />({d.id})</span></>) },
+        { key: `${d.id}$$$$back`, value: `${d.id}$$$$back`, disabled: isDisabled, text: `${d.labelWordingTo}...`,
+          content: (<><b>{d.labelWordingTo}</b>... <span className="text-muted"><br />({d.id})</span></>) }
+      ];
     });
 
     // move add functionality into on-prop
@@ -48,54 +55,62 @@ function AddNewRelation(props) {
       <Segment raised>
         <Form onSubmit={e => {
             e.preventDefault();
-            insertRelation({ variables: { fromCIID: props.ciIdentity, toCIID: newRelation.toCIID, predicateID: newRelation.predicateID, 
-              includeRelated: props.perPredicateLimit, layerID: newRelation.layer.id, layers: props.visibleLayers} }).then(d => {
-              setOpen(false);
-              setNewRelation(initialRelation);
-              setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }});
-            });
+            setInsertError(undefined);
+
+            const fromTo = (newRelation.forward) ? { fromCIID: props.ciIdentity, toCIID: newRelation.targetCIID } : { fromCIID: newRelation.targetCIID, toCIID: props.ciIdentity };
+
+            insertRelation({ variables: { ...fromTo, predicateID: newRelation.predicateID, 
+              includeRelated: props.perPredicateLimit, layerID: newRelation.layer.id, layers: props.visibleLayers} })
+              .then(d => {
+                setOpen(false);
+                setNewRelation(initialRelation);
+                setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }});
+              }).catch(e => {
+                setInsertError(e);
+              });
           }}>
 
-          <Form.Group as={Row} controlId="layer">
-            <Form.Label column>Layer</Form.Label>
-            <Col sm={10}>
-              <LayerDropdown layers={props.visibleAndWritableLayers} selectedLayer={newRelation.layer} onSetSelectedLayer={l => setNewRelation({...newRelation, layer: l})} />
-            </Col>
-          </Form.Group>
-
-          <Form.Group as={Row} controlId="name">
-            <Form.Label column>Predicate</Form.Label>
-            <Col sm={10}>
-              {/* TODO: create own PredicateDropdown (similar to LayerDropdown) */}
+          <Form.Row>
+            <Form.Label column xs={1}>
+              This CI...
+            </Form.Label>
+            <Form.Group as={Col} xs={4} controlId="name">
+                {/* TODO: create own PredicateDropdown (similar to LayerDropdown) */}
               <Dropdown
-                value={newRelation.predicateID}
+                value={((newRelation.predicateID) ? `${newRelation.predicateID}$$$$${((newRelation.forward) ? 'forward' : 'back')}` : undefined)}
                 placeholder='Select Predicate'
-                onChange={(_, data) => setNewRelation({...newRelation, predicateID: data.value})}
+                onChange={(_, data) => {
+                  const [predicateID, forwardStr] = data.value.split('$$$$');
+                  setNewRelation({...newRelation, predicateID: predicateID, forward: forwardStr === 'forward'});
+                }}
                 fluid
                 search
                 selection
                 options={predicateList}
               />
-            </Col>
-          </Form.Group>
+            </Form.Group>
 
-          <Form.Group as={Row} controlId="name">
-            <Form.Label column>To CI</Form.Label>
-            <Col sm={10}>
-              {/* TODO: create own CIDropdown (similar to LayerDropdown) */}
-              <Dropdown 
-                value={newRelation.toCIID}
-                placeholder='Select CI'
-                onChange={(_, data) => setNewRelation({...newRelation, toCIID: data.value})}
-                fluid
-                search
-                selection
-                options={ciList}
-              />
-            </Col>
-          </Form.Group>
+            <Form.Group as={Col} xs={4} controlId="name">
+                {/* TODO: create own CIDropdown (similar to LayerDropdown) */}
+                <Dropdown 
+                  value={newRelation.targetCIID}
+                  placeholder='Target CI'
+                  onChange={(_, data) => setNewRelation({...newRelation, targetCIID: data.value})}
+                  fluid
+                  search
+                  selection
+                  options={ciList}
+                />
+            </Form.Group>
+
+            <Form.Group as={Col} xs={3} controlId="layer">
+              <LayerDropdown layers={props.visibleAndWritableLayers} selectedLayer={newRelation.layer} onSetSelectedLayer={l => setNewRelation({...newRelation, layer: l})} />
+            </Form.Group>
+
+          </Form.Row>
           <Button secondary className="mr-2" onClick={() => setOpen(false)}>Cancel</Button>
           <Button primary type="submit">Insert</Button>
+          <ErrorPopupButton error={insertError} />
         </Form>
       </Segment>;
   }
