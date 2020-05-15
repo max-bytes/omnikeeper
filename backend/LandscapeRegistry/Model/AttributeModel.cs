@@ -283,7 +283,7 @@ namespace LandscapeRegistry.Model
         }
 
         public async Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
-            => await InsertAttribute(CIModel.NameAttribute, AttributeValueTextScalar.Build(nameValue), layerID, ciid, changesetProxy, trans);
+            => await InsertAttribute(CIModel.NameAttribute, AttributeScalarValueText.Build(nameValue), layerID, ciid, changesetProxy, trans);
 
         public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {

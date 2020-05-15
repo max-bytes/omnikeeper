@@ -74,7 +74,7 @@ namespace MonitoringPlugin
                 logger.LogDebug("  Fetched effective traits");
 
                 var monitoredCI = monitoredCIs[p.FromCIID];
-                var monitoringCommands = monitoringModuleET.EffectiveTraits["monitoring_check_module"].TraitAttributes["commands"].Attribute.Value as AttributeValueTextArray;
+                var monitoringCommands = monitoringModuleET.EffectiveTraits["monitoring_check_module"].TraitAttributes["commands"].Attribute.Value as AttributeArrayValueText;
 
                 // add/collect variables
                 var variables = new Dictionary<string, object>() { { "target", LiquidVariableService.CreateVariablesFromCI(monitoredCI) } };
@@ -86,7 +86,7 @@ namespace MonitoringPlugin
                     string finalCommand;
                     try
                     {
-                        var template = DotLiquid.Template.Parse(commandStr);
+                        var template = DotLiquid.Template.Parse(commandStr.Value);
                         finalCommand = template.Render(Hash.FromDictionary(variables));
                     }
                     catch (Exception e)
@@ -101,7 +101,7 @@ namespace MonitoringPlugin
             }
 
             var monitoringCommandFragments = renderedCommands.GroupBy(t => t.ciid)
-                .Select(tt => BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeValueTextArray.Build(tt.Select(ttt => ttt.command).ToArray()), tt.Key));
+                .Select(tt => BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeArrayValueText.Build(tt.Select(ttt => ttt.command).ToArray()), tt.Key));
             await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.executing_commands", targetLayer.ID, monitoringCommandFragments), changesetProxy, trans);
 
             logger.LogDebug("Updated executed commands per monitored CI");
@@ -126,9 +126,9 @@ namespace MonitoringPlugin
             {
                 var naemonInstance = kv.Key;
                 var cis = kv.Value;
-                var commands = monitoringCommandFragments.Where(f => cis.Contains(f.CIID)).Select(f => string.Join("\n", (f.Value as AttributeValueTextArray).Values));
+                var commands = monitoringCommandFragments.Where(f => cis.Contains(f.CIID)).Select(f => string.Join("\n", (f.Value as AttributeArrayValueText).Values.Select(v => v.Value)));
                 var finalConfig = string.Join("\n", commands);
-                monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeValueTextScalar.Build(finalConfig, true), naemonInstance));
+                monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeScalarValueText.Build(finalConfig, true), naemonInstance));
             }
             await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.naemonConfig", targetLayer.ID, monitoringConfigs), changesetProxy, trans);
 

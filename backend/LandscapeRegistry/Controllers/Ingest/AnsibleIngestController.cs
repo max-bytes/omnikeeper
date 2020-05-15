@@ -223,32 +223,32 @@ namespace LandscapeRegistry.Controllers.Ingest
         }
 
         private BulkCICandidateAttributeData.Fragment String2Attribute(string name, string value) =>
-            BulkCICandidateAttributeData.Fragment.Build(name, AttributeValueTextScalar.Build(value));
+            BulkCICandidateAttributeData.Fragment.Build(name, AttributeScalarValueText.Build(value));
         private BulkCICandidateAttributeData.Fragment String2IntegerAttribute(string name, long value) =>
             BulkCICandidateAttributeData.Fragment.Build(name, AttributeValueIntegerScalar.Build(value));
 
         private BulkCICandidateAttributeData.Fragment JValue2TextAttribute(JToken o, string jsonName, string attributeName = null) =>
-            BulkCICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeValueTextScalar.Build(o[jsonName].Value<string>()));
+            BulkCICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeScalarValueText.Build(o[jsonName].Value<string>()));
         private BulkCICandidateAttributeData.Fragment JValue2IntegerAttribute(JToken o, string name, string attributeName = null) =>
             BulkCICandidateAttributeData.Fragment.Build(attributeName ?? name, AttributeValueIntegerScalar.Build(o[name].Value<long>()));
         private BulkCICandidateAttributeData.Fragment JValue2JSONAttribute(JToken o, string jsonName, string attributeName = null) =>
-            BulkCICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeValueJSONScalar.Build(o[jsonName]));
+            BulkCICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeScalarValueJSON.Build(o[jsonName]));
         private BulkCICandidateAttributeData.Fragment JValuePath2TextAttribute(JToken o, string jsonPath, string attributeName)
         {
             var jo = o.SelectToken(jsonPath);
-            return BulkCICandidateAttributeData.Fragment.Build(attributeName, AttributeValueTextScalar.Build(jo.Value<string>()));
+            return BulkCICandidateAttributeData.Fragment.Build(attributeName, AttributeScalarValueText.Build(jo.Value<string>()));
         }
         private BulkCICandidateAttributeData.Fragment JValue2TextArrayAttribute(JToken o, string jsonName, string attributeName = null)
         {
-            return BulkCICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeValueTextArray.Build(o[jsonName].Values<string>().ToArray()));
+            return BulkCICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeArrayValueText.Build(o[jsonName].Values<string>().ToArray()));
         }
         private BulkCICandidateAttributeData.Fragment JArray2JSONArrayAttribute(JArray array, string attributeName)
         {
-            return BulkCICandidateAttributeData.Fragment.Build(attributeName, AttributeValueJSONArray.Build(array.ToArray()));
+            return BulkCICandidateAttributeData.Fragment.Build(attributeName, AttributeArrayValueJSON.Build(array.ToArray()));
         }
         private BulkCICandidateAttributeData.Fragment JToken2JSONAttribute(JToken o, string attributeName)
         {
-            return BulkCICandidateAttributeData.Fragment.Build(attributeName, AttributeValueJSONScalar.Build(o));
+            return BulkCICandidateAttributeData.Fragment.Build(attributeName, AttributeScalarValueJSON.Build(o));
         }
     }
 }

@@ -29,10 +29,10 @@ namespace Tests.Templating
 
                 var testCIA = MergedCI.Build(Guid.NewGuid(), "test-ci-a", CIType.UnspecifiedCIType, new LayerSet(), atTime, new List<MergedCIAttribute>()
                 {
-                    MergedCIAttribute.Build(CIAttribute.Build(0, "a", Guid.NewGuid(), AttributeValueTextScalar.Build("a-value"), AttributeState.New, 0), new long[0]),
-                    MergedCIAttribute.Build(CIAttribute.Build(0, "a.b", Guid.NewGuid(), AttributeValueTextScalar.Build("b-value"), AttributeState.New, 0), new long[0]),
-                    MergedCIAttribute.Build(CIAttribute.Build(0, "a.c", Guid.NewGuid(), AttributeValueTextArray.Build(new string[] { "c-value0", "c-value1" }), AttributeState.New, 0), new long[0]),
-                    MergedCIAttribute.Build(CIAttribute.Build(0, "a.json", Guid.NewGuid(), AttributeValueJSONArray.Build(
+                    MergedCIAttribute.Build(CIAttribute.Build(0, "a", Guid.NewGuid(), AttributeScalarValueText.Build("a-value"), AttributeState.New, 0), new long[0]),
+                    MergedCIAttribute.Build(CIAttribute.Build(0, "a.b", Guid.NewGuid(), AttributeScalarValueText.Build("b-value"), AttributeState.New, 0), new long[0]),
+                    MergedCIAttribute.Build(CIAttribute.Build(0, "a.c", Guid.NewGuid(), AttributeArrayValueText.Build(new string[] { "c-value0", "c-value1" }), AttributeState.New, 0), new long[0]),
+                    MergedCIAttribute.Build(CIAttribute.Build(0, "a.json", Guid.NewGuid(), AttributeArrayValueJSON.Build(
                         new string[] { @"{ ""foo"": ""bar""}", @"{ ""second"": { ""yes"": true } }" }), AttributeState.New, 0), new long[0])
                     //MergedCIAttribute.Build(CIAttribute.Build(0, "a.json", Guid.NewGuid(), AttributeValueJSONScalar.Build(
                     //    JObject.Parse(@"{ ""foo"": ""bar""}")), AttributeState.New, 0), new long[0])

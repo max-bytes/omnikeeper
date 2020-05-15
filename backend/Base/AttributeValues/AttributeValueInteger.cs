@@ -9,16 +9,21 @@ using System.Text.RegularExpressions;
 
 namespace LandscapeRegistry.Entity.AttributeValues
 {
-    public abstract class AttributeValueInteger : IAttributeValue
+    public class AttributeValueIntegerScalar : IAttributeScalarValue<long>, IEquatable<AttributeValueIntegerScalar>
     {
+        public long Value { get; private set; }
+        public string Value2String() => Value.ToString();
+        public AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Value.ToString(), Type);
+        public object ToGenericObject() => Value;
+        public bool IsArray => false;
+
         public override string ToString() => $"AV-Integer: {Value2String()}";
+
         public AttributeValueType Type => AttributeValueType.Integer;
-        public abstract string Value2String();
-        public abstract bool IsArray { get; }
-        public abstract AttributeValueDTO ToDTO();
-        public abstract bool Equals(IAttributeValue other);
-        public abstract bool FullTextSearch(string searchString, CompareOptions compareOptions);
-        public abstract object ToGenericObject();
+
+        public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueIntegerScalar);
+        public bool Equals([AllowNull] AttributeValueIntegerScalar other) => other != null && Value == other.Value;
+        public override int GetHashCode() => Value.GetHashCode();
 
         public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
         { // does not make sense for integer
@@ -30,62 +35,41 @@ namespace LandscapeRegistry.Entity.AttributeValues
             yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, Type);
         }
 
-    }
+        public bool FullTextSearch(string searchString, CompareOptions compareOptions)
+            => CultureInfo.InvariantCulture.CompareInfo.IndexOf(Value.ToString(), searchString, compareOptions) >= 0;
 
-    public class AttributeValueIntegerScalar : AttributeValueInteger, IEquatable<AttributeValueIntegerScalar>
-    {
-        public long Value { get; private set; }
-        public override string Value2String() => Value.ToString();
-        public override AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Value.ToString(), Type);
-        public override object ToGenericObject() => Value;
-        public override bool IsArray => false;
-        public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueIntegerScalar);
-        public bool Equals([AllowNull] AttributeValueIntegerScalar other) => other != null && Value == other.Value;
-        public override int GetHashCode() => Value.GetHashCode();
-        public override bool FullTextSearch(string searchString, CompareOptions compareOptions) => CultureInfo.InvariantCulture.CompareInfo.IndexOf(Value.ToString(), searchString, compareOptions) >= 0;
+        public static AttributeValueIntegerScalar Build(long value)
+        {
+            return new AttributeValueIntegerScalar
+            {
+                Value = value
+            };
+        }
 
-        internal static AttributeValueIntegerScalar Build(string value)
+        public static AttributeValueIntegerScalar Build(string value)
         {
             long.TryParse(value, out var v);
             return Build(v);
         }
-
-        public static AttributeValueIntegerScalar Build(long value)
-        {
-            var n = new AttributeValueIntegerScalar
-            {
-                Value = value
-            };
-            return n;
-        }
-
     }
 
-    public class AttributeValueIntegerArray : AttributeValueInteger, IEquatable<AttributeValueIntegerArray>
+
+    public class AttributeValueIntegerArray : AttributeArrayValue<AttributeValueIntegerScalar, long>
     {
-        public long[] Values { get; private set; }
-        public override string Value2String() => string.Join(",", Values.Select(value => value.ToString().Replace(",", "\\,")));
-        public override AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Values.Select(v => v.ToString()).ToArray(), Type);
-        public override object ToGenericObject() => Values;
-        public override bool IsArray => true;
-        public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueIntegerArray);
-        public bool Equals([AllowNull] AttributeValueIntegerArray other) => other != null && Values.SequenceEqual(other.Values);
-        public override int GetHashCode() => Values.GetHashCode();
-        public override bool FullTextSearch(string searchString, CompareOptions compareOptions) => Values.Any(v => CultureInfo.InvariantCulture.CompareInfo.IndexOf(v.ToString(), searchString, compareOptions) >= 0);
+        public override AttributeValueType Type => AttributeValueType.Integer;
+
+        public static AttributeValueIntegerArray Build(long[] values)
+        {
+            return new AttributeValueIntegerArray()
+            {
+                Values = values.Select(v => AttributeValueIntegerScalar.Build(v)).ToArray()
+            };
+        }
 
         public static AttributeValueIntegerArray Build(string[] values)
         {
             var longValues = values.Select(value => { long.TryParse(value, out var v); return v; }).ToArray();
             return Build(longValues);
-        }
-
-        public static AttributeValueIntegerArray Build(long[] values)
-        {
-            var n = new AttributeValueIntegerArray
-            {
-                Values = values
-            };
-            return n;
         }
     }
 }
