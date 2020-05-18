@@ -16,7 +16,12 @@ function AttributeList(props) {
     if (splits.length <= 1) return "";
     else return splits.slice(0, -1).join(".");
   });
-  const [openAttributeSegments, setOpenAttributeSegments] = useState([]);
+
+  const [openAttributeSegments, setOpenAttributeSegmentsState] = useState(localStorage.getItem('openAttributeSegments') ? JSON.parse(localStorage.getItem('openAttributeSegments')) : [] );
+  const setOpenAttributeSegments = (openAttributeSegments) => {
+    setOpenAttributeSegmentsState(openAttributeSegments);
+    localStorage.setItem('openAttributeSegments', JSON.stringify(openAttributeSegments));
+  }
 
   const attributeAccordionItems = [];
   _.forEach(nestedAttributes, (na, key) => {
