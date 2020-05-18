@@ -55,7 +55,7 @@ const keycloakProviderInitConfig = {
 //'/landscape/registry'
 function App() {
   return (
-    <KeycloakProvider keycloak={keycloak} initConfig={keycloakProviderInitConfig}>
+    <KeycloakProvider keycloak={keycloak} initConfig={keycloakProviderInitConfig} LoadingComponent={<>Loading...</>}>
       <div style={{height: '100%'}}>
         <KeycloakTokenSetter />
         <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
