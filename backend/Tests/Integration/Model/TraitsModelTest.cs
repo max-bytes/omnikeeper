@@ -25,7 +25,7 @@ namespace Tests.Integration.Model
 
         private class MockedTraitsProvider : ITraitsProvider
         {
-            public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans, TimeThreshold timeThreshold)
+            public IImmutableDictionary<string, Trait> GetTraits()
             {
                 return new List<Trait>()
                 {
@@ -64,11 +64,16 @@ namespace Tests.Integration.Model
                     }, requiredTraits: new List<string>() { "test_trait_4" })
                 }.ToImmutableDictionary(t => t.Name);
             }
+
+            public void Register(string source, Trait[] t)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private class MockedTraitsProviderWithLoop : ITraitsProvider
         {
-            public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans, TimeThreshold timeThreshold)
+            public IImmutableDictionary<string, Trait> GetTraits()
             {
                 return new List<Trait>()
                 {
@@ -94,6 +99,11 @@ namespace Tests.Integration.Model
                         )
                     }, requiredTraits: new List<string>() { "test_trait_1" })
                 }.ToImmutableDictionary(t => t.Name);
+            }
+
+            public void Register(string source, Trait[] t)
+            {
+                throw new NotImplementedException();
             }
         }
 
@@ -165,17 +175,17 @@ namespace Tests.Integration.Model
             using (var trans = conn.BeginTransaction())
             {
                 var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
-                await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("text1"), layer1.ID, ciid1, changeset, trans);
-                await attributeModel.InsertAttribute("a2", AttributeValueTextScalar.Build("text2"), layer1.ID, ciid1, changeset, trans);
-                await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("text3"), layer1.ID, ciid1, changeset, trans);
-                await attributeModel.InsertAttribute("a4", AttributeValueTextScalar.Build("text4"), layer1.ID, ciid1, changeset, trans);
+                await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("text1"), layer1.ID, ciid1, changeset, trans);
+                await attributeModel.InsertAttribute("a2", AttributeScalarValueText.Build("text2"), layer1.ID, ciid1, changeset, trans);
+                await attributeModel.InsertAttribute("a3", AttributeScalarValueText.Build("text3"), layer1.ID, ciid1, changeset, trans);
+                await attributeModel.InsertAttribute("a4", AttributeScalarValueText.Build("text4"), layer1.ID, ciid1, changeset, trans);
 
-                await attributeModel.InsertAttribute("a1", AttributeValueTextScalar.Build("text1"), layer1.ID, ciid2, changeset, trans);
-                await attributeModel.InsertAttribute("a4", AttributeValueTextScalar.Build("text4"), layer1.ID, ciid2, changeset, trans);
+                await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("text1"), layer1.ID, ciid2, changeset, trans);
+                await attributeModel.InsertAttribute("a4", AttributeScalarValueText.Build("text4"), layer1.ID, ciid2, changeset, trans);
 
-                await attributeModel.InsertAttribute("a2", AttributeValueTextScalar.Build("text2"), layer1.ID, ciid3, changeset, trans);
-                await attributeModel.InsertAttribute("a3", AttributeValueTextScalar.Build("text3"), layer1.ID, ciid3, changeset, trans);
-                await attributeModel.InsertAttribute("a4", AttributeValueTextScalar.Build("text4"), layer1.ID, ciid3, changeset, trans);
+                await attributeModel.InsertAttribute("a2", AttributeScalarValueText.Build("text2"), layer1.ID, ciid3, changeset, trans);
+                await attributeModel.InsertAttribute("a3", AttributeScalarValueText.Build("text3"), layer1.ID, ciid3, changeset, trans);
+                await attributeModel.InsertAttribute("a4", AttributeScalarValueText.Build("text4"), layer1.ID, ciid3, changeset, trans);
 
                 trans.Commit();
             }

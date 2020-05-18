@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using LandscapeRegistry.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +34,8 @@ namespace LandscapeRegistry.Service
                 {
                     yield return TemplateErrorAttributeWrongType.Build(at.Type.Value, foundAttribute.Attribute.Value.Type);
                 }
-                if (at.IsArray.HasValue && foundAttribute.Attribute.Value.IsArray != at.IsArray.Value)
+                var isFoundAttributeArray = foundAttribute.Attribute.Value is IAttributeArrayValue;
+                if (at.IsArray.HasValue && isFoundAttributeArray != at.IsArray.Value)
                 {
                     yield return TemplateErrorAttributeWrongMultiplicity.Build(at.IsArray.Value);
                 }

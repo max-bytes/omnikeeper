@@ -10,6 +10,7 @@ namespace Landscape.Base.Model
     public interface IChangesetProxy
     {
         Task<Changeset> GetChangeset(NpgsqlTransaction trans);
+        DateTimeOffset Timestamp { get; }
     }
 
 }

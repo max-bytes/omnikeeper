@@ -1,4 +1,5 @@
-﻿using Landscape.Base.Entity;
+﻿using Landscape.Base;
+using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
@@ -8,6 +9,7 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -15,11 +17,67 @@ namespace LandscapeRegistry.Model
 {
     public class TraitsProvider : ITraitsProvider
     {
-        public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans, TimeThreshold timeThreshold)
+        private readonly IDictionary<string, Trait> traits = new Dictionary<string, Trait>();
+
+        public void Register(string source, Trait[] t)
+        { // TODO: consider source
+            foreach (var trait in t)
+                traits.Add(trait.Name, trait);
+        }
+
+        public IImmutableDictionary<string, Trait> GetTraits()
         {
-            // TODO: move somewhere else
-            // TODO: consider time
-            var traits = new List<Trait>()
+            return traits.ToImmutableDictionary();
+        }
+    }
+
+    public class CachedTraitsProvider : ITraitsProvider
+    {
+        private readonly ITraitsProvider TP;
+        private readonly IMemoryCache memoryCache;
+
+        public CachedTraitsProvider(ITraitsProvider tp, IMemoryCache memoryCache)
+        {
+            TP = tp;
+            this.memoryCache = memoryCache;
+        }
+        public IImmutableDictionary<string, Trait> GetTraits()
+        {
+            return memoryCache.GetOrCreate("traits", (ce) =>
+            {
+                return TP.GetTraits();
+            });
+        }
+
+        public void Register(string source, Trait[] t)
+        {
+            TP.Register(source, t);
+        }
+    }
+
+    public class TraitsSetup {
+        private readonly IServiceProvider sp;
+
+        public TraitsSetup(IServiceProvider sp)
+        {
+            this.sp = sp;
+        }
+
+        public void Setup()
+        {
+            var computeLayerBrains = sp.GetServices<IComputeLayerBrain>();
+            var traitsProvider = sp.GetService<ITraitsProvider>();
+            traitsProvider.Register("default", DefaultTraits.Get());
+            foreach (var clb in computeLayerBrains)
+                traitsProvider.Register($"CLB-{clb.Name}", clb.DefinedTraits);
+        }
+    }
+
+    public static class DefaultTraits
+    {
+        public static Trait[] Get()
+        {
+            var traits = new Trait[]
                 {
                     // hosts
                     Trait.Build("host", new List<TraitAttribute>() {
@@ -29,14 +87,14 @@ namespace LandscapeRegistry.Model
                     }),
                     Trait.Build("windows_host", new List<TraitAttribute>() {
                         TraitAttribute.Build("os_family",
-                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false, 
+                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                                 CIAttributeValueConstraintTextRegex.Build(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                         )
                     }, requiredTraits: new string[] { "host" }),
 
                     Trait.Build("linux_host", new List<TraitAttribute>() {
                         TraitAttribute.Build("os_family",
-                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false, 
+                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                                 CIAttributeValueConstraintTextRegex.Build(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
                         )
                     }, requiredTraits: new string[] { "host" }),
@@ -52,7 +110,7 @@ namespace LandscapeRegistry.Model
                     Trait.Build("ansible_can_deploy_to_it",
                         new List<TraitAttribute>() {
                             TraitAttribute.Build("hostname", // TODO: make this an anyOf[CIAttributeTemplate], or use dependent trait host
-                                CIAttributeTemplate.BuildFromParams("ipAddress", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                                CIAttributeTemplate.BuildFromParams("ipAddress",    AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                             )
                         },
                         new List<TraitAttribute>() {
@@ -66,45 +124,9 @@ namespace LandscapeRegistry.Model
                             )
                         }
                     ),
-
-                    // monitoring / naemon
-                    Trait.Build("naemon_service_module", new List<TraitAttribute>() {
-                            TraitAttribute.Build("config_template",
-                                CIAttributeTemplate.BuildFromParams("monitoring.naemon.config_template", AttributeValueType.MultilineText, null, CIAttributeValueConstraintTextLength.Build(1, null))
-                            )
-                        }),
-                    Trait.Build("naemon_instance", new List<TraitAttribute>() {
-                            TraitAttribute.Build("name",
-                                CIAttributeTemplate.BuildFromParams("monitoring.naemon.instance_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                            )
-                        }),
-                    Trait.Build("naemon_contactgroup", new List<TraitAttribute>() {
-                            TraitAttribute.Build("name",
-                                CIAttributeTemplate.BuildFromParams("monitoring.naemon.contactgroup_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                            )
-                        })
                 };
-            return traits.ToImmutableDictionary(t => t.Name);
-        }
-    }
 
-    public class CachedTraitsProvider : ITraitsProvider
-    {
-        private readonly ITraitsProvider TP;
-        private readonly IMemoryCache memoryCache;
-
-        public CachedTraitsProvider(ITraitsProvider tp, IMemoryCache memoryCache)
-        {
-            TP = tp;
-            this.memoryCache = memoryCache;
-        }
-        public async Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans, TimeThreshold timeThreshold)
-        {
-            return await memoryCache.GetOrCreateAsync("traits", async (ce) =>
-            {
-                // TODO: consider time
-                return await TP.GetTraits(trans, timeThreshold);
-            });
+            return traits;
         }
     }
 }

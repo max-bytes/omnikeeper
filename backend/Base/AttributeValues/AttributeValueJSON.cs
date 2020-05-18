@@ -13,18 +13,23 @@ using System.Text.RegularExpressions;
 
 namespace LandscapeRegistry.Entity.AttributeValues
 {
-    public abstract class AttributeValueJSON : IAttributeValue
+    public class AttributeScalarValueJSON : IAttributeScalarValue<JToken>, IEquatable<AttributeScalarValueJSON>
     {
-        protected static JToken ErrorValue(string message) => JToken.Parse($"{{\"error\": \"{message}\" }}");
+        public static JToken ErrorValue(string message) => JToken.Parse($"{{\"error\": \"{message}\" }}");
 
         public override string ToString() => $"AV-JSON: {Value2String()}";
+
+        public JToken Value { get; private set; }
+        public string Value2String() => Value.ToString();
+        public AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Value.ToString(), Type);
+        public object ToGenericObject() => Value;
+        public bool IsArray => false;
+
         public AttributeValueType Type => AttributeValueType.JSON;
-        public abstract string Value2String();
-        public abstract bool IsArray { get; }
-        public abstract AttributeValueDTO ToDTO();
-        public abstract object ToGenericObject();
-        public abstract bool Equals(IAttributeValue other);
-        public abstract bool FullTextSearch(string searchString, CompareOptions compareOptions);
+
+        public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeScalarValueJSON);
+        public bool Equals([AllowNull] AttributeScalarValueJSON other) => other != null && JToken.DeepEquals(Value, other.Value);
+        public override int GetHashCode() => Value.GetHashCode();
 
         public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
         { // does not make sense for JSON
@@ -36,24 +41,12 @@ namespace LandscapeRegistry.Entity.AttributeValues
             yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, Type);
         }
 
-    }
-
-    public class AttributeValueJSONScalar : AttributeValueJSON, IEquatable<AttributeValueJSONScalar>
-    {
-        public JToken Value { get; private set; }
-        public override string Value2String() => Value.ToString();
-        public override AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Value.ToString(), Type);
-        public override object ToGenericObject() => Value;
-        public override bool IsArray => false;
-        public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueJSONScalar);
-        public bool Equals([AllowNull] AttributeValueJSONScalar other) => other != null && JToken.DeepEquals(Value, other.Value);
-        public override int GetHashCode() => Value.GetHashCode();
-        public override bool FullTextSearch(string searchString, CompareOptions compareOptions)
+        public bool FullTextSearch(string searchString, CompareOptions compareOptions)
         {
             return Value.FullTextSearch(searchString, compareOptions);
         }
 
-        internal static AttributeValueJSONScalar Build(string value)
+        public static AttributeScalarValueJSON Build(string value)
         {
             try
             {
@@ -66,57 +59,42 @@ namespace LandscapeRegistry.Entity.AttributeValues
             }
         }
 
-        public static AttributeValueJSONScalar Build(JToken value)
+        public static AttributeScalarValueJSON Build(JToken value)
         {
-            var n = new AttributeValueJSONScalar
+            var n = new AttributeScalarValueJSON
             {
                 Value = value
             };
             return n;
         }
-
     }
 
-    public class AttributeValueJSONArray : AttributeValueJSON, IEquatable<AttributeValueJSONArray>
+
+    public class AttributeArrayValueJSON : AttributeArrayValue<AttributeScalarValueJSON, JToken>
     {
-        public JToken[] Values { get; private set; }
-        public override string Value2String() => string.Join(",", Values.Select(value => value.ToString().Replace(",", "\\,")));
-        public override AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Values.Select(v => v.ToString()).ToArray(), Type);
-        public override object ToGenericObject() => Values;
-        public override bool IsArray => true;
-        public override bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueJSONArray);
+        public override AttributeValueType Type => AttributeValueType.JSON;
 
-        private class EqualityComparer : IEqualityComparer<JToken>
+        public static AttributeArrayValueJSON Build(string[] values)
         {
-            public bool Equals(JToken x, JToken y) => JToken.DeepEquals(x, y);
-            public int GetHashCode(JToken obj) => obj.GetHashCode();
-        }
-        private static readonly EqualityComparer ec = new EqualityComparer();
-        public bool Equals([AllowNull] AttributeValueJSONArray other)
-            => other != null && Values.SequenceEqual(other.Values, ec);
-        public override int GetHashCode() => Values.GetHashCode();
-        public override bool FullTextSearch(string searchString, CompareOptions compareOptions)
-            => Values.Any(value => value.FullTextSearch(searchString, compareOptions));
-
-        public static AttributeValueJSONArray Build(string[] values)
-        {
-            var jsonValues = values.Select(value => {
+            var jsonValues = values.Select(value =>
+            {
                 try
                 {
                     return JToken.Parse(value);
-                } catch (JsonReaderException e)
+                }
+                catch (JsonReaderException e)
                 {
-                    return ErrorValue(e.Message);
+                    return AttributeScalarValueJSON.ErrorValue(e.Message);
                 }
             }).ToArray();
             return Build(jsonValues);
         }
 
-        public static AttributeValueJSONArray Build(JToken[] values)
+        public static AttributeArrayValueJSON Build(JToken[] values)
         {
-            var n = new AttributeValueJSONArray
+            var n = new AttributeArrayValueJSON
             {
-                Values = values
+                Values = values.Select(v => AttributeScalarValueJSON.Build(v)).ToArray()
             };
             return n;
         }

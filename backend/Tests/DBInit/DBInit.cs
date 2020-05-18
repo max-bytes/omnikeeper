@@ -61,9 +61,9 @@ namespace Tests.DBInit
                 if (r == 0)
                     return AttributeValueIntegerScalar.Build(random.Next(1000));
                 else if (r == 1)
-                    return AttributeValueTextArray.Build(Enumerable.Range(0, random.Next(1, 5)).Select(i => $"value_{i}").ToArray());
+                    return AttributeArrayValueText.Build(Enumerable.Range(0, random.Next(1, 5)).Select(i => $"value_{i}").ToArray());
                 else
-                    return AttributeValueTextScalar.Build($"attribute value {i + 1}");
+                    return AttributeScalarValueText.Build($"attribute value {i + 1}");
             }).ToArray();
 
             var applicationCIIDs = Enumerable.Range(0, numApplicationCIs).Select(i =>
@@ -125,7 +125,7 @@ namespace Tests.DBInit
                 {
                     await ciModel.CreateCIWithType("Application", trans, ciid);
                     await attributeModel.InsertCINameAttribute($"Application_{index}", cmdbLayerID, ciid, changeset, trans); 
-                    await attributeModel.InsertAttribute("application_name", AttributeValueTextScalar.Build($"Application_{index}"), cmdbLayerID, ciid, changeset, trans);
+                    await attributeModel.InsertAttribute("application_name", AttributeScalarValueText.Build($"Application_{index}"), cmdbLayerID, ciid, changeset, trans);
                     index++;
                 }
                 index = 0;
@@ -138,8 +138,8 @@ namespace Tests.DBInit
                     else
                         windowsHostCIIds.Add(hostCIID);
                     await attributeModel.InsertCINameAttribute($"{ciType}_{index}", cmdbLayerID, ciid, changeset, trans);
-                    await attributeModel.InsertAttribute("hostname", AttributeValueTextScalar.Build($"hostname_{index}.domain"), cmdbLayerID, ciid, changeset, trans);
-                    await attributeModel.InsertAttribute("system", AttributeValueTextScalar.Build($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), cmdbLayerID, ciid, changeset, trans);
+                    await attributeModel.InsertAttribute("hostname", AttributeScalarValueText.Build($"hostname_{index}.domain"), cmdbLayerID, ciid, changeset, trans);
+                    await attributeModel.InsertAttribute("system", AttributeScalarValueText.Build($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), cmdbLayerID, ciid, changeset, trans);
                     index++;
                 }
 
@@ -195,8 +195,8 @@ namespace Tests.DBInit
                 ciNaemon02 = await ciModel.CreateCIWithType("Naemon Instance", null);
                 await attributeModel.InsertCINameAttribute("Naemon Instance 01", cmdbLayerID, ciNaemon01, changeset, trans);
                 await attributeModel.InsertCINameAttribute("Naemon Instance 02", cmdbLayerID, ciNaemon02, changeset, trans);
-                await attributeModel.InsertAttribute("monitoring.naemon.instance_name", AttributeValueTextScalar.Build("Naemon Instance 01"), monitoringDefinitionsLayerID, ciNaemon01, changeset, trans);
-                await attributeModel.InsertAttribute("monitoring.naemon.instance_name", AttributeValueTextScalar.Build("Naemon Instance 02"), monitoringDefinitionsLayerID, ciNaemon02, changeset, trans);
+                await attributeModel.InsertAttribute("monitoring.naemon.instance_name", AttributeScalarValueText.Build("Naemon Instance 01"), monitoringDefinitionsLayerID, ciNaemon01, changeset, trans);
+                await attributeModel.InsertAttribute("monitoring.naemon.instance_name", AttributeScalarValueText.Build("Naemon Instance 02"), monitoringDefinitionsLayerID, ciNaemon02, changeset, trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("1.2.3.4"), cmdbLayerID, ciNaemon01, changeset.ID, trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("4.5.6.7"), cmdbLayerID, ciNaemon02, changeset.ID, trans);
 
@@ -207,11 +207,11 @@ namespace Tests.DBInit
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset, trans);
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset, trans);
                 await attributeModel.InsertAttribute("monitoring.naemon.config_template",
-                    AttributeValueTextScalar.Build("check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" --hostname \"{{ target.attributes.hostname }}\"", true), monitoringDefinitionsLayerID, ciMonModuleHost, changeset, trans);
+                    AttributeScalarValueText.Build("check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" --hostname \"{{ target.attributes.hostname }}\"", true), monitoringDefinitionsLayerID, ciMonModuleHost, changeset, trans);
                 await attributeModel.InsertAttribute("monitoring.naemon.config_template",
-                    AttributeValueTextScalar.Build("check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo --hostname \"{{ target.attributes.hostname }}\"", true), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset, trans);
+                    AttributeScalarValueText.Build("check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo --hostname \"{{ target.attributes.hostname }}\"", true), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset, trans);
                 await attributeModel.InsertAttribute("monitoring.naemon.config_template", 
-                    AttributeValueTextScalar.Build(
+                    AttributeScalarValueText.Build(
 @"{{~ for related_ci in target.relations.back.runs_on ~}}
 - name: service_name
   command: check_command {{ related_ci.attributes.application_name}}

@@ -9,6 +9,8 @@ namespace Landscape.Base.Model
 {
     public interface ITraitsProvider
     {
-        public Task<IImmutableDictionary<string, Trait>> GetTraits(NpgsqlTransaction trans, TimeThreshold atTime);
+        void Register(string source, Trait[] t);
+
+        IImmutableDictionary<string, Trait> GetTraits();
     }
 }

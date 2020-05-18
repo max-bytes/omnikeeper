@@ -226,7 +226,7 @@ namespace LandscapeRegistry.GraphQL
                     var userContext = context.UserContext as RegistryUserContext;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();// context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
                     // TODO: implement properly, just showing json string for now
-                    var traitsJSON = JObject.FromObject(await traitsProvider.GetTraits(null, userContext.TimeThreshold));
+                    var traitsJSON = JObject.FromObject(traitsProvider.GetTraits());
                     return traitsJSON.ToString();
                 });
 

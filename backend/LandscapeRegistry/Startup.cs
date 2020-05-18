@@ -121,14 +121,17 @@ namespace LandscapeRegistry
 
             services.AddScoped<ITemplatesProvider, TemplatesProvider>();
             services.Decorate<ITemplatesProvider, CachedTemplatesProvider>();
-            services.AddScoped<ITraitsProvider, TraitsProvider>();
-            services.Decorate<ITraitsProvider, CachedTraitsProvider>();
 
             services.AddScoped<MergedCIType>();
             services.AddScoped<RelationType>();
             services.AddScoped<ISchema, RegistrySchema>();
 
+            services.AddScoped<TraitsSetup>();
+
             services.AddSingleton<NpgsqlLoggingProvider>();
+
+            services.AddSingleton<ITraitsProvider, TraitsProvider>();
+            services.Decorate<ITraitsProvider, CachedTraitsProvider>();
 
             services.Configure<IISServerOptions>(options =>
             {
@@ -251,9 +254,11 @@ namespace LandscapeRegistry
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory,
-            NpgsqlLoggingProvider npgsqlLoggingProvider)
+            NpgsqlLoggingProvider npgsqlLoggingProvider, TraitsSetup traitsSetup)
         {
             NpgsqlLogManager.Provider = npgsqlLoggingProvider;
+
+            traitsSetup.Setup();
 
             app.UseCors("DefaultCORSPolicy");
 
@@ -328,8 +333,9 @@ namespace LandscapeRegistry
                     Authorization = new IDashboardAuthorizationFilter[] { new HangFireAuthorizationFilter() }
                 });
             }
+            
 
-            RecurringJob.AddOrUpdate<CLBRunner>(runner => runner.Run(), Cron.Minutely);// "*/15 * * * * *");
+            //RecurringJob.AddOrUpdate<CLBRunner>(runner => runner.Run(), "*/15 * * * * *");
             RecurringJob.AddOrUpdate<MarkedForDeletionRunner>(s => s.Run(), Cron.Minutely);
         }
     }

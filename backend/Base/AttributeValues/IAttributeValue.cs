@@ -2,7 +2,9 @@
 using Landscape.Base.Entity.DTO;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -20,13 +22,67 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public AttributeValueDTO ToDTO();
         public object ToGenericObject();
         public AttributeValueType Type { get; }
-        public bool IsArray { get; }
 
         IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum);
         bool FullTextSearch(string searchString, CompareOptions compareOptions);
         IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex);
     }
 
+    public interface IAttributeScalarValue<T> : IAttributeValue
+    {
+        public T Value { get; }
+    }
+
+    public interface IAttributeArrayValue : IAttributeValue
+    {
+
+    }
+
+    public interface IAttributeArrayValue<S, T> : IAttributeArrayValue where S : IAttributeScalarValue<T>
+    {
+        public S[] Values { get; }
+    }
+
+    public abstract class AttributeArrayValue<S,T> : IAttributeArrayValue<S, T>, IEquatable<AttributeArrayValue<S,T>> where S : IAttributeScalarValue<T>
+    {
+        public S[] Values { get; protected set; }
+
+        public abstract AttributeValueType Type { get; }
+
+        public bool IsArray => true;
+
+        public override string ToString() => $"AV-Array: {Value2String()}";
+
+        public bool Equals(IAttributeValue other) => Equals(other as AttributeArrayValue<S,T>);
+        public bool Equals(AttributeArrayValue<S,T> other) => other != null && Values.SequenceEqual(other.Values); // does this work?, or do we have to use zip()?
+        public override int GetHashCode() => Values.GetHashCode();
+
+        public AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Values.Select(v => v.ToDTO().Values[0]).ToArray(), Type);
+
+        public object ToGenericObject() => Values.Select(v => v.Value).ToArray();
+        public string Value2String() => string.Join(",", Values.Select(value => value.Value2String().Replace(",", "\\,")));
+
+        public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
+        {
+            for (int i = 0; i < Values.Length; i++)
+            {
+                foreach (var e in Values[i].ApplyTextLengthConstraint(minimum, maximum)) yield return e;
+            }
+        }
+
+        public bool FullTextSearch(string searchString, CompareOptions compareOptions)
+        {
+            return Values.Any(v => v.FullTextSearch(searchString, compareOptions));
+        }
+
+        public IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex)
+        {
+            for (int i = 0; i < Values.Length; i++)
+            {
+                foreach (var e in Values[i].MatchRegex(regex)) yield return e;
+            }
+        }
+    }
 
     public static class Extensions
     {
@@ -80,11 +136,11 @@ namespace LandscapeRegistry.Entity.AttributeValues
         {
             return type switch
             {
-                AttributeValueType.Text => AttributeValueTextScalar.Build(value, false),
-                AttributeValueType.MultilineText => AttributeValueTextScalar.Build(value, true),
+                AttributeValueType.Text => AttributeScalarValueText.Build(value, false),
+                AttributeValueType.MultilineText => AttributeScalarValueText.Build(value, true),
                 AttributeValueType.Integer => AttributeValueIntegerScalar.Build(value),
-                AttributeValueType.JSON => AttributeValueJSONScalar.Build(value),
-                AttributeValueType.YAML => AttributeValueYAMLScalar.Build(value),
+                AttributeValueType.JSON => AttributeScalarValueJSON.Build(value),
+                AttributeValueType.YAML => AttributeScalarValueYAML.Build(value),
                 _ => throw new Exception($"Unknown type {type} encountered"),
             };
         }
@@ -92,11 +148,11 @@ namespace LandscapeRegistry.Entity.AttributeValues
         {
             return type switch
             {
-                AttributeValueType.Text => AttributeValueTextArray.Build(values, false),
-                AttributeValueType.MultilineText => AttributeValueTextArray.Build(values, true),
+                AttributeValueType.Text => AttributeArrayValueText.Build(values, false),
+                AttributeValueType.MultilineText => AttributeArrayValueText.Build(values, true),
                 AttributeValueType.Integer => AttributeValueIntegerArray.Build(values),
-                AttributeValueType.JSON => AttributeValueJSONArray.Build(values),
-                AttributeValueType.YAML => AttributeValueYAMLArray.Build(values),
+                AttributeValueType.JSON => AttributeArrayValueJSON.Build(values),
+                AttributeValueType.YAML => AttributeArrayValueYAML.Build(values),
                 _ => throw new Exception($"Unknown type {type} encountered"),
             };
         }
