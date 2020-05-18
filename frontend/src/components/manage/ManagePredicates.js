@@ -27,6 +27,9 @@ export default function ManagePredicates(props) {
     { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
     { headerName: "Wording (from)", field: "wordingFrom" },
     { headerName: "Wording (to)", field: "wordingTo" },
+    { headerName: "Constraints", field: "constraints", 
+      cellRenderer: function(params) { return JSON.stringify(params.getValue()); },
+      cellEditor: 'predicateConstraintsCellEditor' },
     { headerName: "State", field: "state", cellEditor: 'agSelectCellEditor', cellEditorParams: {
         values: ['ACTIVE', 'DEPRECATED', 'INACTIVE', 'MARKED_FOR_DELETION'],
       },

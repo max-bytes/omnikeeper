@@ -49,7 +49,7 @@ function RelatedCI(props) {
         <LayerStackIcons layerStack={props.related.layerStack}></LayerStackIcons>
         <ChangesetPopup changesetID={props.related.changesetID} />
         <Form.Group controlId={`value:${props.related.predicateID}`} style={{flexGrow: 1}}>
-          <Form.Label className={"pr-1"} style={{flexBasis: '400px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{written}</Form.Label>
+          <Form.Label className={"pr-1"} style={{flexBasis: '600px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{written}</Form.Label>
           {removeButton}
         </Form.Group>
       </Form>

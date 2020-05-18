@@ -48,7 +48,7 @@ namespace Tests.Integration.Model
                 ciid1 = await ciModel.CreateCI(trans);
                 var ciid2 = await ciModel.CreateCI(trans);
                 ciid3 = await ciModel.CreateCI(trans);
-                var predicate1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, trans);
+                var predicate1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
 
                 var layer1 = await layerModel.CreateLayer("l1", trans);
                 layerID1 = layer1.ID;
@@ -113,7 +113,7 @@ namespace Tests.Integration.Model
 
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
-            var predicate1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, trans);
+            var predicate1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
 
             var layer1 = await layerModel.CreateLayer("l1", trans);
             var layer2 = await layerModel.CreateLayer("l2", trans);
@@ -150,8 +150,8 @@ namespace Tests.Integration.Model
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
             var ciid3 = await ciModel.CreateCI(trans);
-            var predicateID1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, trans);
-            var predicateID2 = await predicateModel.InsertOrUpdate("predicate_2", "", "", AnchorState.Active, trans);
+            var predicateID1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
+            var predicateID2 = await predicateModel.InsertOrUpdate("predicate_2", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
 
             var layer1 = await layerModel.CreateLayer("l1", trans);
             var layerset = new LayerSet(new long[] { layer1.ID });
@@ -189,7 +189,7 @@ namespace Tests.Integration.Model
             var layerset = new LayerSet(new long[] { layer2.ID, layer1.ID });
             var ciid1 = await ciModel.CreateCI(null);
             var ciid2 = await ciModel.CreateCI(null);
-            var predicate1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, null);
+            var predicate1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, null);
 
             using (var trans = conn.BeginTransaction())
             {
@@ -247,7 +247,7 @@ namespace Tests.Integration.Model
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
             var ciid3 = await ciModel.CreateCI(trans);
-            var predicateID1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, trans);
+            var predicateID1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
 
             var layer1 = await layerModel.CreateLayer("l1", trans);
             var layerset = new LayerSet(new long[] { layer1.ID });

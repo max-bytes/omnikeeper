@@ -109,8 +109,8 @@ namespace Tests.Integration.Model
             using var trans = conn.BeginTransaction();
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
-            var predicate1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, trans);
-            var predicate2 = await predicateModel.InsertOrUpdate("predicate_2", "", "", AnchorState.Active, trans);
+            var predicate1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
+            var predicate2 = await predicateModel.InsertOrUpdate("predicate_2", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
             trans.Commit();
 
             var t1 = DateTimeOffset.Now;

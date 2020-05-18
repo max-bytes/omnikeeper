@@ -1,5 +1,9 @@
 ﻿
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace Landscape.Base.Entity
 {
@@ -9,15 +13,17 @@ namespace Landscape.Base.Entity
         public string WordingFrom { get; private set; }
         public string WordingTo { get; private set; }
         public AnchorState State { get; private set; }
+        public PredicateConstraints Constraints { get; private set; }
 
-        public static Predicate Build(string id, string wordingFrom, string wordingTo, AnchorState state)
+        public static Predicate Build(string id, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints)
         {
             return new Predicate
             {
                 ID = id,
                 WordingFrom = wordingFrom,
                 WordingTo = wordingTo,
-                State = state
+                State = state,
+                Constraints = constraints
             };
         }
 
@@ -27,8 +33,41 @@ namespace Landscape.Base.Entity
             return other != null && ID == other.ID &&
                    WordingFrom == other.WordingFrom &&
                    WordingTo == other.WordingTo &&
-                   State == other.State;
+                   State == other.State &&
+                   Constraints.Equals(other.Constraints);
         }
         public override int GetHashCode() => HashCode.Combine(ID, WordingFrom, WordingTo, State);
+    }
+
+    public class PredicateConstraints
+    {
+        public string[] PreferredTraitsTo { get; private set; }
+        public string[] PreferredTraitsFrom { get; private set; }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool HasPreferredTraitsTo => PreferredTraitsTo.Length > 0;
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool HasPreferredTraitsFrom => PreferredTraitsFrom.Length > 0;
+
+        private PredicateConstraints() { }
+        public PredicateConstraints(string[] preferredTraitsTo, string[] preferredTraitsFrom)
+        {
+            PreferredTraitsFrom = preferredTraitsFrom;
+            PreferredTraitsTo = preferredTraitsTo;
+        }
+
+        public static PredicateConstraints Default = new PredicateConstraints(new string[0], new string[0]);
+
+        public override bool Equals(object obj)
+        {
+            return obj is PredicateConstraints constraints &&
+                   constraints.PreferredTraitsTo != null && PreferredTraitsTo.SequenceEqual(constraints.PreferredTraitsTo) &&
+                   constraints.PreferredTraitsFrom != null && PreferredTraitsFrom.SequenceEqual(constraints.PreferredTraitsFrom);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(PreferredTraitsTo, PreferredTraitsFrom);
+        }
     }
 }

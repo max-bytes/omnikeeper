@@ -49,7 +49,7 @@ namespace Tests.DBInit
             int numAttributesPerCIFrom = 20;
             int numAttributesPerCITo = 40;
             //var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
-            var predicateRunsOn = Predicate.Build("runs_on", "runs on", "is running", AnchorState.Active);
+            var predicateRunsOn = Predicate.Build("runs_on", "runs on", "is running", AnchorState.Active, PredicateModel.DefaultConstraits);
             //var regularPredicates = new[] {
                 //Predicate.Build("is_part_of", "is part of", "has part", AnchorState.Active),
                 //Predicate.Build("is_attached_to", "is attached to", "has attachment", AnchorState.Active),
@@ -76,8 +76,8 @@ namespace Tests.DBInit
             }).ToList();
 
             var monitoringPredicates = new[] {
-                Predicate.Build("has_monitoring_module", "has monitoring module", "is assigned to", AnchorState.Active),
-                Predicate.Build("is_monitored_by", "is monitored by", "monitors", AnchorState.Active)
+                Predicate.Build("has_monitoring_module", "has monitoring module", "is assigned to", AnchorState.Active, PredicateModel.DefaultConstraits),
+                Predicate.Build("is_monitored_by", "is monitored by", "monitors", AnchorState.Active, PredicateModel.DefaultConstraits)
             };
 
             //var automationPredicates = new[] {
@@ -150,7 +150,7 @@ namespace Tests.DBInit
             using (var trans = conn.BeginTransaction())
             {
                 foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates))//.Concat(automationPredicates))
-                    await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, AnchorState.Active, trans);
+                    await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, AnchorState.Active, PredicateModel.DefaultConstraits, trans);
 
                 trans.Commit();
             }

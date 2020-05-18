@@ -141,6 +141,10 @@ export const Fragments = {
     wordingFrom
     wordingTo,
     state,
+    constraints {
+        preferredTraitsTo
+        preferredTraitsFrom
+    },
     labelWordingFrom @client,
     labelWordingTo @client
   }

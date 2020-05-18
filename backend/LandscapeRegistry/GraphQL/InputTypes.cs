@@ -1,4 +1,5 @@
-﻿using GraphQL.Types;
+﻿using GraphQL.Instrumentation;
+using GraphQL.Types;
 using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
 using System;
@@ -133,12 +134,22 @@ namespace LandscapeRegistry.GraphQL
         }
     }
 
+    public class PredicateConstraintsType : ObjectGraphType<PredicateConstraints>
+    {
+        public PredicateConstraintsType()
+        {
+            Field(x => x.PreferredTraitsFrom);
+            Field(x => x.PreferredTraitsTo);
+        }
+    }
+
     public class UpsertPredicateInput
     {
         public string ID { get; private set; }
         public string WordingFrom { get; private set; }
         public string WordingTo { get; private set; }
         public AnchorState State { get; private set; }
+        public PredicateConstraints Constraints { get; private set; }
     }
     public class UpsertPredicateInputType : InputObjectGraphType<UpsertPredicateInput>
     {
@@ -148,6 +159,7 @@ namespace LandscapeRegistry.GraphQL
             Field(x => x.WordingFrom);
             Field(x => x.WordingTo);
             Field(x => x.State, type: typeof(AnchorStateType));
+            Field(x => x.Constraints, type: typeof(PredicateConstraintsType));
         }
     }
 

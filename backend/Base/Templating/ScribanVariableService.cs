@@ -146,7 +146,8 @@ namespace Landscape.Base.Templating
         {
             var so = new ScriptObjectCI(ci, new ScriptObjectContext(layerSet, trans, atTime, ciModel, relationModel));
             var context = new TemplateContext();
-            context.StrictVariables = true;
+            //context.StrictVariables = true;
+            context.EnableRelaxedMemberAccess = true;
             context.PushGlobal(new ScriptObject() { { "target", so } });
             return context;
         }

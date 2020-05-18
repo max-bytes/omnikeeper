@@ -16,6 +16,7 @@ namespace Landscape.Base.Utils
             NpgsqlConnection conn = new NpgsqlConnection(cs);
             conn.Open();
             connectorIDs.Add(conn.ProcessID);
+            conn.TypeMapper.UseJsonNet();
             MapEnums(conn);
             return conn;
         }
@@ -27,6 +28,7 @@ namespace Landscape.Base.Utils
             NpgsqlConnection conn = new NpgsqlConnection($"Server=127.0.0.1;User Id=postgres; Password=postgres;Database={dbName};Pooling={pooling}");
             conn.Open();
             if (reloadTypes) conn.ReloadTypes(); // HACK, see https://github.com/npgsql/npgsql/issues/2366
+            conn.TypeMapper.UseJsonNet();
             MapEnums(conn);
             return conn;
         }

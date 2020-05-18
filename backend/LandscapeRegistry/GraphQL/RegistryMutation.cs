@@ -212,7 +212,7 @@ namespace LandscapeRegistry.GraphQL
                   using var transaction = await conn.BeginTransactionAsync();
                   userContext.Transaction = transaction;
 
-                  var newPredicate = await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, predicate.State, transaction);
+                  var newPredicate = await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, predicate.State, predicate.Constraints, transaction);
                   await transaction.CommitAsync();
 
                   return newPredicate;

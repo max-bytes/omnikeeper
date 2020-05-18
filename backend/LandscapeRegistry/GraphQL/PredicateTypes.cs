@@ -9,6 +9,7 @@ namespace LandscapeRegistry.GraphQL
         {
             Field("id", x => x.ID);
             Field(x => x.WordingFrom);
+            Field(x => x.Constraints, type: typeof(PredicateConstraintsType));
             Field(x => x.WordingTo);
             Field(x => x.State, type: typeof(AnchorStateType));
         }

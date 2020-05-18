@@ -31,6 +31,7 @@ using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MonitoringPlugin;
+using Npgsql;
 using Npgsql.Logging;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;

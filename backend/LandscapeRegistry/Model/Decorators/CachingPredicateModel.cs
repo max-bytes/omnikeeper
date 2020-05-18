@@ -34,10 +34,10 @@ namespace LandscapeRegistry.Model.Decorators
             else return await Model.GetPredicates(trans, atTime, stateFilter);
         }
 
-        public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, NpgsqlTransaction trans)
+        public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints, NpgsqlTransaction trans)
         {
             memoryCache.CancelPredicatesChangeToken(); // TODO: only evict cache when insert changes
-            return await Model.InsertOrUpdate(id, wordingFrom, wordingTo, state, trans);
+            return await Model.InsertOrUpdate(id, wordingFrom, wordingTo, state, constraints, trans);
         }
 
         public async Task<bool> TryToDelete(string id, NpgsqlTransaction trans)

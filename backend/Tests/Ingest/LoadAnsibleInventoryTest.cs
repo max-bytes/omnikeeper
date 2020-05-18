@@ -79,8 +79,8 @@ namespace Tests.Ingest
             var hosts = new string[] { "h1jmplx01.mhx.at", "h1lscapet01.mhx.local" };
             var layerSet = await layerModel.BuildLayerSet(null);
 
-            await predicateModel.InsertOrUpdate("has_network_interface", "has network interface", "is network interface of host", AnchorState.Active, null);
-            await predicateModel.InsertOrUpdate("has_mounted_device", "has mounted device", "is mounted at host", AnchorState.Active, null);
+            await predicateModel.InsertOrUpdate("has_network_interface", "has network interface", "is network interface of host", AnchorState.Active, PredicateModel.DefaultConstraits, null);
+            await predicateModel.InsertOrUpdate("has_mounted_device", "has mounted device", "is mounted at host", AnchorState.Active, PredicateModel.DefaultConstraits, null);
 
             var controller = new AnsibleIngestController(ingestDataService, layerModel, mockCurrentUserService.Object, mockAuthorizationService.Object, NullLogger<AnsibleIngestController>.Instance);
             await PerformIngest(insertLayer.ID, layerSet.LayerIDs, hosts, controller);

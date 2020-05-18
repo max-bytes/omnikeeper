@@ -3,6 +3,7 @@ using Landscape.Base.Model;
 using Landscape.Base.Templating;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
+using LandscapeRegistry.Model;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Npgsql;
@@ -24,7 +25,7 @@ namespace Tests.Templating
         public void Test()
         {
             {
-                var testPredicateA = Predicate.Build("p_a", "p_a_forward", "p_a_backwards", AnchorState.Active);
+                var testPredicateA = Predicate.Build("p_a", "p_a_forward", "p_a_backwards", AnchorState.Active, PredicateModel.DefaultConstraits);
                 var atTime = TimeThreshold.BuildLatest();
 
                 var testCIA = MergedCI.Build(Guid.NewGuid(), "test-ci-a", CIType.UnspecifiedCIType, new LayerSet(), atTime, new List<MergedCIAttribute>()

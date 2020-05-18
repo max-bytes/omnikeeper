@@ -3,6 +3,7 @@ import { AgGridReact } from 'ag-grid-react';
 import { Button } from 'semantic-ui-react';
 import { ErrorModalCellRenderer } from '../ErrorModalCellRenderer';
 import { RowStateCellRenderer } from '../RowStateCellRenderer';
+import PredicateConstraintsCellEditor from './PredicateConstraintsCellEditor';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
@@ -108,7 +109,9 @@ export default function AgGridCrud(props) {
     </div>
     <div className="ag-theme-balham" style={{ flexGrow: 1, width: '100%' }}>
       <AgGridReact
-        frameworkComponents={{errorModalCellRenderer: ErrorModalCellRenderer, rowStateCellRenderer: RowStateCellRenderer }}
+        frameworkComponents={{
+          errorModalCellRenderer: ErrorModalCellRenderer, rowStateCellRenderer: RowStateCellRenderer,
+          predicateConstraintsCellEditor: PredicateConstraintsCellEditor }}
         columnDefs={columnDefs}
         defaultColDef={defaultColDef}
         rowData={props.rowData}

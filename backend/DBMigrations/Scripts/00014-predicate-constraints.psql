@@ -1,0 +1,12 @@
+﻿CREATE TABLE public.predicate_constraints
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    predicate_id text NOT NULL,
+    "timestamp" timestamp with time zone NOT NULL,
+    constraints json NOT NULL,
+    CONSTRAINT predicate_constraints_pkey PRIMARY KEY (id)
+);
+
+
+ALTER TABLE ONLY public.predicate_constraints
+    ADD CONSTRAINT f_predicate_constraints FOREIGN KEY (predicate_id) REFERENCES public.predicate(id) ON UPDATE CASCADE ON DELETE CASCADE;

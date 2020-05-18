@@ -21,6 +21,8 @@ namespace Tests.Integration
             // drop db
             NpgsqlConnection conn = new NpgsqlConnection("Server=localhost;User Id=postgres; Password=postgres;Pooling=false");
             conn.Open();
+            // force disconnect other users
+            new NpgsqlCommand(@$"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE datname = '{_dbName}' AND pid <> pg_backend_pid();", conn).ExecuteNonQuery();
             new NpgsqlCommand($"DROP DATABASE {_dbName};", conn).ExecuteNonQuery();
             conn.Close();
 
