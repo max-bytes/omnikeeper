@@ -3,6 +3,15 @@ using Landscape.Base.Entity;
 
 namespace LandscapeRegistry.GraphQL
 {
+    public class PredicateConstraintsType : ObjectGraphType<PredicateConstraints>
+    {
+        public PredicateConstraintsType()
+        {
+            Field(x => x.PreferredTraitsFrom);
+            Field(x => x.PreferredTraitsTo);
+        }
+    }
+
     public class PredicateType : ObjectGraphType<Predicate>
     {
         public PredicateType()

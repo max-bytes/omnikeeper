@@ -27,8 +27,10 @@ export default function ManagePredicates(props) {
     { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
     { headerName: "Wording (from)", field: "wordingFrom" },
     { headerName: "Wording (to)", field: "wordingTo" },
-    { headerName: "Constraints", field: "constraints", 
-      cellRenderer: function(params) { return JSON.stringify(params.getValue()); },
+    { headerName: "Constraints", field: "constraints", autoHeight: true, flex: 1,
+      cellRenderer: function(params) { 
+        return `From: [${params.getValue().preferredTraitsFrom.join(',')}],<br />To: [${params.getValue().preferredTraitsTo.join(',')}]`; 
+      },
       cellEditor: 'predicateConstraintsCellEditor' },
     { headerName: "State", field: "state", cellEditor: 'agSelectCellEditor', cellEditorParams: {
         values: ['ACTIVE', 'DEPRECATED', 'INACTIVE', 'MARKED_FOR_DELETION'],
@@ -42,7 +44,7 @@ export default function ManagePredicates(props) {
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
       saveRow={async row => {
-        const predicate = { id: row.id, wordingFrom: row.wordingFrom, wordingTo: row.wordingTo, state: row.state };
+        const predicate = { id: row.id, wordingFrom: row.wordingFrom, wordingTo: row.wordingTo, state: row.state, constraints: row.constraints };
         return upsert({ variables: { predicate: predicate } })
           .then(r => ({result: r.data.upsertPredicate, id: row.id}))
           .catch(e => ({result: e, id: row.id }));

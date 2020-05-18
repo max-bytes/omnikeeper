@@ -134,9 +134,9 @@ namespace LandscapeRegistry.GraphQL
         }
     }
 
-    public class PredicateConstraintsType : ObjectGraphType<PredicateConstraints>
+    public class PredicateConstraintsInputType : InputObjectGraphType<PredicateConstraints>
     {
-        public PredicateConstraintsType()
+        public PredicateConstraintsInputType()
         {
             Field(x => x.PreferredTraitsFrom);
             Field(x => x.PreferredTraitsTo);
@@ -159,7 +159,7 @@ namespace LandscapeRegistry.GraphQL
             Field(x => x.WordingFrom);
             Field(x => x.WordingTo);
             Field(x => x.State, type: typeof(AnchorStateType));
-            Field(x => x.Constraints, type: typeof(PredicateConstraintsType));
+            Field(x => x.Constraints, type: typeof(PredicateConstraintsInputType));
         }
     }
 
