@@ -120,7 +120,7 @@ namespace LandscapeRegistry.Model
                         },
                         new List<TraitRelation>() {
                             TraitRelation.Build("ansible_groups",
-                                RelationTemplate.Build("has_ansible_group", new string[] {"Ansible Host Group" }, 1, null)
+                                RelationTemplate.Build("has_ansible_group", 1, null)
                             )
                         }
                     ),

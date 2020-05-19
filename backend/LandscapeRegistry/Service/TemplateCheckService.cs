@@ -14,11 +14,9 @@ namespace LandscapeRegistry.Service
             var foundAttribute = ci.MergedAttributes.FirstOrDefault(a => a.Attribute.Name == at.Name);
             return (foundAttribute, TemplateErrorsAttribute.Build(at.Name, PerAttributeTemplateChecks(foundAttribute, at)));
         }
-        public static (IEnumerable<(Relation relation, MergedCI toCI)> foundRelations, TemplateErrorsRelation errors) CalculateTemplateErrorsRelation(ILookup<string, (Relation relation, MergedCI toCI)> relations, RelationTemplate rt)
+        public static TemplateErrorsRelation CalculateTemplateErrorsRelation(IEnumerable<(Relation relation, MergedCI toCI)> relations, RelationTemplate rt)
         {
-            var foundRelations = relations[rt.PredicateID].Where(r => rt.ToCITypeIDs.Contains(r.toCI.Type.ID));
-
-            return (foundRelations, TemplateErrorsRelation.Build(rt.PredicateID, PerRelationTemplateChecks(foundRelations, rt)));
+            return TemplateErrorsRelation.Build(rt.PredicateID, PerRelationTemplateChecks(relations, rt));
         }
 
         private static IEnumerable<ITemplateErrorAttribute> PerAttributeTemplateChecks(MergedCIAttribute foundAttribute, CIAttributeTemplate at)

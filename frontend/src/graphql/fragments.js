@@ -134,7 +134,6 @@ export const Fragments = {
         }
     }
   `,
-  // TODO: needed?
   fullPredicate: gql`
   fragment FullPredicate on PredicateType {
     id,
@@ -147,6 +146,14 @@ export const Fragments = {
     },
     labelWordingFrom @client,
     labelWordingTo @client
+  }
+  `,
+  directedPredicate: gql`
+  fragment DirectedPredicate on DirectedPredicateType {
+    predicateID
+    wording
+    predicateState
+    forward
   }
   `
 };

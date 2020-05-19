@@ -198,21 +198,26 @@ namespace LandscapeRegistry.Model
             // assume dependent traits are resolved
             var resolvedDependentTraitNames = requiredTraits.Select(rt => rt.Trait.Name).ToList();
 
-            var relationsAndToCIs = (await RelationService.GetMergedForwardRelationsAndToCIs(ci.ID, ci.Layers, ciModel, relationModel, trans, atTime))
-                .ToLookup(t => t.relation.PredicateID);
-
             var requiredEffectiveTraitAttributes = trait.RequiredAttributes.Select(ta =>
             {
                 var traitAttributeIdentifier = ta.Identifier;
                 var (foundAttribute, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
                 return (traitAttributeIdentifier, foundAttribute, checks);
             });
-            var requiredEffectiveTraitRelations = trait.RequiredRelations.Select(tr =>
+            IEnumerable<(string traitRelationIdentifier, IEnumerable<(Relation relation, MergedCI toCI)> foundRelations, TemplateErrorsRelation checks)> requiredEffectiveTraitRelations 
+                = new List<(string traitRelationIdentifier, IEnumerable<(Relation relation, MergedCI toCI)> foundRelations, TemplateErrorsRelation checks)>();
+            if (trait.RequiredRelations.Count > 0)
             {
-                var traitRelationIdentifier = tr.Identifier;
-                var (foundRelations, checks) = TemplateCheckService.CalculateTemplateErrorsRelation(relationsAndToCIs, tr.RelationTemplate);
-                return (traitRelationIdentifier, foundRelations, checks);
-            });
+                var relationsAndToCIs = (await RelationService.GetMergedForwardRelationsAndToCIs(ci.ID, ci.Layers, ciModel, relationModel, trans, atTime))
+                    .ToLookup(t => t.relation.PredicateID);
+                requiredEffectiveTraitRelations = trait.RequiredRelations.Select(tr =>
+                {
+                    var traitRelationIdentifier = tr.Identifier;
+                    var foundRelations = relationsAndToCIs[tr.RelationTemplate.PredicateID];
+                    var checks = TemplateCheckService.CalculateTemplateErrorsRelation(foundRelations, tr.RelationTemplate);
+                    return (traitRelationIdentifier, foundRelations, checks);
+                });
+            }
 
             var isTraitApplicable = requiredEffectiveTraitAttributes.All(t => t.checks.Errors.IsEmpty()) 
                 && requiredEffectiveTraitRelations.All(t => t.checks.Errors.IsEmpty());

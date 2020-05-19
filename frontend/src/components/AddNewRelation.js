@@ -22,9 +22,10 @@ function AddNewRelation(props) {
   React.useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
 
   // TODO: loading
+  TODO: make CI loading lazy, restrict to preferred CIs based on predicate and its constraints
   const { data: dataCIs } = useQuery(queries.CIList, { variables: {layers: props.visibleLayers } });
-  const { data: dataPredicates } = useQuery(queries.PredicateList, {
-    variables: {stateFilter: 'ACTIVE_AND_DEPRECATED'}
+  const { data: directedPredicates } = useQuery(queries.DirectedPredicateList, {
+    variables: {stateFilter: 'ACTIVE_AND_DEPRECATED', preferredForCI: props.ciIdentity, layersForEffectiveTraits: props.visibleLayers }
   });
   const [insertRelation] = useMutation(mutations.INSERT_RELATION);
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
@@ -34,20 +35,17 @@ function AddNewRelation(props) {
   </Button>
   
   let addRelation = <></>;
-  if (isOpen && dataCIs && dataPredicates) {
+  if (isOpen && dataCIs && directedPredicates) {
     var ciList = dataCIs.compactCIs.map(d => {
       return { key: d.id, value: d.id, text: d.name };
     });
-    const sortedPredicates = [...dataPredicates.predicates]
-    sortedPredicates.sort((a,b) => (a.state + "_" + a.wordingFrom).localeCompare(b.state + "_" + b.wordingFrom));
-    var predicateList = sortedPredicates.flatMap(d => {
-      const isDisabled = d.state !== "ACTIVE";
-      return [
-        { key: `${d.id}$$$$forward`, value: `${d.id}$$$$forward`, disabled: isDisabled, text: `${d.labelWordingFrom}...`,
-          content: (<><b>{d.labelWordingFrom}</b>... <span className="text-muted"><br />({d.id})</span></>) },
-        { key: `${d.id}$$$$back`, value: `${d.id}$$$$back`, disabled: isDisabled, text: `${d.labelWordingTo}...`,
-          content: (<><b>{d.labelWordingTo}</b>... <span className="text-muted"><br />({d.id})</span></>) }
-      ];
+    const sortedPredicates = [...directedPredicates.directedPredicates]
+    sortedPredicates.sort((a,b) => a.predicateID.localeCompare(b.predicateID));
+    var predicateList = sortedPredicates.map(d => {
+      const isDisabled = d.predicateState !== "ACTIVE";
+      const forwardStr = (d.forward) ? 'forward' : 'back';
+      return { key: `${d.predicateID}$$$$${forwardStr}`, value: `${d.predicateID}$$$$${forwardStr}`, disabled: isDisabled, text: `${d.wording}...`,
+          content: (<><b>{d.wording}</b>... <span className="text-muted"><br />({d.predicateID})</span></>) };
     });
 
     // move add functionality into on-prop
@@ -57,7 +55,9 @@ function AddNewRelation(props) {
             e.preventDefault();
             setInsertError(undefined);
 
-            const fromTo = (newRelation.forward) ? { fromCIID: props.ciIdentity, toCIID: newRelation.targetCIID } : { fromCIID: newRelation.targetCIID, toCIID: props.ciIdentity };
+            const fromTo = (newRelation.forward) 
+              ? { fromCIID: props.ciIdentity, toCIID: newRelation.targetCIID } 
+              : { fromCIID: newRelation.targetCIID, toCIID: props.ciIdentity };
 
             insertRelation({ variables: { ...fromTo, predicateID: newRelation.predicateID, 
               includeRelated: props.perPredicateLimit, layerID: newRelation.layer.id, layers: props.visibleLayers} })
@@ -75,7 +75,7 @@ function AddNewRelation(props) {
               This CI...
             </Form.Label>
             <Form.Group as={Col} xs={4} controlId="name">
-                {/* TODO: create own PredicateDropdown (similar to LayerDropdown) */}
+                {/* TODO: create own PredicateDropdown, it might be needed more often (similar to LayerDropdown) */}
               <Dropdown
                 value={((newRelation.predicateID) ? `${newRelation.predicateID}$$$$${((newRelation.forward) ? 'forward' : 'back')}` : undefined)}
                 placeholder='Select Predicate'

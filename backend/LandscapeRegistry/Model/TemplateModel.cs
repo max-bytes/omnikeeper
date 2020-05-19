@@ -49,7 +49,7 @@ namespace LandscapeRegistry.Model
             var errorsRelation = new Dictionary<string, TemplateErrorsRelation>();
             if (relationTemplates != null)
                 errorsRelation = relationTemplates.Values
-                .Select(rt => (rt.PredicateID, TemplateCheckService.CalculateTemplateErrorsRelation(relationsAndToCIs, rt).errors))
+                .Select(rt => (rt.PredicateID, errors: TemplateCheckService.CalculateTemplateErrorsRelation(relationsAndToCIs[rt.PredicateID], rt)))
                 .Where(t => !t.errors.Errors.IsEmpty())
                 .ToDictionary(t => t.PredicateID, t => t.errors);
 

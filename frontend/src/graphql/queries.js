@@ -18,6 +18,14 @@ export const queries = {
         }
         ${Fragments.fullPredicate}
     `,
+    DirectedPredicateList: gql`
+        query predicateList($stateFilter: AnchorStateFilter!, $preferredForCI: Guid!, $layersForEffectiveTraits: [String]!) {
+            directedPredicates(stateFilter: $stateFilter, preferredForCI: $preferredForCI, layersForEffectiveTraits: $layersForEffectiveTraits) {
+                ...DirectedPredicate
+            }
+        }
+        ${Fragments.directedPredicate}
+    `,
     CITypeList: gql`
         query citypes {
             citypes {

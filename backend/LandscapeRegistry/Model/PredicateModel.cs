@@ -135,6 +135,7 @@ namespace LandscapeRegistry.Model
                     {
                         // TODO: error handling?
                     }
+
                     ret.Add(id, Predicate.Build(id, wordingFrom, wordingTo, state, constraints));
                 }
             }

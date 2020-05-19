@@ -39,6 +39,35 @@ namespace Landscape.Base.Entity
         public override int GetHashCode() => HashCode.Combine(ID, WordingFrom, WordingTo, State);
     }
 
+    public class DirectedPredicate : IEquatable<DirectedPredicate>
+    {
+        public string PredicateID { get; private set; }
+        public AnchorState PredicateState { get; private set; }
+        public string Wording { get; private set; }
+        public bool Forward { get; private set; }
+
+        public static DirectedPredicate Build(string predicateID, string wording, AnchorState predicateState, bool forward)
+        {
+            return new DirectedPredicate
+            {
+                PredicateID = predicateID,
+                PredicateState = predicateState,
+                Wording = wording,
+                Forward = forward
+            };
+        }
+
+        public override bool Equals(object obj) => Equals(obj as DirectedPredicate);
+        public bool Equals(DirectedPredicate other)
+        {
+            return other != null && PredicateID == other.PredicateID &&
+                   Wording == other.Wording &&
+                   PredicateState == other.PredicateState &&
+                   Forward == other.Forward;
+        }
+        public override int GetHashCode() => HashCode.Combine(PredicateID, Wording, PredicateState, Forward);
+    }
+
     public class PredicateConstraints
     {
         public string[] PreferredTraitsTo { get; private set; }

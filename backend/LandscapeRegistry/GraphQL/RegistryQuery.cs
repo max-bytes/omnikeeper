@@ -7,6 +7,7 @@ using LandscapeRegistry.Model.Decorators;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using static Landscape.Base.Model.IRelationModel;
 
 namespace LandscapeRegistry.GraphQL
@@ -14,7 +15,7 @@ namespace LandscapeRegistry.GraphQL
     public class RegistryQuery : ObjectGraphType
     {
         public RegistryQuery(ICIModel ciModel, ILayerModel layerModel, IPredicateModel predicateModel, 
-            IChangesetModel changesetModel, ICISearchModel ciSearchModel, ITraitsProvider traitsProvider)
+            IChangesetModel changesetModel, ICISearchModel ciSearchModel, ITraitModel traitModel, ITraitsProvider traitsProvider)
         {
             FieldAsync<MergedCIType>("ci",
                 arguments: new QueryArguments(new List<QueryArgument>
@@ -93,7 +94,6 @@ namespace LandscapeRegistry.GraphQL
                     var userContext = context.UserContext as RegistryUserContext;
 
                     var ciid = context.GetArgument<Guid>("identity");
-                    //var layerStrings = context.GetArgument<string[]>("layers");
                     var ls = await layerModel.BuildLayerSet(null);
                     userContext.LayerSet = ls;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
@@ -101,43 +101,53 @@ namespace LandscapeRegistry.GraphQL
                     return await ciSearchModel.Search(context.GetArgument<string>("searchString"), ls, null, userContext.TimeThreshold);
                 });
 
-            //FieldAsync<ListGraphType<MergedCIType>>("cis",
-            //    arguments: new QueryArguments(new List<QueryArgument>
-            //    {
-            //        new QueryArgument<ListGraphType<StringGraphType>>
-            //        {
-            //            Name = "layers"
-            //        },
-            //        new QueryArgument<DateTimeOffsetGraphType>
-            //        {
-            //            Name = "timeThreshold"
-            //        },
-            //        new QueryArgument<BooleanGraphType>
-            //        {
-            //            Name = "includeEmpty"
-            //        },
-            //    }),
-            //    resolve: async context =>
-            //    {
-            //        var userContext = context.UserContext as RegistryUserContext;
+            FieldAsync<ListGraphType<CompactCIType>>("validRelationTargetCIs",
+                arguments: new QueryArguments(new List<QueryArgument>
+                {
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
+                    {
+                        Name = "layers"
+                    }
+                }),
+                resolve: async context =>
+                {
+                    var userContext = context.UserContext as RegistryUserContext;
+                    var layerStrings = context.GetArgument<string[]>("layers");
+                    var ls = await layerModel.BuildLayerSet(layerStrings, null);
+                    userContext.LayerSet = ls;
+                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-            //        var layerStrings = context.GetArgument<string[]>("layers");
-            //        var layerSet = layerStrings != null ? await layerModel.BuildLayerSet(layerStrings, null) : await layerModel.BuildLayerSet(null);
-            //        userContext.LayerSet = layerSet;
-            //        var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
-            //        userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
+                    var cis = await ciModel.GetCompactCIs(userContext.LayerSet, null, userContext.TimeThreshold);
 
-            //        var includeEmpty = context.GetArgument("includeEmpty", false);
+                    var effectiveTraitSet = await traitModel.CalculateEffectiveTraitSetForCIs(ci, null, userContext.TimeThreshold);
+                    var effectiveTraitNames = effectiveTraitSet.EffectiveTraits.Keys;
+                    var directedPredicates = predicates.SelectMany(predicate =>
+                    {
+                        var ret = new List<DirectedPredicate>();
+                        if (!predicate.Constraints.HasPreferredTraitsFrom || predicate.Constraints.PreferredTraitsFrom.Any(pt => effectiveTraitNames.Contains(pt)))
+                            ret.Add(DirectedPredicate.Build(predicate.ID, predicate.WordingFrom, predicate.State, true));
+                        if (!predicate.Constraints.HasPreferredTraitsTo || predicate.Constraints.PreferredTraitsTo.Any(pt => effectiveTraitNames.Contains(pt)))
+                            ret.Add(DirectedPredicate.Build(predicate.ID, predicate.WordingTo, predicate.State, false)); // TODO: switch wording
+                        return ret;
+                    });
 
-            //        var cis = await ciModel.GetMergedCIs(userContext.LayerSet, includeEmpty, null, userContext.TimeThreshold);
-            //        return cis;
-            //    });
-            FieldAsync<ListGraphType<PredicateType>>("predicates",
+                    return cis;
+                });
+
+            FieldAsync<ListGraphType<DirectedPredicateType>>("directedPredicates",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {
                     new QueryArgument<NonNullGraphType<AnchorStateFilterType>>
                     {
                         Name = "stateFilter"
+                    },
+                    new QueryArgument<NonNullGraphType<GuidGraphType>>
+                    {
+                        Name = "preferredForCI"
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
+                    {
+                        Name = "layersForEffectiveTraits"
                     },
                 }),
                 resolve: async context =>
@@ -145,9 +155,48 @@ namespace LandscapeRegistry.GraphQL
                     var userContext = context.UserContext as RegistryUserContext;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
                     var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
+                    var preferredForCI = context.GetArgument<Guid>("preferredForCI");
+                    var layersForEffectiveTraits = context.GetArgument<string[]>("layersForEffectiveTraits");
 
-                    return (await predicateModel.GetPredicates(null, userContext.TimeThreshold, stateFilter)).Values;
+                    var predicates = (await predicateModel.GetPredicates(null, userContext.TimeThreshold, stateFilter)).Values;
+
+                    // filter predicates by constraints
+                    var layers = await layerModel.BuildLayerSet(layersForEffectiveTraits, null);
+                    var ci = await ciModel.GetMergedCI(preferredForCI, layers, null, userContext.TimeThreshold);
+                    var effectiveTraitSet = await traitModel.CalculateEffectiveTraitSetForCI(ci, null, userContext.TimeThreshold);
+                    var effectiveTraitNames = effectiveTraitSet.EffectiveTraits.Keys;
+                    var directedPredicates = predicates.SelectMany(predicate =>
+                    {
+                        var ret = new List<DirectedPredicate>();
+                        if (!predicate.Constraints.HasPreferredTraitsFrom || predicate.Constraints.PreferredTraitsFrom.Any(pt => effectiveTraitNames.Contains(pt)))
+                            ret.Add(DirectedPredicate.Build(predicate.ID, predicate.WordingFrom, predicate.State, true));
+                        if (!predicate.Constraints.HasPreferredTraitsTo || predicate.Constraints.PreferredTraitsTo.Any(pt => effectiveTraitNames.Contains(pt)))
+                            ret.Add(DirectedPredicate.Build(predicate.ID, predicate.WordingTo, predicate.State, false)); // TODO: switch wording
+                        return ret;
+                    });
+
+                    return directedPredicates;
                 });
+
+            FieldAsync<ListGraphType<PredicateType>>("predicates",
+                arguments: new QueryArguments(new List<QueryArgument>
+                {
+                    new QueryArgument<NonNullGraphType<AnchorStateFilterType>>
+                    {
+                        Name = "stateFilter"
+                    }
+                }),
+                resolve: async context =>
+                {
+                    var userContext = context.UserContext as RegistryUserContext;
+                    userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
+                    var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
+                    
+                    var predicates = (await predicateModel.GetPredicates(null, userContext.TimeThreshold, stateFilter)).Values;
+
+                    return predicates;
+                });
+
             FieldAsync<ListGraphType<CITypeType>>("citypes",
                 resolve: async context =>
                 {
