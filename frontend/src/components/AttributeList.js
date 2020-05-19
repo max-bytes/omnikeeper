@@ -74,7 +74,7 @@ function AttributeList(props) {
 
   return (
     <>
-       <div className={"d-flex align-items-end flex-column"} >
+       <div className={"d-flex align-items-end flex-column mb-2"} >
             <Button
                 size={"tiny"}
                 onClick={() => expandeCollapseAll()}
