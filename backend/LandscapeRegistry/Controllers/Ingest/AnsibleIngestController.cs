@@ -29,7 +29,7 @@ namespace LandscapeRegistry.Controllers.Ingest
         private readonly ICurrentUserService currentUserService;
         private readonly IRegistryAuthorizationService authorizationService;
 
-        public AnsibleIngestController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService, 
+        public AnsibleIngestController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService,
             IRegistryAuthorizationService authorizationService, ILogger<AnsibleIngestController> logger)
         {
             this.ingestDataService = ingestDataService;
@@ -139,9 +139,12 @@ namespace LandscapeRegistry.Controllers.Ingest
                         var attributeFragmentsInterface = new List<BulkCICandidateAttributeData.Fragment>
                         {
                             JValue2TextAttribute(@interface, "device"),
+                            JValue2TextAttribute(@interface, "active"),
+                            JValue2TextAttribute(@interface, "type"),
+                            Try2(() => JValue2TextAttribute(@interface, "macaddress")),
                             // TODO
                             String2Attribute(CIModel.NameAttribute, ciNameInterface)
-                        };
+                        }.Where(item => item != null);
                         cis.Add(tempCIIDInterface, CICandidate.Build(
                             CIIdentificationMethodByData.Build(new string[] { CIModel.NameAttribute }), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
                             BulkCICandidateAttributeData.Build(attributeFragmentsInterface)));
@@ -154,11 +157,11 @@ namespace LandscapeRegistry.Controllers.Ingest
                 }
 
                 // yum related data
-                foreach(var kvInstalled in data.YumInstalled)
+                foreach (var kvInstalled in data.YumInstalled)
                 {
                     var hostID = kvInstalled.Key;
                     var fqdn = hostID; // TODO: check if using the HostID as fqdn is ok
-                    var ciName = hostID; 
+                    var ciName = hostID;
 
                     var tempCIID = Guid.NewGuid();
 
@@ -219,6 +222,18 @@ namespace LandscapeRegistry.Controllers.Ingest
             {
                 logger.LogError(e, "Ansible Ingest failed");
                 return BadRequest();
+            }
+        }
+
+        private BulkCICandidateAttributeData.Fragment Try2(Func<BulkCICandidateAttributeData.Fragment> f)
+        {
+            try
+            {
+                return f();
+            }
+            catch
+            {
+                return null;
             }
         }
 

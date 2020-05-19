@@ -99,6 +99,29 @@ namespace LandscapeRegistry.Model
                         )
                     }, requiredTraits: new string[] { "host" }),
 
+                    // linux disk devices
+                    Trait.Build("linux_block_device", new List<TraitAttribute>() {
+                        TraitAttribute.Build("device",
+                            CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        ),
+                        TraitAttribute.Build("mount",
+                            CIAttributeTemplate.BuildFromParams("mount", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        )
+                    }),
+
+                    // linux network_interface
+                    Trait.Build("linux_network_interface", new List<TraitAttribute>() {
+                        TraitAttribute.Build("device",
+                            CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        ),
+                        TraitAttribute.Build("type",
+                            CIAttributeTemplate.BuildFromParams("type", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        ),
+                        TraitAttribute.Build("active",
+                            CIAttributeTemplate.BuildFromParams("active", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        )
+                    }),
+
                     // applications
                     Trait.Build("application", new List<TraitAttribute>() {
                         TraitAttribute.Build("name",
