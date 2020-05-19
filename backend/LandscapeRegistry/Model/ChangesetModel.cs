@@ -36,7 +36,7 @@ namespace LandscapeRegistry.Model
 
         public async Task<Changeset> GetChangeset(long id, NpgsqlTransaction trans)
         {
-            using var command = new NpgsqlCommand(@"SELECT c.timestamp, c.user_id, u.username, u.keycloak_id, u.type, u.timestamp FROM changeset c
+            using var command = new NpgsqlCommand(@"SELECT c.timestamp, c.user_id, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c
                 LEFT JOIN ""user"" u ON c.user_id = u.id
                 WHERE c.id = @id", conn, trans);
 
@@ -49,11 +49,12 @@ namespace LandscapeRegistry.Model
             var timestamp = dr.GetTimeStamp(0).ToDateTime();
             var userID = dr.GetInt64(1);
             var username = dr.GetString(2);
-            var userUUID = dr.GetGuid(3);
-            var userType = dr.GetFieldValue<UserType>(4);
-            var userTimestamp = dr.GetTimeStamp(5).ToDateTime();
+            var displayName = dr.GetString(3);
+            var userUUID = dr.GetGuid(4);
+            var userType = dr.GetFieldValue<UserType>(5);
+            var userTimestamp = dr.GetTimeStamp(6).ToDateTime();
 
-            var user = UserInDatabase.Build(userID, userUUID, username, userType, userTimestamp);
+            var user = UserInDatabase.Build(userID, userUUID, username, displayName, userType, userTimestamp);
             return Changeset.Build(id, user, timestamp);
         }
 
@@ -61,7 +62,7 @@ namespace LandscapeRegistry.Model
         // sorted by timestamp
         public async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IncludeRelationDirections ird, Guid ciid, NpgsqlTransaction trans, int? limit = null)
         {
-            var queryAttributes = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.keycloak_id, u.type, u.timestamp FROM changeset c 
+            var queryAttributes = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 INNER JOIN attribute a ON a.changeset_id = c.id 
                 INNER JOIN ci ci ON a.ci_id = ci.id
                 LEFT JOIN ""user"" u ON c.user_id = u.id
@@ -84,7 +85,7 @@ namespace LandscapeRegistry.Model
                     irdClause = "unused";
                     break;
             }
-            var queryRelations = $@"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.keycloak_id, u.type, u.timestamp FROM changeset c 
+            var queryRelations = $@"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 INNER JOIN relation r ON r.changeset_id = c.id 
                 INNER JOIN ci ci ON ({irdClause})
                 LEFT JOIN ""user"" u ON c.user_id = u.id
@@ -110,13 +111,13 @@ namespace LandscapeRegistry.Model
                 var id = dr.GetInt64(0);
                 var userID = dr.GetInt64(1);
                 var timestamp = dr.GetTimeStamp(2).ToDateTime();
-
                 var username = dr.GetString(3);
-                var userUUID = dr.GetGuid(4);
-                var userType = dr.GetFieldValue<UserType>(5);
-                var userTimestamp = dr.GetTimeStamp(6).ToDateTime();
+                var displayName = dr.GetString(4);
+                var userUUID = dr.GetGuid(5);
+                var userType = dr.GetFieldValue<UserType>(6);
+                var userTimestamp = dr.GetTimeStamp(7).ToDateTime();
 
-                var user = UserInDatabase.Build(userID, userUUID, username, userType, userTimestamp);
+                var user = UserInDatabase.Build(userID, userUUID, username, displayName, userType, userTimestamp);
                 var c = Changeset.Build(id, user, timestamp);
                 ret.Add(c);
             }
@@ -126,7 +127,7 @@ namespace LandscapeRegistry.Model
 
         public async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IncludeRelationDirections ird, NpgsqlTransaction trans, int? limit = null)
         {
-            var query = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.keycloak_id, u.type, u.timestamp FROM changeset c 
+            var query = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 LEFT JOIN attribute a ON a.changeset_id = c.id 
                 LEFT JOIN relation r ON r.changeset_id = c.id
                 LEFT JOIN ""user"" u ON c.user_id = u.id
@@ -152,13 +153,13 @@ namespace LandscapeRegistry.Model
                 var id = dr.GetInt64(0);
                 var userID = dr.GetInt64(1);
                 var timestamp = dr.GetTimeStamp(2).ToDateTime();
-
                 var username = dr.GetString(3);
-                var userUUID = dr.GetGuid(4);
-                var userType = dr.GetFieldValue<UserType>(5);
-                var userTimestamp = dr.GetTimeStamp(6).ToDateTime();
+                var displayName = dr.GetString(4);
+                var userUUID = dr.GetGuid(5);
+                var userType = dr.GetFieldValue<UserType>(6);
+                var userTimestamp = dr.GetTimeStamp(7).ToDateTime();
 
-                var user = UserInDatabase.Build(userID, userUUID, username, userType, userTimestamp);
+                var user = UserInDatabase.Build(userID, userUUID, username, displayName, userType, userTimestamp);
                 var c = Changeset.Build(id, user, timestamp);
                 ret.Add(c);
             }

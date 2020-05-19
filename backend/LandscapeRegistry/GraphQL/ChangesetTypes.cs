@@ -13,6 +13,7 @@ namespace LandscapeRegistry.GraphQL
         {
             Field("id", x => x.ID);
             Field(x => x.Username);
+            Field(x => x.DisplayName);
             Field(x => x.Timestamp);
             Field("type", x => x.UserType, type: typeof(UserTypeType));
         }

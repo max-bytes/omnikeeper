@@ -77,6 +77,7 @@ export const queries = {
                 id
                 user {
                     username
+                    displayName
                     type
                 }
                 timestamp
@@ -89,6 +90,7 @@ export const queries = {
                 timestamp
                 user {
                     username
+                    displayName
                     type
                 }
             }

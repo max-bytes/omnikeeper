@@ -52,6 +52,7 @@ namespace Tests.Ingest
         public async Task Test()
         {
             var username = "testUser";
+            var displayName = username;
             var userGUID = new Guid("7dc848b7-881d-4785-9f25-985e9b6f2715");
 
             var dbcb = new DBConnectionBuilder();
@@ -69,7 +70,7 @@ namespace Tests.Ingest
             
             // mock the current user service
             var mockCurrentUserService = new Mock<ICurrentUserService>();
-            var user = User.Build(await userModel.UpsertUser(username, userGUID, UserType.Robot, null), new List<Layer>() { layer1 });
+            var user = User.Build(await userModel.UpsertUser(username, displayName, userGUID, UserType.Robot, null), new List<Layer>() { layer1 });
             mockCurrentUserService.Setup(_ => _.GetCurrentUser(It.IsAny<NpgsqlTransaction>())).ReturnsAsync(user);
 
             var mockAuthorizationService = new Mock<IRegistryAuthorizationService>();

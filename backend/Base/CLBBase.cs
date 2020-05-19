@@ -57,8 +57,9 @@ namespace Landscape.Base
                 var layerSet = await layerModel.BuildLayerSet(new[] { Settings.LayerName }, trans);
                 var layer = await layerModel.GetLayer(Settings.LayerName, trans);
                 var username = Name; // HACK: make username the same as CLB name
+                var displayName = username;
                 var guid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1"); // TODO
-                var user = await userModel.UpsertUser(username, guid, UserType.Robot, trans);
+                var user = await userModel.UpsertUser(username, displayName, guid, UserType.Robot, trans);
                 var changesetProxy = ChangesetProxy.Build(user, atTime, changesetModel);
 
                 var errorHandler = new CLBErrorHandler(trans, Name, layer.ID, changesetProxy, attributeModel);

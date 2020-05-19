@@ -32,7 +32,7 @@ function Timeline(props) {
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
   if (data) {
-    var changesets = [...data.changesets];
+    var changesets = [...data.changesets]; // TODO: why do we do a copy here?
 
     let activeChangeset = (selectedTime.isLatest) ? changesets.find(e => true) : changesets.find(cs => cs.timestamp === selectedTime.time);
 
@@ -71,7 +71,7 @@ function Timeline(props) {
         <LoadingOverlay active={loadingChangesets} spinner>
         {changesets.map((cs) => {
 
-          const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.username}</span> : '';
+          const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.displayName}</span> : '';
           const buttonStyle = {
             whiteSpace: 'nowrap',
             textOverflow: 'ellipsis',

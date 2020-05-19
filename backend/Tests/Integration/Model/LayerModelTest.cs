@@ -62,7 +62,7 @@ namespace Tests.Integration.Model
             var layerB = await layerModel.CreateLayer("b", AnchorState.Deprecated, ComputeLayerBrain.Build("clbB"), null);
             var layerC = await layerModel.CreateLayer("c", AnchorState.Deprecated, ComputeLayerBrain.Build("clbC"), null);
 
-            var user = await userModel.UpsertUser("testuser", Guid.NewGuid(), UserType.Human, null);
+            var user = await userModel.UpsertUser("testuser", "testuser", Guid.NewGuid(), UserType.Human, null);
 
             var ciid = await ciModel.CreateCI(null);
             var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);

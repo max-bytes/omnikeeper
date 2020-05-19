@@ -18,7 +18,7 @@ function AddNewRelation(props) {
   const [isOpen, setOpen] = useState(false);
   const [newRelation, setNewRelation] = useState(initialRelation);
   useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
-  useEffect(() => { setOpen(false); setNewRelation(initialRelation) },[props.ciIdentity]);
+  useEffect(() => { setOpen(false); setNewRelation(initialRelation) }, [props.ciIdentity]);
 
   const [getValidTargetCIs, { data: dataCIs, loading: loadingCIs }] = useLazyQuery(queries.ValidRelationTargetCIs, { 
     variables: {layers: props.visibleLayers }

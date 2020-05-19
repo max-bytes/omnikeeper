@@ -50,7 +50,7 @@ namespace LandscapeRegistry.Service
             if (username == null)
             {
                 var anonymousGuid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef2"); // TODO: ?
-                var userInDatabase = await UserModel.UpsertUser("anonymous", anonymousGuid, UserType.Unknown, null);
+                var userInDatabase = await UserModel.UpsertUser("anonymous", "anonymous", anonymousGuid, UserType.Unknown, null);
                 return User.Build(userInDatabase, new List<Layer>());
             }
             else
@@ -81,8 +81,16 @@ namespace LandscapeRegistry.Service
                 else if (clientRoles.Contains("robot"))
                     usertype = UserType.Robot;
 
+                var displayName = usertype switch
+                {
+                    UserType.Human => claims.FirstOrDefault(c => c.Type == "name")?.Value ?? username,
+                    UserType.Robot => username,
+                    UserType.Unknown => username,
+                    _ => throw new Exception("Unknown UserType encountered")
+                };
+
                 var guid = new Guid(guidString); // TODO: check for null, handle case
-                var userInDatabase = await UserModel.UpsertUser(username, guid, usertype, null);
+                var userInDatabase = await UserModel.UpsertUser(username, displayName, guid, usertype, null);
 
                 return User.Build(userInDatabase, writableLayers);
             }

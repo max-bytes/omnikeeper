@@ -1,0 +1,2 @@
+﻿ALTER TABLE public."user"
+  ADD COLUMN displayName text NOT NULL DEFAULT '';

@@ -7,7 +7,7 @@ namespace Landscape.Base.Model
 {
     public interface IUserInDatabaseModel
     {
-        Task<UserInDatabase> UpsertUser(string username, Guid uuid, UserType type, NpgsqlTransaction trans);
+        Task<UserInDatabase> UpsertUser(string username, string displayName, Guid uuid, UserType type, NpgsqlTransaction trans);
         Task<UserInDatabase> GetUser(long id, NpgsqlTransaction trans);
     }
 }
