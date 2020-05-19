@@ -21,14 +21,14 @@ namespace Landscape.Base.Entity
             {
                 templates = new List<Template>()
                 {
-                    Template.Build("Application",
-                            new List<CIAttributeTemplate>() {
-                                // TODO
-                                CIAttributeTemplate.BuildFromParams("name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                            },
-                            new List<RelationTemplate>() {},
-                            new List<Trait>() {}
-                    ),
+                    //Template.Build("Application",
+                    //        new List<CIAttributeTemplate>() {
+                    //            // TODO
+                    //            CIAttributeTemplate.BuildFromParams("name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                    //        },
+                    //        new List<RelationTemplate>() {},
+                    //        new List<Trait>() {}
+                    //),
                     //Template.Build("Naemon Instance",
                     //        new List<CIAttributeTemplate>() {
                     //            // TODO

@@ -17,7 +17,8 @@ function AddNewRelation(props) {
   let initialRelation = {predicateID: null, targetCIID: null, forward: true, layer: null };
   const [isOpen, setOpen] = useState(false);
   const [newRelation, setNewRelation] = useState(initialRelation);
-  React.useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
+  useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
+  useEffect(() => { setOpen(false); setNewRelation(initialRelation) },[props.ciIdentity]);
 
   const [getValidTargetCIs, { data: dataCIs, loading: loadingCIs }] = useLazyQuery(queries.ValidRelationTargetCIs, { 
     variables: {layers: props.visibleLayers }
@@ -28,7 +29,7 @@ function AddNewRelation(props) {
   useEffect(() => {
     setNewRelation(e => ({...e, targetCIID: null }));
     getValidTargetCIs({variables: { forward: newRelation.forward, predicateID: newRelation.predicateID }});
-  }, [newRelation.predicateID, newRelation.forward, getValidTargetCIs]);
+  }, [newRelation.predicateID, newRelation.forward, props.ciIdentity, getValidTargetCIs]);
   const [insertRelation] = useMutation(mutations.INSERT_RELATION);
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
