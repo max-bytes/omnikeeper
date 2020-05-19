@@ -29,7 +29,7 @@ export default function ManagePredicates(props) {
     { headerName: "Wording (to)", field: "wordingTo" },
     { headerName: "Constraints", field: "constraints", autoHeight: true, flex: 1,
       cellRenderer: function(params) { 
-        return `From: [${params.getValue().preferredTraitsFrom.join(',')}],<br />To: [${params.getValue().preferredTraitsTo.join(',')}]`; 
+        return `From Traits: [${params.getValue().preferredTraitsFrom.join(',')}],<br />To Traits: [${params.getValue().preferredTraitsTo.join(',')}]`; 
       },
       cellEditor: 'predicateConstraintsCellEditor' },
     { headerName: "State", field: "state", cellEditor: 'agSelectCellEditor', cellEditorParams: {

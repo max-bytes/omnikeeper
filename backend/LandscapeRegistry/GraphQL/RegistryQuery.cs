@@ -107,40 +107,50 @@ namespace LandscapeRegistry.GraphQL
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
                     {
                         Name = "layers"
+                    },
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "predicateID"
+                    },
+                    new QueryArgument<NonNullGraphType<BooleanGraphType>>
+                    {
+                        Name = "forward"
                     }
                 }),
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as RegistryUserContext;
+                    var predicateID = context.GetArgument<string>("predicateID");
+                    var forward = context.GetArgument<bool>("forward");
                     var layerStrings = context.GetArgument<string[]>("layers");
                     var ls = await layerModel.BuildLayerSet(layerStrings, null);
                     userContext.LayerSet = ls;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var cis = await ciModel.GetCompactCIs(userContext.LayerSet, null, userContext.TimeThreshold);
+                    var predicates = (await predicateModel.GetPredicates(null, userContext.TimeThreshold, AnchorStateFilter.ActiveOnly));
+                    var predicate = predicates[predicateID];
 
-                    var effectiveTraitSet = await traitModel.CalculateEffectiveTraitSetForCIs(ci, null, userContext.TimeThreshold);
-                    var effectiveTraitNames = effectiveTraitSet.EffectiveTraits.Keys;
-                    var directedPredicates = predicates.SelectMany(predicate =>
-                    {
-                        var ret = new List<DirectedPredicate>();
-                        if (!predicate.Constraints.HasPreferredTraitsFrom || predicate.Constraints.PreferredTraitsFrom.Any(pt => effectiveTraitNames.Contains(pt)))
-                            ret.Add(DirectedPredicate.Build(predicate.ID, predicate.WordingFrom, predicate.State, true));
-                        if (!predicate.Constraints.HasPreferredTraitsTo || predicate.Constraints.PreferredTraitsTo.Any(pt => effectiveTraitNames.Contains(pt)))
-                            ret.Add(DirectedPredicate.Build(predicate.ID, predicate.WordingTo, predicate.State, false)); // TODO: switch wording
-                        return ret;
-                    });
+                    // predicate has no target constraints -> makes it easy, return ALL CIs
+                    if ((forward && !predicate.Constraints.HasPreferredTraitsTo) || (!forward && !predicate.Constraints.HasPreferredTraitsFrom))
+                        return await ciModel.GetCompactCIs(userContext.LayerSet, null, userContext.TimeThreshold);
 
-                    return cis;
+                    var preferredTraits = (forward) ? predicate.Constraints.PreferredTraitsTo : predicate.Constraints.PreferredTraitsFrom;
+
+                    // TODO: this has abysmal performance! We fully query ALL CIs and the calculate the effective traits for each of them... :(
+                    var allCIIDs = await ciModel.GetCIIDs(null);
+                    var cis = await ciModel.GetMergedCIs(userContext.LayerSet, true, null, userContext.TimeThreshold, allCIIDs);
+                    var effectiveTraitSets = await traitModel.CalculateEffectiveTraitSetForCIs(cis, preferredTraits, null, userContext.TimeThreshold);
+
+                    return effectiveTraitSets.Where(et =>
+                    { 
+                        // if CI has ANY of the preferred traits, keep it
+                        return preferredTraits.Any(pt => et.EffectiveTraits.ContainsKey(pt));
+                    }).Select(et => CompactCI.Build(et.UnderlyingCI));
                 });
 
             FieldAsync<ListGraphType<DirectedPredicateType>>("directedPredicates",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {
-                    new QueryArgument<NonNullGraphType<AnchorStateFilterType>>
-                    {
-                        Name = "stateFilter"
-                    },
                     new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "preferredForCI"
@@ -158,7 +168,7 @@ namespace LandscapeRegistry.GraphQL
                     var preferredForCI = context.GetArgument<Guid>("preferredForCI");
                     var layersForEffectiveTraits = context.GetArgument<string[]>("layersForEffectiveTraits");
 
-                    var predicates = (await predicateModel.GetPredicates(null, userContext.TimeThreshold, stateFilter)).Values;
+                    var predicates = (await predicateModel.GetPredicates(null, userContext.TimeThreshold, AnchorStateFilter.ActiveOnly)).Values;
 
                     // filter predicates by constraints
                     var layers = await layerModel.BuildLayerSet(layersForEffectiveTraits, null);

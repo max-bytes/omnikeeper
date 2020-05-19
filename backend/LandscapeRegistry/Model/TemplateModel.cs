@@ -37,8 +37,7 @@ namespace LandscapeRegistry.Model
             var attributesTemplates = template?.AttributeTemplates;
             var relationTemplates = template?.RelationTemplates;
 
-            var relationsAndToCIs = (await RelationService.GetMergedForwardRelationsAndToCIs(ci.ID, ci.Layers, CIModel, RelationModel, trans, atTime))
-                .ToLookup(t => t.relation.PredicateID);
+            var relationsAndToCIs = (await RelationService.GetMergedRelatedCIs(ci.ID, ci.Layers, CIModel, RelationModel, trans, atTime));
 
             var errorsAttribute = new Dictionary<string, TemplateErrorsAttribute>();
             if (attributesTemplates != null)

@@ -10,6 +10,14 @@ export const queries = {
           }
         ${Fragments.compactCI}
     `,
+    ValidRelationTargetCIs: gql`
+        query validRelationTargetCIs($layers: [String]!, $predicateID: String!, $forward: Boolean!) {
+            validRelationTargetCIs(layers: $layers, predicateID: $predicateID, forward: $forward) {
+              ...CompactCI
+            }
+          }
+        ${Fragments.compactCI}
+    `,
     PredicateList: gql`
         query predicateList($stateFilter: AnchorStateFilter!) {
             predicates(stateFilter: $stateFilter) {
@@ -19,8 +27,8 @@ export const queries = {
         ${Fragments.fullPredicate}
     `,
     DirectedPredicateList: gql`
-        query predicateList($stateFilter: AnchorStateFilter!, $preferredForCI: Guid!, $layersForEffectiveTraits: [String]!) {
-            directedPredicates(stateFilter: $stateFilter, preferredForCI: $preferredForCI, layersForEffectiveTraits: $layersForEffectiveTraits) {
+        query predicateList($preferredForCI: Guid!, $layersForEffectiveTraits: [String]!) {
+            directedPredicates(preferredForCI: $preferredForCI, layersForEffectiveTraits: $layersForEffectiveTraits) {
                 ...DirectedPredicate
             }
         }

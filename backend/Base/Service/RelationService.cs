@@ -12,14 +12,14 @@ namespace Landscape.Base.Service
 {
     public class RelationService
     {
-        public static async Task<IEnumerable<(Relation relation, MergedCI toCI)>> GetMergedForwardRelationsAndToCIs(
+        public static async Task<ILookup<string, MergedRelatedCI>> GetMergedRelatedCIs(
             Guid ciid, LayerSet layers, ICIModel ciModel, IRelationModel relationModel, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var relations = await relationModel.GetMergedRelations(ciid, false, layers, IncludeRelationDirections.Forward, trans, atTime);
+            var relations = await relationModel.GetMergedRelations(ciid, false, layers, IncludeRelationDirections.Both, trans, atTime);
             var relationsToCIIDs = relations.Select(r => r.ToCIID).Distinct();
             var relationsToCIs = (await ciModel.GetMergedCIs(layers, true, trans, atTime, relationsToCIIDs)).ToDictionary(ci => ci.ID);
-            var relationsAndToCIs = relations.Select(r => (relation: r, toCI: relationsToCIs[r.ToCIID]));
-            return relationsAndToCIs;
+            var relationsAndToCIs = relations.Select(r => MergedRelatedCI.Build(r, ciid, relationsToCIs[r.ToCIID]));
+            return relationsAndToCIs.ToLookup(r => r.PredicateID);
         }
 
         public static async Task<IEnumerable<CompactRelatedCI>> GetCompactRelatedCIs(Guid ciid, LayerSet layerset, ICIModel ciModel, IRelationModel relationModel, int? perPredicateLimit, NpgsqlTransaction trans, TimeThreshold atTime)
@@ -33,8 +33,7 @@ namespace Landscape.Base.Service
             {
                 foreach (var r in relations)
                 {
-                    var current = 0;
-                    predicateCounts.TryGetValue(r.PredicateID, out current);
+                    predicateCounts.TryGetValue(r.PredicateID, out int current);
                     predicateCounts[r.PredicateID] = current + 1;
                     if (current < perPredicateLimit.Value)
                         limitedRelations.Add(r);

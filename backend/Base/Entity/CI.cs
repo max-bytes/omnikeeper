@@ -72,5 +72,16 @@ namespace Landscape.Base.Entity
                 ID = id
             };
         }
+
+        public static CompactCI Build(MergedCI mergedCI)
+        {
+            return new CompactCI
+            {
+                Type = mergedCI.Type,
+                Name = mergedCI.Name,
+                AtTime = mergedCI.AtTime,
+                ID = mergedCI.ID
+            };
+        }
     }
 }

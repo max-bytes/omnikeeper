@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useQuery } from '@apollo/client';
+import React, { useState, useEffect } from "react";
+import { useQuery, useLazyQuery } from '@apollo/client';
 import PropTypes from 'prop-types'
 import { useMutation } from '@apollo/react-hooks';
 import { withApollo } from 'react-apollo';
@@ -7,7 +7,6 @@ import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import { mutations } from '../graphql/mutations'
 import { queries } from '../graphql/queries'
-import { Row } from "react-bootstrap";
 import { Dropdown, Button, Icon, Segment } from 'semantic-ui-react';
 import LayerDropdown from "./LayerDropdown";
 import { ErrorPopupButton } from "./ErrorPopupButton";
@@ -16,17 +15,20 @@ function AddNewRelation(props) {
   const [insertError, setInsertError] = useState(undefined);
   const canBeEdited = props.isEditable && props.visibleAndWritableLayers.length > 0;
   let initialRelation = {predicateID: null, targetCIID: null, forward: true, layer: null };
-  // const [selectedLayer, setSelectedLayer] = useState(undefined);
   const [isOpen, setOpen] = useState(false);
   const [newRelation, setNewRelation] = useState(initialRelation);
   React.useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
 
-  // TODO: loading
-  TODO: make CI loading lazy, restrict to preferred CIs based on predicate and its constraints
-  const { data: dataCIs } = useQuery(queries.CIList, { variables: {layers: props.visibleLayers } });
-  const { data: directedPredicates } = useQuery(queries.DirectedPredicateList, {
-    variables: {stateFilter: 'ACTIVE_AND_DEPRECATED', preferredForCI: props.ciIdentity, layersForEffectiveTraits: props.visibleLayers }
+  const [getValidTargetCIs, { data: dataCIs, loading: loadingCIs }] = useLazyQuery(queries.ValidRelationTargetCIs, { 
+    variables: {layers: props.visibleLayers }
   });
+  const { data: directedPredicates } = useQuery(queries.DirectedPredicateList, {
+    variables: { preferredForCI: props.ciIdentity, layersForEffectiveTraits: props.visibleLayers }
+  });
+  useEffect(() => {
+    setNewRelation(e => ({...e, targetCIID: null }));
+    getValidTargetCIs({variables: { forward: newRelation.forward, predicateID: newRelation.predicateID }});
+  }, [newRelation.predicateID, newRelation.forward, getValidTargetCIs]);
   const [insertRelation] = useMutation(mutations.INSERT_RELATION);
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
@@ -35,10 +37,12 @@ function AddNewRelation(props) {
   </Button>
   
   let addRelation = <></>;
-  if (isOpen && dataCIs && directedPredicates) {
-    var ciList = dataCIs.compactCIs.map(d => {
-      return { key: d.id, value: d.id, text: d.name };
-    });
+  if (isOpen && directedPredicates) {
+    var ciList = [];
+    if (dataCIs)
+      ciList = dataCIs.validRelationTargetCIs.map(d => {
+        return { key: d.id, value: d.id, text: d.name };
+      });
     const sortedPredicates = [...directedPredicates.directedPredicates]
     sortedPredicates.sort((a,b) => a.predicateID.localeCompare(b.predicateID));
     var predicateList = sortedPredicates.map(d => {
@@ -91,8 +95,9 @@ function AddNewRelation(props) {
             </Form.Group>
 
             <Form.Group as={Col} xs={4} controlId="name">
-                {/* TODO: create own CIDropdown (similar to LayerDropdown) */}
-                <Dropdown 
+                {/* TODO: create own RelatedTargetCIDropdown (similar to LayerDropdown) */}
+                <Dropdown loading={loadingCIs}
+                  disabled={loadingCIs}
                   value={newRelation.targetCIID}
                   placeholder='Target CI'
                   onChange={(_, data) => setNewRelation({...newRelation, targetCIID: data.value})}

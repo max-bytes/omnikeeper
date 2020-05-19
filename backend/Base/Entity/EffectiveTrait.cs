@@ -26,12 +26,12 @@ namespace Landscape.Base.Entity
     {
         public Trait UnderlyingTrait { get; private set; }
         public IImmutableDictionary<string, MergedCIAttribute> TraitAttributes { get; private set; }
-        public IImmutableDictionary<string, IEnumerable<(Relation relation, MergedCI toCI)>> TraitRelations { get; private set; }
+        public IImmutableDictionary<string, IEnumerable<MergedRelatedCI>> TraitRelations { get; private set; }
         public IEnumerable<string> DependentTraits { get; private set; }
 
         public static EffectiveTrait Build(Trait underlyingTrait, 
             IDictionary<string, MergedCIAttribute> traitAttributes, 
-            IDictionary<string, IEnumerable<(Relation relation, MergedCI toCI)>> traitRelations,
+            IDictionary<string, IEnumerable<MergedRelatedCI>> traitRelations,
             IEnumerable<string> dependentTraits)
         {
             return new EffectiveTrait

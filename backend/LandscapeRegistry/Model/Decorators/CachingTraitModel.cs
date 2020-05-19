@@ -48,6 +48,12 @@ namespace LandscapeRegistry.Model.Decorators
             else return await model.CalculateEffectiveTraitSetForCI(ci, trans, atTime);
         }
 
+        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetForCIs(IEnumerable<MergedCI> cis, string[] traitNames, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            // we cannot properly cache this it seems, because it would need to be invalidated whenever ANY CI changes
+            return await model.CalculateEffectiveTraitSetForCIs(cis, traitNames, trans, atTime);
+        }
+
         public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             // we cannot properly cache this it seems, because it would need to be invalidated whenever ANY CI changes

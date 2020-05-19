@@ -30,6 +30,17 @@ namespace LandscapeRegistry.Model
             this.logger = logger;
         }
 
+        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetForCIs(IEnumerable<MergedCI> cis, string[] traitNames, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            var traits = traitsProvider.GetTraits();
+
+            var selectedTraits = traits.Where(t => traitNames.Contains(t.Key)).Select(t => t.Value);
+
+            var candidates = cis.SelectMany(ci => selectedTraits.Select(t => new EffectiveTraitCandidate(t, ci))).ToList();
+            var ret = await ResolveETCandidates(candidates, traits, trans, atTime);
+            return ret;
+        }
+
         public async Task<EffectiveTraitSet> CalculateEffectiveTraitSetForCI(MergedCI ci, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var traits = traitsProvider.GetTraits();
@@ -38,7 +49,6 @@ namespace LandscapeRegistry.Model
             var ret = await ResolveETCandidates(candidates, traits, trans, atTime);
             return ret.FirstOrDefault() ?? EffectiveTraitSet.Build(ci, ImmutableList<EffectiveTrait>.Empty);
         }
-
 
         public async Task<EffectiveTrait> CalculateEffectiveTraitForCI(MergedCI ci, Trait trait, NpgsqlTransaction trans, TimeThreshold atTime)
         {
@@ -204,18 +214,17 @@ namespace LandscapeRegistry.Model
                 var (foundAttribute, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
                 return (traitAttributeIdentifier, foundAttribute, checks);
             });
-            IEnumerable<(string traitRelationIdentifier, IEnumerable<(Relation relation, MergedCI toCI)> foundRelations, TemplateErrorsRelation checks)> requiredEffectiveTraitRelations 
-                = new List<(string traitRelationIdentifier, IEnumerable<(Relation relation, MergedCI toCI)> foundRelations, TemplateErrorsRelation checks)>();
+            IEnumerable<(string traitRelationIdentifier, IEnumerable<MergedRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)> requiredEffectiveTraitRelations 
+                = new List<(string traitRelationIdentifier, IEnumerable<MergedRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)>();
             if (trait.RequiredRelations.Count > 0)
             {
-                var relationsAndToCIs = (await RelationService.GetMergedForwardRelationsAndToCIs(ci.ID, ci.Layers, ciModel, relationModel, trans, atTime))
-                    .ToLookup(t => t.relation.PredicateID);
+                var allMergedRelatedCIs = (await RelationService.GetMergedRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, trans, atTime));
                 requiredEffectiveTraitRelations = trait.RequiredRelations.Select(tr =>
                 {
                     var traitRelationIdentifier = tr.Identifier;
-                    var foundRelations = relationsAndToCIs[tr.RelationTemplate.PredicateID];
-                    var checks = TemplateCheckService.CalculateTemplateErrorsRelation(foundRelations, tr.RelationTemplate);
-                    return (traitRelationIdentifier, foundRelations, checks);
+                    var mergedRelatedCIs = allMergedRelatedCIs[tr.RelationTemplate.PredicateID];
+                    var checks = TemplateCheckService.CalculateTemplateErrorsRelation(mergedRelatedCIs, tr.RelationTemplate);
+                    return (traitRelationIdentifier, mergedRelatedCIs, checks);
                 });
             }
 
@@ -234,7 +243,7 @@ namespace LandscapeRegistry.Model
 
                 var resolvedET = EffectiveTrait.Build(trait,
                     requiredEffectiveTraitAttributes.Concat(optionalEffectiveTraitAttributes).ToDictionary(t => t.traitAttributeIdentifier, t => t.foundAttribute),
-                    requiredEffectiveTraitRelations.ToDictionary(t => t.traitRelationIdentifier, t => t.foundRelations),
+                    requiredEffectiveTraitRelations.ToDictionary(t => t.traitRelationIdentifier, t => t.mergedRelatedCIs),
                     resolvedDependentTraitNames);
                 et.SetResolved(resolvedET);
             } else

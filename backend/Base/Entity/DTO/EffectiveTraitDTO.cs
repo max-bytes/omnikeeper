@@ -22,14 +22,14 @@ namespace Landscape.Base.Entity.DTO
     public class EffectiveTraitDTO
     {
         [Required] public IImmutableDictionary<string, CIAttributeDTO> TraitAttributes { get; private set; }
-        [Required] public IImmutableDictionary<string, IEnumerable<RelationDTO>> TraitRelations { get; private set; }
+        [Required] public IImmutableDictionary<string, IEnumerable<RelatedCIDTO>> TraitRelations { get; private set; }
 
         public static EffectiveTraitDTO Build(EffectiveTrait et)
         {
             return new EffectiveTraitDTO
             {
                 TraitAttributes = et.TraitAttributes.Select(kv => (kv.Key, CIAttributeDTO.Build(kv.Value))).ToImmutableDictionary(kv => kv.Key, kv => kv.Item2),
-                TraitRelations = et.TraitRelations.Select(kv => (kv.Key, kv.Value.Select(r => RelationDTO.Build(r.relation, CIDTO.Build(r.toCI))))).ToImmutableDictionary(kv => kv.Key, kv => kv.Item2)
+                TraitRelations = et.TraitRelations.Select(kv => (kv.Key, kv.Value.Select(r => RelatedCIDTO.Build(r)))).ToImmutableDictionary(kv => kv.Key, kv => kv.Item2)
             };
         }
     }
