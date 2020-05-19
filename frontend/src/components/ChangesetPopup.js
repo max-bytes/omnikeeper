@@ -15,7 +15,7 @@ function InnerPopup(props) {
 
   if (loading) return (<Icon loading name={'sync'} />);
   if (data) {
-    const userLabel = <span style={{display: 'flex', flexWrap: 'nowrap'}}><UserTypeIcon style={{paddingRight: '3px'}} userType={data.changeset.user.type} /> {data.changeset.user.username}</span>;
+    const userLabel = <span style={{display: 'flex', flexWrap: 'nowrap', whiteSpace: 'nowrap'}}><UserTypeIcon style={{paddingRight: '3px'}} userType={data.changeset.user.type} /> {data.changeset.user.displayName}</span>;
     const dls = {display: 'flex', flexWrap: 'nowrap', marginBottom: '0px'};
     const dts = {width: '120px', textAlign: 'right', paddingRight: '10px' }
     return (<div style={{display: 'flex', flexFlow: 'column'}}>
