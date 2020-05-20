@@ -57,7 +57,7 @@ namespace LandscapeRegistry.Controllers
         [Route("/graphql-debug")]
         public async Task<IActionResult> Debug([FromBody] GraphQLQuery query)
         {
-            if (!_env.IsDevelopment())
+            if (_env.IsProduction())
                 return BadRequest("Not allowed");
             return await ProcessQuery(query);
         }
@@ -80,10 +80,10 @@ namespace LandscapeRegistry.Controllers
                 options.ExposeExceptions = _env.IsDevelopment();
             });
 
-            //if (result.Errors?.Count > 0)
-            //{
-            //    return BadRequest(result);
-            //}
+            if (result.Errors?.Count > 0)
+            {
+                return BadRequest(result);
+            }
 
             return Ok(result);
         }
