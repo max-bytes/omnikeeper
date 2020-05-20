@@ -60,7 +60,8 @@ namespace LandscapeRegistry.Model
 
             var cis = await ciModel.GetCompactCIs(layerSet, trans, atTime, foundCIIDs);
 
-            return cis.OrderBy(t => t.Name).Take(500);
+            // HACK, properly sort unnamed CIs
+            return cis.OrderBy(t => t.Name ?? "ZZZZZZZZZZZ").Take(500);
         }
     }
 }
