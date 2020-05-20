@@ -25,8 +25,9 @@ namespace LandscapeRegistry.Model.Decorators
         }
 
         // TODO: does caching effective traits make sense even?
-        // if we gave up caching traits, they could become much more powerful -> nested relation-requirements, nested traits-requirements
+        // if we gave up caching effective traits, they could become more powerful -> nested relation-requirements, nested traits-requirements
         // caching the underlying structures instead (attributes, relations, ...) we can still keep this feasible
+        // have to think about this more...
 
         public async Task<EffectiveTrait> CalculateEffectiveTraitForCI(MergedCI ci, Trait trait, NpgsqlTransaction trans, TimeThreshold atTime)
         {
@@ -54,10 +55,15 @@ namespace LandscapeRegistry.Model.Decorators
             return await model.CalculateEffectiveTraitSetForCIs(cis, traitNames, trans, atTime);
         }
 
-        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid, bool> ciFilter = null)
         {
             // we cannot properly cache this it seems, because it would need to be invalidated whenever ANY CI changes
-            return await model.CalculateEffectiveTraitSetsForTraitName(traitName, layerSet, trans, atTime);
+            return await model.CalculateEffectiveTraitSetsForTraitName(traitName, layerSet, trans, atTime, ciFilter);
+        }
+        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid, bool> ciFilter = null)
+        {
+            // we cannot properly cache this it seems, because it would need to be invalidated whenever ANY CI changes
+            return await model.CalculateEffectiveTraitSetsForTrait(trait, layerSet, trans, atTime, ciFilter);
         }
     }
 }

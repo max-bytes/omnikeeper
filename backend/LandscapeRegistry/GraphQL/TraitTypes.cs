@@ -1,5 +1,8 @@
 ﻿using GraphQL.Types;
+using Keycloak.Net.Models.Root;
 using Landscape.Base.Entity;
+using System;
+using System.Threading;
 
 namespace LandscapeRegistry.GraphQL
 {
@@ -24,6 +27,15 @@ namespace LandscapeRegistry.GraphQL
         public TraitType()
         {
             Field(x => x.Name);
+        }
+    }
+
+    public class EffectiveTraitListItemType : ObjectGraphType<ValueTuple<string, int>>
+    {
+        public EffectiveTraitListItemType()
+        {
+            Field("name", x => x.Item1);
+            Field("count", x => x.Item2);
         }
     }
 }

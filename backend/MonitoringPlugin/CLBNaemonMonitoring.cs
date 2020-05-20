@@ -283,7 +283,7 @@ namespace MonitoringPlugin
             public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, Trait contactgroupTrait, NpgsqlTransaction trans, TimeThreshold timeThreshold)
             {
                 var contactGroupRelations = await relationModel.GetMergedRelationsWithPredicateID(layerSetAll, false, belongsToNaemonContactgroup, trans, timeThreshold);
-                var contactGroupCIs = (await ciModel.GetMergedCIs(layerSetAll, false, trans, timeThreshold, contactGroupRelations.Select(r => r.ToCIID))).ToDictionary(t => t.ID);
+                var contactGroupCIs = (await ciModel.GetMergedCIs(layerSetAll, false, trans, timeThreshold, contactGroupRelations.Select(r => r.ToCIID).Distinct())).ToDictionary(t => t.ID);
                 contactGroupsMap = contactGroupRelations.GroupBy(r => r.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.ToCIID]));
                 foreach (var ci in contactGroupsMap.Values.SelectMany(t => t).Distinct())
                 {

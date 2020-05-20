@@ -1,4 +1,5 @@
-﻿using Landscape.Base.Entity;
+﻿using GraphQL.Language.AST;
+using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
@@ -101,8 +102,22 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs)
         {
-            // cannot be cached well... or can it?
-            return await model.GetMergedCIs(layers, includeEmptyCIs, trans, atTime, CIIDs);
+            // check which item can be found in the cache
+            var found = new List<MergedCI>();
+            var notFound = new List<Guid>();
+            foreach(var ciid in CIIDs)
+            {
+                if (memoryCache.TryGetValue<MergedCI>(CacheKeyService.MergedCI(ciid, layers), out var ci))
+                    found.Add(ci);
+                else 
+                    notFound.Add(ciid);
+            }
+            // get the non-cached items
+            var fetched = await model.GetMergedCIs(layers, includeEmptyCIs, trans, atTime, notFound);
+            // add them to the cache
+            foreach (var ci in fetched) memoryCache.Set(CacheKeyService.MergedCI(ci.ID, layers), ci, memoryCache.GetCICancellationChangeToken(ci.ID));
+
+            return found.Concat(fetched);
         }
     }
 }

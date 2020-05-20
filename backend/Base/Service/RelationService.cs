@@ -16,9 +16,9 @@ namespace Landscape.Base.Service
             Guid ciid, LayerSet layers, ICIModel ciModel, IRelationModel relationModel, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var relations = await relationModel.GetMergedRelations(ciid, false, layers, IncludeRelationDirections.Both, trans, atTime);
-            var relationsToCIIDs = relations.Select(r => r.ToCIID).Distinct();
-            var relationsToCIs = (await ciModel.GetMergedCIs(layers, true, trans, atTime, relationsToCIIDs)).ToDictionary(ci => ci.ID);
-            var relationsAndToCIs = relations.Select(r => MergedRelatedCI.Build(r, ciid, relationsToCIs[r.ToCIID]));
+            var relationsOtherCIIDs = relations.Select(r => (r.FromCIID == ciid) ? r.ToCIID : r.FromCIID).Distinct();
+            var relationsOtherCIs = (await ciModel.GetMergedCIs(layers, true, trans, atTime, relationsOtherCIIDs)).ToDictionary(ci => ci.ID);
+            var relationsAndToCIs = relations.Select(r => MergedRelatedCI.Build(r, ciid, relationsOtherCIs[(r.FromCIID == ciid) ? r.ToCIID : r.FromCIID]));
             return relationsAndToCIs.ToLookup(r => r.PredicateID);
         }
 

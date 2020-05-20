@@ -1,4 +1,5 @@
 ﻿using GraphQL.Types;
+using Keycloak.Net.Models.Root;
 using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
@@ -14,7 +15,7 @@ namespace LandscapeRegistry.GraphQL
 {
     public class RegistryQuery : ObjectGraphType
     {
-        public RegistryQuery(ICIModel ciModel, ILayerModel layerModel, IPredicateModel predicateModel, 
+        public RegistryQuery(ICIModel ciModel, ILayerModel layerModel, IPredicateModel predicateModel, IMemoryCacheModel memoryCacheModel,
             IChangesetModel changesetModel, ICISearchModel ciSearchModel, ITraitModel traitModel, ITraitsProvider traitsProvider)
         {
             FieldAsync<MergedCIType>("ci",
@@ -88,17 +89,23 @@ namespace LandscapeRegistry.GraphQL
                     {
                         Name = "searchString"
                     },
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
+                    {
+                        Name = "withEffectiveTraits"
+                    }
                 }),
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as RegistryUserContext;
 
+                    var searchString = context.GetArgument<string>("searchString");
+                    var withEffectiveTraits = context.GetArgument<string[]>("withEffectiveTraits");
                     var ciid = context.GetArgument<Guid>("identity");
                     var ls = await layerModel.BuildLayerSet(null);
                     userContext.LayerSet = ls;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    return await ciSearchModel.Search(context.GetArgument<string>("searchString"), ls, null, userContext.TimeThreshold);
+                    return await ciSearchModel.Search(searchString, withEffectiveTraits, ls, null, userContext.TimeThreshold);
                 });
 
             FieldAsync<ListGraphType<CompactCIType>>("validRelationTargetCIs",
@@ -267,6 +274,7 @@ namespace LandscapeRegistry.GraphQL
                     var userContext = context.UserContext as RegistryUserContext;
                     var layerStrings = context.GetArgument<string[]>("layers");
                     userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, null);
+                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
                     var from = context.GetArgument<DateTimeOffset>("from");
                     var to = context.GetArgument<DateTimeOffset>("to");
@@ -282,13 +290,43 @@ namespace LandscapeRegistry.GraphQL
             FieldAsync<StringGraphType>("traits",
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as RegistryUserContext;
-                    userContext.TimeThreshold = TimeThreshold.BuildLatest();// context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
                     // TODO: implement properly, just showing json string for now
                     var traitsJSON = JObject.FromObject(traitsProvider.GetTraits());
                     return traitsJSON.ToString();
                 });
 
+            FieldAsync<ListGraphType<EffectiveTraitListItemType>>("effectiveTraitList",
+                arguments: new QueryArguments(new List<QueryArgument>
+                {
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
+                    {
+                        Name = "layers"
+                    }
+                }),
+                resolve: async context =>
+                {
+                    var userContext = context.UserContext as RegistryUserContext;
+                    var layerStrings = context.GetArgument<string[]>("layers");
+                    userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, null);
+                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
+
+                    // TODO: HORRIBLE performance!, consider aggressive caching
+                    var traits = traitsProvider.GetTraits();
+                    var ret = new List<(string name, int count) > ();
+                    foreach(var trait in traits.Values)
+                    {
+                        var ets = await traitModel.CalculateEffectiveTraitSetsForTrait(trait, userContext.LayerSet, null, userContext.TimeThreshold);
+                        ret.Add((name: trait.Name, count: ets.Count()));
+                    }
+                    return ret;
+                });
+
+            Field<ListGraphType<StringGraphType>>("cacheKeys",
+                resolve: context =>
+                {
+                    var keys = memoryCacheModel.GetKeys();
+                    return keys;
+                });
         }
     }
 }

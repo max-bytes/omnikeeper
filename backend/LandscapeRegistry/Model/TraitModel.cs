@@ -57,15 +57,15 @@ namespace LandscapeRegistry.Model
             return ret.FirstOrDefault()?.EffectiveTraits[trait.Name]; // TODO: this whole thing can be structured better
         }
 
-        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid, bool> ciFilter = null)
         {
             var traits = traitsProvider.GetTraits();
             var trait = traits.GetValueOrDefault(traitName);
             if (trait == null) return null; // trait not found by name
-            return await CalculateEffectiveTraitSetsForTrait(trait, layerSet, trans, atTime);
+            return await CalculateEffectiveTraitSetsForTrait(trait, layerSet, trans, atTime, ciFilter);
         }
 
-        private async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid,bool> ciFilter = null)
         {
             // do a precursor filtering based on required attribute names
             var requiredAttributeNames = trait.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
@@ -95,10 +95,13 @@ namespace LandscapeRegistry.Model
                 command.Parameters.AddWithValue("required_attributes", requiredAttributeNames.ToArray());
                 using var dr = command.ExecuteReader();
 
+                var finalCIFilter = ciFilter ?? ((id) => true);
+
                 while (dr.Read())
                 {
                     var CIID = dr.GetGuid(0);
-                    candidateCIIDs.Add(CIID);
+                    if (finalCIFilter(CIID))
+                        candidateCIIDs.Add(CIID);
                 }
             }
 

@@ -43,8 +43,8 @@ export const queries = {
         }
     `,
     SearchCIs: gql`
-        query searchCIs($searchString: String!) {
-            searchCIs(searchString: $searchString) {
+        query searchCIs($searchString: String!, $withEffectiveTraits: [String]!) {
+            searchCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits) {
                 ...CompactCI
             }
         }
@@ -103,6 +103,11 @@ export const queries = {
     Traits: gql`
     query traits {
         traits
+      }
+    `,
+    CacheKeys: gql`
+    query cacheKeys {
+        cacheKeys
       }
     `,
 };

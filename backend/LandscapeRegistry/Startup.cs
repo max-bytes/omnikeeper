@@ -110,6 +110,7 @@ namespace LandscapeRegistry
             services.AddScoped<ITemplateModel, TemplateModel>();
             services.AddScoped<IPredicateModel, PredicateModel>();
             services.Decorate<IPredicateModel, CachingPredicateModel>();
+            services.AddScoped<IMemoryCacheModel, MemoryCacheModel>();
             //services.AddScoped<KeycloakModel>();
 
             services.AddScoped<ITraitModel, TraitModel>();
