@@ -58,7 +58,7 @@ namespace LandscapeRegistry.Controllers
         public async Task<IActionResult> Debug([FromBody] GraphQLQuery query)
         {
             if (_env.IsProduction())
-                return BadRequest("Not allowed");
+                return Forbid("Not allowed");
             return await ProcessQuery(query);
         }
 
