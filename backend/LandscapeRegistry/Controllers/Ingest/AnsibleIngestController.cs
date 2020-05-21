@@ -58,6 +58,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                 var relations = new List<RelationCandidate>();
 
                 // ingest setup facts
+                var baseCIs = new Dictionary<string, (Guid ciid, CICandidate ci)>();
                 foreach (var kv in data.SetupFacts)
                 {
                     var host = kv.Key; // TODO: use?
@@ -93,6 +94,8 @@ namespace LandscapeRegistry.Controllers.Ingest
                     var attributes = BulkCICandidateAttributeData.Build(attributeFragments);
                     var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }), attributes);
                     cis.Add(tempCIID, ciCandidate);
+
+                    baseCIs.Add(fqdn, (tempCIID, ciCandidate));
 
                     // ansible mounts
                     foreach (var mount in facts["ansible_mounts"])
@@ -163,8 +166,6 @@ namespace LandscapeRegistry.Controllers.Ingest
                     var fqdn = hostID; // TODO: check if using the HostID as fqdn is ok
                     var ciName = hostID;
 
-                    var tempCIID = Guid.NewGuid();
-
                     var attributeFragments = new List<BulkCICandidateAttributeData.Fragment>()
                     {
                         JToken2JSONAttribute(kvInstalled.Value["results"], "yum.installed"),
@@ -172,16 +173,21 @@ namespace LandscapeRegistry.Controllers.Ingest
                         String2Attribute("fqdn", fqdn)
                     };
                     var attributes = BulkCICandidateAttributeData.Build(attributeFragments);
-                    var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }), attributes);
-                    cis.Add(tempCIID, ciCandidate);
+
+                    if (baseCIs.TryGetValue(fqdn, out var @base))
+                    { // attach to base CI
+                        cis[@base.ciid] = CICandidate.BuildWithAdditionalAttributes(@base.ci, attributes);
+                    }
+                    else
+                    { // treat as new CI
+                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }), attributes));
+                    }
                 }
                 foreach (var kvRepos in data.YumRepos)
                 {
                     var hostID = kvRepos.Key;
                     var fqdn = hostID; // TODO: check if using the HostID as fqdn is ok
                     var ciName = hostID;
-
-                    var tempCIID = Guid.NewGuid();
 
                     var attributeFragments = new List<BulkCICandidateAttributeData.Fragment>()
                     {
@@ -190,16 +196,21 @@ namespace LandscapeRegistry.Controllers.Ingest
                         String2Attribute("fqdn", fqdn)
                     };
                     var attributes = BulkCICandidateAttributeData.Build(attributeFragments);
-                    var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }), attributes);
-                    cis.Add(tempCIID, ciCandidate);
+
+                    if (baseCIs.TryGetValue(fqdn, out var @base))
+                    { // attach to base CI
+                        cis[@base.ciid] = CICandidate.BuildWithAdditionalAttributes(@base.ci, attributes);
+                    }
+                    else
+                    { // treat as new CI
+                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }), attributes));
+                    }
                 }
                 foreach (var kvUpdates in data.YumUpdates)
                 {
                     var hostID = kvUpdates.Key;
                     var fqdn = hostID; // TODO: check if using the HostID as fqdn is ok
                     var ciName = hostID;
-
-                    var tempCIID = Guid.NewGuid();
 
                     var attributeFragments = new List<BulkCICandidateAttributeData.Fragment>()
                     {
@@ -208,8 +219,15 @@ namespace LandscapeRegistry.Controllers.Ingest
                         String2Attribute("fqdn", fqdn)
                     };
                     var attributes = BulkCICandidateAttributeData.Build(attributeFragments);
-                    var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }), attributes);
-                    cis.Add(tempCIID, ciCandidate);
+
+                    if (baseCIs.TryGetValue(fqdn, out var @base))
+                    { // attach to base CI
+                        cis[@base.ciid] = CICandidate.BuildWithAdditionalAttributes(@base.ci, attributes);
+                    }
+                    else
+                    { // treat as new CI
+                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }), attributes));
+                    }
                 }
 
                 var ingestData = IngestData.Build(cis, relations);

@@ -23,11 +23,12 @@ namespace LandscapeRegistry.Model
             this.predicateModel = predicateModel;
         }
 
+
         // TODO: make MergedRelation its own type
         // TODO: make it work with list of ciIdentities
-        private async Task<NpgsqlCommand> CreateMergedRelationCommand(Guid? ciid, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, string additionalWhereClause, NpgsqlTransaction trans, TimeThreshold atTime)
+        private NpgsqlCommand CreateMergedRelationCommand(Guid? ciid, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, string additionalWhereClause, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layerset, "temp_layerset", conn, trans);
+            var lsValues = LayerSet.CreateLayerSetSQLValues(layerset);
 
             var innerWhereClauses = new List<string>();
             if (ciid != null)
@@ -55,7 +56,7 @@ namespace LandscapeRegistry.Model
                 select distinct on (from_ci_id, to_ci_id, predicate_id, layer_id) * from
                     relation where timestamp <= @time_threshold and ({innerWhereClause}) order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC
             ) inn
-            inner join {tempLayersetTableName} ls ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
+            inner join ({lsValues}) as ls(id,""order"") ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
             where inn.state != ALL(@excluded_states) -- remove entries from layers which' last item is deleted
             WINDOW wndOut AS(PARTITION by inn.from_ci_id, inn.to_ci_id, inn.predicate_id ORDER BY ls.order DESC -- sort by layer order
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
@@ -76,7 +77,7 @@ namespace LandscapeRegistry.Model
 
             var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 
-            using (var command = await CreateMergedRelationCommand(ciid, includeRemoved, layerset, ird, null, trans, atTime))
+            using (var command = CreateMergedRelationCommand(ciid, includeRemoved, layerset, ird, null, trans, atTime))
             {
                 using var dr = await command.ExecuteReaderAsync();
 
@@ -133,7 +134,7 @@ namespace LandscapeRegistry.Model
 
             var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 
-            using (var command = await CreateMergedRelationCommand(null, includeRemoved, layerset, IncludeRelationDirections.Both, $"predicate_id = '{predicateID}'", trans, atTime))
+            using (var command = CreateMergedRelationCommand(null, includeRemoved, layerset, IncludeRelationDirections.Both, $"predicate_id = '{predicateID}'", trans, atTime))
             {
                 using var dr = await command.ExecuteReaderAsync();
 

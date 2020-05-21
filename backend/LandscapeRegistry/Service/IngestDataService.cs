@@ -56,11 +56,16 @@ namespace LandscapeRegistry.Service
                 return found;
             }
 
-            public async Task<IList<Guid>> Identify(BulkCICandidateAttributeData attributeData, CIIdentificationMethodByData d, NpgsqlTransaction trans)
+            public async Task<IList<Guid>> Identify(BulkCICandidateAttributeData attributeData, CIIdentificationMethodByData d, NpgsqlTransaction trans, ILogger logger)
             {
                 var identifiableFragments = d.IdentifiableAttributes.Select(ia =>
                 {
-                    return attributeData.Fragments.FirstOrDefault(f => f.Name == ia);
+                    var identifiableFragment = attributeData.Fragments.FirstOrDefault(f => f.Name.Equals(ia));
+                    if (identifiableFragment == null)
+                    {
+                        logger.LogWarning($"Could not find identifiable attribute named {ia} in fragments");
+                    }
+                    return identifiableFragment;
                 }).Where(f => f != null).ToList();
 
                 var candidateCIIDs = new List<Guid>();
@@ -96,15 +101,20 @@ namespace LandscapeRegistry.Service
                 switch (cic.Value.IdentificationMethod)
                 {
                     case CIIdentificationMethodByData d: // use identifiable data for finding out CIID
-                        var candidateCIIDs = await dataIdentifier.Identify(cic.Value.Attributes, d, trans);
+                        var candidateCIIDs = await dataIdentifier.Identify(cic.Value.Attributes, d, trans, logger);
                         if (!candidateCIIDs.IsEmpty())
                         { // we found at least one fitting ci, use that // TODO: order matters!!! Find out how to deal with that
                             if (candidateCIIDs.Count > 1)
                             {
-                                logger.LogWarning($"Unambiguous identification of CICandidate {cic.Key}, using first one");
+                                logger.LogWarning($"Ambiguous identification of CICandidate {cic.Key}, using first one");
                             }
                             ciid = candidateCIIDs[0]; // simply use first matching ciid for now
                             foundMatchingCI = true;
+                            logger.LogInformation($"Fitting CI found for identification. CI-ID: {ciid}");
+                        } else
+                        {
+                            // we didn't find a matching CI, create a new one
+                            logger.LogInformation($"No fitting CI found for identification, creating new one...");
                         }
 
                         break;
@@ -224,16 +234,23 @@ namespace LandscapeRegistry.Service
     public class CICandidate
     {
         public ICIIdentificationMethod IdentificationMethod { get; private set; }
-        //private Guid TemporaryCIID { get; set; }// TODO: needed?
         public BulkCICandidateAttributeData Attributes { get; private set; }
 
-        public static CICandidate Build(/*Guid temporaryCIID, */ICIIdentificationMethod identificationMethod, BulkCICandidateAttributeData attributes)
+        public static CICandidate Build(ICIIdentificationMethod identificationMethod, BulkCICandidateAttributeData attributes)
         {
             return new CICandidate()
             {
-                //TemporaryCIID = temporaryCIID,
                 IdentificationMethod = identificationMethod,
                 Attributes = attributes
+            };
+        }
+
+        public static CICandidate BuildWithAdditionalAttributes(CICandidate @base, BulkCICandidateAttributeData additionalAttributes)
+        {
+            return new CICandidate()
+            {
+                IdentificationMethod = @base.IdentificationMethod,
+                Attributes = @base.Attributes.Concat(additionalAttributes)
             };
         }
     }

@@ -1,4 +1,6 @@
-﻿using Npgsql;
+﻿using DotLiquid;
+using Npgsql;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +18,7 @@ namespace Landscape.Base.Entity
             {
                 unchecked // we expect overflows
                 {
-                    return LayerIDs.Aggregate(31L, (hash, item) => hash * 7L + item);
+                    return LayerIDs.Aggregate(2341L, (hash, item) => hash * 37L + item);
                 }
             }
         }
@@ -30,35 +32,46 @@ namespace Landscape.Base.Entity
 
         IEnumerator IEnumerable.GetEnumerator() => LayerIDs.GetEnumerator();
 
-        public static async Task<string> CreateLayerSetTempTable(LayerSet layers, string tablePrefix, NpgsqlConnection conn, NpgsqlTransaction trans)
+        public static string CreateLayerSetSQLValues(LayerSet layers)
         {
-            //--CREATE TEMPORARY TABLE temp_layerset(id bigint, "order" int);
-            //--INSERT INTO temp_layerset(id, "order") VALUES(1, 1), (2, 2), (3, 3), (4, 4);
-            var fullTableName = $"{tablePrefix}_{layers.LayerHash}";
-
-            using var cCheck = new NpgsqlCommand(@$"SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema like 'pg_temp_%' AND table_name = LOWER('{fullTableName}') )", conn, trans);
-            var exists = (bool)await cCheck.ExecuteScalarAsync();
-            if (!exists)
+            var order = 0;
+            var items = new List<string>();
+            foreach (var layerID in layers)
             {
-                using var c1 = new NpgsqlCommand(@$"
-                    CREATE TEMPORARY TABLE {fullTableName}
-                   (
-                        id bigint,
-                        ""order"" int
-                   )", conn, trans);
-                await c1.ExecuteNonQueryAsync();
-                //await new NpgsqlCommand(@$"TRUNCATE TABLE {tablePrefix}", conn, trans).ExecuteNonQueryAsync();
-
-                var order = 0;
-                foreach (var layerID in layers)
-                {
-                    using var c2 = new NpgsqlCommand(@$"INSERT INTO {fullTableName} (id, ""order"") VALUES (@id, @order)", conn, trans);
-                    c2.Parameters.AddWithValue("id", layerID);
-                    c2.Parameters.AddWithValue("order", order++);
-                    await c2.ExecuteScalarAsync();
-                }
+                items.Add($"({layerID}, {order++})");
             }
-            return fullTableName;
+            return $"VALUES{string.Join(',', items)}";
         }
+
+        //public static async Task<string> CreateLayerSetTempTable(LayerSet layers, string tablePrefix, NpgsqlConnection conn, NpgsqlTransaction trans)
+        //{
+        //    //--CREATE TEMPORARY TABLE temp_layerset(id bigint, "order" int);
+        //    //--INSERT INTO temp_layerset(id, "order") VALUES(1, 1), (2, 2), (3, 3), (4, 4);
+        //    var fullTableName = $"{tablePrefix}_{layers.LayerHash}";
+
+        //    using var cCheck = new NpgsqlCommand(@$"SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema like 'pg_temp_%' AND table_name = LOWER('{fullTableName}') )", conn, trans);
+        //    var exists = (bool)await cCheck.ExecuteScalarAsync();
+        //    if (!exists)
+        //    {
+        //        using var c1 = new NpgsqlCommand(@$"
+        //            CREATE TEMPORARY TABLE {fullTableName}
+        //           (
+        //                id bigint,
+        //                ""order"" int
+        //           )", conn, trans);
+        //        await c1.ExecuteNonQueryAsync();
+        //        //await new NpgsqlCommand(@$"TRUNCATE TABLE {tablePrefix}", conn, trans).ExecuteNonQueryAsync();
+
+        //        var order = 0;
+        //        foreach (var layerID in layers)
+        //        {
+        //            using var c2 = new NpgsqlCommand(@$"INSERT INTO {fullTableName} (id, ""order"") VALUES (@id, @order)", conn, trans);
+        //            c2.Parameters.AddWithValue("id", layerID);
+        //            c2.Parameters.AddWithValue("order", order++);
+        //            await c2.ExecuteScalarAsync();
+        //        }
+        //    }
+        //    return fullTableName;
+        //}
     }
 }

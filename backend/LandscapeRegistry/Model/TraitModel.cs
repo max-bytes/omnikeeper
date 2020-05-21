@@ -70,7 +70,8 @@ namespace LandscapeRegistry.Model
             // do a precursor filtering based on required attribute names
             var requiredAttributeNames = trait.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
             var candidateCIIDs = new List<Guid>();
-            var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layerSet, "temp_layerset", conn, trans);
+
+            var lsValues = LayerSet.CreateLayerSetSQLValues(layerSet);
 
             // TODO: consider case with no required attributes, like when a trait only has dependent traits
 
@@ -83,7 +84,7 @@ namespace LandscapeRegistry.Model
                                      and name = ANY(@required_attributes)
                                      order by ci_id, name, layer_id, timestamp DESC
                     ) inn
-                    inner join {tempLayersetTableName} ls ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
+                    inner join ({lsValues}) as ls(id,""order"") ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
                     where inn.state != 'removed'::attributestate -- remove entries from layers which' last item is deleted
                     order by inn.name, inn.ci_id, ls.order DESC
                 ) a

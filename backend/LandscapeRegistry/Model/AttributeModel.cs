@@ -32,7 +32,7 @@ namespace LandscapeRegistry.Model
         {
             var ret = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
 
-            var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn, trans);
+            var lsValues = LayerSet.CreateLayerSetSQLValues(layers);
 
             // inner query can use distinct on, outer needs to do windowing, because of array_agg
             using (var command = new NpgsqlCommand(@$"
@@ -49,7 +49,7 @@ namespace LandscapeRegistry.Model
                 select distinct on (ci_id, name, layer_id) * from
                     attribute where timestamp <= @time_threshold and ci_id = ANY(@ci_identities) and layer_id = ANY(@layer_ids) order by ci_id, name, layer_id, timestamp DESC
             ) inn
-            inner join {tempLayersetTableName} ls ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
+            inner join ({lsValues}) as ls(id,""order"") ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
             where inn.state != ALL(@excluded_states) -- remove entries from layers which' last item is deleted
             WINDOW wndOut AS(PARTITION by inn.name, inn.ci_id ORDER BY ls.order DESC -- sort by layer order
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
@@ -60,9 +60,9 @@ namespace LandscapeRegistry.Model
                 command.Parameters.AddWithValue("excluded_states", excludedStates);
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("layer_ids", layers.ToArray());
-                using var dr = command.ExecuteReader();
+                using var dr = await command.ExecuteReaderAsync();
 
-                while (dr.Read())
+                while (await dr.ReadAsync())
                 {
                     var id = dr.GetInt64(0);
                     var name = dr.GetString(1);
@@ -166,8 +166,7 @@ namespace LandscapeRegistry.Model
         {
             var ret = new Dictionary<Guid, MergedCIAttribute>();
 
-            var tempLayersetTableName = await LayerSet.CreateLayerSetTempTable(layers, "temp_layerset", conn, trans);
-
+            var lsValues = LayerSet.CreateLayerSetSQLValues(layers);
 
             // inner query can use distinct on, outer needs to do windowing, because of array_agg
             using (var command = new NpgsqlCommand(@$"
@@ -183,7 +182,7 @@ namespace LandscapeRegistry.Model
                 select distinct on (ci_id, name, layer_id) * from
                     attribute where timestamp <= @time_threshold and ({selection.WhereClause}) and name = @name and layer_id = ANY(@layer_ids) order by ci_id, name, layer_id, timestamp DESC
             ) inn
-            inner join {tempLayersetTableName} ls ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
+            inner join ({lsValues}) as ls(id,""order"") ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
             where inn.state != ALL(@excluded_states) -- remove entries from layers which' last item is deleted
             WINDOW wndOut AS(PARTITION by inn.name, inn.ci_id ORDER BY ls.order DESC -- sort by layer order
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
@@ -195,9 +194,9 @@ namespace LandscapeRegistry.Model
                 command.Parameters.AddWithValue("name", name);
                 command.Parameters.AddWithValue("layer_ids", layers.ToArray());
                 selection.AddParameters(command.Parameters);
-                using var dr = command.ExecuteReader();
+                using var dr = await command.ExecuteReaderAsync();
 
-                while (dr.Read())
+                while (await dr.ReadAsync())
                 {
                     var id = dr.GetInt64(0);
                     var CIID = dr.GetGuid(1);
