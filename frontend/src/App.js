@@ -1,6 +1,7 @@
 import React from 'react';
 import './App.css';
 import Explorer from './components/Explorer';
+import Diffing from './components/diffing/Diffing';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'semantic-ui-css/semantic.min.css'
 import Keycloak from 'keycloak-js'
@@ -81,6 +82,9 @@ function App() {
               </Route>
               <PrivateRoute path="/explorer/:ciid">
                 <ApolloWrapper component={Explorer} />
+              </PrivateRoute>
+              <PrivateRoute path="/diffing">
+                <ApolloWrapper component={Diffing} />
               </PrivateRoute>
               <PrivateRoute path="/createCI">
                 <ApolloWrapper component={AddNewCI} />

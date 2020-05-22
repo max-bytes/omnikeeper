@@ -1,17 +1,13 @@
-import { mutations } from '../graphql/mutations'
+
 import React from 'react';
 import LayerIcon from './LayerIcon';
-import { useMutation } from '@apollo/react-hooks';
 import { Icon } from 'semantic-ui-react'
 import { Button } from 'semantic-ui-react'
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import { useLayers } from '../utils/useLayers'
 
-function Layers() {
+function Layers(props) {
 
-  // TODO: loading
-  const [toggleLayerVisibility] = useMutation(mutations.TOGGLE_LAYER_VISIBILITY);
-  const [changeLayerSortOrder] = useMutation(mutations.CHANGE_LAYER_SORT_ORDER);
   const { data: layers } = useLayers();
 
   return (<ul style={{listStyle: 'none', paddingLeft: '0px', marginBottom: '0px'}}>
@@ -31,14 +27,14 @@ function Layers() {
               {layer.brainName !== "" && (<Icon fitted name='lightning' />)}
             </span>
             &nbsp;&nbsp;
-              <Button basic size='mini' compact onClick={() => toggleLayerVisibility({variables: { id: layer.id }})}>
+              <Button basic size='mini' compact onClick={() => props.toggleLayerVisibility(layer.id)}>
                 <Icon fitted name={((layer.visibility) ? 'eye' : 'eye slash')} />
               </Button>
             <Button.Group basic size='mini'>
-              <Button compact onClick={() => changeLayerSortOrder({variables: { id: layer.id, change: 1 }})}>
+              <Button compact onClick={() => props.changeLayerSortOrder(layer.id, 1)}>
                 <Icon fitted name='arrow alternate circle up' />
               </Button>
-              <Button compact onClick={() => changeLayerSortOrder({variables: { id: layer.id, change: -1 }})}>
+              <Button compact onClick={() => props.changeLayerSortOrder(layer.id, -1)}>
                 <Icon fitted name='arrow alternate circle down' />
               </Button>
             </Button.Group>
