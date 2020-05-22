@@ -8,7 +8,7 @@ import Button from 'react-bootstrap/Button';
 import LayerStackIcons from "./LayerStackIcons";
 import ChangesetPopup from "./ChangesetPopup";
 import EditableAttributeValue from "./EditableAttributeValue";
-import { useLayers } from '../utils/useLayers';
+import { useExplorerLayers } from '../utils/layers';
 
 function Attribute(props) {
 
@@ -16,7 +16,7 @@ function Attribute(props) {
   
   const isArray = attribute.attribute.value.isArray;
 
-  const { data: visibleLayers } = useLayers(true);
+  const { data: visibleLayers } = useExplorerLayers(true);
   var [hasErrors, setHasErrors] = useState(false);
   const [values, setValues] = useState(attribute.attribute.value.values);
   React.useEffect(() => setValues(attribute.attribute.value.values), [attribute.attribute.value.values])

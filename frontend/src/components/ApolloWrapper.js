@@ -37,7 +37,7 @@ let toHSL = function(string, opts) {
 function ApolloWrapper({ component: Component, ...rest }) {
 
     const typeDefs = gql`
-        type LayerSorting {
+        type LayerSortOffset {
             layerID: Int!
             sortOffset: Int!
         }
@@ -48,7 +48,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
         extend type Query {
             selectedTimeThreshold: SelectedTimeThreshold!
             hiddenLayers: [Int]!
-            layerSortings: [LayerSorting]!
+            layerSortOffsets: [LayerSortOffset]!
         }
         extend type LayerType {
             color: String!
@@ -68,45 +68,12 @@ function ApolloWrapper({ component: Component, ...rest }) {
                 }});
                 return null;
             },
-            toggleLayerVisibility: (_root, variables, { cache, getCacheKey }) => {
-                var { hiddenLayers } = cache.readQuery({query: queries.HiddenLayers });
-                var newHiddenLayers = hiddenLayers;
-                if (hiddenLayers.includes(variables.id))
-                    newHiddenLayers = _.without(hiddenLayers, variables.id);
-                else
-                    newHiddenLayers = _.concat(hiddenLayers, [variables.id]);
-                cache.writeQuery({ query: queries.HiddenLayers, data: { hiddenLayers: newHiddenLayers } });
-
+            setHiddenLayers: (_root, variables, { cache, getCacheKey }) => {
+                cache.writeQuery({ query: queries.HiddenLayers, data: { hiddenLayers: variables.ids } });
                 return null;
             },
-            changeLayerSortOrder: (_root, variables, { cache, getCacheKey }) => {
-                var sortOrderChange = variables.change;
-                var swapLayerIDA = variables.layerIDA;
-                var swapLayerIDB = variables.layerIDB;
-                var { layerSortings: newLayerSortings } = cache.readQuery({query: queries.LayerSortings });
-
-                // console.log(`Swapping ${swapLayerIDA} and ${swapLayerIDB}`);
-
-                var swapLayerA = _.find(newLayerSortings, ls => ls.layerID === swapLayerIDA);
-                if (!swapLayerA) {
-                    swapLayerA = {layerID: swapLayerIDA, sortOffset: 0}
-                    newLayerSortings = _.concat(newLayerSortings, [swapLayerA]);
-                }
-                var swapLayerB = _.find(newLayerSortings, ls => ls.layerID === swapLayerIDB);
-                if (!swapLayerB) {
-                    swapLayerB = {layerID: swapLayerIDB, sortOffset: 0}
-                    newLayerSortings = _.concat(newLayerSortings, [swapLayerB]);
-                }
-                newLayerSortings = _.map(newLayerSortings, ls => {
-                    if (ls.layerID === swapLayerIDA)
-                        return { ...ls, sortOffset: ls.sortOffset + sortOrderChange };
-                    else if (ls.layerID === swapLayerIDB)
-                        return { ...ls, sortOffset: ls.sortOffset - sortOrderChange };
-                    else
-                        return ls;
-                });
-                cache.writeQuery({ query: queries.LayerSortings, data: { layerSortings: newLayerSortings } });
-
+            setLayerSortOffsets: (_root, variables, { cache, getCacheKey }) => {
+                cache.writeQuery({ query: queries.LayerSortOffsets, data: { layerSortOffsets: variables.offsets } });
                 return null;
             },
         },
@@ -188,7 +155,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
           isLatest: true
         },
         hiddenLayers: [],
-        layerSortings: []
+        layerSortOffsets: []
     };
     cache.writeQuery({
         query: gql`
@@ -200,7 +167,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
             hiddenLayers {
                 layerID
             }
-            layerSortings {
+            layerSortOffsets {
                 layerID
                 sortOffset
             }

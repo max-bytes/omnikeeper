@@ -6,12 +6,12 @@ import { queries } from '../graphql/queries'
 import LoadingOverlay from 'react-loading-overlay'
 import { Container } from 'react-bootstrap';
 import { ErrorView } from './ErrorView';
-import { useLayers } from '../utils/useLayers';
+import { useExplorerLayers } from '../utils/layers';
 import { useSelectedTime } from '../utils/useSelectedTime';
 
 function MainAreaCI(props) {
 
-  const { data: visibleLayers } = useLayers(true);
+  const { data: visibleLayers } = useExplorerLayers(true);
   const selectedTime = useSelectedTime();
 
   // TODO: move into CI

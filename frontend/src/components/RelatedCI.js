@@ -7,11 +7,11 @@ import LayerStackIcons from "./LayerStackIcons";
 import Form from 'react-bootstrap/Form';
 import { Link  } from 'react-router-dom'
 import ChangesetPopup from "./ChangesetPopup";
-import { useLayers } from '../utils/useLayers';
+import { useExplorerLayers } from '../utils/layers';
 
 function RelatedCI(props) {
 
-  const { data: visibleLayers } = useLayers(true);
+  const { data: visibleLayers } = useExplorerLayers(true);
   // TODO: loading
   const [removeRelation] = useMutation(mutations.REMOVE_RELATION, { 
     update: (cache, data) => {

@@ -7,13 +7,13 @@ import TemplateErrors from './TemplateErrors';
 import CIRelations from './CIRelations';
 import EffectiveTraits from './EffectiveTraits';
 import { Tab } from 'semantic-ui-react'
-import { useLayers } from '../utils/useLayers';
+import { useExplorerLayers } from '../utils/layers';
 
 function CI(props) {
 
   const [selectedTab, setSelectedTab] = useState(0);
   const [createNewAttribute, setCreateNewAttribute] = useState(undefined);
-  const { data: visibleAndWritableLayers } = useLayers(true, true);
+  const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
     
   const panes = [
     { menuItem: 'Attributes', render: () => <Tab.Pane>

@@ -12,12 +12,12 @@ import EditableAttributeValue from "./EditableAttributeValue";
 import { Dropdown, Segment, Button, Icon } from 'semantic-ui-react'
 import LayerDropdown from "./LayerDropdown";
 import { ErrorPopupButton } from "./ErrorPopupButton";
-import { useLayers } from '../utils/useLayers';
+import { useExplorerLayers } from '../utils/layers';
 
 function AddNewAttribute(props) {
   const [insertError, setInsertError] = useState(undefined);
-  const { data: visibleAndWritableLayers } = useLayers(true, true);
-  const { data: visibleLayers } = useLayers(true);
+  const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
+  const { data: visibleLayers } = useExplorerLayers(true);
   const canBeEdited = props.isEditable && visibleAndWritableLayers.length > 0;
   let initialAttribute = {name: '', type: 'TEXT', values: [''], isArray: false};
   const [selectedLayer, setSelectedLayer] = useState(visibleAndWritableLayers[0]);

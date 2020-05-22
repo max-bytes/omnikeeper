@@ -9,13 +9,13 @@ import Row from 'react-bootstrap/Row'
 import { Dropdown, Message, Icon } from 'semantic-ui-react'
 import { withRouter } from 'react-router-dom'
 import LayerDropdown from "./LayerDropdown";
-import { useLayers } from '../utils/useLayers';
+import { useExplorerLayers } from '../utils/layers';
 
 function AddNewCI(props) {
 
   let initialNewCI = {name: "", layerForName: null, typeID: null };
   const [newCI, setNewCI] = useState(initialNewCI);
-  const { data: visibleAndWritableLayers } = useLayers(true, true);
+  const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
   
   const [error, setError] = useState("");
   const [goToCIAfterCreation, setGoToCIAfterCreation] = useState(true);

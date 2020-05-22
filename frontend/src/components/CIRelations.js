@@ -7,12 +7,12 @@ import { Flipper, Flipped } from 'react-flip-toolkit'
 import { onAppear, onExit } from '../utils/animation';
 import { queries } from '../graphql/queries'
 import { ErrorView } from './ErrorView';
-import { useLayers } from '../utils/useLayers';
+import { useExplorerLayers } from '../utils/layers';
 
 function CIRelations(props) {
 
-  const { data: visibleAndWritableLayers } = useLayers(true, true);
-  const { data: visibleLayers } = useLayers(true);
+  const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
+  const { data: visibleLayers } = useExplorerLayers(true);
 
   const perPredicateLimit = 100;
 

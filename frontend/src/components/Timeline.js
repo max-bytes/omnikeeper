@@ -10,12 +10,12 @@ import { useMutation } from '@apollo/react-hooks';
 import UserTypeIcon from './UserTypeIcon';
 import moment from 'moment'
 import { ErrorView } from './ErrorView';
-import { useLayers } from '../utils/useLayers';
+import { useExplorerLayers } from '../utils/layers';
 import { useSelectedTime } from '../utils/useSelectedTime';
 
 function Timeline(props) {
   
-  const { data: layers } = useLayers();
+  const { data: layers } = useExplorerLayers();
   const selectedTime = useSelectedTime();
 
   var ciid = props.ciid;

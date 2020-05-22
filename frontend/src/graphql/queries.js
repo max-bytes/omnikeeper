@@ -104,9 +104,9 @@ export const queries = {
     query {
         hiddenLayers
     }`,
-    LayerSortings: gql`
+    LayerSortOffsets: gql`
     query {
-        layerSortings {
+        layerSortOffsets {
             layerID
             sortOffset
         }

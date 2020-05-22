@@ -5,10 +5,10 @@ import { Flipper, Flipped } from 'react-flip-toolkit'
 import _ from 'lodash';
 import { Accordion, Button, Icon } from 'semantic-ui-react'
 import { onAppear, onExit } from '../utils/animation';
-import { useLayers } from '../utils/useLayers';
+import { useExplorerLayers } from '../utils/layers';
 
 function AttributeList(props) {
-  const { data: visibleAndWritableLayers } = useLayers(true, true);
+  const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
 
   // TODO: does not work with nested groups yet
   const nestedAttributes = _.groupBy(props.mergedAttributes, (mergedAttribute) => {

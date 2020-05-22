@@ -142,10 +142,16 @@ CREATE_CI: gql`
   }
   `,
 
-  TOGGLE_LAYER_VISIBILITY: gql`
-  mutation ToggleLayerVisibility($id: Int!) {
-    toggleLayerVisibility(id: $id) @client
+  SET_HIDDEN_LAYERS: gql`
+  mutation SetHiddenLayers($ids: [Int]!) {
+    setHiddenLayers(ids: $ids) @client
   }
+  `,
+  
+  SET_LAYER_SORT_OFFSETS: gql`
+    mutation SetLayerSortOffsets($offsets: [LayerSortOffset]!) {
+      setLayerSortOffsets(offsets: $offsets) @client
+    }
   `,
 
   CHANGE_LAYER_SORT_ORDER: gql`
