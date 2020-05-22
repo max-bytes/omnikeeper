@@ -4,6 +4,7 @@ import { ApolloProvider, ApolloClient, createHttpLink, InMemoryCache,gql,default
 import { ApolloProvider as ApolloHooksProvider } from '@apollo/react-hooks'
 import { setContext } from "apollo-link-context";
 import moment from 'moment'
+import _ from 'lodash';
 import env from "@beam-australia/react-env";
 
 let toHSL = function(string, opts) {
@@ -36,32 +37,24 @@ let toHSL = function(string, opts) {
 function ApolloWrapper({ component: Component, ...rest }) {
 
     const typeDefs = gql`
-        type LayerSortingAndVisibility {
-            id: Int!
-            sort: Int!
-            visibility: Bool!
-        }
-        type LocalState {
-            layerSortingAndVisibility: LayerSortingAndVisibility!
+        type LayerSorting {
+            layerID: Int!
+            sortOffset: Int!
         }
         type SelectedTimeThreshold {
             time: DateTimeOffset!
             isLatest: Bool!
         }
         extend type Query {
-            localState: LocalState!
-            selectedTimeThreshold: SelectedTimeThreshold! 
-        }
-        extend type Mutation {
-            updateLayerSortingAndVisibility(layers: [LayerSortingAndVisibility]!): [LayerSortingAndVisibility]!
+            selectedTimeThreshold: SelectedTimeThreshold!
+            hiddenLayers: [Int]!
+            layerSortings: [LayerSorting]!
         }
         extend type LayerType {
-            visibility: Bool!
             color: String!
         }
     `;
-    var initalLayerSort = 0;
-
+    
     const resolvers = {
         Mutation: {
             setSelectedTimeThreshold: (_root, variables, { cache, getCacheKey }) => {
@@ -76,57 +69,48 @@ function ApolloWrapper({ component: Component, ...rest }) {
                 return null;
             },
             toggleLayerVisibility: (_root, variables, { cache, getCacheKey }) => {
-                const id = getCacheKey({ __typename: 'LayerType', id: variables.id })
-                const fragment = gql`
-                fragment visibleLayer on LayerType {
-                    visibility
-                }
-                `;
-                const layer = cache.readFragment({ fragment, id });
-                // const data = { ...layer, visibility: !layer.visibility }; 
-                cache.modify(id, { visibility() { return !layer.visibility; }});
+                var { hiddenLayers } = cache.readQuery({query: queries.HiddenLayers });
+                var newHiddenLayers = hiddenLayers;
+                if (hiddenLayers.includes(variables.id))
+                    newHiddenLayers = _.without(hiddenLayers, variables.id);
+                else
+                    newHiddenLayers = _.concat(hiddenLayers, [variables.id]);
+                cache.writeQuery({ query: queries.HiddenLayers, data: { hiddenLayers: newHiddenLayers } });
+
                 return null;
             },
             changeLayerSortOrder: (_root, variables, { cache, getCacheKey }) => {
-                const id = getCacheKey({ __typename: 'LayerType', id: variables.id })
-                const fragment = gql`
-                fragment layer on LayerType {
-                    sort
-                }
-                `;
-                const layer = cache.readFragment({ fragment, id });
-
                 var sortOrderChange = variables.change;
-                var newSortOrder = layer.sort + sortOrderChange;
+                var swapLayerIDA = variables.layerIDA;
+                var swapLayerIDB = variables.layerIDB;
+                var { layerSortings: newLayerSortings } = cache.readQuery({query: queries.LayerSortings });
 
-                var { layers } = cache.readQuery({query: queries.Layers});
-                var pushedLayers = layers.filter(l => l.sort === newSortOrder && l.id !== variables.id);
+                // console.log(`Swapping ${swapLayerIDA} and ${swapLayerIDB}`);
 
-                if (pushedLayers.length === 0)
-                    return null;
-
-                pushedLayers.forEach(l => {
-                    // const d = { ...l, sort: l.sort - sortOrderChange }; 
-                    var cacheKey = getCacheKey({ __typename: 'LayerType', id: l.id });
-                    // console.log("Moving layer " + l.id + " (" + cacheKey +  ") from sort " + l.sort + " to sort " + d.sort);
-                    cache.modify(cacheKey, { sort() { return l.sort - sortOrderChange; } });
-                    // console.log({ id: cacheKey, data: d });
+                var swapLayerA = _.find(newLayerSortings, ls => ls.layerID === swapLayerIDA);
+                if (!swapLayerA) {
+                    swapLayerA = {layerID: swapLayerIDA, sortOffset: 0}
+                    newLayerSortings = _.concat(newLayerSortings, [swapLayerA]);
+                }
+                var swapLayerB = _.find(newLayerSortings, ls => ls.layerID === swapLayerIDB);
+                if (!swapLayerB) {
+                    swapLayerB = {layerID: swapLayerIDB, sortOffset: 0}
+                    newLayerSortings = _.concat(newLayerSortings, [swapLayerB]);
+                }
+                newLayerSortings = _.map(newLayerSortings, ls => {
+                    if (ls.layerID === swapLayerIDA)
+                        return { ...ls, sortOffset: ls.sortOffset + sortOrderChange };
+                    else if (ls.layerID === swapLayerIDB)
+                        return { ...ls, sortOffset: ls.sortOffset - sortOrderChange };
+                    else
+                        return ls;
                 });
+                cache.writeQuery({ query: queries.LayerSortings, data: { layerSortings: newLayerSortings } });
 
-                // console.log("Moving layer " + variables.id + " (" + id + ") from sort " + layer.sort + " to sort " + (layer.sort + sortOrderChange));
-                // const data = { ...layer, sort: layer.sort + sortOrderChange }; 
-                cache.modify(id, { sort() { return layer.sort + sortOrderChange; } });
-                // console.log({ id, data });
                 return null;
             },
         },
         LayerType: {
-            visibility: (obj, args, context, info) => {
-                return true;
-            },
-            sort: (obj, args, context, info) => {
-                return initalLayerSort++;
-            },
             color: (obj, args, context, info) => {
                 var layerName = obj.name;
                 var layerHue = toHSL(layerName);
@@ -203,16 +187,22 @@ function ApolloWrapper({ component: Component, ...rest }) {
           time: null,
           isLatest: true
         },
-        '__typename': 'LocalState!'
+        hiddenLayers: [],
+        layerSortings: []
     };
-    // cache.writeData(initialState);
-
     cache.writeQuery({
         query: gql`
-        query LocalState {
+        query InitialState {
             selectedTimeThreshold {
                 time
                 isLatest
+            }
+            hiddenLayers {
+                layerID
+            }
+            layerSortings {
+                layerID
+                sortOffset
             }
         }
         `,

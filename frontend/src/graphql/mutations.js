@@ -149,8 +149,8 @@ CREATE_CI: gql`
   `,
 
   CHANGE_LAYER_SORT_ORDER: gql`
-  mutation ChangeLayerSortOrder($id: Int!, $change: Int!) {
-    changeLayerSortOrder(id: $id, change: $change) @client
+  mutation ChangeLayerSortOrder($layerIDA: Int!, $layerIDB: Int!, $change: Int!) {
+    changeLayerSortOrder(layerIDA: $layerIDA, layerIDB: $layerIDB, change: $change) @client
   }
   `,
 

@@ -14,11 +14,12 @@ import { ErrorPopupButton } from "./ErrorPopupButton";
 function AddNewRelation(props) {
   const [insertError, setInsertError] = useState(undefined);
   const canBeEdited = props.isEditable && props.visibleAndWritableLayers.length > 0;
-  let initialRelation = {predicateID: null, targetCIID: null, forward: true, layer: null };
+  const initialRelation = {predicateID: null, targetCIID: null, forward: true, layer: null };
   const [isOpen, setOpen] = useState(false);
   const [newRelation, setNewRelation] = useState(initialRelation);
   useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
-  useEffect(() => { setOpen(false); setNewRelation(initialRelation) }, [props.ciIdentity]);
+   // TODO: don't know how to add initialRelation to useEffect dependencies without creating an infinite render loop
+  useEffect(() => { setOpen(false); setNewRelation(initialRelation) }, [props.ciIdentity, props.visibleLayers]);
 
   const [getValidTargetCIs, { data: dataCIs, loading: loadingCIs }] = useLazyQuery(queries.ValidRelationTargetCIs, { 
     variables: {layers: props.visibleLayers }
@@ -28,7 +29,8 @@ function AddNewRelation(props) {
   });
   useEffect(() => {
     setNewRelation(e => ({...e, targetCIID: null }));
-    getValidTargetCIs({variables: { forward: newRelation.forward, predicateID: newRelation.predicateID }});
+    if (newRelation.predicateID)
+      getValidTargetCIs({variables: { forward: newRelation.forward, predicateID: newRelation.predicateID }});
   }, [newRelation.predicateID, newRelation.forward, props.ciIdentity, getValidTargetCIs]);
   const [insertRelation] = useMutation(mutations.INSERT_RELATION);
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);

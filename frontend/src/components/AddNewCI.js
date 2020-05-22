@@ -15,7 +15,7 @@ function AddNewCI(props) {
 
   let initialNewCI = {name: "", layerForName: null, typeID: null };
   const [newCI, setNewCI] = useState(initialNewCI);
-  const { data: sortedLayers } = useLayers();
+  const { data: visibleAndWritableLayers } = useLayers(true, true);
   
   const [error, setError] = useState("");
   const [goToCIAfterCreation, setGoToCIAfterCreation] = useState(true);
@@ -23,11 +23,9 @@ function AddNewCI(props) {
   const { data: dataCITypes } = useQuery(queries.CITypeList);
   const [createNewCI] = useMutation(mutations.CREATE_CI);
   
-  if (!dataCITypes || !sortedLayers)
+  if (!dataCITypes || !visibleAndWritableLayers)
     return "Loading";
   else {
-
-    let visibleAndWritableLayers = sortedLayers.filter(l => l.visibility && l.writable && l.state === 'ACTIVE');
 
     return (
       <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>

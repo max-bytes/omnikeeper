@@ -10,7 +10,6 @@ export const Fragments = {
         layerStack {
             id
             name
-            visibility @client
             color @client
         }
     }
@@ -97,7 +96,6 @@ export const Fragments = {
         layerStack {
             id
             name
-            visibility @client
             color @client
         }
     }
@@ -109,8 +107,6 @@ export const Fragments = {
     state
     writable
     brainName
-    sort @client
-    visibility @client
     color @client
   }
   `,
@@ -129,7 +125,6 @@ export const Fragments = {
         layerStack {
             id
             name
-            visibility @client
             color @client
         }
     }

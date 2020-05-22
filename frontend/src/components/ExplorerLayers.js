@@ -1,18 +1,18 @@
-
 import React from 'react';
 import Layers from './Layers';
 import { mutations } from '../graphql/mutations'
 import { useMutation } from '@apollo/react-hooks';
+import { useLayers } from '../utils/useLayers'
 
 function ExplorerLayers() {
 
-  // TODO: loading
+  const { data: layers } = useLayers();
   const [toggleLayerVisibility] = useMutation(mutations.TOGGLE_LAYER_VISIBILITY);
   const [changeLayerSortOrder] = useMutation(mutations.CHANGE_LAYER_SORT_ORDER);
 
-  return <Layers 
+  return <Layers layers={layers}
     toggleLayerVisibility={(layerID) => toggleLayerVisibility({variables: { id: layerID }}) } 
-    changeLayerSortOrder={(layerID, change) => changeLayerSortOrder({variables: { id: layerID, change: change }})} />;
+    changeLayerSortOrder={(layerIDA, layerIDB, change) => changeLayerSortOrder({variables: { layerIDA: layerIDA, layerIDB: layerIDB, change: change }})} />;
 }
 
 export default ExplorerLayers;
