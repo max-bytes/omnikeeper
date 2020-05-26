@@ -216,7 +216,7 @@ namespace LandscapeRegistry.Model
             var ciTypes = await GetTypeOfCIs(CIIDs, trans, atTime);
             var ciNames = await GetCINames(CIIDs, visibleLayers, trans, atTime);
 
-            return CIIDs.Select(ciid => CompactCI.Build(ciid, ciNames[ciid], ciTypes[ciid], atTime));
+            return CIIDs.Select(ciid => CompactCI.Build(ciid, ciNames[ciid], ciTypes[ciid], visibleLayers.LayerHash, atTime));
         }
 
         public async Task<IEnumerable<Guid>> GetCIIDs(NpgsqlTransaction trans)

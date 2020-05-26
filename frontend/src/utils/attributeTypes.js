@@ -70,7 +70,7 @@ export function InputControl(props) {
         //         {...attributeType2InputProps(props.type)} placeholder="Enter value" value={props.value} 
         //         onChange={e => props.onChange(e.target.value)} />
         // } else {
-            return <Form.Control autoFocus={props.autoFocus} disabled={props.disabled} style={{flexGrow: 1}} 
+            return <Form.Control autoFocus={props.autoFocus} disabled={props.disabled} style={{flexGrow: 1, alignSelf: 'center'}} 
                 {...attributeType2InputProps(props.type)} placeholder="Enter value" value={props.value} 
                 onChange={e => props.onChange(e.target.value)} />
         // }

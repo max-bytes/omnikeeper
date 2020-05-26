@@ -8,15 +8,13 @@ import Button from 'react-bootstrap/Button';
 import LayerStackIcons from "./LayerStackIcons";
 import ChangesetPopup from "./ChangesetPopup";
 import EditableAttributeValue from "./EditableAttributeValue";
-import { useExplorerLayers } from '../utils/layers';
 
 function Attribute(props) {
 
-  var {ciIdentity, attribute, isEditable, ...rest} = props;
+  var {ciIdentity, attribute, isEditable, visibleLayers, hideNameLabel, controlIdSuffix, ...rest} = props;
   
   const isArray = attribute.attribute.value.isArray;
 
-  const { data: visibleLayers } = useExplorerLayers(true);
   var [hasErrors, setHasErrors] = useState(false);
   const [values, setValues] = useState(attribute.attribute.value.values);
   React.useEffect(() => setValues(attribute.attribute.value.values), [attribute.attribute.value.values])
@@ -42,13 +40,16 @@ function Attribute(props) {
   const layerID = props.attribute.layerStackIDs[props.attribute.layerStackIDs.length - 1];
 
   let valueInput = <>
-    <EditableAttributeValue name={attribute.attribute.name} setHasErrors={setHasErrors} isEditable={isEditable} values={values} setValues={setValues} type={attribute.attribute.value.type} isArray={isArray} />
+    <EditableAttributeValue name={attribute.attribute.name} controlIdSuffix={controlIdSuffix} setHasErrors={setHasErrors} isEditable={isEditable} values={values} setValues={setValues} type={attribute.attribute.value.type} isArray={isArray} />
   </>;
 
-  const leftPart = <div style={{display: 'flex', flexBasis: '220px', alignItems: 'center', minHeight: '33px'}}>
+  const leftPart = (hideNameLabel) ? '' : <div style={{display: 'flex', flexBasis: '220px', minHeight: '38px', alignItems: 'center'}}>
+    <Form.Label className={"pr-1"} style={{whiteSpace: 'nowrap', flexGrow: 1, justifyContent: 'flex-end'}}>{attribute.attribute.name}</Form.Label>
+  </div>;
+
+  const rightPart = <div style={{minHeight: '38px', display: 'flex', alignItems: 'center'}}>
     <LayerStackIcons layerStack={attribute.layerStack} />
     <ChangesetPopup changesetID={attribute.attribute.changesetID} />
-    <Form.Label className={"pr-1"} style={{whiteSpace: 'nowrap', flexGrow: 1, justifyContent: 'flex-end'}}>{attribute.attribute.name}</Form.Label>
   </div>;
 
   if (isEditable) {
@@ -70,9 +71,10 @@ function Attribute(props) {
           } } })
           .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
         }}>
-          {leftPart}
-          <Form.Group controlId={`value:${attribute.attribute.name}`} style={{flexGrow: 1, alignItems: 'flex-start'}}>
+          <Form.Group controlId={`value:${attribute.attribute.name}:${controlIdSuffix}`} style={{flexGrow: 1, alignItems: 'flex-start'}}>
+            {leftPart}
             {valueInput}
+            {rightPart}
             <Button type="submit" className={'mx-1'} disabled={attribute.attribute.value.values === values || hasErrors}>Update</Button>
             {removeButton}
           </Form.Group>
@@ -80,9 +82,10 @@ function Attribute(props) {
     );
   } else {
     input = (<Form inline style={{alignItems: 'flex-start'}} >
-      {leftPart}
-      <Form.Group controlId={`value:${attribute.attribute.name}`} style={{flexGrow: 1}}>
+      <Form.Group controlId={`value:${attribute.attribute.name}:${controlIdSuffix}`} style={{flexGrow: 1, alignItems: 'flex-start'}}>
+        {leftPart}
         {valueInput}
+        {rightPart}
       </Form.Group>
     </Form>);
   }
@@ -97,7 +100,7 @@ function Attribute(props) {
 
 Attribute.propTypes = {
   isEditable: PropTypes.bool.isRequired,
-  ciIdentity: PropTypes.string.isRequired,
+  ciIdentity: PropTypes.string,
   attribute: PropTypes.shape({
       attribute: PropTypes.shape({
         name: PropTypes.string.isRequired,

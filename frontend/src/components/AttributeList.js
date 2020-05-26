@@ -5,10 +5,8 @@ import { Flipper, Flipped } from 'react-flip-toolkit'
 import _ from 'lodash';
 import { Accordion, Button, Icon } from 'semantic-ui-react'
 import { onAppear, onExit } from '../utils/animation';
-import { useExplorerLayers } from '../utils/layers';
 
 function AttributeList(props) {
-  const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
 
   // TODO: does not work with nested groups yet
   const nestedAttributes = _.groupBy(props.mergedAttributes, (mergedAttribute) => {
@@ -48,9 +46,10 @@ function AttributeList(props) {
       <Accordion.Content active={active}>
         <Flipper flipKey={sortedAttributes.map(a => a.layerStackIDs).join(' ')}>
           {sortedAttributes.map((a, index) => {
-            var isLayerWritable = visibleAndWritableLayers.some(l => l.id === a.layerStackIDs[a.layerStackIDs.length - 1]);
+            var isEditable = props.isEditable && props.visibleAndWritableLayers.some(l => l.id === a.layerStackIDs[a.layerStackIDs.length - 1]);
             return (<Flipped key={a.attribute.name} flipId={a.attribute.name} onAppear={onAppear} onExit={onExit}>
-              <Attribute style={{padding: '5px 0px', backgroundColor: ((index % 2 === 1) ? '#00000009' : '#00000000')}} attribute={a} ciIdentity={props.ciIdentity} isEditable={props.isEditable && isLayerWritable}></Attribute>
+              <Attribute visibleLayers={props.visibleLayers} style={{padding: '5px 0px', backgroundColor: ((index % 2 === 1) ? '#00000009' : '#00000000')}} 
+                attribute={a} ciIdentity={props.ciIdentity} isEditable={isEditable} />
             </Flipped>);
           })}
         </Flipper>
@@ -91,7 +90,7 @@ function AttributeList(props) {
 
 AttributeList.propTypes = {
     isEditable: PropTypes.bool.isRequired,
-    ciIdentity: PropTypes.string.isRequired,
+    ciIdentity: PropTypes.string,
     mergedAttributes: PropTypes.arrayOf(
       PropTypes.shape({
         attribute: PropTypes.shape({

@@ -32,6 +32,11 @@ export const Fragments = {
     fragment CompactCI on CompactCIType {
         id
         name
+        layerhash
+        atTime {
+            time
+            isLatest
+        }
         type {id}
     }
   `,

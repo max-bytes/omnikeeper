@@ -69,8 +69,9 @@ function App() {
             <div style={{display:'flex'}}>
               <Route path="*">
                 <Menu.Item><Link to="/manage"><Icon name="wrench" /> Manage</Link></Menu.Item>
-                <Menu.Item><Link to="/createCI">Create New CI</Link></Menu.Item>
-                <Menu.Item><Link to="/explorer">Search CI</Link></Menu.Item>
+                <Menu.Item><Link to="/createCI"><Icon name="plus" /> Create New CI</Link></Menu.Item>
+                <Menu.Item><Link to="/explorer"><Icon name="search" /> Search CI</Link></Menu.Item>
+                <Menu.Item><Link to="/diffing"><Icon name="exchange" /> Diffing</Link></Menu.Item>
               </Route>
               <UserBar />
             </div>

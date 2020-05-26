@@ -14,8 +14,15 @@ import { useExplorerLayers } from '../utils/layers';
 import { useSelectedTime } from '../utils/useSelectedTime';
 
 function Timeline(props) {
-  
   const { data: layers } = useExplorerLayers();
+
+  if (layers) {
+    return <LoadingTimeline layers={layers} ciid={props.ciid} />;
+  } else return 'Loading...';
+}
+
+function LoadingTimeline(props) {
+  
   const selectedTime = useSelectedTime();
 
   var ciid = props.ciid;
@@ -24,7 +31,7 @@ function Timeline(props) {
   var [limit, setLimit] = useState(10);
 
   const { loading: loadingChangesets, error, data, refetch: refetchChangesets } = useQuery(queries.Changesets, {
-    variables: { from: from, to: to, ciid: ciid, layers: layers.map(l => l.name), limit: limit }
+    variables: { from: from, to: to, ciid: ciid, layers: props.layers.map(l => l.name), limit: limit } // TODO
   });
 
   React.useEffect(() => { if (selectedTime.refreshNonceTimeline) refetchChangesets({fetchPolicy: 'network-only'}); }, [selectedTime, refetchChangesets]);

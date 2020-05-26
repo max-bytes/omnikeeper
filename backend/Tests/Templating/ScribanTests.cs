@@ -48,7 +48,7 @@ namespace Tests.Templating
 
                 var ciModel = new Mock<ICIModel>();
                 ciModel.Setup(x => x.GetCompactCIs(It.IsAny<LayerSet>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>(), It.IsAny<IEnumerable<Guid>>()))
-                    .ReturnsAsync(new CompactCI[] { CompactCI.Build(testCIB.ID, testCIB.Name, testCIB.Type, testCIB.AtTime) });
+                    .ReturnsAsync(new CompactCI[] { CompactCI.Build(testCIB.ID, testCIB.Name, testCIB.Type, testCIB.Layers.LayerHash, testCIB.AtTime) });
                 ciModel.Setup(x => x.GetMergedCI(testCIB.ID, It.IsAny<LayerSet>(), It.IsAny<NpgsqlTransaction>(), atTime))
                     .ReturnsAsync(() => testCIB);
 

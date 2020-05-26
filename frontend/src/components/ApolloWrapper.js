@@ -4,7 +4,6 @@ import { ApolloProvider, ApolloClient, createHttpLink, InMemoryCache,gql,default
 import { ApolloProvider as ApolloHooksProvider } from '@apollo/react-hooks'
 import { setContext } from "apollo-link-context";
 import moment from 'moment'
-import _ from 'lodash';
 import env from "@beam-australia/react-env";
 
 let toHSL = function(string, opts) {
@@ -110,6 +109,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
         dataIdFromObject: object => {
             switch (object.__typename) {
             case 'MergedCIType': return `MergedCIType:${object.id}:${object.layerhash}:${((object.atTime.isLatest) ? 'latest' : object.atTime.time)}`; 
+            case 'CompactCIType': return `CompactCIType:${object.id}:${object.layerhash}:${((object.atTime.isLatest) ? 'latest' : object.atTime.time)}`; 
             case 'MergedCIAttributeType': return `MergedCIAttributeType:${object.attribute.id}:ls${object.layerStackIDs.join(',')}`;
             case 'CIAttributeType': return `CIAttributeType:${object.id}}`;
             case 'RelationType': return `RelationType:${object.id}:ls${object.layerStackIDs.join(',')}`;

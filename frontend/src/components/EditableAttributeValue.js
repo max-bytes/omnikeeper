@@ -4,11 +4,8 @@ import { Button } from 'semantic-ui-react'
 import { Icon } from 'semantic-ui-react'
 import { InputControl } from '../utils/attributeTypes'
 
-
-
-
 function EditableAttributeValue(props) {
-  var {values, setValues, type, isArray, autoFocus, isEditable, setHasErrors, name} = props;
+  var {values, setValues, type, isArray, autoFocus, isEditable, setHasErrors, name, controlIdSuffix} = props;
   
   isEditable = isEditable ?? true;
 
@@ -18,9 +15,9 @@ function EditableAttributeValue(props) {
   if (isArray) {
     const canRemoveItem = values.length > 1;
 
-    return <div style={{ display: 'flex', flexDirection: 'column', flexGrow: '1' }}>
+    return <div style={{ display: 'flex', flexDirection: 'column', flexGrow: '1', alignSelf: 'center' }}>
         {values.map((v, index) => {
-          return <Form.Group controlId={`value::${index}`} key={index} style={{display: 'flex', flexGrow: 1, alignItems: 'center'}}>
+          return <Form.Group controlId={`value:${name}:${index}:${controlIdSuffix}`} key={index} style={{display: 'flex', flexGrow: 1, alignItems: 'center'}}>
             <InputControl name={name + "_" + index} setHasErrors={e => {
               setErrorsInArray(oldErrorsInArray => { let newErrorsInArray = [...oldErrorsInArray]; newErrorsInArray[index] = e; return newErrorsInArray;});
             }} key={index} type={type} isArray={isArray} value={v} disabled={!isEditable} autoFocus={autoFocus && index === 0}
@@ -65,7 +62,8 @@ function EditableAttributeValue(props) {
         }
     </div>;
   } else {
-    return <InputControl name={name} setHasErrors={setHasErrors} isArray={isArray} type={type} value={values[0]} disabled={!isEditable} autoFocus={autoFocus} onChange={value => setValues([value])} />
+    return <InputControl name={name} setHasErrors={setHasErrors} isArray={isArray} type={type} value={values[0]} 
+      disabled={!isEditable} autoFocus={autoFocus} onChange={value => setValues([value])} />
   }
 }
 

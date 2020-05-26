@@ -61,15 +61,17 @@ namespace Landscape.Base.Entity
         public string Name { get; private set; }
         public CIType Type { get; private set; }
         public TimeThreshold AtTime { get; private set; }
+        public long LayerHash { get; private set; }
 
-        public static CompactCI Build(Guid id, string name, CIType type, TimeThreshold atTime)
+        public static CompactCI Build(Guid id, string name, CIType type, long layerHash, TimeThreshold atTime)
         {
             return new CompactCI
             {
                 Type = type,
                 Name = name,
                 AtTime = atTime,
-                ID = id
+                ID = id,
+                LayerHash = layerHash
             };
         }
 

@@ -14,6 +14,7 @@ function CI(props) {
   const [selectedTab, setSelectedTab] = useState(0);
   const [createNewAttribute, setCreateNewAttribute] = useState(undefined);
   const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
+  const { data: visibleLayers } = useExplorerLayers(true);
     
   const panes = [
     { menuItem: 'Attributes', render: () => <Tab.Pane>
@@ -24,7 +25,8 @@ function CI(props) {
       </Row>
       <Row>
         <Col>
-          <AttributeList mergedAttributes={props.ci.mergedAttributes} isEditable={props.isEditable} ciIdentity={props.ci.id}></AttributeList>
+          <AttributeList mergedAttributes={props.ci.mergedAttributes} isEditable={props.isEditable} 
+            ciIdentity={props.ci.id} visibleAndWritableLayers={visibleAndWritableLayers} visibleLayers={visibleLayers} />
         </Col>
       </Row>
     </Tab.Pane> },

@@ -99,6 +99,7 @@ namespace LandscapeRegistry.GraphQL
             Field("name", x => x.Name, nullable: true);
             Field(x => x.AtTime, type: typeof(TimeThresholdType));
             Field(x => x.Type, type: typeof(CITypeType));
+            Field("layerhash", x => x.LayerHash);
         }
     }
 

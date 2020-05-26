@@ -1,12 +1,10 @@
-
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 import LayerIcon from './LayerIcon';
 import { Icon } from 'semantic-ui-react'
 import { Button } from 'semantic-ui-react'
 import { Flipper, Flipped } from 'react-flip-toolkit'
-import { mutations } from 'graphql/mutations'
 import { queries } from 'graphql/queries'
-import { useMutation, useQuery } from '@apollo/react-hooks';
+import { useQuery } from '@apollo/react-hooks';
 import { mergeAndSortLayers } from 'utils/layers'; 
 import _ from 'lodash';
 
@@ -45,7 +43,7 @@ function Layers(props) {
     props.onSetLayerSortOffsets(newLayerSortings);
   }
 
-  const { error, data, loading } = useQuery(queries.Layers);
+  const { error, data } = useQuery(queries.Layers);
     if (data) {
       let layers = mergeAndSortLayers(data.layers, props.hiddenLayers, props.layerSortOffsets);
 
@@ -87,6 +85,8 @@ function Layers(props) {
           })}
         </Flipper>
         </ul>);
+    } else if (error) {
+      return "Error";
     } else {
       return "Loading";
     }

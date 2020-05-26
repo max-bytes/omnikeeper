@@ -17,7 +17,7 @@ export function useExplorerLayers(skipInvisible = false, skipReadonly = false) {
             
         return {error: error, data: layers, loading: loading};
     }
-    return {error: error, data: [], loading: loading};
+    return {error: error, data: undefined, loading: loading};
 }
 
 export function mergeAndSortLayers(layers, hiddenLayers, layerSortings) {

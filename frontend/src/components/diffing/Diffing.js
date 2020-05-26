@@ -1,71 +1,128 @@
 import React, {useState} from 'react';
-import Layers from 'components/Layers';
-import { mutations } from 'graphql/mutations'
+import { DiffCISettings, DiffLayerSettings, DiffTimeSettings } from './DiffSettings';
+import { DiffArea } from './DiffArea';
 import { queries } from 'graphql/queries'
-import { useMutation, useQuery } from '@apollo/react-hooks';
-import _ from 'lodash';
-// import ExplorerLayers from 'components/ExplorerLayers';
+import { Segment, Divider } from 'semantic-ui-react'
+import { useQuery, useLazyQuery } from '@apollo/react-hooks';
+import { Button, Container, Row, Col, Form } from 'react-bootstrap';
+import LoadingOverlay from 'react-loading-overlay'
 
+function LeftLabel(props) {
+  return (
+  <div style={{display: 'flex', width: '220px', minHeight: '38px', alignItems: 'center', justifyContent: 'flex-end', fontWeight: 'bold'}}>
+    {props.children}
+  </div>);
+}
 
 function Diffing() {
 
-  var [ hiddenLayers, setHiddenLayers ] = useState([]);
-  var [ layerSortOffsets, setLayerSortOffsets ] = useState([]);
+  const { data: layerData } = useQuery(queries.Layers);
+  var [ leftLayers, setLeftLayers ] = useState([]);
+  var [ rightLayers, setRightLayers ] = useState([]);
+  
+  var [ leftCIID, setLeftCIID ] = useState(undefined);
+  var [ rightCIID, setRightCIID ] = useState(undefined);
+  
+  var [ leftTimeThreshold, setLeftTimeThreshold ] = useState(null);
+  var [ rightTimeThreshold, setRightTimeThreshold ] = useState(null);
+  
+  var [ showEqual, setShowEqual ] = useState(true);
 
-  return (
-    <div style={{position: 'relative', height: '100%'}}>
-      <div className="left-bar">
-        <div className={"layers"}>
-          <h5>Layers</h5>
-          <Layers hiddenLayers={hiddenLayers} layerSortOffsets={layerSortOffsets} 
-    onSetHiddenLayers={ newHLs => setHiddenLayers(newHLs) }
-    onSetLayerSortOffsets={ newLSOs => setLayerSortOffsets(newLSOs)}/>
-          {/* <ExplorerLayers /> */}
-        </div>
-      </div>
-    </div>
-  );
+  const visibleLeftLayerNames = leftLayers.filter(l => l.visible).map(l => l.name);
+  const visibleRightLayerNames = rightLayers.filter(l => l.visible).map(l => l.name);
+
+  const [loadLeftCI, { data: dataLeftCI, loading: loadingLeftCI }] = useLazyQuery(queries.FullCI, {
+    variables: { includeRelated: 0 }
+  });
+  const [loadRightCI, { data: dataRightCI, loading: loadingRightCI }] = useLazyQuery(queries.FullCI, {
+    variables: { includeRelated: 0 }
+  });
+
+  function compare() {
+    if (leftCIID)
+      loadLeftCI({ variables: {layers: visibleLeftLayerNames, timeThreshold: leftTimeThreshold, identity: leftCIID},
+        fetchPolicy: 'cache-and-network' });
+    if (rightCIID)
+      loadRightCI({ variables: {layers: visibleRightLayerNames, timeThreshold: rightTimeThreshold, identity: rightCIID},
+        fetchPolicy: 'cache-and-network' });
+  }
+
+  if (layerData) {
+
+    return (<div style={{marginTop: '10px', marginBottom: '20px'}}>
+      <Container fluid>
+        <Segment>
+          <Row>
+            <Col xs={'auto'} style={{display: 'flex'}}>
+              <LeftLabel>Layers:</LeftLabel>
+            </Col>
+            <Col>
+              <DiffLayerSettings alignment='right' layerData={layerData.layers} onLayersChange={setLeftLayers} />
+            </Col><Col>
+              <DiffLayerSettings alignment='left' layerData={layerData.layers} onLayersChange={setRightLayers} />
+            </Col>
+          </Row>
+          <Divider />
+          <Row>
+            <Col xs={'auto'} style={{display: 'flex'}}>
+              <LeftLabel>CIs:</LeftLabel>
+            </Col>
+            <Col>
+              {visibleLeftLayerNames.length > 0 && 
+                <DiffCISettings alignment='right' layers={visibleLeftLayerNames} selectedCIID={leftCIID} setSelectedCIID={setLeftCIID} />}
+            </Col><Col>
+              {visibleRightLayerNames.length > 0 && 
+                <DiffCISettings alignment='left' layers={visibleRightLayerNames} selectedCIID={rightCIID} setSelectedCIID={setRightCIID} />}
+            </Col>
+          </Row>
+          <Divider />
+          <Row>
+            <Col xs={'auto'} style={{display: 'flex'}}>
+              <LeftLabel>Time:</LeftLabel>
+            </Col>
+            <Col>
+              {visibleLeftLayerNames.length > 0 && 
+                <DiffTimeSettings alignment='right' layers={visibleLeftLayerNames} ciid={leftCIID} timeThreshold={leftTimeThreshold} setTimeThreshold={setLeftTimeThreshold} />}
+            </Col><Col>
+              {visibleRightLayerNames.length > 0 && 
+                <DiffTimeSettings alignment='left' layers={visibleRightLayerNames} ciid={rightCIID} timeThreshold={rightTimeThreshold} setTimeThreshold={setRightTimeThreshold} />}
+            </Col>
+          </Row>
+          <Divider />
+          <Row>
+          <Col xs={'auto'}>
+            <LeftLabel>&nbsp;</LeftLabel>
+          </Col>
+          <Col>
+            <div style={{display: 'flex', justifyContent: 'center'}}>
+              <Form inline>
+                <Form.Group controlId="compare">
+                  <Form.Check
+                    custom
+                    inline
+                    label="Show Equal"
+                    type={'checkbox'}
+                    checked={showEqual}
+                    id={`checkbox-show-equal`}
+                    onChange={d => setShowEqual(d.target.checked) }
+                  />
+                  <Button size='lg' onClick={() => compare()} disabled={!leftCIID || !rightCIID}>Compare</Button>
+                </Form.Group>
+              </Form>
+            </div>
+          </Col>
+        </Row>
+        </Segment>
+        <Row>
+          <Col>
+            <LoadingOverlay fadeSpeed={100} active={loadingLeftCI || loadingRightCI} spinner>
+              <DiffArea showEqual={showEqual} leftCI={dataLeftCI?.ci} rightCI={dataRightCI?.ci} leftLayers={leftLayers} rightLayers={rightLayers} />
+            </LoadingOverlay>
+          </Col>
+        </Row>
+      </Container>
+    </div>)
+  } else return 'Loading';
 }
 
 export default Diffing;
-
-
-
-// function useCustomLayers(skipInvisible = false, skipReadonly = false) {
-//   const { error, data, loading } = useQuery(queries.Layers);
-//   var { data: { hiddenLayers } } = useQuery(queries.HiddenLayers);
-//   var { data: { layerSortings } } = useQuery(queries.LayerSortings);
-
-//   if (data && hiddenLayers && layerSortings) {
-//       // add visibility from cache
-//       let layers = _.map(data.layers, layer => {
-//           if (_.includes(hiddenLayers, layer.id))
-//               return {...layer, visible: false};
-//           else
-//               return {...layer, visible: true};
-//       });
-
-//       // add sort order changes from cache
-//       var baseSortOrder = 0;
-//       layers = _.map(layers, layer => {
-//           var s = _.find(layerSortings, ls => ls.layerID === layer.id);
-//           if (s)
-//               return {...layer, sort: baseSortOrder++ + s.sortOffset };
-//           else
-//               return {...layer, sort: baseSortOrder++ };
-//       });
-
-//       // sort
-//       layers.sort((a,b) => {
-//           var o = b.sort - a.sort;
-//           if (o === 0) return ('' + a.name).localeCompare('' + b.name);
-//           return o;
-//       });
-//       if (skipInvisible)
-//           layers = layers.filter(l => l.visible);
-//       if (skipReadonly)
-//           layers = layers.filter(l => l.writable && l.state === 'ACTIVE');
-//       return {error: error, data: layers, loading: loading};
-//   }
-//   return {error: error, data: [], loading: loading};
-// }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useLazyQuery } from '@apollo/client';
 import PropTypes from 'prop-types'
 import { useMutation } from '@apollo/react-hooks';
@@ -14,12 +14,12 @@ import { ErrorPopupButton } from "./ErrorPopupButton";
 function AddNewRelation(props) {
   const [insertError, setInsertError] = useState(undefined);
   const canBeEdited = props.isEditable && props.visibleAndWritableLayers.length > 0;
-  const initialRelation = {predicateID: null, targetCIID: null, forward: true, layer: null };
+  // use useRef to ensure reference is constant and can be properly used in dependency array
+  const { current: initialRelation } = useRef({predicateID: null, targetCIID: null, forward: true, layer: null });
   const [isOpen, setOpen] = useState(false);
   const [newRelation, setNewRelation] = useState(initialRelation);
   useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
-   // TODO: don't know how to add initialRelation to useEffect dependencies without creating an infinite render loop
-  useEffect(() => { setOpen(false); setNewRelation(initialRelation) }, [props.ciIdentity, props.visibleLayers]);
+  useEffect(() => { setOpen(false); setNewRelation(initialRelation) }, [props.ciIdentity, props.visibleLayers, initialRelation]);
 
   const [getValidTargetCIs, { data: dataCIs, loading: loadingCIs }] = useLazyQuery(queries.ValidRelationTargetCIs, { 
     variables: {layers: props.visibleLayers }
