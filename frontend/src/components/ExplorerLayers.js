@@ -5,15 +5,11 @@ import { queries } from 'graphql/queries'
 import { useMutation, useQuery } from '@apollo/react-hooks';
 
 function ExplorerLayers() {
-  var { data: { visibleLayers } } = useQuery(queries.VisibleLayers);
-  var { data: { layerSortOffsets } } = useQuery(queries.LayerSortOffsets);
-  const [setVisibleLayers] = useMutation(mutations.SET_VISIBLE_LAYERS);
-  const [setLayerSortOffsets] = useMutation(mutations.SET_LAYER_SORT_OFFSETS);
+  var { data: { layerSettings } } = useQuery(queries.LayerSettings);
+  const [setLayerSettings] = useMutation(mutations.SET_LAYER_SETTINGS);
 
-  return <Layers visibleLayers={visibleLayers} layerSortOffsets={layerSortOffsets} 
-    onSetVisibleLayers={ newHLs => setVisibleLayers({variables: {ids: newHLs}}) }
-    onSetLayerSortOffsets={ newLSOs => setLayerSortOffsets({variables: {offsets: newLSOs}})}
-    />
+  return <Layers layerSettings={layerSettings} 
+    setLayerSettings={ newLS => setLayerSettings({variables: {layerSettings: newLS}})} />
 }
 
 export default ExplorerLayers;

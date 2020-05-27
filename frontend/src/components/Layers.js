@@ -5,51 +5,67 @@ import { Button } from 'semantic-ui-react'
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import { queries } from 'graphql/queries'
 import { useQuery } from '@apollo/react-hooks';
-import { mergeAndSortLayers } from 'utils/layers'; 
+import { mergeSettingsAndSortLayers } from 'utils/layers'; 
 import _ from 'lodash';
 
 function Layers(props) {
 
   function toggleLayerVisibility(layerID, allLayers) {
-    if (props.visibleLayers) {
-      if (props.visibleLayers.includes(layerID))
-        return props.onSetVisibleLayers(_.without(props.visibleLayers, layerID));
-      else
-        return props.onSetVisibleLayers(_.concat(props.visibleLayers, [layerID]));
+    if (props.layerSettings) {
+      var l = _.find(props.layerSettings, ls => ls.layerID === layerID);
+      if (l) {
+        props.setLayerSettings(props.layerSettings.map(ls => {
+          if (ls.layerID !== layerID) return ls;
+          return {...ls, visible: !ls.visible };
+        }));
+      } else return props.setLayerSettings(_.concat(props.layerSettings, [{layerID: layerID, visible: false, sortOffset: 0}]));
     } else {
-      props.onSetVisibleLayers(_.without(allLayers.map(l => l.id), layerID));
+      var layerSettings = allLayers.map(l => {
+        return { layerID: l.id, sortOffset: 0, visible: l.id !== layerID }
+      });
+      props.setLayerSettings(layerSettings);
     }
   }
 
-  function changeLayerSortOrder(layerIDA, layerIDB, change) {
-    var newLayerSortings = props.layerSortOffsets.concat();
+  function changeLayerSortOrder(layerIDA, layerIDB, change, allLayers) {
     // console.log(`Swapping ${layerIDA} and ${layerIDB}`);
+    if (props.layerSettings) {
+      var newLayerSettings = props.layerSettings.concat();
 
-    var swapLayerA = _.find(newLayerSortings, ls => ls.layerID === layerIDA);
-    if (!swapLayerA) {
-        swapLayerA = {layerID: layerIDA, sortOffset: 0}
-        newLayerSortings = _.concat(newLayerSortings, [swapLayerA]);
-    }
-    var swapLayerB = _.find(newLayerSortings, ls => ls.layerID === layerIDB);
-    if (!swapLayerB) {
-        swapLayerB = {layerID: layerIDB, sortOffset: 0}
-        newLayerSortings = _.concat(newLayerSortings, [swapLayerB]);
-    }
-    newLayerSortings = _.map(newLayerSortings, ls => {
-        if (ls.layerID === layerIDA)
-            return { ...ls, sortOffset: ls.sortOffset + change };
-        else if (ls.layerID === layerIDB)
-            return { ...ls, sortOffset: ls.sortOffset - change };
-        else
-            return ls;
-    });
+      var swapLayerA = _.find(newLayerSettings, ls => ls.layerID === layerIDA);
+      if (!swapLayerA) {
+          swapLayerA = {layerID: layerIDA, sortOffset: 0, visible: true}
+          newLayerSettings = _.concat(newLayerSettings, [swapLayerA]);
+      }
+      var swapLayerB = _.find(newLayerSettings, ls => ls.layerID === layerIDB);
+      if (!swapLayerB) {
+          swapLayerB = {layerID: layerIDB, sortOffset: 0, visible: true}
+          newLayerSettings = _.concat(newLayerSettings, [swapLayerB]);
+      }
+      newLayerSettings = _.map(newLayerSettings, ls => {
+          if (ls.layerID === layerIDA)
+              return { ...ls, sortOffset: ls.sortOffset + change };
+          else if (ls.layerID === layerIDB)
+              return { ...ls, sortOffset: ls.sortOffset - change };
+          else
+              return ls;
+      });
 
-    props.onSetLayerSortOffsets(newLayerSortings);
+      props.setLayerSettings(newLayerSettings);
+    } else {
+      var layerSettings = allLayers.map(l => {
+        let sortOffset = 0;
+        if (l.id === layerIDA) sortOffset += change;
+        else if (l.id === layerIDB) sortOffset -= change;
+        return { layerID: l.id, sortOffset: sortOffset, visible: true }
+      });
+      props.setLayerSettings(layerSettings);
+    }
   }
 
   const { error, data } = useQuery(queries.Layers);
     if (data) {
-      let layers = mergeAndSortLayers(data.layers, props.visibleLayers, props.layerSortOffsets);
+      let layers = mergeSettingsAndSortLayers(data.layers, props.layerSettings);
 
       return (<ul style={{listStyle: 'none', paddingLeft: '0px', marginBottom: '0px'}}>
         <Flipper flipKey={layers.map(a => a.id + ";" + a.visible).join(' ')}>
@@ -77,10 +93,10 @@ function Layers(props) {
                       <Icon fitted name={((layer.visible) ? 'eye' : 'eye slash')} />
                     </Button>
                   <Button.Group basic size='mini'>
-                    <Button compact disabled={!previousLayer} onClick={() => changeLayerSortOrder(layer.id, previousLayer.id, 1)}>
+                    <Button compact disabled={!previousLayer} onClick={() => changeLayerSortOrder(layer.id, previousLayer.id, 1, data.layers)}>
                       <Icon fitted name='arrow alternate circle up' />
                     </Button>
-                    <Button compact disabled={!nextLayer} onClick={() => changeLayerSortOrder(layer.id, nextLayer.id, -1)}>
+                    <Button compact disabled={!nextLayer} onClick={() => changeLayerSortOrder(layer.id, nextLayer.id, -1, data.layers)}>
                       <Icon fitted name='arrow alternate circle down' />
                     </Button>
                   </Button.Group>

@@ -19,16 +19,26 @@ function LeftLabel(props) {
 
 function parseURLQuery(search) {
   const p = queryString.parse(search, {arrayFormat: 'comma'});
+
+  let lls = null;
+  try {
+    lls = JSON.parse(p.leftLayerSettings);
+  } catch {}
+  let rls = null;
+  try {
+    rls = JSON.parse(p.rightLayerSettings);
+  } catch {}
+
   return {
-    leftHiddenLayers: p.leftHiddenLayers ? [].concat(p.leftHiddenLayers).map(l => parseInt(l, 10)).filter(l => !isNaN(l)) : [],
-    rightHiddenLayers: p.rightHiddenLayers ? [].concat(p.rightHiddenLayers).map(l => parseInt(l, 10)).filter(l => !isNaN(l)) : []
+    leftLayerSettings: lls,
+    rightLayerSettings: rls
   };
 }
 
-function stringifyURLQuery(leftHiddenLayers, rightHiddenLayers) {
+function stringifyURLQuery(leftLayerSettings, rightLayerSettings) {
   return queryString.stringify({
-    leftHiddenLayers: leftHiddenLayers,
-    rightHiddenLayers: rightHiddenLayers
+    leftLayerSettings: JSON.stringify(leftLayerSettings),
+    rightLayerSettings: JSON.stringify(rightLayerSettings)
   }, {arrayFormat: 'comma'});
 }
 
@@ -36,8 +46,9 @@ function Diffing(props) {
   let urlParams = parseURLQuery(useLocation().search);
 
   const { data: layerData } = useQuery(queries.Layers);
-  var [ leftHiddenLayers, setLeftHiddenLayers ] = useState(urlParams.leftHiddenLayers);
-  var [ rightHiddenLayers, setRightHiddenLayers ] = useState(urlParams.rightHiddenLayers);
+
+  var [ leftLayerSettings, setLeftLayerSettings ] = useState(urlParams.leftLayerSettings);
+  var [ rightLayerSettings, setRightLayerSettings ] = useState(urlParams.rightLayerSettings);
   var [ leftLayers, setLeftLayers ] = useState([]);
   var [ rightLayers, setRightLayers ] = useState([]);
   
@@ -50,9 +61,9 @@ function Diffing(props) {
   var [ showEqual, setShowEqual ] = useState(true);
 
   useEffect(() => {
-    const search = stringifyURLQuery(leftHiddenLayers, rightHiddenLayers);
+    const search = stringifyURLQuery(leftLayerSettings, rightLayerSettings);
     props.history.push({search: `?${search}`});
-  }, [leftHiddenLayers, rightHiddenLayers, props.history]);
+  }, [leftLayerSettings, rightLayerSettings, props.history]);
 
   const visibleLeftLayerNames = leftLayers.filter(l => l.visible).map(l => l.name);
   const visibleRightLayerNames = rightLayers.filter(l => l.visible).map(l => l.name);
@@ -83,9 +94,9 @@ function Diffing(props) {
               <LeftLabel>Layers:</LeftLabel>
             </Col>
             <Col>
-              <DiffLayerSettings alignment='right' layerData={layerData.layers} hiddenLayers={leftHiddenLayers} setHiddenLayers={setLeftHiddenLayers} onLayersChange={setLeftLayers} />
+              <DiffLayerSettings alignment='right' layerData={layerData.layers} layerSettings={leftLayerSettings} setLayerSettings={setLeftLayerSettings} onLayersChange={setLeftLayers} />
             </Col><Col>
-              <DiffLayerSettings alignment='left' layerData={layerData.layers} hiddenLayers={rightHiddenLayers} setHiddenLayers={setRightHiddenLayers} onLayersChange={setRightLayers} />
+              <DiffLayerSettings alignment='left' layerData={layerData.layers} layerSettings={rightLayerSettings} setLayerSettings={setRightLayerSettings} onLayersChange={setRightLayers} />
             </Col>
           </Row>
           <Divider />

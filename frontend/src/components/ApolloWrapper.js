@@ -36,9 +36,10 @@ let toHSL = function(string, opts) {
 function ApolloWrapper({ component: Component, ...rest }) {
 
     const typeDefs = gql`
-        type LayerSortOffset {
+        type LayerSettings {
             layerID: Int!
             sortOffset: Int!
+            visible: Bool!
         }
         type SelectedTimeThreshold {
             time: DateTimeOffset!
@@ -46,8 +47,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
         }
         extend type Query {
             selectedTimeThreshold: SelectedTimeThreshold!
-            visibleLayers: [Int]
-            layerSortOffsets: [LayerSortOffset]!
+            layerSettings: [LayerSettings]
         }
         extend type LayerType {
             color: String!
@@ -67,12 +67,8 @@ function ApolloWrapper({ component: Component, ...rest }) {
                 }});
                 return null;
             },
-            setVisibleLayers: (_root, variables, { cache, getCacheKey }) => {
-                cache.writeQuery({ query: queries.VisibleLayers, data: { visibleLayers: variables.ids } });
-                return null;
-            },
-            setLayerSortOffsets: (_root, variables, { cache, getCacheKey }) => {
-                cache.writeQuery({ query: queries.LayerSortOffsets, data: { layerSortOffsets: variables.offsets } });
+            setLayerSettings: (_root, variables, { cache, getCacheKey }) => {
+                cache.writeQuery({ query: queries.LayerSettings, data: { layerSettings: variables.layerSettings } });
                 return null;
             },
         },
@@ -154,8 +150,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
           time: null,
           isLatest: true
         },
-        visibleLayers: null,
-        layerSortOffsets: []
+        layerSettings: null
     };
     cache.writeQuery({
         query: gql`
@@ -164,12 +159,12 @@ function ApolloWrapper({ component: Component, ...rest }) {
                 time
                 isLatest
             }
-            visibleLayers {
-                layerID
-            }
-            layerSortOffsets {
-                layerID
-                sortOffset
+            layerSettings {
+                LayerSettings {
+                    layerID
+                    sortOffset
+                    visible
+                }
             }
         }
         `,

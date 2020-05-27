@@ -3,7 +3,7 @@ import { queries } from 'graphql/queries'
 import { Dropdown } from 'semantic-ui-react'
 import { useQuery } from '@apollo/react-hooks';
 import Layers from 'components/Layers';
-import { mergeAndSortLayers } from 'utils/layers'; 
+import { mergeSettingsAndSortLayers } from 'utils/layers'; 
 import Form from 'react-bootstrap/Form'
 
 export function DiffTimeSettings(props) {
@@ -112,22 +112,19 @@ export function DiffCISettings(props) {
                     selection
                     options={ciList}
                   /></div>);
-  }
-  
+}
   
 export function DiffLayerSettings(props) {
-  const { layerData, onLayersChange, hiddenLayers, setHiddenLayers } = props;
-  var [ layerSortOffsets, setLayerSortOffsets ] = useState([]);
+  const { layerData, onLayersChange, layerSettings, setLayerSettings } = props;
 
   useEffect(() => {
-      const layers = mergeAndSortLayers(layerData, hiddenLayers, layerSortOffsets);
+      const layers = mergeSettingsAndSortLayers(layerData, layerSettings);
       onLayersChange(layers);
-  }, [layerData, hiddenLayers, layerSortOffsets, onLayersChange]);
+  }, [layerData, layerSettings, onLayersChange]);
 
   return (<div style={alignmentStyle(props.alignment)}>
-      <Layers hiddenLayers={hiddenLayers} layerSortOffsets={layerSortOffsets} 
-      onSetHiddenLayers={ setHiddenLayers }
-      onSetLayerSortOffsets={ setLayerSortOffsets }/>
+      <Layers layerSettings={layerSettings}
+        setLayerSettings={ setLayerSettings } />
     </div>
   );
 }

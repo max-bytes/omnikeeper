@@ -142,22 +142,10 @@ CREATE_CI: gql`
   }
   `,
 
-  SET_VISIBLE_LAYERS: gql`
-  mutation SetVisibleLayers($ids: [Int]!) {
-    setVisibleLayers(ids: $ids) @client
-  }
-  `,
-  
-  SET_LAYER_SORT_OFFSETS: gql`
-    mutation SetLayerSortOffsets($offsets: [LayerSortOffset]!) {
-      setLayerSortOffsets(offsets: $offsets) @client
+  SET_LAYER_SETTINGS: gql`
+    mutation SetLayerSettings($layerSettings: [LayerSettings]) {
+      setLayerSettings(layerSettings: $layerSettings) @client
     }
-  `,
-
-  CHANGE_LAYER_SORT_ORDER: gql`
-  mutation ChangeLayerSortOrder($layerIDA: Int!, $layerIDB: Int!, $change: Int!) {
-    changeLayerSortOrder(layerIDA: $layerIDA, layerIDB: $layerIDB, change: $change) @client
-  }
   `,
 
   SET_SELECTED_TIME_THRESHOLD: gql`

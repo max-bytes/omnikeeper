@@ -4,11 +4,10 @@ import _ from 'lodash';
 
 export function useExplorerLayers(skipInvisible = false, skipReadonly = false) {
     const { error, data, loading } = useQuery(queries.Layers);
-    var { data: visibleLayersData } = useQuery(queries.VisibleLayers);
-    var { data: { layerSortOffsets } } = useQuery(queries.LayerSortOffsets);
+    var { data: layerSettingsData } = useQuery(queries.LayerSettings);
 
-    if (data && visibleLayersData && layerSortOffsets) {
-        let layers = mergeAndSortLayers(data.layers, visibleLayersData.visibleLayers, layerSortOffsets);
+    if (data && layerSettingsData) {
+        let layers = mergeSettingsAndSortLayers(data.layers, layerSettingsData.layerSettings);
 
         if (skipInvisible)
             layers = layers.filter(l => l.visible);
@@ -20,32 +19,34 @@ export function useExplorerLayers(skipInvisible = false, skipReadonly = false) {
     return {error: error, data: undefined, loading: loading};
 }
 
-export function mergeAndSortLayers(layers, visibleLayers, layerSortings) {
+export function mergeSettingsAndSortLayers(layers, layerSettings) {
 
-    if (!visibleLayers) {
-        // no visible layers specified, choose convention to show all layers
+    if (!layerSettings) {
+        let baseSortOrder = 0;
+        // no layer settings specified, choose convention to show all layers in default order
         layers = _.map(layers, layer => {
-            return {...layer, visible: true};
+            return {...layer, visible: true, sort: baseSortOrder++};
         });
     } else {
         // add visibility settings
         layers = _.map(layers, layer => {
-            if (_.includes(visibleLayers, layer.id))
-                return {...layer, visible: true};
+            var s = _.find(layerSettings, ls => ls.layerID === layer.id)
+            if (s)
+                return {...layer, visible: s.visible};
             else
-                return {...layer, visible: false};
+                return {...layer, visible: true }; // default visible
+        });
+
+        // add sort order offset settings
+        let baseSortOrder = 0;
+        layers = _.map(layers, layer => {
+            var s = _.find(layerSettings, ls => ls.layerID === layer.id);
+            if (s)
+                return {...layer, sort: baseSortOrder++ + s.sortOffset };
+            else
+                return {...layer, sort: baseSortOrder++ };
         });
     }
-
-    // add sort order offset settings
-    var baseSortOrder = 0;
-    layers = _.map(layers, layer => {
-        var s = _.find(layerSortings, ls => ls.layerID === layer.id);
-        if (s)
-            return {...layer, sort: baseSortOrder++ + s.sortOffset };
-        else
-            return {...layer, sort: baseSortOrder++ };
-    });
 
     // sort
     layers.sort((a,b) => {
