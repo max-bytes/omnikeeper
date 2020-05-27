@@ -5,20 +5,17 @@ import { Input } from 'semantic-ui-react'
 import { withRouter, Link } from 'react-router-dom'
 
 function SearchCI(props) {
-  const initialState = { results: [], searchString: '', withEffectiveTraits: [] }
+  const initialState = { results: [], searchString: '' }
 
-  // TODO: make withEffectiveTraits dynamic, settable via UI
-  // see https://www.mhx.at/openproject/projects/landscape-registry/work_packages/419/activity
-
-  const { loading, data: dataCIs, refetch: search } = useQuery(queries.SearchCIs, {variables: 
-    {searchString: initialState.searchString, withEffectiveTraits: initialState.withEffectiveTraits }
+  const { loading, data: dataCIs, refetch: search } = useQuery(queries.SimpleSearchCIs, {variables: 
+    {searchString: initialState.searchString }
   });
   const [state, setState] = useState(initialState);
 
   const handleSearchChange = (e, { value }) => {
     setState({...state, searchString: value});
     // TODO: cancel previous searches -> see: https://evilmartians.com/chronicles/aborting-queries-and-mutations-in-react-apollo
-    search({searchString: value, withEffectiveTraits: state.withEffectiveTraits });
+    search({searchString: value });
   };
 
   return (
@@ -28,7 +25,7 @@ function SearchCI(props) {
       </div>
       <div style={{flexGrow: 1, overflowY: 'auto', margin: '20px auto', minWidth: '50%'}}>
         {dataCIs &&
-          dataCIs.searchCIs.map((result, index) => {
+          dataCIs.simpleSearchCIs.map((result, index) => {
             return (
               <Link key={result.id} to={`/explorer/${result.id}`}>
                 <div style={{display: 'flex', padding: '10px', backgroundColor: ((index % 2 === 0) ? '#eee' : '#fff')}}>

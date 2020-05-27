@@ -82,7 +82,26 @@ namespace LandscapeRegistry.GraphQL
                     return cis;
                 });
 
-            FieldAsync<ListGraphType<CompactCIType>>("searchCIs",
+            FieldAsync<ListGraphType<CompactCIType>>("simpleSearchCIs",
+                arguments: new QueryArguments(new List<QueryArgument>
+                {
+                    new QueryArgument<NonNullGraphType<StringGraphType>>
+                    {
+                        Name = "searchString"
+                    }
+                }),
+                resolve: async context =>
+                {
+                    var userContext = context.UserContext as RegistryUserContext;
+
+                    var searchString = context.GetArgument<string>("searchString");
+                    var ciid = context.GetArgument<Guid>("identity");
+                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
+
+                    return await ciSearchModel.SimpleSearch(searchString, null, userContext.TimeThreshold);
+                });
+
+            FieldAsync<ListGraphType<CompactCIType>>("advancedSearchCIs",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {
                     new QueryArgument<NonNullGraphType<StringGraphType>>
@@ -92,6 +111,10 @@ namespace LandscapeRegistry.GraphQL
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
                     {
                         Name = "withEffectiveTraits"
+                    },
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
+                    {
+                        Name = "layers"
                     }
                 }),
                 resolve: async context =>
@@ -101,11 +124,12 @@ namespace LandscapeRegistry.GraphQL
                     var searchString = context.GetArgument<string>("searchString");
                     var withEffectiveTraits = context.GetArgument<string[]>("withEffectiveTraits");
                     var ciid = context.GetArgument<Guid>("identity");
-                    var ls = await layerModel.BuildLayerSet(null);
+                    var layerStrings = context.GetArgument<string[]>("layers");
+                    var ls = await layerModel.BuildLayerSet(layerStrings, null);
                     userContext.LayerSet = ls;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    return await ciSearchModel.Search(searchString, withEffectiveTraits, ls, null, userContext.TimeThreshold);
+                    return await ciSearchModel.AdvancedSearch(searchString, withEffectiveTraits, ls, null, userContext.TimeThreshold);
                 });
 
             FieldAsync<ListGraphType<CompactCIType>>("validRelationTargetCIs",

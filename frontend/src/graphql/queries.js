@@ -42,9 +42,18 @@ export const queries = {
             }
         }
     `,
-    SearchCIs: gql`
-        query searchCIs($searchString: String!, $withEffectiveTraits: [String]!) {
-            searchCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits) {
+
+    SimpleSearchCIs: gql`
+        query simpleSearchCIs($searchString: String!) {
+            simpleSearchCIs(searchString: $searchString) {
+                ...CompactCI
+            }
+        }
+        ${Fragments.compactCI}
+    `,
+    AdvancedSearchCIs: gql`
+        query advancedSearchCIs($searchString: String!, $withEffectiveTraits: [String]!, $layers: [String]!) {
+            advancedSearchCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits, layers: $layers) {
                 ...CompactCI
             }
         }
