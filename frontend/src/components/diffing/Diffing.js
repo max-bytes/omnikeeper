@@ -31,14 +31,18 @@ function parseURLQuery(search) {
 
   return {
     leftLayerSettings: lls,
-    rightLayerSettings: rls
+    rightLayerSettings: rls,
+    leftCIID: p.leftCIID,
+    rightCIID: p.rightCIID
   };
 }
 
-function stringifyURLQuery(leftLayerSettings, rightLayerSettings) {
+function stringifyURLQuery(leftLayerSettings, rightLayerSettings, leftCIID, rightCIID) {
   return queryString.stringify({
-    leftLayerSettings: JSON.stringify(leftLayerSettings),
-    rightLayerSettings: JSON.stringify(rightLayerSettings)
+    leftLayerSettings: (leftLayerSettings) ? JSON.stringify(leftLayerSettings) : undefined,
+    rightLayerSettings: (rightLayerSettings) ? JSON.stringify(rightLayerSettings) : undefined,
+    leftCIID: leftCIID,
+    rightCIID: rightCIID
   }, {arrayFormat: 'comma'});
 }
 
@@ -52,8 +56,8 @@ function Diffing(props) {
   var [ leftLayers, setLeftLayers ] = useState([]);
   var [ rightLayers, setRightLayers ] = useState([]);
   
-  var [ leftCIID, setLeftCIID ] = useState(undefined);
-  var [ rightCIID, setRightCIID ] = useState(undefined);
+  var [ leftCIID, setLeftCIID ] = useState(urlParams.leftCIID);
+  var [ rightCIID, setRightCIID ] = useState(urlParams.rightCIID);
   
   var [ leftTimeThreshold, setLeftTimeThreshold ] = useState(null);
   var [ rightTimeThreshold, setRightTimeThreshold ] = useState(null);
@@ -61,9 +65,9 @@ function Diffing(props) {
   var [ showEqual, setShowEqual ] = useState(true);
 
   useEffect(() => {
-    const search = stringifyURLQuery(leftLayerSettings, rightLayerSettings);
+    const search = stringifyURLQuery(leftLayerSettings, rightLayerSettings, leftCIID, rightCIID);
     props.history.push({search: `?${search}`});
-  }, [leftLayerSettings, rightLayerSettings, props.history]);
+  }, [leftLayerSettings, rightLayerSettings, leftCIID, rightCIID, props.history]);
 
   const visibleLeftLayerNames = leftLayers.filter(l => l.visible).map(l => l.name);
   const visibleRightLayerNames = rightLayers.filter(l => l.visible).map(l => l.name);
