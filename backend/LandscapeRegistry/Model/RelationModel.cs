@@ -75,6 +75,9 @@ namespace LandscapeRegistry.Model
         {
             var ret = new List<Relation>();
 
+            if (layerset.IsEmpty)
+                return ret; // return empty, an empty layer list can never produce any relations
+
             var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 
             using (var command = CreateMergedRelationCommand(ciid, includeRemoved, layerset, ird, null, trans, atTime))
@@ -131,6 +134,9 @@ namespace LandscapeRegistry.Model
         public async Task<IEnumerable<Relation>> GetMergedRelationsWithPredicateID(LayerSet layerset, bool includeRemoved, string predicateID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var ret = new List<Relation>();
+
+            if (layerset.IsEmpty)
+                return ret; // return empty, an empty layer list can never produce any relations
 
             var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 

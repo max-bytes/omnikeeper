@@ -67,6 +67,10 @@ namespace LandscapeRegistry.Model
 
         public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid,bool> ciFilter = null)
         {
+            if (layerSet.IsEmpty)
+                return ImmutableArray<EffectiveTraitSet>.Empty; // return empty, an empty layer list can never produce any traits
+
+
             // do a precursor filtering based on required attribute names
             var requiredAttributeNames = trait.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
             var candidateCIIDs = new List<Guid>();

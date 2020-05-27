@@ -32,6 +32,9 @@ namespace LandscapeRegistry.Model
         {
             var ret = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
 
+            if (layers.IsEmpty)
+                return ret; // return empty, an empty layer list can never produce any attributes
+
             var lsValues = LayerSet.CreateLayerSetSQLValues(layers);
 
             // inner query can use distinct on, outer needs to do windowing, because of array_agg
@@ -165,6 +168,9 @@ namespace LandscapeRegistry.Model
         public async Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, IAttributeSelection selection, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var ret = new Dictionary<Guid, MergedCIAttribute>();
+
+            if (layers.IsEmpty)
+                return ret; // return empty, an empty layer list can never produce any attributes
 
             var lsValues = LayerSet.CreateLayerSetSQLValues(layers);
 

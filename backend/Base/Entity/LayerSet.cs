@@ -32,8 +32,12 @@ namespace Landscape.Base.Entity
 
         IEnumerator IEnumerable.GetEnumerator() => LayerIDs.GetEnumerator();
 
+        public bool IsEmpty => LayerIDs.Length <= 0;
+
         public static string CreateLayerSetSQLValues(LayerSet layers)
         {
+            if (layers.IsEmpty) throw new Exception("Cannot create valid SQL values from an empty layerset");
+
             var order = 0;
             var items = new List<string>();
             foreach (var layerID in layers)
