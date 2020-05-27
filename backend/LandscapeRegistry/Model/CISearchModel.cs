@@ -50,16 +50,18 @@ namespace LandscapeRegistry.Model
             {
                 foundCIIDs = (await ciModel.GetCIIDs(trans)).ToHashSet();
             }
-                
+
             //if (withEffectiveTraits.Length > 0)
             //{
-                foreach(var etName in withEffectiveTraits)
-                {
-                    var ciFilter = (searchAllCIsBasedOnSearchString) ? (Func<Guid, bool>)null : (ciid) => foundCIIDs.Contains(ciid);
-                    var ets = await traitModel.CalculateEffectiveTraitSetsForTraitName(etName, layerSet, trans, atTime, ciFilter);
-                    var cisFulfillingTraitRequirement = ets.Select(et => et.UnderlyingCI.ID);
-                    foundCIIDs = cisFulfillingTraitRequirement.ToHashSet(); // reduce the number of cis to the ones that fulfill this trait requirement
-                }
+            var resultIsReducedByETs = false;
+            foreach(var etName in withEffectiveTraits)
+            {
+                var ciFilter = (searchAllCIsBasedOnSearchString && !resultIsReducedByETs) ? (Func<Guid, bool>)null : (ciid) => foundCIIDs.Contains(ciid);
+                var ets = await traitModel.CalculateEffectiveTraitSetsForTraitName(etName, layerSet, trans, atTime, ciFilter);
+                var cisFulfillingTraitRequirement = ets.Select(et => et.UnderlyingCI.ID);
+                foundCIIDs = cisFulfillingTraitRequirement.ToHashSet(); // reduce the number of cis to the ones that fulfill this trait requirement
+                resultIsReducedByETs = true;
+            }
             //}
 
             var cis = await ciModel.GetCompactCIs(layerSet, trans, atTime, foundCIIDs);
