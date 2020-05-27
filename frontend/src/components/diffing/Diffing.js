@@ -1,11 +1,14 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { DiffCISettings, DiffLayerSettings, DiffTimeSettings } from './DiffSettings';
 import { DiffArea } from './DiffArea';
 import { queries } from 'graphql/queries'
+import { useLocation } from 'react-router-dom'
 import { Segment, Divider } from 'semantic-ui-react'
 import { useQuery, useLazyQuery } from '@apollo/react-hooks';
 import { Button, Container, Row, Col, Form } from 'react-bootstrap';
-import LoadingOverlay from 'react-loading-overlay'
+import LoadingOverlay from 'react-loading-overlay';
+import queryString from 'query-string';
+import { withRouter } from 'react-router-dom'
 
 function LeftLabel(props) {
   return (
@@ -14,9 +17,27 @@ function LeftLabel(props) {
   </div>);
 }
 
-function Diffing() {
+function parseURLQuery(search) {
+  const p = queryString.parse(search, {arrayFormat: 'comma'});
+  return {
+    leftHiddenLayers: p.leftHiddenLayers ? [].concat(p.leftHiddenLayers).map(l => parseInt(l, 10)).filter(l => !isNaN(l)) : [],
+    rightHiddenLayers: p.rightHiddenLayers ? [].concat(p.rightHiddenLayers).map(l => parseInt(l, 10)).filter(l => !isNaN(l)) : []
+  };
+}
+
+function stringifyURLQuery(leftHiddenLayers, rightHiddenLayers) {
+  return queryString.stringify({
+    leftHiddenLayers: leftHiddenLayers,
+    rightHiddenLayers: rightHiddenLayers
+  }, {arrayFormat: 'comma'});
+}
+
+function Diffing(props) {
+  let urlParams = parseURLQuery(useLocation().search);
 
   const { data: layerData } = useQuery(queries.Layers);
+  var [ leftHiddenLayers, setLeftHiddenLayers ] = useState(urlParams.leftHiddenLayers);
+  var [ rightHiddenLayers, setRightHiddenLayers ] = useState(urlParams.rightHiddenLayers);
   var [ leftLayers, setLeftLayers ] = useState([]);
   var [ rightLayers, setRightLayers ] = useState([]);
   
@@ -27,6 +48,11 @@ function Diffing() {
   var [ rightTimeThreshold, setRightTimeThreshold ] = useState(null);
   
   var [ showEqual, setShowEqual ] = useState(true);
+
+  useEffect(() => {
+    const search = stringifyURLQuery(leftHiddenLayers, rightHiddenLayers);
+    props.history.push({search: `?${search}`});
+  }, [leftHiddenLayers, rightHiddenLayers, props.history]);
 
   const visibleLeftLayerNames = leftLayers.filter(l => l.visible).map(l => l.name);
   const visibleRightLayerNames = rightLayers.filter(l => l.visible).map(l => l.name);
@@ -57,9 +83,9 @@ function Diffing() {
               <LeftLabel>Layers:</LeftLabel>
             </Col>
             <Col>
-              <DiffLayerSettings alignment='right' layerData={layerData.layers} onLayersChange={setLeftLayers} />
+              <DiffLayerSettings alignment='right' layerData={layerData.layers} hiddenLayers={leftHiddenLayers} setHiddenLayers={setLeftHiddenLayers} onLayersChange={setLeftLayers} />
             </Col><Col>
-              <DiffLayerSettings alignment='left' layerData={layerData.layers} onLayersChange={setRightLayers} />
+              <DiffLayerSettings alignment='left' layerData={layerData.layers} hiddenLayers={rightHiddenLayers} setHiddenLayers={setRightHiddenLayers} onLayersChange={setRightLayers} />
             </Col>
           </Row>
           <Divider />
@@ -125,4 +151,4 @@ function Diffing() {
   } else return 'Loading';
 }
 
-export default Diffing;
+export default withRouter(Diffing);

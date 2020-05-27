@@ -116,8 +116,7 @@ export function DiffCISettings(props) {
   
   
 export function DiffLayerSettings(props) {
-  const { layerData, onLayersChange } = props;
-  var [ hiddenLayers, setHiddenLayers ] = useState([]);
+  const { layerData, onLayersChange, hiddenLayers, setHiddenLayers } = props;
   var [ layerSortOffsets, setLayerSortOffsets ] = useState([]);
 
   useEffect(() => {
