@@ -12,6 +12,8 @@ import moment from 'moment'
 import { ErrorView } from './ErrorView';
 import { useExplorerLayers } from '../utils/layers';
 import { useSelectedTime } from '../utils/useSelectedTime';
+import { Link } from 'react-router-dom';
+import { buildDiffingURLQueryBetweenChangesets } from 'components/diffing/Diffing'
 
 function Timeline(props) {
   const { data: layers } = useExplorerLayers();
@@ -37,8 +39,10 @@ function LoadingTimeline(props) {
   React.useEffect(() => { if (selectedTime.refreshNonceTimeline) refetchChangesets({fetchPolicy: 'network-only'}); }, [selectedTime, refetchChangesets]);
 
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
+  
+  var { data: layerSettingsData } = useQuery(queries.LayerSettings);
 
-  if (data) {
+  if (data && layerSettingsData) {
     var changesets = [...data.changesets]; // TODO: why do we do a copy here?
 
     let activeChangeset = (selectedTime.isLatest) ? changesets.find(e => true) : changesets.find(cs => cs.timestamp === selectedTime.time);
@@ -80,19 +84,33 @@ function LoadingTimeline(props) {
 
           const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.displayName}</span> : '';
           const buttonStyle = {
+            textAlign: 'left',
+            flexGrow: 1,
+            overflow: 'hidden',
             whiteSpace: 'nowrap',
             textOverflow: 'ellipsis',
-            overflow: 'hidden',
-            display: 'inline-block',
+          };
+          const diffButtonStyle = {
+          };
+          const lineStyle = {
+            display: 'flex',
             width: '100%',
-            textAlign: 'left'
+            paddingRight: '5px'
           };
           const label = <span style={((activeChangeset === cs) ? {fontWeight: 'bold'} : {})}>{moment(cs.timestamp).format('YYYY-MM-DD HH:mm:ss')} - {userLabel}</span>;
           if (activeChangeset === cs) {
             return (<Button style={buttonStyle} variant="link" size="sm" disabled key={cs.id}>{label}</Button>);
           }
           const isLatest = latestChangeset === cs;
-          return <Button style={buttonStyle} key={cs.id} variant="link" size="sm" onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: cs.timestamp, isLatest: isLatest }})}>{label}</Button>
+          const diffQuery = buildDiffingURLQueryBetweenChangesets(layerSettingsData.layerSettings, ciid, (latestChangeset === activeChangeset) ? null : activeChangeset.timestamp, (isLatest) ? null : cs.timestamp);
+          return (<div style={lineStyle} key={cs.id}>
+              <Button style={buttonStyle} variant="link" size="sm" 
+              onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: cs.timestamp, isLatest: isLatest }})}>
+                {label}
+              </Button>
+              <Link style={diffButtonStyle} 
+                to={`/diffing?${diffQuery}`}><Icon name="exchange" /></Link>
+            </div>);
         })}
           <Form inline onSubmit={e => e.preventDefault()} style={{justifyContent: "center"}}>
             <SemanticButton basic size='mini' compact onClick={() => {

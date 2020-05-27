@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect} from 'react';
 import { queries } from 'graphql/queries'
 import { Dropdown } from 'semantic-ui-react'
 import { useQuery } from '@apollo/react-hooks';
@@ -6,68 +6,58 @@ import Layers from 'components/Layers';
 import { mergeSettingsAndSortLayers } from 'utils/layers'; 
 import Form from 'react-bootstrap/Form'
 
+function ChangesetDropdown(props) {
+  const { ciid, layers, timeSettings, setTimeSettings } = props;
+
+  var from = "2010-01-01 00:00:00"; // TODO?
+  var to = "2022-01-01 00:00:00";
+  const { loading, data } = useQuery(queries.Changesets, {
+    variables: { from: from, to: to, ciid: ciid, layers: layers }
+  });
+
+  let list = [];
+  if (data) {
+
+    list = data.changesets.map(d => {
+      return { key: d.id, value: d.timestamp, text: d.timestamp };
+    }).sort((a, b) => {
+      return b.text.localeCompare(a.text);
+    });
+  }
+  return <Dropdown loading={loading}
+    disabled={loading}
+    value={timeSettings?.timeThreshold}
+    placeholder='Select Changeset...'
+    onChange={(_, data) => setTimeSettings(ts => ({...ts, timeThreshold: data.value}))}
+    fluid
+    search
+    selection
+    options={list}
+  />;
+}
+
+
 export function DiffTimeSettings(props) {
   
-  const { ciid, layers, alignment, setTimeThreshold } = props;
+  const { ciid, layers, alignment, timeSettings, setTimeSettings } = props;
 
-  const [selectedType, setSelectedType] = useState(0);
-  const [selectedChangeset, setSelectedChangeset] = useState(undefined);
-
-  // reset changeset when ci changes
-  useEffect(() => setSelectedChangeset(undefined), [ciid]);
-
-  // set resulting time threshold
-  useEffect(() => {
-    let resultingTimeThreshold = null;
-    if (selectedType === 1 && selectedChangeset)
-      resultingTimeThreshold = selectedChangeset; // TODO
-    setTimeThreshold(resultingTimeThreshold);
-  }, [selectedType, selectedChangeset, setTimeThreshold]);
-
-  function ChangesetDropdown(props) {
-    const { ciid, layers, selectedChangeset, setSelectedChangeset } = props;
-    var from = "2010-01-01 00:00:00"; // TODO?
-    var to = "2022-01-01 00:00:00";
-    const { loading, data } = useQuery(queries.Changesets, {
-      variables: { from: from, to: to, ciid: ciid, layers: layers }
-    });
-
-    let list = [];
-    if (data) {
-
-      list = data.changesets.map(d => {
-        return { key: d.id, value: d.timestamp, text: d.timestamp };
-      }).sort((a, b) => {
-        return b.text.localeCompare(a.text);
-      });
-    }
-    return <Dropdown loading={loading}
-      disabled={loading}
-      value={selectedChangeset}
-      placeholder='Select Changeset...'
-      onChange={(_, data) => setSelectedChangeset(data.value)}
-      fluid
-      search
-      selection
-      options={list}
-    />;
-  }
+  const type = timeSettings?.type ?? 0;
 
   return (
     <div style={alignmentStyle(props.alignment)}>
         <div style={{display: 'flex'}}>
           <Form.Check style={{alignItems: 'center'}}
-            checked={selectedType===0}
+            checked={type===0}
             custom
             inline
             label="Now / Latest"
             type={'radio'}
             value={0}
             id={`time-range-select-latest-${alignment}`}
-            onChange={() => setSelectedType(0)}
+            onChange={() => setTimeSettings(ts => ({...ts, type: 0}))}
           />
           <Form.Check style={{alignItems: 'center'}}
-            checked={selectedType===1}
+            checked={type===1}
             disabled={!!!ciid}
             custom
             inline
@@ -75,12 +65,12 @@ export function DiffTimeSettings(props) {
             type={'radio'}
             value={1}
             id={`time-range-select-changeset-${alignment}`}
-            onChange={() => setSelectedType(1)}
+            onChange={() => setTimeSettings(ts => ({...ts, type: 1}))}
           />
       </div>
-      {selectedType === 1 && 
+      {type === 1 && 
         <div style={{display: 'flex', flexBasis: '300px'}}>
-          <ChangesetDropdown layers={layers} ciid={ciid} selectedChangeset={selectedChangeset} setSelectedChangeset={setSelectedChangeset} />
+          <ChangesetDropdown layers={layers} ciid={ciid} timeSettings={timeSettings} setTimeSettings={setTimeSettings} />
         </div>}
     </div>
   );

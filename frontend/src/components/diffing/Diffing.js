@@ -28,22 +28,41 @@ function parseURLQuery(search) {
   try {
     rls = JSON.parse(p.rightLayerSettings);
   } catch {}
+  
+  let lts = null;
+  try {
+    lts = JSON.parse(p.leftTimeSettings);
+  } catch {}
+  let rts = null;
+  try {
+    rts = JSON.parse(p.rightTimeSettings);
+  } catch {}
 
   return {
     leftLayerSettings: lls,
     rightLayerSettings: rls,
     leftCIID: p.leftCIID,
-    rightCIID: p.rightCIID
+    rightCIID: p.rightCIID,
+    leftTimeSettings: lts,
+    rightTimeSettings: rts
   };
 }
 
-function stringifyURLQuery(leftLayerSettings, rightLayerSettings, leftCIID, rightCIID) {
+function stringifyURLQuery(leftLayerSettings, rightLayerSettings, leftCIID, rightCIID, leftTimeSettings, rightTimeSettings) {
   return queryString.stringify({
     leftLayerSettings: (leftLayerSettings) ? JSON.stringify(leftLayerSettings) : undefined,
     rightLayerSettings: (rightLayerSettings) ? JSON.stringify(rightLayerSettings) : undefined,
     leftCIID: leftCIID,
-    rightCIID: rightCIID
+    rightCIID: rightCIID,
+    leftTimeSettings: (leftTimeSettings) ? JSON.stringify(leftTimeSettings) : undefined, 
+    rightTimeSettings: (rightTimeSettings) ? JSON.stringify(rightTimeSettings) : undefined
   }, {arrayFormat: 'comma'});
+}
+
+export function buildDiffingURLQueryBetweenChangesets(layerSettings, ciid, leftTimestamp, rightTimestamp) {
+  return stringifyURLQuery(layerSettings, layerSettings, ciid, ciid, 
+    (leftTimestamp) ? { type: 1, timeThreshold: leftTimestamp } : { type: 0 }, 
+    (rightTimestamp) ? { type: 1, timeThreshold: rightTimestamp } : { type: 0 });
 }
 
 function Diffing(props) {
@@ -59,15 +78,19 @@ function Diffing(props) {
   var [ leftCIID, setLeftCIID ] = useState(urlParams.leftCIID);
   var [ rightCIID, setRightCIID ] = useState(urlParams.rightCIID);
   
-  var [ leftTimeThreshold, setLeftTimeThreshold ] = useState(null);
-  var [ rightTimeThreshold, setRightTimeThreshold ] = useState(null);
+  var [ leftTimeSettings, setLeftTimeSettings ] = useState(urlParams.leftTimeSettings);
+  var [ rightTimeSettings, setRightTimeSettings ] = useState(urlParams.rightTimeSettings);
   
   var [ showEqual, setShowEqual ] = useState(true);
 
+  // reset timesettings when ci changes TODO: this breaks url-based setting -> how to make this work?
+  // useEffect(() => setLeftTimeSettings(null), [leftCIID]);
+  // useEffect(() => setRightTimeSettings(null), [rightCIID]);
+
   useEffect(() => {
-    const search = stringifyURLQuery(leftLayerSettings, rightLayerSettings, leftCIID, rightCIID);
+    const search = stringifyURLQuery(leftLayerSettings, rightLayerSettings, leftCIID, rightCIID, leftTimeSettings, rightTimeSettings);
     props.history.push({search: `?${search}`});
-  }, [leftLayerSettings, rightLayerSettings, leftCIID, rightCIID, props.history]);
+  }, [leftLayerSettings, rightLayerSettings, leftCIID, rightCIID, leftTimeSettings, rightTimeSettings, props.history]);
 
   const visibleLeftLayerNames = leftLayers.filter(l => l.visible).map(l => l.name);
   const visibleRightLayerNames = rightLayers.filter(l => l.visible).map(l => l.name);
@@ -81,10 +104,10 @@ function Diffing(props) {
 
   function compare() {
     if (leftCIID)
-      loadLeftCI({ variables: {layers: visibleLeftLayerNames, timeThreshold: leftTimeThreshold, identity: leftCIID},
+      loadLeftCI({ variables: {layers: visibleLeftLayerNames, timeThreshold: leftTimeSettings?.timeThreshold, identity: leftCIID},
         fetchPolicy: 'cache-and-network' });
     if (rightCIID)
-      loadRightCI({ variables: {layers: visibleRightLayerNames, timeThreshold: rightTimeThreshold, identity: rightCIID},
+      loadRightCI({ variables: {layers: visibleRightLayerNames, timeThreshold: rightTimeSettings?.timeThreshold, identity: rightCIID},
         fetchPolicy: 'cache-and-network' });
   }
 
@@ -123,10 +146,10 @@ function Diffing(props) {
             </Col>
             <Col>
               {visibleLeftLayerNames.length > 0 && 
-                <DiffTimeSettings alignment='right' layers={visibleLeftLayerNames} ciid={leftCIID} timeThreshold={leftTimeThreshold} setTimeThreshold={setLeftTimeThreshold} />}
+                <DiffTimeSettings alignment='right' layers={visibleLeftLayerNames} ciid={leftCIID} timeSettings={leftTimeSettings} setTimeSettings={setLeftTimeSettings} />}
             </Col><Col>
               {visibleRightLayerNames.length > 0 && 
-                <DiffTimeSettings alignment='left' layers={visibleRightLayerNames} ciid={rightCIID} timeThreshold={rightTimeThreshold} setTimeThreshold={setRightTimeThreshold} />}
+                <DiffTimeSettings alignment='left' layers={visibleRightLayerNames} ciid={rightCIID} timeSettings={rightTimeSettings} setTimeSettings={setRightTimeSettings} />}
             </Col>
           </Row>
           <Divider />
