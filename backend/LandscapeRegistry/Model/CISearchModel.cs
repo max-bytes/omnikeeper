@@ -5,6 +5,7 @@ using LandscapeRegistry.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using static Landscape.Base.Model.IAttributeModel;
@@ -29,6 +30,9 @@ namespace LandscapeRegistry.Model
             var finalSS = searchString.Trim();
             var foundCIIDs = new HashSet<Guid>();
 
+            if (withEffectiveTraits.Length <= 0) // if no traits are specified, there cannot be any results -> return early
+                return ImmutableArray<CompactCI>.Empty;
+
             var searchAllCIsBasedOnSearchString = true;
             if (finalSS.Length > 0)
             {
@@ -47,8 +51,8 @@ namespace LandscapeRegistry.Model
                 foundCIIDs = (await ciModel.GetCIIDs(trans)).ToHashSet();
             }
                 
-            if (withEffectiveTraits.Length > 0)
-            {
+            //if (withEffectiveTraits.Length > 0)
+            //{
                 foreach(var etName in withEffectiveTraits)
                 {
                     var ciFilter = (searchAllCIsBasedOnSearchString) ? (Func<Guid, bool>)null : (ciid) => foundCIIDs.Contains(ciid);
@@ -56,7 +60,7 @@ namespace LandscapeRegistry.Model
                     var cisFulfillingTraitRequirement = ets.Select(et => et.UnderlyingCI.ID);
                     foundCIIDs = cisFulfillingTraitRequirement.ToHashSet(); // reduce the number of cis to the ones that fulfill this trait requirement
                 }
-            }
+            //}
 
             var cis = await ciModel.GetCompactCIs(layerSet, trans, atTime, foundCIIDs);
 
