@@ -46,7 +46,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
         }
         extend type Query {
             selectedTimeThreshold: SelectedTimeThreshold!
-            hiddenLayers: [Int]!
+            visibleLayers: [Int]
             layerSortOffsets: [LayerSortOffset]!
         }
         extend type LayerType {
@@ -67,8 +67,8 @@ function ApolloWrapper({ component: Component, ...rest }) {
                 }});
                 return null;
             },
-            setHiddenLayers: (_root, variables, { cache, getCacheKey }) => {
-                cache.writeQuery({ query: queries.HiddenLayers, data: { hiddenLayers: variables.ids } });
+            setVisibleLayers: (_root, variables, { cache, getCacheKey }) => {
+                cache.writeQuery({ query: queries.VisibleLayers, data: { visibleLayers: variables.ids } });
                 return null;
             },
             setLayerSortOffsets: (_root, variables, { cache, getCacheKey }) => {
@@ -154,7 +154,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
           time: null,
           isLatest: true
         },
-        hiddenLayers: [],
+        visibleLayers: null,
         layerSortOffsets: []
     };
     cache.writeQuery({
@@ -164,7 +164,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
                 time
                 isLatest
             }
-            hiddenLayers {
+            visibleLayers {
                 layerID
             }
             layerSortOffsets {

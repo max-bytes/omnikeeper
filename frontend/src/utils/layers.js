@@ -4,11 +4,11 @@ import _ from 'lodash';
 
 export function useExplorerLayers(skipInvisible = false, skipReadonly = false) {
     const { error, data, loading } = useQuery(queries.Layers);
-    var { data: { hiddenLayers } } = useQuery(queries.HiddenLayers);
+    var { data: visibleLayersData } = useQuery(queries.VisibleLayers);
     var { data: { layerSortOffsets } } = useQuery(queries.LayerSortOffsets);
 
-    if (data && hiddenLayers && layerSortOffsets) {
-        let layers = mergeAndSortLayers(data.layers, hiddenLayers, layerSortOffsets);
+    if (data && visibleLayersData && layerSortOffsets) {
+        let layers = mergeAndSortLayers(data.layers, visibleLayersData.visibleLayers, layerSortOffsets);
 
         if (skipInvisible)
             layers = layers.filter(l => l.visible);
@@ -20,14 +20,22 @@ export function useExplorerLayers(skipInvisible = false, skipReadonly = false) {
     return {error: error, data: undefined, loading: loading};
 }
 
-export function mergeAndSortLayers(layers, hiddenLayers, layerSortings) {
-    // add visibility settings
-    layers = _.map(layers, layer => {
-        if (_.includes(hiddenLayers, layer.id))
-            return {...layer, visible: false};
-        else
+export function mergeAndSortLayers(layers, visibleLayers, layerSortings) {
+
+    if (!visibleLayers) {
+        // no visible layers specified, choose convention to show all layers
+        layers = _.map(layers, layer => {
             return {...layer, visible: true};
-    });
+        });
+    } else {
+        // add visibility settings
+        layers = _.map(layers, layer => {
+            if (_.includes(visibleLayers, layer.id))
+                return {...layer, visible: true};
+            else
+                return {...layer, visible: false};
+        });
+    }
 
     // add sort order offset settings
     var baseSortOrder = 0;

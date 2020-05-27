@@ -10,11 +10,15 @@ import _ from 'lodash';
 
 function Layers(props) {
 
-  function toggleLayerVisibility(layerID) {
-    if (props.hiddenLayers.includes(layerID))
-      return props.onSetHiddenLayers(_.without(props.hiddenLayers, layerID));
-    else
-      return props.onSetHiddenLayers(_.concat(props.hiddenLayers, [layerID]));
+  function toggleLayerVisibility(layerID, allLayers) {
+    if (props.visibleLayers) {
+      if (props.visibleLayers.includes(layerID))
+        return props.onSetVisibleLayers(_.without(props.visibleLayers, layerID));
+      else
+        return props.onSetVisibleLayers(_.concat(props.visibleLayers, [layerID]));
+    } else {
+      props.onSetVisibleLayers(_.without(allLayers.map(l => l.id), layerID));
+    }
   }
 
   function changeLayerSortOrder(layerIDA, layerIDB, change) {
@@ -45,7 +49,7 @@ function Layers(props) {
 
   const { error, data } = useQuery(queries.Layers);
     if (data) {
-      let layers = mergeAndSortLayers(data.layers, props.hiddenLayers, props.layerSortOffsets);
+      let layers = mergeAndSortLayers(data.layers, props.visibleLayers, props.layerSortOffsets);
 
       return (<ul style={{listStyle: 'none', paddingLeft: '0px', marginBottom: '0px'}}>
         <Flipper flipKey={layers.map(a => a.id + ";" + a.visible).join(' ')}>
@@ -69,7 +73,7 @@ function Layers(props) {
                     {layer.brainName !== "" && (<Icon fitted name='lightning' />)}
                   </span>
                   &nbsp;&nbsp;
-                    <Button basic size='mini' compact onClick={() => toggleLayerVisibility(layer.id)}>
+                    <Button basic size='mini' compact onClick={() => toggleLayerVisibility(layer.id, data.layers)}>
                       <Icon fitted name={((layer.visible) ? 'eye' : 'eye slash')} />
                     </Button>
                   <Button.Group basic size='mini'>

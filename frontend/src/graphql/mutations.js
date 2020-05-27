@@ -142,9 +142,9 @@ CREATE_CI: gql`
   }
   `,
 
-  SET_HIDDEN_LAYERS: gql`
-  mutation SetHiddenLayers($ids: [Int]!) {
-    setHiddenLayers(ids: $ids) @client
+  SET_VISIBLE_LAYERS: gql`
+  mutation SetVisibleLayers($ids: [Int]!) {
+    setVisibleLayers(ids: $ids) @client
   }
   `,
   

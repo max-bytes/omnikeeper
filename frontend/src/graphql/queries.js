@@ -100,9 +100,9 @@ export const queries = {
             selectedTimeThreshold @client
           }
       `,
-    HiddenLayers: gql`
+    VisibleLayers: gql`
     query {
-        hiddenLayers
+        visibleLayers
     }`,
     LayerSortOffsets: gql`
     query {
