@@ -35,7 +35,7 @@ function RelatedCI(props) {
   // move remove functionality into on-prop
   let removeButton;
   if (props.isEditable) {
-    removeButton = <Button variant="danger" onClick={e => {
+    removeButton = <Button variant="danger" size="sm" onClick={e => {
       e.preventDefault();
       removeRelation({ variables: { fromCIID: props.related.fromCIID, toCIID: props.related.toCIID, includeRelated: props.perPredicateLimit,
         predicateID: props.related.predicateID, layerID: props.related.layerID, layers: visibleLayers.map(l => l.name) } })
@@ -48,7 +48,7 @@ function RelatedCI(props) {
       <Form inline onSubmit={e => e.preventDefault()}>
         <LayerStackIcons layerStack={props.related.layerStack}></LayerStackIcons>
         <ChangesetPopup changesetID={props.related.changesetID} />
-        <Form.Group controlId={`value:${props.related.predicateID}`} style={{flexGrow: 1}}>
+        <Form.Group controlId={`value:${props.related.predicateID}`} style={{flexGrow: 1, minHeight: "27px"}}>
           <Form.Label className={"pr-1"} style={{flexBasis: '600px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{written}</Form.Label>
           {removeButton}
         </Form.Group>

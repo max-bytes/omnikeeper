@@ -21,15 +21,15 @@ function CIRelations(props) {
   });
 
   if (dataCI) {
-    // var sortedRelatedCIs = [...dataCI.ci.related];
-    // sortedRelatedCIs.sort((a,b) => {
-    //   const predicateCompare = a.predicateID.localeCompare(b.predicateID);
-    //   if (predicateCompare !== 0)
-    //     return predicateCompare;
-    //   return a.ci.id.localeCompare(b.ci.id);
-    // });
+    var sortedRelatedCIs = [...dataCI.ci.related];
+    sortedRelatedCIs.sort((a,b) => {
+      const predicateCompare = a.predicateID.localeCompare(b.predicateID);
+      if (predicateCompare !== 0)
+        return predicateCompare;
+      return a.predicateWording.localeCompare(b.predicateWording);
+    });
 
-    var sortedRelatedCIs = dataCI.ci.related;
+    // var sortedRelatedCIs = dataCI.ci.related;
   
     return (<>
     <Row>
