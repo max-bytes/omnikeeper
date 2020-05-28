@@ -8,103 +8,18 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Npgsql;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Tests.Integration.Model.Mocks;
 
 namespace Tests.Integration.Model
 {
-    class TraitsModelTest
+    partial class TraitsModelTest
     {
         [SetUp]
         public void Setup()
         {
             DBSetup.Setup();
-        }
-
-        private class MockedTraitsProvider : ITraitsProvider
-        {
-            public IImmutableDictionary<string, Trait> GetTraits()
-            {
-                return new List<Trait>()
-                {
-                    Trait.Build("test_trait_1", new List<TraitAttribute>()
-                    {
-                        TraitAttribute.Build("a4",
-                            CIAttributeTemplate.BuildFromParams("a4", AttributeValueType.Text, false)
-                        )
-                    }, new List<TraitAttribute>() { }, new List<TraitRelation>() { }),
-                    Trait.Build("test_trait_2", new List<TraitAttribute>()
-                    {
-                        TraitAttribute.Build("a4",
-                            CIAttributeTemplate.BuildFromParams("a4", AttributeValueType.Text, false)
-                        ),
-                        TraitAttribute.Build("a2",
-                            CIAttributeTemplate.BuildFromParams("a2", AttributeValueType.Text, false)
-                        )
-                    }, new List<TraitAttribute>() { }, new List<TraitRelation>() { }),
-                    Trait.Build("test_trait_3", new List<TraitAttribute>()
-                    {
-                        TraitAttribute.Build("a1",
-                            CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false)
-                        )
-                    }, new List<TraitAttribute>() { }, new List<TraitRelation>() { }),
-                    Trait.Build("test_trait_4", new List<TraitAttribute>()
-                    {
-                        TraitAttribute.Build("a1",
-                            CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false)
-                        )
-                    }, requiredTraits: new List<string>() { "test_trait_1" }),
-                    Trait.Build("test_trait_5", new List<TraitAttribute>()
-                    {
-                        TraitAttribute.Build("a2",
-                            CIAttributeTemplate.BuildFromParams("a2", AttributeValueType.Text, false)
-                        )
-                    }, requiredTraits: new List<string>() { "test_trait_4" })
-                }.ToImmutableDictionary(t => t.Name);
-            }
-
-            public void Register(string source, Trait[] t)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        private class MockedTraitsProviderWithLoop : ITraitsProvider
-        {
-            public IImmutableDictionary<string, Trait> GetTraits()
-            {
-                return new List<Trait>()
-                {
-                    Trait.Build("test_trait_1", new List<TraitAttribute>()
-                    {
-                        TraitAttribute.Build("a4",
-                            CIAttributeTemplate.BuildFromParams("a4", AttributeValueType.Text, false)
-                        )
-                    }, requiredTraits: new List<string>() { "test_trait_2" }),
-                    Trait.Build("test_trait_2", new List<TraitAttribute>()
-                    {
-                        TraitAttribute.Build("a4",
-                            CIAttributeTemplate.BuildFromParams("a4", AttributeValueType.Text, false)
-                        ),
-                        TraitAttribute.Build("a2",
-                            CIAttributeTemplate.BuildFromParams("a2", AttributeValueType.Text, false)
-                        )
-                    }, requiredTraits: new List<string>() { "test_trait_3" }),
-                    Trait.Build("test_trait_3", new List<TraitAttribute>()
-                    {
-                        TraitAttribute.Build("a1",
-                            CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false)
-                        )
-                    }, requiredTraits: new List<string>() { "test_trait_1" })
-                }.ToImmutableDictionary(t => t.Name);
-            }
-
-            public void Register(string source, Trait[] t)
-            {
-                throw new NotImplementedException();
-            }
         }
 
         [Test]
