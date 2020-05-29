@@ -1,9 +1,10 @@
 import React, {useState} from 'react';
 import _ from 'lodash';
 import DiffAttributeList from 'components/diffing/DiffAttributeList';
+import DiffRelationList from 'components/diffing/DiffRelationList';
 import { Tab } from 'semantic-ui-react'
 
-function compare(attributeA, attributeB) {
+function compareAttributes(attributeA, attributeB) {
   if (!attributeA && attributeB) {
     return {state: 'unequal'};
   } else if (attributeA && !attributeB) {
@@ -26,6 +27,49 @@ function compare(attributeA, attributeB) {
   }
 }
 
+function compareRelations(relationA, relationB) {
+  if (!relationA && relationB) {
+    return {state: 'unequal'};
+  } else if (relationA && !relationB) {
+    return {state: 'unequal'};
+  } else {
+    return {state: 'equal'};
+  }
+}
+
+
+function Attributes(props) {
+  var leftD = _.keyBy(props.leftAttributes, a => a.attribute.name);
+  var rightD = _.keyBy(props.rightAttributes, a => a.attribute.name);
+
+  var keys = _.union(_.keys(leftD), _.keys(rightD));
+
+  let mergedAttributes = {};
+  for(const key of keys) {
+    mergedAttributes[key] = { left: leftD[key], right: rightD[key], compareResult: compareAttributes(leftD[key], rightD[key]) };
+  }
+  if (!props.showEqual) {
+    mergedAttributes = _.pickBy(mergedAttributes, (v, k) => v.compareResult.state !== 'equal');
+  }
+  return <DiffAttributeList attributes={mergedAttributes} />;
+}
+
+function Relations(props) {
+  var leftD = _.keyBy(props.leftRelated, r => `${r.predicateID}-${r.ci.id}`);
+  var rightD = _.keyBy(props.rightRelated, r => `${r.predicateID}-${r.ci.id}`);
+
+  var keys = _.union(_.keys(leftD), _.keys(rightD));
+
+  let mergedRelations = {};
+  for(const key of keys) {
+    mergedRelations[key] = { key: key, left: leftD[key], right: rightD[key], compareResult: compareRelations(leftD[key], rightD[key]) };
+  }
+  if (!props.showEqual) {
+    mergedRelations = _.pickBy(mergedRelations, (v, k) => v.compareResult.state !== 'equal');
+  }
+  return <DiffRelationList relations={mergedRelations} />;
+}
+
 export function DiffArea(props) {
   
   const [selectedTab, setSelectedTab] = useState(0);
@@ -33,30 +77,13 @@ export function DiffArea(props) {
   if (!props.leftCI || !props.rightCI) {
     return <div style={{minHeight: '200px'}}>&nbsp;</div>;
   } else {
-    var leftD = _.keyBy(props.leftCI.mergedAttributes, a => a.attribute.name);
-    var rightD = _.keyBy(props.rightCI.mergedAttributes, a => a.attribute.name);
-
-    var keys = _.union(_.keys(leftD), _.keys(rightD));
-
-    let merged = {};
-    for(const key of keys) {
-      merged[key] = { left: leftD[key], right: rightD[key], compareResult: compare(leftD[key], rightD[key]) };
-    }
-
-    if (!props.showEqual) {
-      merged = _.pickBy(merged, (v, k) => v.compareResult.state !== 'equal');
-    }
-
-    if (_.size(merged) === 0)
-      return (<div style={{display: 'flex', justifyContent: 'center', marginLeft: '220px', padding: '20px', fontSize: '1.4rem', fontWeight: 'bold'}}>Empty</div>);
-
-
+    
     const panes = [
       { menuItem: 'Attributes', render: () => <Tab.Pane>
-        <DiffAttributeList attributes={merged} />
+        <Attributes leftAttributes={props.leftCI.mergedAttributes} rightAttributes={props.rightCI.mergedAttributes} showEqual={props.showEqual} />
       </Tab.Pane> },
       { menuItem: 'Relations', render: () => <Tab.Pane>
-        TODO
+        <Relations leftRelated={props.leftCI.related} rightRelated={props.rightCI.related} showEqual={props.showEqual} />
       </Tab.Pane> },
       { menuItem: 'Effective Traits', render: () => <Tab.Pane>
         TODO

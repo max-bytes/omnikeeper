@@ -1,47 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Attribute from 'components/Attribute';
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import _ from 'lodash';
 import { Accordion, Button, Icon } from 'semantic-ui-react'
 import { onAppear, onExit } from 'utils/animation';
 import { Container, Row, Col } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEquals } from '@fortawesome/free-solid-svg-icons'
-import { faNotEqual } from '@fortawesome/free-solid-svg-icons'
-import { faWaveSquare } from '@fortawesome/free-solid-svg-icons'
-
-function MissingAttribute() {
-  return <div style={{display: 'flex', minHeight: '38px', alignItems: 'center', justifyContent: 'center'}}>
-    <span style={{color: 'red', fontWeight: 'bold'}}>Missing</span>
-  </div>;
-}
-
-// TODO: move
-export function useAttributeSegmentsToggler(segmentNames) {
-  const [openAttributeSegments, setOpenAttributeSegmentsState] = useState(localStorage.getItem('openAttributeSegments') ? JSON.parse(localStorage.getItem('openAttributeSegments')) : [] );
-  const setOpenAttributeSegments = (openAttributeSegments) => {
-    setOpenAttributeSegmentsState(openAttributeSegments);
-    localStorage.setItem('openAttributeSegments', JSON.stringify(openAttributeSegments));
-  }
-  const [expanded, setExpanded] = useState(false);
-  const toggleExpandCollapseAll = () => {
-    const newOpenAttributeSegments = expanded ? [] : segmentNames;
-    setOpenAttributeSegments(newOpenAttributeSegments);
-    setExpanded(!expanded);
-  };
-  const toggleSegment = (index) => {
-    if (openAttributeSegments.indexOf(index) === -1)
-      setOpenAttributeSegments([...openAttributeSegments, index]);
-    else
-      setOpenAttributeSegments(openAttributeSegments.filter(i => i !== index));
-  };
-  const isSegmentActive = (key) => openAttributeSegments.includes(key);
-
-  return [toggleSegment, isSegmentActive, toggleExpandCollapseAll];
-}
+import { MissingLabel, CompareLabel, EmptyLabel } from './DiffUtilComponents';
+import {useAttributeSegmentsToggler} from 'utils/useAttributeSegmentsToggler'
 
 // TODO: consider merging with ExplorerAttributeList?
 function DiffAttributeList(props) {
+
   // TODO: does not work with nested groups yet
   const nestedAttributes = _.groupBy(_.map(props.attributes, (leftRight, name) => ({leftRight, name})), (t) => {
     const splits = t.name.split('.');
@@ -51,9 +20,12 @@ function DiffAttributeList(props) {
 
   const [toggleSegment, isSegmentActive, toggleExpandCollapseAll] = useAttributeSegmentsToggler(_.keys(nestedAttributes));
 
+  if (_.size(props.attributes) === 0)
+    return EmptyLabel();
+
   const attributeAccordionItems = [];
   _.forEach(nestedAttributes, (na, key) => {
-    
+
     var sortedAttributes = [...na];
     sortedAttributes.sort((a,b) => {
       return a.name.localeCompare(b.name);
@@ -85,20 +57,14 @@ function DiffAttributeList(props) {
                     </Col>
                     <Col>
                       {a.leftRight.left && <Attribute controlIdSuffix={'left'} attribute={a.leftRight.left} hideNameLabel={true} isEditable={false} />}
-                      {!a.leftRight.left && <MissingAttribute /> }
+                      {!a.leftRight.left && <MissingLabel /> }
                     </Col>
                     <Col xs={1}>
-                      <div style={{display: 'flex', minHeight: '38px', alignItems: 'center', justifyContent: 'center'}}>
-                        {(() => { switch (a.leftRight.compareResult.state) {
-                          case 'equal': return <span style={{color: 'green', fontWeight: 'bold'}}><FontAwesomeIcon icon={faEquals} size="lg" /></span>;
-                          case 'similar': return <span style={{color: 'orange', fontWeight: 'bold'}}><FontAwesomeIcon icon={faWaveSquare} size="lg" /></span>;
-                          default: return <span style={{color: 'red', fontWeight: 'bold'}}><FontAwesomeIcon icon={faNotEqual} size="lg" /></span>;
-                        }})()}
-                      </div>
+                      <CompareLabel state={a.leftRight.compareResult.state} />
                     </Col>
                     <Col>
                       {a.leftRight.right && <Attribute controlIdSuffix={'right'} attribute={a.leftRight.right} hideNameLabel={true} isEditable={false} />}
-                      {!a.leftRight.right && <MissingAttribute /> }
+                      {!a.leftRight.right && <MissingLabel /> }
                     </Col>
                   </Row>
                 </Container>

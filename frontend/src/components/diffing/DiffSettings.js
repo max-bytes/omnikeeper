@@ -84,7 +84,7 @@ export function DiffCISettings(props) {
     var ciList = [];
     if (data)
       ciList = data.compactCIs.map(d => {
-        return { key: d.id, value: d.id, text: d.name ?? '[UNNAMED]', orderLast: !!d.name };
+        return { key: d.id, value: d.id, text: `${d.name ?? '[UNNAMED]'} - ${d.id}`, orderLast: !!d.name };
       }).sort((a, b) => {
         if (a.orderLast !== b.orderLast) return ((a.orderLast) ? -1 : 1);
         if (a.text && b.text) return a.text.localeCompare(b.text);
@@ -92,7 +92,7 @@ export function DiffCISettings(props) {
       }).map(({orderLast, ...rest}) => rest);
   
     return (<div style={alignmentStyle(props.alignment)}>
-      <Dropdown style={{flexBasis: '400px'}} loading={loading}
+      <Dropdown style={{flexBasis: '550px', flexGrow: 1}} loading={loading}
                     disabled={loading}
                     value={props.selectedCIID}
                     placeholder='Select CI...'
@@ -123,10 +123,10 @@ export function DiffLayerSettings(props) {
 function alignmentStyle(alignment) {
   switch (alignment) {
     case 'left':
-      return {display: 'flex', flexBasis: '400px', justifyContent: 'flex-start', marginLeft: '20px', minHeight: '38px'};
+      return {display: 'flex', justifyContent: 'flex-start', marginLeft: '20px', minHeight: '38px'};
     case 'right':
-      return {display: 'flex', flexBasis: '400px', justifyContent: 'flex-end', marginRight: '20px', minHeight: '38px'};
+      return {display: 'flex', justifyContent: 'flex-end', marginRight: '20px', minHeight: '38px'};
     default:
-      return {display: 'flex', flexBasis: '400px', justifyContent: 'center', minHeight: '38px'};
+      return {display: 'flex', justifyContent: 'center', minHeight: '38px'};
   };
 }

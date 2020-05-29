@@ -70,6 +70,8 @@ function Diffing(props) {
 
   const { data: layerData } = useQuery(queries.Layers);
 
+  const perPredicateLimit = 100;
+
   var [ leftLayerSettings, setLeftLayerSettings ] = useState(urlParams.leftLayerSettings);
   var [ rightLayerSettings, setRightLayerSettings ] = useState(urlParams.rightLayerSettings);
   var [ leftLayers, setLeftLayers ] = useState([]);
@@ -87,6 +89,13 @@ function Diffing(props) {
   // useEffect(() => setLeftTimeSettings(null), [leftCIID]);
   // useEffect(() => setRightTimeSettings(null), [rightCIID]);
 
+  const [loadLeftCI, { data: dataLeftCI, loading: loadingLeftCI }] = useLazyQuery(queries.FullCI, {
+    variables: { includeRelated: perPredicateLimit }
+  });
+  const [loadRightCI, { data: dataRightCI, loading: loadingRightCI }] = useLazyQuery(queries.FullCI, {
+    variables: { includeRelated: perPredicateLimit }
+  });
+
   useEffect(() => {
     const search = stringifyURLQuery(leftLayerSettings, rightLayerSettings, leftCIID, rightCIID, leftTimeSettings, rightTimeSettings);
     props.history.push({search: `?${search}`});
@@ -94,13 +103,6 @@ function Diffing(props) {
 
   const visibleLeftLayerNames = leftLayers.filter(l => l.visible).map(l => l.name);
   const visibleRightLayerNames = rightLayers.filter(l => l.visible).map(l => l.name);
-
-  const [loadLeftCI, { data: dataLeftCI, loading: loadingLeftCI }] = useLazyQuery(queries.FullCI, {
-    variables: { includeRelated: 0 }
-  });
-  const [loadRightCI, { data: dataRightCI, loading: loadingRightCI }] = useLazyQuery(queries.FullCI, {
-    variables: { includeRelated: 0 }
-  });
 
   function compare() {
     if (leftCIID)

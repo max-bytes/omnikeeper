@@ -8,6 +8,7 @@ import { onAppear, onExit } from '../utils/animation';
 import { queries } from '../graphql/queries'
 import { ErrorView } from './ErrorView';
 import { useExplorerLayers } from '../utils/layers';
+import _ from 'lodash';
 
 function CIRelations(props) {
 
@@ -29,8 +30,6 @@ function CIRelations(props) {
       return a.predicateWording.localeCompare(b.predicateWording);
     });
 
-    // var sortedRelatedCIs = dataCI.ci.related;
-  
     return (<>
     <Row>
       <Col>
@@ -44,11 +43,11 @@ function CIRelations(props) {
             var isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.layerID);
 
             return (<Flipped key={r.predicateID + "_" + r.ci.id} flipId={r.predicateID} onAppear={onAppear} onExit={onExit}>
-                <RelatedCI related={r} perPredicateLimit={perPredicateLimit} ciIdentity={props.ciIdentity} isEditable={props.isEditable && isLayerWritable}></RelatedCI>
+                <RelatedCI related={r} perPredicateLimit={perPredicateLimit} isEditable={props.isEditable && isLayerWritable}></RelatedCI>
               </Flipped>);
           })}
         </Flipper>
-        (Showing first {perPredicateLimit} relations per predicate)
+        { _.size(sortedRelatedCIs) >= 100 && <>(Showing first {perPredicateLimit} relations per predicate")</>}
       </Col>
     </Row>
     </>);

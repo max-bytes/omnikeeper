@@ -45,11 +45,11 @@ function RelatedCI(props) {
 
   return (
     <div style={{margin: "5px"}}>
-      <Form inline onSubmit={e => e.preventDefault()}>
+      <Form inline style={{flexFlow: 'nowrap'}} onSubmit={e => e.preventDefault()}>
         <LayerStackIcons layerStack={props.related.layerStack}></LayerStackIcons>
         <ChangesetPopup changesetID={props.related.changesetID} />
         <Form.Group controlId={`value:${props.related.predicateID}`} style={{flexGrow: 1, minHeight: "27px"}}>
-          <Form.Label className={"pr-1"} style={{flexBasis: '600px', justifyContent: 'flex-start', whiteSpace: 'nowrap'}}>{written}</Form.Label>
+          <Form.Label className={"pr-1"} style={{flexBasis: '600px', justifyContent: 'flex-start'}}>{written}</Form.Label>
           {removeButton}
         </Form.Group>
       </Form>

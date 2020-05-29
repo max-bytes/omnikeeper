@@ -5,7 +5,7 @@ import { Flipper, Flipped } from 'react-flip-toolkit'
 import _ from 'lodash';
 import { Accordion, Button, Icon } from 'semantic-ui-react'
 import { onAppear, onExit } from '../utils/animation';
-import {useAttributeSegmentsToggler} from 'components/diffing/DiffAttributeList'
+import {useAttributeSegmentsToggler} from 'utils/useAttributeSegmentsToggler'
 
 function ExplorerAttributeList(props) {
 
