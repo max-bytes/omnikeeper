@@ -5,7 +5,7 @@ import _ from 'lodash';
 import { Accordion, Button, Icon } from 'semantic-ui-react'
 import { onAppear, onExit } from 'utils/animation';
 import { Container, Row, Col } from 'react-bootstrap';
-import { MissingLabel, CompareLabel, EmptyLabel } from './DiffUtilComponents';
+import { MissingLabel, CompareLabel, EmptyLabel, stateBasedBackgroundColor } from './DiffUtilComponents';
 import {useAttributeSegmentsToggler} from 'utils/useAttributeSegmentsToggler'
 
 // TODO: consider merging with ExplorerAttributeList?
@@ -40,16 +40,12 @@ function DiffAttributeList(props) {
       <Accordion.Content active={isSegmentActive(key)}>
         <Flipper flipKey={sortedAttributes.map(a => a.layerStackIDs).join(' ')}>
           {sortedAttributes.map((a, index) => {
-
+            const state = a.leftRight.compareResult.state;
             return (<Flipped key={a.name} flipId={a.name} onAppear={onAppear} onExit={onExit}>
               <div style={{padding: '5px 0px', backgroundColor: ((index % 2 === 1) ? '#00000009' : '#00000000')}}>
-
+              
                 <Container fluid>
-                  <Row style={{backgroundColor: (() => { switch (a.leftRight.compareResult.state) {
-                          case 'equal': return '#ddffdd';
-                          case 'similar': return '#ffffdd';
-                          default: return '#ffdddd';
-                        }})()}}>
+                  <Row style={{backgroundColor: stateBasedBackgroundColor(state)}}>
                     <Col xs={'auto'}>
                       <div style={{display: 'flex', width: '220px', minHeight: '38px', alignItems: 'center', justifyContent: 'flex-end'}}>
                         <span className={"pr-1"} style={{whiteSpace: 'nowrap'}}>{a.name}</span>
@@ -60,7 +56,7 @@ function DiffAttributeList(props) {
                       {!a.leftRight.left && <MissingLabel /> }
                     </Col>
                     <Col xs={1}>
-                      <CompareLabel state={a.leftRight.compareResult.state} />
+                      <CompareLabel state={state} />
                     </Col>
                     <Col>
                       {a.leftRight.right && <Attribute controlIdSuffix={'right'} attribute={a.leftRight.right} hideNameLabel={true} isEditable={false} />}

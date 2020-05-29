@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEquals } from '@fortawesome/free-solid-svg-icons'
 import { faNotEqual } from '@fortawesome/free-solid-svg-icons'
@@ -22,7 +22,16 @@ export function CompareLabel(props) {
 
 export function EmptyLabel() {
     return <div style={{display: 'flex', justifyContent: 'center', marginLeft: '220px', padding: '20px', fontSize: '1.4rem', fontWeight: 'bold'}}>
-      Empty
+        Empty
     </div>;
-  }
+}
+
+export function stateBasedBackgroundColor(state) {
+    switch (state) {
+        case 'equal': return '#ddffdd';
+        case 'similar': return '#ffffdd';
+        default: return '#ffdddd';
+    };
+}
+
   

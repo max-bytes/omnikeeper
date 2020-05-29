@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import _ from 'lodash';
 import DiffAttributeList from 'components/diffing/DiffAttributeList';
 import DiffRelationList from 'components/diffing/DiffRelationList';
+import DiffEffectiveTraitsList from './DiffEffectiveTraitsList';
 import { Tab } from 'semantic-ui-react'
 
 function compareAttributes(attributeA, attributeB) {
@@ -33,7 +34,16 @@ function compareRelations(relationA, relationB) {
   } else if (relationA && !relationB) {
     return {state: 'unequal'};
   } else {
-    return {state: 'equal'};
+    return {state: 'equal'}; // TODO?
+  }
+}
+function compareEffectiveTraits(etA, etB) {
+  if (!etA && etB) {
+    return {state: 'unequal'};
+  } else if (etA && !etB) {
+    return {state: 'unequal'};
+  } else {
+    return {state: 'equal'}; // TODO: treat different attributes/relations/... as being only similar, not equal
   }
 }
 
@@ -70,6 +80,22 @@ function Relations(props) {
   return <DiffRelationList relations={mergedRelations} />;
 }
 
+function EffectiveTraits(props) {
+  var leftD = _.keyBy(props.leftEffectiveTraits, r => `${r.underlyingTrait.name}`);
+  var rightD = _.keyBy(props.rightEffectiveTraits, r => `${r.underlyingTrait.name}`);
+
+  var keys = _.union(_.keys(leftD), _.keys(rightD));
+
+  let mergedETs = {};
+  for(const key of keys) {
+    mergedETs[key] = { key: key, left: leftD[key], right: rightD[key], compareResult: compareEffectiveTraits(leftD[key], rightD[key]) };
+  }
+  if (!props.showEqual) {
+    mergedETs = _.pickBy(mergedETs, (v, k) => v.compareResult.state !== 'equal');
+  }
+  return <DiffEffectiveTraitsList effectiveTraits={mergedETs} />;
+}
+
 export function DiffArea(props) {
   
   const [selectedTab, setSelectedTab] = useState(0);
@@ -86,7 +112,7 @@ export function DiffArea(props) {
         <Relations leftRelated={props.leftCI.related} rightRelated={props.rightCI.related} showEqual={props.showEqual} />
       </Tab.Pane> },
       { menuItem: 'Effective Traits', render: () => <Tab.Pane>
-        TODO
+        <EffectiveTraits leftEffectiveTraits={props.leftCI.effectiveTraits} rightEffectiveTraits={props.rightCI.effectiveTraits} showEqual={props.showEqual} />
       </Tab.Pane> },
     ]
 
