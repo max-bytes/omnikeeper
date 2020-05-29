@@ -16,9 +16,32 @@ function MissingAttribute() {
   </div>;
 }
 
-// TODO: consider merging with AttributeList?
-function DiffAttributeList(props) {
+// TODO: move
+export function useAttributeSegmentsToggler(segmentNames) {
+  const [openAttributeSegments, setOpenAttributeSegmentsState] = useState(localStorage.getItem('openAttributeSegments') ? JSON.parse(localStorage.getItem('openAttributeSegments')) : [] );
+  const setOpenAttributeSegments = (openAttributeSegments) => {
+    setOpenAttributeSegmentsState(openAttributeSegments);
+    localStorage.setItem('openAttributeSegments', JSON.stringify(openAttributeSegments));
+  }
+  const [expanded, setExpanded] = useState(false);
+  const toggleExpandCollapseAll = () => {
+    const newOpenAttributeSegments = expanded ? [] : segmentNames;
+    setOpenAttributeSegments(newOpenAttributeSegments);
+    setExpanded(!expanded);
+  };
+  const toggleSegment = (index) => {
+    if (openAttributeSegments.indexOf(index) === -1)
+      setOpenAttributeSegments([...openAttributeSegments, index]);
+    else
+      setOpenAttributeSegments(openAttributeSegments.filter(i => i !== index));
+  };
+  const isSegmentActive = (key) => openAttributeSegments.includes(key);
 
+  return [toggleSegment, isSegmentActive, toggleExpandCollapseAll];
+}
+
+// TODO: consider merging with ExplorerAttributeList?
+function DiffAttributeList(props) {
   // TODO: does not work with nested groups yet
   const nestedAttributes = _.groupBy(_.map(props.attributes, (leftRight, name) => ({leftRight, name})), (t) => {
     const splits = t.name.split('.');
@@ -26,14 +49,11 @@ function DiffAttributeList(props) {
     else return splits.slice(0, -1).join(".");
   });
 
-  const [openAttributeSegments, setOpenAttributeSegmentsState] = useState(localStorage.getItem('openAttributeSegments') ? JSON.parse(localStorage.getItem('openAttributeSegments')) : [] );
-  const setOpenAttributeSegments = (openAttributeSegments) => {
-    setOpenAttributeSegmentsState(openAttributeSegments);
-    localStorage.setItem('openAttributeSegments', JSON.stringify(openAttributeSegments));
-  }
+  const [toggleSegment, isSegmentActive, toggleExpandCollapseAll] = useAttributeSegmentsToggler(_.keys(nestedAttributes));
 
   const attributeAccordionItems = [];
   _.forEach(nestedAttributes, (na, key) => {
+    
     var sortedAttributes = [...na];
     sortedAttributes.sort((a,b) => {
       return a.name.localeCompare(b.name);
@@ -41,22 +61,11 @@ function DiffAttributeList(props) {
 
     const title = (key === "") ? "__base" : key;
 
-    const onTitleClick = (e, itemProps) => {
-      const { index } = itemProps;
-      if (openAttributeSegments.indexOf(index) === -1)
-        setOpenAttributeSegments([...openAttributeSegments, index]);
-      else
-        setOpenAttributeSegments(openAttributeSegments.filter(i => i !== index));
-    };
-
-    const active = openAttributeSegments.includes(key) ? true : false;
-
-    const ret = (
-    <div key={key}>
-      <Accordion.Title active={active} onClick={onTitleClick} index={key}>
+    const ret = (<div key={key}>
+      <Accordion.Title active={isSegmentActive(key)} onClick={(_, { index }) => toggleSegment(index)} index={key}>
         <Icon name='dropdown' /> {title}
       </Accordion.Title>
-      <Accordion.Content active={active}>
+      <Accordion.Content active={isSegmentActive(key)}>
         <Flipper flipKey={sortedAttributes.map(a => a.layerStackIDs).join(' ')}>
           {sortedAttributes.map((a, index) => {
 
@@ -109,19 +118,12 @@ function DiffAttributeList(props) {
     attributeAccordionItemsSorted[value] = attributeAccordionItems[value];
   })
 
-  const [expanded, setExpanded] = useState(false);
-  const expandeCollapseAll = () => {
-    const newOpenAttributeSegments = expanded ? [] : _.keys(attributeAccordionItemsSorted);
-    setOpenAttributeSegments(newOpenAttributeSegments);
-    setExpanded(!expanded);
-  };
-
   return (
     <>
        <div className={"d-flex align-items-end flex-column mb-2"} >
             <Button
                 size={"tiny"}
-                onClick={() => expandeCollapseAll()}
+                onClick={() => toggleExpandCollapseAll()}
             >
                 Expand/Collapse All
             </Button>

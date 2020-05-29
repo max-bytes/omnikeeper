@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types'
 import {Row, Col} from 'react-bootstrap';
 import AddNewAttribute from './AddNewAttribute';
-import AttributeList from './AttributeList';
+import ExplorerAttributeList from './ExplorerAttributeList';
 import TemplateErrors from './TemplateErrors';
 import CIRelations from './CIRelations';
 import EffectiveTraits from './EffectiveTraits';
@@ -25,7 +25,7 @@ function CI(props) {
       </Row>
       <Row>
         <Col>
-          <AttributeList mergedAttributes={props.ci.mergedAttributes} isEditable={props.isEditable} 
+          <ExplorerAttributeList mergedAttributes={props.ci.mergedAttributes} isEditable={props.isEditable} 
             ciIdentity={props.ci.id} visibleAndWritableLayers={visibleAndWritableLayers} visibleLayers={visibleLayers} />
         </Col>
       </Row>
