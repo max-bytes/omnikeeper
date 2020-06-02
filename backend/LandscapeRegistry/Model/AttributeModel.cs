@@ -340,35 +340,42 @@ namespace LandscapeRegistry.Model
                 _ => null
             }).ToDictionary(a => a.InformationHash);
 
-            // TODO: rework so changeset is only created when there is actually anything inserted
-            Changeset changeset = await changesetProxy.GetChangeset(trans);
-
-            // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
-            using (var writer = conn.BeginBinaryImport(@"COPY attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)"))
+            var actualInserts = new List<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>();
+            foreach (var fragment in data.Fragments)
             {
-                foreach (var fragment in data.Fragments)
+                var fullName = data.GetFullName(fragment);
+                var ciid = data.GetCIID(fragment);
+                var value = data.GetValue(fragment);
+
+                var informationHash = CIAttribute.CreateInformationHash(fullName, ciid);
+                // remove the current attribute from the list of attribute to remove
+                outdatedAttributes.Remove(informationHash, out var currentAttribute);
+
+                var state = AttributeState.New;
+                if (currentAttribute != null)
                 {
-                    var fullName = data.GetFullName(fragment);
-                    var ciid = data.GetCIID(fragment);
-                    var value = data.GetValue(fragment);
+                    if (currentAttribute.State == AttributeState.Removed)
+                        state = AttributeState.Renewed;
+                    else
+                        state = AttributeState.Changed;
+                }
 
-                    var informationHash = CIAttribute.CreateInformationHash(fullName, ciid);
-                    // remove the current attribute from the list of attribute to remove
-                    outdatedAttributes.Remove(informationHash, out var currentAttribute);
+                // handle equality case, also think about what should happen if a different user inserts the same data
+                if (currentAttribute != null && currentAttribute.State != AttributeState.Removed && currentAttribute.Value.Equals(value))
+                    continue;
 
-                    var state = AttributeState.New;
-                    if (currentAttribute != null)
-                    {
-                        if (currentAttribute.State == AttributeState.Removed)
-                            state = AttributeState.Renewed;
-                        else
-                            state = AttributeState.Changed;
-                    }
+                actualInserts.Add((ciid, fullName, value, state));
+            }
 
-                    // handle equality case, also think about what should happen if a different user inserts the same data
-                    if (currentAttribute != null && currentAttribute.State != AttributeState.Removed && currentAttribute.Value.Equals(value))
-                        continue;
+            // changeset is only created and copy mode is only entered when there is actually anything inserted
+            if (!actualInserts.IsEmpty() || !outdatedAttributes.IsEmpty())
+            {
+                Changeset changeset = await changesetProxy.GetChangeset(trans);
 
+                // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
+                using var writer = conn.BeginBinaryImport(@"COPY attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)");
+                foreach (var (ciid, fullName, value, state) in actualInserts)
+                {
                     writer.StartRow();
                     writer.Write(fullName);
                     writer.Write(ciid);
@@ -393,7 +400,6 @@ namespace LandscapeRegistry.Model
                     writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                     writer.Write(changeset.ID);
                 }
-
                 writer.Complete();
             }
 
