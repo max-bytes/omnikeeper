@@ -10,8 +10,8 @@ import _ from 'lodash';
 export default forwardRef((props, ref) => {
 
     const { data: traitsJSON, loading: loadingTraits } = useQuery(queries.Traits);
-    var [preferredTraitsFrom, setPreferredTraitsFrom] = useState(props.value.preferredTraitsFrom);
-    var [preferredTraitsTo, setPreferredTraitsTo] = useState(props.value.preferredTraitsTo);
+    var [preferredTraitsFrom, setPreferredTraitsFrom] = useState(props.value?.preferredTraitsFrom ?? []);
+    var [preferredTraitsTo, setPreferredTraitsTo] = useState(props.value?.preferredTraitsTo ?? []);
 
     const inputRefFrom = useRef();
     const inputRefTo = useRef();
@@ -35,13 +35,13 @@ export default forwardRef((props, ref) => {
     var traitNames = Object.keys(JSON.parse(traitsJSON.traits));
 
     // we mix in the currently set traits, so traits that don't exist anymore can still be managed
-    const optionsFrom = _.union(traitNames, props.value.preferredTraitsFrom).map(traitName => 
+    const optionsFrom = _.union(traitNames, props.value?.preferredTraitsFrom ?? []).map(traitName => 
         ({
             key: traitName,
             text: traitName,
             value: traitName,
         }));
-    const optionsTo = _.union(traitNames, props.value.preferredTraitsTo).map(traitName => 
+    const optionsTo = _.union(traitNames, props.value?.preferredTraitsTo ?? []).map(traitName => 
         ({
             key: traitName,
             text: traitName,

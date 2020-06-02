@@ -7,14 +7,22 @@ import { mutations } from '../../graphql/mutations'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import AgGridCrud from './AgGridCrud';
+import _ from 'lodash';
 
 export default function ManagePredicates(props) {
   var [rowData, setRowData] = useState([]);
+
+  // HACK: we need to manually remove __typename properties from the constraints because it causes errors
+  // when sending the data back via a mutation
+  // see https://github.com/apollographql/apollo-feature-requests/issues/6 why
+  const removeTypename = (predicate) => ({...predicate, constraints: _.omit(predicate.constraints, ['__typename'])});
+
   const { loading, refetch } = useQuery(queries.PredicateList, { 
     variables: {stateFilter: 'all'},
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
-      setRowData(data.predicates);
+      const preparedData = _.map(data.predicates, (p) => removeTypename(p));
+      setRowData(preparedData);
     },
     onError: (e) => {
       console.log("error"); // TODO
@@ -28,8 +36,10 @@ export default function ManagePredicates(props) {
     { headerName: "Wording (from)", field: "wordingFrom" },
     { headerName: "Wording (to)", field: "wordingTo" },
     { headerName: "Constraints", field: "constraints", autoHeight: true, flex: 1,
-      cellRenderer: function(params) { 
-        return `From Traits: [${params.getValue().preferredTraitsFrom.join(',')}],<br />To Traits: [${params.getValue().preferredTraitsTo.join(',')}]`; 
+      cellRenderer: function(params) {
+        const value = params.getValue();
+
+        return `From Traits: [${value?.preferredTraitsFrom.join(',') ?? ''}],<br />To Traits: [${value?.preferredTraitsTo.join(',') ?? ''}]`;  
       },
       cellEditor: 'predicateConstraintsCellEditor' },
     { headerName: "State", field: "state", cellEditor: 'agSelectCellEditor', cellEditorParams: {
@@ -46,7 +56,7 @@ export default function ManagePredicates(props) {
       saveRow={async row => {
         const predicate = { id: row.id, wordingFrom: row.wordingFrom, wordingTo: row.wordingTo, state: row.state, constraints: row.constraints };
         return upsert({ variables: { predicate: predicate } })
-          .then(r => ({result: r.data.upsertPredicate, id: row.id}))
+          .then(r => ({result: removeTypename(r.data.upsertPredicate), id: row.id}))
           .catch(e => ({result: e, id: row.id }));
       }} />
   </div>;
