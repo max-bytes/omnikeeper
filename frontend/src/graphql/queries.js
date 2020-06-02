@@ -127,4 +127,9 @@ export const queries = {
         cacheKeys
       }
     `,
+    DebugCurrentUserClaims: gql`
+    query debugCurrentUserClaims {
+        debugCurrentUserClaims
+      }
+    `
 };

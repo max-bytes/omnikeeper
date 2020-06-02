@@ -21,6 +21,7 @@ import ManageLayers from './components/manage/ManageLayers';
 import ManageCITypes from './components/manage/ManageCITypes';
 import ManageTraits from './components/manage/ManageTraits';
 import ManageCache from './components/manage/ManageCache';
+import ManageCurrentUser from './components/manage/ManageCurrentUser';
 import { useKeycloak } from '@react-keycloak/web'
 import { useEffect } from 'react';
 
@@ -108,6 +109,9 @@ function App() {
               </PrivateRoute>
               <PrivateRoute path="/manage/cache">
                 <ApolloWrapper component={ManageCache} />
+              </PrivateRoute>
+              <PrivateRoute path="/manage/current-user">
+                <ApolloWrapper component={ManageCurrentUser} />
               </PrivateRoute>
               <PrivateRoute path="/manage">
                 <ApolloWrapper component={Manage} />

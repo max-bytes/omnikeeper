@@ -5,6 +5,7 @@ using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Decorators;
+using LandscapeRegistry.Service;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace LandscapeRegistry.GraphQL
     public class RegistryQuery : ObjectGraphType
     {
         public RegistryQuery(ICIModel ciModel, ILayerModel layerModel, IPredicateModel predicateModel, IMemoryCacheModel memoryCacheModel,
-            IChangesetModel changesetModel, ICISearchModel ciSearchModel, ITraitModel traitModel, ITraitsProvider traitsProvider)
+            IChangesetModel changesetModel, ICISearchModel ciSearchModel, ITraitModel traitModel, ITraitsProvider traitsProvider, ICurrentUserService currentUserService)
         {
             FieldAsync<MergedCIType>("ci",
                 arguments: new QueryArguments(new List<QueryArgument>
@@ -350,6 +351,13 @@ namespace LandscapeRegistry.GraphQL
                 {
                     var keys = memoryCacheModel.GetKeys();
                     return keys;
+                });
+
+            Field<ListGraphType<StringGraphType>>("debugCurrentUserClaims",
+                resolve: context =>
+                {
+                    var claims = currentUserService.DebugGetAllClaims();
+                    return claims.Select(kv => $"{kv.type}: {kv.value}");
                 });
         }
     }

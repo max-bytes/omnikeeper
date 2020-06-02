@@ -38,6 +38,11 @@ namespace LandscapeRegistry.Service
             return await CreateUserFromClaims(HttpContextAccessor.HttpContext.User.Claims, trans);
         }
 
+        public IEnumerable<(string type, string value)> DebugGetAllClaims()
+        {
+            return HttpContextAccessor.HttpContext.User.Claims.Select(c => (c.Type, c.Value));
+        }
+
         public string GetUsernameFromClaims(IEnumerable<Claim> claims)
         {
             return claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
