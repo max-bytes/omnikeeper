@@ -6,6 +6,8 @@ import { Flipper, Flipped } from 'react-flip-toolkit'
 import { queries } from 'graphql/queries'
 import { useQuery } from '@apollo/react-hooks';
 import { mergeSettingsAndSortLayers } from 'utils/layers'; 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCogs } from '@fortawesome/free-solid-svg-icons'
 import _ from 'lodash';
 
 function Layers(props) {
@@ -86,7 +88,7 @@ function Layers(props) {
                   </Icon.Group>&nbsp;
                   <span style={{flexGrow: 1}}>
                     <span style={((layer.visible) ? {} : {color: '#ccc'})}>{layer.name} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
-                    {layer.brainName !== "" && (<Icon fitted name='lightning' />)}
+                    {layer.brainName !== "" && (<FontAwesomeIcon icon={faCogs} />)}
                   </span>
                   &nbsp;&nbsp;
                     <Button basic size='mini' compact onClick={() => toggleLayerVisibility(layer.id, data.layers)}>
