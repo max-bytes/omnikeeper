@@ -9,6 +9,7 @@ using LandscapeRegistry.Service;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 
 namespace LandscapeRegistry.GraphQL
@@ -161,7 +162,7 @@ namespace LandscapeRegistry.GraphQL
                     ComputeLayerBrain clb = LayerModel.DefaultCLB;
                     if (createLayer.BrainName != null && createLayer.BrainName != "")
                         clb = ComputeLayerBrain.Build(createLayer.BrainName);
-                    var createdLayer = await layerModel.CreateLayer(createLayer.Name, createLayer.State, clb, transaction);
+                    var createdLayer = await layerModel.CreateLayer(createLayer.Name, Color.FromArgb(createLayer.Color), createLayer.State, clb, transaction);
 
                     //var writeAccessGroupInKeycloakCreated = await keycloakModel.CreateGroup(authorizationService.GetWriteAccessGroupNameFromLayerName(createLayer.Name));
                     //if (!writeAccessGroupInKeycloakCreated)
@@ -190,7 +191,7 @@ namespace LandscapeRegistry.GraphQL
                   userContext.Transaction = transaction;
 
                   var clb = ComputeLayerBrain.Build(layer.BrainName);
-                  var updatedLayer = await layerModel.Update(layer.ID, layer.State, clb, transaction);
+                  var updatedLayer = await layerModel.Update(layer.ID, Color.FromArgb(layer.Color), layer.State, clb, transaction);
                   await transaction.CommitAsync();
 
                   return updatedLayer;

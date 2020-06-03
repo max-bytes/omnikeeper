@@ -10,7 +10,7 @@ export const Fragments = {
         layerStack {
             id
             name
-            color @client
+            color
         }
     }
   `,
@@ -101,7 +101,7 @@ export const Fragments = {
         layerStack {
             id
             name
-            color @client
+            color
         }
     }
   `,
@@ -109,10 +109,10 @@ export const Fragments = {
   fragment FullLayer on LayerType {
     id
     name
+    color
     state
     writable
     brainName
-    color @client
   }
   `,
   // TODO: needed?
@@ -130,7 +130,7 @@ export const Fragments = {
         layerStack {
             id
             name
-            color @client
+            color
         }
     }
   `,

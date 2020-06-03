@@ -3,7 +3,9 @@ import { AgGridReact } from 'ag-grid-react';
 import { Button } from 'semantic-ui-react';
 import { ErrorModalCellRenderer } from '../ErrorModalCellRenderer';
 import { RowStateCellRenderer } from '../RowStateCellRenderer';
+import { LayerColorCellRenderer } from '../LayerColorCellRenderer';
 import PredicateConstraintsCellEditor from './PredicateConstraintsCellEditor';
+import ARGBColorCellEditor from './ARGBColorCellEditor';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
@@ -111,7 +113,8 @@ export default function AgGridCrud(props) {
       <AgGridReact
         frameworkComponents={{
           errorModalCellRenderer: ErrorModalCellRenderer, rowStateCellRenderer: RowStateCellRenderer,
-          predicateConstraintsCellEditor: PredicateConstraintsCellEditor }}
+          layerColorCellRenderer: LayerColorCellRenderer,
+          predicateConstraintsCellEditor: PredicateConstraintsCellEditor, ARGBColorCellEditor: ARGBColorCellEditor }}
         columnDefs={columnDefs}
         defaultColDef={defaultColDef}
         rowData={props.rowData}

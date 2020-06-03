@@ -6,6 +6,7 @@ using LandscapeRegistry.Model;
 using LandscapeRegistry.Utils;
 using NUnit.Framework;
 using System;
+using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -59,8 +60,8 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel, conn);
 
             var layerA = await layerModel.CreateLayer("a", null);
-            var layerB = await layerModel.CreateLayer("b", AnchorState.Deprecated, ComputeLayerBrain.Build("clbB"), null);
-            var layerC = await layerModel.CreateLayer("c", AnchorState.Deprecated, ComputeLayerBrain.Build("clbC"), null);
+            var layerB = await layerModel.CreateLayer("b", ColorTranslator.FromHtml("#FF0000"), AnchorState.Deprecated, ComputeLayerBrain.Build("clbB"), null);
+            var layerC = await layerModel.CreateLayer("c", ColorTranslator.FromHtml("#00FF00"), AnchorState.Deprecated, ComputeLayerBrain.Build("clbC"), null);
 
             var user = await userModel.UpsertUser("testuser", "testuser", Guid.NewGuid(), UserType.Human, null);
 

@@ -18,6 +18,7 @@ namespace LandscapeRegistry.GraphQL
             Field(x => x.Name);
             Field("brainName", x => x.ComputeLayerBrain.Name);
             Field("id", x => x.ID);
+            Field("color", x => x.Color.ToArgb());
             Field(x => x.State, type: typeof(AnchorStateType));
             Field<BooleanGraphType>("writable",
             resolve: (context) =>

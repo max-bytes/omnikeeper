@@ -214,7 +214,6 @@ namespace MonitoringPlugin
             var naemonInstance2MonitoredCILookup = monitoredByCIIDFragments.GroupBy(t => t.To).ToDictionary(t => t.Key, t => t.Select(t => t.From));
             var monitoringConfigs = new List<BulkCIAttributeDataLayerScope.Fragment>();
 
-
             foreach (var kv in naemonInstance2MonitoredCILookup)
             {
                 var naemonInstance = kv.Key;
@@ -273,7 +272,8 @@ namespace MonitoringPlugin
         {
             naemonInstanceET.TraitAttributes.TryGetValue("capabilities", out var naemonCapabilitiesA);
             naemonInstanceET.TraitAttributes.TryGetValue("requirements", out var naemonRequirementsA);
-            monitoredCI.MergedAttributes.TryGetValue("naemon.capabilities", out var ciCapabilitiesA);
+            // TODO: would be better to use a trait than accessing the attribute directly
+            monitoredCI.MergedAttributes.TryGetValue("naemon.capabilities", out var ciCapabilitiesA); 
             monitoredCI.MergedAttributes.TryGetValue("naemon.requirements", out var ciRequirementsA);
             var naemonCapabilities = naemonCapabilitiesA?.TryReadValueTextArray() ?? new string[0];
             var naemonRequirements = naemonRequirementsA?.TryReadValueTextArray() ?? new string[0];

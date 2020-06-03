@@ -1,6 +1,7 @@
 ﻿using Landscape.Base.Entity;
 using Npgsql;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Threading.Tasks;
 
 namespace Landscape.Base.Model
@@ -12,8 +13,8 @@ namespace Landscape.Base.Model
 
 
         Task<Layer> CreateLayer(string name, NpgsqlTransaction trans);
-        Task<Layer> CreateLayer(string name, AnchorState state, ComputeLayerBrain computeLayerBrain, NpgsqlTransaction trans);
-        Task<Layer> Update(long id, AnchorState state, ComputeLayerBrain computeLayerBrain, NpgsqlTransaction trans);
+        Task<Layer> CreateLayer(string name, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, NpgsqlTransaction trans);
+        Task<Layer> Update(long id, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, NpgsqlTransaction trans);
         Task<bool> TryToDelete(long id, NpgsqlTransaction trans);
 
         Task<Layer> GetLayer(long layerID, NpgsqlTransaction trans);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 
 namespace Landscape.Base.Entity
 {
@@ -24,6 +25,7 @@ namespace Landscape.Base.Entity
         public string Name { get; private set; }
         public long ID { get; private set; }
         public AnchorState State { get; private set; }
+        public Color Color { get; private set; }
         public ComputeLayerBrain ComputeLayerBrain { get; private set; }
 
         public override int GetHashCode() => HashCode.Combine(Name, ID, State);
@@ -31,12 +33,13 @@ namespace Landscape.Base.Entity
         public bool Equals(Layer other) => other != null && Name.Equals(other.Name)
             && ID.Equals(other.ID) && State.Equals(other.State) && ComputeLayerBrain.Equals(other.ComputeLayerBrain);
 
-        public static Layer Build(string name, long id, AnchorState state, ComputeLayerBrain computeLayerBrain)
+        public static Layer Build(string name, long id, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain)
         {
             return new Layer
             {
                 Name = name,
                 ID = id,
+                Color = color,
                 State = state,
                 ComputeLayerBrain = computeLayerBrain
             };
