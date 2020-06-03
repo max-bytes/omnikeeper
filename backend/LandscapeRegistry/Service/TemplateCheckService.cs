@@ -11,7 +11,7 @@ namespace LandscapeRegistry.Service
     {
         public static (MergedCIAttribute foundAttribute, TemplateErrorsAttribute errors) CalculateTemplateErrorsAttribute(MergedCI ci, CIAttributeTemplate at)
         {
-            var foundAttribute = ci.MergedAttributes.FirstOrDefault(a => a.Attribute.Name == at.Name);
+            var foundAttribute = ci.MergedAttributes.FirstOrDefault(a => a.Key == at.Name).Value;
             return (foundAttribute, TemplateErrorsAttribute.Build(at.Name, PerAttributeTemplateChecks(foundAttribute, at)));
         }
         public static TemplateErrorsRelation CalculateTemplateErrorsRelation(IEnumerable<MergedRelatedCI> relations, RelationTemplate rt)

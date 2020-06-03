@@ -130,7 +130,7 @@ namespace Landscape.Base.Templating
                 {
                     // TODO: caching
                     var attributeVariables = new Dictionary<string, object>();
-                    foreach (var monitoredCIAttribute in ci.MergedAttributes)
+                    foreach (var monitoredCIAttribute in ci.MergedAttributes.Values)
                         AddNested(attributeVariables, $"{monitoredCIAttribute.Attribute.Name}", monitoredCIAttribute.Attribute.Value);
                     return attributeVariables;
                 }));

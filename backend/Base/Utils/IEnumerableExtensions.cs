@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LandscapeRegistry.Utils
+namespace Landscape.Base.Utils
 {
     public static class IEnumerableExtensions
     {
@@ -55,6 +55,12 @@ namespace LandscapeRegistry.Utils
             if (count == 0) return default;
             int index = random.Next(0, count);
             return enumerable.ElementAt(index);
+        }
+
+        public static bool IsSubsetOf<T>(this IEnumerable<T> coll1, IEnumerable<T> coll2)
+        {
+            bool isSubset = !coll1.Except(coll2).Any();
+            return isSubset;
         }
     }
 }

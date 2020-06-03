@@ -8,7 +8,7 @@ namespace Landscape.Base
     {
         public static IEnumerable<MergedCIAttribute> GetAttributesInGroup(this MergedCI ci, string groupName)
         {
-            return ci.MergedAttributes.Where(a => a.Attribute.Name.StartsWith(groupName));
+            return ci.MergedAttributes.Where(kv => kv.Key.StartsWith(groupName)).Select(kv => kv.Value);
         }
     }
 }

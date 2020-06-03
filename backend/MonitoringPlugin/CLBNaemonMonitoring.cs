@@ -23,6 +23,7 @@ using YamlDotNet.Serialization.NamingConventions;
 using JsonSubTypes;
 using DotLiquid.Util;
 using System.Reflection;
+using Landscape.Base.AttributeValues;
 
 namespace MonitoringPlugin
 {
@@ -65,6 +66,12 @@ namespace MonitoringPlugin
         {
             TraitAttribute.Build("config",
                 CIAttributeTemplate.BuildFromParams("naemon.config", AttributeValueType.JSON, true)
+            ),
+            TraitAttribute.Build("requirements", 
+                CIAttributeTemplate.BuildFromParams("naemon.requirements", AttributeValueType.Text, true, CIAttributeValueConstraintTextLength.Build(1, null))
+            ),
+            TraitAttribute.Build("capabilities",
+                CIAttributeTemplate.BuildFromParams("naemon.capabilities", AttributeValueType.Text, true, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
@@ -192,10 +199,11 @@ namespace MonitoringPlugin
 
             // assign monitored cis to naemon instances
             var monitoredByCIIDFragments = new List<BulkRelationDataPredicateScope.Fragment>();
-            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitSetsForTraitName("naemon_instance", layerSetAll, trans, timeThreshold);
-            foreach (var naemonInstance in naemonInstancesTS)
-                foreach (var monitoredCI in monitoredCIs)
-                    monitoredByCIIDFragments.Add(BulkRelationDataPredicateScope.Fragment.Build(monitoredCI.Value.ID, naemonInstance.UnderlyingCI.ID));
+            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitSetsForTrait(naemonInstanceTrait, layerSetAll, trans, timeThreshold);
+            foreach (var naemonInstanceTS in naemonInstancesTS)
+                foreach (var monitoredCI in monitoredCIs.Values)
+                    if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.EffectiveTraits[naemonInstanceTrait.Name]))
+                        monitoredByCIIDFragments.Add(BulkRelationDataPredicateScope.Fragment.Build(monitoredCI.ID, naemonInstanceTS.UnderlyingCI.ID));
             await relationModel.BulkReplaceRelations(BulkRelationDataPredicateScope.Build(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, trans);
             logger.LogDebug("Assigned CIs to naemon instances");
 
@@ -258,6 +266,25 @@ namespace MonitoringPlugin
             await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("naemon.config", targetLayer.ID, monitoringConfigs), changesetProxy, trans);
 
             logger.LogDebug("End clbMonitoring");
+            return true;
+        }
+
+        private bool CanCIBeMonitoredByNaemonInstance(MergedCI monitoredCI, EffectiveTrait naemonInstanceET)
+        {
+            naemonInstanceET.TraitAttributes.TryGetValue("capabilities", out var naemonCapabilitiesA);
+            naemonInstanceET.TraitAttributes.TryGetValue("requirements", out var naemonRequirementsA);
+            monitoredCI.MergedAttributes.TryGetValue("naemon.capabilities", out var ciCapabilitiesA);
+            monitoredCI.MergedAttributes.TryGetValue("naemon.requirements", out var ciRequirementsA);
+            var naemonCapabilities = naemonCapabilitiesA?.TryReadValueTextArray() ?? new string[0];
+            var naemonRequirements = naemonRequirementsA?.TryReadValueTextArray() ?? new string[0];
+            var ciCapabilities = ciCapabilitiesA?.TryReadValueTextArray() ?? new string[0];
+            var ciRequirements = ciRequirementsA?.TryReadValueTextArray() ?? new string[0];
+
+            if (!naemonRequirements.IsSubsetOf(ciCapabilities)) // ci must fulfill all of the naemon's requirements
+                return false;
+            if (!ciRequirements.IsSubsetOf(naemonCapabilities)) // naemon must fulfill all of the ci's requirements
+                return false;
+
             return true;
         }
 

@@ -36,7 +36,7 @@ namespace LandscapeRegistry.GraphQL
             Field("layerhash", x => x.Layers.LayerHash);
             Field(x => x.AtTime, type: typeof(TimeThresholdType));
             Field(x => x.Type, type: typeof(CITypeType));
-            Field(x => x.MergedAttributes, type: typeof(ListGraphType<MergedCIAttributeType>));
+            Field("mergedAttributes", x => x.MergedAttributes.Values, type: typeof(ListGraphType<MergedCIAttributeType>));
             FieldAsync<ListGraphType<CompactRelatedCIType>>("related",
             arguments: new QueryArguments(new List<QueryArgument>
             {
