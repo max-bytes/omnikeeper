@@ -72,7 +72,7 @@ namespace LandscapeRegistry.Model
             Debug.Assert(current.ComputeLayerBrain != null);
 
             // update color
-            if (current.Color != color)
+            if (!current.Color.Equals(color))
             {
                 using var commandColor = new NpgsqlCommand(@"INSERT INTO layer_color (layer_id, color, ""timestamp"")
                     VALUES (@layer_id, @color, @timestamp)", conn, trans);
