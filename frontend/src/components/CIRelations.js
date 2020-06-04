@@ -8,6 +8,7 @@ import { onAppear, onExit } from '../utils/animation';
 import { queries } from '../graphql/queries'
 import { ErrorView } from './ErrorView';
 import { useExplorerLayers } from '../utils/layers';
+import { useSelectedTime } from '../utils/useSelectedTime';
 import _ from 'lodash';
 
 function CIRelations(props) {
@@ -17,9 +18,14 @@ function CIRelations(props) {
 
   const perPredicateLimit = 100;
 
-  const { loading: loadingCI, error: errorCI, data: dataCI } = useQuery(queries.FullCI, {
+  const { loading: loadingCI, error: errorCI, data: dataCI, refetch: refetchCI } = useQuery(queries.FullCI, {
     variables: { identity: props.ciIdentity, layers: visibleLayers.map(l => l.name), timeThreshold: props.timeThreshold, includeRelated: perPredicateLimit, includeAttributes: false }
   });
+  
+  // reload when nonce changes
+  const selectedTime = useSelectedTime();
+  React.useEffect(() => { if (selectedTime.refreshNonceCI) refetchCI({fetchPolicy: 'network-only'}); }, [selectedTime, refetchCI]);
+
 
   if (dataCI) {
     var sortedRelatedCIs = [...dataCI.ci.related];
@@ -27,7 +33,13 @@ function CIRelations(props) {
       const predicateCompare = a.predicateID.localeCompare(b.predicateID);
       if (predicateCompare !== 0)
         return predicateCompare;
-      return a.predicateWording.localeCompare(b.predicateWording);
+      const predicateWordingCompare = a.predicateWording.localeCompare(b.predicateWording);
+      if (predicateWordingCompare !== 0)
+        return predicateWordingCompare;
+      const targetCINameCompare = a.ci.name.localeCompare(b.ci.name);
+      if (targetCINameCompare !== 0)
+        return targetCINameCompare;
+      return a.ci.id.localeCompare(b.ci.id);
     });
 
     return (<>
