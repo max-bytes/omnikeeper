@@ -46,8 +46,8 @@ function ApolloWrapper({ component: Component, ...rest }) {
             isLatest: Bool!
         }
         extend type Query {
-            selectedTimeThreshold: SelectedTimeThreshold!
-            layerSettings: [LayerSettings]
+            selectedTimeThreshold: SelectedTimeThreshold! @client
+            layerSettings: [LayerSettings] @client
         }
     `;
     
@@ -142,6 +142,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
         },
         layerSettings: null
     };
+    console.log("Writing initial state")
     cache.writeQuery({
         query: gql`
         query InitialState {

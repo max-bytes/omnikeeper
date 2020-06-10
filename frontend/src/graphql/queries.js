@@ -112,9 +112,9 @@ export const queries = {
     LayerSettings: gql`
     query {
         layerSettings {
-            layerID
-            sortOffset
-            visible
+            layerID @client
+            sortOffset @client
+            visible @client
         }
     }`,
     Traits: gql`

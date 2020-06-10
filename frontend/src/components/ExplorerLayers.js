@@ -5,9 +5,11 @@ import { queries } from 'graphql/queries'
 import { useMutation, useQuery } from '@apollo/react-hooks';
 
 function ExplorerLayers() {
-  var { data: { layerSettings } } = useQuery(queries.LayerSettings);
+  var { data: { layerSettings }, loading } = useQuery(queries.LayerSettings);
   const [setLayerSettings] = useMutation(mutations.SET_LAYER_SETTINGS);
 
+  if (loading) return "Loading";
+  
   return <Layers layerSettings={layerSettings} 
     setLayerSettings={ newLS => setLayerSettings({variables: {layerSettings: newLS}})} />
 }

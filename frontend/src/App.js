@@ -57,11 +57,9 @@ const keycloakProviderInitConfig = {
 }
 //'/landscape/registry'
 function App() {
-  return (
-    <KeycloakProvider keycloak={keycloak} initConfig={keycloakProviderInitConfig} LoadingComponent={<>Loading...</>}>
-      <div style={{height: '100%'}}>
-        <KeycloakTokenSetter />
-        <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
+
+  const BR = () => {
+    return <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
           <Menu fixed='top' inverted style={{display: 'flex', justifyContent: 'space-between'}}>
             <div>
               <Menu.Item style={{fontSize:'1.2em'}}>Landscape Registry</Menu.Item>
@@ -80,41 +78,41 @@ function App() {
           <div style={{height: '100%', paddingTop: '50px'}}> {/* HACK: because we are not 100% using semantic UI, move the main content down manually*/}
             <Switch>
               <Route path="/login">
-                <LoginPage></LoginPage>
+                <LoginPage />
               </Route>
               <PrivateRoute path="/explorer/:ciid">
-                <ApolloWrapper component={Explorer} />
+                <Explorer />
               </PrivateRoute>
               <PrivateRoute path="/diffing">
-                <ApolloWrapper component={Diffing} />
+                <Diffing />
               </PrivateRoute>
               <PrivateRoute path="/createCI">
-                <ApolloWrapper component={AddNewCI} />
+                <AddNewCI />
               </PrivateRoute>
               <PrivateRoute path="/explorer">
-                <ApolloWrapper component={SearchCI} />
+                <SearchCI />
               </PrivateRoute>
               
               <PrivateRoute path="/manage/predicates">
-                <ApolloWrapper component={ManagePredicates} />
+                <ManagePredicates />
               </PrivateRoute>
               <PrivateRoute path="/manage/layers">
-                <ApolloWrapper component={ManageLayers} />
+                <ManageLayers />
               </PrivateRoute>
               <PrivateRoute path="/manage/citypes">
-                <ApolloWrapper component={ManageCITypes} />
+                <ManageCITypes />
               </PrivateRoute>
               <PrivateRoute path="/manage/traits">
-                <ApolloWrapper component={ManageTraits} />
+                <ManageTraits />
               </PrivateRoute>
               <PrivateRoute path="/manage/cache">
-                <ApolloWrapper component={ManageCache} />
+                <ManageCache />
               </PrivateRoute>
               <PrivateRoute path="/manage/current-user">
-                <ApolloWrapper component={ManageCurrentUser} />
+                <ManageCurrentUser />
               </PrivateRoute>
               <PrivateRoute path="/manage">
-                <ApolloWrapper component={Manage} />
+                <Manage />
               </PrivateRoute>
 
               <Route path="*">
@@ -123,6 +121,14 @@ function App() {
             </Switch>
           </div>
         </BrowserRouter>
+  }
+  
+
+  return (
+    <KeycloakProvider keycloak={keycloak} initConfig={keycloakProviderInitConfig} LoadingComponent={<>Loading...</>}>
+      <div style={{height: '100%'}}>
+        <KeycloakTokenSetter />
+        <ApolloWrapper component={BR} />
       </div>
     </KeycloakProvider>
   );
