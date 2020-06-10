@@ -30,13 +30,13 @@ function CIRelations(props) {
   if (dataCI) {
     var sortedRelatedCIs = [...dataCI.ci.related];
     sortedRelatedCIs.sort((a,b) => {
-      const predicateCompare = a.predicateID.localeCompare(b.predicateID);
+      const predicateCompare = a.predicateID?.localeCompare(b.predicateID) ?? 0;
       if (predicateCompare !== 0)
         return predicateCompare;
-      const predicateWordingCompare = a.predicateWording.localeCompare(b.predicateWording);
+      const predicateWordingCompare = a.predicateWording?.localeCompare(b.predicateWording) ?? 0;
       if (predicateWordingCompare !== 0)
         return predicateWordingCompare;
-      const targetCINameCompare = a.ci.name.localeCompare(b.ci.name);
+      const targetCINameCompare = a.ci.name?.localeCompare(b.ci.name) ?? 0;
       if (targetCINameCompare !== 0)
         return targetCINameCompare;
       return a.ci.id.localeCompare(b.ci.id);
