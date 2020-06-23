@@ -3,15 +3,15 @@ stages:
  - deploy
 
 variables:
-  # The 'docker' hostname is the alias of the service container as described at
-  # https://docs.gitlab.com/ee/ci/docker/using_docker_images.html#accessing-the-services
-  DOCKER_HOST: tcp://docker:2375/
   DOCKER_DRIVER: overlay2
 
-  # build breaks with
-  # docker: Cannot connect to the Docker daemon at tcp://docker:2375. Is the docker daemon running?.
-  # see https://gitlab.com/gitlab-org/gitlab-runner/issues/4501 for details
-  DOCKER_TLS_CERTDIR: ""
+  # Variant TLS disabled: https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#tls-disabled
+  #DOCKER_HOST: tcp://docker:2375/
+  #DOCKER_TLS_CERTDIR: ""
+
+  # Variant TLS enabled: https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#tls-enabled
+  # do not forget to adapt runners config.toml
+  DOCKER_TLS_CERTDIR: "/certs"
 
 
 build-backend:
