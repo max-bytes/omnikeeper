@@ -1,6 +1,6 @@
 {
-  "short_name": "Landscape Registry",
-  "name": "Landscape Registry",
+  "short_name": "Landscape metakeeper",
+  "name": "Landscape metakeeper",
   "icons": [
     {
       "src": "favicon.ico",
