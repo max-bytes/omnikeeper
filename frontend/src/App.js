@@ -62,7 +62,7 @@ function App() {
     return <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
           <Menu fixed='top' inverted style={{display: 'flex', justifyContent: 'space-between'}}>
             <div>
-              <Menu.Item style={{fontSize:'1.2em'}}>Landscape metakeeper</Menu.Item>
+              <Menu.Item style={{fontSize:'1.2em'}}>Landscape omnikeeper</Menu.Item>
             </div>
             <div style={{flexGrow: 1}}></div>
             <div style={{display:'flex'}}>
