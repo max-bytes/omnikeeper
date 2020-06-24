@@ -46,35 +46,6 @@ namespace LandscapeRegistry.Controllers
             return Ok(await ciModel.GetCIIDs(null));
         }
 
-        ///// <summary>
-        ///// list of merged CIs with a specific CI-type
-        ///// </summary>
-        ///// <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
-        ///// <param name="CITypeIDs"></param>
-        ///// <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
-        ///// <returns></returns>
-        //[HttpGet("getMergedCIsByType")]
-        //public async Task<ActionResult<IEnumerable<MergedCI>>> GetMergedCIsByType([FromQuery,Required]long[] layerIDs, [FromQuery,Required]string[] CITypeIDs, [FromQuery]DateTimeOffset? atTime = null)
-        //{
-        //    var layerset = new LayerSet(layerIDs);
-        //    return Ok(await ciModel.GetMergedCIsByType(layerset, null, atTime ?? DateTimeOffset.Now, CITypeIDs));
-        //}
-
-        /// <summary>
-        /// list of merged CIs with speficied CI-types
-        /// </summary>
-        /// <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
-        /// <param name="CITypeIDs"></param>
-        /// <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
-        /// <returns></returns>
-        //[HttpGet("getCIsByType")]
-        //public async Task<ActionResult<IEnumerable<CIDTO>>> GetCIsByType([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string[] CITypeIDs, [FromQuery]DateTimeOffset? atTime = null)
-        //{
-        //    var layerset = new LayerSet(layerIDs);
-        //    var cis = await ciModel.GetMergedCIsByType(layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest(), CITypeIDs);
-        //    return Ok(cis.Select(ci => CIDTO.Build(ci)));
-        //}
-
         /// <summary>
         /// single CI by CI-ID
         /// </summary>

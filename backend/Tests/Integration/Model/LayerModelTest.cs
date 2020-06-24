@@ -73,7 +73,6 @@ namespace Tests.Integration.Model
             Assert.AreEqual(true, await layerModel.TryToDelete(layerA.ID, null));
             Assert.AreEqual(true, await layerModel.TryToDelete(layerB.ID, null));
             Assert.AreEqual(false, await layerModel.TryToDelete(layerC.ID, null));
-
         }
     }
 }
