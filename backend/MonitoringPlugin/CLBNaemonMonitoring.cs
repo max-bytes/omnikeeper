@@ -100,12 +100,12 @@ namespace MonitoringPlugin
             await cgr.Setup(layerSetAll, belongsToNaemonContactgroup, contactgroupTrait, trans, timeThreshold);
 
             // prepare list of all monitored cis
-            var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.FromCIID).Distinct();
+            var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).Distinct();
             var monitoredCIs = (await ciModel.GetMergedCIs(layerSetAll, true, trans, timeThreshold, monitoredCIIDs))
                 .ToDictionary(ci => ci.ID);
 
             // prepare list of all monitoring modules
-            var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.ToCIID).Distinct();
+            var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.ToCIID).Distinct();
             var monitoringModuleCIs = (await ciModel.GetMergedCIs(layerSetMonitoringDefinitionsOnly, false, trans, timeThreshold, monitoringModuleCIIDs))
                 .ToDictionary(ci => ci.ID);
 
@@ -117,7 +117,7 @@ namespace MonitoringPlugin
             {
                 logger.LogDebug("Process mm relation...");
 
-                var monitoringModuleCI = monitoringModuleCIs[p.ToCIID];
+                var monitoringModuleCI = monitoringModuleCIs[p.Relation.ToCIID];
 
                 var monitoringModuleET = await traitModel.CalculateEffectiveTraitForCI(monitoringModuleCI, moduleTrait, trans, timeThreshold);
                 if (monitoringModuleET == null)
@@ -130,7 +130,7 @@ namespace MonitoringPlugin
                 var templateStr = (monitoringModuleET.TraitAttributes["template"].Attribute.Value as AttributeScalarValueText).Value;
 
                 // create template context based on monitored CI, so that the templates can access all the related variables
-                var context = ScribanVariableService.CreateCIBasedTemplateContext(monitoredCIs[p.FromCIID], layerSetAll, timeThreshold, null, ciModel, relationModel);
+                var context = ScribanVariableService.CreateCIBasedTemplateContext(monitoredCIs[p.Relation.FromCIID], layerSetAll, timeThreshold, null, ciModel, relationModel);
 
                 logger.LogDebug("  Parse/Render config segments");
                 // template parsing and rendering
@@ -141,7 +141,7 @@ namespace MonitoringPlugin
                     var template = Scriban.Template.Parse(templateStr);
                     string templateSegment = template.Render(context);
                     logger.LogDebug($"  Rendered template:\n{templateSegment}");
-                    renderedTemplateSegments.Add((p.FromCIID, monitoringModuleCI.Name, templateSegment));
+                    renderedTemplateSegments.Add((p.Relation.FromCIID, monitoringModuleCI.Name, templateSegment));
                 }
                 catch (Exception e)
                 {
@@ -310,8 +310,8 @@ namespace MonitoringPlugin
             public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, Trait contactgroupTrait, NpgsqlTransaction trans, TimeThreshold timeThreshold)
             {
                 var contactGroupRelations = await relationModel.GetMergedRelationsWithPredicateID(layerSetAll, false, belongsToNaemonContactgroup, trans, timeThreshold);
-                var contactGroupCIs = (await ciModel.GetMergedCIs(layerSetAll, false, trans, timeThreshold, contactGroupRelations.Select(r => r.ToCIID).Distinct())).ToDictionary(t => t.ID);
-                contactGroupsMap = contactGroupRelations.GroupBy(r => r.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.ToCIID]));
+                var contactGroupCIs = (await ciModel.GetMergedCIs(layerSetAll, false, trans, timeThreshold, contactGroupRelations.Select(r => r.Relation.ToCIID).Distinct())).ToDictionary(t => t.ID);
+                contactGroupsMap = contactGroupRelations.GroupBy(r => r.Relation.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.Relation.ToCIID]));
                 foreach (var ci in contactGroupsMap.Values.SelectMany(t => t).Distinct())
                 {
                     var et = await traitModel.CalculateEffectiveTraitForCI(ci, contactgroupTrait, trans, timeThreshold);

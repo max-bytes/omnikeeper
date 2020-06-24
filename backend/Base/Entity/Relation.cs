@@ -7,6 +7,27 @@ namespace Landscape.Base.Entity
         New, Removed, Renewed
     }
 
+
+    public class MergedRelation
+    {
+        public Relation Relation { get; private set; }
+        public long[] LayerStackIDs { get; private set; }
+        public long LayerID { get => LayerStackIDs[^1]; }
+
+        // information hash: 
+        public string InformationHash => CreateInformationHash(Relation.FromCIID, Relation.ToCIID, Relation.PredicateID);
+        public static string CreateInformationHash(Guid fromCIID, Guid toCIID, string predicateID) => fromCIID + "_" + toCIID + "_" + predicateID;
+
+        public static MergedRelation Build(Relation relation, long[] layerStackIDs)
+        {
+            return new MergedRelation
+            {
+                Relation = relation,
+                LayerStackIDs = layerStackIDs
+            };
+        }
+    }
+
     public class Relation
     {
         public long ID { get; private set; }
@@ -14,16 +35,10 @@ namespace Landscape.Base.Entity
         public Guid ToCIID { get; private set; }
         public string PredicateID { get => Predicate.ID; }
         public Predicate Predicate { get; private set; }
-        public long LayerID { get => LayerStackIDs[^1]; }
-        public long[] LayerStackIDs { get; private set; }
         public RelationState State { get; private set; }
         public long ChangesetID { get; private set; }
 
-        // information hash: 
-        public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);
-        public static string CreateInformationHash(Guid fromCIID, Guid toCIID, string predicateID) => fromCIID + "_" + toCIID + "_" + predicateID;
-
-        public static Relation Build(long id, Guid fromCIID, Guid toCIID, Predicate predicate, long[] layerStackIDs, RelationState state, long changesetID)
+        public static Relation Build(long id, Guid fromCIID, Guid toCIID, Predicate predicate, RelationState state, long changesetID)
         {
             return new Relation
             {
@@ -31,7 +46,6 @@ namespace Landscape.Base.Entity
                 FromCIID = fromCIID,
                 ToCIID = toCIID,
                 Predicate = predicate,
-                LayerStackIDs = layerStackIDs,
                 State = state,
                 ChangesetID = changesetID
             };

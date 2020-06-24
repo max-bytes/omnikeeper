@@ -36,12 +36,12 @@ namespace LandscapeRegistry.Model.Decorators
             return success;
         }
 
-        public async Task<IEnumerable<Relation>> GetMergedRelations(Guid? ciid, bool includeRemoved, LayerSet layerset, IRelationModel.IncludeRelationDirections ird, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(Guid? ciid, bool includeRemoved, LayerSet layerset, IRelationModel.IncludeRelationDirections ird, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             return await model.GetMergedRelations(ciid, includeRemoved, layerset, ird, trans, atTime);
         }
 
-        public async Task<IEnumerable<Relation>> GetMergedRelationsWithPredicateID(LayerSet layerset, bool includeRemoved, string predicate, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedRelation>> GetMergedRelationsWithPredicateID(LayerSet layerset, bool includeRemoved, string predicate, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             return await model.GetMergedRelationsWithPredicateID(layerset, includeRemoved, predicate, trans, atTime);
         }

@@ -24,7 +24,6 @@ namespace LandscapeRegistry.Model
         }
 
 
-        // TODO: make MergedRelation its own type
         // TODO: make it work with list of ciIdentities
         private NpgsqlCommand CreateMergedRelationCommand(Guid? ciid, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, string additionalWhereClause, NpgsqlTransaction trans, TimeThreshold atTime)
         {
@@ -71,9 +70,9 @@ namespace LandscapeRegistry.Model
             return command;
         }
 
-        public async Task<IEnumerable<Relation>> GetMergedRelations(Guid? ciid, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(Guid? ciid, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var ret = new List<Relation>();
+            var ret = new List<MergedRelation>();
 
             if (layerset.IsEmpty)
                 return ret; // return empty, an empty layer list can never produce any relations
@@ -95,7 +94,7 @@ namespace LandscapeRegistry.Model
                     var changesetID = dr.GetInt64(6);
 
                     var predicate = predicates[predicateID];
-                    var relation = Relation.Build(id, fromCIID, toCIID, predicate, layerStack, state, changesetID);
+                    var relation = MergedRelation.Build(Relation.Build(id, fromCIID, toCIID, predicate, state, changesetID), layerStack);
 
                     ret.Add(relation);
                 }
@@ -127,13 +126,13 @@ namespace LandscapeRegistry.Model
 
                 var predicate = predicates[predicateID];
 
-                return Relation.Build(id, fromCIID, toCIID, predicate, new long[] { layerID }, state, changesetID);
+                return Relation.Build(id, fromCIID, toCIID, predicate, state, changesetID);
             }
         }
 
-        public async Task<IEnumerable<Relation>> GetMergedRelationsWithPredicateID(LayerSet layerset, bool includeRemoved, string predicateID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedRelation>> GetMergedRelationsWithPredicateID(LayerSet layerset, bool includeRemoved, string predicateID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var ret = new List<Relation>();
+            var ret = new List<MergedRelation>();
 
             if (layerset.IsEmpty)
                 return ret; // return empty, an empty layer list can never produce any relations
@@ -156,7 +155,7 @@ namespace LandscapeRegistry.Model
 
                     var predicate = predicates[predicateIDOut];
 
-                    var relation = Relation.Build(id, fromCIID, toCIID, predicate, layerStack, state, changesetID);
+                    var relation = MergedRelation.Build(Relation.Build(id, fromCIID, toCIID, predicate, state, changesetID), layerStack);
 
                     ret.Add(relation);
                 }
@@ -195,12 +194,10 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("changeset_id", changeset.ID);
             command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
 
-            var layerStack = new long[] { layerID }; // TODO: calculate proper layerstack(?)
-
             var predicate = predicates[predicateID]; // TODO: only get one predicate?
 
             var id = (long)await command.ExecuteScalarAsync();
-            return Relation.Build(id, fromCIID, toCIID, predicate, layerStack, RelationState.Removed, changeset.ID);
+            return Relation.Build(id, fromCIID, toCIID, predicate, RelationState.Removed, changeset.ID);
         }
 
         public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
@@ -238,18 +235,16 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("changeset_id", changeset.ID);
             command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
 
-            var layerStack = new long[] { layerID }; // TODO: calculate proper layerstack(?)
-
             var predicate = predicates[predicateID]; // TODO: only get one predicate?
 
             var id = (long)await command.ExecuteScalarAsync();
-            return Relation.Build(id, fromCIID, toCIID, predicate, layerStack, state, changeset.ID);
+            return Relation.Build(id, fromCIID, toCIID, predicate, state, changeset.ID);
         }
 
         public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
-            var layerSet = new LayerSet(data.LayerID);
+            var layerSet = new LayerSet(data.LayerID); // TODO: rework to work with non-merged relations
             var outdatedRelations = (data switch {
                 BulkRelationDataPredicateScope p => (await GetMergedRelationsWithPredicateID(layerSet, false, p.PredicateID, trans, timeThreshold)),
                 BulkRelationDataLayerScope l => (await GetMergedRelations(null, false, layerSet, IncludeRelationDirections.Both, trans, timeThreshold)),
@@ -266,14 +261,14 @@ namespace LandscapeRegistry.Model
                     throw new Exception("From and To CIID must not be the same!");
 
                 var predicateID = data.GetPredicateID(fragment);
-                var informationHash = Relation.CreateInformationHash(fromCIID, toCIID, predicateID);
+                var informationHash = MergedRelation.CreateInformationHash(fromCIID, toCIID, predicateID);
                 // remove the current relation from the list of relations to remove
                 outdatedRelations.Remove(informationHash, out var currentRelation);
 
                 var state = RelationState.New;
                 if (currentRelation != null)
                 {
-                    if (currentRelation.State == RelationState.Removed)
+                    if (currentRelation.Relation.State == RelationState.Removed)
                         state = RelationState.Renewed;
                     else // same predicate already exists and is present, go to next pair
                         continue;
@@ -298,7 +293,7 @@ namespace LandscapeRegistry.Model
             // remove outdated 
             foreach (var outdatedRelation in outdatedRelations.Values)
             {
-                await RemoveRelation(outdatedRelation.FromCIID, outdatedRelation.ToCIID, outdatedRelation.PredicateID, data.LayerID, changesetProxy, trans); // TODO: proper timethreshold
+                await RemoveRelation(outdatedRelation.Relation.FromCIID, outdatedRelation.Relation.ToCIID, outdatedRelation.Relation.PredicateID, data.LayerID, changesetProxy, trans); // TODO: proper timethreshold
             }
 
             return true;

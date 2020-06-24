@@ -46,12 +46,12 @@ namespace MonitoringPlugin
             var allHasMonitoringModuleRelations = await relationModel.GetMergedRelationsWithPredicateID(layerSetMonitoringDefinitionsOnly, false, "has_monitoring_module", trans, timeThreshold);
 
             // prepare list of all monitored cis
-            var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.FromCIID).Distinct();
+            var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).Distinct();
             var monitoredCIs = (await ciModel.GetMergedCIs(layerSetAll, true, trans, timeThreshold, monitoredCIIDs))
                 .ToDictionary(ci => ci.ID);
 
             // prepare list of all monitoring modules
-            var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.ToCIID).Distinct();
+            var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.ToCIID).Distinct();
             var monitoringModuleCIs = (await ciModel.GetMergedCIs(layerSetMonitoringDefinitionsOnly, false, trans, timeThreshold, monitoringModuleCIIDs))
                 .ToDictionary(ci => ci.ID);
 
@@ -63,7 +63,7 @@ namespace MonitoringPlugin
             {
                 logger.LogDebug("Process mm relation...");
 
-                var monitoringModuleCI = monitoringModuleCIs[p.ToCIID];
+                var monitoringModuleCI = monitoringModuleCIs[p.Relation.ToCIID];
                 var monitoringModuleET = await traitModel.CalculateEffectiveTraitSetForCI(monitoringModuleCI, trans, timeThreshold); // TODO: move outside of loop, prefetch
                 if (!monitoringModuleET.EffectiveTraits.ContainsKey("monitoring_check_module"))
                 {
@@ -73,7 +73,7 @@ namespace MonitoringPlugin
                 }
                 logger.LogDebug("  Fetched effective traits");
 
-                var monitoredCI = monitoredCIs[p.FromCIID];
+                var monitoredCI = monitoredCIs[p.Relation.FromCIID];
                 var monitoringCommands = monitoringModuleET.EffectiveTraits["monitoring_check_module"].TraitAttributes["commands"].Attribute.Value as AttributeArrayValueText;
 
                 // add/collect variables
@@ -95,7 +95,7 @@ namespace MonitoringPlugin
                         await errorHandler.LogError(monitoringModuleCI.ID, "error", $"Error parsing or rendering command: {e.Message}");
                         continue;
                     }
-                    renderedCommands.Add((p.FromCIID, finalCommand));
+                    renderedCommands.Add((p.Relation.FromCIID, finalCommand));
                 }
                 logger.LogDebug("Processed mm relation");
             }

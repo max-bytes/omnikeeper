@@ -124,14 +124,7 @@ export const Fragments = {
         predicate {
             ...FullPredicate
         }
-        layerID
-        layerStackIDs
         changesetID
-        layerStack {
-            id
-            name
-            color
-        }
     }
   `,
   fullPredicate: gql`

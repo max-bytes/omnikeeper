@@ -16,9 +16,9 @@ namespace Landscape.Base.Service
             Guid ciid, LayerSet layers, ICIModel ciModel, IRelationModel relationModel, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var relations = await relationModel.GetMergedRelations(ciid, false, layers, IncludeRelationDirections.Both, trans, atTime);
-            var relationsOtherCIIDs = relations.Select(r => (r.FromCIID == ciid) ? r.ToCIID : r.FromCIID).Distinct();
+            var relationsOtherCIIDs = relations.Select(r => (r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID).Distinct();
             var relationsOtherCIs = (await ciModel.GetMergedCIs(layers, true, trans, atTime, relationsOtherCIIDs)).ToDictionary(ci => ci.ID);
-            var relationsAndToCIs = relations.Select(r => MergedRelatedCI.Build(r, ciid, relationsOtherCIs[(r.FromCIID == ciid) ? r.ToCIID : r.FromCIID]));
+            var relationsAndToCIs = relations.Select(r => MergedRelatedCI.Build(r.Relation, ciid, relationsOtherCIs[(r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID]));
             return relationsAndToCIs.ToLookup(r => r.PredicateID);
         }
 
@@ -28,13 +28,13 @@ namespace Landscape.Base.Service
 
             // HACK: limit number per predicate type
             var predicateCounts = new Dictionary<string, int>();
-            var limitedRelations = new List<Relation>();
+            var limitedRelations = new List<MergedRelation>();
             if (perPredicateLimit.HasValue)
             {
                 foreach (var r in relations)
                 {
-                    predicateCounts.TryGetValue(r.PredicateID, out int current);
-                    predicateCounts[r.PredicateID] = current + 1;
+                    predicateCounts.TryGetValue(r.Relation.PredicateID, out int current);
+                    predicateCounts[r.Relation.PredicateID] = current + 1;
                     if (current < perPredicateLimit.Value)
                         limitedRelations.Add(r);
                 }
@@ -46,8 +46,8 @@ namespace Landscape.Base.Service
 
             var relationTuples = limitedRelations.Select(r =>
             {
-                var isForwardRelation = r.FromCIID == ciid;
-                var relatedCIID = (isForwardRelation) ? r.ToCIID : r.FromCIID;
+                var isForwardRelation = r.Relation.FromCIID == ciid;
+                var relatedCIID = (isForwardRelation) ? r.Relation.ToCIID : r.Relation.FromCIID;
                 return (relation: r, relatedCIID, isForwardRelation);
             });
 
@@ -56,11 +56,11 @@ namespace Landscape.Base.Service
             .ToDictionary(ci => ci.ID); // TODO: performance improvements
             foreach ((var relation, var relatedCIID, var isForwardRelation) in relationTuples)
             {
-                var predicateID = relation.PredicateID;
-                var predicateWording = (isForwardRelation) ? relation.Predicate.WordingFrom : relation.Predicate.WordingTo;
-                var changesetID = relation.ChangesetID;
+                var predicateID = relation.Relation.PredicateID;
+                var predicateWording = (isForwardRelation) ? relation.Relation.Predicate.WordingFrom : relation.Relation.Predicate.WordingTo;
+                var changesetID = relation.Relation.ChangesetID;
                 relatedCompactCIs.TryGetValue(relatedCIID, out var ci); // TODO: performance improvements
-                relatedCIs.Add(CompactRelatedCI.Build(ci, relation.FromCIID, relation.ToCIID, changesetID, predicateID, isForwardRelation, predicateWording, relation.LayerStackIDs));
+                relatedCIs.Add(CompactRelatedCI.Build(ci, relation.Relation.FromCIID, relation.Relation.ToCIID, changesetID, predicateID, isForwardRelation, predicateWording, relation.LayerStackIDs));
             }
 
             return relatedCIs;

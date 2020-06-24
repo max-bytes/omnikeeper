@@ -60,11 +60,11 @@ namespace Tests.Integration.Model
                 var r1 = await relationModel.GetMergedRelations(ciid1, false, layerset, IncludeRelationDirections.Forward, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, r1.Count());
                 var rr1 = r1.First();
-                Assert.AreEqual(ciid1, rr1.FromCIID);
-                Assert.AreEqual(ciid2, rr1.ToCIID);
+                Assert.AreEqual(ciid1, rr1.Relation.FromCIID);
+                Assert.AreEqual(ciid2, rr1.Relation.ToCIID);
                 Assert.AreEqual(layerID1, rr1.LayerID);
-                Assert.AreEqual(RelationState.New, rr1.State);
-                Assert.AreEqual((await changeset.GetChangeset(trans)).ID, rr1.ChangesetID);
+                Assert.AreEqual(RelationState.New, rr1.Relation.State);
+                Assert.AreEqual((await changeset.GetChangeset(trans)).ID, rr1.Relation.ChangesetID);
 
                 // test repeated insertion
                 var i2 = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layerID1, changeset, trans);
@@ -72,7 +72,7 @@ namespace Tests.Integration.Model
                 r1 = await relationModel.GetMergedRelations(ciid1, false, layerset, IncludeRelationDirections.Forward, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, r1.Count());
                 rr1 = r1.First();
-                Assert.AreEqual(RelationState.New, rr1.State); // state must still be New
+                Assert.AreEqual(RelationState.New, rr1.Relation.State); // state must still be New
 
 
                 // test second relation
@@ -81,11 +81,11 @@ namespace Tests.Integration.Model
                 var r2 = await relationModel.GetMergedRelations(ciid1, false, layerset, IncludeRelationDirections.Forward, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(2, r2.Count());
                 var rr2 = r2.Last();
-                Assert.AreEqual(ciid1, rr2.FromCIID);
-                Assert.AreEqual(ciid3, rr2.ToCIID);
+                Assert.AreEqual(ciid1, rr2.Relation.FromCIID);
+                Assert.AreEqual(ciid3, rr2.Relation.ToCIID);
                 Assert.AreEqual(layerID1, rr2.LayerID);
-                Assert.AreEqual(RelationState.New, rr2.State);
-                Assert.AreEqual((await changeset.GetChangeset(trans)).ID, rr2.ChangesetID);
+                Assert.AreEqual(RelationState.New, rr2.Relation.State);
+                Assert.AreEqual((await changeset.GetChangeset(trans)).ID, rr2.Relation.ChangesetID);
             }
 
             using (var trans2 = conn.BeginTransaction())
@@ -163,10 +163,10 @@ namespace Tests.Integration.Model
 
             var r1 = await relationModel.GetMergedRelationsWithPredicateID(layerset, false, predicateID1.ID, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(2, r1.Count());
-            Assert.IsFalse(r1.Any(r => r.PredicateID == predicateID2.ID));
+            Assert.IsFalse(r1.Any(r => r.Relation.PredicateID == predicateID2.ID));
             var r2 = await relationModel.GetMergedRelationsWithPredicateID(layerset, false, predicateID2.ID, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(2, r2.Count());
-            Assert.IsFalse(r2.Any(r => r.PredicateID == predicateID1.ID));
+            Assert.IsFalse(r2.Any(r => r.Relation.PredicateID == predicateID1.ID));
         }
 
         [Test]
