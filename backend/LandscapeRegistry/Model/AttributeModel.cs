@@ -28,6 +28,22 @@ namespace LandscapeRegistry.Model
             return d.GetValueOrDefault(ciid, () => new Dictionary<string, MergedCIAttribute>());
         }
 
+        private IEnumerable<MergedCIAttribute> MergeAttributes(IEnumerable<(CIAttribute attribute, long layerID)> attributes, LayerSet layers)
+        {
+            var compound = new Dictionary<(Guid ciid, string name), SortedList<int, (CIAttribute attribute, long layerID)>>();
+
+            foreach(var (attribute, layerID) in attributes) {
+                var layerSortOrder = layers.GetOrder(layerID);
+
+                compound.AddOrUpdate((attribute.CIID, attribute.Name),
+                    () => new SortedList<int, (CIAttribute attribute, long layerID)>() { { layerSortOrder, (attribute, layerID) } },
+                    (old) => { old.Add(layerSortOrder, (attribute, layerID)); return old; }
+                );
+            }
+
+            return compound.Select(t => MergedCIAttribute.Build(t.Value.First().Value.attribute, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).ToArray()));
+        }
+
         public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var ret = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
@@ -35,36 +51,17 @@ namespace LandscapeRegistry.Model
             if (layers.IsEmpty)
                 return ret; // return empty, an empty layer list can never produce any attributes
 
-            var lsValues = LayerSet.CreateLayerSetSQLValues(layers);
-
-            // inner query can use distinct on, outer needs to do windowing, because of array_agg
-            using (var command = new NpgsqlCommand(@$"
-            select distinct
-            last_value(inn.id) over wndOut,
-            last_value(inn.name) over wndOut,
-            last_value(inn.ci_id) over wndOut,
-            last_value(inn.type) over wndOut,
-            last_value(inn.value) over wndOut,
-            last_value(inn.state) over wndOut,
-            last_value(inn.changeset_id) over wndOut,
-            array_agg(inn.layer_id) over wndOut
-            from(
-                select distinct on (ci_id, name, layer_id) * from
-                    attribute where timestamp <= @time_threshold and ci_id = ANY(@ci_identities) and layer_id = ANY(@layer_ids) order by ci_id, name, layer_id, timestamp DESC
-            ) inn
-            inner join ({lsValues}) as ls(id,""order"") ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
-            where inn.state != ALL(@excluded_states) -- remove entries from layers which' last item is deleted
-            WINDOW wndOut AS(PARTITION by inn.name, inn.ci_id ORDER BY ls.order DESC -- sort by layer order
-                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+            // we get the most recent value for each CI+attribute_name combination using SQL, then sort programmatically later (due to external layers)
+            using (var command = new NpgsqlCommand(@$"select distinct on(ci_id, name, layer_id) id, name, ci_id, type, value, state, changeset_id, layer_id from
+                   attribute where timestamp <= @time_threshold and ci_id = ANY(@ci_identities) and layer_id = ANY(@layer_ids) order by ci_id, name, layer_id, timestamp DESC
             ", conn, trans))
             {
                 command.Parameters.AddWithValue("ci_identities", ciids.ToArray());
-                var excludedStates = (includeRemoved) ? new AttributeState[] { } : new AttributeState[] { AttributeState.Removed };
-                command.Parameters.AddWithValue("excluded_states", excludedStates);
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("layer_ids", layers.ToArray());
                 using var dr = await command.ExecuteReaderAsync();
 
+                var attributes = new List<(CIAttribute attribute, long layerID)>();
                 while (await dr.ReadAsync())
                 {
                     var id = dr.GetInt64(0);
@@ -76,13 +73,20 @@ namespace LandscapeRegistry.Model
 
                     var state = dr.GetFieldValue<AttributeState>(5);
                     var changesetID = dr.GetInt64(6);
-                    var layerStack = (long[])dr[7];
+                    var layerID = dr.GetInt64(7); // TODO: optimization to only get the layerID, name and CIID first, check if it is even above the current stack, discard if so
 
-                    var att = MergedCIAttribute.Build(CIAttribute.Build(id, name, CIID, av, state, changesetID), layerStack);
+                    if (includeRemoved || state != AttributeState.Removed)
+                        attributes.Add((CIAttribute.Build(id, name, CIID, av, state, changesetID), layerID));
+                }
 
+                var mergedAttributes = MergeAttributes(attributes, layers);
+
+                foreach (var ma in mergedAttributes)
+                {
+                    var CIID = ma.Attribute.CIID;
                     if (!ret.ContainsKey(CIID))
                         ret.Add(CIID, new Dictionary<string, MergedCIAttribute>());
-                    ret[CIID].Add(name, att);
+                    ret[CIID].Add(ma.Attribute.Name, ma);
                 }
             }
             return ret;
@@ -172,36 +176,18 @@ namespace LandscapeRegistry.Model
             if (layers.IsEmpty)
                 return ret; // return empty, an empty layer list can never produce any attributes
 
-            var lsValues = LayerSet.CreateLayerSetSQLValues(layers);
-
-            // inner query can use distinct on, outer needs to do windowing, because of array_agg
             using (var command = new NpgsqlCommand(@$"
-            select distinct
-            last_value(inn.id) over wndOut,
-            last_value(inn.ci_id) over wndOut,
-            last_value(inn.type) over wndOut,
-            last_value(inn.value) over wndOut,
-            last_value(inn.state) over wndOut,
-            last_value(inn.changeset_id) over wndOut,
-            array_agg(inn.layer_id) over wndOut
-            from(
-                select distinct on (ci_id, name, layer_id) * from
+                select distinct on (ci_id, name, layer_id) id, ci_id, type, value, state, changeset_id, layer_id from
                     attribute where timestamp <= @time_threshold and ({selection.WhereClause}) and name = @name and layer_id = ANY(@layer_ids) order by ci_id, name, layer_id, timestamp DESC
-            ) inn
-            inner join ({lsValues}) as ls(id,""order"") ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
-            where inn.state != ALL(@excluded_states) -- remove entries from layers which' last item is deleted
-            WINDOW wndOut AS(PARTITION by inn.name, inn.ci_id ORDER BY ls.order DESC -- sort by layer order
-                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
             ", conn, trans))
             {
-                var excludedStates = (includeRemoved) ? new AttributeState[] { } : new AttributeState[] { AttributeState.Removed };
-                command.Parameters.AddWithValue("excluded_states", excludedStates);
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("name", name);
                 command.Parameters.AddWithValue("layer_ids", layers.ToArray());
                 selection.AddParameters(command.Parameters);
                 using var dr = await command.ExecuteReaderAsync();
 
+                var attributes = new List<(CIAttribute attribute, long layerID)>();
                 while (await dr.ReadAsync())
                 {
                     var id = dr.GetInt64(0);
@@ -212,10 +198,18 @@ namespace LandscapeRegistry.Model
 
                     var state = dr.GetFieldValue<AttributeState>(4);
                     var changesetID = dr.GetInt64(5);
-                    var layerStack = (long[])dr[6];
+                    var layerID = dr.GetInt64(6);
 
-                    var att = MergedCIAttribute.Build(CIAttribute.Build(id, name, CIID, av, state, changesetID), layerStack);
-                    ret[CIID] = att;
+                    if (includeRemoved || state != AttributeState.Removed)
+                        attributes.Add((CIAttribute.Build(id, name, CIID, av, state, changesetID), layerID));
+                }
+
+                var mergedAttributes = MergeAttributes(attributes, layers);
+
+                foreach (var ma in mergedAttributes)
+                {
+                    var CIID = ma.Attribute.CIID;
+                    ret.Add(CIID, ma);
                 }
             }
             return ret;
