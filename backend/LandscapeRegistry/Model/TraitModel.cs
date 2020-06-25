@@ -78,6 +78,7 @@ namespace LandscapeRegistry.Model
             var lsValues = LayerSet.CreateLayerSetSQLValues(layerSet);
 
             // TODO: consider case with no required attributes, like when a trait only has dependent traits
+            // TODO: consider external datasources
 
             using (var command = new NpgsqlCommand(@$"
                 select a.ci_id from

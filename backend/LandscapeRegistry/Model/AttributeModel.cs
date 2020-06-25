@@ -41,7 +41,7 @@ namespace LandscapeRegistry.Model
                 );
             }
 
-            return compound.Select(t => MergedCIAttribute.Build(t.Value.First().Value.attribute, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).ToArray()));
+            return compound.Select(t => MergedCIAttribute.Build(t.Value.First().Value.attribute, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).Reverse().ToArray()));
         }
 
         public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
@@ -51,7 +51,11 @@ namespace LandscapeRegistry.Model
             if (layers.IsEmpty)
                 return ret; // return empty, an empty layer list can never produce any attributes
 
+            var attributes = new List<(CIAttribute attribute, long layerID)>();
+
             // we get the most recent value for each CI+attribute_name combination using SQL, then sort programmatically later (due to external layers)
+
+            // internal attributes
             using (var command = new NpgsqlCommand(@$"select distinct on(ci_id, name, layer_id) id, name, ci_id, type, value, state, changeset_id, layer_id from
                    attribute where timestamp <= @time_threshold and ci_id = ANY(@ci_identities) and layer_id = ANY(@layer_ids) order by ci_id, name, layer_id, timestamp DESC
             ", conn, trans))
@@ -61,7 +65,6 @@ namespace LandscapeRegistry.Model
                 command.Parameters.AddWithValue("layer_ids", layers.ToArray());
                 using var dr = await command.ExecuteReaderAsync();
 
-                var attributes = new List<(CIAttribute attribute, long layerID)>();
                 while (await dr.ReadAsync())
                 {
                     var id = dr.GetInt64(0);
@@ -78,17 +81,18 @@ namespace LandscapeRegistry.Model
                     if (includeRemoved || state != AttributeState.Removed)
                         attributes.Add((CIAttribute.Build(id, name, CIID, av, state, changesetID), layerID));
                 }
-
-                var mergedAttributes = MergeAttributes(attributes, layers);
-
-                foreach (var ma in mergedAttributes)
-                {
-                    var CIID = ma.Attribute.CIID;
-                    if (!ret.ContainsKey(CIID))
-                        ret.Add(CIID, new Dictionary<string, MergedCIAttribute>());
-                    ret[CIID].Add(ma.Attribute.Name, ma);
-                }
             }
+
+            var mergedAttributes = MergeAttributes(attributes, layers);
+
+            foreach (var ma in mergedAttributes)
+            {
+                var CIID = ma.Attribute.CIID;
+                if (!ret.ContainsKey(CIID))
+                    ret.Add(CIID, new Dictionary<string, MergedCIAttribute>());
+                ret[CIID].Add(ma.Attribute.Name, ma);
+            }
+
             return ret;
         }
 

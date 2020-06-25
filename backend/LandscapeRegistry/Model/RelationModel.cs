@@ -6,6 +6,7 @@ using Landscape.Base.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using static Landscape.Base.Model.IRelationModel;
@@ -23,12 +24,26 @@ namespace LandscapeRegistry.Model
             this.predicateModel = predicateModel;
         }
 
+        private IEnumerable<MergedRelation> MergeRelations(IEnumerable<(Relation relation, long layerID)> relations, LayerSet layers)
+        {
+            var compound = new Dictionary<(Guid from_ciid, Guid to_ciid, string predicate_id), SortedList<int, (Relation relation, long layerID)>>();
+
+            foreach (var (relation, layerID) in relations)
+            {
+                var layerSortOrder = layers.GetOrder(layerID);
+
+                compound.AddOrUpdate((relation.FromCIID, relation.ToCIID, relation.PredicateID),
+                    () => new SortedList<int, (Relation relation, long layerID)>() { { layerSortOrder, (relation, layerID) } },
+                    (old) => { old.Add(layerSortOrder, (relation, layerID)); return old; }
+                );
+            }
+
+            return compound.Select(t => MergedRelation.Build(t.Value.First().Value.relation, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).Reverse().ToArray()));
+        }
 
         // TODO: make it work with list of ciIdentities
-        private NpgsqlCommand CreateMergedRelationCommand(Guid? ciid, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, string additionalWhereClause, NpgsqlTransaction trans, TimeThreshold atTime)
+        private NpgsqlCommand CreateRelationCommand(Guid? ciid, LayerSet layerset, IncludeRelationDirections ird, string additionalWhereClause, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var lsValues = LayerSet.CreateLayerSetSQLValues(layerset);
-
             var innerWhereClauses = new List<string>();
             if (ciid != null)
                 innerWhereClauses.Add(ird switch
@@ -43,43 +58,33 @@ namespace LandscapeRegistry.Model
             var innerWhereClause = string.Join(" AND ", innerWhereClauses);
             if (innerWhereClause == "") innerWhereClause = "1=1";
             var query = $@"
-            select distinct
-            last_value(inn.id) over wndOut,
-            last_value(inn.from_ci_id) over wndOut,
-            last_value(inn.to_ci_id) over wndOut,
-            last_value(inn.predicate_id) over wndOut,
-            array_agg(inn.layer_id) over wndOut,
-            last_value(inn.state) over wndOut,
-            last_value(inn.changeset_id) over wndOut
-            FROM (
-                select distinct on (from_ci_id, to_ci_id, predicate_id, layer_id) * from
-                    relation where timestamp <= @time_threshold and ({innerWhereClause}) order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC
-            ) inn
-            inner join ({lsValues}) as ls(id,""order"") ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
-            where inn.state != ALL(@excluded_states) -- remove entries from layers which' last item is deleted
-            WINDOW wndOut AS(PARTITION by inn.from_ci_id, inn.to_ci_id, inn.predicate_id ORDER BY ls.order DESC -- sort by layer order
-                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+                select distinct on (from_ci_id, to_ci_id, predicate_id, layer_id) id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id from
+                    relation where timestamp <= @time_threshold and ({innerWhereClause}) and layer_id = ANY(@layer_ids) order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC
             ";
+
+            //) inn
+            //inner join({ lsValues}) as ls(id, ""order"") ON inn.layer_id = ls.id-- inner join to only keep rows that are in the selected layers
+            //where inn.state != ALL(@excluded_states)-- remove entries from layers which' last item is deleted
+            //WINDOW wndOut AS(PARTITION by inn.from_ci_id, inn.to_ci_id, inn.predicate_id ORDER BY ls.order DESC-- sort by layer order
+            //    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
 
             var command = new NpgsqlCommand(query, conn, trans);
             if (ciid != null)
                 command.Parameters.AddWithValue("ci_identity", ciid.Value);
-            var excludedStates = (includeRemoved) ? new RelationState[] { } : new RelationState[] { RelationState.Removed };
-            command.Parameters.AddWithValue("excluded_states", excludedStates);
             command.Parameters.AddWithValue("time_threshold", atTime.Time);
+            command.Parameters.AddWithValue("layer_ids", layerset.ToArray());
             return command;
         }
 
         public async Task<IEnumerable<MergedRelation>> GetMergedRelations(Guid? ciid, bool includeRemoved, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var ret = new List<MergedRelation>();
-
             if (layerset.IsEmpty)
-                return ret; // return empty, an empty layer list can never produce any relations
+                return ImmutableList<MergedRelation>.Empty; // return empty, an empty layer list can never produce any relations
 
             var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 
-            using (var command = CreateMergedRelationCommand(ciid, includeRemoved, layerset, ird, null, trans, atTime))
+            var relations = new List<(Relation relation, long layerID)>();
+            using (var command = CreateRelationCommand(ciid, layerset, ird, null, trans, atTime))
             {
                 using var dr = await command.ExecuteReaderAsync();
 
@@ -89,17 +94,19 @@ namespace LandscapeRegistry.Model
                     var fromCIID = dr.GetGuid(1);
                     var toCIID = dr.GetGuid(2);
                     var predicateID = dr.GetString(3);
-                    var layerStack = (long[])dr[4];
+                    var layerID = dr.GetInt64(4);
                     var state = dr.GetFieldValue<RelationState>(5);
                     var changesetID = dr.GetInt64(6);
 
                     var predicate = predicates[predicateID];
-                    var relation = MergedRelation.Build(Relation.Build(id, fromCIID, toCIID, predicate, state, changesetID), layerStack);
+                    var relation = Relation.Build(id, fromCIID, toCIID, predicate, state, changesetID);
 
-                    ret.Add(relation);
+                    if (includeRemoved || state != RelationState.Removed)
+                        relations.Add((relation, layerID));
                 }
             }
-            return ret;
+
+            return MergeRelations(relations, layerset);
         }
 
 
@@ -132,14 +139,13 @@ namespace LandscapeRegistry.Model
 
         public async Task<IEnumerable<MergedRelation>> GetMergedRelationsWithPredicateID(LayerSet layerset, bool includeRemoved, string predicateID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var ret = new List<MergedRelation>();
-
             if (layerset.IsEmpty)
-                return ret; // return empty, an empty layer list can never produce any relations
+                return ImmutableList<MergedRelation>.Empty; // return empty, an empty layer list can never produce any relations
 
             var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 
-            using (var command = CreateMergedRelationCommand(null, includeRemoved, layerset, IncludeRelationDirections.Both, $"predicate_id = '{predicateID}'", trans, atTime))
+            var relations = new List<(Relation relation, long layerID)>();
+            using (var command = CreateRelationCommand(null, layerset, IncludeRelationDirections.Both, $"predicate_id = '{predicateID}'", trans, atTime))
             {
                 using var dr = await command.ExecuteReaderAsync();
 
@@ -149,18 +155,19 @@ namespace LandscapeRegistry.Model
                     var fromCIID = dr.GetGuid(1);
                     var toCIID = dr.GetGuid(2);
                     var predicateIDOut = dr.GetString(3);
-                    var layerStack = (long[])dr[4];
+                    var layerID = dr.GetInt64(4);
                     var state = dr.GetFieldValue<RelationState>(5);
                     var changesetID = dr.GetInt64(6);
 
                     var predicate = predicates[predicateIDOut];
 
-                    var relation = MergedRelation.Build(Relation.Build(id, fromCIID, toCIID, predicate, state, changesetID), layerStack);
+                    var relation = Relation.Build(id, fromCIID, toCIID, predicate, state, changesetID);
 
-                    ret.Add(relation);
+                    if (includeRemoved || state != RelationState.Removed)
+                        relations.Add((relation, layerID));
                 }
             }
-            return ret;
+            return MergeRelations(relations, layerset);
         }
 
         public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
