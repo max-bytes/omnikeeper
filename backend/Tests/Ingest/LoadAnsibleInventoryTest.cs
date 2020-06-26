@@ -64,7 +64,7 @@ namespace Tests.Ingest
             var userModel = new UserInDatabaseModel(conn);
             var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new PredicateModel(conn);
-            var relationModel = new RelationModel(predicateModel, conn);
+            var relationModel = new RelationModel(MockedEmptyOnlineAccessProxy.O, predicateModel, conn);
             var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel, conn), relationModel, conn);
 
             Layer layer1 = await layerModel.GetLayer("Inventory Scan", null);

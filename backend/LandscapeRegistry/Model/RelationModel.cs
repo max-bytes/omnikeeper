@@ -1,6 +1,7 @@
 ﻿using DotLiquid.Tags;
 using Hangfire.States;
 using Landscape.Base.Entity;
+using Landscape.Base.Inbound;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using Npgsql;
@@ -17,10 +18,12 @@ namespace LandscapeRegistry.Model
     {
         private readonly NpgsqlConnection conn;
         private readonly IPredicateModel predicateModel;
+        private readonly IOnlineAccessProxy onlineAccessProxy;
 
-        public RelationModel(IPredicateModel predicateModel, NpgsqlConnection connection)
+        public RelationModel(IOnlineAccessProxy onlineAccessProxy, IPredicateModel predicateModel, NpgsqlConnection connection)
         {
             conn = connection;
+            this.onlineAccessProxy = onlineAccessProxy;
             this.predicateModel = predicateModel;
         }
 
@@ -106,7 +109,9 @@ namespace LandscapeRegistry.Model
                 }
             }
 
-            return MergeRelations(relations, layerset);
+            var onlineRelations = await onlineAccessProxy.GetRelations(ciid, layerset, ird, trans).ToListAsync();
+
+            return MergeRelations(relations.Concat(onlineRelations), layerset);
         }
 
 
@@ -167,7 +172,10 @@ namespace LandscapeRegistry.Model
                         relations.Add((relation, layerID));
                 }
             }
-            return MergeRelations(relations, layerset);
+
+            var onlineRelations = await onlineAccessProxy.GetRelationsWithPredicateID(predicateID, layerset, trans).ToListAsync();
+
+            return MergeRelations(relations.Concat(onlineRelations), layerset);
         }
 
         public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)

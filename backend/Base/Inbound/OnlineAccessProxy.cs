@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Landscape.Base.Model.IRelationModel;
 
 namespace Landscape.Base.Inbound
 {
@@ -46,6 +47,24 @@ namespace Landscape.Base.Inbound
             {
                 await foreach (var attribute in proxy.GetAttributesWithName(name).Select(a => (a, layer.ID)))
                     yield return attribute;
+            }
+        }
+
+        public async IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(Guid? ciid, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans)
+        {
+            await foreach (var (proxy, layer) in GetAccessProxies(layerset, trans))
+            {
+                await foreach (var relation in proxy.GetRelations(ciid, ird).Select(a => (a, layer.ID)))
+                    yield return relation;
+            }
+        }
+
+        public async IAsyncEnumerable<(Relation relation, long layerID)> GetRelationsWithPredicateID(string predicateID, LayerSet layerset, NpgsqlTransaction trans)
+        {
+            await foreach (var (proxy, layer) in GetAccessProxies(layerset, trans))
+            {
+                await foreach (var relation in proxy.GetRelationsWithPredicateID(predicateID).Select(a => (a, layer.ID)))
+                    yield return relation;
             }
         }
     }

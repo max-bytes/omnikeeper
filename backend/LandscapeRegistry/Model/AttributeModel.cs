@@ -87,7 +87,7 @@ namespace LandscapeRegistry.Model
             }
 
             // TODO: keep async nature further?
-            var onlineAttributes = await onlineAccessProxy.GetAttributes(ciids.ToHashSet(), layers, trans).ToListAsync(); // TODO: rework ciids to set from the start
+            var onlineAttributes = await onlineAccessProxy.GetAttributes(ciids.ToHashSet(), layers, trans).ToListAsync(); // TODO: rework ciids to set<> from the start
 
             var mergedAttributes = MergeAttributes(attributes.Concat(onlineAttributes), layers);
 

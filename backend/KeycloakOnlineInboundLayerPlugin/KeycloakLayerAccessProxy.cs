@@ -1,9 +1,11 @@
 ﻿using Keycloak.Net;
 using Landscape.Base.Entity;
 using Landscape.Base.Inbound;
+using Landscape.Base.Model;
 using LandscapeRegistry.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace KeycloakOnlineInboundLayerPlugin
 {
@@ -67,6 +69,16 @@ namespace KeycloakOnlineInboundLayerPlugin
                             yield return a;
                 }
             }
+        }
+
+        public IAsyncEnumerable<Relation> GetRelations(Guid? ciid, IRelationModel.IncludeRelationDirections ird)
+        {
+            return AsyncEnumerable.Empty<Relation>();// TODO: implement
+        }
+
+        public IAsyncEnumerable<Relation> GetRelationsWithPredicateID(string predicateID)
+        {
+            return AsyncEnumerable.Empty<Relation>();// TODO: implement
         }
     }
 }
