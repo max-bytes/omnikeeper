@@ -16,6 +16,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Tests.Integration;
 using Tests.Integration.Model;
+using Tests.Integration.Model.Mocks;
 
 namespace Tests.DBInit
 {
@@ -32,7 +33,7 @@ namespace Tests.DBInit
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build("landscape_prototype", false, true);
 
-            var attributeModel = new AttributeModel(conn);
+            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
             var ciModel = new CIModel(attributeModel, conn);
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
@@ -96,7 +97,7 @@ namespace Tests.DBInit
                 await layerModel.CreateLayer("Inventory Scan", trans);
                 var monitoringDefinitionsLayer = await layerModel.CreateLayer("Monitoring Definitions", trans);
                 monitoringDefinitionsLayerID = monitoringDefinitionsLayer.ID;
-                await layerModel.CreateLayer("Monitoring", ColorTranslator.FromHtml("#FFE6CC"), AnchorState.Active, ComputeLayerBrain.Build("MonitoringPlugin.CLBNaemonMonitoring"), trans);
+                await layerModel.CreateLayer("Monitoring", ColorTranslator.FromHtml("#FFE6CC"), AnchorState.Active, ComputeLayerBrain.Build("MonitoringPlugin.CLBNaemonMonitoring"), OnlineInboundLayerPlugin.Build(""), trans);
                 var automationLayer = await layerModel.CreateLayer("Automation", trans);
                 automationLayerID = automationLayer.ID;
                 trans.Commit();

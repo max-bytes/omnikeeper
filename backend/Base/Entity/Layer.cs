@@ -20,6 +20,23 @@ namespace Landscape.Base.Entity
         }
     }
 
+    public class OnlineInboundLayerPlugin : IEquatable<OnlineInboundLayerPlugin>
+    {
+        public string PluginName { get; private set; }
+
+        public override int GetHashCode() => HashCode.Combine(PluginName);
+        public override bool Equals(object obj) => Equals(obj as OnlineInboundLayerPlugin);
+        public bool Equals(OnlineInboundLayerPlugin other) => other != null && PluginName.Equals(other.PluginName);
+
+        public static OnlineInboundLayerPlugin Build(string pluginName)
+        {
+            return new OnlineInboundLayerPlugin
+            {
+                PluginName = pluginName
+            };
+        }
+    }
+
     public class Layer : IEquatable<Layer>
     {
         public string Name { get; private set; }
@@ -27,13 +44,14 @@ namespace Landscape.Base.Entity
         public AnchorState State { get; private set; }
         public Color Color { get; private set; }
         public ComputeLayerBrain ComputeLayerBrain { get; private set; }
+        public OnlineInboundLayerPlugin OnlineInboundLayerPlugin { get; private set; }
 
-        public override int GetHashCode() => HashCode.Combine(Name, ID, State);
+        public override int GetHashCode() => HashCode.Combine(Name, ID, State, Color, ComputeLayerBrain, OnlineInboundLayerPlugin);
         public override bool Equals(object obj) => Equals(obj as Layer);
         public bool Equals(Layer other) => other != null && Name.Equals(other.Name)
-            && ID.Equals(other.ID) && State.Equals(other.State) && ComputeLayerBrain.Equals(other.ComputeLayerBrain);
+            && ID.Equals(other.ID) && State.Equals(other.State) && ComputeLayerBrain.Equals(other.ComputeLayerBrain) && OnlineInboundLayerPlugin.Equals(other.OnlineInboundLayerPlugin);
 
-        public static Layer Build(string name, long id, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain)
+        public static Layer Build(string name, long id, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, OnlineInboundLayerPlugin onlineInboundLayerPlugin)
         {
             return new Layer
             {
@@ -41,7 +59,8 @@ namespace Landscape.Base.Entity
                 ID = id,
                 Color = color,
                 State = state,
-                ComputeLayerBrain = computeLayerBrain
+                ComputeLayerBrain = computeLayerBrain,
+                OnlineInboundLayerPlugin = onlineInboundLayerPlugin
             };
         }
     }

@@ -8,7 +8,7 @@ namespace Landscape.Base.Utils
 {
     public class DBConnectionBuilder
     {
-        private ISet<int> connectorIDs = new HashSet<int>();
+        private readonly ISet<int> connectorIDs = new HashSet<int>();
 
         public NpgsqlConnection Build(IConfiguration configuration)
         {

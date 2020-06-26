@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Inbound;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
@@ -15,10 +16,12 @@ namespace LandscapeRegistry.Model
 {
     public partial class AttributeModel : IAttributeModel
     {
+        private readonly IOnlineAccessProxy onlineAccessProxy;
         private readonly NpgsqlConnection conn;
 
-        public AttributeModel(NpgsqlConnection connection)
+        public AttributeModel(IOnlineAccessProxy onlineAccessProxy, NpgsqlConnection connection)
         {
+            this.onlineAccessProxy = onlineAccessProxy;
             conn = connection;
         }
 
@@ -83,7 +86,10 @@ namespace LandscapeRegistry.Model
                 }
             }
 
-            var mergedAttributes = MergeAttributes(attributes, layers);
+            // TODO: keep async nature further?
+            var onlineAttributes = await onlineAccessProxy.GetAttributes(ciids.ToHashSet(), layers, trans).ToListAsync(); // TODO: rework ciids to set from the start
+
+            var mergedAttributes = MergeAttributes(attributes.Concat(onlineAttributes), layers);
 
             foreach (var ma in mergedAttributes)
             {
@@ -180,6 +186,7 @@ namespace LandscapeRegistry.Model
             if (layers.IsEmpty)
                 return ret; // return empty, an empty layer list can never produce any attributes
 
+            var attributes = new List<(CIAttribute attribute, long layerID)>();
             using (var command = new NpgsqlCommand(@$"
                 select distinct on (ci_id, name, layer_id) id, ci_id, type, value, state, changeset_id, layer_id from
                     attribute where timestamp <= @time_threshold and ({selection.WhereClause}) and name = @name and layer_id = ANY(@layer_ids) order by ci_id, name, layer_id, timestamp DESC
@@ -191,7 +198,6 @@ namespace LandscapeRegistry.Model
                 selection.AddParameters(command.Parameters);
                 using var dr = await command.ExecuteReaderAsync();
 
-                var attributes = new List<(CIAttribute attribute, long layerID)>();
                 while (await dr.ReadAsync())
                 {
                     var id = dr.GetInt64(0);
@@ -207,15 +213,19 @@ namespace LandscapeRegistry.Model
                     if (includeRemoved || state != AttributeState.Removed)
                         attributes.Add((CIAttribute.Build(id, name, CIID, av, state, changesetID), layerID));
                 }
-
-                var mergedAttributes = MergeAttributes(attributes, layers);
-
-                foreach (var ma in mergedAttributes)
-                {
-                    var CIID = ma.Attribute.CIID;
-                    ret.Add(CIID, ma);
-                }
             }
+
+            // TODO: keep async nature further?
+            var onlineAttributes = await onlineAccessProxy.GetAttributesWithName(name, layers, trans).ToListAsync(); // TODO: rework ciids to set from the start
+
+            var mergedAttributes = MergeAttributes(attributes.Concat(onlineAttributes), layers);
+
+            foreach (var ma in mergedAttributes)
+            {
+                var CIID = ma.Attribute.CIID;
+                ret.Add(CIID, ma);
+            }
+
             return ret;
         }
 

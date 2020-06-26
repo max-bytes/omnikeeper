@@ -108,16 +108,16 @@ namespace LandscapeRegistry.Model.Decorators
             return layer;
         }
 
-        public async Task<Layer> CreateLayer(string name, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, NpgsqlTransaction trans)
+        public async Task<Layer> CreateLayer(string name, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, OnlineInboundLayerPlugin oilp, NpgsqlTransaction trans)
         {
-            var layer = await Model.CreateLayer(name, color, state, computeLayerBrain, trans);
+            var layer = await Model.CreateLayer(name, color, state, computeLayerBrain, oilp, trans);
             if (layer != null) CacheKeyService.CancelLayersChangeTokens(memoryCache);
             return layer;
         }
 
-        public async Task<Layer> Update(long id, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, NpgsqlTransaction trans)
+        public async Task<Layer> Update(long id, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, OnlineInboundLayerPlugin oilp, NpgsqlTransaction trans)
         {
-            var layer = await Model.Update(id, color, state, computeLayerBrain, trans);
+            var layer = await Model.Update(id, color, state, computeLayerBrain, oilp, trans);
             if (layer != null) CacheKeyService.CancelLayersChangeTokens(memoryCache);
             return layer;
         }

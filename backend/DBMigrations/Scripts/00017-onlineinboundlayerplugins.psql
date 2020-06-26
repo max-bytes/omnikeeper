@@ -1,0 +1,13 @@
+﻿
+CREATE TABLE public.layer_onlineinboundlayerplugin
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    pluginname text NOT NULL,
+    layer_id bigint NOT NULL,
+    "timestamp" timestamp with time zone NOT NULL,
+    CONSTRAINT layer_onlineinboundlayerplugin_pkey PRIMARY KEY (id)
+);
+
+ALTER TABLE ONLY public.layer_onlineinboundlayerplugin
+    ADD CONSTRAINT f_layer FOREIGN KEY (layer_id) REFERENCES public.layer(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    

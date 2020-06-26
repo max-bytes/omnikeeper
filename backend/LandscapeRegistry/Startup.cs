@@ -1,4 +1,6 @@
 using DBMigrations;
+using Flurl;
+using Flurl.Http;
 using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
@@ -8,8 +10,10 @@ using Hangfire.Annotations;
 using Hangfire.AspNetCore;
 using Hangfire.Console;
 using Hangfire.Dashboard;
+using Hangfire.MemoryStorage;
 using Hangfire.PostgreSql;
 using Landscape.Base;
+using Landscape.Base.Inbound;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.GraphQL;
@@ -23,6 +27,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -31,13 +36,11 @@ using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MonitoringPlugin;
-using Npgsql;
 using Npgsql.Logging;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -74,6 +77,38 @@ namespace LandscapeRegistry
             services.AddScoped<IComputeLayerBrain, CLBMonitoring>();
             services.AddScoped<IComputeLayerBrain, CLBNaemonMonitoring>();
 
+            // register online inbound layer plugins
+            services.AddScoped<IOnlineInboundLayerPlugin, KeycloakOnlineInboundLayerPlugin.KeycloakOnlineInboundLayerPlugin>(sp => 
+            {
+                static async Task<string> GetAccessTokenAsync(string url, string realm, string client_id, string client_secret)
+                {
+                    var result = await url
+                        .AppendPathSegment($"/auth/realms/{realm}/protocol/openid-connect/token")
+                        .WithHeader("Accept", "application/json")
+                        .PostUrlEncodedAsync(new List<KeyValuePair<string, string>>
+                        {
+                            new KeyValuePair<string, string>("grant_type", "client_credentials"),
+                            new KeyValuePair<string, string>("client_secret", client_secret),
+                            new KeyValuePair<string, string>("client_id", client_id)
+                        })
+                        .ReceiveJson();
+
+                    string accessToken = result.access_token.ToString();
+
+                    return accessToken;
+                }
+
+                var config = Configuration.GetSection("Keycloak");
+                var apiURL = config["URL"];
+                var realm = config["Realm"];
+                var clientID = config["ClientID"];
+                var clientSecret = config["ClientSecret"];
+                string GetAccessToken() => GetAccessTokenAsync(apiURL, realm, clientID, clientSecret).GetAwaiter().GetResult();
+
+                var persister = new ExternalIDMapPostgresPersister(Configuration, sp.GetRequiredService<DBConnectionBuilder>(), "ext_id_mapping_internal_keycloak");
+                return new KeycloakOnlineInboundLayerPlugin.KeycloakOnlineInboundLayerPlugin(apiURL, GetAccessToken, realm, new ExternalIDMapper(persister));
+            });
+
             services.AddCors(options => options.AddPolicy("DefaultCORSPolicy", builder =>
                builder.WithOrigins(Configuration.GetSection("CORS")["AllowedHosts"].Split(","))
                .AllowCredentials()
@@ -98,7 +133,7 @@ namespace LandscapeRegistry
 
             services.AddScoped<ICISearchModel, CISearchModel>();
             services.AddScoped<ICIModel, CIModel>();
-            services.Decorate<ICIModel, CachingCIModel>();
+            //services.Decorate<ICIModel, CachingCIModel>(); TODO: does not work well with online external data sources -> rework into using attributes and relations as base cache items
             services.AddScoped<IAttributeModel, AttributeModel>();
             services.Decorate<IAttributeModel, CachingAttributeModel>();
             services.AddScoped<IUserInDatabaseModel, UserInDatabaseModel>();
@@ -111,7 +146,6 @@ namespace LandscapeRegistry
             services.AddScoped<IPredicateModel, PredicateModel>();
             services.Decorate<IPredicateModel, CachingPredicateModel>();
             services.AddScoped<IMemoryCacheModel, MemoryCacheModel>();
-            //services.AddScoped<KeycloakModel>();
 
             services.AddScoped<ITraitModel, TraitModel>();
             services.Decorate<ITraitModel, CachingTraitModel>();
@@ -134,6 +168,8 @@ namespace LandscapeRegistry
 
             services.AddSingleton<ITraitsProvider, TraitsProvider>();
             services.Decorate<ITraitsProvider, CachedTraitsProvider>();
+
+            services.AddScoped<IOnlineAccessProxy, OnlineAccessProxy>();
 
             services.Configure<IISServerOptions>(options =>
             {
@@ -199,12 +235,14 @@ namespace LandscapeRegistry
             services.AddHangfire(config =>
             {
                 var cs = Configuration.GetConnectionString("HangfireConnection");
-                config.UsePostgreSqlStorage(cs, new PostgreSqlStorageOptions()
-                {
-                    InvisibilityTimeout = TimeSpan.FromMinutes(5),
-                    QueuePollInterval = TimeSpan.FromSeconds(5),
-                    DistributedLockTimeout = TimeSpan.FromMinutes(1),
-                });
+                config.UseMemoryStorage();
+                //config.UsePostgreSqlStorage(cs, new PostgreSqlStorageOptions()
+                //{
+                //    InvisibilityTimeout = TimeSpan.FromMinutes(5),
+                //    QueuePollInterval = TimeSpan.FromSeconds(5),
+                //    DistributedLockTimeout = TimeSpan.FromMinutes(1),
+                //});
+                config.UseFilter(new AutomaticRetryAttribute() { Attempts = 0 });
                 //config.UseConsole(); //TODO
             });
 
@@ -339,6 +377,7 @@ namespace LandscapeRegistry
 
             //RecurringJob.AddOrUpdate<CLBRunner>(runner => runner.Run(), "*/15 * * * * *");
             RecurringJob.AddOrUpdate<MarkedForDeletionRunner>(s => s.Run(), Cron.Minutely);
+            RecurringJob.AddOrUpdate<ExternalIDManagerRunner>(s => s.Run(), "*/15 * * * * *");
         }
     }
 

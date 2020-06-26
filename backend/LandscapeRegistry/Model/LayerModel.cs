@@ -15,6 +15,7 @@ namespace LandscapeRegistry.Model
         private readonly NpgsqlConnection conn;
 
         public static readonly ComputeLayerBrain DefaultCLB = ComputeLayerBrain.Build("");
+        public static readonly OnlineInboundLayerPlugin DefaultOILP = OnlineInboundLayerPlugin.Build("");
         private static readonly AnchorState DefaultState = AnchorState.Active;
         private static readonly Color DefaultColor = Color.White;
 
@@ -25,15 +26,15 @@ namespace LandscapeRegistry.Model
 
         public async Task<Layer> CreateLayer(string name, NpgsqlTransaction trans)
         {
-            return await CreateLayer(name, DefaultColor, DefaultState, DefaultCLB, trans);
+            return await CreateLayer(name, DefaultColor, DefaultState, DefaultCLB, DefaultOILP, trans);
         }
-        public async Task<Layer> CreateLayer(string name, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, NpgsqlTransaction trans)
+        public async Task<Layer> CreateLayer(string name, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, OnlineInboundLayerPlugin oilp, NpgsqlTransaction trans)
         {
             Debug.Assert(computeLayerBrain != null);
 
             // create layer
             using var command = new NpgsqlCommand(@"INSERT INTO layer (name) VALUES (@name) returning id", conn, trans);
-            command.Parameters.AddWithValue("name", name);
+            command.Parameters.AddWithValue("name", name); // TODO: move layername into own table to make it mutable
             var id = (long)await command.ExecuteScalarAsync();
 
             // set color
@@ -60,16 +61,26 @@ namespace LandscapeRegistry.Model
             commandCLB.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
             await commandCLB.ExecuteNonQueryAsync();
 
-            return Layer.Build(name, id, color, state, computeLayerBrain);
+            // set oilp
+            using var commandOILP = new NpgsqlCommand(@"INSERT INTO layer_onlineinboundlayerplugin (layer_id, pluginname, ""timestamp"")
+                    VALUES (@layer_id, @pluginname, @timestamp)", conn, trans);
+            commandOILP.Parameters.AddWithValue("layer_id", id);
+            commandOILP.Parameters.AddWithValue("pluginname", oilp.PluginName);
+            commandOILP.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
+            await commandOILP.ExecuteNonQueryAsync();
+
+            return Layer.Build(name, id, color, state, computeLayerBrain, oilp);
         }
 
-        public async Task<Layer> Update(long id, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, NpgsqlTransaction trans)
+        public async Task<Layer> Update(long id, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, OnlineInboundLayerPlugin oilp, NpgsqlTransaction trans)
         {
             Debug.Assert(computeLayerBrain != null);
+            Debug.Assert(oilp != null);
 
             var current = await GetLayer(id, trans);
 
             Debug.Assert(current.ComputeLayerBrain != null);
+            Debug.Assert(current.OnlineInboundLayerPlugin != null);
 
             // update color
             if (!current.Color.Equals(color))
@@ -80,7 +91,7 @@ namespace LandscapeRegistry.Model
                 commandColor.Parameters.AddWithValue("color", color.ToArgb());
                 commandColor.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandColor.ExecuteNonQueryAsync();
-                current = Layer.Build(current.Name, current.ID, color, current.State, current.ComputeLayerBrain);
+                current = Layer.Build(current.Name, current.ID, color, current.State, current.ComputeLayerBrain, current.OnlineInboundLayerPlugin);
             }
 
             // update state
@@ -92,7 +103,7 @@ namespace LandscapeRegistry.Model
                 commandState.Parameters.AddWithValue("state", state);
                 commandState.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandState.ExecuteNonQueryAsync();
-                current = Layer.Build(current.Name, current.ID, current.Color, state, current.ComputeLayerBrain);
+                current = Layer.Build(current.Name, current.ID, current.Color, state, current.ComputeLayerBrain, current.OnlineInboundLayerPlugin);
             }
 
             // update clb
@@ -104,7 +115,19 @@ namespace LandscapeRegistry.Model
                 commandCLB.Parameters.AddWithValue("brainname", computeLayerBrain.Name);
                 commandCLB.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandCLB.ExecuteNonQueryAsync();
-                current = Layer.Build(current.Name, current.ID, current.Color, current.State, computeLayerBrain);
+                current = Layer.Build(current.Name, current.ID, current.Color, current.State, computeLayerBrain, current.OnlineInboundLayerPlugin);
+            }
+
+            // update oilp
+            if (!current.OnlineInboundLayerPlugin.Equals(oilp))
+            {
+                using var commandOILP = new NpgsqlCommand(@"INSERT INTO layer_onlineinboundlayerplugin (layer_id, pluginname, ""timestamp"")
+                    VALUES (@layer_id, @pluginname, @timestamp)", conn, trans);
+                commandOILP.Parameters.AddWithValue("layer_id", id);
+                commandOILP.Parameters.AddWithValue("pluginname", oilp.PluginName);
+                commandOILP.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
+                await commandOILP.ExecuteNonQueryAsync();
+                current = Layer.Build(current.Name, current.ID, current.Color, current.State, current.ComputeLayerBrain, oilp);
             }
 
             return current;
@@ -153,9 +176,10 @@ namespace LandscapeRegistry.Model
             return new LayerSet(layerIDs.ToArray());
         }
 
-        public async Task<Layer> GetLayer(string layerName, NpgsqlTransaction trans)
+        private async Task<IEnumerable<Layer>> _GetLayers(string whereClause, Action<NpgsqlParameterCollection> addParameters, NpgsqlTransaction trans)
         {
-            using var command = new NpgsqlCommand(@"SELECT l.id, ls.state, lclb.brainname, lc.color FROM layer l
+            var layers = new List<Layer>();
+            using var command = new NpgsqlCommand($@"SELECT l.id, l.name, ls.state, lclb.brainname, loilp.pluginname, lc.color FROM layer l
                 LEFT JOIN 
                     (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
                     ON ls.layer_id = l.id
@@ -163,42 +187,37 @@ namespace LandscapeRegistry.Model
                     (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain ORDER BY layer_id, timestamp DESC) lclb
                     ON lclb.layer_id = l.id
                 LEFT JOIN 
+                    (SELECT DISTINCT ON (layer_id) layer_id, pluginname FROM layer_onlineinboundlayerplugin ORDER BY layer_id, timestamp DESC) loilp
+                    ON loilp.layer_id = l.id
+                LEFT JOIN 
                     (SELECT DISTINCT ON (layer_id) layer_id, color FROM layer_color ORDER BY layer_id, timestamp DESC) lc
                     ON lc.layer_id = l.id
-                WHERE l.name = @name LIMIT 1", conn, trans);
-            command.Parameters.AddWithValue("name", layerName);
+                WHERE {whereClause}", conn, trans);
+            addParameters(command.Parameters);
             using var r = await command.ExecuteReaderAsync();
-            await r.ReadAsync();
-            if (!r.HasRows) return null;
-            var id = r.GetInt64(0);
-            var state = (r.IsDBNull(1)) ? DefaultState : r.GetFieldValue<AnchorState>(1);
-            var clb = (r.IsDBNull(2)) ? DefaultCLB : ComputeLayerBrain.Build(r.GetString(2));
-            var color = (r.IsDBNull(3)) ? DefaultColor : Color.FromArgb(r.GetInt32(3));
-            return Layer.Build(layerName, id, color, state, clb);
+            while (await r.ReadAsync())
+            {
+                var id = r.GetInt64(0);
+                var name = r.GetString(1);
+                var state = (r.IsDBNull(2)) ? DefaultState : r.GetFieldValue<AnchorState>(2);
+                var clb = (r.IsDBNull(3)) ? DefaultCLB : ComputeLayerBrain.Build(r.GetString(3));
+                var oilp = (r.IsDBNull(4)) ? DefaultOILP : OnlineInboundLayerPlugin.Build(r.GetString(4));
+                var color = (r.IsDBNull(5)) ? DefaultColor : Color.FromArgb(r.GetInt32(5));
+                layers.Add(Layer.Build(name, id, color, state, clb, oilp));
+            }
+            return layers;
+        }
+
+        public async Task<Layer> GetLayer(string layerName, NpgsqlTransaction trans)
+        {
+            var layers = await _GetLayers("l.name = @name LIMIT 1", (p) => p.AddWithValue("name", layerName), trans);
+            return layers.FirstOrDefault();
         }
 
         public async Task<Layer> GetLayer(long layerID, NpgsqlTransaction trans)
         {
-            using var command = new NpgsqlCommand(@"SELECT l.name, ls.state, lclb.brainname, lc.color FROM layer l
-                LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
-                    ON ls.layer_id = l.id
-                LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain ORDER BY layer_id, timestamp DESC) lclb
-                    ON lclb.layer_id = l.id
-                LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, color FROM layer_color ORDER BY layer_id, timestamp DESC) lc
-                    ON lc.layer_id = l.id
-                WHERE l.id = @id LIMIT 1", conn, trans);
-            command.Parameters.AddWithValue("id", layerID);
-            using var r = await command.ExecuteReaderAsync();
-            await r.ReadAsync();
-            if (!r.HasRows) return null;
-            var name = r.GetString(0);
-            var state = (r.IsDBNull(1)) ? DefaultState : r.GetFieldValue<AnchorState>(1);
-            var clb = (r.IsDBNull(2)) ? DefaultCLB : ComputeLayerBrain.Build(r.GetString(2));
-            var color = (r.IsDBNull(3)) ? DefaultColor : Color.FromArgb(r.GetInt32(3));
-            return Layer.Build(name, layerID, color, state, clb);
+            var layers = await _GetLayers("l.id = @id LIMIT 1", (p) => p.AddWithValue("id", layerID), trans);
+            return layers.FirstOrDefault();
         }
 
 
@@ -206,87 +225,25 @@ namespace LandscapeRegistry.Model
         {
             if (layerIDs.Length == 0) return new List<Layer>();
 
-            var layers = new List<Layer>();
-            using var command = new NpgsqlCommand(@"SELECT l.id, l.name, ls.state, lclb.brainname, lc.color FROM layer l
-                LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
-                    ON ls.layer_id = l.id
-                LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain ORDER BY layer_id, timestamp DESC) lclb
-                    ON lclb.layer_id = l.id
-                LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, color FROM layer_color ORDER BY layer_id, timestamp DESC) lc
-                    ON lc.layer_id = l.id
-                WHERE l.id = ANY(@layer_ids)", conn, trans);
-            command.Parameters.AddWithValue("layer_ids", layerIDs);
-            using var r = await command.ExecuteReaderAsync();
-            while (await r.ReadAsync())
-            {
-                var id = r.GetInt64(0);
-                var name = r.GetString(1);
-                var state = (r.IsDBNull(2)) ? DefaultState : r.GetFieldValue<AnchorState>(2);
-                var clb = (r.IsDBNull(3)) ? DefaultCLB : ComputeLayerBrain.Build(r.GetString(3));
-                var color = (r.IsDBNull(4)) ? DefaultColor : Color.FromArgb(r.GetInt32(4));
-                layers.Add(Layer.Build(name, id, color, state, clb));
-            }
+            var layers = (await _GetLayers("l.id = ANY(@layer_ids)", (p) => p.AddWithValue("layer_ids", layerIDs), trans)).ToList();
 
-            // HACK: wonky re-sorting of layers according to input layerIDs
+            // HACK, TODO: wonky re-sorting of layers according to input layerIDs
             return layerIDs.Select(id => layers.Find(l => l.ID == id));
         }
 
         public async Task<IEnumerable<Layer>> GetLayers(NpgsqlTransaction trans)
         {
-            var layers = new List<Layer>();
-            using var command = new NpgsqlCommand(@"SELECT l.id, l.name, ls.state, lclb.brainname, lc.color FROM layer l
-                LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
-                    ON ls.layer_id = l.id
-                LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain ORDER BY layer_id, timestamp DESC) lclb
-                    ON lclb.layer_id = l.id
-                LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, color FROM layer_color ORDER BY layer_id, timestamp DESC) lc
-                    ON lc.layer_id = l.id
-                    ", conn, trans);
-            using var r = await command.ExecuteReaderAsync();
-            while (await r.ReadAsync())
-            {
-                var id = r.GetInt64(0);
-                var name = r.GetString(1);
-                var state = (r.IsDBNull(2)) ? DefaultState : r.GetFieldValue<AnchorState>(2);
-                var clb = (r.IsDBNull(3)) ? DefaultCLB : ComputeLayerBrain.Build(r.GetString(3));
-                var color = (r.IsDBNull(4)) ? DefaultColor : Color.FromArgb(r.GetInt32(4));
-                layers.Add(Layer.Build(name, id, color, state, clb));
-            }
+            var layers = (await _GetLayers("1=1", (p) => { }, trans));
             return layers;
         }
 
         public async Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, NpgsqlTransaction trans)
         {
-            var layers = new List<Layer>();
-            using var command = new NpgsqlCommand(@"SELECT l.id, l.name, ls.state, lclb.brainname, lc.color FROM layer l
-                LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
-                    ON ls.layer_id = l.id
-                LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain ORDER BY layer_id, timestamp DESC) lclb
-                    ON lclb.layer_id = l.id
-                LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, color FROM layer_color ORDER BY layer_id, timestamp DESC) lc
-                    ON lc.layer_id = l.id
-                WHERE ls.state = ANY(@states) OR (ls.state IS NULL AND @default_state = ANY(@states))", conn, trans);
-            command.Parameters.AddWithValue("states", stateFilter.Filter2States());
-            command.Parameters.AddWithValue("default_state", DefaultState);
-            using var r = await command.ExecuteReaderAsync();
-            while (await r.ReadAsync())
-            {
-                var id = r.GetInt64(0);
-                var name = r.GetString(1);
-                var state = (r.IsDBNull(2)) ? DefaultState : r.GetFieldValue<AnchorState>(2);
-                var clb = (r.IsDBNull(3)) ? DefaultCLB : ComputeLayerBrain.Build(r.GetString(3));
-                var color = (r.IsDBNull(4)) ? DefaultColor : Color.FromArgb(r.GetInt32(4));
-                layers.Add(Layer.Build(name, id, color, state, clb));
-            }
+            var layers = (await _GetLayers("ls.state = ANY(@states) OR (ls.state IS NULL AND @default_state = ANY(@states))", 
+                (p) => {
+                    p.AddWithValue("states", stateFilter.Filter2States());
+                    p.AddWithValue("default_state", DefaultState);
+                }, trans));
             return layers;
         }
     }

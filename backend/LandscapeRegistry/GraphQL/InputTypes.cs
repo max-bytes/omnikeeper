@@ -27,6 +27,7 @@ namespace LandscapeRegistry.GraphQL
         public string Name { get; private set; }
         public AnchorState State { get; private set; }
         public string BrainName { get; private set; }
+        public string OnlineInboundLayerPluginName { get; private set; }
         public int Color { get; private set; }
     }
     public class CreateLayerInputType : InputObjectGraphType<CreateLayerInput>
@@ -36,6 +37,7 @@ namespace LandscapeRegistry.GraphQL
             Field(x => x.Name);
             Field(x => x.State, type: typeof(AnchorStateType));
             Field(x => x.BrainName, nullable: true);
+            Field(x => x.OnlineInboundLayerPluginName, nullable: true);
             Field(x => x.Color);
         }
     }
@@ -44,6 +46,7 @@ namespace LandscapeRegistry.GraphQL
         public long ID { get; private set; }
         public AnchorState State { get; private set; }
         public string BrainName { get; private set; }
+        public string OnlineInboundLayerPluginName { get; private set; }
         public int Color { get; private set; }
     }
     public class UpdateLayerInputType : InputObjectGraphType<UpdateLayerInput>
@@ -53,6 +56,7 @@ namespace LandscapeRegistry.GraphQL
             Field("id", x => x.ID);
             Field(x => x.State, type: typeof(AnchorStateType));
             Field(x => x.BrainName);
+            Field(x => x.OnlineInboundLayerPluginName);
             Field(x => x.Color);
         }
     }

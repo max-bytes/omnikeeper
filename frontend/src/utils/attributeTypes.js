@@ -66,7 +66,7 @@ export function InputControl(props) {
     } else {
         // simple type, simple handling
         return <Form.Control autoFocus={props.autoFocus} disabled={props.disabled} style={{flexGrow: 1, alignSelf: 'center'}} 
-            {...attributeType2InputProps(props.type)} placeholder={(props.disabled) ? "[Empty]" : "Enter value"} value={props.value} 
+            {...attributeType2InputProps(props.type)} placeholder={(props.disabled) ? "[Empty]" : "Enter value"} value={props.value ?? ""} 
             onChange={e => props.onChange(e.target.value)} />
     }
   }

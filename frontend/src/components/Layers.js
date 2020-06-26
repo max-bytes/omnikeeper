@@ -7,7 +7,7 @@ import { queries } from 'graphql/queries'
 import { useQuery } from '@apollo/react-hooks';
 import { mergeSettingsAndSortLayers } from 'utils/layers'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCogs } from '@fortawesome/free-solid-svg-icons'
+import { faCogs, faPlug, faBan, faEdit } from '@fortawesome/free-solid-svg-icons'
 import _ from 'lodash';
 
 function Layers(props) {
@@ -81,14 +81,13 @@ function Layers(props) {
               <li style={{paddingBottom: '5px', display: 'flex'}}>
                 <LayerIcon layer={layer}></LayerIcon>
                 
-                  <Icon.Group>
-                    {!layer.writable && (<Icon fitted disabled name='dont' />)}
-                    {layer.writable && (<Icon fitted name='pencil' />)}
-                    {/* <Icon fitted name={'pencil'} disabled={!layer.writable} /> */}
-                  </Icon.Group>&nbsp;
                   <span style={{flexGrow: 1}}>
+                    {!layer.writable && (<FontAwesomeIcon icon={faBan} />)}
+                    {layer.writable && (<FontAwesomeIcon icon={faEdit} />)}
+                    &nbsp;
                     <span style={((layer.visible) ? {} : {color: '#ccc'})}>{layer.name} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
                     {layer.brainName !== "" && (<FontAwesomeIcon icon={faCogs} />)}
+                    {layer.onlineInboundLayerPluginName !== "" && (<FontAwesomeIcon icon={faPlug} />)}
                   </span>
                   &nbsp;&nbsp;
                     <Button basic size='mini' compact onClick={() => toggleLayerVisibility(layer.id, data.layers)}>

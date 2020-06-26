@@ -73,7 +73,7 @@ namespace Tests.Integration.Model
 
         private async Task<(TraitModel traitModel, LayerSet layerset)> BaseSetup(ITraitsProvider traitsProvider, NpgsqlConnection conn)
         {
-            var attributeModel = new AttributeModel(conn);
+            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
             var ciModel = new CIModel(attributeModel, conn);
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);

@@ -42,7 +42,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestBasics()
         {
-            var attributeModel = new AttributeModel(conn);
+            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
             var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new PredicateModel(conn);
             var traitsProvider = new MockedTraitsProvider();
