@@ -2,7 +2,6 @@
 using Landscape.Base.Entity;
 using Landscape.Base.Inbound;
 using LandscapeRegistry.Entity.AttributeValues;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 
@@ -30,7 +29,8 @@ namespace KeycloakOnlineInboundLayerPlugin
             */
             int attributeIDGenerator() => new Random().Next(int.MinValue, -1);
             var changesetID = -1; // TODO: the same for changeset IDs
-            yield return CIAttribute.Build(attributeIDGenerator(), "__name", ciid, AttributeScalarValueText.Build($"User {user.UserName}"), AttributeState.New, changesetID);
+            var name = (user.FirstName != null && user.FirstName.Length > 0 && user.LastName != null && user.LastName.Length > 0) ? $"{user.FirstName} {user.LastName}" : user.UserName;
+            yield return CIAttribute.Build(attributeIDGenerator(), "__name", ciid, AttributeScalarValueText.Build($"User {name}"), AttributeState.New, changesetID);
             yield return CIAttribute.Build(attributeIDGenerator(), "user.keycloak_id", ciid, AttributeScalarValueText.Build(user.Id), AttributeState.New, changesetID);
             yield return CIAttribute.Build(attributeIDGenerator(), "user.email", ciid, AttributeScalarValueText.Build(user.Email), AttributeState.New, changesetID);
             yield return CIAttribute.Build(attributeIDGenerator(), "user.username", ciid, AttributeScalarValueText.Build(user.UserName), AttributeState.New, changesetID);

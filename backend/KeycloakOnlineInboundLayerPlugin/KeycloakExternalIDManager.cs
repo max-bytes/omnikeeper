@@ -1,8 +1,6 @@
 ﻿using Keycloak.Net;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
-using Landscape.Base.Utils;
-using Microsoft.Extensions.Logging;
 using Npgsql;
 using System.Collections.Generic;
 using System.Linq;
