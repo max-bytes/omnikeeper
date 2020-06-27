@@ -1,0 +1,11 @@
+﻿CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+ALTER TABLE ONLY public.attribute
+    ADD COLUMN uid uuid DEFAULT uuid_generate_v4();
+   
+ALTER TABLE public.attribute DROP CONSTRAINT attribute_pkey;
+ALTER TABLE public.attribute ADD PRIMARY KEY (uid);
+
+ALTER TABLE public.attribute DROP COLUMN id;
+
+ALTER TABLE public.attribute RENAME COLUMN uid TO id;

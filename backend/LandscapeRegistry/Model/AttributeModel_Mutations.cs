@@ -46,7 +46,7 @@ namespace LandscapeRegistry.Model
 
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
-            var id = reader.GetInt64(0);
+            var id = reader.GetGuid(0);
             var ret = CIAttribute.Build(id, name, ciid, currentAttribute.Value, AttributeState.Removed, changeset.ID);
 
             return ret;
@@ -90,7 +90,7 @@ namespace LandscapeRegistry.Model
 
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
-            var id = reader.GetInt64(0);
+            var id = reader.GetGuid(0);
             return CIAttribute.Build(id, name, ciid, value, state, changeset.ID);
         }
 

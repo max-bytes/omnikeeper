@@ -29,7 +29,7 @@ namespace Landscape.Base.Entity
 
     public class CIAttribute
     {
-        public long ID { get; private set; }
+        public Guid ID { get; private set; }
         public string Name { get; private set; }
         public Guid CIID { get; private set; }
         public IAttributeValue Value { get; private set; }
@@ -41,7 +41,7 @@ namespace Landscape.Base.Entity
         public static string CreateInformationHash(string name, Guid ciid) => name + "_" + ciid;
 
 
-        public static CIAttribute Build(long id, string name, Guid CIID, IAttributeValue value, AttributeState state, long changesetID)
+        public static CIAttribute Build(Guid id, string name, Guid CIID, IAttributeValue value, AttributeState state, long changesetID)
         {
             return new CIAttribute
             {

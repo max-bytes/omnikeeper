@@ -70,7 +70,7 @@ namespace LandscapeRegistry.Model
 
                 while (await dr.ReadAsync())
                 {
-                    var id = dr.GetInt64(0);
+                    var id = dr.GetGuid(0);
                     var name = dr.GetString(1);
                     var CIID = dr.GetGuid(2);
                     var type = dr.GetFieldValue<AttributeValueType>(3);
@@ -119,7 +119,7 @@ namespace LandscapeRegistry.Model
 
             while (dr.Read())
             {
-                var id = dr.GetInt64(0);
+                var id = dr.GetGuid(0);
                 var name = dr.GetString(1);
                 var CIID = dr.GetGuid(2);
                 var type = dr.GetFieldValue<AttributeValueType>(3);
@@ -161,7 +161,7 @@ namespace LandscapeRegistry.Model
             using var dr = await command.ExecuteReaderAsync();
             while (dr.Read())
             {
-                var id = dr.GetInt64(0);
+                var id = dr.GetGuid(0);
                 var name = dr.GetString(1);
                 var CIID = dr.GetGuid(2);
                 var type = dr.GetFieldValue<AttributeValueType>(3);
@@ -200,7 +200,7 @@ namespace LandscapeRegistry.Model
 
                 while (await dr.ReadAsync())
                 {
-                    var id = dr.GetInt64(0);
+                    var id = dr.GetGuid(0);
                     var CIID = dr.GetGuid(1);
                     var type = dr.GetFieldValue<AttributeValueType>(2);
                     var value = dr.GetString(3);
@@ -246,7 +246,7 @@ namespace LandscapeRegistry.Model
             if (!await dr.ReadAsync())
                 return null;
 
-            var id = dr.GetInt64(0);
+            var id = dr.GetGuid(0);
             var CIID = dr.GetGuid(1);
             var type = dr.GetFieldValue<AttributeValueType>(2);
             var value = dr.GetString(3);

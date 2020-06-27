@@ -29,7 +29,7 @@ namespace KeycloakOnlineInboundLayerPlugin
                 * we might need to move attribute IDs and all other IDs that can also come from external data sources to Guids?
                 * Or is there another way?
             */
-            int attributeIDGenerator() => new Random().Next(int.MinValue, -1);
+            Guid attributeIDGenerator() => Guid.NewGuid();
             var changesetID = -1; // TODO: the same for changeset IDs
             var name = (user.FirstName != null && user.FirstName.Length > 0 && user.LastName != null && user.LastName.Length > 0) ? $"{user.FirstName} {user.LastName}" : user.UserName;
             yield return CIAttribute.Build(attributeIDGenerator(), "__name", ciid, AttributeScalarValueText.Build($"User {name}"), AttributeState.New, changesetID);
