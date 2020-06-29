@@ -32,9 +32,11 @@ namespace LandscapeRegistry.Model
 
             var changeset = await changesetProxy.GetChangeset(trans);
 
-            using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
-                VALUES (@name, @ci_id, @type, @value, @layer_id, @state, @timestamp, @changeset_id) returning id", conn, trans);
+            using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
+                VALUES (@id, @name, @ci_id, @type, @value, @layer_id, @state, @timestamp, @changeset_id)", conn, trans);
 
+            var id = Guid.NewGuid();
+            command.Parameters.AddWithValue("id", id);
             command.Parameters.AddWithValue("name", name);
             command.Parameters.AddWithValue("ci_id", ciid);
             command.Parameters.AddWithValue("type", currentAttribute.Value.Type);
@@ -44,9 +46,7 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
             command.Parameters.AddWithValue("changeset_id", changeset.ID);
 
-            using var reader = await command.ExecuteReaderAsync();
-            await reader.ReadAsync();
-            var id = reader.GetGuid(0);
+            await command.ExecuteNonQueryAsync();
             var ret = CIAttribute.Build(id, name, ciid, currentAttribute.Value, AttributeState.Removed, changeset.ID);
 
             return ret;
@@ -76,9 +76,11 @@ namespace LandscapeRegistry.Model
 
             var changeset = await changesetProxy.GetChangeset(trans);
 
-            using var command = new NpgsqlCommand(@"INSERT INTO attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
-                VALUES (@name, @ci_id, @type, @value, @layer_id, @state, @timestamp, @changeset_id) returning id", conn, trans);
+            using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
+                VALUES (@id, @name, @ci_id, @type, @value, @layer_id, @state, @timestamp, @changeset_id)", conn, trans);
 
+            var id = Guid.NewGuid();
+            command.Parameters.AddWithValue("id", id);
             command.Parameters.AddWithValue("name", name);
             command.Parameters.AddWithValue("ci_id", ciid);
             command.Parameters.AddWithValue("type", value.Type);
@@ -88,9 +90,7 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
             command.Parameters.AddWithValue("changeset_id", changeset.ID);
 
-            using var reader = await command.ExecuteReaderAsync();
-            await reader.ReadAsync();
-            var id = reader.GetGuid(0);
+            await command.ExecuteNonQueryAsync();
             return CIAttribute.Build(id, name, ciid, value, state, changeset.ID);
         }
 
@@ -138,10 +138,11 @@ namespace LandscapeRegistry.Model
                 Changeset changeset = await changesetProxy.GetChangeset(trans);
 
                 // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
-                using var writer = conn.BeginBinaryImport(@"COPY attribute (name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)");
+                using var writer = conn.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)");
                 foreach (var (ciid, fullName, value, state) in actualInserts)
                 {
                     writer.StartRow();
+                    writer.Write(Guid.NewGuid());
                     writer.Write(fullName);
                     writer.Write(ciid);
                     writer.Write(value.Type, "attributevaluetype");
@@ -156,6 +157,7 @@ namespace LandscapeRegistry.Model
                 foreach (var outdatedAttribute in outdatedAttributes.Values)
                 {
                     writer.StartRow();
+                    writer.Write(Guid.NewGuid());
                     writer.Write(outdatedAttribute.Name);
                     writer.Write(outdatedAttribute.CIID);
                     writer.Write(outdatedAttribute.Value.Type, "attributevaluetype");

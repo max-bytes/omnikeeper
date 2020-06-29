@@ -29,17 +29,17 @@ namespace KeycloakOnlineInboundLayerPlugin
 
         private IEnumerable<CIAttribute> BuildAttributesFromUser(Keycloak.Net.Models.Users.User user, Guid ciid, Keycloak.Net.Models.Common.Mapping roleMappings)
         {
-            /* TODO: with external data sources, we don't have a single source of attributes and hence
+            /* with external data sources, we don't have a single source of attributes and hence
                 * we don't have a single source of attribute IDs (or relation IDs, or...)
-                * we might need to move attribute IDs and all other IDs that can also come from external data sources to Guids?
+                * we need to move attribute IDs and all other IDs that can also come from external data sources to Guids?
                 * Or is there another way?
             */
-            var changesetID = -1; // TODO: the same for changeset IDs
+            var changesetID = -1; // TODO: how to work with changesets when its online access?
             var CIName = (user.FirstName != null && user.FirstName.Length > 0 && user.LastName != null && user.LastName.Length > 0) ? $"{user.FirstName} {user.LastName}" : user.UserName;
 
             CIAttribute BuildAttribute(string name, Guid ciid, IAttributeValue value, long changesetID)
             {
-                // create a deterministic, depdendent guid from the ciid + attribute name + value
+                // create a deterministic, dependent guid from the ciid + attribute name + value
                 //static Guid attributeIDGenerator(Guid ciid, string attributeName, Layer layer, IAttributeValue value) => GuidUtility.Create(ciid, attributeName + layer.ID.ToString() + value.Value2String());
                 var id = GuidUtility.Create(ciid, name + layer.ID.ToString());// TODO: determine if we need to factor in value or not
                 return CIAttribute.Build(id, name, ciid, value, AttributeState.New, changesetID);
@@ -60,9 +60,11 @@ namespace KeycloakOnlineInboundLayerPlugin
 
         }
 
-        public async IAsyncEnumerable<CIAttribute> GetAttributes(ISet<Guid> ciids)
+        public async IAsyncEnumerable<CIAttribute> GetAttributes(ISet<Guid> ciids, TimeThreshold atTime)
         {
             await mapper.Setup();
+
+            if (!atTime.IsLatest) yield break; // we don't have historic information
 
             foreach (var (ciid, externalID) in mapper.GetIDPairs(ciids))
             {
@@ -74,9 +76,11 @@ namespace KeycloakOnlineInboundLayerPlugin
             }
         }
 
-        public async IAsyncEnumerable<CIAttribute> GetAttributesWithName(string name)
+        public async IAsyncEnumerable<CIAttribute> GetAttributesWithName(string name, TimeThreshold atTime)
         {
             await mapper.Setup();
+
+            if (!atTime.IsLatest) yield break; // we don't have historic information
 
             var users = await client.GetUsersAsync(realm, true, null, null, null, null, 99999, null, null); // TODO, HACK: magic number, how to properly get all user IDs?
             foreach (var user in users)
@@ -91,12 +95,12 @@ namespace KeycloakOnlineInboundLayerPlugin
             }
         }
 
-        public IAsyncEnumerable<Relation> GetRelations(Guid? ciid, IRelationModel.IncludeRelationDirections ird)
+        public IAsyncEnumerable<Relation> GetRelations(Guid? ciid, IRelationModel.IncludeRelationDirections ird, TimeThreshold atTime)
         {
             return AsyncEnumerable.Empty<Relation>();// TODO: implement
         }
 
-        public IAsyncEnumerable<Relation> GetRelationsWithPredicateID(string predicateID)
+        public IAsyncEnumerable<Relation> GetRelationsWithPredicateID(string predicateID, TimeThreshold atTime)
         {
             return AsyncEnumerable.Empty<Relation>();// TODO: implement
         }

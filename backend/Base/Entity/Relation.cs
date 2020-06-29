@@ -30,7 +30,7 @@ namespace Landscape.Base.Entity
 
     public class Relation
     {
-        public long ID { get; private set; }
+        public Guid ID { get; private set; }
         public Guid FromCIID { get; private set; }
         public Guid ToCIID { get; private set; }
         public string PredicateID { get => Predicate.ID; }
@@ -38,7 +38,7 @@ namespace Landscape.Base.Entity
         public RelationState State { get; private set; }
         public long ChangesetID { get; private set; }
 
-        public static Relation Build(long id, Guid fromCIID, Guid toCIID, Predicate predicate, RelationState state, long changesetID)
+        public static Relation Build(Guid id, Guid fromCIID, Guid toCIID, Predicate predicate, RelationState state, long changesetID)
         {
             return new Relation
             {

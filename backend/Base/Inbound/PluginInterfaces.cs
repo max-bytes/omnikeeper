@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
@@ -21,19 +22,19 @@ namespace Landscape.Base.Inbound
 
     public interface IOnlineInboundLayerAccessProxy
     {
-        IAsyncEnumerable<CIAttribute> GetAttributes(ISet<Guid> ciids);
-        IAsyncEnumerable<CIAttribute> GetAttributesWithName(string name);
-        IAsyncEnumerable<Relation> GetRelations(Guid? ciid, IncludeRelationDirections ird);
-        IAsyncEnumerable<Relation> GetRelationsWithPredicateID(string predicateID);
+        IAsyncEnumerable<CIAttribute> GetAttributes(ISet<Guid> ciids, TimeThreshold atTime);
+        IAsyncEnumerable<CIAttribute> GetAttributesWithName(string name, TimeThreshold atTime);
+        IAsyncEnumerable<Relation> GetRelations(Guid? ciid, IncludeRelationDirections ird, TimeThreshold atTime);
+        IAsyncEnumerable<Relation> GetRelationsWithPredicateID(string predicateID, TimeThreshold atTime);
     }
 
     public interface IOnlineAccessProxy
     {
-        IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributes(ISet<Guid> ciids, LayerSet layers, NpgsqlTransaction trans);
-        IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributesWithName(string name, LayerSet layers, NpgsqlTransaction trans);
+        IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributes(ISet<Guid> ciids, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
+        IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributesWithName(string name, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
 
-        IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(Guid? ciid, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans);
-        IAsyncEnumerable<(Relation relation, long layerID)> GetRelationsWithPredicateID(string predicateID, LayerSet layerset, NpgsqlTransaction trans);
+        IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(Guid? ciid, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans, TimeThreshold atTime);
+        IAsyncEnumerable<(Relation relation, long layerID)> GetRelationsWithPredicateID(string predicateID, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime);
     }
 
     public interface IOnlineInboundLayerPluginBuilder

@@ -93,7 +93,7 @@ namespace LandscapeRegistry.Model
 
                 while (await dr.ReadAsync())
                 {
-                    var id = dr.GetInt64(0);
+                    var id = dr.GetGuid(0);
                     var fromCIID = dr.GetGuid(1);
                     var toCIID = dr.GetGuid(2);
                     var predicateID = dr.GetString(3);
@@ -109,7 +109,7 @@ namespace LandscapeRegistry.Model
                 }
             }
 
-            var onlineRelations = await onlineAccessProxy.GetRelations(ciid, layerset, ird, trans).ToListAsync();
+            var onlineRelations = await onlineAccessProxy.GetRelations(ciid, layerset, ird, trans, atTime).ToListAsync();
 
             return MergeRelations(relations.Concat(onlineRelations), layerset);
         }
@@ -132,7 +132,7 @@ namespace LandscapeRegistry.Model
                 if (!await dr.ReadAsync())
                     return null;
 
-                var id = dr.GetInt64(0);
+                var id = dr.GetGuid(0);
                 var state = dr.GetFieldValue<RelationState>(1);
                 var changesetID = dr.GetInt64(2);
 
@@ -156,7 +156,7 @@ namespace LandscapeRegistry.Model
 
                 while (await dr.ReadAsync())
                 {
-                    var id = dr.GetInt64(0);
+                    var id = dr.GetGuid(0);
                     var fromCIID = dr.GetGuid(1);
                     var toCIID = dr.GetGuid(2);
                     var predicateIDOut = dr.GetString(3);
@@ -173,7 +173,7 @@ namespace LandscapeRegistry.Model
                 }
             }
 
-            var onlineRelations = await onlineAccessProxy.GetRelationsWithPredicateID(predicateID, layerset, trans).ToListAsync();
+            var onlineRelations = await onlineAccessProxy.GetRelationsWithPredicateID(predicateID, layerset, trans, atTime).ToListAsync();
 
             return MergeRelations(relations.Concat(onlineRelations), layerset);
         }
@@ -196,11 +196,13 @@ namespace LandscapeRegistry.Model
 
             var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.All);
 
-            using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
-                VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp) returning id", conn, trans);
+            using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
+                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp)", conn, trans);
 
             var changeset = await changesetProxy.GetChangeset(trans);
 
+            var id = Guid.NewGuid();
+            command.Parameters.AddWithValue("id", id);
             command.Parameters.AddWithValue("from_ci_id", fromCIID);
             command.Parameters.AddWithValue("to_ci_id", toCIID);
             command.Parameters.AddWithValue("predicate_id", predicateID);
@@ -211,7 +213,7 @@ namespace LandscapeRegistry.Model
 
             var predicate = predicates[predicateID]; // TODO: only get one predicate?
 
-            var id = (long)await command.ExecuteScalarAsync();
+            await command.ExecuteNonQueryAsync();
             return Relation.Build(id, fromCIID, toCIID, predicate, RelationState.Removed, changeset.ID);
         }
 
@@ -237,11 +239,13 @@ namespace LandscapeRegistry.Model
 
             var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.ActiveOnly); // only active predicates allowed
 
-            using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
-                VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp) returning id", conn, trans);
+            using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
+                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp)", conn, trans);
 
             var changeset = await changesetProxy.GetChangeset(trans);
 
+            var id = Guid.NewGuid();
+            command.Parameters.AddWithValue("id", id);
             command.Parameters.AddWithValue("from_ci_id", fromCIID);
             command.Parameters.AddWithValue("to_ci_id", toCIID);
             command.Parameters.AddWithValue("predicate_id", predicateID);
@@ -252,7 +256,7 @@ namespace LandscapeRegistry.Model
 
             var predicate = predicates[predicateID]; // TODO: only get one predicate?
 
-            var id = (long)await command.ExecuteScalarAsync();
+            await command.ExecuteNonQueryAsync();
             return Relation.Build(id, fromCIID, toCIID, predicate, state, changeset.ID);
         }
 
@@ -269,6 +273,7 @@ namespace LandscapeRegistry.Model
             // TODO: use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
             foreach (var fragment in data.Fragments)
             {
+                var id = Guid.NewGuid();
                 var fromCIID = data.GetFromCIID(fragment);
                 var toCIID = data.GetToCIID(fragment);
 
@@ -289,11 +294,12 @@ namespace LandscapeRegistry.Model
                         continue;
                 }
 
-                using var command = new NpgsqlCommand(@"INSERT INTO relation (from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
-                    VALUES (@from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp) returning id", conn, trans);
+                using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
+                    VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp)", conn, trans);
 
                 var changeset = await changesetProxy.GetChangeset(trans);
 
+                command.Parameters.AddWithValue("id", id);
                 command.Parameters.AddWithValue("from_ci_id", fromCIID);
                 command.Parameters.AddWithValue("to_ci_id", toCIID);
                 command.Parameters.AddWithValue("predicate_id", predicateID);
@@ -302,7 +308,7 @@ namespace LandscapeRegistry.Model
                 command.Parameters.AddWithValue("changeset_id", changeset.ID);
                 command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
 
-                var id = (long)await command.ExecuteScalarAsync();
+                await command.ExecuteNonQueryAsync();
             }
 
             // remove outdated 

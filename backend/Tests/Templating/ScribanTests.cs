@@ -43,7 +43,7 @@ namespace Tests.Templating
                 var relationModel = new Mock<IRelationModel>();
                 relationModel.Setup(x => x.GetMergedRelations(It.IsAny<Guid>(), false, It.IsAny<LayerSet>(), IRelationModel.IncludeRelationDirections.Both, It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()))
                     .ReturnsAsync(() => new MergedRelation[] {
-                        MergedRelation.Build(Relation.Build(0, testCIA.ID, testCIB.ID, testPredicateA, RelationState.New, 0), new long[0])
+                        MergedRelation.Build(Relation.Build(Guid.NewGuid(), testCIA.ID, testCIB.ID, testPredicateA, RelationState.New, 0), new long[0])
                     });
 
                 var ciModel = new Mock<ICIModel>();

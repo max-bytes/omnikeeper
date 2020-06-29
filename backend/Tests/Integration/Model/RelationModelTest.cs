@@ -81,7 +81,7 @@ namespace Tests.Integration.Model
                 Assert.AreEqual(predicate1.ID, i3.PredicateID);
                 var r2 = await relationModel.GetMergedRelations(ciid1, false, layerset, IncludeRelationDirections.Forward, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(2, r2.Count());
-                var rr2 = r2.First();
+                var rr2 = r2.Last();
                 Assert.AreEqual(ciid1, rr2.Relation.FromCIID);
                 Assert.AreEqual(ciid3, rr2.Relation.ToCIID);
                 Assert.AreEqual(layerID1, rr2.LayerID);

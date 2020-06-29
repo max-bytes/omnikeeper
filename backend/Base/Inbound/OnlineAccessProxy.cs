@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -32,40 +33,41 @@ namespace Landscape.Base.Inbound
             }
         }
 
-        public async IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributes(ISet<Guid> ciids, LayerSet layerset, NpgsqlTransaction trans)
+        public async IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributes(ISet<Guid> ciids, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             await foreach (var (proxy, layer) in GetAccessProxies(layerset, trans))
             {
-                await foreach (var attribute in proxy.GetAttributes(ciids).Select(a => (a, layer.ID)))
+                await foreach (var attribute in proxy.GetAttributes(ciids, atTime).Select(a => (a, layer.ID)))
                     yield return attribute;
             }
         }
 
-        public async IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributesWithName(string name, LayerSet layerset, NpgsqlTransaction trans)
+        public async IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributesWithName(string name, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             await foreach(var (proxy, layer) in GetAccessProxies(layerset, trans))
             {
-                await foreach (var attribute in proxy.GetAttributesWithName(name).Select(a => (a, layer.ID)))
+                await foreach (var attribute in proxy.GetAttributesWithName(name, atTime).Select(a => (a, layer.ID)))
                     yield return attribute;
             }
         }
 
-        public async IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(Guid? ciid, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans)
+        public async IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(Guid? ciid, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             await foreach (var (proxy, layer) in GetAccessProxies(layerset, trans))
             {
-                await foreach (var relation in proxy.GetRelations(ciid, ird).Select(a => (a, layer.ID)))
+                await foreach (var relation in proxy.GetRelations(ciid, ird, atTime).Select(a => (a, layer.ID)))
                     yield return relation;
             }
         }
 
-        public async IAsyncEnumerable<(Relation relation, long layerID)> GetRelationsWithPredicateID(string predicateID, LayerSet layerset, NpgsqlTransaction trans)
+        public async IAsyncEnumerable<(Relation relation, long layerID)> GetRelationsWithPredicateID(string predicateID, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             await foreach (var (proxy, layer) in GetAccessProxies(layerset, trans))
             {
-                await foreach (var relation in proxy.GetRelationsWithPredicateID(predicateID).Select(a => (a, layer.ID)))
+                await foreach (var relation in proxy.GetRelationsWithPredicateID(predicateID, atTime).Select(a => (a, layer.ID)))
                     yield return relation;
             }
         }
+
     }
 }
