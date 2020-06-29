@@ -12,22 +12,22 @@ namespace Landscape.Base.Inbound
 {
     public class OnlineAccessProxy : IOnlineAccessProxy
     {
-        private readonly IDictionary<string, IOnlineInboundLayerPlugin> availablePlugins;
         private readonly ILayerModel layerModel;
+        private readonly IInboundLayerPluginManager pluginManager;
 
-        public OnlineAccessProxy(IEnumerable<IOnlineInboundLayerPlugin> availablePlugins, ILayerModel layerModel) {
-            this.availablePlugins = availablePlugins.ToDictionary(p => p.Name);
+        public OnlineAccessProxy(ILayerModel layerModel, IInboundLayerPluginManager pluginManager) {
             this.layerModel = layerModel;
+            this.pluginManager = pluginManager;
         }
 
         private async IAsyncEnumerable<(IOnlineInboundLayerAccessProxy proxy, Layer layer)> GetAccessProxies(LayerSet layerset, NpgsqlTransaction trans)
         {
             foreach (var layer in await layerModel.GetLayers(layerset.LayerIDs, trans))
             {
-                availablePlugins.TryGetValue(layer.OnlineInboundLayerPlugin.PluginName, out var plugin);
+                var plugin = pluginManager.GetOnlinePluginInstance(layer.OnlineInboundLayerPlugin.PluginName);
                 if (plugin != null)
                 {
-                    yield return (plugin.GetLayerAccessProxy(), layer);
+                    yield return (plugin.GetLayerAccessProxy(layer), layer);
                 }
             }
         }

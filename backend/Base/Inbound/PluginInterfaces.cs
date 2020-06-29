@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using static Landscape.Base.Model.IRelationModel;
 
@@ -37,12 +36,21 @@ namespace Landscape.Base.Inbound
         IAsyncEnumerable<(Relation relation, long layerID)> GetRelationsWithPredicateID(string predicateID, LayerSet layerset, NpgsqlTransaction trans);
     }
 
+    public interface IOnlineInboundLayerPluginBuilder
+    {
+        public string Name { get; }
+        public IOnlineInboundLayerPlugin Build(IOnlineInboundLayerPlugin.IConfig config);
+    }
+
     public interface IOnlineInboundLayerPlugin
     {
+        public interface IConfig
+        {
+
+        }
+
         IExternalIDManager GetExternalIDManager(ICIModel ciModel);
 
-        IOnlineInboundLayerAccessProxy GetLayerAccessProxy();
-
-        string Name { get; }
+        IOnlineInboundLayerAccessProxy GetLayerAccessProxy(Layer layer);
     }
 }

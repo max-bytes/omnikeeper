@@ -12,6 +12,7 @@ using Hangfire.Console;
 using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
 using Hangfire.PostgreSql;
+using KeycloakOnlineInboundLayerPlugin;
 using Landscape.Base;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
@@ -78,35 +79,22 @@ namespace LandscapeRegistry
             services.AddScoped<IComputeLayerBrain, CLBNaemonMonitoring>();
 
             // register online inbound layer plugins
-            services.AddScoped<IOnlineInboundLayerPlugin, KeycloakOnlineInboundLayerPlugin.KeycloakOnlineInboundLayerPlugin>(sp => 
+            services.AddScoped<IOnlineInboundLayerPluginBuilder, KeycloakOnlineInboundLayerPluginBuilder>();
+            services.AddScoped<IInboundLayerPluginManager, InboundLayerPluginManager>(sp =>
             {
-                static async Task<string> GetAccessTokenAsync(string url, string realm, string client_id, string client_secret)
-                {
-                    var result = await url
-                        .AppendPathSegment($"/auth/realms/{realm}/protocol/openid-connect/token")
-                        .WithHeader("Accept", "application/json")
-                        .PostUrlEncodedAsync(new List<KeyValuePair<string, string>>
-                        {
-                            new KeyValuePair<string, string>("grant_type", "client_credentials"),
-                            new KeyValuePair<string, string>("client_secret", client_secret),
-                            new KeyValuePair<string, string>("client_id", client_id)
-                        })
-                        .ReceiveJson();
-
-                    string accessToken = result.access_token.ToString();
-
-                    return accessToken;
-                }
+                var manager = new InboundLayerPluginManager(sp.GetServices<IOnlineInboundLayerPluginBuilder>());
 
                 var config = Configuration.GetSection("Keycloak");
                 var apiURL = config["URL"];
                 var realm = config["Realm"];
                 var clientID = config["ClientID"];
                 var clientSecret = config["ClientSecret"];
-                string GetAccessToken() => GetAccessTokenAsync(apiURL, realm, clientID, clientSecret).GetAwaiter().GetResult();
+                var mapper = new ExternalIDMapper();
+                mapper.SetPersister(new ExternalIDMapPostgresPersister(Configuration, sp.GetRequiredService<DBConnectionBuilder>(), "ext_id_mapping_internal_keycloak"));
+                var pluginConfig = new KeycloakOnlineInboundLayerPlugin.KeycloakOnlineInboundLayerPlugin.Config(apiURL, realm, clientID, clientSecret, mapper);
+                manager.RegisterStaticOnlinePlugin("Keycloak", pluginConfig, "Internal Keycloak");
 
-                var persister = new ExternalIDMapPostgresPersister(Configuration, sp.GetRequiredService<DBConnectionBuilder>(), "ext_id_mapping_internal_keycloak");
-                return new KeycloakOnlineInboundLayerPlugin.KeycloakOnlineInboundLayerPlugin(apiURL, GetAccessToken, realm, new ExternalIDMapper(persister));
+                return manager;
             });
 
             services.AddCors(options => options.AddPolicy("DefaultCORSPolicy", builder =>

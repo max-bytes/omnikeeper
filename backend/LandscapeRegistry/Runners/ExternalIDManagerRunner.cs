@@ -12,16 +12,16 @@ namespace LandscapeRegistry.Runners
 {
     public class ExternalIDManagerRunner
     {
-        private readonly IDictionary<string, IOnlineInboundLayerPlugin> plugins;
         private readonly ILogger<ExternalIDManagerRunner> logger;
+        private readonly IInboundLayerPluginManager pluginManager;
         private readonly ICIModel ciModel;
         private readonly ILayerModel layerModel;
         private readonly NpgsqlConnection conn;
 
-        public ExternalIDManagerRunner(IEnumerable<IOnlineInboundLayerPlugin> plugins, ICIModel ciModel, ILayerModel layerModel, NpgsqlConnection conn, ILogger<ExternalIDManagerRunner> logger)
+        public ExternalIDManagerRunner(IInboundLayerPluginManager pluginManager, ICIModel ciModel, ILayerModel layerModel, NpgsqlConnection conn, ILogger<ExternalIDManagerRunner> logger)
         {
-            this.plugins = plugins.ToDictionary(p => p.Name);
             this.logger = logger;
+            this.pluginManager = pluginManager;
             this.ciModel = ciModel;
             this.layerModel = layerModel;
             this.conn = conn;
@@ -42,7 +42,8 @@ namespace LandscapeRegistry.Runners
             foreach (var l in layersWithOILPs)
             {
                 // find oilp for layer
-                if (!plugins.TryGetValue(l.OnlineInboundLayerPlugin.PluginName, out var plugin))
+                var plugin = pluginManager.GetOnlinePluginInstance(l.OnlineInboundLayerPlugin.PluginName);
+                if (plugin == null)
                 {
                     logger.LogError($"Could not find online inbound layer plugin with name {l.OnlineInboundLayerPlugin.PluginName}");
                 }

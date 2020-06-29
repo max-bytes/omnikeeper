@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Utils;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using System;

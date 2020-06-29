@@ -16,14 +16,18 @@ namespace Landscape.Base.Inbound
     {
         private IDictionary<Guid, string> int2ext;
         private IDictionary<string, Guid> ext2int;
-        private readonly IExternalIDMapPersister persister;
+        private IExternalIDMapPersister persister = null;
 
         private bool loaded = false;
 
-        public ExternalIDMapper(IExternalIDMapPersister persister)
+        public ExternalIDMapper()
         {
             int2ext = new Dictionary<Guid, string>();
             ext2int = new Dictionary<string, Guid>();
+        }
+
+        public void SetPersister(IExternalIDMapPersister persister)
+        {
             this.persister = persister;
         }
 
@@ -31,11 +35,14 @@ namespace Landscape.Base.Inbound
         {
             if (!loaded)
             {
-                var data = await persister.Load();
-                if (data != null)
+                if (persister != null)
                 {
-                    int2ext = data;
-                    ext2int = data.ToDictionary(x => x.Value, x => x.Key);
+                    var data = await persister.Load();
+                    if (data != null)
+                    {
+                        int2ext = data;
+                        ext2int = data.ToDictionary(x => x.Value, x => x.Key);
+                    }
                 }
                 loaded = true;
             }
@@ -86,7 +93,8 @@ namespace Landscape.Base.Inbound
 
         public async Task Persist()
         {
-            await persister.Persist(int2ext);
+            if (persister != null)
+                await persister.Persist(int2ext);
         }
     }
 }

@@ -14,7 +14,9 @@ function InnerPopup(props) {
   props.onLoadingChange(loading);
 
   if (loading) return (<Icon loading name={'sync'} />);
+  if (error) return (<Icon name={'exclamation circle'} />);
   if (data) {
+    if (!data.changeset) return (<Icon name={'exclamation circle'} />);
     const userLabel = <span style={{display: 'flex', flexWrap: 'nowrap', whiteSpace: 'nowrap'}}><UserTypeIcon style={{paddingRight: '3px'}} userType={data.changeset.user.type} /> {data.changeset.user.displayName}</span>;
     const dls = {display: 'flex', flexWrap: 'nowrap', marginBottom: '0px'};
     const dts = {width: '120px', textAlign: 'right', paddingRight: '10px' }
@@ -30,7 +32,6 @@ function InnerPopup(props) {
       </div>
     );
   }
-  if (error) return (<Icon name={'exclamation circle'} />);
 }
 
 function ChangesetPopup(props) {
