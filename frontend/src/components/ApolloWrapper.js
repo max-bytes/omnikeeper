@@ -99,7 +99,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
             case 'MergedCIAttributeType': return `MergedCIAttributeType:${object.attribute.id}:ls${object.layerStackIDs.join(',')}`;
             case 'CIAttributeType': return `CIAttributeType:${object.id}`;
             case 'RelationType': return `RelationType:${object.id}`;
-            case 'RelatedCIType': return `RelatedCIType:${object.relationID}:${object.fromCIID}:${object.toCIID}:ls${object.relation.layerStackIDs.join(',')}`;
+            case 'CompactRelatedCIType': return `CompactRelatedCIType:${object.relationID}:ls${object.layerStackIDs.join(',')}`;
             default: return defaultDataIdFromObject(object);
             }
         }

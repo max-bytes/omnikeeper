@@ -5,6 +5,7 @@ namespace Landscape.Base.Entity
     public class CompactRelatedCI
     {
         public CompactCI CI { get; private set; }
+        public Guid RelationID { get; private set; }
         public Guid FromCIID { get; private set; }
         public Guid ToCIID { get; private set; }
         public string PredicateID { get; private set; }
@@ -14,10 +15,11 @@ namespace Landscape.Base.Entity
         public long[] LayerStackIDs { get; private set; }
         public bool IsForwardRelation { get; private set; }
 
-        public static CompactRelatedCI Build(CompactCI ci, Guid fromCIID, Guid toCIID, long changesetID, string predicateID, bool isForwardRelation, string predicateWording, long[] layerStackIDs)
+        public static CompactRelatedCI Build(CompactCI ci, Guid relationID, Guid fromCIID, Guid toCIID, long changesetID, string predicateID, bool isForwardRelation, string predicateWording, long[] layerStackIDs)
         {
             var r = new CompactRelatedCI
             {
+                RelationID = relationID,
                 CI = ci,
                 FromCIID = fromCIID,
                 ToCIID = toCIID,

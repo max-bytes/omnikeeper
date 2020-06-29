@@ -60,7 +60,7 @@ namespace Landscape.Base.Service
                 var predicateWording = (isForwardRelation) ? relation.Relation.Predicate.WordingFrom : relation.Relation.Predicate.WordingTo;
                 var changesetID = relation.Relation.ChangesetID;
                 relatedCompactCIs.TryGetValue(relatedCIID, out var ci); // TODO: performance improvements
-                relatedCIs.Add(CompactRelatedCI.Build(ci, relation.Relation.FromCIID, relation.Relation.ToCIID, changesetID, predicateID, isForwardRelation, predicateWording, relation.LayerStackIDs));
+                relatedCIs.Add(CompactRelatedCI.Build(ci, relation.Relation.ID, relation.Relation.FromCIID, relation.Relation.ToCIID, changesetID, predicateID, isForwardRelation, predicateWording, relation.LayerStackIDs));
             }
 
             return relatedCIs;

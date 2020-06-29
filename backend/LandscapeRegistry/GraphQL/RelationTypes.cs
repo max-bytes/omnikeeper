@@ -45,6 +45,7 @@ namespace LandscapeRegistry.GraphQL
     {
         public CompactRelatedCIType(ILayerModel layerModel)
         {
+            Field(x => x.RelationID);
             Field("ci", x => x.CI, type: typeof(CompactCIType));
             Field(x => x.FromCIID);
             Field(x => x.ToCIID);

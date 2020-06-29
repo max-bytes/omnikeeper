@@ -31,8 +31,7 @@ namespace KeycloakOnlineInboundLayerPlugin
         {
             /* with external data sources, we don't have a single source of attributes and hence
                 * we don't have a single source of attribute IDs (or relation IDs, or...)
-                * we need to move attribute IDs and all other IDs that can also come from external data sources to Guids?
-                * Or is there another way?
+                * we use guids for attribute IDs and all other IDs that can also come from external data sources
             */
             var changesetID = -1; // TODO: how to work with changesets when its online access?
             var CIName = (user.FirstName != null && user.FirstName.Length > 0 && user.LastName != null && user.LastName.Length > 0) ? $"{user.FirstName} {user.LastName}" : user.UserName;

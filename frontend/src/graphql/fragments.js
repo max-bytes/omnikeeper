@@ -88,6 +88,7 @@ export const Fragments = {
   `,
   relatedCI: gql`
   fragment RelatedCI on CompactRelatedCIType {
+        relationID
         ci {
             ...CompactCI
         }
