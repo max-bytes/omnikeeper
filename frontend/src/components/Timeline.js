@@ -71,6 +71,22 @@ function LoadingTimeline(props) {
         setSelectedTimeThreshold({variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true, refreshCI: true }});
     }}><Icon loading={loadingChangesets} fitted name={'sync'} /></SemanticButton>)
 
+          
+    const buttonStyle = {
+      textAlign: 'left',
+      flexGrow: 1,
+      overflow: 'hidden',
+      whiteSpace: 'nowrap',
+      textOverflow: 'ellipsis',
+    };
+    const diffButtonStyle = {
+    };
+    const lineStyle = {
+      display: 'flex',
+      width: '100%',
+      paddingRight: '5px'
+    };
+
     return (
       <div>
         <div className={"d-flex align-items-center"}>
@@ -80,38 +96,24 @@ function LoadingTimeline(props) {
           </Form>
         </div>
         <LoadingOverlay active={loadingChangesets} spinner>
-        {changesets.map((cs) => {
-
-          const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.displayName}</span> : '';
-          const buttonStyle = {
-            textAlign: 'left',
-            flexGrow: 1,
-            overflow: 'hidden',
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-          };
-          const diffButtonStyle = {
-          };
-          const lineStyle = {
-            display: 'flex',
-            width: '100%',
-            paddingRight: '5px'
-          };
-          const label = <span style={((activeChangeset === cs) ? {fontWeight: 'bold'} : {})}>{moment(cs.timestamp).format('YYYY-MM-DD HH:mm:ss')} - {userLabel}</span>;
-          if (activeChangeset === cs) {
-            return (<Button style={buttonStyle} variant="link" size="sm" disabled key={cs.id}>{label}</Button>);
-          }
-          const isLatest = latestChangeset === cs;
-          const diffQuery = buildDiffingURLQueryBetweenChangesets(layerSettingsData.layerSettings, ciid, (latestChangeset === activeChangeset) ? null : activeChangeset.timestamp, (isLatest) ? null : cs.timestamp);
-          return (<div style={lineStyle} key={cs.id}>
-              <Button style={buttonStyle} variant="link" size="sm" 
-              onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: cs.timestamp, isLatest: isLatest }})}>
-                {label}
-              </Button>
-              <Link style={diffButtonStyle} 
-                to={`/diffing?${diffQuery}`}><Icon name="exchange" /></Link>
-            </div>);
-        })}
+            
+          {changesets.map((cs) => {
+            const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.displayName}</span> : '';
+            const label = <span style={((activeChangeset === cs) ? {fontWeight: 'bold'} : {})}>{moment(cs.timestamp).format('YYYY-MM-DD HH:mm:ss')} - {userLabel}</span>;
+            if (activeChangeset === cs) {
+              return (<Button style={buttonStyle} variant="link" size="sm" disabled key={cs.id}>{label}</Button>);
+            }
+            const isLatest = latestChangeset === cs;
+            const diffQuery = buildDiffingURLQueryBetweenChangesets(layerSettingsData.layerSettings, ciid, (latestChangeset === activeChangeset) ? null : activeChangeset.timestamp, (isLatest) ? null : cs.timestamp);
+            return (<div style={lineStyle} key={cs.id}>
+                <Button style={buttonStyle} variant="link" size="sm" 
+                onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: (isLatest) ? null : cs.timestamp, isLatest: isLatest }})}>
+                  {label}
+                </Button>
+                <Link style={diffButtonStyle} 
+                  to={`/diffing?${diffQuery}`}><Icon name="exchange" /></Link>
+              </div>);
+          })}
           <Form inline onSubmit={e => e.preventDefault()} style={{justifyContent: "center"}}>
             <SemanticButton basic size='mini' compact onClick={() => {
               setLimit(l => l + 10);
