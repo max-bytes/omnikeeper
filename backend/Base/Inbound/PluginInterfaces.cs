@@ -16,9 +16,38 @@ namespace Landscape.Base.Inbound
         public Task<IDictionary<Guid, string>> Load(string scope);
     }
 
-    public interface IExternalItem
+    public interface IExternalID
+    {
+        string ConvertToString();
+    }
+
+    public struct ExternalIDString : IExternalID
     {
         public string ID { get; }
+
+        public ExternalIDString(string id)
+        {
+            ID = id;
+        }
+
+        public string ConvertToString() => ID;
+    }
+
+    public struct ExternalIDGuid : IExternalID
+    {
+        public Guid ID { get; }
+
+        public ExternalIDGuid(Guid id)
+        {
+            ID = id;
+        }
+
+        public string ConvertToString() => ID.ToString();
+    }
+
+    public interface IExternalItem<EID> where EID : IExternalID
+    {
+        public EID ID { get; }
     }
 
     public interface IExternalIDManager
@@ -47,7 +76,7 @@ namespace Landscape.Base.Inbound
     public interface IOnlineInboundAdapterBuilder
     {
         public string Name { get; }
-        public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config);
+        public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister);
     }
 
     public interface IOnlineInboundAdapter

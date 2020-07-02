@@ -5,21 +5,20 @@ using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace KeycloakOnlineInboundAdapter
+namespace OnlineInboundAdapterKeycloak
 {
     public class KeycloakLayerAccessProxy : IOnlineInboundLayerAccessProxy
     {
         private readonly KeycloakClient client;
         private readonly string realm;
-        private readonly ScopedExternalIDMapper mapper;
+        private readonly KeycloakScopedExternalIDMapper mapper;
         private readonly Layer layer;
 
-        public KeycloakLayerAccessProxy(KeycloakClient client, string realm, ScopedExternalIDMapper mapper, Layer layer)
+        public KeycloakLayerAccessProxy(KeycloakClient client, string realm, KeycloakScopedExternalIDMapper mapper, Layer layer)
         {
             this.client = client;
             this.realm = realm;
@@ -67,8 +66,8 @@ namespace KeycloakOnlineInboundAdapter
 
             foreach (var (ciid, externalID) in mapper.GetIDPairs(ciids))
             {
-                var user = await client.GetUserAsync(realm, externalID);
-                var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID);
+                var user = await client.GetUserAsync(realm, externalID.ID);
+                var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.ID);
 
                 foreach (var a in BuildAttributesFromUser(user, ciid, roleMappings))
                     yield return a;
@@ -84,7 +83,7 @@ namespace KeycloakOnlineInboundAdapter
             var users = await client.GetUsersAsync(realm, true, null, null, null, null, 99999, null, null); // TODO, HACK: magic number, how to properly get all user IDs?
             foreach (var user in users)
             {
-                var ciid = mapper.GetCIID(user.Id);
+                var ciid = mapper.GetCIID(new ExternalIDString(user.Id));
                 if (ciid.HasValue)
                 {
                     foreach (var a in BuildAttributesFromUser(user, ciid.Value, null))

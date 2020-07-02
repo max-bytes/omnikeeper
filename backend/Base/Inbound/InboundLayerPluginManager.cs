@@ -14,10 +14,14 @@ namespace Landscape.Base.Inbound
     {
         private readonly IDictionary<string, IOnlineInboundAdapterBuilder> onlinePluginsBuilders;
         private readonly IDictionary<string, (IOnlineInboundAdapterBuilder builder, IOnlineInboundAdapter.IConfig config)> staticConfiguredPlugins;
+        private readonly IExternalIDMapper externalIDMapper;
+        private readonly IExternalIDMapPersister persister;
 
-        public InboundAdapterManager(IEnumerable<IOnlineInboundAdapterBuilder> onlinePluginBuilders)
+        public InboundAdapterManager(IEnumerable<IOnlineInboundAdapterBuilder> onlinePluginBuilders, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister)
         {
             this.onlinePluginsBuilders = onlinePluginBuilders.ToDictionary(p => p.Name);
+            this.externalIDMapper = externalIDMapper;
+            this.persister = persister;
             staticConfiguredPlugins = new Dictionary<string, (IOnlineInboundAdapterBuilder builder, IOnlineInboundAdapter.IConfig config)>();
         }
 
@@ -33,7 +37,7 @@ namespace Landscape.Base.Inbound
             if (staticConfiguredPlugins.TryGetValue(instanceName, out var t))
             {
                 var (builder, config) = t;
-                return builder.Build(config);
+                return builder.Build(config, externalIDMapper, persister);
             }
             return null;
         }

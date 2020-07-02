@@ -15,19 +15,19 @@ namespace Landscape.Base.Inbound
     /// a) to ensure that the external CIs exist also internally and have a proper CIID
     /// b) keep the mapping table between internal and external IDs up-to-date
     /// </summary>
-    public abstract class ExternalIDManager : IExternalIDManager
+    public abstract class ExternalIDManager<EID> : IExternalIDManager where EID : IExternalID
     {
-        private readonly ScopedExternalIDMapper mapper;
+        private readonly ScopedExternalIDMapper<EID> mapper;
 
         public TimeSpan PreferredUpdateRate { get; }
 
-        public ExternalIDManager(ScopedExternalIDMapper mapper, TimeSpan preferredUpdateRate)
+        public ExternalIDManager(ScopedExternalIDMapper<EID> mapper, TimeSpan preferredUpdateRate)
         {
             this.mapper = mapper;
             PreferredUpdateRate = preferredUpdateRate;
         }
 
-        protected abstract Task<IEnumerable<IExternalItem>> GetExternalItems();
+        protected abstract Task<IEnumerable<IExternalItem<EID>>> GetExternalItems();
 
         public async Task Update(ICIModel ciModel, NpgsqlConnection conn, ILogger logger)
         {
@@ -56,7 +56,16 @@ namespace Landscape.Base.Inbound
                 if (!mapper.ExistsInternally(externalID))
                 {
                     logger.LogInformation($"CI with external ID {externalID} does not exist internally, creating...");
-                    var ciid = await ciModel.CreateCI(trans);
+
+                    var derivedCIID = mapper.DeriveCIIDFromExternalID(externalID);
+                    Guid ciid;
+                    if (derivedCIID.HasValue)
+                    {
+                        ciid = await ciModel.CreateCI(trans, derivedCIID.Value);
+                    } else
+                    {
+                        ciid = await ciModel.CreateCI(trans);
+                    }
                     logger.LogInformation($"Created CI with CIID {ciid}");
                     /**
                      * TODO: actually, we should check first if an existing CI may already be a fitting candidate

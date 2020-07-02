@@ -1,13 +1,17 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading.Tasks;
+using static Landscape.Base.Model.IAttributeModel;
 
 namespace LandscapeRegistry.Controllers
 {
@@ -33,6 +37,22 @@ namespace LandscapeRegistry.Controllers
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="layerIDs"></param>
+        /// <param name="atTime"></param>
+        /// <returns></returns>
+        [HttpGet("getMergedAttributesWithName")]
+        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> GetMergedAttributesWithName([FromQuery, Required]string name, [FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
+        {
+            var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
+            var layerset = new LayerSet(layerIDs);
+            var attributes = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsAttributeSelection(), false, layerset, null, timeThreshold);
+            return Ok(attributes.Select(a => CIAttributeDTO.Build(a.Value)));
+        }
+
+        /// <summary>
         /// bulk replace all attributes in specified layer
         /// </summary>
         /// <param name="dto"></param>
@@ -55,5 +75,7 @@ namespace LandscapeRegistry.Controllers
             }
             else return BadRequest();
         }
+
+
     }
 }

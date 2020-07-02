@@ -8,17 +8,19 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace KeycloakOnlineInboundAdapter
+namespace OnlineInboundAdapterKeycloak
 {
-    public class KeycloakOnlineInboundAdapter : IOnlineInboundAdapter
+    public class OnlineInboundAdapter : IOnlineInboundAdapter
     {
         public class Builder : IOnlineInboundAdapterBuilder
         {
             public string Name => "Keycloak";
 
-            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config)
+            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister)
             {
-                return new KeycloakOnlineInboundAdapter(config as Config);
+                var cconfig = config as Config;
+                var scopedExternalIDMapper = externalIDMapper.RegisterScoped(new KeycloakScopedExternalIDMapper(cconfig.mapperScope, persister));
+                return new OnlineInboundAdapter(cconfig, scopedExternalIDMapper);
             }
         }
 
@@ -42,24 +44,21 @@ namespace KeycloakOnlineInboundAdapter
             }
         }
 
-
         private readonly Config config;
         private readonly KeycloakClient client;
         private readonly KeycloakExternalIDManager externalIDManager;
-        private readonly ScopedExternalIDMapper scopedExternalIDMapper;
+        private readonly KeycloakScopedExternalIDMapper scopedExternalIDMapper;
 
-        public KeycloakOnlineInboundAdapter(Config config, IExternalIDMapper externalIDMapper)
+        public OnlineInboundAdapter(Config config, KeycloakScopedExternalIDMapper scopedExternalIDMapper)
         {
             this.config = config;
+            this.scopedExternalIDMapper = scopedExternalIDMapper;
             string GetAccessToken() => GetAccessTokenAsync(config.apiURL, config.realm, config.clientID, config.clientSecret).GetAwaiter().GetResult();
 
             client = new KeycloakClient(config.apiURL, GetAccessToken);
 
-            scopedExternalIDMapper = externalIDMapper.GetScoped(config.mapperScope);
-
             externalIDManager = new KeycloakExternalIDManager(client, config.realm, scopedExternalIDMapper, config.preferredIDMapUpdateRate);
         }
-
 
         private async Task<string> GetAccessTokenAsync(string url, string realm, string client_id, string client_secret)
         {

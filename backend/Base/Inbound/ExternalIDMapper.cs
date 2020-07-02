@@ -8,66 +8,72 @@ namespace Landscape.Base.Inbound
 {
     public interface IExternalIDMapper
     {
-        ScopedExternalIDMapper GetScoped(string scope);
+        S RegisterScoped<S>(S scoped) where S : class, IScopedExternalIDMapper;
+    }
+    public interface IScopedExternalIDMapper
+    {
+        Task Setup();
+        string Scope { get; }
     }
 
     public class ExternalIDMapper : IExternalIDMapper
     {
-        private readonly IExternalIDMapPersister persister;
-        private readonly IDictionary<string, ScopedExternalIDMapper> scopes = new Dictionary<string, ScopedExternalIDMapper>();
+        private readonly IDictionary<string, IScopedExternalIDMapper> scopes = new Dictionary<string, IScopedExternalIDMapper>();
 
-        public ExternalIDMapper(IExternalIDMapPersister persister)
+        public ExternalIDMapper()
         {
-            this.persister = persister;
         }
 
-        public ScopedExternalIDMapper GetScoped(string scope)
+        public S RegisterScoped<S>(S scoped) where S : class, IScopedExternalIDMapper
         {
-            if (scopes.TryGetValue(scope, out var scoped)) return scoped;
-            var newScoped = new ScopedExternalIDMapper(scope, persister);
-            scopes.Add(scope, newScoped);
-            return newScoped;
+            if (scopes.TryGetValue(scoped.Scope, out var existingScoped)) return existingScoped as S;
+            scopes.Add(scoped.Scope, scoped);
+            return scoped;
         }
     }
 
-    public class ScopedExternalIDMapper
+    public abstract class ScopedExternalIDMapper<EID> : IScopedExternalIDMapper where EID : IExternalID
     {
-        private IDictionary<Guid, string> int2ext;
-        private IDictionary<string, Guid> ext2int;
-        public readonly string scope;
+        private IDictionary<Guid, EID> int2ext;
+        private IDictionary<EID, Guid> ext2int;
+        public string Scope { get; }
+        private readonly Func<string, EID> string2ExtIDF;
         private readonly IExternalIDMapPersister persister;
 
         private bool loaded = false;
 
-        public ScopedExternalIDMapper(string scope, IExternalIDMapPersister persister)
+        public ScopedExternalIDMapper(string scope, IExternalIDMapPersister persister, Func<string, EID> string2ExtIDF)
         {
-            int2ext = new Dictionary<Guid, string>();
-            ext2int = new Dictionary<string, Guid>();
-            this.scope = scope;
+            int2ext = new Dictionary<Guid, EID>();
+            ext2int = new Dictionary<EID, Guid>();
+            Scope = scope;
+            this.string2ExtIDF = string2ExtIDF;
             this.persister = persister;
         }
+
+        public abstract Guid? DeriveCIIDFromExternalID(EID externalID);
 
         public async Task Setup()
         {
             if (!loaded)
             {
-                var data = await persister.Load(scope);
+                var data = await persister.Load(Scope);
                 if (data != null)
                 {
-                    int2ext = data;
-                    ext2int = data.ToDictionary(x => x.Value, x => x.Key);
+                    int2ext = data.ToDictionary(kv => kv.Key, kv => string2ExtIDF(kv.Value));
+                    ext2int = int2ext.ToDictionary(x => x.Value, x => x.Key);
                 }
                 loaded = true;
             }
         }
 
-        public void Add(Guid ciid, string externalID)
+        public void Add(Guid ciid, EID externalID)
         {
             int2ext.Add(ciid, externalID);
             ext2int.Add(externalID, ciid);
         }
 
-        public void RemoveViaExternalID(string externalID)
+        public void RemoveViaExternalID(EID externalID)
         {
             if (ext2int.TryGetValue(externalID, out var ciid))
             {
@@ -76,7 +82,7 @@ namespace Landscape.Base.Inbound
             }
         }
 
-        public IEnumerable<string> RemoveAllExceptExternalIDs(IEnumerable<string> externalIDsToKeep)
+        public IEnumerable<EID> RemoveAllExceptExternalIDs(IEnumerable<EID> externalIDsToKeep)
         {
             var remove = ext2int.Keys.Except(externalIDsToKeep).ToList(); // the ToList() is important here, to ensure the Except() is evaluated right now, not later when the collections are modified
             foreach(var r in remove)
@@ -86,7 +92,7 @@ namespace Landscape.Base.Inbound
             return remove;
         }
 
-        public IEnumerable<(Guid, string)> GetIDPairs(ISet<Guid> fromSubSelectionCIIDs)
+        public IEnumerable<(Guid, EID)> GetIDPairs(ISet<Guid> fromSubSelectionCIIDs)
         {
             if (fromSubSelectionCIIDs != null)
                 return int2ext.Where(kv => fromSubSelectionCIIDs.Contains(kv.Key)).Select(kv => (kv.Key, kv.Value));
@@ -94,11 +100,11 @@ namespace Landscape.Base.Inbound
                 return int2ext.Select(kv => (kv.Key, kv.Value));
         }
 
-        public bool ExistsInternally(string externalID) => ext2int.ContainsKey(externalID);
+        public bool ExistsInternally(EID externalID) => ext2int.ContainsKey(externalID);
 
         public IEnumerable<Guid> GetAllCIIDs() => int2ext.Keys;
 
-        public Guid? GetCIID(string externalId)
+        public Guid? GetCIID(EID externalId)
         {
             ext2int.TryGetValue(externalId, out var ciid);
             return ciid;
@@ -106,7 +112,7 @@ namespace Landscape.Base.Inbound
 
         public async Task Persist()
         {
-            await persister.Persist(scope, int2ext);
+            await persister.Persist(Scope, int2ext.ToDictionary(kv => kv.Key, kv => kv.Value.ConvertToString()));
         }
     }
 }

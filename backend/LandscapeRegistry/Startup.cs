@@ -12,7 +12,7 @@ using Hangfire.Console;
 using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
 using Hangfire.PostgreSql;
-using KeycloakOnlineInboundAdapter;
+using OnlineInboundAdapterKeycloak;
 using Landscape.Base;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
@@ -81,17 +81,17 @@ namespace LandscapeRegistry
             // register online inbound adapters
             services.AddSingleton<IExternalIDMapper, ExternalIDMapper>();
             services.AddSingleton<IExternalIDMapPersister, ExternalIDMapPostgresPersister>();
-            services.AddScoped<IOnlineInboundAdapterBuilder, KeycloakOnlineInboundAdapter.KeycloakOnlineInboundAdapter.Builder>();
+            services.AddScoped<IOnlineInboundAdapterBuilder, OnlineInboundAdapterKeycloak.OnlineInboundAdapter.Builder>();
             services.AddScoped<IInboundAdapterManager, InboundAdapterManager>(sp =>
             {
-                var manager = new InboundAdapterManager(sp.GetServices<IOnlineInboundAdapterBuilder>());
+                var manager = new InboundAdapterManager(sp.GetServices<IOnlineInboundAdapterBuilder>(), sp.GetService<IExternalIDMapper>(), sp.GetService<IExternalIDMapPersister>());
 
                 var config = Configuration.GetSection("Keycloak");
                 var apiURL = config["URL"];
                 var realm = config["Realm"];
                 var clientID = config["ClientID"];
                 var clientSecret = config["ClientSecret"];
-                var pluginConfig = new KeycloakOnlineInboundAdapter.KeycloakOnlineInboundAdapter.Config(apiURL, realm, clientID, clientSecret, new TimeSpan(0,0,5), "ext_id_mapping_internal_keycloak");
+                var pluginConfig = new OnlineInboundAdapterKeycloak.OnlineInboundAdapter.Config(apiURL, realm, clientID, clientSecret, new TimeSpan(0,0,5), "ext_id_mapping_internal_keycloak");
                 manager.RegisterStaticOnlinePlugin("Keycloak", pluginConfig, "Internal Keycloak");
 
                 return manager;

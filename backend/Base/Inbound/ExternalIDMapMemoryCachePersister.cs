@@ -16,7 +16,10 @@ namespace Landscape.Base.Inbound
         public async Task<IDictionary<Guid, string>> Load(string scope)
         {
             mc.TryGetValue(scope, out var r);
-            if (r is IDictionary<Guid, string> rr) return rr;
+            if (r is IDictionary<Guid, string> rr)
+            {
+                return rr;
+            }
             return null;
         }
 

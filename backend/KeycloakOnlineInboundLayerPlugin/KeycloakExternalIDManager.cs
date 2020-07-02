@@ -7,31 +7,32 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace KeycloakOnlineInboundAdapter
+namespace OnlineInboundAdapterKeycloak
 {
-    public class KeycloakExternalUser : IExternalItem
+    public class KeycloakExternalUser : IExternalItem<ExternalIDString>
     {
         private readonly Keycloak.Net.Models.Users.User user;
 
         public KeycloakExternalUser(Keycloak.Net.Models.Users.User user)
         {
             this.user = user;
+            ID = new ExternalIDString(user.Id);
         }
-        public string ID => user.Id;
+        public ExternalIDString ID { get; }
     }
 
-    public class KeycloakExternalIDManager : ExternalIDManager
+    public class KeycloakExternalIDManager : ExternalIDManager<ExternalIDString>
     {
         private readonly KeycloakClient client;
         private readonly string realm;
 
-        public KeycloakExternalIDManager(KeycloakClient client, string realm, ScopedExternalIDMapper mapper, TimeSpan preferredUpdateRate) : base(mapper, preferredUpdateRate)
+        public KeycloakExternalIDManager(KeycloakClient client, string realm, KeycloakScopedExternalIDMapper mapper, TimeSpan preferredUpdateRate) : base(mapper, preferredUpdateRate)
         {
             this.client = client;
             this.realm = realm;
         }
 
-        protected override async Task<IEnumerable<IExternalItem>> GetExternalItems()
+        protected override async Task<IEnumerable<IExternalItem<ExternalIDString>>> GetExternalItems()
         {
             var users = await client.GetUsersAsync(realm, true, null, null, null, null, 99999, null, null); // TODO, HACK: magic number, how to properly get all user IDs?
 
