@@ -162,9 +162,9 @@ namespace LandscapeRegistry.GraphQL
                     ComputeLayerBrain clb = LayerModel.DefaultCLB;
                     if (createLayer.BrainName != null && createLayer.BrainName != "")
                         clb = ComputeLayerBrain.Build(createLayer.BrainName);
-                    OnlineInboundLayerPlugin oilp = LayerModel.DefaultOILP;
-                    if (createLayer.OnlineInboundLayerPluginName != null && createLayer.OnlineInboundLayerPluginName != "")
-                        oilp = OnlineInboundLayerPlugin.Build(createLayer.OnlineInboundLayerPluginName);
+                    OnlineInboundAdapter oilp = LayerModel.DefaultOILP;
+                    if (createLayer.OnlineInboundAdapterName != null && createLayer.OnlineInboundAdapterName != "")
+                        oilp = OnlineInboundAdapter.Build(createLayer.OnlineInboundAdapterName);
                     var createdLayer = await layerModel.CreateLayer(createLayer.Name, Color.FromArgb(createLayer.Color), createLayer.State, clb, oilp, transaction);
 
                     //var writeAccessGroupInKeycloakCreated = await keycloakModel.CreateGroup(authorizationService.GetWriteAccessGroupNameFromLayerName(createLayer.Name));
@@ -194,7 +194,7 @@ namespace LandscapeRegistry.GraphQL
                   userContext.Transaction = transaction;
 
                   var clb = ComputeLayerBrain.Build(layer.BrainName);
-                  var oilp = OnlineInboundLayerPlugin.Build(layer.OnlineInboundLayerPluginName);
+                  var oilp = OnlineInboundAdapter.Build(layer.OnlineInboundAdapterName);
                   var updatedLayer = await layerModel.Update(layer.ID, Color.FromArgb(layer.Color), layer.State, clb, oilp, transaction);
                   await transaction.CommitAsync();
 

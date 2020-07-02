@@ -8,23 +8,21 @@ namespace Landscape.Base.Inbound
     public class ExternalIDMapMemoryCachePersister : IExternalIDMapPersister
     {
         private readonly IMemoryCache mc;
-        private readonly string key;
 
-        public ExternalIDMapMemoryCachePersister(IMemoryCache mc, string key)
+        public ExternalIDMapMemoryCachePersister(IMemoryCache mc)
         {
             this.mc = mc;
-            this.key = key;
         }
-        public async Task<IDictionary<Guid, string>> Load()
+        public async Task<IDictionary<Guid, string>> Load(string scope)
         {
-            mc.TryGetValue(key, out var r);
+            mc.TryGetValue(scope, out var r);
             if (r is IDictionary<Guid, string> rr) return rr;
             return null;
         }
 
-        public async Task Persist(IDictionary<Guid, string> int2ext)
+        public async Task Persist(string scope, IDictionary<Guid, string> int2ext)
         {
-            mc.Set(key, int2ext);
+            mc.Set(scope, int2ext);
         }
     }
 

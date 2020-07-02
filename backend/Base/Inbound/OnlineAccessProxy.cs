@@ -5,8 +5,6 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static Landscape.Base.Model.IRelationModel;
 
 namespace Landscape.Base.Inbound
@@ -14,9 +12,9 @@ namespace Landscape.Base.Inbound
     public class OnlineAccessProxy : IOnlineAccessProxy
     {
         private readonly ILayerModel layerModel;
-        private readonly IInboundLayerPluginManager pluginManager;
+        private readonly IInboundAdapterManager pluginManager;
 
-        public OnlineAccessProxy(ILayerModel layerModel, IInboundLayerPluginManager pluginManager) {
+        public OnlineAccessProxy(ILayerModel layerModel, IInboundAdapterManager pluginManager) {
             this.layerModel = layerModel;
             this.pluginManager = pluginManager;
         }
@@ -25,7 +23,7 @@ namespace Landscape.Base.Inbound
         {
             foreach (var layer in await layerModel.GetLayers(layerset.LayerIDs, trans))
             {
-                var plugin = pluginManager.GetOnlinePluginInstance(layer.OnlineInboundLayerPlugin.PluginName);
+                var plugin = pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapter.AdapterName);
                 if (plugin != null)
                 {
                     yield return (plugin.GetLayerAccessProxy(layer), layer);

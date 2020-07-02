@@ -8,48 +8,56 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace KeycloakOnlineInboundLayerPlugin
+namespace KeycloakOnlineInboundAdapter
 {
-    public class KeycloakOnlineInboundLayerPluginBuilder : IOnlineInboundLayerPluginBuilder
+    public class KeycloakOnlineInboundAdapter : IOnlineInboundAdapter
     {
-        public string Name => "Keycloak";
-
-        public IOnlineInboundLayerPlugin Build(IOnlineInboundLayerPlugin.IConfig config)
+        public class Builder : IOnlineInboundAdapterBuilder
         {
-            return new KeycloakOnlineInboundLayerPlugin(config as KeycloakOnlineInboundLayerPlugin.Config);
-        }
-    }
+            public string Name => "Keycloak";
 
-    public class KeycloakOnlineInboundLayerPlugin : IOnlineInboundLayerPlugin
-    {
-        public class Config : IOnlineInboundLayerPlugin.IConfig
+            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config)
+            {
+                return new KeycloakOnlineInboundAdapter(config as Config);
+            }
+        }
+
+        public class Config : IOnlineInboundAdapter.IConfig
         {
             public readonly string apiURL;
             public readonly string realm;
             public readonly string clientID;
             public readonly string clientSecret;
-            public readonly ExternalIDMapper mapper;
+            public readonly string mapperScope;
+            public TimeSpan preferredIDMapUpdateRate;
 
-            public Config(string apiURL, string realm, string clientID, string clientSecret, ExternalIDMapper mapper)
+            public Config(string apiURL, string realm, string clientID, string clientSecret, TimeSpan preferredIDMapUpdateRate, string mapperScope)
             {
                 this.apiURL = apiURL;
                 this.realm = realm;
                 this.clientID = clientID;
                 this.clientSecret = clientSecret;
-                this.mapper = mapper;
+                this.mapperScope = mapperScope;
+                this.preferredIDMapUpdateRate = preferredIDMapUpdateRate;
             }
         }
 
 
         private readonly Config config;
         private readonly KeycloakClient client;
+        private readonly KeycloakExternalIDManager externalIDManager;
+        private readonly ScopedExternalIDMapper scopedExternalIDMapper;
 
-        public KeycloakOnlineInboundLayerPlugin(Config config)
+        public KeycloakOnlineInboundAdapter(Config config, IExternalIDMapper externalIDMapper)
         {
             this.config = config;
             string GetAccessToken() => GetAccessTokenAsync(config.apiURL, config.realm, config.clientID, config.clientSecret).GetAwaiter().GetResult();
 
             client = new KeycloakClient(config.apiURL, GetAccessToken);
+
+            scopedExternalIDMapper = externalIDMapper.GetScoped(config.mapperScope);
+
+            externalIDManager = new KeycloakExternalIDManager(client, config.realm, scopedExternalIDMapper, config.preferredIDMapUpdateRate);
         }
 
 
@@ -71,8 +79,8 @@ namespace KeycloakOnlineInboundLayerPlugin
             return accessToken;
         }
 
-        public IExternalIDManager GetExternalIDManager(ICIModel ciModel) => new KeycloakExternalIDManager(client, config.realm, config.mapper, ciModel);
+        public IExternalIDManager GetExternalIDManager() => externalIDManager;
 
-        public IOnlineInboundLayerAccessProxy GetLayerAccessProxy(Layer layer) => new KeycloakLayerAccessProxy(client, config.realm, config.mapper, layer);
+        public IOnlineInboundLayerAccessProxy GetLayerAccessProxy(Layer layer) => new KeycloakLayerAccessProxy(client, config.realm, scopedExternalIDMapper, layer);
     }
 }

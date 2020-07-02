@@ -10,6 +10,12 @@ using static Landscape.Base.Model.IRelationModel;
 
 namespace Landscape.Base.Inbound
 {
+    public interface IExternalIDMapPersister
+    {
+        public Task Persist(string scope, IDictionary<Guid, string> int2ext);
+        public Task<IDictionary<Guid, string>> Load(string scope);
+    }
+
     public interface IExternalItem
     {
         public string ID { get; }
@@ -17,7 +23,8 @@ namespace Landscape.Base.Inbound
 
     public interface IExternalIDManager
     {
-        Task Update(NpgsqlConnection conn, ILogger logger);
+        Task Update(ICIModel ciModel, NpgsqlConnection conn, ILogger logger);
+        TimeSpan PreferredUpdateRate { get; }
     }
 
     public interface IOnlineInboundLayerAccessProxy
@@ -37,20 +44,20 @@ namespace Landscape.Base.Inbound
         IAsyncEnumerable<(Relation relation, long layerID)> GetRelationsWithPredicateID(string predicateID, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime);
     }
 
-    public interface IOnlineInboundLayerPluginBuilder
+    public interface IOnlineInboundAdapterBuilder
     {
         public string Name { get; }
-        public IOnlineInboundLayerPlugin Build(IOnlineInboundLayerPlugin.IConfig config);
+        public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config);
     }
 
-    public interface IOnlineInboundLayerPlugin
+    public interface IOnlineInboundAdapter
     {
         public interface IConfig
         {
 
         }
 
-        IExternalIDManager GetExternalIDManager(ICIModel ciModel);
+        IExternalIDManager GetExternalIDManager();
 
         IOnlineInboundLayerAccessProxy GetLayerAccessProxy(Layer layer);
     }

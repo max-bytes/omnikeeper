@@ -6,28 +6,44 @@ using System.Threading.Tasks;
 
 namespace Landscape.Base.Inbound
 {
-    public interface IExternalIDMapPersister
+    public interface IExternalIDMapper
     {
-        public Task Persist(IDictionary<Guid, string> int2ext);
-        public Task<IDictionary<Guid, string>> Load();
+        ScopedExternalIDMapper GetScoped(string scope);
     }
 
-    public class ExternalIDMapper
+    public class ExternalIDMapper : IExternalIDMapper
+    {
+        private readonly IExternalIDMapPersister persister;
+        private readonly IDictionary<string, ScopedExternalIDMapper> scopes = new Dictionary<string, ScopedExternalIDMapper>();
+
+        public ExternalIDMapper(IExternalIDMapPersister persister)
+        {
+            this.persister = persister;
+        }
+
+        public ScopedExternalIDMapper GetScoped(string scope)
+        {
+            if (scopes.TryGetValue(scope, out var scoped)) return scoped;
+            var newScoped = new ScopedExternalIDMapper(scope, persister);
+            scopes.Add(scope, newScoped);
+            return newScoped;
+        }
+    }
+
+    public class ScopedExternalIDMapper
     {
         private IDictionary<Guid, string> int2ext;
         private IDictionary<string, Guid> ext2int;
-        private IExternalIDMapPersister persister = null;
+        public readonly string scope;
+        private readonly IExternalIDMapPersister persister;
 
         private bool loaded = false;
 
-        public ExternalIDMapper()
+        public ScopedExternalIDMapper(string scope, IExternalIDMapPersister persister)
         {
             int2ext = new Dictionary<Guid, string>();
             ext2int = new Dictionary<string, Guid>();
-        }
-
-        public void SetPersister(IExternalIDMapPersister persister)
-        {
+            this.scope = scope;
             this.persister = persister;
         }
 
@@ -35,14 +51,11 @@ namespace Landscape.Base.Inbound
         {
             if (!loaded)
             {
-                if (persister != null)
+                var data = await persister.Load(scope);
+                if (data != null)
                 {
-                    var data = await persister.Load();
-                    if (data != null)
-                    {
-                        int2ext = data;
-                        ext2int = data.ToDictionary(x => x.Value, x => x.Key);
-                    }
+                    int2ext = data;
+                    ext2int = data.ToDictionary(x => x.Value, x => x.Key);
                 }
                 loaded = true;
             }
@@ -93,8 +106,7 @@ namespace Landscape.Base.Inbound
 
         public async Task Persist()
         {
-            if (persister != null)
-                await persister.Persist(int2ext);
+            await persister.Persist(scope, int2ext);
         }
     }
 }

@@ -5,29 +5,29 @@ using System.Text;
 
 namespace Landscape.Base.Inbound
 {
-    public interface IInboundLayerPluginManager
+    public interface IInboundAdapterManager
     {
-        IOnlineInboundLayerPlugin GetOnlinePluginInstance(string instanceName);
+        IOnlineInboundAdapter GetOnlinePluginInstance(string instanceName);
     }
 
-    public class InboundLayerPluginManager : IInboundLayerPluginManager
+    public class InboundAdapterManager : IInboundAdapterManager
     {
-        private readonly IDictionary<string, IOnlineInboundLayerPluginBuilder> onlinePluginsBuilders;
-        private readonly IDictionary<string, (IOnlineInboundLayerPluginBuilder builder, IOnlineInboundLayerPlugin.IConfig config)> staticConfiguredPlugins;
+        private readonly IDictionary<string, IOnlineInboundAdapterBuilder> onlinePluginsBuilders;
+        private readonly IDictionary<string, (IOnlineInboundAdapterBuilder builder, IOnlineInboundAdapter.IConfig config)> staticConfiguredPlugins;
 
-        public InboundLayerPluginManager(IEnumerable<IOnlineInboundLayerPluginBuilder> onlinePluginBuilders)
+        public InboundAdapterManager(IEnumerable<IOnlineInboundAdapterBuilder> onlinePluginBuilders)
         {
             this.onlinePluginsBuilders = onlinePluginBuilders.ToDictionary(p => p.Name);
-            staticConfiguredPlugins = new Dictionary<string, (IOnlineInboundLayerPluginBuilder builder, IOnlineInboundLayerPlugin.IConfig config)>();
+            staticConfiguredPlugins = new Dictionary<string, (IOnlineInboundAdapterBuilder builder, IOnlineInboundAdapter.IConfig config)>();
         }
 
-        public void RegisterStaticOnlinePlugin(string builderName, IOnlineInboundLayerPlugin.IConfig config, string instanceName)
+        public void RegisterStaticOnlinePlugin(string builderName, IOnlineInboundAdapter.IConfig config, string instanceName)
         {
             var builder = onlinePluginsBuilders[builderName];
             staticConfiguredPlugins.Add(instanceName, (builder, config));
         }
 
-        public IOnlineInboundLayerPlugin GetOnlinePluginInstance(string instanceName)
+        public IOnlineInboundAdapter GetOnlinePluginInstance(string instanceName)
         {
             // TODO: add dynamic plugins
             if (staticConfiguredPlugins.TryGetValue(instanceName, out var t))

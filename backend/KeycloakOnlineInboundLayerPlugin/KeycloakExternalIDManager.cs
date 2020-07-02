@@ -2,11 +2,12 @@
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
 using Npgsql;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace KeycloakOnlineInboundLayerPlugin
+namespace KeycloakOnlineInboundAdapter
 {
     public class KeycloakExternalUser : IExternalItem
     {
@@ -24,7 +25,7 @@ namespace KeycloakOnlineInboundLayerPlugin
         private readonly KeycloakClient client;
         private readonly string realm;
 
-        public KeycloakExternalIDManager(KeycloakClient client, string realm, ExternalIDMapper mapper, ICIModel ciModel) : base(mapper, ciModel)
+        public KeycloakExternalIDManager(KeycloakClient client, string realm, ScopedExternalIDMapper mapper, TimeSpan preferredUpdateRate) : base(mapper, preferredUpdateRate)
         {
             this.client = client;
             this.realm = realm;

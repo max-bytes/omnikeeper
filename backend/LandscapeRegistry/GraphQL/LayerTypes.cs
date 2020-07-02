@@ -17,7 +17,7 @@ namespace LandscapeRegistry.GraphQL
         {
             Field(x => x.Name);
             Field("brainName", x => x.ComputeLayerBrain.Name);
-            Field("onlineInboundLayerPluginName", x => x.OnlineInboundLayerPlugin.PluginName);
+            Field("onlineInboundAdapterName", x => x.OnlineInboundAdapter.AdapterName);
             Field("id", x => x.ID);
             Field("color", x => x.Color.ToArgb());
             Field(x => x.State, type: typeof(AnchorStateType));

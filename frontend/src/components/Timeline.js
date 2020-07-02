@@ -1,17 +1,17 @@
 import { useQuery } from '@apollo/client';
 import React, { useState } from 'react';
 import PropTypes from 'prop-types'
-import { queries } from '../graphql/queries'
+import { queries } from 'graphql/queries'
 import LoadingOverlay from 'react-loading-overlay'
 import { Form, Button } from 'react-bootstrap';
 import { Button as SemanticButton, Icon } from 'semantic-ui-react'
-import { mutations } from '../graphql/mutations';
+import { mutations } from 'graphql/mutations';
 import { useMutation } from '@apollo/react-hooks';
 import UserTypeIcon from './UserTypeIcon';
-import moment from 'moment'
+import { formatTimestamp } from 'utils/datetime.js';
 import { ErrorView } from './ErrorView';
-import { useExplorerLayers } from '../utils/layers';
-import { useSelectedTime } from '../utils/useSelectedTime';
+import { useExplorerLayers } from 'utils/layers';
+import { useSelectedTime } from 'utils/useSelectedTime';
 import { Link } from 'react-router-dom';
 import { buildDiffingURLQueryBetweenChangesets } from 'components/diffing/Diffing'
 
@@ -99,7 +99,7 @@ function LoadingTimeline(props) {
             
           {changesets.map((cs) => {
             const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.displayName}</span> : '';
-            const label = <span style={((activeChangeset === cs) ? {fontWeight: 'bold'} : {})}>{moment(cs.timestamp).format('YYYY-MM-DD HH:mm:ss')} - {userLabel}</span>;
+            const label = <span style={((activeChangeset === cs) ? {fontWeight: 'bold'} : {})}>{formatTimestamp(cs.timestamp)} - {userLabel}</span>;
             if (activeChangeset === cs) {
               return (<Button style={buttonStyle} variant="link" size="sm" disabled key={cs.id}>{label}</Button>);
             }

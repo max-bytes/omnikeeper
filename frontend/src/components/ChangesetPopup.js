@@ -4,6 +4,7 @@ import PropTypes from 'prop-types'
 import { queries } from '../graphql/queries'
 import { Button, Popup, Icon } from 'semantic-ui-react'
 import UserTypeIcon from './UserTypeIcon';
+import { formatTimestamp } from 'utils/datetime.js';
 
 function InnerPopup(props) {
 
@@ -18,12 +19,16 @@ function InnerPopup(props) {
   if (data) {
     if (!data.changeset) return (<Icon name={'exclamation circle'} />);
     const userLabel = <span style={{display: 'flex', flexWrap: 'nowrap', whiteSpace: 'nowrap'}}><UserTypeIcon style={{paddingRight: '3px'}} userType={data.changeset.user.type} /> {data.changeset.user.displayName}</span>;
-    const dls = {display: 'flex', flexWrap: 'nowrap', marginBottom: '0px'};
+    const dls = {display: 'flex', flexWrap: 'nowrap', marginBottom: '0px', whiteSpace: 'nowrap'};
     const dts = {width: '120px', textAlign: 'right', paddingRight: '10px' }
     return (<div style={{display: 'flex', flexFlow: 'column'}}>
       <dl style={dls}>
         <dt style={dts}>User:</dt>
         <dd>{userLabel}</dd>
+      </dl>
+      <dl style={dls}>
+        <dt style={dts}>Timestamp:</dt>
+        <dd>{formatTimestamp(data.changeset.timestamp)}</dd>
       </dl>
       <dl style={dls}>
         <dt style={dts}>Changeset-ID:</dt>

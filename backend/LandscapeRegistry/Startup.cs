@@ -12,7 +12,7 @@ using Hangfire.Console;
 using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
 using Hangfire.PostgreSql;
-using KeycloakOnlineInboundLayerPlugin;
+using KeycloakOnlineInboundAdapter;
 using Landscape.Base;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
@@ -78,20 +78,20 @@ namespace LandscapeRegistry
             services.AddScoped<IComputeLayerBrain, CLBMonitoring>();
             services.AddScoped<IComputeLayerBrain, CLBNaemonMonitoring>();
 
-            // register online inbound layer plugins
-            services.AddScoped<IOnlineInboundLayerPluginBuilder, KeycloakOnlineInboundLayerPluginBuilder>();
-            services.AddScoped<IInboundLayerPluginManager, InboundLayerPluginManager>(sp =>
+            // register online inbound adapters
+            services.AddSingleton<IExternalIDMapper, ExternalIDMapper>();
+            services.AddSingleton<IExternalIDMapPersister, ExternalIDMapPostgresPersister>();
+            services.AddScoped<IOnlineInboundAdapterBuilder, KeycloakOnlineInboundAdapter.KeycloakOnlineInboundAdapter.Builder>();
+            services.AddScoped<IInboundAdapterManager, InboundAdapterManager>(sp =>
             {
-                var manager = new InboundLayerPluginManager(sp.GetServices<IOnlineInboundLayerPluginBuilder>());
+                var manager = new InboundAdapterManager(sp.GetServices<IOnlineInboundAdapterBuilder>());
 
                 var config = Configuration.GetSection("Keycloak");
                 var apiURL = config["URL"];
                 var realm = config["Realm"];
                 var clientID = config["ClientID"];
                 var clientSecret = config["ClientSecret"];
-                var mapper = new ExternalIDMapper();
-                mapper.SetPersister(new ExternalIDMapPostgresPersister(Configuration, sp.GetRequiredService<DBConnectionBuilder>(), "ext_id_mapping_internal_keycloak"));
-                var pluginConfig = new KeycloakOnlineInboundLayerPlugin.KeycloakOnlineInboundLayerPlugin.Config(apiURL, realm, clientID, clientSecret, mapper);
+                var pluginConfig = new KeycloakOnlineInboundAdapter.KeycloakOnlineInboundAdapter.Config(apiURL, realm, clientID, clientSecret, new TimeSpan(0,0,5), "ext_id_mapping_internal_keycloak");
                 manager.RegisterStaticOnlinePlugin("Keycloak", pluginConfig, "Internal Keycloak");
 
                 return manager;
@@ -365,7 +365,7 @@ namespace LandscapeRegistry
 
             //RecurringJob.AddOrUpdate<CLBRunner>(runner => runner.Run(), "*/15 * * * * *");
             RecurringJob.AddOrUpdate<MarkedForDeletionRunner>(s => s.Run(), Cron.Minutely);
-            RecurringJob.AddOrUpdate<ExternalIDManagerRunner>(s => s.Run(), "*/15 * * * * *");
+            RecurringJob.AddOrUpdate<ExternalIDManagerRunner>(s => s.Run(), "*/5 * * * * *");
         }
     }
 

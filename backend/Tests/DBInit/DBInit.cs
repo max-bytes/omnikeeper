@@ -97,7 +97,7 @@ namespace Tests.DBInit
                 await layerModel.CreateLayer("Inventory Scan", trans);
                 var monitoringDefinitionsLayer = await layerModel.CreateLayer("Monitoring Definitions", trans);
                 monitoringDefinitionsLayerID = monitoringDefinitionsLayer.ID;
-                await layerModel.CreateLayer("Monitoring", ColorTranslator.FromHtml("#FFE6CC"), AnchorState.Active, ComputeLayerBrain.Build("MonitoringPlugin.CLBNaemonMonitoring"), OnlineInboundLayerPlugin.Build(""), trans);
+                await layerModel.CreateLayer("Monitoring", ColorTranslator.FromHtml("#FFE6CC"), AnchorState.Active, ComputeLayerBrain.Build("MonitoringPlugin.CLBNaemonMonitoring"), OnlineInboundAdapter.Build(""), trans);
                 var automationLayer = await layerModel.CreateLayer("Automation", trans);
                 automationLayerID = automationLayer.ID;
                 trans.Commit();

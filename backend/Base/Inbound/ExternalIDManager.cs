@@ -17,18 +17,19 @@ namespace Landscape.Base.Inbound
     /// </summary>
     public abstract class ExternalIDManager : IExternalIDManager
     {
-        private readonly ExternalIDMapper mapper;
-        private readonly ICIModel ciModel;
+        private readonly ScopedExternalIDMapper mapper;
 
-        public ExternalIDManager(ExternalIDMapper mapper, ICIModel ciModel)
+        public TimeSpan PreferredUpdateRate { get; }
+
+        public ExternalIDManager(ScopedExternalIDMapper mapper, TimeSpan preferredUpdateRate)
         {
             this.mapper = mapper;
-            this.ciModel = ciModel;
+            PreferredUpdateRate = preferredUpdateRate;
         }
 
         protected abstract Task<IEnumerable<IExternalItem>> GetExternalItems();
 
-        public async Task Update(NpgsqlConnection conn, ILogger logger)
+        public async Task Update(ICIModel ciModel, NpgsqlConnection conn, ILogger logger)
         {
             await mapper.Setup();
 

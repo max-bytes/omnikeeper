@@ -10,16 +10,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace KeycloakOnlineInboundLayerPlugin
+namespace KeycloakOnlineInboundAdapter
 {
     public class KeycloakLayerAccessProxy : IOnlineInboundLayerAccessProxy
     {
         private readonly KeycloakClient client;
         private readonly string realm;
-        private readonly ExternalIDMapper mapper;
+        private readonly ScopedExternalIDMapper mapper;
         private readonly Layer layer;
 
-        public KeycloakLayerAccessProxy(KeycloakClient client, string realm, ExternalIDMapper mapper, Layer layer)
+        public KeycloakLayerAccessProxy(KeycloakClient client, string realm, ScopedExternalIDMapper mapper, Layer layer)
         {
             this.client = client;
             this.realm = realm;

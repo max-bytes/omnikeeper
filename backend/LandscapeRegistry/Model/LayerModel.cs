@@ -15,7 +15,7 @@ namespace LandscapeRegistry.Model
         private readonly NpgsqlConnection conn;
 
         public static readonly ComputeLayerBrain DefaultCLB = ComputeLayerBrain.Build("");
-        public static readonly OnlineInboundLayerPlugin DefaultOILP = OnlineInboundLayerPlugin.Build("");
+        public static readonly OnlineInboundAdapter DefaultOILP = OnlineInboundAdapter.Build("");
         private static readonly AnchorState DefaultState = AnchorState.Active;
         private static readonly Color DefaultColor = Color.White;
 
@@ -28,7 +28,7 @@ namespace LandscapeRegistry.Model
         {
             return await CreateLayer(name, DefaultColor, DefaultState, DefaultCLB, DefaultOILP, trans);
         }
-        public async Task<Layer> CreateLayer(string name, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, OnlineInboundLayerPlugin oilp, NpgsqlTransaction trans)
+        public async Task<Layer> CreateLayer(string name, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, OnlineInboundAdapter oilp, NpgsqlTransaction trans)
         {
             Debug.Assert(computeLayerBrain != null);
 
@@ -65,14 +65,14 @@ namespace LandscapeRegistry.Model
             using var commandOILP = new NpgsqlCommand(@"INSERT INTO layer_onlineinboundlayerplugin (layer_id, pluginname, ""timestamp"")
                     VALUES (@layer_id, @pluginname, @timestamp)", conn, trans);
             commandOILP.Parameters.AddWithValue("layer_id", id);
-            commandOILP.Parameters.AddWithValue("pluginname", oilp.PluginName);
+            commandOILP.Parameters.AddWithValue("pluginname", oilp.AdapterName);
             commandOILP.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
             await commandOILP.ExecuteNonQueryAsync();
 
             return Layer.Build(name, id, color, state, computeLayerBrain, oilp);
         }
 
-        public async Task<Layer> Update(long id, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, OnlineInboundLayerPlugin oilp, NpgsqlTransaction trans)
+        public async Task<Layer> Update(long id, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, OnlineInboundAdapter oilp, NpgsqlTransaction trans)
         {
             Debug.Assert(computeLayerBrain != null);
             Debug.Assert(oilp != null);
@@ -80,7 +80,7 @@ namespace LandscapeRegistry.Model
             var current = await GetLayer(id, trans);
 
             Debug.Assert(current.ComputeLayerBrain != null);
-            Debug.Assert(current.OnlineInboundLayerPlugin != null);
+            Debug.Assert(current.OnlineInboundAdapter != null);
 
             // update color
             if (!current.Color.Equals(color))
@@ -91,7 +91,7 @@ namespace LandscapeRegistry.Model
                 commandColor.Parameters.AddWithValue("color", color.ToArgb());
                 commandColor.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandColor.ExecuteNonQueryAsync();
-                current = Layer.Build(current.Name, current.ID, color, current.State, current.ComputeLayerBrain, current.OnlineInboundLayerPlugin);
+                current = Layer.Build(current.Name, current.ID, color, current.State, current.ComputeLayerBrain, current.OnlineInboundAdapter);
             }
 
             // update state
@@ -103,7 +103,7 @@ namespace LandscapeRegistry.Model
                 commandState.Parameters.AddWithValue("state", state);
                 commandState.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandState.ExecuteNonQueryAsync();
-                current = Layer.Build(current.Name, current.ID, current.Color, state, current.ComputeLayerBrain, current.OnlineInboundLayerPlugin);
+                current = Layer.Build(current.Name, current.ID, current.Color, state, current.ComputeLayerBrain, current.OnlineInboundAdapter);
             }
 
             // update clb
@@ -115,16 +115,16 @@ namespace LandscapeRegistry.Model
                 commandCLB.Parameters.AddWithValue("brainname", computeLayerBrain.Name);
                 commandCLB.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandCLB.ExecuteNonQueryAsync();
-                current = Layer.Build(current.Name, current.ID, current.Color, current.State, computeLayerBrain, current.OnlineInboundLayerPlugin);
+                current = Layer.Build(current.Name, current.ID, current.Color, current.State, computeLayerBrain, current.OnlineInboundAdapter);
             }
 
             // update oilp
-            if (!current.OnlineInboundLayerPlugin.Equals(oilp))
+            if (!current.OnlineInboundAdapter.Equals(oilp))
             {
                 using var commandOILP = new NpgsqlCommand(@"INSERT INTO layer_onlineinboundlayerplugin (layer_id, pluginname, ""timestamp"")
                     VALUES (@layer_id, @pluginname, @timestamp)", conn, trans);
                 commandOILP.Parameters.AddWithValue("layer_id", id);
-                commandOILP.Parameters.AddWithValue("pluginname", oilp.PluginName);
+                commandOILP.Parameters.AddWithValue("pluginname", oilp.AdapterName);
                 commandOILP.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandOILP.ExecuteNonQueryAsync();
                 current = Layer.Build(current.Name, current.ID, current.Color, current.State, current.ComputeLayerBrain, oilp);
@@ -201,7 +201,7 @@ namespace LandscapeRegistry.Model
                 var name = r.GetString(1);
                 var state = (r.IsDBNull(2)) ? DefaultState : r.GetFieldValue<AnchorState>(2);
                 var clb = (r.IsDBNull(3)) ? DefaultCLB : ComputeLayerBrain.Build(r.GetString(3));
-                var oilp = (r.IsDBNull(4)) ? DefaultOILP : OnlineInboundLayerPlugin.Build(r.GetString(4));
+                var oilp = (r.IsDBNull(4)) ? DefaultOILP : OnlineInboundAdapter.Build(r.GetString(4));
                 var color = (r.IsDBNull(5)) ? DefaultColor : Color.FromArgb(r.GetInt32(5));
                 layers.Add(Layer.Build(name, id, color, state, clb, oilp));
             }

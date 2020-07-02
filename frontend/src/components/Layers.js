@@ -87,7 +87,7 @@ function Layers(props) {
                     &nbsp;
                     <span style={((layer.visible) ? {} : {color: '#ccc'})}>{layer.name} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
                     {layer.brainName !== "" && (<FontAwesomeIcon icon={faCogs} />)}
-                    {layer.onlineInboundLayerPluginName !== "" && (<FontAwesomeIcon icon={faPlug} />)}
+                    {layer.onlineInboundAdapterName !== "" && (<FontAwesomeIcon icon={faPlug} />)}
                   </span>
                   &nbsp;&nbsp;
                     <Button basic size='mini' compact onClick={() => toggleLayerVisibility(layer.id, data.layers)}>

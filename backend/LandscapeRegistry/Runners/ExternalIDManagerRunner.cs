@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Inbound;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
@@ -13,12 +14,15 @@ namespace LandscapeRegistry.Runners
     public class ExternalIDManagerRunner
     {
         private readonly ILogger<ExternalIDManagerRunner> logger;
-        private readonly IInboundLayerPluginManager pluginManager;
+        private readonly IInboundAdapterManager pluginManager;
         private readonly ICIModel ciModel;
         private readonly ILayerModel layerModel;
         private readonly NpgsqlConnection conn;
 
-        public ExternalIDManagerRunner(IInboundLayerPluginManager pluginManager, ICIModel ciModel, ILayerModel layerModel, NpgsqlConnection conn, ILogger<ExternalIDManagerRunner> logger)
+        // HACK: making this static sucks, find better way, but runner is instantiated anew on each run
+        private static readonly IDictionary<string, DateTimeOffset> lastRuns = new Dictionary<string, DateTimeOffset>();
+
+        public ExternalIDManagerRunner(IInboundAdapterManager pluginManager, ICIModel ciModel, ILayerModel layerModel, NpgsqlConnection conn, ILogger<ExternalIDManagerRunner> logger)
         {
             this.logger = logger;
             this.pluginManager = pluginManager;
@@ -37,29 +41,40 @@ namespace LandscapeRegistry.Runners
             logger.LogInformation("Start");
 
             var activeLayers = await layerModel.GetLayers(Landscape.Base.Entity.AnchorStateFilter.ActiveAndDeprecated, null);
-            var layersWithOILPs = activeLayers.Where(l => l.OnlineInboundLayerPlugin.PluginName != ""); // TODO: better check for set oilp than name != ""
+            var layersWithOILPs = activeLayers.Where(l => l.OnlineInboundAdapter.AdapterName != ""); // TODO: better check for set oilp than name != ""
 
-            foreach (var l in layersWithOILPs)
+            var adapters = layersWithOILPs.Select(l => l.OnlineInboundAdapter.AdapterName)
+                .Distinct(); // distinct because multiple layers can have the same adapter configured
+
+            foreach (var adapterName in adapters)
             {
+                lastRuns.TryGetValue(adapterName, out var lastRun);
+
                 // find oilp for layer
-                var plugin = pluginManager.GetOnlinePluginInstance(l.OnlineInboundLayerPlugin.PluginName);
+                var plugin = pluginManager.GetOnlinePluginInstance(adapterName);
                 if (plugin == null)
                 {
-                    logger.LogError($"Could not find online inbound layer plugin with name {l.OnlineInboundLayerPlugin.PluginName}");
+                    logger.LogError($"Could not find online inbound layer plugin with name {adapterName}");
                 }
                 else
                 {
-                    logger.LogInformation($"Running external ID manager for OILP {l.OnlineInboundLayerPlugin.PluginName} on layer {l.Name}");
+                    var manager = plugin.GetExternalIDManager();
+                    if (lastRun == null || (DateTimeOffset.Now - lastRun) > manager.PreferredUpdateRate)
+                    {
+                        logger.LogInformation($"Running external ID update for OILP {adapterName}");
 
-                    var manager = plugin.GetExternalIDManager(ciModel);
-
-                    Stopwatch stopWatch = new Stopwatch();
-                    stopWatch.Start();
-                    await manager.Update(conn, logger);
-                    stopWatch.Stop();
-                    TimeSpan ts = stopWatch.Elapsed;
-                    string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-                    logger.LogInformation($"Done in {elapsedTime}");
+                        Stopwatch stopWatch = new Stopwatch();
+                        stopWatch.Start();
+                        await manager.Update(ciModel, conn, logger);
+                        stopWatch.Stop();
+                        TimeSpan ts = stopWatch.Elapsed;
+                        string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                        logger.LogInformation($"Done in {elapsedTime}");
+                        lastRuns[adapterName] = DateTimeOffset.Now;
+                    } else
+                    {
+                        logger.LogInformation($"Skipping external ID update for OILP {adapterName}");
+                    }
                 }
             }
 

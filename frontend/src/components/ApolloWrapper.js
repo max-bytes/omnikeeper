@@ -58,8 +58,8 @@ function ApolloWrapper({ component: Component, ...rest }) {
                     selectedTimeThreshold: {
                         time: variables.newTimeThreshold,
                         isLatest: variables.isLatest,
-                        refreshNonceTimeline: (variables.refreshTimeline) ? moment().format('YYYY-MM-DD HH:mm:ss') : null,
-                        refreshNonceCI: (variables.refreshCI) ? moment().format('YYYY-MM-DD HH:mm:ss') : null
+                        refreshNonceTimeline: (variables.refreshTimeline) ? moment().format() : null,
+                        refreshNonceCI: (variables.refreshCI) ? moment().format() : null
                     }
                 }});
                 return null;

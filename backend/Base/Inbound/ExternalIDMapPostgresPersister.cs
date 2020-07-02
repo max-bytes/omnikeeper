@@ -13,16 +13,15 @@ namespace Landscape.Base.Inbound
     {
         private readonly IConfiguration configuration;
         private readonly DBConnectionBuilder cb;
-        private readonly string tableName;
 
-        public ExternalIDMapPostgresPersister(IConfiguration configuration, DBConnectionBuilder cb, string tableName)
+        public ExternalIDMapPostgresPersister(IConfiguration configuration, DBConnectionBuilder cb)
         {
             this.configuration = configuration;
             this.cb = cb;
-            this.tableName = tableName;
         }
-        public async Task<IDictionary<Guid, string>> Load()
+        public async Task<IDictionary<Guid, string>> Load(string scope)
         {
+            var tableName = scope;
             var conn = cb.Build(configuration);
 
             if (conn == null) return ImmutableDictionary<Guid, string>.Empty;
@@ -31,7 +30,7 @@ namespace Landscape.Base.Inbound
 
             using (var trans = conn.BeginTransaction())
             {
-                CreateTableIfNotExists(trans, conn);
+                CreateTableIfNotExists(tableName, trans, conn);
 
                 using (var command = new NpgsqlCommand(@$"SELECT ci_id, external_id from {tableName}", conn, trans))
                 {
@@ -54,7 +53,7 @@ namespace Landscape.Base.Inbound
             return ret;
         }
 
-        private void CreateTableIfNotExists(NpgsqlTransaction trans, NpgsqlConnection conn)
+        private void CreateTableIfNotExists(string tableName, NpgsqlTransaction trans, NpgsqlConnection conn)
         {
             var createSQL = $@"CREATE TABLE IF NOT EXISTS public.{tableName}
                 (
@@ -66,15 +65,16 @@ namespace Landscape.Base.Inbound
             cmdCreate.ExecuteNonQuery();
         }
 
-        public async Task Persist(IDictionary<Guid, string> int2ext)
+        public async Task Persist(string scope, IDictionary<Guid, string> int2ext)
         {
+            var tableName = scope;
             var conn = cb.Build(configuration);
 
             if (conn == null) return;
 
             using var trans = conn.BeginTransaction();
 
-            CreateTableIfNotExists(trans, conn);
+            CreateTableIfNotExists(tableName, trans, conn);
 
             // truncate // TODO: maybe find a better way to update the mappings instead of trunating and writing everything anew
             using var cmdTruncate = new NpgsqlCommand($"TRUNCATE TABLE public.{tableName}", conn, trans);

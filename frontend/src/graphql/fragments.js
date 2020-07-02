@@ -114,7 +114,7 @@ export const Fragments = {
     state
     writable
     brainName
-    onlineInboundLayerPluginName
+    onlineInboundAdapterName
   }
   `,
   // TODO: needed?
