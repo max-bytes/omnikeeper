@@ -83,6 +83,7 @@ namespace LandscapeRegistry.Model
         {
             if (layerset.IsEmpty)
                 return ImmutableList<MergedRelation>.Empty; // return empty, an empty layer list can never produce any relations
+            // TODO: use GetAttributes() in case of single item layerset
 
             var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 

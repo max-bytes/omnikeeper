@@ -27,18 +27,18 @@ namespace Landscape.Base.Inbound
             PreferredUpdateRate = preferredUpdateRate;
         }
 
-        protected abstract Task<IEnumerable<IExternalItem<EID>>> GetExternalItems();
+        protected abstract Task<IEnumerable<EID>> GetExternalIDs();
 
         public async Task Update(ICIModel ciModel, NpgsqlConnection conn, ILogger logger)
         {
             await mapper.Setup();
 
-            var externalItems = await GetExternalItems();
+            var externalIDs = await GetExternalIDs();
 
             var changes = false;
 
             // remove all mappings that do not have an external item (anymore)
-            var removedExternalIDs = mapper.RemoveAllExceptExternalIDs(externalItems.Select(ei => ei.ID));
+            var removedExternalIDs = mapper.RemoveAllExceptExternalIDs(externalIDs);
             if (!removedExternalIDs.IsEmpty())
             {
                 logger.LogInformation("Removed the folloing external IDs from mapping: ");
@@ -50,23 +50,28 @@ namespace Landscape.Base.Inbound
             using var trans = conn.BeginTransaction();
 
             // add any (new) CIs that don't exist yet, and add to mapper
-            foreach (var externalItem in externalItems)
+            foreach (var externalID in externalIDs)
             {
-                var externalID = externalItem.ID;
                 if (!mapper.ExistsInternally(externalID))
                 {
                     logger.LogInformation($"CI with external ID {externalID} does not exist internally, creating...");
 
-                    var derivedCIID = mapper.DeriveCIIDFromExternalID(externalID);
+                    var derivedCIID = mapper.DeriveCIIDFromExternalID(externalID); // TODO: rework 
                     Guid ciid;
                     if (derivedCIID.HasValue)
                     {
-                        ciid = await ciModel.CreateCI(trans, derivedCIID.Value);
+                        if (await ciModel.CIIDExists(derivedCIID.Value, trans)) // TODO: performance improvements, do not check every ci separately
+                            ciid = derivedCIID.Value;
+                        else
+                        {
+                            ciid = await ciModel.CreateCI(trans, derivedCIID.Value);
+                            logger.LogInformation($"Created CI with CIID {ciid}");
+                        }
                     } else
                     {
                         ciid = await ciModel.CreateCI(trans);
+                        logger.LogInformation($"Created CI with CIID {ciid}");
                     }
-                    logger.LogInformation($"Created CI with CIID {ciid}");
                     /**
                      * TODO: actually, we should check first if an existing CI may already be a fitting candidate
                      * this would probably be a similar process as when identifying CIs when doing an ingest 

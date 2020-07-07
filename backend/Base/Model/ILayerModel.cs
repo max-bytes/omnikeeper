@@ -13,8 +13,8 @@ namespace Landscape.Base.Model
 
 
         Task<Layer> CreateLayer(string name, NpgsqlTransaction trans);
-        Task<Layer> CreateLayer(string name, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, OnlineInboundAdapter oilp, NpgsqlTransaction trans);
-        Task<Layer> Update(long id, Color color, AnchorState state, ComputeLayerBrain computeLayerBrain, OnlineInboundAdapter oilp, NpgsqlTransaction trans);
+        Task<Layer> CreateLayer(string name, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrain, OnlineInboundAdapterLink oilp, NpgsqlTransaction trans);
+        Task<Layer> Update(long id, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrain, OnlineInboundAdapterLink oilp, NpgsqlTransaction trans);
         Task<bool> TryToDelete(long id, NpgsqlTransaction trans);
 
         Task<Layer> GetLayer(long layerID, NpgsqlTransaction trans);

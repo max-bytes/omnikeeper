@@ -228,6 +228,60 @@ namespace LandscapeRegistry.Model
                 tmp.Add(s.GetGuid(0));
             return tmp;
         }
+
+        public async Task<IEnumerable<Guid>> GetCIIDsOfNonEmptyCIs(LayerSet layerset, NpgsqlTransaction trans, TimeThreshold timeThreshold)
+        {
+            var ret = new HashSet<Guid>();
+
+            /*
+             * CI is non-empty if it has either non-removed attributes or non-removed relations
+             */
+
+            // attributes
+            using (var command = new NpgsqlCommand(@$"select distinct on(ci_id, name, layer_id) ci_id, state from
+                   attribute where timestamp <= @time_threshold and layer_id = ANY(@layer_ids) order by ci_id, name, layer_id, timestamp DESC
+                ", conn, trans))
+            {
+                command.Parameters.AddWithValue("time_threshold", timeThreshold.Time);
+                command.Parameters.AddWithValue("layer_ids", layerset.ToArray());
+                using var dr = await command.ExecuteReaderAsync();
+
+                while (await dr.ReadAsync())
+                {
+                    var CIID = dr.GetGuid(0);
+                    var state = dr.GetFieldValue<AttributeState>(1);
+
+                    if (state != AttributeState.Removed)
+                        ret.Add(CIID);
+                }
+            }
+
+            // relations
+            using (var command = new NpgsqlCommand(@$"select distinct on(from_ci_id, to_ci_id, predicate_id, layer_id) from_ci_id, to_ci_id, state from
+                    relation where timestamp <= @time_threshold and layer_id = ANY(@layer_ids) order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC
+                ", conn, trans))
+            {
+                command.Parameters.AddWithValue("time_threshold", timeThreshold.Time);
+                command.Parameters.AddWithValue("layer_ids", layerset.ToArray());
+                using var dr = await command.ExecuteReaderAsync();
+
+                while (await dr.ReadAsync())
+                {
+                    var fromCIID = dr.GetGuid(0);
+                    var toCIID = dr.GetGuid(1);
+                    var state = dr.GetFieldValue<RelationState>(2);
+
+                    if (state != RelationState.Removed)
+                    {
+                        ret.Add(fromCIID);
+                        ret.Add(toCIID);
+                    }
+                }
+            }
+
+            return ret;
+        }
+
         public async Task<bool> CIIDExists(Guid id, NpgsqlTransaction trans)
         {
             using var command = new NpgsqlCommand(@"select id from ci WHERE id = @ciid LIMIT 1", conn, trans);

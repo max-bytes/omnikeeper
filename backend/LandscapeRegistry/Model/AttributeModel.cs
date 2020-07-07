@@ -53,6 +53,7 @@ namespace LandscapeRegistry.Model
 
             if (layers.IsEmpty)
                 return ret; // return empty, an empty layer list can never produce any attributes
+            // TODO: use GetAttributes() in case of single item layerset
 
             var attributes = new List<(CIAttribute attribute, long layerID)>();
 

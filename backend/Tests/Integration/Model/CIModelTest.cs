@@ -1,4 +1,5 @@
-﻿using Landscape.Base.Entity;
+﻿using FluentAssertions;
+using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
@@ -177,6 +178,70 @@ namespace Tests.Integration.Model
             Assert.AreEqual(AttributeScalarValueText.Build("textL1"), a1.First().Value.Attribute.Value);
         }
 
+
+        [Test]
+        public async Task TestGetCIIDsOfNonEmptyCIs()
+        {
+            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var userModel = new UserInDatabaseModel(conn);
+            var changesetModel = new ChangesetModel(userModel, conn);
+            var model = new CIModel(attributeModel, conn);
+            var layerModel = new LayerModel(conn);
+            var predicateModel = new PredicateModel(conn);
+            var relationModel = new RelationModel(MockedEmptyOnlineAccessProxy.O, predicateModel, conn);
+            var user = await DBSetup.SetupUser(userModel);
+
+            var ciid1 = await model.CreateCI(null);
+            var ciid2 = await model.CreateCI(null);
+            var layer1 = await layerModel.CreateLayer("l1", null);
+            var layer2 = await layerModel.CreateLayer("l2", null);
+            var layer3 = await layerModel.CreateLayer("l3", null);
+            var layerset1 = new LayerSet(new long[] { layer2.ID, layer1.ID });
+            var layerset2 = new LayerSet(new long[] { layer1.ID });
+            var layerset3 = new LayerSet(new long[] { layer2.ID });
+            var layerset4 = new LayerSet(new long[] { layer3.ID });
+
+            using (var trans = conn.BeginTransaction())
+            {
+
+                var changeset1 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("textL1"), layer1.ID, ciid1, changeset1, trans);
+
+                var changeset2 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                await attributeModel.InsertAttribute("a2", AttributeScalarValueText.Build("textL2"), layer2.ID, ciid1, changeset2, trans);
+
+                var changeset3 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("textL3"), layer2.ID, ciid2, changeset3, trans);
+
+                trans.Commit();
+            }
+
+            (await model.GetCIIDsOfNonEmptyCIs(layerset1, null, TimeThreshold.BuildLatest())).Should().HaveCount(2).And.BeEquivalentTo(new Guid[] { ciid1, ciid2 });
+            (await model.GetCIIDsOfNonEmptyCIs(layerset2, null, TimeThreshold.BuildLatest())).Should().HaveCount(1).And.BeEquivalentTo(new Guid[] { ciid1 });
+            (await model.GetCIIDsOfNonEmptyCIs(layerset3, null, TimeThreshold.BuildLatest())).Should().HaveCount(2).And.BeEquivalentTo(new Guid[] { ciid1, ciid2 });
+
+            using (var trans = conn.BeginTransaction())
+            {
+                var changeset3 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                await attributeModel.RemoveAttribute("a2", layer2.ID, ciid1, changeset3, trans);
+                trans.Commit();
+            }
+
+            (await model.GetCIIDsOfNonEmptyCIs(layerset1, null, TimeThreshold.BuildLatest())).Should().HaveCount(2).And.BeEquivalentTo(new Guid[] { ciid1, ciid2 });
+            (await model.GetCIIDsOfNonEmptyCIs(layerset2, null, TimeThreshold.BuildLatest())).Should().HaveCount(1).And.BeEquivalentTo(new Guid[] { ciid1 });
+            (await model.GetCIIDsOfNonEmptyCIs(layerset3, null, TimeThreshold.BuildLatest())).Should().HaveCount(1).And.BeEquivalentTo(new Guid[] { ciid2 });
+
+
+            (await model.GetCIIDsOfNonEmptyCIs(layerset4, null, TimeThreshold.BuildLatest())).Should().HaveCount(0);
+            using (var trans = conn.BeginTransaction())
+            {
+                await predicateModel.InsertOrUpdate("p1", "pw1", "pw1", AnchorState.Active, PredicateConstraints.Default, trans);
+                var changeset1 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                await relationModel.InsertRelation(ciid1, ciid2, "p1", layer3.ID, changeset1, trans);
+                trans.Commit();
+            }
+            (await model.GetCIIDsOfNonEmptyCIs(layerset4, null, TimeThreshold.BuildLatest())).Should().HaveCount(2).And.BeEquivalentTo(new Guid[] { ciid1, ciid2 });
+        }
 
         [Test]
         public async Task TestCITypes()

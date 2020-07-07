@@ -4,6 +4,7 @@ using Keycloak.Net;
 using Landscape.Base.Entity;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -14,9 +15,10 @@ namespace OnlineInboundAdapterKeycloak
     {
         public class Builder : IOnlineInboundAdapterBuilder
         {
-            public string Name => "Keycloak";
+            public string Name => StaticName;
+            public static string StaticName => "Keycloak";
 
-            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister)
+            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister)
             {
                 var cconfig = config as Config;
                 var scopedExternalIDMapper = externalIDMapper.RegisterScoped(new KeycloakScopedExternalIDMapper(cconfig.mapperScope, persister));
@@ -32,6 +34,7 @@ namespace OnlineInboundAdapterKeycloak
             public readonly string clientSecret;
             public readonly string mapperScope;
             public TimeSpan preferredIDMapUpdateRate;
+            public string BuilderName { get; } = Builder.StaticName;
 
             public Config(string apiURL, string realm, string clientID, string clientSecret, TimeSpan preferredIDMapUpdateRate, string mapperScope)
             {
@@ -43,6 +46,42 @@ namespace OnlineInboundAdapterKeycloak
                 this.preferredIDMapUpdateRate = preferredIDMapUpdateRate;
             }
         }
+
+
+        public class BuilderInternal : IOnlineInboundAdapterBuilder
+        {
+            public string Name => StaticName;
+            public static string StaticName => "Keycloak Internal";
+
+            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister)
+            {
+                var configInternal = config as ConfigInternal;
+
+                var keycloakConfig = appConfig.GetSection("Keycloak");
+                var authURL = keycloakConfig["URL"];
+                var realm = keycloakConfig["Realm"];
+                var clientID = keycloakConfig["ClientID"];
+                var clientSecret = keycloakConfig["ClientSecret"];
+                var cconfig = new Config(authURL, realm, clientID, clientSecret, configInternal.preferredIDMapUpdateRate, configInternal.mapperScope);
+
+                var scopedExternalIDMapper = externalIDMapper.RegisterScoped(new KeycloakScopedExternalIDMapper(cconfig.mapperScope, persister));
+                return new OnlineInboundAdapter(cconfig, scopedExternalIDMapper);
+            }
+        }
+
+        public class ConfigInternal : IOnlineInboundAdapter.IConfig
+        {
+            public readonly string mapperScope;
+            public TimeSpan preferredIDMapUpdateRate;
+            public string BuilderName { get; } = BuilderInternal.StaticName;
+
+            public ConfigInternal(TimeSpan preferredIDMapUpdateRate, string mapperScope)
+            {
+                this.mapperScope = mapperScope;
+                this.preferredIDMapUpdateRate = preferredIDMapUpdateRate;
+            }
+        }
+
 
         private readonly Config config;
         private readonly KeycloakClient client;

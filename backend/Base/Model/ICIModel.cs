@@ -15,6 +15,7 @@ namespace Landscape.Base.Model
         Task<Guid> CreateCIWithType(string typeID, NpgsqlTransaction trans);
 
         Task<IEnumerable<Guid>> GetCIIDs(NpgsqlTransaction trans);
+        Task<IEnumerable<Guid>> GetCIIDsOfNonEmptyCIs(LayerSet layerset, NpgsqlTransaction trans, TimeThreshold timeThreshold);
 
         Task<CIType> UpsertCIType(string typeID, AnchorState state, NpgsqlTransaction trans);
 
@@ -26,5 +27,7 @@ namespace Landscape.Base.Model
 
         Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs);
         Task<IEnumerable<CompactCI>> GetCompactCIs(LayerSet visibleLayers, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs = null);
+
+        Task<bool> CIIDExists(Guid id, NpgsqlTransaction trans);
     }
 }

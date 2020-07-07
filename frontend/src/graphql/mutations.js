@@ -124,6 +124,32 @@ CREATE_CI: gql`
   ${Fragments.fullLayer}
   `,
 
+  CREATE_OIACONFIG: gql`
+    mutation CreateOIAConfig($oiaConfig: CreateOIAConfigInputType!) {
+      createOIAConfig(oiaConfig: $oiaConfig) {
+        id
+        name
+        config
+      }
+    }
+  `,
+  UPDATE_OIACONFIG: gql`
+  mutation UpdateOIAConfig($oiaConfig: UpdateOIAConfigInputType!) {
+    updateOIAConfig(oiaConfig: $oiaConfig) {
+      id
+      name
+      config
+    }
+  }
+  `,
+  DELETE_OIACONFIG: gql`
+  mutation DeleteOIAConfig($oiaID: Long!) {
+    deleteOIAConfig(oiaID: $oiaID)
+  }
+  `,
+
+  
+
   UPSERT_PREDICATE: gql`
   mutation UpsertPredicate($predicate: UpsertPredicateInputType!) {
     upsertPredicate(predicate: $predicate) {

@@ -184,4 +184,33 @@ namespace LandscapeRegistry.GraphQL
             Field(x => x.State, type: typeof(AnchorStateType));
         }
     }
+
+    public class CreateOIAConfigInput
+    {
+        public string Name { get; private set; }
+        public string Config { get; private set; }
+    }
+    public class CreateOIAConfigInputType : InputObjectGraphType<CreateOIAConfigInput>
+    {
+        public CreateOIAConfigInputType()
+        {
+            Field(x => x.Name);
+            Field(x => x.Config);
+        }
+    }
+    public class UpdateOIAConfigInput
+    {
+        public long ID { get; private set; }
+        public string Name { get; private set; }
+        public string Config { get; private set; }
+    }
+    public class UpdateOIAConfigInputType : InputObjectGraphType<UpdateOIAConfigInput>
+    {
+        public UpdateOIAConfigInputType()
+        {
+            Field("id", x => x.ID);
+            Field(x => x.Name);
+            Field(x => x.Config);
+        }
+    }
 }

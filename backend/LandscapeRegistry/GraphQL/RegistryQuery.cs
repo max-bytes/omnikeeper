@@ -17,7 +17,7 @@ namespace LandscapeRegistry.GraphQL
     public class RegistryQuery : ObjectGraphType
     {
         public RegistryQuery(ICIModel ciModel, ILayerModel layerModel, IPredicateModel predicateModel, IMemoryCacheModel memoryCacheModel,
-            IChangesetModel changesetModel, ICISearchModel ciSearchModel, ITraitModel traitModel, ITraitsProvider traitsProvider, ICurrentUserService currentUserService)
+            IChangesetModel changesetModel, ICISearchModel ciSearchModel, IOIAConfigModel oiaConfigModel, ITraitModel traitModel, ITraitsProvider traitsProvider, ICurrentUserService currentUserService)
         {
             FieldAsync<MergedCIType>("ci",
                 arguments: new QueryArguments(new List<QueryArgument>
@@ -251,6 +251,14 @@ namespace LandscapeRegistry.GraphQL
                 resolve: async context =>
                 {
                     var layers = await layerModel.GetLayers(null);
+
+                    return layers;
+                });
+
+            FieldAsync<ListGraphType<OIAConfigType>>("oiaconfigs",
+                resolve: async context =>
+                {
+                    var layers = await oiaConfigModel.GetConfigs(null);
 
                     return layers;
                 });

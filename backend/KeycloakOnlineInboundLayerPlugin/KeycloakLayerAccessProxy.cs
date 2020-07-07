@@ -18,6 +18,8 @@ namespace OnlineInboundAdapterKeycloak
         private readonly KeycloakScopedExternalIDMapper mapper;
         private readonly Layer layer;
 
+        public string Name => "Keycloak";
+
         public KeycloakLayerAccessProxy(KeycloakClient client, string realm, KeycloakScopedExternalIDMapper mapper, Layer layer)
         {
             this.client = client;

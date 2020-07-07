@@ -53,6 +53,22 @@ namespace LandscapeRegistry.Controllers
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ciids"></param>
+        /// <param name="layerIDs"></param>
+        /// <param name="atTime"></param>
+        /// <returns></returns>
+        [HttpGet("getMergedAttributes")]
+        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> GetMergedAttributes([FromQuery, Required]IEnumerable<Guid> ciids, [FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
+        {
+            var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
+            var layerset = new LayerSet(layerIDs);
+            var attributes = await attributeModel.GetMergedAttributes(ciids, false, layerset, null, timeThreshold);
+            return Ok(attributes.SelectMany(t => t.Value.Select(a => CIAttributeDTO.Build(a.Value))));
+        }
+
+        /// <summary>
         /// bulk replace all attributes in specified layer
         /// </summary>
         /// <param name="dto"></param>

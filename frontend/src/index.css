@@ -62,3 +62,7 @@ body {
   bottom: unset;
   left: unset;
 }
+
+.cell-wrap-text {
+  white-space: normal !important;
+}

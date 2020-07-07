@@ -5,6 +5,7 @@ import { ErrorModalCellRenderer } from '../ErrorModalCellRenderer';
 import { RowStateCellRenderer } from '../RowStateCellRenderer';
 import { LayerColorCellRenderer } from '../LayerColorCellRenderer';
 import PredicateConstraintsCellEditor from './PredicateConstraintsCellEditor';
+import DeleteRowCellRenderer from '../DeleteRowCellRenderer';
 import ARGBColorCellEditor from './ARGBColorCellEditor';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
@@ -13,12 +14,36 @@ export default function AgGridCrud(props) {
   var [isSaving, setIsSaving] = useState(false);
 
   const editedRowData = useMemo(() => props.rowData.filter(rd => rd.isEdited), [props.rowData]);
-  const hasEditedRowData = useMemo(() => editedRowData.length > 0, [editedRowData]);
+  const deletedRowData = useMemo(() => props.rowData.filter(rd => rd.isDeleted), [props.rowData]);
+  const hasEditedOrDeletedRowData = useMemo(() => editedRowData.length > 0 || deletedRowData.length > 0, [editedRowData, deletedRowData]);
+
 
   const getRowNodeId = data => data.id;
   const isFrontendRowNodeOnly = data => data.id === undefined && data.frontend_id !== undefined && !props.idIsUserCreated;
 
   const uuidv4 = () => ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ ((crypto.getRandomValues(new Uint8Array(1))[0] & 15) >> c / 4)).toString(16));
+
+  let deleteColumn = [];
+  if (props.deletableRows)
+    deleteColumn = [{ 
+      headerName: "", sortable: false, resizable: false, filter: false, colId: 'state', editable: false, valueGetter: 'data', 
+        cellRenderer: 'deleteRowCellRenderer', cellRendererParams: { flipDelete: (params) => {
+          props.setRowData(oldData => {
+            var foundIndex = oldData.findIndex(x => {
+                if (isFrontendRowNodeOnly(params.data))
+                    return x.frontend_id === params.data.frontend_id;
+                else
+                    return getRowNodeId(x) === getRowNodeId(params.data);
+            });
+            if (foundIndex !== -1) {
+              var newData = [...oldData];
+              var newItem = {...params.data, isDeleted: !!!params.data.isDeleted };
+              newData[foundIndex] = newItem;
+              return newData;
+            } else return oldData; // TODO: error handling
+          }); 
+        } }
+      }];
 
   const columnDefs = [
     { headerName: "", sortable: false, resizable: false, filter: false, width: 30, colId: 'state', editable: false, valueGetter: 'data', 
@@ -27,13 +52,43 @@ export default function AgGridCrud(props) {
     { headerName: "", field: "error", sortable: false, resizable: false, filter: false, width: 30, editable: false, 
       cellRenderer: 'errorModalCellRenderer'
     },
-    ...props.columnDefs
+    ...props.columnDefs,
+    ...deleteColumn
   ];
 
   function save() {
     setIsSaving(true);
 
     Promise.all(
+      deletedRowData.map(async row => props.deleteRow(row))
+    )
+    .then(results => {
+      let indicesToDelete = [];
+      props.setRowData(oldRowData => {
+        var newRowData = [...oldRowData];
+        results.forEach(result => {
+          var index = newRowData.findIndex(p => {
+            if (isFrontendRowNodeOnly(result))
+                return p.frontend_id === result.frontend_id;
+            else
+                return getRowNodeId(p) === result.id
+          });
+          if (index === -1) {
+              console.log("Error!"); // TODO
+          } else {
+              if (result.result instanceof Error) {
+                  newRowData[index] = {...newRowData[index], error: result.result};
+              } else {
+                  indicesToDelete.push(index);
+              }
+          }
+        });
+
+        newRowData = newRowData.filter((v, index) => !indicesToDelete.includes(index));
+        return newRowData;
+      });
+    })
+    .then(Promise.all(
         editedRowData.map(async row => props.saveRow(row))
     ).then(results => {
       props.setRowData(oldRowData => {
@@ -57,7 +112,7 @@ export default function AgGridCrud(props) {
           });
           return newRowData;
       });
-    }).finally(() => setIsSaving(false));
+    })).finally(() => setIsSaving(false));
   }
 
   function addRow() {
@@ -105,15 +160,15 @@ export default function AgGridCrud(props) {
 
   return <>
     <div style={{marginBottom: '10px'}}>
-      <Button primary onClick={e => save()} disabled={!hasEditedRowData} loading={isSaving} icon='save' content='Save' />
+      <Button primary onClick={e => save()} disabled={!hasEditedOrDeletedRowData} loading={isSaving} icon='save' content='Save' />
       <Button positive icon='plus' onClick={e => addRow()} content='Add Row' />
-      <Button onClick={e => props.onRefresh()} loading={props.loading} icon='refresh' content={((!hasEditedRowData) ? 'Refresh' :  'Reset')} />
+      <Button onClick={e => props.onRefresh()} loading={props.loading} icon='refresh' content={((!hasEditedOrDeletedRowData) ? 'Refresh' :  'Reset')} />
     </div>
     <div className="ag-theme-balham" style={{ flexGrow: 1, width: '100%' }}>
       <AgGridReact
         frameworkComponents={{
           errorModalCellRenderer: ErrorModalCellRenderer, rowStateCellRenderer: RowStateCellRenderer,
-          layerColorCellRenderer: LayerColorCellRenderer,
+          layerColorCellRenderer: LayerColorCellRenderer, deleteRowCellRenderer: DeleteRowCellRenderer,
           predicateConstraintsCellEditor: PredicateConstraintsCellEditor, ARGBColorCellEditor: ARGBColorCellEditor }}
         columnDefs={columnDefs}
         defaultColDef={defaultColDef}

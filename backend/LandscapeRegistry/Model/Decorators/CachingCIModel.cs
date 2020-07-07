@@ -42,6 +42,12 @@ namespace LandscapeRegistry.Model.Decorators
             return await model.CreateCIWithType(typeID, trans);
         }
 
+        public async Task<bool> CIIDExists(Guid ciid, NpgsqlTransaction trans)
+        {
+            // TODO: caching
+            return await model.CIIDExists(ciid, trans);
+        }
+
         public async Task<CI> GetCI(Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             if (atTime.IsLatest)
@@ -60,6 +66,11 @@ namespace LandscapeRegistry.Model.Decorators
         {
             // cannot be cached well... or can it?
             return await model.GetCIIDs(trans);
+        }
+
+        public async Task<IEnumerable<Guid>> GetCIIDsOfNonEmptyCIs(LayerSet layerset, NpgsqlTransaction trans, TimeThreshold timeThreshold)
+        {
+            return await model.GetCIIDsOfNonEmptyCIs(layerset, trans, timeThreshold);
         }
 
         public async Task<IEnumerable<CI>> GetCIs(long layerID, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)

@@ -4,6 +4,7 @@ using Landscape.Base.Utils;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace LandscapeRegistry.Runners
         private readonly NpgsqlConnection conn;
 
         // HACK: making this static sucks, find better way, but runner is instantiated anew on each run
-        private static readonly IDictionary<string, DateTimeOffset> lastRuns = new Dictionary<string, DateTimeOffset>();
+        private static readonly IDictionary<string, DateTimeOffset> lastRuns = new ConcurrentDictionary<string, DateTimeOffset>();
 
         public ExternalIDManagerRunner(IInboundAdapterManager pluginManager, ICIModel ciModel, ILayerModel layerModel, NpgsqlConnection conn, ILogger<ExternalIDManagerRunner> logger)
         {
@@ -41,9 +42,9 @@ namespace LandscapeRegistry.Runners
             logger.LogInformation("Start");
 
             var activeLayers = await layerModel.GetLayers(Landscape.Base.Entity.AnchorStateFilter.ActiveAndDeprecated, null);
-            var layersWithOILPs = activeLayers.Where(l => l.OnlineInboundAdapter.AdapterName != ""); // TODO: better check for set oilp than name != ""
+            var layersWithOILPs = activeLayers.Where(l => l.OnlineInboundAdapterLink.AdapterName != ""); // TODO: better check for set oilp than name != ""
 
-            var adapters = layersWithOILPs.Select(l => l.OnlineInboundAdapter.AdapterName)
+            var adapters = layersWithOILPs.Select(l => l.OnlineInboundAdapterLink.AdapterName)
                 .Distinct(); // distinct because multiple layers can have the same adapter configured
 
             foreach (var adapterName in adapters)
@@ -51,7 +52,7 @@ namespace LandscapeRegistry.Runners
                 lastRuns.TryGetValue(adapterName, out var lastRun);
 
                 // find oilp for layer
-                var plugin = pluginManager.GetOnlinePluginInstance(adapterName);
+                var plugin = await pluginManager.GetOnlinePluginInstance(adapterName, null);
                 if (plugin == null)
                 {
                     logger.LogError($"Could not find online inbound layer plugin with name {adapterName}");
@@ -65,7 +66,13 @@ namespace LandscapeRegistry.Runners
 
                         Stopwatch stopWatch = new Stopwatch();
                         stopWatch.Start();
-                        await manager.Update(ciModel, conn, logger);
+                        try
+                        {
+                            await manager.Update(ciModel, conn, logger);
+                        } catch (Exception e)
+                        {
+                            logger.LogError(e, $"An error occured when updating external IDs for OILP {adapterName}");
+                        }
                         stopWatch.Stop();
                         TimeSpan ts = stopWatch.Elapsed;
                         string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);

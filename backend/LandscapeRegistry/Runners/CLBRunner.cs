@@ -31,18 +31,18 @@ namespace LandscapeRegistry.Runners
             logger.LogInformation("Start");
 
             var activeLayers = await layerModel.GetLayers(Landscape.Base.Entity.AnchorStateFilter.ActiveAndDeprecated, null);
-            var layersWithCLBs = activeLayers.Where(l => l.ComputeLayerBrain.Name != ""); // TODO: better check for set clb than name != ""
+            var layersWithCLBs = activeLayers.Where(l => l.ComputeLayerBrainLink.Name != ""); // TODO: better check for set clb than name != ""
 
             foreach (var l in layersWithCLBs)
             {
                 // find clb for layer
-                if (!existingComputeLayerBrains.TryGetValue(l.ComputeLayerBrain.Name, out var clb))
+                if (!existingComputeLayerBrains.TryGetValue(l.ComputeLayerBrainLink.Name, out var clb))
                 {
-                    logger.LogError($"Could not find compute layer brain with name {l.ComputeLayerBrain.Name}");
+                    logger.LogError($"Could not find compute layer brain with name {l.ComputeLayerBrainLink.Name}");
                 }
                 else
                 {
-                    logger.LogInformation($"Running CLB {l.ComputeLayerBrain.Name} on layer {l.Name}");
+                    logger.LogInformation($"Running CLB {l.ComputeLayerBrainLink.Name} on layer {l.Name}");
 
                     Stopwatch stopWatch = new Stopwatch();
                     stopWatch.Start();

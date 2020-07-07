@@ -61,8 +61,8 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel, conn);
 
             var layerA = await layerModel.CreateLayer("a", null);
-            var layerB = await layerModel.CreateLayer("b", ColorTranslator.FromHtml("#FF0000"), AnchorState.Deprecated, ComputeLayerBrain.Build("clbB"), OnlineInboundAdapter.Build("oilpX"), null);
-            var layerC = await layerModel.CreateLayer("c", ColorTranslator.FromHtml("#00FF00"), AnchorState.Deprecated, ComputeLayerBrain.Build("clbC"), OnlineInboundAdapter.Build("oilpY"), null);
+            var layerB = await layerModel.CreateLayer("b", ColorTranslator.FromHtml("#FF0000"), AnchorState.Deprecated, ComputeLayerBrainLink.Build("clbB"), OnlineInboundAdapterLink.Build("oilpX"), null);
+            var layerC = await layerModel.CreateLayer("c", ColorTranslator.FromHtml("#00FF00"), AnchorState.Deprecated, ComputeLayerBrainLink.Build("clbC"), OnlineInboundAdapterLink.Build("oilpY"), null);
 
             var user = await userModel.UpsertUser("testuser", "testuser", Guid.NewGuid(), UserType.Human, null);
 

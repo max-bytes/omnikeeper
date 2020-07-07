@@ -73,12 +73,21 @@ export const queries = {
         ${Fragments.attribute}
     `,
     Layers: gql`
-    query layers {
-        layers {
-            ...FullLayer
+        query layers {
+            layers {
+                ...FullLayer
+            }
         }
-    }
-    ${Fragments.fullLayer}
+        ${Fragments.fullLayer}
+    `,
+    OIAConfigs: gql`
+        query oiaconfigs {
+            oiaconfigs {
+                id
+                name
+                config
+            }
+        }
     `,
     Changesets: gql`
         query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciid: Guid, $layers:[String]!, $limit: Int) {

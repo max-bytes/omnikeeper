@@ -1,6 +1,7 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
@@ -58,6 +59,8 @@ namespace Landscape.Base.Inbound
 
     public interface IOnlineInboundLayerAccessProxy
     {
+        string Name { get; }
+
         IAsyncEnumerable<CIAttribute> GetAttributes(ISet<Guid> ciids, TimeThreshold atTime);
         IAsyncEnumerable<CIAttribute> GetAttributesWithName(string name, TimeThreshold atTime);
         IAsyncEnumerable<Relation> GetRelations(Guid? ciid, IncludeRelationDirections ird, TimeThreshold atTime);
@@ -76,14 +79,14 @@ namespace Landscape.Base.Inbound
     public interface IOnlineInboundAdapterBuilder
     {
         public string Name { get; }
-        public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister);
+        public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister);
     }
 
     public interface IOnlineInboundAdapter
     {
         public interface IConfig
         {
-
+            public string BuilderName { get; }
         }
 
         IExternalIDManager GetExternalIDManager();

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -44,8 +45,8 @@ namespace Landscape.Base.Inbound
 
         public ScopedExternalIDMapper(string scope, IExternalIDMapPersister persister, Func<string, EID> string2ExtIDF)
         {
-            int2ext = new Dictionary<Guid, EID>();
-            ext2int = new Dictionary<EID, Guid>();
+            int2ext = new ConcurrentDictionary<Guid, EID>();
+            ext2int = new ConcurrentDictionary<EID, Guid>();
             Scope = scope;
             this.string2ExtIDF = string2ExtIDF;
             this.persister = persister;

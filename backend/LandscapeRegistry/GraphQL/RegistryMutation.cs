@@ -1,11 +1,13 @@
 ﻿using GraphQL;
 using GraphQL.Types;
 using Landscape.Base.Entity;
+using Landscape.Base.Inbound;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Service;
+using Newtonsoft.Json;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -16,7 +18,7 @@ namespace LandscapeRegistry.GraphQL
 {
     public class RegistryMutation : ObjectGraphType
     {
-        public RegistryMutation(ICIModel ciModel, IAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel,
+        public RegistryMutation(ICIModel ciModel, IAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAConfigModel OIAConfigModel,
             IChangesetModel changesetModel, IPredicateModel predicateModel, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
@@ -159,12 +161,12 @@ namespace LandscapeRegistry.GraphQL
                     using var transaction = await conn.BeginTransactionAsync();
                     userContext.Transaction = transaction;
 
-                    ComputeLayerBrain clb = LayerModel.DefaultCLB;
+                    ComputeLayerBrainLink clb = LayerModel.DefaultCLB;
                     if (createLayer.BrainName != null && createLayer.BrainName != "")
-                        clb = ComputeLayerBrain.Build(createLayer.BrainName);
-                    OnlineInboundAdapter oilp = LayerModel.DefaultOILP;
+                        clb = ComputeLayerBrainLink.Build(createLayer.BrainName);
+                    OnlineInboundAdapterLink oilp = LayerModel.DefaultOILP;
                     if (createLayer.OnlineInboundAdapterName != null && createLayer.OnlineInboundAdapterName != "")
-                        oilp = OnlineInboundAdapter.Build(createLayer.OnlineInboundAdapterName);
+                        oilp = OnlineInboundAdapterLink.Build(createLayer.OnlineInboundAdapterName);
                     var createdLayer = await layerModel.CreateLayer(createLayer.Name, Color.FromArgb(createLayer.Color), createLayer.State, clb, oilp, transaction);
 
                     //var writeAccessGroupInKeycloakCreated = await keycloakModel.CreateGroup(authorizationService.GetWriteAccessGroupNameFromLayerName(createLayer.Name));
@@ -193,12 +195,94 @@ namespace LandscapeRegistry.GraphQL
                   using var transaction = await conn.BeginTransactionAsync();
                   userContext.Transaction = transaction;
 
-                  var clb = ComputeLayerBrain.Build(layer.BrainName);
-                  var oilp = OnlineInboundAdapter.Build(layer.OnlineInboundAdapterName);
+                  var clb = ComputeLayerBrainLink.Build(layer.BrainName);
+                  var oilp = OnlineInboundAdapterLink.Build(layer.OnlineInboundAdapterName);
                   var updatedLayer = await layerModel.Update(layer.ID, Color.FromArgb(layer.Color), layer.State, clb, oilp, transaction);
                   await transaction.CommitAsync();
 
                   return updatedLayer;
+              });
+
+
+            FieldAsync<OIAConfigType>("createOIAConfig",
+                arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<CreateOIAConfigInputType>> { Name = "oiaConfig" }
+                ),
+                resolve: async context =>
+                {
+                    var configInput = context.GetArgument<CreateOIAConfigInput>("oiaConfig");
+                    var userContext = context.UserContext as RegistryUserContext;
+
+                    // TODO: auth
+                    //if (!authorizationService.CanUserCreateLayer(userContext.User))
+                    //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create Layers");
+
+                    using var transaction = await conn.BeginTransactionAsync();
+                    userContext.Transaction = transaction;
+
+                    try {
+                        var config = JsonConvert.DeserializeObject<IOnlineInboundAdapter.IConfig>(configInput.Config, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects });
+
+                        var createdOIAConfig = await OIAConfigModel.Create(configInput.Name, config, transaction);
+
+                        await transaction.CommitAsync();
+
+                        return createdOIAConfig;
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ExecutionError($"Could not parse configuration", e);
+                    }
+                });
+            FieldAsync<OIAConfigType>("updateOIAConfig",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<UpdateOIAConfigInputType>> { Name = "oiaConfig" }
+              ),
+              resolve: async context =>
+              {
+                  var configInput = context.GetArgument<UpdateOIAConfigInput>("oiaConfig");
+
+                  var userContext = context.UserContext as RegistryUserContext;
+
+                  // TODO: auth
+                  //if (!authorizationService.CanUserUpdateLayer(userContext.User))
+                  //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update Layers");
+
+                  using var transaction = await conn.BeginTransactionAsync();
+                  userContext.Transaction = transaction;
+
+                  try
+                  {
+                      var config = JsonConvert.DeserializeObject<IOnlineInboundAdapter.IConfig>(configInput.Config, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects });
+                      var oiaConfig = await OIAConfigModel.Update(configInput.ID, configInput.Name, config, transaction);
+                      await transaction.CommitAsync();
+
+                      return oiaConfig;
+                  } catch (Exception e)
+                  {
+                      throw new ExecutionError($"Could not parse configuration", e);
+                  }
+              });
+            FieldAsync<BooleanGraphType>("deleteOIAConfig",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<LongGraphType>> { Name = "oiaID" }
+              ),
+              resolve: async context =>
+              {
+                  var id = context.GetArgument<long>("oiaID");
+
+                  var userContext = context.UserContext as RegistryUserContext;
+
+                  // TODO: auth
+                  //if (!authorizationService.CanUserUpdateLayer(userContext.User))
+                  //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update Layers");
+
+                  using var transaction = await conn.BeginTransactionAsync();
+                  userContext.Transaction = transaction;
+
+                  var success = await OIAConfigModel.Delete(id, transaction);
+                  await transaction.CommitAsync();
+                  return success;
               });
 
             FieldAsync<PredicateType>("upsertPredicate",

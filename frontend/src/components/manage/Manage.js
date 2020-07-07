@@ -9,6 +9,7 @@ export default function Manage(props) {
       <li><Link to="/manage/citypes">Manage CITypes</Link></li>
       <li><Link to="/manage/traits">Manage Traits</Link></li>
       <li><Link to="/manage/cache">Manage Cache</Link></li>
+      <li><Link to="/manage/oiaconfigs">Manage Online Inbound Layer Configurations</Link></li>
       
     </ul>
   </div>;

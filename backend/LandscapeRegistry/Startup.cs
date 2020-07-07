@@ -1,6 +1,3 @@
-using DBMigrations;
-using Flurl;
-using Flurl.Http;
 using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
@@ -11,8 +8,6 @@ using Hangfire.AspNetCore;
 using Hangfire.Console;
 using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
-using Hangfire.PostgreSql;
-using OnlineInboundAdapterKeycloak;
 using Landscape.Base;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
@@ -28,7 +23,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -37,6 +31,7 @@ using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MonitoringPlugin;
+using Newtonsoft.Json;
 using Npgsql.Logging;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
@@ -78,24 +73,13 @@ namespace LandscapeRegistry
             services.AddScoped<IComputeLayerBrain, CLBMonitoring>();
             services.AddScoped<IComputeLayerBrain, CLBNaemonMonitoring>();
 
-            // register online inbound adapters
+            // register online inbound adapters and managers
             services.AddSingleton<IExternalIDMapper, ExternalIDMapper>();
             services.AddSingleton<IExternalIDMapPersister, ExternalIDMapPostgresPersister>();
             services.AddScoped<IOnlineInboundAdapterBuilder, OnlineInboundAdapterKeycloak.OnlineInboundAdapter.Builder>();
-            services.AddScoped<IInboundAdapterManager, InboundAdapterManager>(sp =>
-            {
-                var manager = new InboundAdapterManager(sp.GetServices<IOnlineInboundAdapterBuilder>(), sp.GetService<IExternalIDMapper>(), sp.GetService<IExternalIDMapPersister>());
-
-                var config = Configuration.GetSection("Keycloak");
-                var apiURL = config["URL"];
-                var realm = config["Realm"];
-                var clientID = config["ClientID"];
-                var clientSecret = config["ClientSecret"];
-                var pluginConfig = new OnlineInboundAdapterKeycloak.OnlineInboundAdapter.Config(apiURL, realm, clientID, clientSecret, new TimeSpan(0,0,5), "ext_id_mapping_internal_keycloak");
-                manager.RegisterStaticOnlinePlugin("Keycloak", pluginConfig, "Internal Keycloak");
-
-                return manager;
-            });
+            services.AddScoped<IOnlineInboundAdapterBuilder, OnlineInboundAdapterKeycloak.OnlineInboundAdapter.BuilderInternal>();
+            services.AddScoped<IOnlineInboundAdapterBuilder, OnlineInboundAdapterOmnikeeper.OnlineInboundAdapter.Builder>();
+            services.AddScoped<IInboundAdapterManager, InboundAdapterManager>();
 
             services.AddCors(options => options.AddPolicy("DefaultCORSPolicy", builder =>
                builder.WithOrigins(Configuration.GetSection("CORS")["AllowedHosts"].Split(","))
@@ -137,6 +121,8 @@ namespace LandscapeRegistry
 
             services.AddScoped<ITraitModel, TraitModel>();
             services.Decorate<ITraitModel, CachingTraitModel>();
+
+            services.AddScoped<IOIAConfigModel, OIAConfigModel>();
 
             services.AddScoped<IRegistryAuthorizationService, RegistryAuthorizationService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();

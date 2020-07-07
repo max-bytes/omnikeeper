@@ -1,6 +1,7 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -13,17 +14,19 @@ namespace Landscape.Base.Inbound
     {
         private readonly ILayerModel layerModel;
         private readonly IInboundAdapterManager pluginManager;
+        private readonly ILogger<OnlineAccessProxy> logger;
 
-        public OnlineAccessProxy(ILayerModel layerModel, IInboundAdapterManager pluginManager) {
+        public OnlineAccessProxy(ILayerModel layerModel, IInboundAdapterManager pluginManager, ILogger<OnlineAccessProxy> logger) {
             this.layerModel = layerModel;
             this.pluginManager = pluginManager;
+            this.logger = logger;
         }
 
         private async IAsyncEnumerable<(IOnlineInboundLayerAccessProxy proxy, Layer layer)> GetAccessProxies(LayerSet layerset, NpgsqlTransaction trans)
         {
             foreach (var layer in await layerModel.GetLayers(layerset.LayerIDs, trans))
             {
-                var plugin = pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapter.AdapterName);
+                var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
                 if (plugin != null)
                 {
                     yield return (plugin.GetLayerAccessProxy(layer), layer);
@@ -44,7 +47,16 @@ namespace Landscape.Base.Inbound
         {
             await foreach(var (proxy, layer) in GetAccessProxies(layerset, trans))
             {
-                await foreach (var attribute in proxy.GetAttributesWithName(name, atTime).Select(a => (a, layer.ID)))
+                IAsyncEnumerable<CIAttribute> attributes;
+                try
+                {
+                    attributes = proxy.GetAttributesWithName(name, atTime);
+                } catch (Exception e)
+                {
+                    logger.LogError(e, $"Error fetching attributes with name from access proxy {proxy.Name}");
+                    yield break;
+                }
+                await foreach (var attribute in attributes.Select(a => (a, layer.ID)))
                     yield return attribute;
             }
         }

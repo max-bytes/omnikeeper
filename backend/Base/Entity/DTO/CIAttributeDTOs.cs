@@ -8,20 +8,24 @@ namespace Landscape.Base.Entity.DTO
 {
     public class CIAttributeDTO
     {
+        [Required] public Guid ID { get; private set; }
         [Required] public string Name { get; private set; }
         [Required] public AttributeValueDTO Value { get; private set; }
+        [Required] public Guid CIID { get; private set; }
         [Required] public AttributeState State { get; private set; }
 
         public static CIAttributeDTO Build(MergedCIAttribute attribute)
         {
-            return Build(attribute.Attribute.Name, attribute.Attribute.Value.ToDTO(), attribute.Attribute.State);
+            return Build(attribute.Attribute.ID, attribute.Attribute.Name, attribute.Attribute.Value.ToDTO(), attribute.Attribute.CIID, attribute.Attribute.State);
         }
-        public static CIAttributeDTO Build(string name, AttributeValueDTO value, AttributeState state)
+        public static CIAttributeDTO Build(Guid id, string name, AttributeValueDTO value, Guid ciid, AttributeState state)
         {
             return new CIAttributeDTO
             {
+                ID = id,
                 Name = name,
                 Value = value,
+                CIID = ciid,
                 State = state
             };
         }
@@ -55,6 +59,17 @@ namespace Landscape.Base.Entity.DTO
         public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueDTO);
         public bool Equals([AllowNull] AttributeValueDTO other) => other != null && Values.SequenceEqual(other.Values);
         public override int GetHashCode() => HashCode.Combine(IsArray, Values.GetHashCode());
+
+        public static AttributeValueDTO Build(string[] values, bool isArray, AttributeValueType type)
+        {
+            if (isArray)
+            {
+                return Build(values[0], type);
+            } else
+            {
+                return Build(values, type);
+            }
+        }
 
         public static AttributeValueDTO Build(string value, AttributeValueType type)
         {

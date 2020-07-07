@@ -1,0 +1,12 @@
+﻿
+CREATE TABLE public.onlineinboundadapter_config
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    name text NOT NULL,
+    config json NOT NULL,
+    CONSTRAINT onlineinboundadapter_config_pkey PRIMARY KEY (id)
+);
+
+ALTER TABLE ONLY public.onlineinboundadapter_config
+    ADD CONSTRAINT u_onlineinboundadapter_config_name UNIQUE (name);
+    
