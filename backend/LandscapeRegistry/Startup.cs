@@ -18,17 +18,22 @@ using LandscapeRegistry.Model.Decorators;
 using LandscapeRegistry.Runners;
 using LandscapeRegistry.Service;
 using LandscapeRegistry.Utils;
+using Microsoft.AspNet.OData.Builder;
+using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
+using Microsoft.OData.Edm;
 using Microsoft.OpenApi.Models;
 using MonitoringPlugin;
 using Newtonsoft.Json;
@@ -37,6 +42,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -93,6 +99,8 @@ namespace LandscapeRegistry
                 // enums to string conversion
                 options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
             });
+
+            services.AddOData();
 
             services.AddSingleton<DBConnectionBuilder>();
             services.AddScoped((sp) =>
@@ -249,6 +257,33 @@ namespace LandscapeRegistry
             services.AddSwaggerGenNewtonsoftSupport();
 
             services.AddMemoryCache();
+
+            // needed by odata
+            services.AddMvcCore(options =>
+            {
+                foreach (var outputFormatter in options.OutputFormatters.OfType<OutputFormatter>().Where(x => x.SupportedMediaTypes.Count == 0))
+                {
+                    outputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/odata"));
+                }
+
+                foreach (var inputFormatter in options.InputFormatters.OfType<InputFormatter>().Where(x => x.SupportedMediaTypes.Count == 0))
+                {
+                    inputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/odata"));
+                }
+            });
+
+            //services.AddMvcCore(options =>
+            //{
+            //    IEnumerable<ODataOutputFormatter> outputFormatters =
+            //        options.OutputFormatters.OfType<ODataOutputFormatter>()
+            //            .Where(foramtter => foramtter.SupportedMediaTypes.Count == 0);
+
+            //    foreach (var outputFormatter in outputFormatters)
+            //    {
+            //        outputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/odata"));
+            //    }
+            //});
+
         }
         public class AuthenticationRequirementsOperationFilter : IOperationFilter
         {
@@ -304,9 +339,17 @@ namespace LandscapeRegistry
             app.UseAuthentication();
             app.UseAuthorization();
 
+            var builder = new ODataConventionModelBuilder(app.ApplicationServices);
+            builder.EntitySet<LandscapeRegistry.Controllers.MyODataController.Test>("MyOData");
             app.UseEndpoints(endpoints =>
             {
+                // odata
+                endpoints.MapODataRoute("ODataRoute", "odata", builder.GetEdmModel());
+                endpoints.EnableDependencyInjection();
+                endpoints.Select().Expand().Filter().OrderBy().Count().MaxTop(10);
+
                 endpoints.MapControllers();
+
             });
 
             app.UseSwagger(c =>
