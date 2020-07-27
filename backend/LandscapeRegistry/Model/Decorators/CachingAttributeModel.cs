@@ -37,6 +37,10 @@ namespace LandscapeRegistry.Model.Decorators
         {
             return await model.GetAttribute(name, layerID, ciid, trans, atTime);
         }
+        public async Task<CIAttribute> GetAttribute(Guid id, NpgsqlTransaction trans)
+        {
+            return await model.GetAttribute(id, trans);
+        }
 
         public async Task<IEnumerable<CIAttribute>> GetAttributes(IAttributeModel.IAttributeSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {

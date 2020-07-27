@@ -100,7 +100,7 @@ namespace LandscapeRegistry
                 options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
             });
 
-            services.AddOData();
+            services.AddOData();//.EnableApiVersioning();
 
             services.AddSingleton<DBConnectionBuilder>();
             services.AddScoped((sp) =>
@@ -272,18 +272,6 @@ namespace LandscapeRegistry
                 }
             });
 
-            //services.AddMvcCore(options =>
-            //{
-            //    IEnumerable<ODataOutputFormatter> outputFormatters =
-            //        options.OutputFormatters.OfType<ODataOutputFormatter>()
-            //            .Where(foramtter => foramtter.SupportedMediaTypes.Count == 0);
-
-            //    foreach (var outputFormatter in outputFormatters)
-            //    {
-            //        outputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/odata"));
-            //    }
-            //});
-
         }
         public class AuthenticationRequirementsOperationFilter : IOperationFilter
         {
@@ -340,15 +328,15 @@ namespace LandscapeRegistry
             app.UseAuthorization();
 
             var builder = new ODataConventionModelBuilder(app.ApplicationServices);
-            builder.EntitySet<LandscapeRegistry.Controllers.MyODataController.Test>("MyOData");
+            builder.EntitySet<LandscapeRegistry.Controllers.Attribute>("Attributes");
             app.UseEndpoints(endpoints =>
             {
-                // odata
-                endpoints.MapODataRoute("ODataRoute", "odata", builder.GetEdmModel());
-                endpoints.EnableDependencyInjection();
-                endpoints.Select().Expand().Filter().OrderBy().Count().MaxTop(10);
-
                 endpoints.MapControllers();
+                // odata
+                //endpoints.EnableDependencyInjection();
+                endpoints.Select().Expand().Filter().OrderBy().Count();
+                var edmModel = builder.GetEdmModel();
+                endpoints.MapODataRoute("odata", "odata/{layerID}", edmModel);
 
             });
 

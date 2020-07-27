@@ -62,6 +62,7 @@ namespace Landscape.Base.Inbound
         string Name { get; }
 
         IAsyncEnumerable<CIAttribute> GetAttributes(ISet<Guid> ciids, TimeThreshold atTime);
+        IAsyncEnumerable<CIAttribute> GetAttributes(IAttributeModel.IAttributeSelection selection, TimeThreshold atTime);
         IAsyncEnumerable<CIAttribute> GetAttributesWithName(string name, TimeThreshold atTime);
         IAsyncEnumerable<Relation> GetRelations(Guid? ciid, IncludeRelationDirections ird, TimeThreshold atTime);
         IAsyncEnumerable<Relation> GetRelationsWithPredicateID(string predicateID, TimeThreshold atTime);
@@ -69,11 +70,15 @@ namespace Landscape.Base.Inbound
 
     public interface IOnlineAccessProxy
     {
+        Task<bool> IsOnlineInboundLayer(long layerID, NpgsqlTransaction trans);
+
         IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributes(ISet<Guid> ciids, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
         IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributesWithName(string name, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
+        IAsyncEnumerable<CIAttribute> GetAttributes(IAttributeModel.IAttributeSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
 
         IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(Guid? ciid, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans, TimeThreshold atTime);
         IAsyncEnumerable<(Relation relation, long layerID)> GetRelationsWithPredicateID(string predicateID, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime);
+
     }
 
     public interface IOnlineInboundAdapterBuilder

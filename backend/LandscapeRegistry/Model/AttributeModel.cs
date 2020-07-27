@@ -105,6 +105,11 @@ namespace LandscapeRegistry.Model
 
         public async Task<IEnumerable<CIAttribute>> GetAttributes(IAttributeSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
+            // if layer is online inbound layer, return from proxy
+            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) {
+                return onlineAccessProxy.GetAttributes(selection, layerID, trans, atTime).ToEnumerable();
+            }
+
             var ret = new List<CIAttribute>();
 
             using var command = new NpgsqlCommand($@"
@@ -141,6 +146,8 @@ namespace LandscapeRegistry.Model
         public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime, Guid? ciid = null)
         {
             var ret = new List<CIAttribute>();
+
+            // TODO: what about online layers?
 
             var innerWhereClause = "1=1";
             if (ciid != null)
@@ -232,6 +239,8 @@ namespace LandscapeRegistry.Model
 
         public async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
         {
+            // TODO: what about online layers?
+
             using var command = new NpgsqlCommand(@"
             select id, ci_id, type, value, state, changeset_id FROM attribute 
             where timestamp <= @time_threshold and ci_id = @ci_id and layer_id = @layer_id and name = @name
@@ -248,6 +257,33 @@ namespace LandscapeRegistry.Model
                 return null;
 
             var id = dr.GetGuid(0);
+            var CIID = dr.GetGuid(1);
+            var type = dr.GetFieldValue<AttributeValueType>(2);
+            var value = dr.GetString(3);
+            var av = AttributeValueBuilder.BuildFromDatabase(value, type);
+            var state = dr.GetFieldValue<AttributeState>(4);
+            var changesetID = dr.GetInt64(5);
+            var att = CIAttribute.Build(id, name, CIID, av, state, changesetID);
+            return att;
+        }
+
+        public async Task<CIAttribute> GetAttribute(Guid id, NpgsqlTransaction trans)
+        {
+
+            // TODO: what about online layers?
+
+            using var command = new NpgsqlCommand(@"
+            select name, ci_id, type, value, state, changeset_id FROM attribute 
+            where id = @id LIMIT 1
+            ", conn, trans);
+            command.Parameters.AddWithValue("id", id);
+
+            using var dr = await command.ExecuteReaderAsync();
+
+            if (!await dr.ReadAsync())
+                return null;
+
+            var name = dr.GetString(0);
             var CIID = dr.GetGuid(1);
             var type = dr.GetFieldValue<AttributeValueType>(2);
             var value = dr.GetString(3);

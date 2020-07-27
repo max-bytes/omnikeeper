@@ -118,6 +118,7 @@ namespace LandscapeRegistry.Model
 
         private async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
+            // TODO: what about online layers?
             var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 
             using (var command = new NpgsqlCommand(@"select id, state, changeset_id from relation where 

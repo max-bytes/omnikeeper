@@ -76,6 +76,29 @@ namespace OnlineInboundAdapterKeycloak
             }
         }
 
+        public async IAsyncEnumerable<CIAttribute> GetAttributes(IAttributeModel.IAttributeSelection selection, TimeThreshold atTime)
+        {
+            await mapper.Setup();
+
+            if (!atTime.IsLatest) yield break; // we don't have historic information
+
+            IEnumerable<Guid> GetCIIDs(IAttributeModel.IAttributeSelection selection)
+            {
+                return selection switch
+                {
+                    IAttributeModel.AllCIIDsAttributeSelection _ => mapper.GetAllCIIDs(),
+                    IAttributeModel.MultiCIIDsAttributeSelection multiple => multiple.CIIDs,
+                    IAttributeModel.SingleCIIDAttributeSelection single => new Guid[] { single.CIID },
+                    _ => null,// must not be
+                };
+            }
+
+            var ciids = GetCIIDs(selection).ToHashSet();
+
+            await foreach (var a in GetAttributes(ciids, atTime))
+                yield return a;
+        }
+
         public async IAsyncEnumerable<CIAttribute> GetAttributesWithName(string name, TimeThreshold atTime)
         {
             await mapper.Setup();

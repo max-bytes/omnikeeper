@@ -6,6 +6,7 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using static Landscape.Base.Model.IRelationModel;
 
 namespace Landscape.Base.Inbound
@@ -20,6 +21,13 @@ namespace Landscape.Base.Inbound
             this.layerModel = layerModel;
             this.pluginManager = pluginManager;
             this.logger = logger;
+        }
+
+        public async Task<bool> IsOnlineInboundLayer(long layerID, NpgsqlTransaction trans)
+        {
+            var layer = await layerModel.GetLayer(layerID, trans);
+            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
+            return plugin != null;
         }
 
         private async IAsyncEnumerable<(IOnlineInboundLayerAccessProxy proxy, Layer layer)> GetAccessProxies(LayerSet layerset, NpgsqlTransaction trans)
@@ -41,6 +49,15 @@ namespace Landscape.Base.Inbound
                 await foreach (var attribute in proxy.GetAttributes(ciids, atTime).Select(a => (a, layer.ID)))
                     yield return attribute;
             }
+        }
+
+        public async IAsyncEnumerable<CIAttribute> GetAttributes(IAttributeModel.IAttributeSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            var layer = await layerModel.GetLayer(layerID, trans);
+            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
+            await foreach (var a in plugin.GetLayerAccessProxy(layer).GetAttributes(selection, atTime))
+                yield return a;
+
         }
 
         public async IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributesWithName(string name, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
@@ -78,6 +95,5 @@ namespace Landscape.Base.Inbound
                     yield return relation;
             }
         }
-
     }
 }
