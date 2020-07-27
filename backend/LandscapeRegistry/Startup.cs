@@ -258,7 +258,7 @@ namespace LandscapeRegistry
 
             services.AddMemoryCache();
 
-            // needed by odata
+            // HACK: needed by odata, see: https://github.com/OData/WebApi/issues/2024
             services.AddMvcCore(options =>
             {
                 foreach (var outputFormatter in options.OutputFormatters.OfType<OutputFormatter>().Where(x => x.SupportedMediaTypes.Count == 0))
@@ -327,12 +327,12 @@ namespace LandscapeRegistry
             app.UseAuthentication();
             app.UseAuthorization();
 
-            var builder = new ODataConventionModelBuilder(app.ApplicationServices);
-            builder.EntitySet<LandscapeRegistry.Controllers.Attribute>("Attributes");
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
                 // odata
+                var builder = new ODataConventionModelBuilder(app.ApplicationServices);
+                builder.EntitySet<LandscapeRegistry.Controllers.OData.Attribute>("Attributes");
                 //endpoints.EnableDependencyInjection();
                 endpoints.Select().Expand().Filter().OrderBy().Count();
                 var edmModel = builder.GetEdmModel();

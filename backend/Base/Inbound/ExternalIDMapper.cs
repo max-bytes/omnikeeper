@@ -110,6 +110,11 @@ namespace Landscape.Base.Inbound
             ext2int.TryGetValue(externalId, out var ciid);
             return ciid;
         }
+        public EID GetExternalID(Guid ciid)
+        {
+            int2ext.TryGetValue(ciid, out var externalID);
+            return externalID;
+        }
 
         public async Task Persist()
         {

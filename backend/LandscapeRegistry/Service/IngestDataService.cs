@@ -50,7 +50,7 @@ namespace LandscapeRegistry.Service
             {
                 if (!attributeCache.ContainsKey(name))
                 {
-                    attributeCache[name] = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsAttributeSelection(), false, searchableLayers, trans, atTime);
+                    attributeCache[name] = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsSelection(), false, searchableLayers, trans, atTime);
                 }
                 var found = attributeCache[name].Where(kv => kv.Value.Attribute.Value.Equals(value)).ToDictionary(kv => kv.Key, kv => kv.Value);
                 return found;

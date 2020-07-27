@@ -17,7 +17,7 @@ using LandscapeRegistry.Entity.AttributeValues;
 using Npgsql;
 using LandscapeRegistry.Service;
 
-namespace LandscapeRegistry.Controllers
+namespace LandscapeRegistry.Controllers.OData
 {
     public class Attribute
     {
@@ -28,14 +28,7 @@ namespace LandscapeRegistry.Controllers
         public string Value { get; set; }
     }
 
-    //[ApiController]
-    //[ApiVersion("1.0")]
-    //[ApiVersionNeutral]
-    //[Route("api/[controller]")]
     [Authorize]
-    //[ODataRoutePrefix("foo")]
-    //[ODataRouting()]
-    //[ODataRoutePrefix("MyOData")]
     public class AttributesController : ODataController
     {
         private readonly IAttributeModel attributeModel;
@@ -68,7 +61,7 @@ namespace LandscapeRegistry.Controllers
         [EnableQuery]
         public async Task<IEnumerable<Attribute>> GetAttributes([FromRoute]int layerID)
         {
-            var attributes = await attributeModel.GetAttributes(new IAttributeModel.AllCIIDsAttributeSelection(), false, layerID, null, TimeThreshold.BuildLatest());
+            var attributes = await attributeModel.GetAttributes(new AllCIIDsSelection(), false, layerID, null, TimeThreshold.BuildLatest());
             return attributes.Select(a => Model2DTO(a));
         }
 

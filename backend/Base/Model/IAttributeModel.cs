@@ -10,45 +10,15 @@ namespace Landscape.Base.Model
 {
     public interface IAttributeModel
     {
-        interface IAttributeSelection
-        {
-            string WhereClause { get; }
-            void AddParameters(NpgsqlParameterCollection p);
-        }
-        class SingleCIIDAttributeSelection : IAttributeSelection
-        {
-            public Guid CIID { get; }
-            public SingleCIIDAttributeSelection(Guid ciid)
-            {
-                CIID = ciid;
-            }
-            public string WhereClause => "ci_id = @ci_id";
-            public void AddParameters(NpgsqlParameterCollection p) => p.AddWithValue("ci_id", CIID);
-        }
-        class MultiCIIDsAttributeSelection : IAttributeSelection
-        {
-            public Guid[] CIIDs { get; }
-            public MultiCIIDsAttributeSelection(Guid[] ciids)
-            {
-                CIIDs = ciids;
-            }
-            public string WhereClause => "ci_id = ANY(@ci_ids)";
-            public void AddParameters(NpgsqlParameterCollection p) => p.AddWithValue("ci_ids", CIIDs);
-        }
-        class AllCIIDsAttributeSelection : IAttributeSelection
-        {
-            public string WhereClause => "1=1";
-            public void AddParameters(NpgsqlParameterCollection p) { }
-        }
-
+        // TODO: rework into using ICIIDSelection
         Task<IDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
         Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
-        Task<IEnumerable<CIAttribute>> GetAttributes(IAttributeSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
         Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime);
-        Task<CIAttribute> GetAttribute(Guid id, NpgsqlTransaction trans);
 
+        // TODO: rework into using ICIIDSelection
         Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime, Guid? ciid = null);
-        Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, IAttributeSelection selection, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
 
         Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, IChangesetProxy changeset, NpgsqlTransaction trans);
         Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, IChangesetProxy changeset, NpgsqlTransaction trans);

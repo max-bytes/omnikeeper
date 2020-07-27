@@ -41,7 +41,7 @@ namespace LandscapeRegistry.Model
             else if (finalSS.Length > 0)
             {
                 // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
-                var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(CIModel.NameAttribute, new AllCIIDsAttributeSelection(), false, ls, trans, atTime);
+                var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(CIModel.NameAttribute, new AllCIIDsSelection(), false, ls, trans, atTime);
                 foundCIIDs = ciNamesFromNameAttributes.Where(kv => kv.Value.Attribute.Value.FullTextSearch(finalSS, System.Globalization.CompareOptions.IgnoreCase))
                     .Select(kv => kv.Key).ToHashSet();
             }
@@ -74,7 +74,7 @@ namespace LandscapeRegistry.Model
             {
                 searchAllCIsBasedOnSearchString = false;
                 // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
-                var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(CIModel.NameAttribute, new AllCIIDsAttributeSelection(), false, layerSet, trans, atTime);
+                var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(CIModel.NameAttribute, new AllCIIDsSelection(), false, layerSet, trans, atTime);
                 foundCIIDs = ciNamesFromNameAttributes.Where(kv => kv.Value.Attribute.Value.FullTextSearch(finalSS, System.Globalization.CompareOptions.IgnoreCase))
                     .Select(kv => kv.Key).ToHashSet();
             }
