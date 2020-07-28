@@ -47,7 +47,7 @@ namespace OnlineInboundAdapterKeycloak
                 return CIAttribute.Build(id, name, ciid, value, AttributeState.New, changesetID);
             }
 
-            yield return BuildAttribute("__name", ciid, AttributeScalarValueText.Build($"User {CIName}"), changesetID);
+            yield return BuildAttribute(ICIModel.NameAttribute, ciid, AttributeScalarValueText.Build($"User {CIName}"), changesetID);
             yield return BuildAttribute("user.email", ciid, AttributeScalarValueText.Build(user.Email), changesetID);
             yield return BuildAttribute("user.username", ciid, AttributeScalarValueText.Build(user.UserName), changesetID);
             yield return BuildAttribute("user.first_name", ciid, AttributeScalarValueText.Build(user.FirstName), changesetID);

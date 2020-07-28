@@ -50,7 +50,7 @@ namespace OnlineInboundAdapterOmnikeeper
         {
             await mapper.Setup();
 
-            if (!atTime.IsLatest) yield break; // we don't have historic information
+            if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
             IEnumerable<Guid> GetCIIDs(ICIIDSelection selection)
             {
@@ -82,7 +82,7 @@ namespace OnlineInboundAdapterOmnikeeper
         {
             await mapper.Setup();
 
-            if (!atTime.IsLatest) return null; // we don't have historic information
+            if (!atTime.IsLatest) return null; // TODO: implement historic information
 
             //var externalID = mapper.GetExternalID(ciid);
 
@@ -108,7 +108,7 @@ namespace OnlineInboundAdapterOmnikeeper
         {
             await mapper.Setup();
 
-            if (!atTime.IsLatest) yield break; // we don't have historic information
+            if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
             if (ciid.HasValue)
             {

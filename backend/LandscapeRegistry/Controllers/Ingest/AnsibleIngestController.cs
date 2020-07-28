@@ -88,7 +88,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                         JValue2IntegerAttribute(facts, "ansible_memtotal_mb", "memtotal_mb"),
                         JValue2TextArrayAttribute(facts, "ansible_interfaces", "interfaces"),
                         JValue2JSONAttribute(facts, "ansible_dns", "dns"),
-                        String2Attribute(CIModel.NameAttribute, ciName),
+                        String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
                     };
                     var attributes = BulkCICandidateAttributeData.Build(attributeFragments);
@@ -119,11 +119,11 @@ namespace LandscapeRegistry.Controllers.Ingest
                         JValue2IntegerAttribute(mount, "size_available"),
                         JValue2IntegerAttribute(mount, "size_total"),
                         JValue2TextAttribute(mount, "uuid"),
-                        String2Attribute(CIModel.NameAttribute, ciNameMount)
+                        String2Attribute(ICIModel.NameAttribute, ciNameMount)
                     };
                         cis.Add(tempMountCIID, CICandidate.Build(
                             // TODO: ansible mounts have an uuid, find out what that is and if they can be used for identification
-                            CIIdentificationMethodByData.Build(new string[] { "device", "mount", CIModel.NameAttribute }), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
+                            CIIdentificationMethodByData.Build(new string[] { "device", "mount", ICIModel.NameAttribute }), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
                             BulkCICandidateAttributeData.Build(attributeFragmentsMount)));
 
                         relations.Add(RelationCandidate.Build(
@@ -146,10 +146,10 @@ namespace LandscapeRegistry.Controllers.Ingest
                             JValue2TextAttribute(@interface, "type"),
                             Try2(() => JValue2TextAttribute(@interface, "macaddress")),
                             // TODO
-                            String2Attribute(CIModel.NameAttribute, ciNameInterface)
+                            String2Attribute(ICIModel.NameAttribute, ciNameInterface)
                         }.Where(item => item != null);
                         cis.Add(tempCIIDInterface, CICandidate.Build(
-                            CIIdentificationMethodByData.Build(new string[] { CIModel.NameAttribute }), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
+                            CIIdentificationMethodByData.Build(new string[] { ICIModel.NameAttribute }), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
                             BulkCICandidateAttributeData.Build(attributeFragmentsInterface)));
 
                         relations.Add(RelationCandidate.Build(
@@ -169,7 +169,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                     var attributeFragments = new List<BulkCICandidateAttributeData.Fragment>()
                     {
                         JToken2JSONAttribute(kvInstalled.Value["results"], "yum.installed"),
-                        String2Attribute(CIModel.NameAttribute, ciName),
+                        String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
                     };
                     var attributes = BulkCICandidateAttributeData.Build(attributeFragments);
@@ -192,7 +192,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                     var attributeFragments = new List<BulkCICandidateAttributeData.Fragment>()
                     {
                         JToken2JSONAttribute(kvRepos.Value["results"], "yum.repos"),
-                        String2Attribute(CIModel.NameAttribute, ciName),
+                        String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
                     };
                     var attributes = BulkCICandidateAttributeData.Build(attributeFragments);
@@ -215,7 +215,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                     var attributeFragments = new List<BulkCICandidateAttributeData.Fragment>()
                     {
                         JToken2JSONAttribute(kvUpdates.Value["results"], "yum.updates"),
-                        String2Attribute(CIModel.NameAttribute, ciName),
+                        String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
                     };
                     var attributes = BulkCICandidateAttributeData.Build(attributeFragments);
