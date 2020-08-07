@@ -336,7 +336,7 @@ namespace LandscapeRegistry
                 //endpoints.EnableDependencyInjection();
                 endpoints.Select().Expand().Filter().OrderBy().Count();
                 var edmModel = builder.GetEdmModel();
-                endpoints.MapODataRoute("odata", "odata/{layerID}", edmModel);
+                endpoints.MapODataRoute("odata", "api/odata/{layerID}", edmModel);
 
             });
 
