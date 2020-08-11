@@ -43,7 +43,7 @@ namespace MonitoringPlugin
             // TODO: make configurable
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
 
-            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate("has_monitoring_module"), false, layerSetMonitoringDefinitionsOnly, trans, timeThreshold);
+            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate("has_monitoring_module"), layerSetMonitoringDefinitionsOnly, trans, timeThreshold);
 
             // prepare list of all monitored cis
             var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).Distinct();

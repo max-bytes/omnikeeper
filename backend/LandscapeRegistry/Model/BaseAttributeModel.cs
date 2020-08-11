@@ -147,7 +147,7 @@ namespace LandscapeRegistry.Model
                     var state = dr.GetFieldValue<AttributeState>(4);
                     var changesetID = dr.GetInt64(5);
 
-                    if (state != AttributeState.Removed) // TODO: move into SQL
+                    if (state != AttributeState.Removed)
                         ret.Add(CIAttribute.Build(id, name, CIID, av, state, changesetID));
                 }
             }

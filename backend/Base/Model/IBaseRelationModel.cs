@@ -9,7 +9,7 @@ namespace Landscape.Base.Model
 {
     public interface IBaseRelationModel
     {
-        Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
         Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
 
         // mutations

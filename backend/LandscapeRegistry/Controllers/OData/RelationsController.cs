@@ -65,7 +65,7 @@ namespace LandscapeRegistry.Controllers.OData
         [EnableQuery]
         public async Task<IEnumerable<RelationDTO>> GetRelations([FromRoute]int layerID)
         {
-            var relations = await relationModel.GetRelations(new RelationSelectionAll(), false, layerID, null, TimeThreshold.BuildLatest());
+            var relations = await relationModel.GetRelations(new RelationSelectionAll(), layerID, null, TimeThreshold.BuildLatest());
 
             return relations.Select(r => Model2DTO(r));
         }

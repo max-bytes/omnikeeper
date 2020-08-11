@@ -25,11 +25,13 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
+            // TODO: caching?
             return await model.FindAttributesByName(like, selection, layerID, trans, atTime);
         }
 
         public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
+            // TODO: caching?
             return await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
         }
 
@@ -57,42 +59,42 @@ namespace LandscapeRegistry.Model.Decorators
                 switch (selection)
                 {
                     case SingleCIIDSelection scs:
+                    {
+                        var attributes = await memoryCache.GetOrCreateAsync(CacheKeyService.Attributes(scs.CIID, layerID), async (ce) =>
                         {
-                            var attributes = await memoryCache.GetOrCreateAsync(CacheKeyService.Attributes(scs.CIID, layerID), async (ce) =>
-                            {
-                                var changeToken = memoryCache.GetAttributesCancellationChangeToken(scs.CIID, layerID);
-                                ce.AddExpirationToken(changeToken);
-                                return await model.GetAttributes(scs, layerID, trans, atTime);
-                            });
-                            return attributes;
-                        }
+                            var changeToken = memoryCache.GetAttributesCancellationChangeToken(scs.CIID, layerID);
+                            ce.AddExpirationToken(changeToken);
+                            return await model.GetAttributes(scs, layerID, trans, atTime);
+                        });
+                        return attributes;
+                    }
                     case MultiCIIDsSelection mcs:
+                    {
+                        // check which item can be found in the cache
+                        var found = new List<CIAttribute>();
+                        var notFoundCIIDs = new List<Guid>();
+                        foreach (var ciid in mcs.CIIDs)
                         {
-                            // check which item can be found in the cache
-                            var found = new List<CIAttribute>();
-                            var notFoundCIIDs = new List<Guid>();
-                            foreach (var ciid in mcs.CIIDs)
+                            if (memoryCache.TryGetValue<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid, layerID), out var attributesOfCI))
                             {
-                                if (memoryCache.TryGetValue<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid, layerID), out var attributesOfCI))
-                                {
-                                    found.AddRange(attributesOfCI);
-                                }
-                                else
-                                    notFoundCIIDs.Add(ciid);
-
-                                // get the non-cached items
-                                if (notFoundCIIDs.Count > 0)
-                                {
-                                    var fetched = await model.GetAttributes(MultiCIIDsSelection.Build(notFoundCIIDs), layerID, trans, atTime);
-                                    // add them to the cache
-                                    foreach (var a in fetched.ToLookup(a => a.CIID))
-                                        memoryCache.Set(CacheKeyService.Attributes(a.Key, layerID), a.ToList(), memoryCache.GetAttributesCancellationChangeToken(a.Key, layerID));
-
-                                    found.AddRange(fetched);
-                                }
+                                found.AddRange(attributesOfCI);
                             }
-                            return found;
+                            else
+                                notFoundCIIDs.Add(ciid);
+
+                            // get the non-cached items
+                            if (notFoundCIIDs.Count > 0)
+                            {
+                                var fetched = await model.GetAttributes(MultiCIIDsSelection.Build(notFoundCIIDs), layerID, trans, atTime);
+                                // add them to the cache
+                                foreach (var a in fetched.ToLookup(a => a.CIID))
+                                    memoryCache.Set(CacheKeyService.Attributes(a.Key, layerID), a.ToList(), memoryCache.GetAttributesCancellationChangeToken(a.Key, layerID));
+
+                                found.AddRange(fetched);
+                            }
                         }
+                        return found;
+                    }
                     case AllCIIDsSelection acs:
                         // TODO: caching(?)
                         return await model.GetAttributes(acs, layerID, trans, atTime);

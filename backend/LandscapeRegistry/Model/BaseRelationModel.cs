@@ -31,17 +31,9 @@ namespace LandscapeRegistry.Model
             var parameters = new List<NpgsqlParameter>();
             switch (rl)
             {
-                case RelationSelectionFromTo rsft:
-                    if (rsft.fromCIID.HasValue)
-                    {
-                        innerWhereClauses.Add("(from_ci_id = @from_ci_id)");
-                        parameters.Add(new NpgsqlParameter("from_ci_id", rsft.fromCIID.Value));
-                    }
-                    if (rsft.toCIID.HasValue)
-                    {
-                        innerWhereClauses.Add("(to_ci_id = @to_ci_id)");
-                        parameters.Add(new NpgsqlParameter("to_ci_id", rsft.toCIID.Value));
-                    }
+                case RelationSelectionFrom rsft:
+                    innerWhereClauses.Add("(from_ci_id = @from_ci_id)");
+                    parameters.Add(new NpgsqlParameter("from_ci_id", rsft.fromCIID));
                     break;
                 case RelationSelectionEitherFromOrTo rsot:
                     innerWhereClauses.Add("(from_ci_id = @ci_identity OR to_ci_id = @ci_identity)");
@@ -99,7 +91,7 @@ namespace LandscapeRegistry.Model
             }
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 
@@ -120,7 +112,7 @@ namespace LandscapeRegistry.Model
                     var predicate = predicates[predicateID];
                     var relation = Relation.Build(id, fromCIID, toCIID, predicate, state, changesetID);
 
-                    if (includeRemoved || state != RelationState.Removed)
+                    if (state != RelationState.Removed)
                         relations.Add(relation);
                 }
             }
@@ -219,8 +211,8 @@ namespace LandscapeRegistry.Model
             var timeThreshold = TimeThreshold.BuildLatest();
             var outdatedRelations = (data switch
             {
-                BulkRelationDataPredicateScope p => (await GetRelations(new RelationSelectionWithPredicate(p.PredicateID), false, data.LayerID, trans, timeThreshold)),
-                BulkRelationDataLayerScope l => (await GetRelations(new RelationSelectionAll(), false, data.LayerID, trans, timeThreshold)),
+                BulkRelationDataPredicateScope p => (await GetRelations(new RelationSelectionWithPredicate(p.PredicateID), data.LayerID, trans, timeThreshold)),
+                BulkRelationDataLayerScope l => (await GetRelations(new RelationSelectionAll(), data.LayerID, trans, timeThreshold)),
                 _ => null
             }).ToDictionary(r => r.InformationHash);
 

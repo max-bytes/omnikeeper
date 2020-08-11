@@ -15,7 +15,7 @@ namespace Landscape.Base.Service
         public static async Task<ILookup<string, MergedRelatedCI>> GetMergedRelatedCIs(
             Guid ciid, LayerSet layers, ICIModel ciModel, IRelationModel relationModel, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var relations = await relationModel.GetMergedRelations(new RelationSelectionEitherFromOrTo(ciid), false, layers, trans, atTime);
+            var relations = await relationModel.GetMergedRelations(new RelationSelectionEitherFromOrTo(ciid), layers, trans, atTime);
             var relationsOtherCIIDs = relations.Select(r => (r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID).Distinct();
             if (relationsOtherCIIDs.IsEmpty()) return new List<MergedRelatedCI>().ToLookup(x => "");
             var relationsOtherCIs = (await ciModel.GetMergedCIs(layers, MultiCIIDsSelection.Build(relationsOtherCIIDs), true, trans, atTime)).ToDictionary(ci => ci.ID);
@@ -25,7 +25,7 @@ namespace Landscape.Base.Service
 
         public static async Task<IEnumerable<CompactRelatedCI>> GetCompactRelatedCIs(Guid ciid, LayerSet layerset, ICIModel ciModel, IRelationModel relationModel, int? perPredicateLimit, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var relations = await relationModel.GetMergedRelations(new RelationSelectionEitherFromOrTo(ciid), false, layerset, trans, atTime);
+            var relations = await relationModel.GetMergedRelations(new RelationSelectionEitherFromOrTo(ciid), layerset, trans, atTime);
 
             // HACK: limit number per predicate type
             var predicateCounts = new Dictionary<string, int>();

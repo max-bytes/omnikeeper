@@ -13,10 +13,6 @@ namespace LandscapeRegistry.Service
 {
     public static class CacheKeyService
     {
-        //public static string EffectiveTraitsOfCI(MergedCI ci) => $"effectiveTraitsOfCI_{ci.ID}_{ci.Layers.LayerHash}";
-        //public static string CIOnLayer(Guid ciid, long layerID) => $"ciOnLayer_{ciid}_{layerID}";
-        //public static string MergedCI(Guid ciid, LayerSet layers) => $"mergedCI_{ciid}_{layers.LayerHash}";
-
         public static string Attributes(Guid ciid, long layerID) => $"attributes_{ciid}_{layerID}";
         private static string AttributesChangeToken(Guid ciid, long layerID) => $"ct_att_{ciid}_{layerID}";
         public static CancellationChangeToken GetAttributesCancellationChangeToken(this IMemoryCache memoryCache, Guid ciid, long layerID) =>
@@ -24,6 +20,7 @@ namespace LandscapeRegistry.Service
         public static void CancelAttributesChangeToken(this IMemoryCache memoryCache, Guid ciid, long layerID) =>
             CancelAndRemoveChangeToken(memoryCache, AttributesChangeToken(ciid, layerID));
 
+        public static string Relations(Guid fromCIID, Guid toCIID, long layerID) => $"relations_{fromCIID}_{toCIID}_{layerID}";
         private static string RelationsChangeToken(Guid fromCIID, Guid toCIID, long layerID) => $"ct_rel_{fromCIID}_{toCIID}_{layerID}";
         public static CancellationChangeToken GetRelationsCancellationChangeToken(this IMemoryCache memoryCache, Guid fromCIID, Guid toCIID, long layerID) =>
             new CancellationChangeToken(memoryCache.GetOrCreate(RelationsChangeToken(fromCIID, toCIID, layerID), (ce) => new CancellationTokenSource()).Token);

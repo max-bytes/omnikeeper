@@ -93,7 +93,7 @@ namespace MonitoringPlugin
             // TODO: make configurable
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
 
-            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(hasMonitoringModulePredicate), false, layerSetMonitoringDefinitionsOnly, trans, timeThreshold);
+            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, timeThreshold);
 
             // prepare contact groups
             var cgr = new ContactgroupResolver(relationModel, ciModel, traitModel, logger, errorHandler);
@@ -311,7 +311,7 @@ namespace MonitoringPlugin
 
             public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, Trait contactgroupTrait, NpgsqlTransaction trans, TimeThreshold timeThreshold)
             {
-                var contactGroupRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(belongsToNaemonContactgroup), false, layerSetAll, trans, timeThreshold);
+                var contactGroupRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(belongsToNaemonContactgroup), layerSetAll, trans, timeThreshold);
                 if (contactGroupRelations.IsEmpty())
                 {
                     contactGroupsMap = new Dictionary<Guid, IEnumerable<MergedCI>>();

@@ -113,7 +113,6 @@ namespace LandscapeRegistry
 
             services.AddScoped<ICISearchModel, CISearchModel>();
             services.AddScoped<ICIModel, CIModel>();
-            //services.Decorate<ICIModel, CachingCIModel>(); TODO: does not work well with online external data sources -> rework into using attributes and relations as base cache items
             services.AddScoped<IAttributeModel, AttributeModel>();
             services.AddScoped<IBaseAttributeModel, BaseAttributeModel>();
             services.Decorate<IBaseAttributeModel, CachingBaseAttributeModel>();

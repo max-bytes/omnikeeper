@@ -28,9 +28,9 @@ namespace LandscapeRegistry.Model
             return await baseModel.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            return await baseModel.GetRelations(rs, includeRemoved, layerID, trans, atTime);
+            return await baseModel.GetRelations(rs, layerID, trans, atTime);
         }
 
 
@@ -51,7 +51,7 @@ namespace LandscapeRegistry.Model
 
             return compound.Select(t => MergedRelation.Build(t.Value.First().Value.relation, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).Reverse().ToArray()));
         }
-        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, bool includeRemoved, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             if (layerset.IsEmpty)
                 return ImmutableList<MergedRelation>.Empty; // return empty, an empty layer list can never produce any relations
@@ -60,7 +60,7 @@ namespace LandscapeRegistry.Model
 
             foreach (var layerID in layerset)
             {
-                var lr = await GetRelations(rl, includeRemoved, layerID, trans, atTime);
+                var lr = await GetRelations(rl, layerID, trans, atTime);
                 foreach (var r in lr)
                     relations.Add((r, layerID));
             }
@@ -81,7 +81,7 @@ namespace LandscapeRegistry.Model
 
         public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            return await BulkReplaceRelations(data, changesetProxy, trans);
+            return await baseModel.BulkReplaceRelations(data, changesetProxy, trans);
         }
     }
 }

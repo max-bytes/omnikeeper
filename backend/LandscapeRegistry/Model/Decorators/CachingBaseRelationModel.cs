@@ -37,12 +37,27 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
+            // TODO: caching
             return await model.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            return await model.GetRelations(rl, includeRemoved, layerID, trans, atTime);
+            //switch (rl)
+            //{
+            //    case RelationSelectionFrom scs:
+            //    {
+            //        var attributes = await memoryCache.GetOrCreateAsync(CacheKeyService.Relations(scs., layerID), async (ce) =>
+            //        {
+            //            var changeToken = memoryCache.GetAttributesCancellationChangeToken(scs.CIID, layerID);
+            //            ce.AddExpirationToken(changeToken);
+            //            return await model.GetAttributes(scs, layerID, trans, atTime);
+            //        });
+            //        return attributes;
+            //    }
+            //}
+            // todo
+            return await model.GetRelations(rl, layerID, trans, atTime);
         }
 
         public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)

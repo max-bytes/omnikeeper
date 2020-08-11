@@ -8,15 +8,13 @@ namespace Landscape.Base.Model
     {
 
     }
-    public class RelationSelectionFromTo : IRelationSelection
+    public class RelationSelectionFrom : IRelationSelection
     {
-        public readonly Guid? fromCIID;
-        public readonly Guid? toCIID;
+        public readonly Guid fromCIID;
 
-        public RelationSelectionFromTo(Guid? fromCIID, Guid? toCIID)
+        public RelationSelectionFrom(Guid fromCIID)
         {
             this.fromCIID = fromCIID;
-            this.toCIID = toCIID;
         }
     }
     public class RelationSelectionEitherFromOrTo : IRelationSelection
