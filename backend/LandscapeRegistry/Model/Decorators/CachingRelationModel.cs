@@ -13,32 +13,28 @@ using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model.Decorators
 {
-    public class CachingRelationModel : IRelationModel
+    public class CachingRelationModel : IBaseRelationModel
     {
-        private readonly IRelationModel model;
+        private readonly IBaseRelationModel model;
         private readonly IMemoryCache memoryCache;
 
-        public CachingRelationModel(IRelationModel model, IMemoryCache memoryCache)
+        public CachingRelationModel(IBaseRelationModel model, IMemoryCache memoryCache)
         {
             this.model = model;
             this.memoryCache = memoryCache;
         }
 
-        public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
-        {
-            var success = await model.BulkReplaceRelations(data, changesetProxy, trans);
-            if (success)
-                foreach (var f in data.Fragments)
-                {
-                    memoryCache.CancelRelationsChangeToken(data.GetFromCIID(f), data.GetToCIID(f), data.LayerID);
-                }
-            return success;
-        }
-
-        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, bool includeRemoved, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
-        {
-            return await model.GetMergedRelations(rl, includeRemoved, layerset, trans, atTime);
-        }
+        // TODO
+        //public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        //{
+        //    var success = await model.BulkReplaceRelations(data, changesetProxy, trans);
+        //    if (success)
+        //        foreach (var f in data.Fragments)
+        //        {
+        //            memoryCache.CancelRelationsChangeToken(data.GetFromCIID(f), data.GetToCIID(f), data.LayerID);
+        //        }
+        //    return success;
+        //}
 
         public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {

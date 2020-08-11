@@ -122,7 +122,8 @@ namespace LandscapeRegistry
             services.AddScoped<ILayerModel, LayerModel>();
             services.Decorate<ILayerModel, CachingLayerModel>();
             services.AddScoped<IRelationModel, RelationModel>();
-            services.Decorate<IRelationModel, CachingRelationModel>();
+            services.AddScoped<IBaseRelationModel, BaseRelationModel>();
+            services.Decorate<IBaseRelationModel, CachingRelationModel>();
             services.AddScoped<IChangesetModel, ChangesetModel>();
             services.AddScoped<ITemplateModel, TemplateModel>();
             services.AddScoped<IPredicateModel, PredicateModel>();

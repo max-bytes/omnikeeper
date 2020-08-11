@@ -187,7 +187,7 @@ namespace Tests.Integration.Model
             var model = new CIModel(attributeModel, conn);
             var layerModel = new LayerModel(conn);
             var predicateModel = new PredicateModel(conn);
-            var relationModel = new RelationModel(MockedEmptyOnlineAccessProxy.O, predicateModel, conn);
+            var relationModel = new RelationModel(MockedEmptyOnlineAccessProxy.O, new BaseRelationModel(MockedEmptyOnlineAccessProxy.O, predicateModel, conn), conn);
             var user = await DBSetup.SetupUser(userModel);
 
             var ciid1 = await model.CreateCI(null);
