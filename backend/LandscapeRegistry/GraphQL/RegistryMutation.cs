@@ -99,7 +99,7 @@ namespace LandscapeRegistry.GraphQL
                         .Concat(insertedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
                         .Concat(removedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
                         .Distinct();
-                        affectedCIs = await ciModel.GetMergedCIs(userContext.LayerSet, true, transaction, userContext.TimeThreshold, affectedCIIDs);
+                        affectedCIs = await ciModel.GetMergedCIs(userContext.LayerSet, new MultiCIIDsSelection(affectedCIIDs), true, transaction, userContext.TimeThreshold);
                     }
 
                     await transaction.CommitAsync();

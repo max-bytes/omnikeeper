@@ -47,12 +47,12 @@ namespace MonitoringPlugin
 
             // prepare list of all monitored cis
             var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).Distinct();
-            var monitoredCIs = (await ciModel.GetMergedCIs(layerSetAll, true, trans, timeThreshold, monitoredCIIDs))
+            var monitoredCIs = (await ciModel.GetMergedCIs(layerSetAll, new MultiCIIDsSelection(monitoredCIIDs), true, trans, timeThreshold))
                 .ToDictionary(ci => ci.ID);
 
             // prepare list of all monitoring modules
             var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.ToCIID).Distinct();
-            var monitoringModuleCIs = (await ciModel.GetMergedCIs(layerSetMonitoringDefinitionsOnly, false, trans, timeThreshold, monitoringModuleCIIDs))
+            var monitoringModuleCIs = (await ciModel.GetMergedCIs(layerSetMonitoringDefinitionsOnly, new MultiCIIDsSelection(monitoringModuleCIIDs), false, trans, timeThreshold))
                 .ToDictionary(ci => ci.ID);
 
             logger.LogDebug("Prep");

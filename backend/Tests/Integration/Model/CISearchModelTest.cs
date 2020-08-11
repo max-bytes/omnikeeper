@@ -91,7 +91,7 @@ namespace Tests.Integration.Model
 
             var tt = TimeThreshold.BuildLatest();
 
-            var all = await ciModel.GetCompactCIs(new LayerSet(layerID1, layerID2), null, tt);
+            var all = await ciModel.GetCompactCIs(new LayerSet(layerID1, layerID2), new AllCIIDsSelection(), null, tt);
 
             (await searchModel.SimpleSearch("ci", null, tt)).Should().BeEquivalentTo(all);
             (await searchModel.SimpleSearch("i", null, tt)).Should().BeEquivalentTo(all);

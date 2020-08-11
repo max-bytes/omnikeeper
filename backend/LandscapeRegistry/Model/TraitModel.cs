@@ -112,8 +112,7 @@ namespace LandscapeRegistry.Model
             }
 
             // now do a full pass to check which ci's REALLY fulfill the trait's requirements
-            // TODO: performance improvement: use a function that works on a list of ci's, not check every ci on its own (and do N queries)
-            var cis = await ciModel.GetMergedCIs(layerSet, false, trans, atTime, candidateCIIDs);
+            var cis = await ciModel.GetMergedCIs(layerSet, new MultiCIIDsSelection(candidateCIIDs), false, trans, atTime);
 
             // TODO: check that if the current trait has depedent traits that they are properly resolved too
             var candidates = cis.Select(ci => new EffectiveTraitCandidate(trait, ci)).ToList();

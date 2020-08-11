@@ -31,34 +31,36 @@ namespace LandscapeRegistry.Model
             // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
             var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), layerSet, trans, timeThreshold);
             var foundCIIDs = ciNamesFromNameAttributes.Where(a => a.Value.Attribute.Value.Value2String().Equals(CIName)).Select(a => a.Key).ToHashSet();
-            var cis = await ciModel.GetCompactCIs(layerSet, trans, timeThreshold, foundCIIDs);
+            var cis = await ciModel.GetCompactCIs(layerSet, new MultiCIIDsSelection(foundCIIDs), trans, timeThreshold);
             return cis;
         }
 
         public async Task<IEnumerable<CompactCI>> SimpleSearch(string searchString, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var finalSS = searchString.Trim();
-            var foundCIIDs = new HashSet<Guid>();
 
             var ls = await layerModel.BuildLayerSet(trans);
 
+            IEnumerable<CompactCI> cis;
             if (Guid.TryParse(finalSS, out var guid))
             {
-                foundCIIDs = (await ciModel.GetCIIDs(trans)).Where(ciid => ciid.Equals(guid)).ToHashSet(); // TODO: performance improvement
+                //foundCIIDs = (await ciModel.GetCIIDs(trans)).Where(ciid => ciid.Equals(guid)).ToHashSet(); // TODO: performance improvement
+                cis = await ciModel.GetCompactCIs(ls, new SingleCIIDSelection(guid), trans, atTime);
             }
             else if (finalSS.Length > 0)
             {
                 // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
                 var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), ls, trans, atTime);
-                foundCIIDs = ciNamesFromNameAttributes.Where(kv => kv.Value.Attribute.Value.FullTextSearch(finalSS, System.Globalization.CompareOptions.IgnoreCase))
+                var foundCIIDs = ciNamesFromNameAttributes.Where(kv => kv.Value.Attribute.Value.FullTextSearch(finalSS, System.Globalization.CompareOptions.IgnoreCase))
                     .Select(kv => kv.Key).ToHashSet();
+                cis = await ciModel.GetCompactCIs(ls, new MultiCIIDsSelection(foundCIIDs), trans, atTime);
             }
             else
             {
-                foundCIIDs = (await ciModel.GetCIIDs(trans)).ToHashSet();
+                //foundCIIDs = (await ciModel.GetCIIDs(trans)).ToHashSet();
+                cis = await ciModel.GetCompactCIs(ls, new AllCIIDsSelection(), trans, atTime);
             }
 
-            var cis = await ciModel.GetCompactCIs(ls, trans, atTime, foundCIIDs);
 
             // HACK, properly sort unnamed CIs
             return cis.OrderBy(t => t.Name ?? "ZZZZZZZZZZZ").Take(500);
@@ -88,7 +90,7 @@ namespace LandscapeRegistry.Model
             }
             else 
             {
-                foundCIIDs = (await ciModel.GetCIIDs(trans)).ToHashSet();
+                foundCIIDs = (await ciModel.GetCIIDs(trans)).ToHashSet(); // TODO: performance improvement
             }
 
             var resultIsReducedByETs = false;
@@ -106,7 +108,7 @@ namespace LandscapeRegistry.Model
                 resultIsReducedByETs = true;
             }
 
-            var cis = await ciModel.GetCompactCIs(layerSet, trans, atTime, foundCIIDs);
+            var cis = await ciModel.GetCompactCIs(layerSet, new MultiCIIDsSelection(foundCIIDs), trans, atTime); // TODO: performance improvement
 
             // HACK, properly sort unnamed CIs
             return cis.OrderBy(t => t.Name ?? "ZZZZZZZZZZZ").Take(500);

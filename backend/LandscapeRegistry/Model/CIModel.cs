@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static Landscape.Base.Model.IAttributeModel;
 
 namespace LandscapeRegistry.Model
 {
@@ -15,7 +14,7 @@ namespace LandscapeRegistry.Model
     {
         private readonly NpgsqlConnection conn;
         private readonly IAttributeModel attributeModel;
-        private static readonly AnchorState DefaultState = AnchorState.Active;
+        //private static readonly AnchorState DefaultState = AnchorState.Active;
 
         public CIModel(IAttributeModel attributeModel, NpgsqlConnection connection)
         {
@@ -34,10 +33,11 @@ namespace LandscapeRegistry.Model
             return nameA?.Value.Value2String(); // TODO
         }
 
-        private async Task<IDictionary<Guid, string>> GetCINames(IEnumerable<Guid> ciids, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
+        private async Task<IDictionary<Guid, string>> GetCINames(LayerSet layerset, ICIIDSelection selection, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var attributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new MultiCIIDsSelection(ciids.ToArray()), layerset, trans, atTime);
-            return ciids.Select(ciid =>
+            var attributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, selection, layerset, trans, atTime);
+            var AllSelectedCIIDs = await GetCIIDsFromSelection(selection, trans);
+            return AllSelectedCIIDs.Select(ciid =>
             {
                 attributes.TryGetValue(ciid, out var nameAttribute);
                 return (ciid, name: nameAttribute?.Attribute.Value.Value2String());
@@ -58,13 +58,13 @@ namespace LandscapeRegistry.Model
             return CI.Build(ciid, name, layerID, atTime, attributes);
         }
 
-        public async Task<IEnumerable<CI>> GetCIs(long layerID, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CI>> GetCIs(long layerID, ICIIDSelection selection, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var attributes = await attributeModel.GetAttributes(new AllCIIDsSelection(), false, layerID, trans, atTime);
+            var attributes = await attributeModel.GetAttributes(selection, false, layerID, trans, atTime);
             var groupedAttributes = attributes.GroupBy(a => a.CIID).ToDictionary(a => a.Key, a => a.ToList());
             if (includeEmptyCIs)
             {
-                var allCIIds = await GetCIIDs(trans); // TODO: performance improvements?
+                var allCIIds = await GetCIIDsFromSelection(selection, trans);
                 var emptyCIs = allCIIds.Except(groupedAttributes.Select(a => a.Key)).ToDictionary(a => a, a => new List<CIAttribute>());
                 groupedAttributes = groupedAttributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
             }
@@ -76,10 +76,21 @@ namespace LandscapeRegistry.Model
             return t;
         }
 
-        public async Task<IEnumerable<CompactCI>> GetCompactCIs(LayerSet visibleLayers, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs = null)
+        private async Task<IEnumerable<Guid>> GetCIIDsFromSelection(ICIIDSelection selection, NpgsqlTransaction trans)
         {
-            if (CIIDs == null) CIIDs = await GetCIIDs(trans);
-            var ciNames = await GetCINames(CIIDs, visibleLayers, trans, atTime);
+            return selection switch
+            {
+                AllCIIDsSelection _ => await GetCIIDs(trans),
+                MultiCIIDsSelection multiple => multiple.CIIDs,
+                SingleCIIDSelection single => new Guid[] { single.CIID },
+                _ => null,// must not be
+            };
+        }
+
+        public async Task<IEnumerable<CompactCI>> GetCompactCIs(LayerSet visibleLayers, ICIIDSelection selection, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            var CIIDs = await GetCIIDsFromSelection(selection, trans);
+            var ciNames = await GetCINames(visibleLayers, selection, trans, atTime);
 
             return CIIDs.Select(ciid => CompactCI.Build(ciid, ciNames[ciid], visibleLayers.LayerHash, atTime));
         }
@@ -159,13 +170,15 @@ namespace LandscapeRegistry.Model
             return true;
         }
 
-        public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs)
+        public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, ICIIDSelection selection, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var attributes = await attributeModel.GetMergedAttributes(new MultiCIIDsSelection(CIIDs), false, layers, trans, atTime);
+            var attributes = await attributeModel.GetMergedAttributes(selection, false, layers, trans, atTime);
 
             if (includeEmptyCIs)
             {
-                IDictionary<Guid, IDictionary<string, MergedCIAttribute>> emptyCIs = CIIDs.Except(attributes.Keys).ToDictionary(a => a, a => (IDictionary<string, MergedCIAttribute>)new Dictionary<string, MergedCIAttribute>());
+                // check which ciids we already got and which are empty, add the empty ones
+                var AllSelectedCIIDs = await GetCIIDsFromSelection(selection, trans); 
+                IDictionary<Guid, IDictionary<string, MergedCIAttribute>> emptyCIs = AllSelectedCIIDs.Except(attributes.Keys).ToDictionary(a => a, a => (IDictionary<string, MergedCIAttribute>)new Dictionary<string, MergedCIAttribute>());
                 attributes = attributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
             }
 

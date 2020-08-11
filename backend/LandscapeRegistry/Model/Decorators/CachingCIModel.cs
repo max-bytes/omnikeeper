@@ -67,16 +67,16 @@ namespace LandscapeRegistry.Model.Decorators
             return await model.GetCIIDsOfNonEmptyCIs(layerset, trans, timeThreshold);
         }
 
-        public async Task<IEnumerable<CI>> GetCIs(long layerID, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CI>> GetCIs(long layerID, ICIIDSelection selection, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             // cannot be cached well... or can it?
-            return await model.GetCIs(layerID, includeEmptyCIs, trans, atTime);
+            return await model.GetCIs(layerID, selection, includeEmptyCIs, trans, atTime);
         }
 
-        public async Task<IEnumerable<CompactCI>> GetCompactCIs(LayerSet visibleLayers, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs = null)
+        public async Task<IEnumerable<CompactCI>> GetCompactCIs(LayerSet visibleLayers, ICIIDSelection selection, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             // cannot be cached well... or can it?
-            return await model.GetCompactCIs(visibleLayers, trans, atTime, CIIDs);
+            return await model.GetCompactCIs(visibleLayers, selection, trans, atTime);
         }
 
         public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
@@ -93,24 +93,25 @@ namespace LandscapeRegistry.Model.Decorators
             else return await model.GetMergedCI(ciid, layers, trans, atTime);
         }
 
-        public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs)
+        public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, ICIIDSelection selection, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            // check which item can be found in the cache
-            var found = new List<MergedCI>();
-            var notFound = new List<Guid>();
-            foreach(var ciid in CIIDs)
-            {
-                if (memoryCache.TryGetValue<MergedCI>(CacheKeyService.MergedCI(ciid, layers), out var ci))
-                    found.Add(ci);
-                else 
-                    notFound.Add(ciid);
-            }
-            // get the non-cached items
-            var fetched = await model.GetMergedCIs(layers, includeEmptyCIs, trans, atTime, notFound);
-            // add them to the cache
-            foreach (var ci in fetched) memoryCache.Set(CacheKeyService.MergedCI(ci.ID, layers), ci, memoryCache.GetCICancellationChangeToken(ci.ID));
+            //// check which item can be found in the cache
+            //var found = new List<MergedCI>();
+            //var notFound = new List<Guid>();
+            //foreach(var ciid in CIIDs)
+            //{
+            //    if (memoryCache.TryGetValue<MergedCI>(CacheKeyService.MergedCI(ciid, layers), out var ci))
+            //        found.Add(ci);
+            //    else 
+            //        notFound.Add(ciid);
+            //}
+            //// get the non-cached items
+            //var fetched = await model.GetMergedCIs(layers, selection, includeEmptyCIs, trans, atTime);
+            //// add them to the cache
+            //foreach (var ci in fetched) memoryCache.Set(CacheKeyService.MergedCI(ci.ID, layers), ci, memoryCache.GetCICancellationChangeToken(ci.ID));
 
-            return found.Concat(fetched);
+            //return found.Concat(fetched);
+            return await model.GetMergedCIs(layers, selection, includeEmptyCIs, trans, atTime); // TODO: caching?
         }
     }
 }
