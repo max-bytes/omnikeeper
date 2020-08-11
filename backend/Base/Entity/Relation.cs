@@ -14,10 +14,6 @@ namespace Landscape.Base.Entity
         public long[] LayerStackIDs { get; private set; }
         public long LayerID { get => LayerStackIDs[^1]; }
 
-        // information hash: 
-        public string InformationHash => CreateInformationHash(Relation.FromCIID, Relation.ToCIID, Relation.PredicateID);
-        public static string CreateInformationHash(Guid fromCIID, Guid toCIID, string predicateID) => fromCIID + "_" + toCIID + "_" + predicateID;
-
         public static MergedRelation Build(Relation relation, long[] layerStackIDs)
         {
             return new MergedRelation
@@ -37,6 +33,10 @@ namespace Landscape.Base.Entity
         public Predicate Predicate { get; private set; }
         public RelationState State { get; private set; }
         public long ChangesetID { get; private set; }
+
+        // information hash: 
+        public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);
+        public static string CreateInformationHash(Guid fromCIID, Guid toCIID, string predicateID) => fromCIID + "_" + toCIID + "_" + predicateID;
 
         public static Relation Build(Guid id, Guid fromCIID, Guid toCIID, Predicate predicate, RelationState state, long changesetID)
         {

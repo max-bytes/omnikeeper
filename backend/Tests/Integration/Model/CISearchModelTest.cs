@@ -46,7 +46,7 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new PredicateModel(conn);
             var traitsProvider = new MockedTraitsProvider();
-            var relationModel = new RelationModel(MockedEmptyOnlineAccessProxy.O, new BaseRelationModel(MockedEmptyOnlineAccessProxy.O, predicateModel, conn), conn);
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var layerModel = new LayerModel(conn);

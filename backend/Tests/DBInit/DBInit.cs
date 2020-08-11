@@ -39,7 +39,7 @@ namespace Tests.DBInit
             var changesetModel = new ChangesetModel(userModel, conn);
             var layerModel = new LayerModel(conn);
             var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
-            var relationModel = new RelationModel(MockedEmptyOnlineAccessProxy.O, new BaseRelationModel(MockedEmptyOnlineAccessProxy.O, predicateModel, conn), conn);
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
 
             var random = new Random(3);
 

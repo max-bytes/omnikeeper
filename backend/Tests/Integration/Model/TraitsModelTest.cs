@@ -78,7 +78,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var predicateModel = new PredicateModel(conn);
-            var relationModel = new RelationModel(MockedEmptyOnlineAccessProxy.O, new BaseRelationModel(MockedEmptyOnlineAccessProxy.O, predicateModel, conn), conn);
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
             var layerModel = new LayerModel(conn);
             var traitModel = new TraitModel(ciModel, relationModel, traitsProvider, NullLogger<TraitModel>.Instance, conn);
             var user = await DBSetup.SetupUser(userModel);

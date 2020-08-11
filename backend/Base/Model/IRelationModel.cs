@@ -10,8 +10,5 @@ namespace Landscape.Base.Model
     public interface IRelationModel : IBaseRelationModel
     {
         Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, bool includeRemoved, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime);
-
-        // TODO: move to baserelationModel
-        Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans);
     }
 }

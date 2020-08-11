@@ -36,7 +36,7 @@ namespace Tests.Integration.Model
             var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
-            var relationModel = new RelationModel(MockedEmptyOnlineAccessProxy.O, new BaseRelationModel(MockedEmptyOnlineAccessProxy.O, predicateModel, conn), conn);
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
 
@@ -104,7 +104,7 @@ namespace Tests.Integration.Model
             var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
-            var relationModel = new RelationModel(MockedEmptyOnlineAccessProxy.O, new BaseRelationModel(MockedEmptyOnlineAccessProxy.O, predicateModel, conn), conn);
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
 

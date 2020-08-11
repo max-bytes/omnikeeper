@@ -5,6 +5,7 @@ using Landscape.Base.Inbound;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using Npgsql;
+using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -17,12 +18,10 @@ namespace LandscapeRegistry.Model
     {
         private readonly NpgsqlConnection conn;
         private readonly IPredicateModel predicateModel;
-        private readonly IOnlineAccessProxy onlineAccessProxy;
 
-        public BaseRelationModel(IOnlineAccessProxy onlineAccessProxy, IPredicateModel predicateModel, NpgsqlConnection connection)
+        public BaseRelationModel(IPredicateModel predicateModel, NpgsqlConnection connection)
         {
             conn = connection;
-            this.onlineAccessProxy = onlineAccessProxy;
             this.predicateModel = predicateModel;
         }
 
@@ -75,12 +74,6 @@ namespace LandscapeRegistry.Model
 
         public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            // if layer is online inbound layer, return from proxy
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
-            {
-                return await onlineAccessProxy.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
-            }
-
             var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All); // TODO: don't get predicates all the time
 
             using (var command = new NpgsqlCommand(@"select id, state, changeset_id from relation where 
@@ -108,12 +101,6 @@ namespace LandscapeRegistry.Model
 
         public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            // if layer is online inbound layer, return from proxy
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
-            {
-                return onlineAccessProxy.GetRelations(rs, layerID, trans, atTime).ToEnumerable();
-            }
-
             var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 
             var relations = new List<Relation>();
@@ -143,8 +130,6 @@ namespace LandscapeRegistry.Model
 
         public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
-
             var timeThreshold = TimeThreshold.BuildLatest();
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, timeThreshold);
 
@@ -184,8 +169,6 @@ namespace LandscapeRegistry.Model
 
         public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
-
             var timeThreshold = TimeThreshold.BuildLatest();
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, timeThreshold);
 
@@ -228,6 +211,80 @@ namespace LandscapeRegistry.Model
 
             await command.ExecuteNonQueryAsync();
             return Relation.Build(id, fromCIID, toCIID, predicate, state, changeset.ID);
+        }
+
+
+        public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        {
+            var timeThreshold = TimeThreshold.BuildLatest();
+            var outdatedRelations = (data switch
+            {
+                BulkRelationDataPredicateScope p => (await GetRelations(new RelationSelectionWithPredicate(p.PredicateID), false, data.LayerID, trans, timeThreshold)),
+                BulkRelationDataLayerScope l => (await GetRelations(new RelationSelectionAll(), false, data.LayerID, trans, timeThreshold)),
+                _ => null
+            }).ToDictionary(r => r.InformationHash);
+
+            var actualInserts = new List<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>();
+            foreach (var fragment in data.Fragments)
+            {
+                var id = Guid.NewGuid();
+                var fromCIID = data.GetFromCIID(fragment);
+                var toCIID = data.GetToCIID(fragment);
+
+                var predicateID = data.GetPredicateID(fragment); // TODO: check if predicates are active
+                var informationHash = Relation.CreateInformationHash(fromCIID, toCIID, predicateID);
+                // remove the current relation from the list of relations to remove
+                outdatedRelations.Remove(informationHash, out var currentRelation);
+
+                var state = RelationState.New;
+                if (currentRelation != null)
+                {
+                    if (currentRelation.State == RelationState.Removed)
+                        state = RelationState.Renewed;
+                    else
+                        continue;
+                }
+
+                actualInserts.Add((fromCIID, toCIID, predicateID, state));
+            }
+
+            // changeset is only created and copy mode is only entered when there is actually anything inserted
+            if (!actualInserts.IsEmpty() || !outdatedRelations.IsEmpty())
+            {
+                Changeset changeset = await changesetProxy.GetChangeset(trans);
+
+                // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
+                using var writer = conn.BeginBinaryImport(@"COPY relation (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, state, ""timestamp"") FROM STDIN (FORMAT BINARY)");
+                foreach (var (fromCIID, toCIID, predicateID, state) in actualInserts)
+                {
+                    writer.StartRow();
+                    writer.Write(Guid.NewGuid());
+                    writer.Write(fromCIID);
+                    writer.Write(toCIID);
+                    writer.Write(predicateID);
+                    writer.Write(changeset.ID);
+                    writer.Write(data.LayerID);
+                    writer.Write(state, "relationstate");
+                    writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
+                }
+
+                // remove outdated 
+                foreach (var outdatedRelation in outdatedRelations.Values)
+                {
+                    writer.StartRow();
+                    writer.Write(Guid.NewGuid());
+                    writer.Write(outdatedRelation.FromCIID);
+                    writer.Write(outdatedRelation.ToCIID);
+                    writer.Write(outdatedRelation.PredicateID);
+                    writer.Write(changeset.ID);
+                    writer.Write(data.LayerID);
+                    writer.Write(RelationState.Removed, "relationstate");
+                    writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
+                }
+                writer.Complete();
+            }
+
+            return true;
         }
     }
 }
