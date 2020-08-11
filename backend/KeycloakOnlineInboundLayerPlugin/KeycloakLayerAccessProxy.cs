@@ -107,7 +107,7 @@ namespace OnlineInboundAdapterKeycloak
             }
         }
 
-        public async IAsyncEnumerable<CIAttribute> GetAttributesWithName(string name, TimeThreshold atTime)
+        public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, TimeThreshold atTime)
         {
             await mapper.Setup();
 
@@ -117,7 +117,7 @@ namespace OnlineInboundAdapterKeycloak
             foreach (var user in users)
             {
                 var ciid = mapper.GetCIID(new ExternalIDString(user.Id));
-                if (ciid.HasValue)
+                if (ciid.HasValue && selection.Contains(ciid.Value)) // HACK: we get ALL users and discard a lot of them again
                 {
                     foreach (var a in BuildAttributesFromUser(user, ciid.Value, null))
                         if (a.Name.Equals(name)) // HACK: we are getting ALL attributes of the user and then discard them again, except for one
@@ -126,35 +126,56 @@ namespace OnlineInboundAdapterKeycloak
             }
         }
 
-        public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, TimeThreshold atTime, Guid? ciid)
+        public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, TimeThreshold atTime)
         {
             await mapper.Setup();
 
             if (!atTime.IsLatest) yield break; // we don't have historic information
 
-            if (ciid.HasValue)
+            switch (selection)
             {
-                var externalID = mapper.GetExternalID(ciid.Value);
-
-                var user = await client.GetUserAsync(realm, externalID.ID);
-                var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.ID);
-
-                foreach (var a in BuildAttributesFromUser(user, ciid.Value, roleMappings))
-                    if (Regex.IsMatch(a.Name, regex))
-                        yield return a;
-            } else
-            {
-                var users = await client.GetUsersAsync(realm, true, null, null, null, null, 99999, null, null); // TODO, HACK: magic number, how to properly get all user IDs?
-                foreach (var user in users)
-                {
-                    var id = mapper.GetCIID(new ExternalIDString(user.Id));
-                    if (id.HasValue)
+                case SingleCIIDSelection scs:
                     {
-                        foreach (var a in BuildAttributesFromUser(user, id.Value, null))
-                            if (Regex.IsMatch(a.Name, regex)) // HACK: we are getting ALL attributes of the user and then discard many of them again
+                        var externalID = mapper.GetExternalID(scs.CIID);
+
+                        var user = await client.GetUserAsync(realm, externalID.ID);
+                        var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.ID);
+
+                        foreach (var a in BuildAttributesFromUser(user, scs.CIID, roleMappings))
+                            if (Regex.IsMatch(a.Name, regex))
                                 yield return a;
+                        break;
                     }
-                }
+                case MultiCIIDsSelection mcs:
+                    {
+                        foreach (var ciid in mcs.CIIDs)
+                        {
+                            var externalID = mapper.GetExternalID(ciid);
+
+                            var user = await client.GetUserAsync(realm, externalID.ID);
+                            var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.ID);
+
+                            foreach (var a in BuildAttributesFromUser(user, ciid, roleMappings))
+                                if (Regex.IsMatch(a.Name, regex))
+                                    yield return a;
+                        }
+                        break;
+                    }
+                case AllCIIDsSelection acs:
+                    {
+                        var users = await client.GetUsersAsync(realm, true, null, null, null, null, 99999, null, null); // TODO, HACK: magic number, how to properly get all user IDs?
+                        foreach (var user in users)
+                        {
+                            var id = mapper.GetCIID(new ExternalIDString(user.Id));
+                            if (id.HasValue)
+                            {
+                                foreach (var a in BuildAttributesFromUser(user, id.Value, null))
+                                    if (Regex.IsMatch(a.Name, regex)) // HACK: we are getting ALL attributes of the user and then discard many of them again
+                                        yield return a;
+                            }
+                        }
+                        break;
+                    }
             }
         }
 

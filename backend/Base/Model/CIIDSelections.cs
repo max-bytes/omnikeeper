@@ -10,6 +10,8 @@ namespace Landscape.Base.Model
     {
         string WhereClause { get; }
         void AddParameters(NpgsqlParameterCollection p);
+
+        public bool Contains(Guid ciid);
     }
 
     public class SingleCIIDSelection : ICIIDSelection
@@ -21,6 +23,7 @@ namespace Landscape.Base.Model
         }
         public string WhereClause => "ci_id = @ci_id";
         public void AddParameters(NpgsqlParameterCollection p) => p.AddWithValue("ci_id", CIID);
+        public bool Contains(Guid ciid) => ciid == CIID;
     }
 
     public class MultiCIIDsSelection : ICIIDSelection
@@ -36,11 +39,13 @@ namespace Landscape.Base.Model
         }
         public string WhereClause => "ci_id = ANY(@ci_ids)";
         public void AddParameters(NpgsqlParameterCollection p) => p.AddWithValue("ci_ids", CIIDs);
+        public bool Contains(Guid ciid) => CIIDs.Contains(ciid);
     }
 
     public class AllCIIDsSelection : ICIIDSelection
     {
         public string WhereClause => "1=1";
         public void AddParameters(NpgsqlParameterCollection p) { }
+        public bool Contains(Guid ciid) => true;
     }
 }

@@ -180,7 +180,7 @@ namespace LandscapeRegistry.Model
 
             var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 
-            var layerset = new LayerSet(layerID); // HACK: use layerset logic for single layer fetch
+            var layerset = new LayerSet(layerID); // HACK: use of layerset logic for single layer fetch
 
             var relations = new List<Relation>();
             using (var command = CreateRelationCommand(rs, layerset, trans, atTime))
@@ -274,7 +274,7 @@ namespace LandscapeRegistry.Model
             var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.ActiveOnly); // only active predicates allowed
 
             if (!predicates.ContainsKey(predicateID))
-                throw new Exception($"Predicate ID {predicateID} does not exist");
+                throw new KeyNotFoundException($"Predicate ID {predicateID} does not exist");
 
             using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
                 VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp)", conn, trans);
@@ -319,7 +319,7 @@ namespace LandscapeRegistry.Model
                 if (fromCIID == toCIID)
                     throw new Exception("From and To CIID must not be the same!");
 
-                var predicateID = data.GetPredicateID(fragment);
+                var predicateID = data.GetPredicateID(fragment); // TODO: check if predicates are active
                 var informationHash = MergedRelation.CreateInformationHash(fromCIID, toCIID, predicateID);
                 // remove the current relation from the list of relations to remove
                 outdatedRelations.Remove(informationHash, out var currentRelation);

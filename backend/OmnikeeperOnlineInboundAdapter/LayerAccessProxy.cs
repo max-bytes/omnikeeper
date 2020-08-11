@@ -89,7 +89,7 @@ namespace OnlineInboundAdapterOmnikeeper
             throw new NotImplementedException(); // TODO
         }
 
-        public async IAsyncEnumerable<CIAttribute> GetAttributesWithName(string name, TimeThreshold atTime)
+        public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, TimeThreshold atTime)
         {
             await mapper.Setup();
 
@@ -100,26 +100,19 @@ namespace OnlineInboundAdapterOmnikeeper
 
             var attributesDTO = await client.GetMergedAttributesWithNameAsync(name, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, "1");
 
+
             foreach (var a in AttributeDTO2Regular(attributesDTO))
-                yield return a;
+                if (selection.Contains(a.CIID)) // TODO, HACK: we fetch without doing any ciid filtering, rework Rest API endpoint to allow CIID filtering
+                    yield return a;
         }
 
-        public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, TimeThreshold atTime, Guid? ciid)
+        public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, TimeThreshold atTime)
         {
             await mapper.Setup();
 
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
-            if (ciid.HasValue)
-            {
-                //var externalID = mapper.GetExternalID(ciid.Value);
-
-                throw new NotImplementedException(); // TODO
-            }
-            else
-            {
-                throw new NotImplementedException(); // TODO
-            }
+            throw new NotImplementedException(); // TODO
         }
 
         public IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime)

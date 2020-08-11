@@ -59,29 +59,37 @@ namespace Landscape.Base.Inbound
                 yield return a;
         }
 
-        public async IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributesWithName(string name, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
-        {
-            await foreach(var (proxy, layer) in GetAccessProxies(layerset, trans))
-            {
-                IAsyncEnumerable<CIAttribute> attributes;
-                try
-                {
-                    attributes = proxy.GetAttributesWithName(name, atTime);
-                } catch (Exception e)
-                {
-                    logger.LogError(e, $"Error fetching attributes with name from access proxy {proxy.Name}");
-                    yield break;
-                }
-                await foreach (var attribute in attributes.Select(a => (a, layer.ID)))
-                    yield return attribute;
-            }
-        }
+        //public async IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributesWithName(string name, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
+        //{
+        //    await foreach(var (proxy, layer) in GetAccessProxies(layerset, trans))
+        //    {
+        //        IAsyncEnumerable<CIAttribute> attributes;
+        //        try
+        //        {
+        //            attributes = proxy.GetAttributesWithName(name, atTime);
+        //        } catch (Exception e)
+        //        {
+        //            logger.LogError(e, $"Error fetching attributes with name from access proxy {proxy.Name}");
+        //            yield break;
+        //        }
+        //        await foreach (var attribute in attributes.Select(a => (a, layer.ID)))
+        //            yield return attribute;
+        //    }
+        //}
 
-        public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, long layerID, NpgsqlTransaction trans, TimeThreshold atTime, Guid? ciid)
+        public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-            await foreach (var a in plugin.GetLayerAccessProxy(layer).FindAttributesByName(regex, atTime, ciid))
+            await foreach (var a in plugin.GetLayerAccessProxy(layer).FindAttributesByName(regex, selection, atTime))
+                yield return a;
+        }
+
+        public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            var layer = await layerModel.GetLayer(layerID, trans);
+            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
+            await foreach (var a in plugin.GetLayerAccessProxy(layer).FindAttributesByFullName(name, selection, atTime))
                 yield return a;
         }
 

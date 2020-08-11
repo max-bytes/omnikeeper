@@ -29,7 +29,7 @@ namespace LandscapeRegistry.Model
         public async Task<IEnumerable<CompactCI>> FindCIsWithName(string CIName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold timeThreshold)
         {
             // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
-            var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), false, layerSet, trans, timeThreshold);
+            var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), layerSet, trans, timeThreshold);
             var foundCIIDs = ciNamesFromNameAttributes.Where(a => a.Value.Attribute.Value.Value2String().Equals(CIName)).Select(a => a.Key).ToHashSet();
             var cis = await ciModel.GetCompactCIs(layerSet, trans, timeThreshold, foundCIIDs);
             return cis;
@@ -49,7 +49,7 @@ namespace LandscapeRegistry.Model
             else if (finalSS.Length > 0)
             {
                 // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
-                var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), false, ls, trans, atTime);
+                var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), ls, trans, atTime);
                 foundCIIDs = ciNamesFromNameAttributes.Where(kv => kv.Value.Attribute.Value.FullTextSearch(finalSS, System.Globalization.CompareOptions.IgnoreCase))
                     .Select(kv => kv.Key).ToHashSet();
             }
@@ -82,7 +82,7 @@ namespace LandscapeRegistry.Model
             {
                 searchAllCIsBasedOnSearchString = false;
                 // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
-                var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), false, layerSet, trans, atTime);
+                var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), layerSet, trans, atTime);
                 foundCIIDs = ciNamesFromNameAttributes.Where(kv => kv.Value.Attribute.Value.FullTextSearch(finalSS, System.Globalization.CompareOptions.IgnoreCase))
                     .Select(kv => kv.Key).ToHashSet();
             }

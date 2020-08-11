@@ -17,7 +17,7 @@ namespace Tests.Integration.Model.Mocks
         public MockedEmptyOnlineAccessProxy()
         {
             Setup(_ => _.GetAttributes(It.IsAny<ICIIDSelection>(), It.IsAny<LayerSet>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).Returns(AsyncEnumerable.Empty<(CIAttribute attribute, long layerID)>());
-            Setup(_ => _.GetAttributesWithName(It.IsAny<string>(), It.IsAny<LayerSet>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).Returns(AsyncEnumerable.Empty<(CIAttribute attribute, long layerID)>());
+            //Setup(_ => _.GetAttributesWithName(It.IsAny<string>(), It.IsAny<LayerSet>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).Returns(AsyncEnumerable.Empty<(CIAttribute attribute, long layerID)>());
             Setup(_ => _.GetRelations(It.IsAny<IRelationSelection?>(), It.IsAny<LayerSet>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).Returns(AsyncEnumerable.Empty<(Relation relation, long layerID)>());
         }
 

@@ -48,7 +48,7 @@ namespace LandscapeRegistry.Controllers
         {
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
-            var attributes = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsSelection(), false, layerset, null, timeThreshold);
+            var attributes = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsSelection(), layerset, null, timeThreshold);
             return Ok(attributes.Select(a => CIAttributeDTO.Build(a.Value)));
         }
 
@@ -64,7 +64,7 @@ namespace LandscapeRegistry.Controllers
         {
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
-            var attributes = await attributeModel.GetMergedAttributes(ciids, false, layerset, null, timeThreshold);
+            var attributes = await attributeModel.GetMergedAttributes(new MultiCIIDsSelection(ciids), false, layerset, null, timeThreshold);
             return Ok(attributes.SelectMany(t => t.Value.Select(a => CIAttributeDTO.Build(a.Value))));
         }
 

@@ -23,14 +23,19 @@ namespace LandscapeRegistry.Model.Decorators
             this.memoryCache = memoryCache;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime, Guid? ciid = null)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            return await model.FindAttributesByName(like, includeRemoved, layerID, trans, atTime, ciid);
+            return await model.FindAttributesByName(like, selection, layerID, trans, atTime);
         }
 
-        public async Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            return await model.FindMergedAttributesByFullName(name, selection, includeRemoved, layers, trans, atTime);
+            return await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
+        }
+
+        public async Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            return await model.FindMergedAttributesByFullName(name, selection, layers, trans, atTime);
         }
 
         public async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
@@ -48,9 +53,9 @@ namespace LandscapeRegistry.Model.Decorators
             return await model.GetMergedAttributes(ciid, includeRemoved, layers, trans, atTime);
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection selection, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            return await model.GetMergedAttributes(ciids, includeRemoved, layers, trans, atTime);
+            return await model.GetMergedAttributes(selection, includeRemoved, layers, trans, atTime);
         }
 
         public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
@@ -78,6 +83,5 @@ namespace LandscapeRegistry.Model.Decorators
                 foreach (var f in data.Fragments) memoryCache.CancelCIChangeToken(data.GetCIID(f));
             return success;
         }
-
     }
 }

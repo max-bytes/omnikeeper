@@ -66,7 +66,7 @@ namespace LandscapeRegistry.Model
 
         private async Task<IDictionary<Guid, string>> GetCINames(IEnumerable<Guid> ciids, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var attributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new MultiCIIDsSelection(ciids.ToArray()), false, layerset, trans, atTime);
+            var attributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new MultiCIIDsSelection(ciids.ToArray()), layerset, trans, atTime);
             return ciids.Select(ciid =>
             {
                 attributes.TryGetValue(ciid, out var nameAttribute);
@@ -294,7 +294,7 @@ namespace LandscapeRegistry.Model
 
         public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs)
         {
-            var attributes = await attributeModel.GetMergedAttributes(CIIDs, false, layers, trans, atTime);
+            var attributes = await attributeModel.GetMergedAttributes(new MultiCIIDsSelection(CIIDs), false, layers, trans, atTime);
 
             if (includeEmptyCIs)
             {
