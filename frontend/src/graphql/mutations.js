@@ -92,12 +92,11 @@ ${Fragments.fullCI}
 `,
 
 CREATE_CI: gql`
-    mutation CreateCI($name: String!, $layerIDForName: Long!, $typeID: String) {
+    mutation CreateCI($name: String!, $layerIDForName: Long!) {
       createCIs(cis: [
         {
           name: $name,
-          layerIDForName: $layerIDForName,
-          typeID: $typeID
+          layerIDForName: $layerIDForName
         }
       ]) {
         __typename
@@ -158,15 +157,6 @@ CREATE_CI: gql`
   }
   ${Fragments.fullPredicate}
 `,
-
-  UPSERT_CITYPE: gql`
-  mutation UpsertCIType($citype: UpsertCITypeInputType!) {
-    upsertCIType(citype: $citype) {
-        id
-        state
-    }
-  }
-  `,
 
   SET_LAYER_SETTINGS: gql`
     mutation SetLayerSettings($layerSettings: [LayerSettings]) {

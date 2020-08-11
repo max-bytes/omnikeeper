@@ -125,7 +125,6 @@ namespace Landscape.Base.Templating
             {
                 Add("id", ci.ID);
                 Add("name", ci.Name);
-                Add("type_id", ci.Type.ID);
                 this.Import("attributes", new Func<Dictionary<string, object>>(() =>
                 {
                     // TODO: caching

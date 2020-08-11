@@ -240,14 +240,6 @@ namespace LandscapeRegistry.GraphQL
                     return predicates;
                 });
 
-            FieldAsync<ListGraphType<CITypeType>>("citypes",
-                resolve: async context =>
-                {
-                    var userContext = context.UserContext as RegistryUserContext;
-                    userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
-
-                    return await ciModel.GetCITypes(null, userContext.TimeThreshold);
-                });
             FieldAsync<ListGraphType<LayerType>>("layers",
                 resolve: async context =>
                 {

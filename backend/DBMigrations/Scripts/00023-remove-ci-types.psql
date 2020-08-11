@@ -1,0 +1,3 @@
+﻿DROP TABLE citype_state;
+DROP TABLE citype_assignment;
+DROP TABLE citype;

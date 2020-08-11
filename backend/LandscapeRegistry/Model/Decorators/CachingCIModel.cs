@@ -36,12 +36,6 @@ namespace LandscapeRegistry.Model.Decorators
             return await model.CreateCI(trans);
         }
 
-        public async Task<Guid> CreateCIWithType(string typeID, NpgsqlTransaction trans)
-        {
-            // we assume there is no cache entry for a ci that gets created
-            return await model.CreateCIWithType(typeID, trans);
-        }
-
         public async Task<bool> CIIDExists(Guid ciid, NpgsqlTransaction trans)
         {
             // TODO: caching
@@ -77,18 +71,6 @@ namespace LandscapeRegistry.Model.Decorators
         {
             // cannot be cached well... or can it?
             return await model.GetCIs(layerID, includeEmptyCIs, trans, atTime);
-        }
-
-        public async Task<CIType> UpsertCIType(string typeID, AnchorState state, NpgsqlTransaction trans)
-        {
-            // TODO: this would actually need to remove ALL CIs in cache, but we just ignore it for now because CITypes are supposed to be removed anyway
-            return await model.UpsertCIType(typeID, state, trans);
-        }
-
-        public async Task<IEnumerable<CIType>> GetCITypes(NpgsqlTransaction trans, TimeThreshold atTime)
-        {
-            // we don't cache it because we hope to get rid of it soon anyway
-            return await model.GetCITypes(trans, atTime);
         }
 
         public async Task<IEnumerable<CompactCI>> GetCompactCIs(LayerSet visibleLayers, NpgsqlTransaction trans, TimeThreshold atTime, IEnumerable<Guid> CIIDs = null)

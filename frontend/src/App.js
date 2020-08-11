@@ -19,7 +19,6 @@ import env from "@beam-australia/react-env";
 import ManagePredicates from './components/manage/ManagePredicates';
 import ManageLayers from './components/manage/ManageLayers';
 import ManageOIAConfigs from './components/manage/ManageOIAConfigs';
-import ManageCITypes from './components/manage/ManageCITypes';
 import ManageTraits from './components/manage/ManageTraits';
 import ManageCache from './components/manage/ManageCache';
 import ManageCurrentUser from './components/manage/ManageCurrentUser';
@@ -102,9 +101,6 @@ function App() {
               </PrivateRoute>
               <PrivateRoute path="/manage/oiaconfigs">
                 <ManageOIAConfigs />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/citypes">
-                <ManageCITypes />
               </PrivateRoute>
               <PrivateRoute path="/manage/traits">
                 <ManageTraits />

@@ -37,7 +37,6 @@ export const Fragments = {
             time
             isLatest
         }
-        type {id}
     }
   `,
   fullCI: gql`
@@ -48,9 +47,6 @@ export const Fragments = {
         atTime {
             time
             isLatest
-        }
-        type {
-            id
         }
         effectiveTraits { 
             underlyingTrait {name}

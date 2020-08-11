@@ -34,14 +34,6 @@ export const queries = {
         }
         ${Fragments.directedPredicate}
     `,
-    CITypeList: gql`
-        query citypes {
-            citypes {
-                id
-                state
-            }
-        }
-    `,
 
     SimpleSearchCIs: gql`
         query simpleSearchCIs($searchString: String!) {

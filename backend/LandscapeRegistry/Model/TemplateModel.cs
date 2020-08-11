@@ -7,6 +7,7 @@ using LandscapeRegistry.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -32,10 +33,15 @@ namespace LandscapeRegistry.Model
 
         public async Task<TemplateErrorsCI> CalculateTemplateErrors(MergedCI ci, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var templates = await TemplatesProvider.GetTemplates(trans);
-            var template = templates.GetTemplate(ci.Type?.ID);
-            var attributesTemplates = template?.AttributeTemplates;
-            var relationTemplates = template?.RelationTemplates;
+            // TODO: does this even make sense still? we don't have ci-types anymore
+
+            //var templates = await TemplatesProvider.GetTemplates(trans);
+            //var template = templates.GetTemplate(ci.Type?.ID);
+            //var attributesTemplates = template?.AttributeTemplates;
+            //var relationTemplates = template?.RelationTemplates;
+
+            IImmutableDictionary<string, CIAttributeTemplate> attributesTemplates = null;
+            IImmutableDictionary<string, RelationTemplate> relationTemplates = null;
 
             var relationsAndToCIs = (await RelationService.GetMergedRelatedCIs(ci.ID, ci.Layers, CIModel, RelationModel, trans, atTime));
 

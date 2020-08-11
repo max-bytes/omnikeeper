@@ -26,16 +26,6 @@ namespace LandscapeRegistry.Controllers
         }
 
         /// <summary>
-        /// list of all CI-types
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("getAllCITypes")]
-        public async Task<ActionResult<IEnumerable<CITypeDTO>>> GetAllCITypes()
-        {
-            return Ok((await ciModel.GetCITypes(null, TimeThreshold.BuildLatest())).Select(t => CITypeDTO.Build(t)));
-        }
-
-        /// <summary>
         /// list of all CI-IDs
         /// </summary>
         /// <returns></returns>

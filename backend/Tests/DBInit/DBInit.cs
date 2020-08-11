@@ -103,19 +103,6 @@ namespace Tests.DBInit
                 trans.Commit();
             }
 
-            // create CI-Types // TODO: remove/deprecate
-            using (var trans = conn.BeginTransaction())
-            {
-                //foreach (var ciType in regularTypeIDs)
-                await ciModel.InsertCIType("Host Linux", trans);
-                await ciModel.InsertCIType("Host Windows", trans);
-                await ciModel.InsertCIType("Application", trans);
-                await ciModel.InsertCIType("Monitoring Check Module", trans);
-                await ciModel.InsertCIType("Naemon Instance", trans);
-                await ciModel.InsertCIType("Ansible Host Group", trans);
-                trans.Commit();
-            }
-
             // create regular CIs
             var windowsHostCIIds = new List<Guid>();
             var linuxHostCIIds = new List<Guid>();
@@ -125,7 +112,7 @@ namespace Tests.DBInit
                 var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 foreach (var ciid in applicationCIIDs)
                 {
-                    await ciModel.CreateCIWithType("Application", trans, ciid);
+                    await ciModel.CreateCI(trans, ciid);
                     await attributeModel.InsertCINameAttribute($"Application_{index}", cmdbLayerID, ciid, changeset, trans); 
                     await attributeModel.InsertAttribute("application_name", AttributeScalarValueText.Build($"Application_{index}"), cmdbLayerID, ciid, changeset, trans);
                     index++;
@@ -134,7 +121,7 @@ namespace Tests.DBInit
                 foreach (var ciid in hostCIIDs)
                 {
                     var ciType = new string[] { "Host Linux", "Host Windows" }.GetRandom(random);
-                    var hostCIID = await ciModel.CreateCIWithType(ciType, trans, ciid);
+                    var hostCIID = await ciModel.CreateCI(trans, ciid);
                     if (ciType.Equals("Host Linux"))
                         linuxHostCIIds.Add(hostCIID);
                     else
@@ -193,8 +180,8 @@ namespace Tests.DBInit
             using (var trans = conn.BeginTransaction())
             {
                 var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
-                ciNaemon01 = await ciModel.CreateCIWithType("Naemon Instance", null);
-                ciNaemon02 = await ciModel.CreateCIWithType("Naemon Instance", null);
+                ciNaemon01 = await ciModel.CreateCI(null);
+                ciNaemon02 = await ciModel.CreateCI(null);
                 await attributeModel.InsertCINameAttribute("Naemon Instance 01", cmdbLayerID, ciNaemon01, changeset, trans);
                 await attributeModel.InsertCINameAttribute("Naemon Instance 02", cmdbLayerID, ciNaemon02, changeset, trans);
                 await attributeModel.InsertAttribute("monitoring.naemon.instance_name", AttributeScalarValueText.Build("Naemon Instance 01"), monitoringDefinitionsLayerID, ciNaemon01, changeset, trans);
@@ -202,9 +189,9 @@ namespace Tests.DBInit
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("1.2.3.4"), cmdbLayerID, ciNaemon01, changeset.ID, trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("4.5.6.7"), cmdbLayerID, ciNaemon02, changeset.ID, trans);
 
-                ciMonModuleHost = await ciModel.CreateCIWithType("Monitoring Check Module", null);
-                ciMonModuleHostWindows = await ciModel.CreateCIWithType("Monitoring Check Module", null);
-                ciMonModuleHostLinux = await ciModel.CreateCIWithType("Monitoring Check Module", null);
+                ciMonModuleHost = await ciModel.CreateCI(null);
+                ciMonModuleHostWindows = await ciModel.CreateCI(null);
+                ciMonModuleHostLinux = await ciModel.CreateCI(null);
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host", monitoringDefinitionsLayerID, ciMonModuleHost, changeset, trans);
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset, trans);
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset, trans);

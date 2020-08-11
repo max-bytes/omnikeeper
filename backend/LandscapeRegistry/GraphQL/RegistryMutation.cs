@@ -131,11 +131,7 @@ namespace LandscapeRegistry.GraphQL
                     var createdCIIDs = new List<Guid>();
                     foreach (var ci in createCIs)
                     {
-                        Guid ciid;
-                        if (ci.TypeID != null)
-                        ciid = await ciModel.CreateCIWithType(ci.TypeID, transaction);
-                        else
-                        ciid = await ciModel.CreateCI(transaction);
+                        Guid ciid = await ciModel.CreateCI(transaction);
 
                         await attributeModel.InsertCINameAttribute(ci.Name, ci.LayerIDForName, ciid, changeset, transaction);
 
@@ -305,28 +301,6 @@ namespace LandscapeRegistry.GraphQL
                   await transaction.CommitAsync();
 
                   return newPredicate;
-              });
-
-            FieldAsync<CITypeType>("upsertCIType",
-              arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<UpsertCITypeInputType>> { Name = "citype" }
-              ),
-              resolve: async context =>
-              {
-                  var ciType = context.GetArgument<UpsertCITypeInput>("citype");
-
-                  var userContext = context.UserContext as RegistryUserContext;
-
-                  if (!authorizationService.CanUserUpsertCIType(userContext.User))
-                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update or insert CI-Types");
-
-                  using var transaction = await conn.BeginTransactionAsync();
-                  userContext.Transaction = transaction;
-
-                  var newCIType = await ciModel.UpsertCIType(ciType.ID, ciType.State, transaction);
-                  await transaction.CommitAsync();
-
-                  return newCIType;
               });
         }
     }

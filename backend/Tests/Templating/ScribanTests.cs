@@ -28,7 +28,7 @@ namespace Tests.Templating
                 var testPredicateA = Predicate.Build("p_a", "p_a_forward", "p_a_backwards", AnchorState.Active, PredicateModel.DefaultConstraits);
                 var atTime = TimeThreshold.BuildLatest();
 
-                var testCIA = MergedCI.Build(Guid.NewGuid(), "test-ci-a", CIType.UnspecifiedCIType, new LayerSet(), atTime, new List<MergedCIAttribute>()
+                var testCIA = MergedCI.Build(Guid.NewGuid(), "test-ci-a", new LayerSet(), atTime, new List<MergedCIAttribute>()
                 {
                     MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a", Guid.NewGuid(), AttributeScalarValueText.Build("a-value"), AttributeState.New, 0), new long[0]),
                     MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.b", Guid.NewGuid(), AttributeScalarValueText.Build("b-value"), AttributeState.New, 0), new long[0]),
@@ -38,7 +38,7 @@ namespace Tests.Templating
                     //MergedCIAttribute.Build(CIAttribute.Build(0, "a.json", Guid.NewGuid(), AttributeValueJSONScalar.Build(
                     //    JObject.Parse(@"{ ""foo"": ""bar""}")), AttributeState.New, 0), new long[0])
                 });
-                var testCIB = MergedCI.Build(Guid.NewGuid(), "test-ci-b", CIType.UnspecifiedCIType, new LayerSet(), atTime, new List<MergedCIAttribute>() {});
+                var testCIB = MergedCI.Build(Guid.NewGuid(), "test-ci-b", new LayerSet(), atTime, new List<MergedCIAttribute>() {});
 
                 var relationModel = new Mock<IRelationModel>();
                 relationModel.Setup(x => x.GetMergedRelations(It.IsAny<IRelationSelection>(), false, It.IsAny<LayerSet>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()))
@@ -48,7 +48,7 @@ namespace Tests.Templating
 
                 var ciModel = new Mock<ICIModel>();
                 ciModel.Setup(x => x.GetCompactCIs(It.IsAny<LayerSet>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>(), It.IsAny<IEnumerable<Guid>>()))
-                    .ReturnsAsync(new CompactCI[] { CompactCI.Build(testCIB.ID, testCIB.Name, testCIB.Type, testCIB.Layers.LayerHash, testCIB.AtTime) });
+                    .ReturnsAsync(new CompactCI[] { CompactCI.Build(testCIB.ID, testCIB.Name, testCIB.Layers.LayerHash, testCIB.AtTime) });
                 ciModel.Setup(x => x.GetMergedCI(testCIB.ID, It.IsAny<LayerSet>(), It.IsAny<NpgsqlTransaction>(), atTime))
                     .ReturnsAsync(() => testCIB);
 

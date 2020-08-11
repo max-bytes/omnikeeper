@@ -50,10 +50,9 @@ namespace Tests.Integration.Model
             using (var trans = conn.BeginTransaction())
             {
                 var changesetID = await changesetModel.CreateChangeset(user.ID, trans);
-                var ciType1 = await model.InsertCIType("T1", trans);
-                ciid1 = await model.CreateCIWithType(ciType1.ID, trans);
-                ciid2 = await model.CreateCIWithType(ciType1.ID, trans);
-                ciid3 = await model.CreateCIWithType(ciType1.ID, trans);
+                ciid1 = await model.CreateCI(trans);
+                ciid2 = await model.CreateCI(trans);
+                ciid3 = await model.CreateCI(trans);
                 trans.Commit();
             }
 
@@ -241,57 +240,6 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
             (await model.GetCIIDsOfNonEmptyCIs(layerset4, null, TimeThreshold.BuildLatest())).Should().HaveCount(2).And.BeEquivalentTo(new Guid[] { ciid1, ciid2 });
-        }
-
-        [Test]
-        public async Task TestCITypes()
-        {
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
-            var model = new CIModel(attributeModel, conn);
-            var userModel = new UserInDatabaseModel(conn);
-            var changesetModel = new ChangesetModel(userModel, conn);
-            var layerModel = new LayerModel(conn);
-            var user = await DBSetup.SetupUser(userModel);
-            Guid ciid1;
-            using (var trans = conn.BeginTransaction())
-            {
-                // test setting and getting of citype
-                var ciType1 = await model.InsertCIType("T1", trans);
-
-                // test CI creation
-                ciid1 = await model.CreateCIWithType(ciType1.ID, trans);
-                Assert.AreEqual(ciid1, ciid1);
-                var ci = await model.GetCI(ciid1, 0, trans, TimeThreshold.BuildLatest());
-                Assert.AreEqual("T1", ci.Type.ID);
-
-                trans.Commit();
-            }
-
-            using (var trans = conn.BeginTransaction())
-            {
-                Assert.ThrowsAsync<Exception>(async () => await model.CreateCIWithType("T-Nonexisting", trans));
-            }
-
-            using (var trans = conn.BeginTransaction())
-            {
-                // test overriding of type
-                var ciTypeID2 = await model.InsertCIType("T2", trans);
-                await model.UpdateCI(ciid1, "T2", trans);
-                var ci = await model.GetCI(ciid1, 0, trans, TimeThreshold.BuildLatest());
-                Assert.AreEqual("T2", ci.Type.ID);
-                trans.Commit();
-            }
-
-            //using (var trans = conn.BeginTransaction())
-            //{
-            //    // test getting by ci type
-            //    var layer1 = await layerModel.CreateLayer("l1", trans);
-            //    var layerset1 = new LayerSet(new long[] { layer1.ID });
-            //    var ciid2 = await model.CreateCIWithType("T1", trans);
-            //    var ciid3 = await model.CreateCIWithType("T2", trans);
-            //    Assert.AreEqual(1, (await model.GetMergedCIsByType(layerset1, trans, TimeThreshold.BuildLatest(), "T1")).Count());
-            //    Assert.AreEqual(2, (await model.GetMergedCIsByType(layerset1, trans, TimeThreshold.BuildLatest(), "T2")).Count());
-            //}
         }
     }
 }

@@ -8,14 +8,12 @@ namespace Landscape.Base.Entity.DTO
     public class CIDTO
     {
         [Required] public Guid ID { get; private set; }
-        [Required] public CITypeDTO Type { get; private set; }
         [Required] public IDictionary<string, CIAttributeDTO> Attributes { get; private set; }
 
-        public static CIDTO Build(Guid ciid, CITypeDTO type, IEnumerable<CIAttributeDTO> attributes)
+        public static CIDTO Build(Guid ciid, IEnumerable<CIAttributeDTO> attributes)
         {
             return new CIDTO
             {
-                Type = type,
                 ID = ciid,
                 Attributes = attributes.ToDictionary(a => a.Name)
             };
@@ -26,7 +24,6 @@ namespace Landscape.Base.Entity.DTO
             return new CIDTO
             {
                 ID = ci.ID,
-                Type = CITypeDTO.Build(ci.Type),
                 Attributes = ci.MergedAttributes.Values.Select(ma => CIAttributeDTO.Build(ma)
                 ).ToDictionary(a => a.Name)
             };

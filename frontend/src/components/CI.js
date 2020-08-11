@@ -65,9 +65,6 @@ CI.propTypes = {
   ci: PropTypes.shape({
     id: PropTypes.string.isRequired,
     name: PropTypes.string,
-    type: PropTypes.shape({
-      id: PropTypes.string.isRequired
-    }).isRequired,
     templateErrors: PropTypes.shape({
       attributeErrors: PropTypes.arrayOf(PropTypes.shape({
         attributeName: PropTypes.string.isRequired,

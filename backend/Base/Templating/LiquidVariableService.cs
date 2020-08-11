@@ -45,7 +45,7 @@ namespace Landscape.Base.Templating
 
         public static Dictionary<string, object> CreateVariablesFromCI(MergedCI ci)
         {
-            var targetVariables = new Dictionary<string, object>() { { "ciid", ci.ID }, { "type", ci.Type.ID } };
+            var targetVariables = new Dictionary<string, object>() { { "ciid", ci.ID } };
             foreach (var monitoredCIAttribute in ci.MergedAttributes.Values)
                 AddNested(targetVariables, $"{monitoredCIAttribute.Attribute.Name}", monitoredCIAttribute.Attribute.Value.Value2String());
             // TODO: array values

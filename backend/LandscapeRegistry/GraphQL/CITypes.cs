@@ -18,14 +18,6 @@ using static Landscape.Base.Model.IRelationModel;
 
 namespace LandscapeRegistry.GraphQL
 {
-    public class CITypeType : ObjectGraphType<CIType>
-    {
-        public CITypeType()
-        {
-            Field("id", x => x.ID);
-            Field(x => x.State, type: typeof(AnchorStateType));
-        }
-    }
 
     public class MergedCIType : ObjectGraphType<MergedCI>
     {
@@ -35,7 +27,6 @@ namespace LandscapeRegistry.GraphQL
             Field("name", x => x.Name, nullable: true);
             Field("layerhash", x => x.Layers.LayerHash);
             Field(x => x.AtTime, type: typeof(TimeThresholdType));
-            Field(x => x.Type, type: typeof(CITypeType));
             Field("mergedAttributes", x => x.MergedAttributes.Values, type: typeof(ListGraphType<MergedCIAttributeType>));
             FieldAsync<ListGraphType<CompactRelatedCIType>>("related",
             arguments: new QueryArguments(new List<QueryArgument>
@@ -72,6 +63,7 @@ namespace LandscapeRegistry.GraphQL
                 return relatedCIs;
             });
 
+            // TODO: remove?
             FieldAsync<TemplateErrorsCIType>("templateErrors",
             resolve: async (context) =>
             {
@@ -98,7 +90,6 @@ namespace LandscapeRegistry.GraphQL
             Field("id", x => x.ID);
             Field("name", x => x.Name, nullable: true);
             Field(x => x.AtTime, type: typeof(TimeThresholdType));
-            Field(x => x.Type, type: typeof(CITypeType));
             Field("layerhash", x => x.LayerHash);
         }
     }
