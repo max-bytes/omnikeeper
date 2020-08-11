@@ -46,21 +46,21 @@ namespace LandscapeRegistry.Model
 
         public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var attributes = await attributeModel.GetMergedAttributes(ciid, false, layers, trans, atTime);
+            var attributes = await attributeModel.GetMergedAttributes(ciid, layers, trans, atTime);
             var name = GetNameFromAttributes(attributes);
             return MergedCI.Build(ciid, name, layers, atTime, attributes);
         }
 
         public async Task<CI> GetCI(Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var attributes = await attributeModel.GetAttributes(new SingleCIIDSelection(ciid), false, layerID, trans, atTime);
+            var attributes = await attributeModel.GetAttributes(new SingleCIIDSelection(ciid), layerID, trans, atTime);
             var name = GetNameFromAttributes(attributes);
             return CI.Build(ciid, name, layerID, atTime, attributes);
         }
 
         public async Task<IEnumerable<CI>> GetCIs(long layerID, ICIIDSelection selection, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var attributes = await attributeModel.GetAttributes(selection, false, layerID, trans, atTime);
+            var attributes = await attributeModel.GetAttributes(selection, layerID, trans, atTime);
             var groupedAttributes = attributes.GroupBy(a => a.CIID).ToDictionary(a => a.Key, a => a.ToList());
             if (includeEmptyCIs)
             {
@@ -172,7 +172,7 @@ namespace LandscapeRegistry.Model
 
         public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, ICIIDSelection selection, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var attributes = await attributeModel.GetMergedAttributes(selection, false, layers, trans, atTime);
+            var attributes = await attributeModel.GetMergedAttributes(selection, layers, trans, atTime);
 
             if (includeEmptyCIs)
             {

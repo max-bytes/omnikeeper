@@ -62,14 +62,14 @@ namespace LandscapeRegistry.Model.Decorators
             return await model.GetAttribute(name, layerID, ciid, trans, atTime);
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
                 return onlineAccessProxy.GetAttributes(selection, layerID, trans, atTime).ToEnumerable();
             }
 
-            return await model.GetAttributes(selection, includeRemoved, layerID, trans, atTime);
+            return await model.GetAttributes(selection, layerID, trans, atTime);
         }
 
         public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)

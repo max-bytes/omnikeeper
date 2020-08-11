@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using Landscape.Base.Utils;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,17 +30,19 @@ namespace Landscape.Base.Model
     public class MultiCIIDsSelection : ICIIDSelection
     {
         public Guid[] CIIDs { get; }
-        public MultiCIIDsSelection(Guid[] ciids)
-        {
-            CIIDs = ciids;
-        }
-        public MultiCIIDsSelection(IEnumerable<Guid> ciids)
+        private MultiCIIDsSelection(IEnumerable<Guid> ciids)
         {
             CIIDs = ciids.ToArray();
         }
         public string WhereClause => "ci_id = ANY(@ci_ids)";
         public void AddParameters(NpgsqlParameterCollection p) => p.AddWithValue("ci_ids", CIIDs);
         public bool Contains(Guid ciid) => CIIDs.Contains(ciid);
+
+        public static MultiCIIDsSelection Build(IEnumerable<Guid> ciids)
+        {
+            if (ciids.IsEmpty()) throw new Exception("Empty MultiCIIDsSelection not allowed");
+            return new MultiCIIDsSelection(ciids);
+        }
     }
 
     public class AllCIIDsSelection : ICIIDSelection

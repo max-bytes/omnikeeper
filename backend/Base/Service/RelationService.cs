@@ -17,7 +17,8 @@ namespace Landscape.Base.Service
         {
             var relations = await relationModel.GetMergedRelations(new RelationSelectionEitherFromOrTo(ciid), false, layers, trans, atTime);
             var relationsOtherCIIDs = relations.Select(r => (r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID).Distinct();
-            var relationsOtherCIs = (await ciModel.GetMergedCIs(layers, new MultiCIIDsSelection(relationsOtherCIIDs), true, trans, atTime)).ToDictionary(ci => ci.ID);
+            if (relationsOtherCIIDs.IsEmpty()) return new List<MergedRelatedCI>().ToLookup(x => "");
+            var relationsOtherCIs = (await ciModel.GetMergedCIs(layers, MultiCIIDsSelection.Build(relationsOtherCIIDs), true, trans, atTime)).ToDictionary(ci => ci.ID);
             var relationsAndToCIs = relations.Select(r => MergedRelatedCI.Build(r.Relation, ciid, relationsOtherCIs[(r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID]));
             return relationsAndToCIs.ToLookup(r => r.PredicateID);
         }
@@ -51,16 +52,21 @@ namespace Landscape.Base.Service
                 return (relation: r, relatedCIID, isForwardRelation);
             });
 
+
             var relatedCIs = new List<CompactRelatedCI>();
-            var relatedCompactCIs = (await ciModel.GetCompactCIs(layerset, new MultiCIIDsSelection(relationTuples.Select(t => t.relatedCIID).Distinct()), trans, atTime))
-            .ToDictionary(ci => ci.ID); // TODO: performance improvements
-            foreach ((var relation, var relatedCIID, var isForwardRelation) in relationTuples)
+
+            if (!relationTuples.IsEmpty())
             {
-                var predicateID = relation.Relation.PredicateID;
-                var predicateWording = (isForwardRelation) ? relation.Relation.Predicate.WordingFrom : relation.Relation.Predicate.WordingTo;
-                var changesetID = relation.Relation.ChangesetID;
-                relatedCompactCIs.TryGetValue(relatedCIID, out var ci); // TODO: performance improvements
-                relatedCIs.Add(CompactRelatedCI.Build(ci, relation.Relation.ID, relation.Relation.FromCIID, relation.Relation.ToCIID, changesetID, predicateID, isForwardRelation, predicateWording, relation.LayerStackIDs));
+                var relatedCompactCIs = (await ciModel.GetCompactCIs(layerset, MultiCIIDsSelection.Build(relationTuples.Select(t => t.relatedCIID).Distinct()), trans, atTime))
+                    .ToDictionary(ci => ci.ID); // TODO: performance improvements
+                foreach ((var relation, var relatedCIID, var isForwardRelation) in relationTuples)
+                {
+                    var predicateID = relation.Relation.PredicateID;
+                    var predicateWording = (isForwardRelation) ? relation.Relation.Predicate.WordingFrom : relation.Relation.Predicate.WordingTo;
+                    var changesetID = relation.Relation.ChangesetID;
+                    relatedCompactCIs.TryGetValue(relatedCIID, out var ci); // TODO: performance improvements
+                    relatedCIs.Add(CompactRelatedCI.Build(ci, relation.Relation.ID, relation.Relation.FromCIID, relation.Relation.ToCIID, changesetID, predicateID, isForwardRelation, predicateWording, relation.LayerStackIDs));
+                }
             }
 
             return relatedCIs;

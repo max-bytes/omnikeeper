@@ -101,12 +101,14 @@ namespace MonitoringPlugin
 
             // prepare list of all monitored cis
             var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).Distinct();
-            var monitoredCIs = (await ciModel.GetMergedCIs(layerSetAll, new MultiCIIDsSelection(monitoredCIIDs), true, trans, timeThreshold))
+            if (monitoredCIIDs.IsEmpty()) return true;
+            var monitoredCIs = (await ciModel.GetMergedCIs(layerSetAll, MultiCIIDsSelection.Build(monitoredCIIDs), true, trans, timeThreshold))
                 .ToDictionary(ci => ci.ID);
 
             // prepare list of all monitoring modules
             var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.ToCIID).Distinct();
-            var monitoringModuleCIs = (await ciModel.GetMergedCIs(layerSetMonitoringDefinitionsOnly, new MultiCIIDsSelection(monitoringModuleCIIDs), false, trans, timeThreshold))
+            if (monitoringModuleCIIDs.IsEmpty()) return true;
+            var monitoringModuleCIs = (await ciModel.GetMergedCIs(layerSetMonitoringDefinitionsOnly, MultiCIIDsSelection.Build(monitoringModuleCIIDs), false, trans, timeThreshold))
                 .ToDictionary(ci => ci.ID);
 
             logger.LogDebug("Prep");
@@ -310,20 +312,27 @@ namespace MonitoringPlugin
             public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, Trait contactgroupTrait, NpgsqlTransaction trans, TimeThreshold timeThreshold)
             {
                 var contactGroupRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(belongsToNaemonContactgroup), false, layerSetAll, trans, timeThreshold);
-                var contactGroupCIs = (await ciModel.GetMergedCIs(layerSetAll, new MultiCIIDsSelection(contactGroupRelations.Select(r => r.Relation.ToCIID).Distinct()), false, trans, timeThreshold)).ToDictionary(t => t.ID);
-                contactGroupsMap = contactGroupRelations.GroupBy(r => r.Relation.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.Relation.ToCIID]));
-                foreach (var ci in contactGroupsMap.Values.SelectMany(t => t).Distinct())
+                if (contactGroupRelations.IsEmpty())
                 {
-                    var et = await traitModel.CalculateEffectiveTraitForCI(ci, contactgroupTrait, trans, timeThreshold);
-                    if (et != null)
+                    contactGroupsMap = new Dictionary<Guid, IEnumerable<MergedCI>>();
+                }
+                else
+                {
+                    var contactGroupCIs = (await ciModel.GetMergedCIs(layerSetAll, MultiCIIDsSelection.Build(contactGroupRelations.Select(r => r.Relation.ToCIID).Distinct()), false, trans, timeThreshold)).ToDictionary(t => t.ID);
+                    contactGroupsMap = contactGroupRelations.GroupBy(r => r.Relation.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.Relation.ToCIID]));
+                    foreach (var ci in contactGroupsMap.Values.SelectMany(t => t).Distinct())
                     {
-                        var name = (et.TraitAttributes["name"].Attribute.Value as AttributeScalarValueText).Value;
-                        contactGroupNames.Add(ci.ID, name);
-                    }
-                    else
-                    {
-                        logger.LogError($"Expected CI {ci.ID} to have trait \"{contactgroupTrait.Name}\"");
-                        await errorHandler.LogError(ci.ID, "error", $"Expected this CI to have trait \"{contactgroupTrait.Name}\"");
+                        var et = await traitModel.CalculateEffectiveTraitForCI(ci, contactgroupTrait, trans, timeThreshold);
+                        if (et != null)
+                        {
+                            var name = (et.TraitAttributes["name"].Attribute.Value as AttributeScalarValueText).Value;
+                            contactGroupNames.Add(ci.ID, name);
+                        }
+                        else
+                        {
+                            logger.LogError($"Expected CI {ci.ID} to have trait \"{contactgroupTrait.Name}\"");
+                            await errorHandler.LogError(ci.ID, "error", $"Expected this CI to have trait \"{contactgroupTrait.Name}\"");
+                        }
                     }
                 }
             }

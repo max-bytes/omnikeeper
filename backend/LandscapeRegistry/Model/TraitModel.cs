@@ -112,7 +112,10 @@ namespace LandscapeRegistry.Model
             }
 
             // now do a full pass to check which ci's REALLY fulfill the trait's requirements
-            var cis = await ciModel.GetMergedCIs(layerSet, new MultiCIIDsSelection(candidateCIIDs), false, trans, atTime);
+            var cis = await ciModel.GetMergedCIs(layerSet, MultiCIIDsSelection.Build(candidateCIIDs), false, trans, atTime);
+
+            if (cis.IsEmpty())
+                return ImmutableArray<EffectiveTraitSet>.Empty;
 
             // TODO: check that if the current trait has depedent traits that they are properly resolved too
             var candidates = cis.Select(ci => new EffectiveTraitCandidate(trait, ci)).ToList();

@@ -38,13 +38,13 @@ namespace LandscapeRegistry.Model
             return compound.Select(t => MergedCIAttribute.Build(t.Value.First().Value.attribute, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).Reverse().ToArray()));
         }
 
-        public async Task<IDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var d = await GetMergedAttributes(new SingleCIIDSelection(ciid), includeRemoved, layers, trans, atTime);
+            var d = await GetMergedAttributes(new SingleCIIDSelection(ciid), layers, trans, atTime);
             return d.GetValueOrDefault(ciid, () => new Dictionary<string, MergedCIAttribute>());
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var ret = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
 
@@ -55,7 +55,7 @@ namespace LandscapeRegistry.Model
 
             foreach (var layerID in layers)
             {
-                var la = await baseModel.GetAttributes(cs, includeRemoved, layerID, trans, atTime);
+                var la = await baseModel.GetAttributes(cs, layerID, trans, atTime);
                 foreach (var a in la)
                     attributes.Add((a, layerID));
             }
@@ -100,9 +100,9 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            return await baseModel.GetAttributes(selection, includeRemoved, layerID, trans, atTime);
+            return await baseModel.GetAttributes(selection, layerID, trans, atTime);
         }
 
         public async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)

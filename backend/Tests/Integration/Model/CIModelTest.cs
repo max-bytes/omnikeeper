@@ -121,19 +121,19 @@ namespace Tests.Integration.Model
             await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("textL1"), layer1.ID, ciid1, changeset, trans);
             await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("textL2"), layer2.ID, ciid1, changeset, trans);
 
-            var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset1, trans, TimeThreshold.BuildLatest());
+            var a1 = await attributeModel.GetMergedAttributes(ciid1, layerset1, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a1.Count());
             Assert.AreEqual(AttributeScalarValueText.Build("textL1"), a1.First().Value.Attribute.Value);
 
-            var a2 = await attributeModel.GetMergedAttributes(ciid1, false, layerset2, trans, TimeThreshold.BuildLatest());
+            var a2 = await attributeModel.GetMergedAttributes(ciid1, layerset2, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a2.Count());
             Assert.AreEqual(AttributeScalarValueText.Build("textL2"), a2.First().Value.Attribute.Value);
 
-            var a3 = await attributeModel.GetMergedAttributes(ciid1, false, layerset3, trans, TimeThreshold.BuildLatest());
+            var a3 = await attributeModel.GetMergedAttributes(ciid1, layerset3, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a3.Count());
             Assert.AreEqual(AttributeScalarValueText.Build("textL1"), a3.First().Value.Attribute.Value);
 
-            var a4 = await attributeModel.GetMergedAttributes(ciid1, false, layerset4, trans, TimeThreshold.BuildLatest());
+            var a4 = await attributeModel.GetMergedAttributes(ciid1, layerset4, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a4.Count());
             Assert.AreEqual(AttributeScalarValueText.Build("textL2"), a4.First().Value.Attribute.Value);
         }
@@ -172,7 +172,7 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
 
-            var a1 = await attributeModel.GetMergedAttributes(ciid1, false, layerset1, null, TimeThreshold.BuildLatest());
+            var a1 = await attributeModel.GetMergedAttributes(ciid1, layerset1, null, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a1.Count()); // layerID1 shines through deleted
             Assert.AreEqual(AttributeScalarValueText.Build("textL1"), a1.First().Value.Attribute.Value);
         }

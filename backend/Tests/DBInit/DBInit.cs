@@ -210,7 +210,7 @@ namespace Tests.DBInit
             }
 
             // create monitoring relations
-            var windowsHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), new MultiCIIDsSelection(windowsHostCIIds), true, null, TimeThreshold.BuildLatest());
+            var windowsHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), MultiCIIDsSelection.Build(windowsHostCIIds), true, null, TimeThreshold.BuildLatest());
             foreach (var ci in windowsHosts)
             {
                 using var trans = conn.BeginTransaction();
@@ -219,7 +219,7 @@ namespace Tests.DBInit
                 await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                 trans.Commit();
             }
-            var linuxHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), new MultiCIIDsSelection(linuxHostCIIds), true, null, TimeThreshold.BuildLatest());
+            var linuxHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), MultiCIIDsSelection.Build(linuxHostCIIds), true, null, TimeThreshold.BuildLatest());
             foreach (var ci in linuxHosts)
             {
                 using var trans = conn.BeginTransaction();

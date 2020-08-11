@@ -105,7 +105,7 @@ namespace Tests.Integration.Model
             timer.Start();
             foreach (var ciName in ciNames)
             {
-                var a1 = await attributeModel.GetMergedAttributes(ciName, false, layerset, trans, TimeThreshold.BuildLatest());
+                var a1 = await attributeModel.GetMergedAttributes(ciName, layerset, trans, TimeThreshold.BuildLatest());
 
                 //Console.WriteLine($"{ciName} count: {a1.Count()}");
                 //foreach (var aa in a1)

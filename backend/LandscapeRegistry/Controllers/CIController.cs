@@ -63,8 +63,11 @@ namespace LandscapeRegistry.Controllers
         [HttpGet("getCIsByID")]
         public async Task<ActionResult<IEnumerable<CIDTO>>> GetCIsByID([FromQuery, Required]long[] layerIDs, [FromQuery, Required]Guid[] CIIDs, [FromQuery]DateTimeOffset? atTime = null)
         {
+            if (CIIDs.IsEmpty())
+                return BadRequest("Empty CIID list");
+
             var layerset = new LayerSet(layerIDs);
-            var cis = await ciModel.GetMergedCIs(layerset, new MultiCIIDsSelection(CIIDs), true, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
+            var cis = await ciModel.GetMergedCIs(layerset, MultiCIIDsSelection.Build(CIIDs), true, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
             return Ok(cis.Select(ci => CIDTO.Build(ci)));
         }
 

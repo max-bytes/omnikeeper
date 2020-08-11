@@ -51,7 +51,7 @@ namespace LandscapeRegistry.Model
             return att;
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var ret = new List<CIAttribute>();
 
@@ -78,7 +78,7 @@ namespace LandscapeRegistry.Model
                 var changesetID = dr.GetInt64(6);
 
                 var att = CIAttribute.Build(id, name, CIID, av, state, changesetID);
-                if (state != AttributeState.Removed || includeRemoved)
+                if (state != AttributeState.Removed)
                 {
                     ret.Add(att);
                 }

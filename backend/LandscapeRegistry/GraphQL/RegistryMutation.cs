@@ -91,7 +91,7 @@ namespace LandscapeRegistry.GraphQL
                         removedRelations.Add(await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, removeRelation.LayerID, changeset, transaction));
                     }
 
-                    IEnumerable<MergedCI> affectedCIs = null;
+                    IEnumerable<MergedCI> affectedCIs = new List<MergedCI>(); ;
                     if (userContext.LayerSet != null)
                     {
                         var affectedCIIDs = removedAttributes.Select(r => r.CIID)
@@ -99,7 +99,8 @@ namespace LandscapeRegistry.GraphQL
                         .Concat(insertedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
                         .Concat(removedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
                         .Distinct();
-                        affectedCIs = await ciModel.GetMergedCIs(userContext.LayerSet, new MultiCIIDsSelection(affectedCIIDs), true, transaction, userContext.TimeThreshold);
+                        if (!affectedCIIDs.IsEmpty())
+                            affectedCIs = await ciModel.GetMergedCIs(userContext.LayerSet, MultiCIIDsSelection.Build(affectedCIIDs), true, transaction, userContext.TimeThreshold);
                     }
 
                     await transaction.CommitAsync();

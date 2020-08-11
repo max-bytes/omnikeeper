@@ -35,14 +35,25 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
         {
+            if (atTime.IsLatest)
+            {
+                // instead of doing single-attribute caching, we cache all attributes of this ci in a list and pick the fitting one based on name afterwards
+                var attributes = await memoryCache.GetOrCreateAsync(CacheKeyService.Attributes(ciid, layerID), async (ce) =>
+                {
+                    var changeToken = memoryCache.GetAttributesCancellationChangeToken(ciid, layerID);
+                    ce.AddExpirationToken(changeToken);
+                    return await model.GetAttributes(new SingleCIIDSelection(ciid), layerID, trans, atTime);
+                });
+
+                attributes.FirstOrDefault(p => p.Name.Equals(name));
+            }
             return await model.GetAttribute(name, layerID, ciid, trans, atTime);
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             if (atTime.IsLatest)
             {
-                // TODO: deal with includeRemoved somehow, maybe even remove it fully?
                 switch (selection)
                 {
                     case SingleCIIDSelection scs:
@@ -51,7 +62,7 @@ namespace LandscapeRegistry.Model.Decorators
                             {
                                 var changeToken = memoryCache.GetAttributesCancellationChangeToken(scs.CIID, layerID);
                                 ce.AddExpirationToken(changeToken);
-                                return await model.GetAttributes(scs, includeRemoved, layerID, trans, atTime);
+                                return await model.GetAttributes(scs, layerID, trans, atTime);
                             });
                             return attributes;
                         }
@@ -70,24 +81,27 @@ namespace LandscapeRegistry.Model.Decorators
                                     notFoundCIIDs.Add(ciid);
 
                                 // get the non-cached items
-                                var fetched = await model.GetAttributes(new MultiCIIDsSelection(notFoundCIIDs), includeRemoved, layerID, trans, atTime);
-                                // add them to the cache
-                                foreach (var a in fetched.ToLookup(a => a.CIID)) 
-                                    memoryCache.Set(CacheKeyService.Attributes(a.Key, layerID), a.ToList(), memoryCache.GetAttributesCancellationChangeToken(a.Key, layerID));
+                                if (notFoundCIIDs.Count > 0)
+                                {
+                                    var fetched = await model.GetAttributes(MultiCIIDsSelection.Build(notFoundCIIDs), layerID, trans, atTime);
+                                    // add them to the cache
+                                    foreach (var a in fetched.ToLookup(a => a.CIID))
+                                        memoryCache.Set(CacheKeyService.Attributes(a.Key, layerID), a.ToList(), memoryCache.GetAttributesCancellationChangeToken(a.Key, layerID));
 
-                                found.AddRange(fetched);
+                                    found.AddRange(fetched);
+                                }
                             }
                             return found;
                         }
                     case AllCIIDsSelection acs:
                         // TODO: caching(?)
-                        return await model.GetAttributes(acs, includeRemoved, layerID, trans, atTime);
+                        return await model.GetAttributes(acs, layerID, trans, atTime);
                     default:
                         throw new Exception("Invalid CIIDSelection");
                 }
             }
             else
-                return await model.GetAttributes(selection, includeRemoved, layerID, trans, atTime);
+                return await model.GetAttributes(selection, layerID, trans, atTime);
         }
 
         public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)

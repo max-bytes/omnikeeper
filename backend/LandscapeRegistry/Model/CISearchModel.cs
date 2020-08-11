@@ -31,7 +31,8 @@ namespace LandscapeRegistry.Model
             // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
             var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), layerSet, trans, timeThreshold);
             var foundCIIDs = ciNamesFromNameAttributes.Where(a => a.Value.Attribute.Value.Value2String().Equals(CIName)).Select(a => a.Key).ToHashSet();
-            var cis = await ciModel.GetCompactCIs(layerSet, new MultiCIIDsSelection(foundCIIDs), trans, timeThreshold);
+            if (foundCIIDs.IsEmpty()) return ImmutableArray<CompactCI>.Empty;
+            var cis = await ciModel.GetCompactCIs(layerSet, MultiCIIDsSelection.Build(foundCIIDs), trans, timeThreshold);
             return cis;
         }
 
@@ -41,7 +42,7 @@ namespace LandscapeRegistry.Model
 
             var ls = await layerModel.BuildLayerSet(trans);
 
-            IEnumerable<CompactCI> cis;
+            IEnumerable<CompactCI> cis = ImmutableArray<CompactCI>.Empty;
             if (Guid.TryParse(finalSS, out var guid))
             {
                 //foundCIIDs = (await ciModel.GetCIIDs(trans)).Where(ciid => ciid.Equals(guid)).ToHashSet(); // TODO: performance improvement
@@ -53,7 +54,8 @@ namespace LandscapeRegistry.Model
                 var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), ls, trans, atTime);
                 var foundCIIDs = ciNamesFromNameAttributes.Where(kv => kv.Value.Attribute.Value.FullTextSearch(finalSS, System.Globalization.CompareOptions.IgnoreCase))
                     .Select(kv => kv.Key).ToHashSet();
-                cis = await ciModel.GetCompactCIs(ls, new MultiCIIDsSelection(foundCIIDs), trans, atTime);
+                if (!foundCIIDs.IsEmpty())
+                    cis = await ciModel.GetCompactCIs(ls, MultiCIIDsSelection.Build(foundCIIDs), trans, atTime);
             }
             else
             {
@@ -108,7 +110,10 @@ namespace LandscapeRegistry.Model
                 resultIsReducedByETs = true;
             }
 
-            var cis = await ciModel.GetCompactCIs(layerSet, new MultiCIIDsSelection(foundCIIDs), trans, atTime); // TODO: performance improvement
+            if (foundCIIDs.IsEmpty())
+                return ImmutableArray<CompactCI>.Empty;
+
+            var cis = await ciModel.GetCompactCIs(layerSet, MultiCIIDsSelection.Build(foundCIIDs), trans, atTime); // TODO: performance improvement
 
             // HACK, properly sort unnamed CIs
             return cis.OrderBy(t => t.Name ?? "ZZZZZZZZZZZ").Take(500);

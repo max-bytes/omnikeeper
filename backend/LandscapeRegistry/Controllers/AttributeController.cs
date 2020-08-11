@@ -62,9 +62,12 @@ namespace LandscapeRegistry.Controllers
         [HttpGet("getMergedAttributes")]
         public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> GetMergedAttributes([FromQuery, Required]IEnumerable<Guid> ciids, [FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
         {
+            if (ciids.IsEmpty())
+                return BadRequest("Empty CIID list");
+
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
-            var attributes = await attributeModel.GetMergedAttributes(new MultiCIIDsSelection(ciids), false, layerset, null, timeThreshold);
+            var attributes = await attributeModel.GetMergedAttributes(MultiCIIDsSelection.Build(ciids), layerset, null, timeThreshold);
             return Ok(attributes.SelectMany(t => t.Value.Select(a => CIAttributeDTO.Build(a.Value))));
         }
 

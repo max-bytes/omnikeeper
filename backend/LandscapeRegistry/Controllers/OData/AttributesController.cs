@@ -80,7 +80,7 @@ namespace LandscapeRegistry.Controllers.OData
         [EnableQuery]
         public async Task<IEnumerable<AttributeDTO>> GetAttributes([FromRoute]int layerID)
         {
-            var attributes = await attributeModel.GetAttributes(new AllCIIDsSelection(), false, layerID, null, TimeThreshold.BuildLatest());
+            var attributes = await attributeModel.GetAttributes(new AllCIIDsSelection(), layerID, null, TimeThreshold.BuildLatest());
 
             var nameAttributes = attributes.Where(a => a.Name.Equals(ICIModel.NameAttribute)).ToDictionary(a => a.CIID, a => a.Value.Value2String());
 
