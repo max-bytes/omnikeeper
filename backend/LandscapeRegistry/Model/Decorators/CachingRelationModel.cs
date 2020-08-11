@@ -36,14 +36,19 @@ namespace LandscapeRegistry.Model.Decorators
             return success;
         }
 
-        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(Guid? ciid, bool includeRemoved, LayerSet layerset, IRelationModel.IncludeRelationDirections ird, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, bool includeRemoved, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            return await model.GetMergedRelations(ciid, includeRemoved, layerset, ird, trans, atTime);
+            return await model.GetMergedRelations(rl, includeRemoved, layerset, trans, atTime);
         }
 
-        public async Task<IEnumerable<MergedRelation>> GetMergedRelationsWithPredicateID(LayerSet layerset, bool includeRemoved, string predicate, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            return await model.GetMergedRelationsWithPredicateID(layerset, includeRemoved, predicate, trans, atTime);
+            return await model.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
+        }
+
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            return await model.GetRelations(rl, includeRemoved, layerID, trans, atTime);
         }
 
         public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)

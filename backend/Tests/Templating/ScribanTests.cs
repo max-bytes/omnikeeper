@@ -41,7 +41,7 @@ namespace Tests.Templating
                 var testCIB = MergedCI.Build(Guid.NewGuid(), "test-ci-b", CIType.UnspecifiedCIType, new LayerSet(), atTime, new List<MergedCIAttribute>() {});
 
                 var relationModel = new Mock<IRelationModel>();
-                relationModel.Setup(x => x.GetMergedRelations(It.IsAny<Guid>(), false, It.IsAny<LayerSet>(), IRelationModel.IncludeRelationDirections.Both, It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()))
+                relationModel.Setup(x => x.GetMergedRelations(It.IsAny<IRelationSelection>(), false, It.IsAny<LayerSet>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()))
                     .ReturnsAsync(() => new MergedRelation[] {
                         MergedRelation.Build(Relation.Build(Guid.NewGuid(), testCIA.ID, testCIB.ID, testPredicateA, RelationState.New, 0), new long[0])
                     });

@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace OnlineInboundAdapterOmnikeeper
 {
@@ -45,11 +46,23 @@ namespace OnlineInboundAdapterOmnikeeper
             }
         }
 
-        public async IAsyncEnumerable<CIAttribute> GetAttributes(ISet<Guid> ciids, TimeThreshold atTime)
+        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime)
         {
             await mapper.Setup();
 
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
+
+            IEnumerable<Guid> GetCIIDs(ICIIDSelection selection)
+            {
+                return selection switch
+                {
+                    AllCIIDsSelection _ => mapper.GetAllCIIDs(),
+                    MultiCIIDsSelection multiple => multiple.CIIDs,
+                    SingleCIIDSelection single => new Guid[] { single.CIID },
+                    _ => null,// must not be
+                };
+            }
+            var ciids = GetCIIDs(selection).ToHashSet();
 
             // we need to map the ciids to external ciids, even if they are the same, to ensure that only mapped cis are fetched
             var IDPairs = mapper.GetIDPairs(ciids);
@@ -65,7 +78,18 @@ namespace OnlineInboundAdapterOmnikeeper
                 yield return a;
         }
 
-        public async IAsyncEnumerable<CIAttribute> GetAttributesWithName(string name, TimeThreshold atTime)
+        public async Task<CIAttribute> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
+        {
+            await mapper.Setup();
+
+            if (!atTime.IsLatest) return null; // TODO: implement historic information
+
+            //var externalID = mapper.GetExternalID(ciid);
+
+            throw new NotImplementedException(); // TODO
+        }
+
+        public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, TimeThreshold atTime)
         {
             await mapper.Setup();
 
@@ -76,18 +100,29 @@ namespace OnlineInboundAdapterOmnikeeper
 
             var attributesDTO = await client.GetMergedAttributesWithNameAsync(name, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, "1");
 
+
             foreach (var a in AttributeDTO2Regular(attributesDTO))
-                yield return a;
+                if (selection.Contains(a.CIID)) // TODO, HACK: we fetch without doing any ciid filtering, rework Rest API endpoint to allow CIID filtering
+                    yield return a;
         }
 
-        public IAsyncEnumerable<Relation> GetRelations(Guid? ciid, IRelationModel.IncludeRelationDirections ird, TimeThreshold atTime)
+        public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, TimeThreshold atTime)
+        {
+            await mapper.Setup();
+
+            if (!atTime.IsLatest) yield break; // TODO: implement historic information
+
+            throw new NotImplementedException(); // TODO
+        }
+
+        public IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime)
         {
             return AsyncEnumerable.Empty<Relation>();// TODO: implement
         }
 
-        public IAsyncEnumerable<Relation> GetRelationsWithPredicateID(string predicateID, TimeThreshold atTime)
+        public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
         {
-            return AsyncEnumerable.Empty<Relation>();// TODO: implement
+            return null; // TODO: implement
         }
     }
 }

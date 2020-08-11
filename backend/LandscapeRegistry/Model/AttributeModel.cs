@@ -9,8 +9,8 @@ using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static Landscape.Base.Model.IAttributeModel;
 
 namespace LandscapeRegistry.Model
 {
@@ -25,86 +25,47 @@ namespace LandscapeRegistry.Model
             conn = connection;
         }
 
-        public async Task<IDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var d = await GetMergedAttributes(new Guid[] { ciid }, includeRemoved, layers, trans, atTime);
-            return d.GetValueOrDefault(ciid, () => new Dictionary<string, MergedCIAttribute>());
-        }
-
-        private IEnumerable<MergedCIAttribute> MergeAttributes(IEnumerable<(CIAttribute attribute, long layerID)> attributes, LayerSet layers)
-        {
-            var compound = new Dictionary<(Guid ciid, string name), SortedList<int, (CIAttribute attribute, long layerID)>>();
-
-            foreach(var (attribute, layerID) in attributes) {
-                var layerSortOrder = layers.GetOrder(layerID);
-
-                compound.AddOrUpdate((attribute.CIID, attribute.Name),
-                    () => new SortedList<int, (CIAttribute attribute, long layerID)>() { { layerSortOrder, (attribute, layerID) } },
-                    (old) => { old.Add(layerSortOrder, (attribute, layerID)); return old; }
-                );
-            }
-
-            return compound.Select(t => MergedCIAttribute.Build(t.Value.First().Value.attribute, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).Reverse().ToArray()));
-        }
-
-        public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(IEnumerable<Guid> ciids, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
-        {
-            var ret = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
-
-            if (layers.IsEmpty)
-                return ret; // return empty, an empty layer list can never produce any attributes
-            // TODO: use GetAttributes() in case of single item layerset
-
-            var attributes = new List<(CIAttribute attribute, long layerID)>();
-
-            // we get the most recent value for each CI+attribute_name combination using SQL, then sort programmatically later (due to external layers)
-
-            // internal attributes
-            using (var command = new NpgsqlCommand(@$"select distinct on(ci_id, name, layer_id) id, name, ci_id, type, value, state, changeset_id, layer_id from
-                   attribute where timestamp <= @time_threshold and ci_id = ANY(@ci_identities) and layer_id = ANY(@layer_ids) order by ci_id, name, layer_id, timestamp DESC
-            ", conn, trans))
+            // if layer is online inbound layer, return from proxy
+            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
-                command.Parameters.AddWithValue("ci_identities", ciids.ToArray());
-                command.Parameters.AddWithValue("time_threshold", atTime.Time);
-                command.Parameters.AddWithValue("layer_ids", layers.ToArray());
-                using var dr = await command.ExecuteReaderAsync();
-
-                while (await dr.ReadAsync())
-                {
-                    var id = dr.GetGuid(0);
-                    var name = dr.GetString(1);
-                    var CIID = dr.GetGuid(2);
-                    var type = dr.GetFieldValue<AttributeValueType>(3);
-                    var value = dr.GetString(4);
-                    var av = AttributeValueBuilder.BuildFromDatabase(value, type);
-
-                    var state = dr.GetFieldValue<AttributeState>(5);
-                    var changesetID = dr.GetInt64(6);
-                    var layerID = dr.GetInt64(7); // TODO: optimization to only get the layerID, name and CIID first, check if it is even above the current stack, discard if so
-
-                    if (includeRemoved || state != AttributeState.Removed)
-                        attributes.Add((CIAttribute.Build(id, name, CIID, av, state, changesetID), layerID));
-                }
+                return await onlineAccessProxy.GetAttribute(name, layerID, ciid, trans, atTime);
             }
 
-            // TODO: keep async nature further?
-            var onlineAttributes = await onlineAccessProxy.GetAttributes(ciids.ToHashSet(), layers, trans, atTime).ToListAsync(); // TODO: rework ciids to set<> from the start
+            using var command = new NpgsqlCommand(@"
+            select id, ci_id, type, value, state, changeset_id FROM attribute 
+            where timestamp <= @time_threshold and ci_id = @ci_id and layer_id = @layer_id and name = @name
+            order by timestamp DESC LIMIT 1
+            ", conn, trans);
+            command.Parameters.AddWithValue("ci_id", ciid);
+            command.Parameters.AddWithValue("layer_id", layerID);
+            command.Parameters.AddWithValue("name", name);
+            command.Parameters.AddWithValue("time_threshold", atTime.Time);
 
-            var mergedAttributes = MergeAttributes(attributes.Concat(onlineAttributes), layers);
+            using var dr = await command.ExecuteReaderAsync();
 
-            foreach (var ma in mergedAttributes)
-            {
-                var CIID = ma.Attribute.CIID;
-                if (!ret.ContainsKey(CIID))
-                    ret.Add(CIID, new Dictionary<string, MergedCIAttribute>());
-                ret[CIID].Add(ma.Attribute.Name, ma);
-            }
+            if (!await dr.ReadAsync())
+                return null;
 
-            return ret;
+            var id = dr.GetGuid(0);
+            var CIID = dr.GetGuid(1);
+            var type = dr.GetFieldValue<AttributeValueType>(2);
+            var value = dr.GetString(3);
+            var av = AttributeValueBuilder.BuildFromDatabase(value, type);
+            var state = dr.GetFieldValue<AttributeState>(4);
+            var changesetID = dr.GetInt64(5);
+            var att = CIAttribute.Build(id, name, CIID, av, state, changesetID);
+            return att;
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(IAttributeSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
+            // if layer is online inbound layer, return from proxy
+            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) {
+                return onlineAccessProxy.GetAttributes(selection, layerID, trans, atTime).ToEnumerable();
+            }
+
             var ret = new List<CIAttribute>();
 
             using var command = new NpgsqlCommand($@"
@@ -138,26 +99,32 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime, Guid? ciid = null)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var ret = new List<CIAttribute>();
-
-            var innerWhereClause = "1=1";
-            if (ciid != null)
+            // if layer is online inbound layer, return from proxy
+            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
-                innerWhereClause = "ci_id = @ci_id";
+                // HACK: we crudly simulate an SQL like, see https://stackoverflow.com/questions/41757762/use-sql-like-operator-in-c-sharp-linq/41757857
+                static string LikeToRegular(string value)
+                {
+                    return "^" + Regex.Escape(value).Replace("_", ".").Replace("%", ".*") + "$";
+                }
+                var regex = LikeToRegular(like);
+
+                return onlineAccessProxy.FindAttributesByName(regex, selection, layerID, trans, atTime).ToEnumerable();
             }
+
+            var ret = new List<CIAttribute>();
 
             using var command = new NpgsqlCommand($@"
             select distinct on(ci_id, name, layer_id) id, name, ci_id, type, value, state, changeset_id from
-                attribute where timestamp <= @time_threshold and layer_id = @layer_id and name like @like_name and ({innerWhereClause}) order by ci_id, name, layer_id, timestamp DESC
-            ", conn, trans);
+                attribute where timestamp <= @time_threshold and layer_id = @layer_id and name like @like_name and ({selection.WhereClause}) order by ci_id, name, layer_id, timestamp DESC
+            ", conn, trans); // TODO: remove order by layer_id, but consider not breaking indices first
 
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("like_name", like);
             command.Parameters.AddWithValue("time_threshold", atTime.Time);
-            if (ciid != null)
-                command.Parameters.AddWithValue("ci_id", ciid.Value);
+            selection.AddParameters(command.Parameters);
 
             using var dr = await command.ExecuteReaderAsync();
             while (dr.Read())
@@ -171,7 +138,7 @@ namespace LandscapeRegistry.Model
                 var state = dr.GetFieldValue<AttributeState>(5);
                 var changesetID = dr.GetInt64(6);
 
-                if (state != AttributeState.Removed || includeRemoved)
+                if (state != AttributeState.Removed)
                 {
                     var att = CIAttribute.Build(id, name, CIID, av, state, changesetID);
                     ret.Add(att);
@@ -180,22 +147,24 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, IAttributeSelection selection, bool includeRemoved, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var ret = new Dictionary<Guid, MergedCIAttribute>();
+            // if layer is online inbound layer, return from proxy
+            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
+            {
+                return onlineAccessProxy.FindAttributesByFullName(name, selection, layerID, trans, atTime).ToEnumerable();
+            }
 
-            if (layers.IsEmpty)
-                return ret; // return empty, an empty layer list can never produce any attributes
+            var ret = new List<CIAttribute>();
 
-            var attributes = new List<(CIAttribute attribute, long layerID)>();
             using (var command = new NpgsqlCommand(@$"
-                select distinct on (ci_id, name, layer_id) id, ci_id, type, value, state, changeset_id, layer_id from
-                    attribute where timestamp <= @time_threshold and ({selection.WhereClause}) and name = @name and layer_id = ANY(@layer_ids) order by ci_id, name, layer_id, timestamp DESC
-            ", conn, trans))
+                select distinct on (ci_id, name) id, ci_id, type, value, state, changeset_id from
+                    attribute where timestamp <= @time_threshold and ({selection.WhereClause}) and name = @name and layer_id = @layer_id order by ci_id, name, layer_id, timestamp DESC
+            ", conn, trans))// TODO: remove order by layer_id, but consider not breaking indices first
             {
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("name", name);
-                command.Parameters.AddWithValue("layer_ids", layers.ToArray());
+                command.Parameters.AddWithValue("layer_id", layerID);
                 selection.AddParameters(command.Parameters);
                 using var dr = await command.ExecuteReaderAsync();
 
@@ -209,53 +178,15 @@ namespace LandscapeRegistry.Model
 
                     var state = dr.GetFieldValue<AttributeState>(4);
                     var changesetID = dr.GetInt64(5);
-                    var layerID = dr.GetInt64(6);
 
-                    if (includeRemoved || state != AttributeState.Removed)
-                        attributes.Add((CIAttribute.Build(id, name, CIID, av, state, changesetID), layerID));
+                    if (state != AttributeState.Removed) // TODO: move into SQL
+                        ret.Add(CIAttribute.Build(id, name, CIID, av, state, changesetID));
                 }
-            }
-
-            // TODO: keep async nature further?
-            var onlineAttributes = await onlineAccessProxy.GetAttributesWithName(name, layers, trans, atTime).ToListAsync(); // TODO: rework ciids to set from the start
-
-            var mergedAttributes = MergeAttributes(attributes.Concat(onlineAttributes), layers);
-
-            foreach (var ma in mergedAttributes)
-            {
-                var CIID = ma.Attribute.CIID;
-                ret.Add(CIID, ma);
             }
 
             return ret;
         }
 
-        public async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
-        {
-            using var command = new NpgsqlCommand(@"
-            select id, ci_id, type, value, state, changeset_id FROM attribute 
-            where timestamp <= @time_threshold and ci_id = @ci_id and layer_id = @layer_id and name = @name
-            order by timestamp DESC LIMIT 1
-            ", conn, trans);
-            command.Parameters.AddWithValue("ci_id", ciid);
-            command.Parameters.AddWithValue("layer_id", layerID);
-            command.Parameters.AddWithValue("name", name);
-            command.Parameters.AddWithValue("time_threshold", atTime.Time);
 
-            using var dr = await command.ExecuteReaderAsync();
-
-            if (!await dr.ReadAsync())
-                return null;
-
-            var id = dr.GetGuid(0);
-            var CIID = dr.GetGuid(1);
-            var type = dr.GetFieldValue<AttributeValueType>(2);
-            var value = dr.GetString(3);
-            var av = AttributeValueBuilder.BuildFromDatabase(value, type);
-            var state = dr.GetFieldValue<AttributeState>(4);
-            var changesetID = dr.GetInt64(5);
-            var att = CIAttribute.Build(id, name, CIID, av, state, changesetID);
-            return att;
-        }
     }
 }

@@ -9,6 +9,8 @@ namespace Landscape.Base.Model
 {
     public interface ICIModel
     {
+        public static readonly string NameAttribute = "__name";
+
         Task<Guid> CreateCI(NpgsqlTransaction trans, Guid id);
         Task<Guid> CreateCI(NpgsqlTransaction trans);
 

@@ -1,9 +1,11 @@
-﻿using Landscape.Base.Entity;
+﻿using DotLiquid.Tags;
+using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static Landscape.Base.Model.IChangesetModel;
 using static Landscape.Base.Model.IRelationModel;
 
 namespace LandscapeRegistry.Model
@@ -58,9 +60,22 @@ namespace LandscapeRegistry.Model
             return Changeset.Build(id, user, timestamp);
         }
 
+        // returns all changesets in the time range
+        // sorted by timestamp
+        public async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, NpgsqlTransaction trans, int? limit = null)
+        {
+            return cs switch
+            {
+                ChangesetSelectionSingleCI sci => await GetChangesetsInTimespan(from, to, layers, sci.ciid, trans, limit),
+                ChangesetSelectionAllCIs _ => await GetChangesetsInTimespan(from, to, layers, trans, limit),
+                _ => throw new Exception("Invalid changeset selection"),
+            };
+        }
+
+
         // returns all changesets affecting this CI, both via attributes OR relations
         // sorted by timestamp
-        public async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IncludeRelationDirections ird, Guid ciid, NpgsqlTransaction trans, int? limit = null)
+        private async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, Guid ciid, NpgsqlTransaction trans, int? limit = null)
         {
             var queryAttributes = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 INNER JOIN attribute a ON a.changeset_id = c.id 
@@ -69,22 +84,7 @@ namespace LandscapeRegistry.Model
                 WHERE c.timestamp >= @from AND c.timestamp <= @to AND a.layer_id = ANY(@layer_ids)";
             queryAttributes += " AND ci.id = @ciid";
 
-            string irdClause;
-            switch (ird)
-            {
-                case IncludeRelationDirections.Forward:
-                    irdClause = "r.from_ci_id = ci.id";
-                    break;
-                case IncludeRelationDirections.Backward:
-                    irdClause = "r.to_ci_id = ci.id";
-                    break;
-                case IncludeRelationDirections.Both:
-                    irdClause = "r.from_ci_id = ci.id OR r.to_ci_id = ci.id";
-                    break;
-                default:
-                    irdClause = "unused";
-                    break;
-            }
+            var irdClause = "r.from_ci_id = ci.id OR r.to_ci_id = ci.id";
             var queryRelations = $@"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 INNER JOIN relation r ON r.changeset_id = c.id 
                 INNER JOIN ci ci ON ({irdClause})
@@ -124,8 +124,7 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-
-        public async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IncludeRelationDirections ird, NpgsqlTransaction trans, int? limit = null)
+        private async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, NpgsqlTransaction trans, int? limit = null)
         {
             var query = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 LEFT JOIN attribute a ON a.changeset_id = c.id 

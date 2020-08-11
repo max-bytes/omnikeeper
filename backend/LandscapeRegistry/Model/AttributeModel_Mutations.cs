@@ -13,9 +13,10 @@ namespace LandscapeRegistry.Model
 {
     public partial class AttributeModel
     {
-
         public async Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
+            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
+
             var readTS = TimeThreshold.BuildLatest();
             var currentAttribute = await GetAttribute(name, layerID, ciid, trans, readTS);
 
@@ -53,10 +54,12 @@ namespace LandscapeRegistry.Model
         }
 
         public async Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
-            => await InsertAttribute(CIModel.NameAttribute, AttributeScalarValueText.Build(nameValue), layerID, ciid, changesetProxy, trans);
+            => await InsertAttribute(ICIModel.NameAttribute, AttributeScalarValueText.Build(nameValue), layerID, ciid, changesetProxy, trans);
 
         public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
+            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
+
             var readTS = TimeThreshold.BuildLatest();
             var currentAttribute = await GetAttribute(name, layerID, ciid, trans, readTS);
 
@@ -96,12 +99,14 @@ namespace LandscapeRegistry.Model
 
         public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
+            if (await onlineAccessProxy.IsOnlineInboundLayer(data.LayerID, trans)) throw new Exception("Cannot write to online inbound layer");
+
             var readTS = TimeThreshold.BuildLatest();
 
             var outdatedAttributes = (data switch
             {
-                BulkCIAttributeDataLayerScope d => (await FindAttributesByName($"{data.NamePrefix}%", false, data.LayerID, trans, readTS)),
-                BulkCIAttributeDataCIScope d => (await FindAttributesByName($"{data.NamePrefix}%", false, data.LayerID, trans, readTS, d.CIID)),
+                BulkCIAttributeDataLayerScope d => (await FindAttributesByName($"{data.NamePrefix}%", new AllCIIDsSelection(), data.LayerID, trans, readTS)),
+                BulkCIAttributeDataCIScope d => (await FindAttributesByName($"{data.NamePrefix}%", new SingleCIIDSelection(d.CIID), data.LayerID, trans, readTS)),
                 _ => null
             }).ToDictionary(a => a.InformationHash);
 
