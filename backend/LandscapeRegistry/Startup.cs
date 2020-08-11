@@ -332,7 +332,8 @@ namespace LandscapeRegistry
                 endpoints.MapControllers();
                 // odata
                 var builder = new ODataConventionModelBuilder(app.ApplicationServices);
-                builder.EntitySet<LandscapeRegistry.Controllers.OData.Attribute>("Attributes");
+                builder.EntitySet<LandscapeRegistry.Controllers.OData.AttributeDTO>("Attributes");
+                builder.EntitySet<LandscapeRegistry.Controllers.OData.RelationDTO>("Relations");
                 //endpoints.EnableDependencyInjection();
                 endpoints.Select().Expand().Filter().OrderBy().Count();
                 var edmModel = builder.GetEdmModel();

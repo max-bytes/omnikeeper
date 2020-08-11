@@ -122,14 +122,14 @@ namespace OnlineInboundAdapterOmnikeeper
             }
         }
 
-        public IAsyncEnumerable<Relation> GetRelations(Guid? ciid, IRelationModel.IncludeRelationDirections ird, TimeThreshold atTime)
+        public IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime)
         {
             return AsyncEnumerable.Empty<Relation>();// TODO: implement
         }
 
-        public IAsyncEnumerable<Relation> GetRelationsWithPredicateID(string predicateID, TimeThreshold atTime)
+        public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
         {
-            return AsyncEnumerable.Empty<Relation>();// TODO: implement
+            return null; // TODO: implement
         }
     }
 }

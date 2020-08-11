@@ -85,22 +85,27 @@ namespace Landscape.Base.Inbound
                 yield return a;
         }
 
-        public async IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(Guid? ciid, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            var layer = await layerModel.GetLayer(layerID, trans);
+            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
+            return await plugin.GetLayerAccessProxy(layer).GetRelation(fromCIID, toCIID, predicateID, atTime);
+        }
+
+        public async IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(IRelationSelection rl, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             await foreach (var (proxy, layer) in GetAccessProxies(layerset, trans))
             {
-                await foreach (var relation in proxy.GetRelations(ciid, ird, atTime).Select(a => (a, layer.ID)))
+                await foreach (var relation in proxy.GetRelations(rl, atTime).Select(a => (a, layer.ID)))
                     yield return relation;
             }
         }
-
-        public async IAsyncEnumerable<(Relation relation, long layerID)> GetRelationsWithPredicateID(string predicateID, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            await foreach (var (proxy, layer) in GetAccessProxies(layerset, trans))
-            {
-                await foreach (var relation in proxy.GetRelationsWithPredicateID(predicateID, atTime).Select(a => (a, layer.ID)))
-                    yield return relation;
-            }
+            var layer = await layerModel.GetLayer(layerID, trans);
+            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
+            await foreach (var relation in plugin.GetLayerAccessProxy(layer).GetRelations(rl, atTime))
+                yield return relation;
         }
 
         public async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)

@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Landscape.Base.Model.IChangesetModel;
 using static Landscape.Base.Model.IRelationModel;
 
 namespace LandscapeRegistry.GraphQL
@@ -314,9 +315,9 @@ namespace LandscapeRegistry.GraphQL
                     var ciid = context.GetArgument<Guid?>("ciid", null);
                     var limit = context.GetArgument<int?>("limit", null);
                     if (ciid != null)
-                        return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, IncludeRelationDirections.Both, ciid.Value, null, limit);
+                        return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, new ChangesetSelectionSingleCI(ciid.Value), null, limit);
                     else
-                        return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, IncludeRelationDirections.Both, null, limit);
+                        return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, new ChangesetSelectionAllCIs(), null, limit);
                 });
 
 

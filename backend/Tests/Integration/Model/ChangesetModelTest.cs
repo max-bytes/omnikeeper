@@ -13,6 +13,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Tests.Integration.Model.Mocks;
+using static Landscape.Base.Model.IChangesetModel;
 using static Landscape.Base.Model.IRelationModel;
 
 namespace Tests.Integration.Model
@@ -68,10 +69,10 @@ namespace Tests.Integration.Model
 
             var t3 = DateTimeOffset.Now;
 
-            var changesets = await changesetModel.GetChangesetsInTimespan(t1, t2, layerset, IncludeRelationDirections.Forward, null);
+            var changesets = await changesetModel.GetChangesetsInTimespan(t1, t2, layerset, new ChangesetSelectionAllCIs(), null);
             Assert.AreEqual(2, changesets.Count());
 
-            var changesets2 = await changesetModel.GetChangesetsInTimespan(t1, t3, layerset, IncludeRelationDirections.Forward, ciid3, null);
+            var changesets2 = await changesetModel.GetChangesetsInTimespan(t1, t3, layerset, new ChangesetSelectionSingleCI(ciid3), null);
             Assert.AreEqual(2, changesets2.Count());
 
 
@@ -83,11 +84,11 @@ namespace Tests.Integration.Model
             }
             var t4 = DateTimeOffset.Now;
 
-            var changesets3 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, IncludeRelationDirections.Forward, null);
+            var changesets3 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, new ChangesetSelectionAllCIs(), null);
             Assert.AreEqual(3, changesets3.Count());
-            var changesets4 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, IncludeRelationDirections.Forward, null, 2);
+            var changesets4 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, new ChangesetSelectionAllCIs(), null, 2);
             Assert.AreEqual(2, changesets4.Count());
-            var changesets5 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, IncludeRelationDirections.Forward, ciid2, null, 1);
+            var changesets5 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, new ChangesetSelectionSingleCI(ciid2), null, 1);
             Assert.AreEqual(1, changesets5.Count());
         }
 
@@ -134,11 +135,11 @@ namespace Tests.Integration.Model
             Thread.Sleep(500);
             var t3 = DateTimeOffset.Now;
 
-            var changesets1 = await changesetModel.GetChangesetsInTimespan(t1, t2, layerset, IncludeRelationDirections.Forward, ciid1, null);
+            var changesets1 = await changesetModel.GetChangesetsInTimespan(t1, t2, layerset, new ChangesetSelectionSingleCI(ciid1), null);
             Assert.AreEqual(1, changesets1.Count());
 
-            var changesets2 = await changesetModel.GetChangesetsInTimespan(t1, t3, layerset, IncludeRelationDirections.Forward, ciid1, null);
-            Assert.AreEqual(1, changesets2.Count()); // must still be 1, as incoming relations are not counted
+            var changesets2 = await changesetModel.GetChangesetsInTimespan(t1, t3, layerset, new ChangesetSelectionSingleCI(ciid1), null);
+            Assert.AreEqual(2, changesets2.Count());
         }
     }
 }

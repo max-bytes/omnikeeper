@@ -19,7 +19,7 @@ using LandscapeRegistry.Service;
 
 namespace LandscapeRegistry.Controllers.OData
 {
-    public class Attribute
+    public class AttributeDTO
     {
         [Key]
         public Guid CIID { get; set; }
@@ -60,13 +60,13 @@ namespace LandscapeRegistry.Controllers.OData
             this.conn = conn;
         }
 
-        private Attribute Model2DTO(CIAttribute a, string ciName)
+        private AttributeDTO Model2DTO(CIAttribute a, string ciName)
         {
-            return new Attribute() { CIID = a.CIID, CIName = ciName ?? "[Unnamed]", AttributeName = a.Name, Value = a.Value.Value2String() };
+            return new AttributeDTO() { CIID = a.CIID, CIName = ciName ?? "[Unnamed]", AttributeName = a.Name, Value = a.Value.Value2String() };
         }
 
         [EnableQuery]
-        public async Task<Attribute> GetAttribute([FromODataUri,Required]Guid keyCIID, [FromODataUri]string keyAttributeName, [FromRoute]int layerID)
+        public async Task<AttributeDTO> GetAttributeDTO([FromODataUri,Required]Guid keyCIID, [FromODataUri]string keyAttributeName, [FromRoute]int layerID)
         {
             if (keyAttributeName.Equals(ICIModel.NameAttribute))
                 throw new Exception("Cannot get name attribute directly");
@@ -78,7 +78,7 @@ namespace LandscapeRegistry.Controllers.OData
         }
 
         [EnableQuery]
-        public async Task<IEnumerable<Attribute>> GetAttributes([FromRoute]int layerID)
+        public async Task<IEnumerable<AttributeDTO>> GetAttributes([FromRoute]int layerID)
         {
             var attributes = await attributeModel.GetAttributes(new AllCIIDsSelection(), false, layerID, null, TimeThreshold.BuildLatest());
 
@@ -92,7 +92,7 @@ namespace LandscapeRegistry.Controllers.OData
             });
         }
 
-        public async Task<IActionResult> Patch([FromODataUri]Guid keyCIID, [FromODataUri]string keyCIName, [FromODataUri]string keyAttributeName, [FromBody] Delta<Attribute> test, [FromRoute]int layerID)
+        public async Task<IActionResult> Patch([FromODataUri]Guid keyCIID, [FromODataUri]string keyCIName, [FromODataUri]string keyAttributeName, [FromBody] Delta<AttributeDTO> test, [FromRoute]int layerID)
         {
             var user = await currentUserService.GetCurrentUser(null);
             if (!authorizationService.CanUserWriteToLayer(user, layerID))

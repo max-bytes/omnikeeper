@@ -93,7 +93,7 @@ namespace MonitoringPlugin
             // TODO: make configurable
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
 
-            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelationsWithPredicateID(layerSetMonitoringDefinitionsOnly, false, hasMonitoringModulePredicate, trans, timeThreshold);
+            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(hasMonitoringModulePredicate), false, layerSetMonitoringDefinitionsOnly, trans, timeThreshold);
 
             // prepare contact groups
             var cgr = new ContactgroupResolver(relationModel, ciModel, traitModel, logger, errorHandler);
@@ -309,7 +309,7 @@ namespace MonitoringPlugin
 
             public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, Trait contactgroupTrait, NpgsqlTransaction trans, TimeThreshold timeThreshold)
             {
-                var contactGroupRelations = await relationModel.GetMergedRelationsWithPredicateID(layerSetAll, false, belongsToNaemonContactgroup, trans, timeThreshold);
+                var contactGroupRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(belongsToNaemonContactgroup), false, layerSetAll, trans, timeThreshold);
                 var contactGroupCIs = (await ciModel.GetMergedCIs(layerSetAll, false, trans, timeThreshold, contactGroupRelations.Select(r => r.Relation.ToCIID).Distinct())).ToDictionary(t => t.ID);
                 contactGroupsMap = contactGroupRelations.GroupBy(r => r.Relation.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.Relation.ToCIID]));
                 foreach (var ci in contactGroupsMap.Values.SelectMany(t => t).Distinct())

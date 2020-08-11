@@ -65,8 +65,8 @@ namespace Landscape.Base.Inbound
         IAsyncEnumerable<CIAttribute> GetAttributesWithName(string name, TimeThreshold atTime);
         IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, TimeThreshold atTime, Guid? ciid);
         Task<CIAttribute> GetAttribute(string name, Guid ciid, TimeThreshold atTime);
-        IAsyncEnumerable<Relation> GetRelations(Guid? ciid, IncludeRelationDirections ird, TimeThreshold atTime);
-        IAsyncEnumerable<Relation> GetRelationsWithPredicateID(string predicateID, TimeThreshold atTime);
+        IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime);
+        Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime);
     }
 
     public interface IOnlineAccessProxy
@@ -74,13 +74,14 @@ namespace Landscape.Base.Inbound
         Task<bool> IsOnlineInboundLayer(long layerID, NpgsqlTransaction trans);
 
         IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributes(ICIIDSelection selection, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
+        IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
         IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributesWithName(string name, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
         IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, long layerID, NpgsqlTransaction trans, TimeThreshold atTime, Guid? ciid);
-        IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
         Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime);
 
-        IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(Guid? ciid, LayerSet layerset, IncludeRelationDirections ird, NpgsqlTransaction trans, TimeThreshold atTime);
-        IAsyncEnumerable<(Relation relation, long layerID)> GetRelationsWithPredicateID(string predicateID, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime);
+        IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(IRelationSelection rl, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime);
+        IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
     }
 
     public interface IOnlineInboundAdapterBuilder
