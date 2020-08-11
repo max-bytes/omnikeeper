@@ -40,7 +40,54 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            return await model.GetAttributes(selection, includeRemoved, layerID, trans, atTime);
+            if (atTime.IsLatest)
+            {
+                // TODO: deal with includeRemoved somehow, maybe even remove it fully?
+                switch (selection)
+                {
+                    case SingleCIIDSelection scs:
+                        {
+                            var attributes = await memoryCache.GetOrCreateAsync(CacheKeyService.Attributes(scs.CIID, layerID), async (ce) =>
+                            {
+                                var changeToken = memoryCache.GetAttributesCancellationChangeToken(scs.CIID, layerID);
+                                ce.AddExpirationToken(changeToken);
+                                return await model.GetAttributes(scs, includeRemoved, layerID, trans, atTime);
+                            });
+                            return attributes;
+                        }
+                    case MultiCIIDsSelection mcs:
+                        {
+                            // check which item can be found in the cache
+                            var found = new List<CIAttribute>();
+                            var notFoundCIIDs = new List<Guid>();
+                            foreach (var ciid in mcs.CIIDs)
+                            {
+                                if (memoryCache.TryGetValue<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid, layerID), out var attributesOfCI))
+                                {
+                                    found.AddRange(attributesOfCI);
+                                }
+                                else
+                                    notFoundCIIDs.Add(ciid);
+
+                                // get the non-cached items
+                                var fetched = await model.GetAttributes(new MultiCIIDsSelection(notFoundCIIDs), includeRemoved, layerID, trans, atTime);
+                                // add them to the cache
+                                foreach (var a in fetched.ToLookup(a => a.CIID)) 
+                                    memoryCache.Set(CacheKeyService.Attributes(a.Key, layerID), a.ToList(), memoryCache.GetAttributesCancellationChangeToken(a.Key, layerID));
+
+                                found.AddRange(fetched);
+                            }
+                            return found;
+                        }
+                    case AllCIIDsSelection acs:
+                        // TODO: caching(?)
+                        return await model.GetAttributes(acs, includeRemoved, layerID, trans, atTime);
+                    default:
+                        throw new Exception("Invalid CIIDSelection");
+                }
+            }
+            else
+                return await model.GetAttributes(selection, includeRemoved, layerID, trans, atTime);
         }
 
         public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)

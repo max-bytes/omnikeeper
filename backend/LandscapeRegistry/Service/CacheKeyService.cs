@@ -17,6 +17,7 @@ namespace LandscapeRegistry.Service
         //public static string CIOnLayer(Guid ciid, long layerID) => $"ciOnLayer_{ciid}_{layerID}";
         //public static string MergedCI(Guid ciid, LayerSet layers) => $"mergedCI_{ciid}_{layers.LayerHash}";
 
+        public static string Attributes(Guid ciid, long layerID) => $"attributes_{ciid}_{layerID}";
         private static string AttributesChangeToken(Guid ciid, long layerID) => $"ct_att_{ciid}_{layerID}";
         public static CancellationChangeToken GetAttributesCancellationChangeToken(this IMemoryCache memoryCache, Guid ciid, long layerID) =>
             new CancellationChangeToken(memoryCache.GetOrCreate(AttributesChangeToken(ciid, layerID), (ce) => new CancellationTokenSource()).Token);

@@ -27,7 +27,6 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            // if layer is online inbound layer, return from proxy
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
                 // HACK: we crudly simulate an SQL like, see https://stackoverflow.com/questions/41757762/use-sql-like-operator-in-c-sharp-linq/41757857
@@ -45,7 +44,6 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            // if layer is online inbound layer, return from proxy
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
                 return onlineAccessProxy.FindAttributesByFullName(name, selection, layerID, trans, atTime).ToEnumerable();
@@ -56,7 +54,6 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            // if layer is online inbound layer, return from proxy
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
                 return await onlineAccessProxy.GetAttribute(name, layerID, ciid, trans, atTime);
@@ -67,7 +64,6 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, bool includeRemoved, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            // if layer is online inbound layer, return from proxy
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
                 return onlineAccessProxy.GetAttributes(selection, layerID, trans, atTime).ToEnumerable();
@@ -78,6 +74,8 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
+            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
+
             return await model.InsertAttribute(name, value, layerID, ciid, changesetProxy, trans);
         }
 
