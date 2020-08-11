@@ -30,8 +30,7 @@ namespace LandscapeRegistry.Model.Decorators
             if (success)
                 foreach (var f in data.Fragments)
                 {
-                    memoryCache.CancelCIChangeToken(data.GetFromCIID(f));
-                    memoryCache.CancelCIChangeToken(data.GetToCIID(f));
+                    memoryCache.CancelRelationsChangeToken(data.GetFromCIID(f), data.GetToCIID(f), data.LayerID);
                 }
             return success;
         }
@@ -53,15 +52,13 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            memoryCache.CancelCIChangeToken(fromCIID);
-            memoryCache.CancelCIChangeToken(toCIID);
+            memoryCache.CancelRelationsChangeToken(fromCIID, toCIID, layerID);
             return await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
         }
 
         public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            memoryCache.CancelCIChangeToken(fromCIID);
-            memoryCache.CancelCIChangeToken(toCIID);
+            memoryCache.CancelRelationsChangeToken(fromCIID, toCIID, layerID);
             return await model.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
         }
     }

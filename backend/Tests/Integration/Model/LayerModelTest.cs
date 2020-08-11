@@ -55,7 +55,7 @@ namespace Tests.Integration.Model
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             var layerModel = new LayerModel(conn);
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var ciModel = new CIModel(attributeModel, conn);
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);

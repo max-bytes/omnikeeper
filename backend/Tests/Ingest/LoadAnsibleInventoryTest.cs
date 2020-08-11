@@ -59,7 +59,7 @@ namespace Tests.Ingest
             var dbcb = new DBConnectionBuilder();
             //using var conn = dbcb.Build(DBSetup.dbName, false, true);
             using var conn = dbcb.Build("landscape_prototype", false, true);
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var layerModel = new LayerModel(conn);
             var userModel = new UserInDatabaseModel(conn);
             var ciModel = new CIModel(attributeModel, conn);

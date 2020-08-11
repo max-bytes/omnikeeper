@@ -38,7 +38,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestGetCIs()
         {
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var model = new CIModel(attributeModel, conn);
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
@@ -100,7 +100,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestLayerSets()
         {
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var model = new CIModel(attributeModel, conn);
@@ -141,7 +141,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestRemoveShowsLayerBelow()
         {
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var model = new CIModel(attributeModel, conn);
@@ -181,7 +181,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestGetCIIDsOfNonEmptyCIs()
         {
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var model = new CIModel(attributeModel, conn);

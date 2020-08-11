@@ -41,7 +41,7 @@ namespace LandscapeRegistry.Controllers.OData
     [Authorize]
     public class AttributesController : ODataController
     {
-        private readonly IAttributeModel attributeModel;
+        private readonly IBaseAttributeModel attributeModel;
         private readonly ICIModel ciModel;
         private readonly IChangesetModel changesetModel;
         private readonly ICISearchModel ciSearchModel;
@@ -49,7 +49,7 @@ namespace LandscapeRegistry.Controllers.OData
         private readonly ICurrentUserService currentUserService;
         private readonly IRegistryAuthorizationService authorizationService;
 
-        public AttributesController(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, ICISearchModel ciSearchModel, ICurrentUserService currentUserService, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
+        public AttributesController(IBaseAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, ICISearchModel ciSearchModel, ICurrentUserService currentUserService, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             this.attributeModel = attributeModel;
             this.ciModel = ciModel;

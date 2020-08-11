@@ -31,7 +31,7 @@ namespace Tests.Integration.Model
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
             var relationModel = new RelationModel(MockedEmptyOnlineAccessProxy.O, predicateModel, conn);
@@ -103,7 +103,7 @@ namespace Tests.Integration.Model
             using var trans = conn.BeginTransaction();
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
             var relationModel = new RelationModel(MockedEmptyOnlineAccessProxy.O, predicateModel, conn);
@@ -139,7 +139,7 @@ namespace Tests.Integration.Model
             using var trans = conn.BeginTransaction();
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
             var relationModel = new RelationModel(MockedEmptyOnlineAccessProxy.O, predicateModel, conn);
@@ -176,7 +176,7 @@ namespace Tests.Integration.Model
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
 
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
             var relationModel = new RelationModel(MockedEmptyOnlineAccessProxy.O, predicateModel, conn);
@@ -235,7 +235,7 @@ namespace Tests.Integration.Model
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
             var relationModel = new RelationModel(MockedEmptyOnlineAccessProxy.O, predicateModel, conn);

@@ -33,7 +33,7 @@ namespace Tests.DBInit
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build("landscape_prototype", false, true);
 
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var ciModel = new CIModel(attributeModel, conn);
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);

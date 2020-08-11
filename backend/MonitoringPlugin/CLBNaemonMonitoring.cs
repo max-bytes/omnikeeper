@@ -33,7 +33,7 @@ namespace MonitoringPlugin
         private readonly ICIModel ciModel;
         private readonly ITraitModel traitModel;
 
-        public CLBNaemonMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, ITraitModel traitModel, IRelationModel relationModel,
+        public CLBNaemonMonitoring(ICIModel ciModel, IBaseAttributeModel atributeModel, ILayerModel layerModel, ITraitModel traitModel, IRelationModel relationModel,
             IPredicateModel predicateModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
             : base(atributeModel, layerModel, predicateModel, changesetModel, userModel, conn)
         {

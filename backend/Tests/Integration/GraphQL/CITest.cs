@@ -25,8 +25,8 @@ namespace Tests.Integration.GraphQL
             Services.Register<MergedCIType>();
             Services.Register<ICIModel, CIModel>();
             Services.Register<ICISearchModel, CISearchModel>();
-            Services.Register<AttributeModel>();
-            Services.Register<IAttributeModel, AttributeModel>();
+            Services.Register<BaseAttributeModel>();
+            Services.Register<IBaseAttributeModel, BaseAttributeModel>();
             Services.Register<UserInDatabaseModel>();
             Services.Register<LayerModel>();
             Services.Register<ILayerModel, LayerModel>();
@@ -61,7 +61,7 @@ namespace Tests.Integration.GraphQL
             var username = "testUser";
             var userGUID = new Guid("7dc848b7-881d-4785-9f25-985e9b6f2715");
             var ciModel = Services.Get<CIModel>();
-            var attributeModel = Services.Get<AttributeModel>();
+            var attributeModel = Services.Get<BaseAttributeModel>();
             var layerModel = Services.Get<LayerModel>();
             var changesetModel = Services.Get<ChangesetModel>();
             var userModel = Services.Get<UserInDatabaseModel>();

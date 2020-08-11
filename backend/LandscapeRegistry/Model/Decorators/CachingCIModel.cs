@@ -44,16 +44,17 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<CI> GetCI(Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            if (atTime.IsLatest)
-            {
-                return await memoryCache.GetOrCreateAsync(CacheKeyService.CIOnLayer(ciid, layerID), async (ce) =>
-                {
-                    var changeToken = memoryCache.GetCICancellationChangeToken(ciid);
-                    ce.AddExpirationToken(changeToken);
-                    return await model.GetCI(ciid, layerID, trans, atTime);
-                });
-            }
-            else return await model.GetCI(ciid, layerID, trans, atTime);
+            //if (atTime.IsLatest)
+            //{
+            //    return await memoryCache.GetOrCreateAsync(CacheKeyService.CIOnLayer(ciid, layerID), async (ce) =>
+            //    {
+            //        var changeToken = memoryCache.GetCICancellationChangeToken(ciid);
+            //        ce.AddExpirationToken(changeToken);
+            //        return await model.GetCI(ciid, layerID, trans, atTime);
+            //    });
+            //}
+            //else 
+                return await model.GetCI(ciid, layerID, trans, atTime);
         }
 
         public async Task<IEnumerable<Guid>> GetCIIDs(NpgsqlTransaction trans)
@@ -81,16 +82,17 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            if (atTime.IsLatest)
-            {
-                return await memoryCache.GetOrCreateAsync(CacheKeyService.MergedCI(ciid, layers), async (ce) =>
-                {
-                    var changeToken = memoryCache.GetCICancellationChangeToken(ciid);
-                    ce.AddExpirationToken(changeToken);
-                    return await model.GetMergedCI(ciid, layers, trans, atTime);
-                });
-            }
-            else return await model.GetMergedCI(ciid, layers, trans, atTime);
+            //if (atTime.IsLatest)
+            //{
+            //    return await memoryCache.GetOrCreateAsync(CacheKeyService.MergedCI(ciid, layers), async (ce) =>
+            //    {
+            //        var changeToken = memoryCache.GetCICancellationChangeToken(ciid);
+            //        ce.AddExpirationToken(changeToken);
+            //        return await model.GetMergedCI(ciid, layers, trans, atTime);
+            //    });
+            //}
+            //else 
+            return await model.GetMergedCI(ciid, layers, trans, atTime);
         }
 
         public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, ICIIDSelection selection, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)

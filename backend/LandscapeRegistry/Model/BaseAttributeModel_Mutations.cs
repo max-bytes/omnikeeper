@@ -11,12 +11,10 @@ using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model
 {
-    public partial class AttributeModel
+    public partial class BaseAttributeModel
     {
         public async Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
-
             var readTS = TimeThreshold.BuildLatest();
             var currentAttribute = await GetAttribute(name, layerID, ciid, trans, readTS);
 
@@ -58,8 +56,6 @@ namespace LandscapeRegistry.Model
 
         public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
-
             var readTS = TimeThreshold.BuildLatest();
             var currentAttribute = await GetAttribute(name, layerID, ciid, trans, readTS);
 
@@ -99,8 +95,6 @@ namespace LandscapeRegistry.Model
 
         public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(data.LayerID, trans)) throw new Exception("Cannot write to online inbound layer");
-
             var readTS = TimeThreshold.BuildLatest();
 
             var outdatedAttributes = (data switch

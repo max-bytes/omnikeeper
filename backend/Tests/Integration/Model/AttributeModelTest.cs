@@ -39,7 +39,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestAddingUpdatingRemovingAndRenewingOfAttributes()
         {
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var model = new CIModel(attributeModel, conn);
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
@@ -132,7 +132,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var model = new CIModel(attributeModel, conn);
             var layerModel = new LayerModel(conn);
             var user = await DBSetup.SetupUser(userModel);
@@ -175,7 +175,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var model = new CIModel(attributeModel, conn);
             var layerModel = new LayerModel(conn);
             using var trans = conn.BeginTransaction();
@@ -202,7 +202,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var model = new CIModel(attributeModel, conn);
             var layerModel = new LayerModel(conn);
             using var trans = conn.BeginTransaction();
@@ -247,7 +247,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var model = new CIModel(attributeModel, conn);
             var layerModel = new LayerModel(conn);
             using var trans = conn.BeginTransaction();

@@ -33,7 +33,7 @@ namespace Tests.Integration.Model
             using (var trans = conn.BeginTransaction())
             {
                 var changesetModel = new ChangesetModel(userModel, conn);
-                var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+                var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
                 var model = new CIModel(attributeModel, conn);
                 var layerModel = new LayerModel(conn);
 
@@ -95,7 +95,7 @@ namespace Tests.Integration.Model
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             using var trans = conn.BeginTransaction();
-            var attributeModel = new AttributeModel(MockedEmptyOnlineAccessProxy.O, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var model = new CIModel(attributeModel, conn);
             var layerModel = new LayerModel(conn);
 
