@@ -100,6 +100,7 @@ export const Fragments = {
             name
             color
         }
+        isForwardRelation
     }
   `,
   fullLayer: gql`

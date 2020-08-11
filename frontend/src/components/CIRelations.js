@@ -54,7 +54,7 @@ function CIRelations(props) {
           {sortedRelatedCIs.map(r => {
             var isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.layerID);
 
-            return (<Flipped key={r.predicateID + "_" + r.ci.id} flipId={r.predicateID} onAppear={onAppear} onExit={onExit}>
+            return (<Flipped key={r.predicateID + "_" + r.ci.id + "_" + r.isForwardRelation} flipId={r.predicateID} onAppear={onAppear} onExit={onExit}>
                 <RelatedCI related={r} perPredicateLimit={perPredicateLimit} isEditable={props.isEditable && isLayerWritable}></RelatedCI>
               </Flipped>);
           })}

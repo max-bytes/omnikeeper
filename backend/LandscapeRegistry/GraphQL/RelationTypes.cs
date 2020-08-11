@@ -51,6 +51,7 @@ namespace LandscapeRegistry.GraphQL
             Field(x => x.ToCIID);
             Field(x => x.PredicateID);
             Field(x => x.PredicateWording);
+            Field(x => x.IsForwardRelation);
             Field(x => x.ChangesetID);
             Field(x => x.LayerID);
             Field(x => x.LayerStackIDs);
