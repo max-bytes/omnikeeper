@@ -119,7 +119,7 @@ namespace LandscapeRegistry.Model
             using var command = new NpgsqlCommand($@"
             select distinct on(ci_id, name, layer_id) id, name, ci_id, type, value, state, changeset_id from
                 attribute where timestamp <= @time_threshold and layer_id = @layer_id and name like @like_name and ({selection.WhereClause}) order by ci_id, name, layer_id, timestamp DESC
-            ", conn, trans);
+            ", conn, trans); // TODO: remove order by layer_id, but consider not breaking indices first
 
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("like_name", like);
@@ -160,7 +160,7 @@ namespace LandscapeRegistry.Model
             using (var command = new NpgsqlCommand(@$"
                 select distinct on (ci_id, name) id, ci_id, type, value, state, changeset_id from
                     attribute where timestamp <= @time_threshold and ({selection.WhereClause}) and name = @name and layer_id = @layer_id order by ci_id, name, layer_id, timestamp DESC
-            ", conn, trans))
+            ", conn, trans))// TODO: remove order by layer_id, but consider not breaking indices first
             {
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("name", name);
