@@ -17,7 +17,6 @@ namespace Landscape.Base.Inbound
     public class InboundAdapterManager : IInboundAdapterManager
     {
         private readonly IDictionary<string, IOnlineInboundAdapterBuilder> onlinePluginsBuilders;
-        //private readonly IDictionary<string, IOnlineInboundAdapter.IConfig> staticConfiguredPlugins;
         private readonly IExternalIDMapper externalIDMapper;
         private readonly IOIAConfigModel ioaConfigModel;
         private readonly IExternalIDMapPersister persister;
@@ -32,17 +31,10 @@ namespace Landscape.Base.Inbound
             this.ioaConfigModel = ioaConfigModel;
             this.persister = persister;
             this.appConfig = appConfig;
-            //staticConfiguredPlugins = new Dictionary<string, IOnlineInboundAdapter.IConfig>();
         }
-
-        //public void RegisterOnlineAdapter(IOnlineInboundAdapter.IConfig config, string instanceName)
-        //{
-        //    staticConfiguredPlugins.Add(instanceName, config);
-        //}
 
         public async Task<IOnlineInboundAdapter> GetOnlinePluginInstance(string instanceName, NpgsqlTransaction trans)
         {
-            // TODO: add dynamic plugins
             var config = await ioaConfigModel.GetConfigByName(instanceName, trans);
             if (config != null)
             {

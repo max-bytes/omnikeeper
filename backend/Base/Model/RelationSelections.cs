@@ -6,7 +6,7 @@ namespace Landscape.Base.Model
 {
     public interface IRelationSelection
     {
-
+        public string ToHashKey();
     }
     public class RelationSelectionFrom : IRelationSelection
     {
@@ -16,6 +16,8 @@ namespace Landscape.Base.Model
         {
             this.fromCIID = fromCIID;
         }
+
+        public string ToHashKey() => $"rsf_{fromCIID}";
     }
     public class RelationSelectionEitherFromOrTo : IRelationSelection
     {
@@ -25,6 +27,7 @@ namespace Landscape.Base.Model
         {
             this.ciid = ciid;
         }
+        public string ToHashKey() => $"efot_{ciid}";
     }
     public class RelationSelectionWithPredicate : IRelationSelection
     {
@@ -34,9 +37,11 @@ namespace Landscape.Base.Model
         {
             this.predicateID = predicateID;
         }
+        public string ToHashKey() => $"p_{predicateID}";
     }
     public class RelationSelectionAll : IRelationSelection
     {
+        public string ToHashKey() => $"all";
     }
 
 }

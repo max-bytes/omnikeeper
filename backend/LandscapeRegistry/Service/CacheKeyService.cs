@@ -1,5 +1,6 @@
 ﻿using DotLiquid.Util;
 using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
@@ -20,12 +21,19 @@ namespace LandscapeRegistry.Service
         public static void CancelAttributesChangeToken(this IMemoryCache memoryCache, Guid ciid, long layerID) =>
             CancelAndRemoveChangeToken(memoryCache, AttributesChangeToken(ciid, layerID));
 
-        public static string Relations(Guid fromCIID, Guid toCIID, long layerID) => $"relations_{fromCIID}_{toCIID}_{layerID}";
-        private static string RelationsChangeToken(Guid fromCIID, Guid toCIID, long layerID) => $"ct_rel_{fromCIID}_{toCIID}_{layerID}";
-        public static CancellationChangeToken GetRelationsCancellationChangeToken(this IMemoryCache memoryCache, Guid fromCIID, Guid toCIID, long layerID) =>
-            new CancellationChangeToken(memoryCache.GetOrCreate(RelationsChangeToken(fromCIID, toCIID, layerID), (ce) => new CancellationTokenSource()).Token);
-        public static void CancelRelationsChangeToken(this IMemoryCache memoryCache, Guid fromCIID, Guid toCIID, long layerID) =>
-            CancelAndRemoveChangeToken(memoryCache, RelationsChangeToken(fromCIID, toCIID, layerID));
+        public static string Relations(IRelationSelection rs, long layerID) => $"relations_{rs.ToHashKey()}_{layerID}";
+        private static string RelationsChangeToken(IRelationSelection rs, long layerID) => $"ct_rel_{rs.ToHashKey()}_{layerID}";
+        public static CancellationChangeToken GetRelationsCancellationChangeToken(this IMemoryCache memoryCache, IRelationSelection rs, long layerID) =>
+            new CancellationChangeToken(memoryCache.GetOrCreate(RelationsChangeToken(rs, layerID), (ce) => new CancellationTokenSource()).Token);
+        public static void CancelRelationsChangeToken(this IMemoryCache memoryCache, IRelationSelection rs, long layerID) =>
+            CancelAndRemoveChangeToken(memoryCache, RelationsChangeToken(rs, layerID));
+
+        internal static object OIAConfig(string name) => $"oiaconfig_${name}";
+        private static string OIAConfigChangeToken(string name) => $"ct_oiaconfig_{name}";
+        public static CancellationChangeToken GetOIAConfigCancellationChangeToken(this IMemoryCache memoryCache, string name) =>
+            new CancellationChangeToken(memoryCache.GetOrCreate(OIAConfigChangeToken(name), (ce) => new CancellationTokenSource()).Token);
+        public static void CancelOIAConfigChangeToken(this IMemoryCache memoryCache, string name) =>
+            CancelAndRemoveChangeToken(memoryCache, OIAConfigChangeToken(name));
 
         private static string PredicatesChangeToken() => $"ct_predicates";
         public static string Predicates(AnchorStateFilter stateFilter) => $"predicates_{stateFilter}";
@@ -33,6 +41,7 @@ namespace LandscapeRegistry.Service
             new CancellationChangeToken(memoryCache.GetOrCreate(PredicatesChangeToken(), (ce) => new CancellationTokenSource()).Token);
         public static void CancelPredicatesChangeToken(this IMemoryCache memoryCache) =>
             CancelAndRemoveChangeToken(memoryCache, PredicatesChangeToken());
+
 
         public static string LayerSet(string[] layerNames) => $"layerSet_{string.Join(',', layerNames)}";
         public static string AllLayersSet() => $"layerSet_all";

@@ -131,7 +131,7 @@ namespace LandscapeRegistry
             services.AddScoped<IMemoryCacheModel, MemoryCacheModel>();
 
             services.AddScoped<ITraitModel, TraitModel>();
-            services.Decorate<ITraitModel, CachingTraitModel>();
+            //services.Decorate<ITraitModel, CachingTraitModel>();
 
             services.AddScoped<IOIAConfigModel, OIAConfigModel>();
 

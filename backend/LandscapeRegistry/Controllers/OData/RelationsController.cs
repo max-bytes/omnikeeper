@@ -1,10 +1,7 @@
 ﻿using Landscape.Base.Entity;
-using Landscape.Base.Entity.DTO;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
-using LandscapeRegistry.Model;
 using Microsoft.AspNet.OData;
-using Microsoft.AspNet.OData.Routing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -12,8 +9,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.OData.Query;
-using LandscapeRegistry.Entity.AttributeValues;
 using Npgsql;
 using LandscapeRegistry.Service;
 
@@ -85,7 +80,7 @@ namespace LandscapeRegistry.Controllers.OData
 
             var user = await currentUserService.GetCurrentUser(null);
             if (!authorizationService.CanUserWriteToLayer(user, layerID))
-                return BadRequest($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
+                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
 
             if (!(await ciModel.CIIDExists(relation.FromCIID, null)))
                 return BadRequest($"CI with ID \"{relation.FromCIID}\" does not exist");
@@ -109,7 +104,7 @@ namespace LandscapeRegistry.Controllers.OData
         {
             var user = await currentUserService.GetCurrentUser(null);
             if (!authorizationService.CanUserWriteToLayer(user, layerID))
-                return BadRequest($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
+                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
 
             using var trans = conn.BeginTransaction();
             var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);

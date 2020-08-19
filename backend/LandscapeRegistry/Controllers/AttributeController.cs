@@ -81,7 +81,7 @@ namespace LandscapeRegistry.Controllers
         {
             var user = await currentUserService.GetCurrentUser(null);
             if (!authorizationService.CanUserWriteToLayer(user, dto.LayerID))
-                return BadRequest($"User \"{user.Username}\" does not have permission to write to layer ID {dto.LayerID}");
+                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {dto.LayerID}");
 
             using var trans = conn.BeginTransaction();
             var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);

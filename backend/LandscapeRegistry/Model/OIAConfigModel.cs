@@ -131,12 +131,25 @@ namespace LandscapeRegistry.Model
             return OIAConfig.Build(name, id, config);
         }
 
-        public async Task<bool> Delete(long id, NpgsqlTransaction trans)
+        public async Task<OIAConfig> Delete(long id, NpgsqlTransaction trans)
         {
-            using var command = new NpgsqlCommand(@"DELETE FROM onlineinboundadapter_config WHERE id = @id", conn, trans);
+            using var command = new NpgsqlCommand(@"DELETE FROM onlineinboundadapter_config WHERE id = @id RETURNING name, config", conn, trans);
             command.Parameters.AddWithValue("id", id);
-            await command.ExecuteNonQueryAsync();
-            return true;
+
+            using var reader = await command.ExecuteReaderAsync();
+            await reader.ReadAsync();
+            var name = reader.GetString(0);
+            var configJO = reader.GetFieldValue<JObject>(1);
+            try
+            {
+                var config = serializer.Deserialize<IOnlineInboundAdapter.IConfig>(new JTokenReader(configJO));
+                return OIAConfig.Build(name, id, config);
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, $"Could not deserialize OIA config \"{name}\"");
+                return null;
+            }
         }
     }
 }

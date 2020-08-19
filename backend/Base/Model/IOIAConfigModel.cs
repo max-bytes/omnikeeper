@@ -14,6 +14,6 @@ namespace Landscape.Base.Model
         Task<OIAConfig> GetConfigByName(string name, NpgsqlTransaction trans);
         Task<OIAConfig> Create(string name, IOnlineInboundAdapter.IConfig config, NpgsqlTransaction trans);
         Task<OIAConfig> Update(long id, string name, IOnlineInboundAdapter.IConfig config, NpgsqlTransaction trans);
-        Task<bool> Delete(long iD, NpgsqlTransaction transaction);
+        Task<OIAConfig> Delete(long iD, NpgsqlTransaction transaction);
     }
 }

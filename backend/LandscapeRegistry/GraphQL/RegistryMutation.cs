@@ -272,14 +272,14 @@ namespace LandscapeRegistry.GraphQL
 
                   // TODO: auth
                   //if (!authorizationService.CanUserUpdateLayer(userContext.User))
-                  //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update Layers");
+                  //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission");
 
                   using var transaction = await conn.BeginTransactionAsync();
                   userContext.Transaction = transaction;
 
-                  var success = await OIAConfigModel.Delete(id, transaction);
+                  var deleted = await OIAConfigModel.Delete(id, transaction);
                   await transaction.CommitAsync();
-                  return success;
+                  return deleted != null;
               });
 
             FieldAsync<PredicateType>("upsertPredicate",

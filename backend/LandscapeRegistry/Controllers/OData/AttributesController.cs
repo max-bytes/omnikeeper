@@ -96,7 +96,7 @@ namespace LandscapeRegistry.Controllers.OData
         {
             var user = await currentUserService.GetCurrentUser(null);
             if (!authorizationService.CanUserWriteToLayer(user, layerID))
-                return BadRequest($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
+                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
 
 
             var old = await attributeModel.GetAttribute(keyAttributeName, layerID, keyCIID, null, TimeThreshold.BuildLatest());
@@ -127,7 +127,7 @@ namespace LandscapeRegistry.Controllers.OData
 
             var user = await currentUserService.GetCurrentUser(null);
             if (!authorizationService.CanUserWriteToLayer(user, layerID))
-                return BadRequest($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
+                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
 
             using var trans = conn.BeginTransaction();
             var timeThreshold = TimeThreshold.BuildLatest();
@@ -185,7 +185,7 @@ namespace LandscapeRegistry.Controllers.OData
         {
             var user = await currentUserService.GetCurrentUser(null);
             if (!authorizationService.CanUserWriteToLayer(user, layerID))
-                return BadRequest($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
+                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
 
             using var trans = conn.BeginTransaction();
             var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);

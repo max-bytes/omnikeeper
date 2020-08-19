@@ -30,9 +30,18 @@ namespace LandscapeRegistry.Model.Decorators
             if (success)
                 foreach (var f in data.Fragments)
                 {
-                    memoryCache.CancelRelationsChangeToken(data.GetFromCIID(f), data.GetToCIID(f), data.LayerID);
+                    EvictFromCache(data.GetFromCIID(f), data.GetToCIID(f), data.GetPredicateID(f), data.LayerID);
                 }
             return success;
+        }
+
+        private void EvictFromCache(Guid fromCIID, Guid toCIID, string predicateID, long layerID)
+        {
+            memoryCache.CancelRelationsChangeToken(new RelationSelectionAll(), layerID);
+            memoryCache.CancelRelationsChangeToken(new RelationSelectionEitherFromOrTo(fromCIID), layerID);
+            memoryCache.CancelRelationsChangeToken(new RelationSelectionEitherFromOrTo(toCIID), layerID);
+            memoryCache.CancelRelationsChangeToken(new RelationSelectionFrom(fromCIID), layerID);
+            memoryCache.CancelRelationsChangeToken(new RelationSelectionWithPredicate(predicateID), layerID);
         }
 
         public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
@@ -43,32 +52,27 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            //switch (rl)
-            //{
-            //    case RelationSelectionFrom scs:
-            //    {
-            //        var attributes = await memoryCache.GetOrCreateAsync(CacheKeyService.Relations(scs., layerID), async (ce) =>
-            //        {
-            //            var changeToken = memoryCache.GetAttributesCancellationChangeToken(scs.CIID, layerID);
-            //            ce.AddExpirationToken(changeToken);
-            //            return await model.GetAttributes(scs, layerID, trans, atTime);
-            //        });
-            //        return attributes;
-            //    }
-            //}
-            // todo
-            return await model.GetRelations(rl, layerID, trans, atTime);
+            if (atTime.IsLatest) {
+                return await memoryCache.GetOrCreateAsync(CacheKeyService.Relations(rl, layerID), async (ce) =>
+                {
+                    var changeToken = memoryCache.GetRelationsCancellationChangeToken(rl, layerID);
+                    ce.AddExpirationToken(changeToken);
+                    return await model.GetRelations(rl, layerID, trans, atTime);
+                });
+            }
+            else 
+                return await model.GetRelations(rl, layerID, trans, atTime);
         }
 
         public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            memoryCache.CancelRelationsChangeToken(fromCIID, toCIID, layerID);
+            EvictFromCache(fromCIID, toCIID, predicateID, layerID);
             return await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
         }
 
         public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            memoryCache.CancelRelationsChangeToken(fromCIID, toCIID, layerID);
+            EvictFromCache(fromCIID, toCIID, predicateID, layerID);
             return await model.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
         }
     }
