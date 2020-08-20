@@ -68,7 +68,18 @@ namespace LandscapeRegistry.Runners
                         stopWatch.Start();
                         try
                         {
-                            await manager.Update(ciModel, conn, logger);
+                            using var trans = conn.BeginTransaction();
+
+                            var changes = await manager.Update(ciModel, trans, logger);
+
+                            if (changes)
+                            {
+                                trans.Commit();
+                            }
+                            else
+                            {
+                                trans.Rollback();
+                            }
                         } catch (Exception e)
                         {
                             logger.LogError(e, $"An error occured when updating external IDs for OILP {adapterName}");

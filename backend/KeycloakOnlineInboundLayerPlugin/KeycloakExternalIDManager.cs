@@ -9,18 +9,6 @@ using System.Threading.Tasks;
 
 namespace OnlineInboundAdapterKeycloak
 {
-    //public class KeycloakExternalUser : IExternalItem<ExternalIDString>
-    //{
-    //    private readonly Keycloak.Net.Models.Users.User user;
-
-    //    public KeycloakExternalUser(Keycloak.Net.Models.Users.User user)
-    //    {
-    //        this.user = user;
-    //        ID = new ExternalIDString(user.Id);
-    //    }
-    //    public ExternalIDString ID { get; }
-    //}
-
     public class KeycloakExternalIDManager : ExternalIDManager<ExternalIDString>
     {
         private readonly KeycloakClient client;

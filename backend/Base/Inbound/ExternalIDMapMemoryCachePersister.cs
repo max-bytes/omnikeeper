@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

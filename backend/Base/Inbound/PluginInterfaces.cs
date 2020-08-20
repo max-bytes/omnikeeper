@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using static Landscape.Base.Model.IRelationModel;
 
@@ -22,7 +23,7 @@ namespace Landscape.Base.Inbound
         string ConvertToString();
     }
 
-    public struct ExternalIDString : IExternalID
+    public struct ExternalIDString : IExternalID, IEquatable<ExternalIDString>
     {
         public string ID { get; }
 
@@ -32,9 +33,17 @@ namespace Landscape.Base.Inbound
         }
 
         public string ConvertToString() => ID;
+        public override string ToString()
+        {
+            return ID;
+        }
+
+        public override bool Equals([AllowNull] object other) => Equals(other as ExternalIDString?);
+        public bool Equals([AllowNull] ExternalIDString other) => ID == other.ID;
+        public override int GetHashCode() => ID.GetHashCode();
     }
 
-    public struct ExternalIDGuid : IExternalID
+    public struct ExternalIDGuid : IExternalID, IEquatable<ExternalIDGuid>
     {
         public Guid ID { get; }
 
@@ -44,6 +53,14 @@ namespace Landscape.Base.Inbound
         }
 
         public string ConvertToString() => ID.ToString();
+        public override string ToString()
+        {
+            return ID.ToString();
+        }
+
+        public override bool Equals([AllowNull] object other) => Equals(other as ExternalIDGuid?);
+        public bool Equals([AllowNull] ExternalIDGuid other) => ID == other.ID;
+        public override int GetHashCode() => ID.GetHashCode();
     }
 
     public interface IExternalItem<EID> where EID : IExternalID
@@ -53,7 +70,7 @@ namespace Landscape.Base.Inbound
 
     public interface IExternalIDManager
     {
-        Task Update(ICIModel ciModel, NpgsqlConnection conn, ILogger logger);
+        Task<bool> Update(ICIModel ciModel, NpgsqlTransaction trans, ILogger logger);
         TimeSpan PreferredUpdateRate { get; }
     }
 

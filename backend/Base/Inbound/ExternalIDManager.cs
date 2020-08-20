@@ -29,7 +29,7 @@ namespace Landscape.Base.Inbound
 
         protected abstract Task<IEnumerable<EID>> GetExternalIDs();
 
-        public async Task Update(ICIModel ciModel, NpgsqlConnection conn, ILogger logger)
+        public async Task<bool> Update(ICIModel ciModel, NpgsqlTransaction trans, ILogger logger)
         {
             await mapper.Setup();
 
@@ -41,13 +41,11 @@ namespace Landscape.Base.Inbound
             var removedExternalIDs = mapper.RemoveAllExceptExternalIDs(externalIDs);
             if (!removedExternalIDs.IsEmpty())
             {
-                logger.LogInformation("Removed the folloing external IDs from mapping: ");
+                logger.LogInformation("Removed the following external IDs from mapping: ");
                 logger.LogInformation(string.Join(", ", removedExternalIDs));
 
                 changes = true;
             }
-
-            using var trans = conn.BeginTransaction();
 
             // add any (new) CIs that don't exist yet, and add to mapper
             foreach (var externalID in externalIDs)
@@ -95,13 +93,9 @@ namespace Landscape.Base.Inbound
             }
 
             if (changes)
-            {
-                trans.Commit();
                 await mapper.Persist();
-            } else
-            {
-                trans.Rollback();
-            }
+
+            return changes;
         }
     }
 
