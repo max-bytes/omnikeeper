@@ -46,9 +46,11 @@ namespace Landscape.Base
                 var atTime = DateTimeOffset.Now;
 
 
-                var username = Name; // HACK: make username the same as CLB name
+                var username = Name; // make username the same as CLB name
                 var displayName = username;
-                var guid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1"); // TODO
+                // generate a unique but deterministic GUID from the clb Name
+                var clbUserGuidNamespace = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1");
+                var guid = GuidUtility.Create(clbUserGuidNamespace, Name);
                 var user = await userModel.UpsertUser(username, displayName, guid, UserType.Robot, trans);
                 var changesetProxy = ChangesetProxy.Build(user, atTime, changesetModel);
 
