@@ -82,14 +82,14 @@ namespace Tests.Integration.Model
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 var cis1 = await model.GetCIs(layerID1, new AllCIIDsSelection(), false, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(2, cis1.Count());
-                Assert.AreEqual(1, cis1.Count(c => c.ID == ciid1 && c.Attributes.Any(a => a.Name == "a1")));
-                Assert.AreEqual(1, cis1.Count(c => c.ID == ciid2 && c.Attributes.Any(a => a.Name == "a2")));
+                Assert.AreEqual(1, cis1.Count(c => c.ID == ciid1 && c.Attributes.ContainsKey("a1")));
+                Assert.AreEqual(1, cis1.Count(c => c.ID == ciid2 && c.Attributes.ContainsKey("a2")));
                 var cis2 = await model.GetCIs(layerID2, new AllCIIDsSelection(), false, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, cis2.Count());
-                Assert.AreEqual(1, cis2.Count(c => c.ID == ciid1 && c.Attributes.Any(a => a.Name == "a3")));
+                Assert.AreEqual(1, cis2.Count(c => c.ID == ciid1 && c.Attributes.ContainsKey("a3")));
                 var cis3 = await model.GetCIs(layerID2, new AllCIIDsSelection(), true, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(3, cis3.Count());
-                Assert.AreEqual(1, cis3.Count(c => c.ID == ciid1 && c.Attributes.Any(a => a.Name == "a3")));
+                Assert.AreEqual(1, cis3.Count(c => c.ID == ciid1 && c.Attributes.ContainsKey("a3")));
                 Assert.AreEqual(1, cis3.Count(c => c.ID == ciid2 && c.Attributes.Count() == 0));
                 Assert.AreEqual(1, cis3.Count(c => c.ID == ciid3 && c.Attributes.Count() == 0));
 

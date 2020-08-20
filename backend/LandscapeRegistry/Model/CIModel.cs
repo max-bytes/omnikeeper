@@ -5,6 +5,7 @@ using LandscapeRegistry.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -22,7 +23,7 @@ namespace LandscapeRegistry.Model
             conn = connection;
         }
 
-        private string GetNameFromAttributes(IDictionary<string, MergedCIAttribute> attributes)
+        private string GetNameFromAttributes(IImmutableDictionary<string, MergedCIAttribute> attributes)
         {
             var nameA = attributes.GetValueOrDefault(ICIModel.NameAttribute, (MergedCIAttribute)null);
             return nameA?.Attribute.Value.Value2String(); // TODO
@@ -177,9 +178,9 @@ namespace LandscapeRegistry.Model
             if (includeEmptyCIs)
             {
                 // check which ciids we already got and which are empty, add the empty ones
-                var AllSelectedCIIDs = await GetCIIDsFromSelection(selection, trans); 
-                IDictionary<Guid, IDictionary<string, MergedCIAttribute>> emptyCIs = AllSelectedCIIDs.Except(attributes.Keys).ToDictionary(a => a, a => (IDictionary<string, MergedCIAttribute>)new Dictionary<string, MergedCIAttribute>());
-                attributes = attributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
+                var AllSelectedCIIDs = await GetCIIDsFromSelection(selection, trans);
+                IImmutableDictionary<Guid, IImmutableDictionary<string, MergedCIAttribute>> emptyCIs = AllSelectedCIIDs.Except(attributes.Keys).ToImmutableDictionary(a => a, a => (IImmutableDictionary<string, MergedCIAttribute>)ImmutableDictionary<string, MergedCIAttribute>.Empty);
+                attributes = attributes.Concat(emptyCIs).ToImmutableDictionary(a => a.Key, a => a.Value);
             }
 
             var ret = new List<MergedCI>();

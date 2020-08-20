@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using static Landscape.Base.Model.IBaseAttributeModel;
@@ -34,7 +35,7 @@ namespace LandscapeRegistry.Service
 
         private class DataIdentifier
         {
-            private readonly IDictionary<string, IDictionary<Guid, MergedCIAttribute>> attributeCache = new Dictionary<string, IDictionary<Guid, MergedCIAttribute>>();
+            private readonly IDictionary<string, IImmutableDictionary<Guid, MergedCIAttribute>> attributeCache = new Dictionary<string, IImmutableDictionary<Guid, MergedCIAttribute>>();
             private readonly IAttributeModel attributeModel;
             private readonly LayerSet searchableLayers;
             private readonly TimeThreshold atTime;

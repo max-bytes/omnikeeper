@@ -1,6 +1,7 @@
 ﻿using Landscape.Base.Utils;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Landscape.Base.Entity
@@ -9,16 +10,16 @@ namespace Landscape.Base.Entity
     {
         public Guid ID { get; private set; }
         public string Name { get; private set; }
-        public IDictionary<string, MergedCIAttribute> MergedAttributes { get; private set; }
+        public IImmutableDictionary<string, MergedCIAttribute> MergedAttributes { get; private set; }
         public LayerSet Layers { get; private set; }
         public TimeThreshold AtTime { get; private set; }
 
         public static MergedCI Build(Guid id, string name, LayerSet layers, TimeThreshold atTime, IEnumerable<MergedCIAttribute> attributes)
         {
-            return Build(id, name, layers, atTime, attributes.ToDictionary(a => a.Attribute.Name));
+            return Build(id, name, layers, atTime, attributes.ToImmutableDictionary(a => a.Attribute.Name));
         }
 
-        public static MergedCI Build(Guid id, string name, LayerSet layers, TimeThreshold atTime, IDictionary<string, MergedCIAttribute> attributes)
+        public static MergedCI Build(Guid id, string name, LayerSet layers, TimeThreshold atTime, IImmutableDictionary<string, MergedCIAttribute> attributes)
         {
             return new MergedCI
             {
@@ -35,7 +36,7 @@ namespace Landscape.Base.Entity
     {
         public Guid ID { get; private set; }
         public string Name { get; private set; }
-        public CIAttribute[] Attributes { get; private set; } // TODO: rewrite to dictionary
+        public IImmutableDictionary<string, CIAttribute> Attributes { get; private set; }
         public long LayerID { get; private set; }
         public TimeThreshold AtTime { get; private set; }
 
@@ -47,7 +48,7 @@ namespace Landscape.Base.Entity
                 LayerID = layerID,
                 AtTime = atTime,
                 ID = id,
-                Attributes = attributes.ToArray()
+                Attributes = attributes.ToImmutableDictionary(a => a.Name)
             };
         }
     }

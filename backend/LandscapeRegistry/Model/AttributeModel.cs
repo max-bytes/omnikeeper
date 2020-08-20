@@ -7,6 +7,7 @@ using Npgsql;
 using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -38,18 +39,18 @@ namespace LandscapeRegistry.Model
             return compound.Select(t => MergedCIAttribute.Build(t.Value.First().Value.attribute, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).Reverse().ToArray()));
         }
 
-        public async Task<IDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IImmutableDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var d = await GetMergedAttributes(new SingleCIIDSelection(ciid), layers, trans, atTime);
-            return d.GetValueOrDefault(ciid, () => new Dictionary<string, MergedCIAttribute>());
+            return d.GetValueOrDefault(ciid, ImmutableDictionary<string, MergedCIAttribute>.Empty);
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IImmutableDictionary<Guid, IImmutableDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var ret = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
+            var ret = new Dictionary<Guid, IImmutableDictionary<string, MergedCIAttribute>>();
 
             if (layers.IsEmpty)
-                return ret; // return empty, an empty layer list can never produce any attributes
+                return ImmutableDictionary<Guid, IImmutableDictionary<string, MergedCIAttribute>>.Empty; // return empty, an empty layer list can never produce any attributes
 
             var attributes = new List<(CIAttribute attribute, long layerID)>();
 
@@ -66,19 +67,19 @@ namespace LandscapeRegistry.Model
             {
                 var CIID = ma.Attribute.CIID;
                 if (!ret.ContainsKey(CIID))
-                    ret.Add(CIID, new Dictionary<string, MergedCIAttribute>());
-                ret[CIID].Add(ma.Attribute.Name, ma);
+                    ret.Add(CIID, ImmutableDictionary<string, MergedCIAttribute>.Empty);
+                ret[CIID] = ret[CIID].Add(ma.Attribute.Name, ma);
             }
 
-            return ret;
+            return ret.ToImmutableDictionary();
         }
 
-        public async Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IImmutableDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var ret = new Dictionary<Guid, MergedCIAttribute>();
 
             if (layers.IsEmpty)
-                return ret; // return empty, an empty layer list can never produce any attributes
+                return ImmutableDictionary<Guid, MergedCIAttribute>.Empty; // return empty, an empty layer list can never produce any attributes
 
             var attributes = new List<(CIAttribute attribute, long layerID)>();
 
@@ -97,7 +98,7 @@ namespace LandscapeRegistry.Model
                 ret.Add(CIID, ma);
             }
 
-            return ret;
+            return ret.ToImmutableDictionary();
         }
 
         public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
