@@ -90,7 +90,6 @@ namespace LandscapeRegistry.Service
             var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, ChangesetModel);
 
             var timeThreshold = TimeThreshold.BuildLatest();
-            var dataIdentifier = new DataIdentifier(AttributeModel, searchableLayers, timeThreshold);
             var temp2finalCIIDMap = new Dictionary<Guid, Guid>();
 
             var attributeData = new Dictionary<Guid, BulkCICandidateAttributeData>();
@@ -102,6 +101,7 @@ namespace LandscapeRegistry.Service
                 switch (cic.Value.IdentificationMethod)
                 {
                     case CIIdentificationMethodByData d: // use identifiable data for finding out CIID
+                        var dataIdentifier = new DataIdentifier(AttributeModel, searchableLayers, timeThreshold);
                         var candidateCIIDs = await dataIdentifier.Identify(cic.Value.Attributes, d, trans, logger);
                         if (!candidateCIIDs.IsEmpty())
                         { // we found at least one fitting ci, use that // TODO: order matters!!! Find out how to deal with that

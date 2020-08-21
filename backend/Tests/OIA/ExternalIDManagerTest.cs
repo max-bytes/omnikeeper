@@ -119,8 +119,8 @@ namespace Tests.OIA
             });
 
             // delete cis from model, should be recreated on update, if mapped
-            existingCIs.RemoveAt(1); // this ci is not mapped anymore, should stay removed
-            existingCIs.RemoveAt(1); // this ci is still mapped and must be re-created
+            existingCIs.RemoveAt(2); // this ci (22xxx...) is still mapped and must be re-created
+            existingCIs.RemoveAt(1); // this ci (11xxx...) is not mapped anymore, should stay removed
             changed = await eidManager.Update(ciModelMock.Object, null, NullLogger.Instance);
             Assert.IsTrue(changed);
             Assert.AreEqual(3, existingCIs.Count);
@@ -128,7 +128,7 @@ namespace Tests.OIA
             {
                 (existingCIs[0], new ExternalIDString("eid0")),
                 (existingCIs[1], new ExternalIDString("eid3")),
-                (existingCIs[2], new ExternalIDString("eid2")), // re-added ci is added at the end
+                (existingCIs[2], new ExternalIDString("eid2")), // re-added ci is added at the end of the existingCIs
             });
         }
     }
