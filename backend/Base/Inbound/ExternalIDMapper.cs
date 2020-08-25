@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using Landscape.Base.Service;
+using Npgsql;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -53,7 +54,7 @@ namespace Landscape.Base.Inbound
             this.persister = persister;
         }
 
-        public abstract Guid? DeriveCIIDFromExternalID(EID externalID);
+        //public abstract Guid? DeriveCIIDFromExternalID(EID externalID);
 
         public async Task Setup()
         {
@@ -68,6 +69,8 @@ namespace Landscape.Base.Inbound
                 loaded = true;
             }
         }
+
+        public abstract ICIIdentificationMethod GetIdentificationMethod(EID externalID);
 
         public void Add(Guid ciid, EID externalID)
         {

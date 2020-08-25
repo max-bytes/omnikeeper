@@ -1,1357 +1,3389 @@
+// 20200825165905
+// https://localhost:44378/swagger/v1/swagger.json
+
 {
-  "openapi": "3.0.1",
-  "info": {
-    "title": "Landscape Registry REST API",
-    "version": "v1"
-  },
-  "servers": [
-    {
-      "url": "https://localhost:44378"
-    }
-  ],
-  "paths": {
-    "/api/v{version}/AnsibleIngest/IngestAnsibleInventoryScan": {
-      "post": {
-        "tags": [
-          "AnsibleIngest"
-        ],
-        "operationId": "IngestAnsibleInventoryScan",
-        "parameters": [
-          {
-            "name": "writeLayerID",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Landscape Registry REST API",
+        "version": "v1"
+    },
+    "servers": [
+        {
+            "url": "https://localhost:44378"
+        }
+    ],
+    "paths": {
+        "/api/v{version}/AnsibleIngest/IngestAnsibleInventoryScan": {
+            "post": {
+                "tags": [
+                    "AnsibleIngest"
+                ],
+                "operationId": "IngestAnsibleInventoryScan",
+                "parameters": [
+                    {
+                        "name": "writeLayerID",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "searchLayerIDs",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            }
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json;odata.metadata=minimal;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=minimal;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=minimal": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=full;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=full;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=full": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=none;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=none;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=none": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/json;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/json;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/xml": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/odata": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/json-patch+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "text/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        },
+                        "application/*+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
             }
-          },
-          {
-            "name": "searchLayerIDs",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "int64"
-              }
+        },
+        "/api/v{version}/Attribute/getMergedAttributesWithName": {
+            "get": {
+                "tags": [
+                    "Attribute"
+                ],
+                "summary": "",
+                "operationId": "GetMergedAttributesWithName",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "layerIDs",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            },
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "atTime",
+                        "in": "query",
+                        "description": "",
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "date-time",
+                            "nullable": true
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
             }
-          },
-          {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
+        },
+        "/api/v{version}/Attribute/getMergedAttributes": {
+            "get": {
+                "tags": [
+                    "Attribute"
+                ],
+                "summary": "",
+                "operationId": "GetMergedAttributes",
+                "parameters": [
+                    {
+                        "name": "ciids",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "layerIDs",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            },
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "atTime",
+                        "in": "query",
+                        "description": "",
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "date-time",
+                            "nullable": true
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
             }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
-              }
+        },
+        "/api/v{version}/Attribute/bulkReplaceAttributesInLayer": {
+            "post": {
+                "tags": [
+                    "Attribute"
+                ],
+                "summary": "bulk replace all attributes in specified layer",
+                "operationId": "BulkReplaceAttributesInLayer",
+                "parameters": [
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "",
+                    "content": {
+                        "application/json;odata.metadata=minimal;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=minimal;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=minimal": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=full;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=full;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=full": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=none;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=none;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/json;odata.metadata=none": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/json;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/json;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/xml": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/odata": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/json-patch+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "text/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        },
+                        "application/*+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/CI/getAllCIIDs": {
+            "get": {
+                "tags": [
+                    "CI"
+                ],
+                "summary": "list of all CI-IDs",
+                "operationId": "GetAllCIIDs",
+                "parameters": [
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/CI/getCIByID": {
+            "get": {
+                "tags": [
+                    "CI"
+                ],
+                "summary": "single CI by CI-ID",
+                "operationId": "GetCIByID",
+                "parameters": [
+                    {
+                        "name": "layerIDs",
+                        "in": "query",
+                        "description": "Specifies which layers contribute to the result, and in which order",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            },
+                            "description": "Specifies which layers contribute to the result, and in which order"
+                        }
+                    },
+                    {
+                        "name": "CIID",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "atTime",
+                        "in": "query",
+                        "description": "Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)",
+                        "schema": {
+                            "type": "string",
+                            "description": "Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)",
+                            "format": "date-time",
+                            "nullable": true
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIDTO"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/CI/getCIsByID": {
+            "get": {
+                "tags": [
+                    "CI"
+                ],
+                "summary": "multiple CIs by CI-ID\r\n!Watch out for the query URL getting too long because of a lot of CIIDs!\r\nTODO: consider using POST",
+                "operationId": "GetCIsByID",
+                "parameters": [
+                    {
+                        "name": "layerIDs",
+                        "in": "query",
+                        "description": "Specifies which layers contribute to the result, and in which order",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            },
+                            "description": "Specifies which layers contribute to the result, and in which order"
+                        }
+                    },
+                    {
+                        "name": "CIIDs",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "atTime",
+                        "in": "query",
+                        "description": "Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)",
+                        "schema": {
+                            "type": "string",
+                            "description": "Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)",
+                            "format": "date-time",
+                            "nullable": true
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIDTO"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/CI/getCIIDsOfNonEmptyCIs": {
+            "get": {
+                "tags": [
+                    "CI"
+                ],
+                "summary": "",
+                "operationId": "GetCIIDsOfNonEmptyCIs",
+                "parameters": [
+                    {
+                        "name": "layerIDs",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            },
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "atTime",
+                        "in": "query",
+                        "description": "",
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "date-time",
+                            "nullable": true
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/graphql": {
+            "post": {
+                "tags": [
+                    "GraphQL"
+                ],
+                "operationId": "Index",
+                "requestBody": {
+                    "content": {
+                        "application/json;odata.metadata=minimal;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=minimal;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=minimal": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=full;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=full;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=full": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=none;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=none;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=none": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/xml": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/odata": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json-patch+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "text/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/*+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/graphql-debug": {
+            "post": {
+                "tags": [
+                    "GraphQL"
+                ],
+                "operationId": "Debug",
+                "requestBody": {
+                    "content": {
+                        "application/json;odata.metadata=minimal;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=minimal;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=minimal": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=full;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=full;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=full": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=none;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=none;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.metadata=none": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.streaming=true": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json;odata.streaming=false": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/xml": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/odata": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/json-patch+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "text/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        },
+                        "application/*+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphQLQuery"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/Layer/getAllLayers": {
+            "get": {
+                "tags": [
+                    "Layer"
+                ],
+                "summary": "list of all layers",
+                "operationId": "GetAllLayers",
+                "parameters": [
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/Layer/getLayerByName": {
+            "get": {
+                "tags": [
+                    "Layer"
+                ],
+                "summary": "get a layer by name",
+                "operationId": "GetLayerByName",
+                "parameters": [
+                    {
+                        "name": "layerName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LayerDTO"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/Layer/getLayersByName": {
+            "get": {
+                "tags": [
+                    "Layer"
+                ],
+                "summary": "get layers by name",
+                "operationId": "GetLayersByName",
+                "parameters": [
+                    {
+                        "name": "layerNames",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LayerDTO"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/Relation/getMergedRelationsWithPredicate": {
+            "get": {
+                "tags": [
+                    "Relation"
+                ],
+                "summary": "",
+                "operationId": "GetMergedRelationsWithPredicate",
+                "parameters": [
+                    {
+                        "name": "predicateID",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "layerIDs",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            },
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "atTime",
+                        "in": "query",
+                        "description": "",
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "date-time",
+                            "nullable": true
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/Relation/getAllMergedRelations": {
+            "get": {
+                "tags": [
+                    "Relation"
+                ],
+                "summary": "",
+                "operationId": "GetAllMergedRelations",
+                "parameters": [
+                    {
+                        "name": "layerIDs",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            },
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "atTime",
+                        "in": "query",
+                        "description": "",
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "date-time",
+                            "nullable": true
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/Relation/getMergedRelationsOutgoingFromCI": {
+            "get": {
+                "tags": [
+                    "Relation"
+                ],
+                "summary": "",
+                "operationId": "GetMergedRelationsOutgoingFromCI",
+                "parameters": [
+                    {
+                        "name": "fromCIID",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "layerIDs",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            },
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "atTime",
+                        "in": "query",
+                        "description": "",
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "date-time",
+                            "nullable": true
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/Relation/getMergedRelationsFromOrToCI": {
+            "get": {
+                "tags": [
+                    "Relation"
+                ],
+                "summary": "",
+                "operationId": "GetMergedRelationsFromOrToCI",
+                "parameters": [
+                    {
+                        "name": "ciid",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "layerIDs",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            },
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "atTime",
+                        "in": "query",
+                        "description": "",
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "date-time",
+                            "nullable": true
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RelationDTO"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/Trait/getEffectiveTraitSetsForTraitName": {
+            "get": {
+                "tags": [
+                    "Trait"
+                ],
+                "operationId": "GetEffectiveTraitSetsForTraitName",
+                "parameters": [
+                    {
+                        "name": "layerIDs",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            }
+                        }
+                    },
+                    {
+                        "name": "traitName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "atTime",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AnsibleInventoryScanDTO": {
+                "required": [
+                    "setupFacts",
+                    "yumInstalled",
+                    "yumRepos",
+                    "yumUpdates"
+                ],
+                "type": "object",
+                "properties": {
+                    "setupFacts": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object"
+                        }
+                    },
+                    "yumInstalled": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object"
+                        }
+                    },
+                    "yumRepos": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object"
+                        }
+                    },
+                    "yumUpdates": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object"
+                        }
+                    }
+                }
             },
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/AnsibleInventoryScanDTO"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
-    },
-    "/api/v{version}/Attribute/getMergedAttributesWithName": {
-      "get": {
-        "tags": [
-          "Attribute"
-        ],
-        "summary": "",
-        "operationId": "GetMergedAttributesWithName",
-        "parameters": [
-          {
-            "name": "name",
-            "in": "query",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": ""
-            }
-          },
-          {
-            "name": "layerIDs",
-            "in": "query",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "description": ""
-            }
-          },
-          {
-            "name": "atTime",
-            "in": "query",
-            "description": "",
-            "schema": {
-              "type": "string",
-              "description": "",
-              "format": "date-time",
-              "nullable": true
-            }
-          },
-          {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CIAttributeDTO"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CIAttributeDTO"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CIAttributeDTO"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
-    },
-    "/api/v{version}/Attribute/getMergedAttributes": {
-      "get": {
-        "tags": [
-          "Attribute"
-        ],
-        "summary": "",
-        "operationId": "GetMergedAttributes",
-        "parameters": [
-          {
-            "name": "ciids",
-            "in": "query",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "description": ""
-            }
-          },
-          {
-            "name": "layerIDs",
-            "in": "query",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "description": ""
-            }
-          },
-          {
-            "name": "atTime",
-            "in": "query",
-            "description": "",
-            "schema": {
-              "type": "string",
-              "description": "",
-              "format": "date-time",
-              "nullable": true
-            }
-          },
-          {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CIAttributeDTO"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CIAttributeDTO"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CIAttributeDTO"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
-    },
-    "/api/v{version}/Attribute/bulkReplaceAttributesInLayer": {
-      "post": {
-        "tags": [
-          "Attribute"
-        ],
-        "summary": "bulk replace all attributes in specified layer",
-        "operationId": "BulkReplaceAttributesInLayer",
-        "parameters": [
-          {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "description": "",
-          "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
-              }
-            },
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkCIAttributeLayerScopeDTO"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
-    },
-    "/api/v{version}/CI/getAllCITypes": {
-      "get": {
-        "tags": [
-          "CI"
-        ],
-        "summary": "list of all CI-types",
-        "operationId": "GetAllCITypes",
-        "parameters": [
-          {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CITypeDTO"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CITypeDTO"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CITypeDTO"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
-    },
-    "/api/v{version}/CI/getAllCIIDs": {
-      "get": {
-        "tags": [
-          "CI"
-        ],
-        "summary": "list of all CI-IDs",
-        "operationId": "GetAllCIIDs",
-        "parameters": [
-          {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
-    },
-    "/api/v{version}/CI/getCIByID": {
-      "get": {
-        "tags": [
-          "CI"
-        ],
-        "summary": "single CI by CI-ID",
-        "operationId": "GetCIByID",
-        "parameters": [
-          {
-            "name": "layerIDs",
-            "in": "query",
-            "description": "Specifies which layers contribute to the result, and in which order",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "description": "Specifies which layers contribute to the result, and in which order"
-            }
-          },
-          {
-            "name": "CIID",
-            "in": "query",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "atTime",
-            "in": "query",
-            "description": "Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)",
-            "schema": {
-              "type": "string",
-              "description": "Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)",
-              "format": "date-time",
-              "nullable": true
-            }
-          },
-          {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/CIDTO"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CIDTO"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CIDTO"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
-    },
-    "/api/v{version}/CI/getCIsByID": {
-      "get": {
-        "tags": [
-          "CI"
-        ],
-        "summary": "multiple CIs by CI-ID\r\n!Watch out for the query URL getting too long because of a lot of CIIDs!\r\nTODO: consider using POST",
-        "operationId": "GetCIsByID",
-        "parameters": [
-          {
-            "name": "layerIDs",
-            "in": "query",
-            "description": "Specifies which layers contribute to the result, and in which order",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "description": "Specifies which layers contribute to the result, and in which order"
-            }
-          },
-          {
-            "name": "CIIDs",
-            "in": "query",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "description": ""
-            }
-          },
-          {
-            "name": "atTime",
-            "in": "query",
-            "description": "Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)",
-            "schema": {
-              "type": "string",
-              "description": "Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)",
-              "format": "date-time",
-              "nullable": true
-            }
-          },
-          {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CIDTO"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CIDTO"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CIDTO"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
-    },
-    "/api/v{version}/CI/getCIIDsOfNonEmptyCIs": {
-      "get": {
-        "tags": [
-          "CI"
-        ],
-        "summary": "",
-        "operationId": "GetCIIDsOfNonEmptyCIs",
-        "parameters": [
-          {
-            "name": "layerIDs",
-            "in": "query",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "description": ""
-            }
-          },
-          {
-            "name": "atTime",
-            "in": "query",
-            "description": "",
-            "schema": {
-              "type": "string",
-              "description": "",
-              "format": "date-time",
-              "nullable": true
-            }
-          },
-          {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "format": "uuid"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "format": "uuid"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "format": "uuid"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
-    },
-    "/graphql": {
-      "post": {
-        "tags": [
-          "GraphQL"
-        ],
-        "operationId": "Index",
-        "requestBody": {
-          "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/GraphQLQuery"
-              }
-            },
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GraphQLQuery"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GraphQLQuery"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/GraphQLQuery"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
-    },
-    "/graphql-debug": {
-      "post": {
-        "tags": [
-          "GraphQL"
-        ],
-        "operationId": "Debug",
-        "requestBody": {
-          "content": {
-            "application/json-patch+json": {
-              "schema": {
-                "$ref": "#/components/schemas/GraphQLQuery"
-              }
-            },
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GraphQLQuery"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GraphQLQuery"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/GraphQLQuery"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
-    },
-    "/api/v{version}/Layer/getAllLayers": {
-      "get": {
-        "tags": [
-          "Layer"
-        ],
-        "summary": "list of all layers",
-        "operationId": "GetAllLayers",
-        "parameters": [
-          {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LayerDTO"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LayerDTO"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LayerDTO"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
-    },
-    "/api/v{version}/Layer/getLayerByName": {
-      "get": {
-        "tags": [
-          "Layer"
-        ],
-        "summary": "get a layer by name",
-        "operationId": "GetLayerByName",
-        "parameters": [
-          {
-            "name": "layerName",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/LayerDTO"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LayerDTO"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LayerDTO"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
-    },
-    "/api/v{version}/Layer/getLayersByName": {
-      "get": {
-        "tags": [
-          "Layer"
-        ],
-        "summary": "get layers by name",
-        "operationId": "GetLayersByName",
-        "parameters": [
-          {
-            "name": "layerNames",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
+            "AttributeValueType": {
+                "enum": [
+                    "Text",
+                    "MultilineText",
+                    "Integer",
+                    "JSON",
+                    "YAML"
+                ],
                 "type": "string"
-              }
-            }
-          },
-          {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LayerDTO"
-                  }
+            },
+            "AttributeValueDTO": {
+                "required": [
+                    "isArray",
+                    "type",
+                    "values"
+                ],
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "$ref": "#/components/schemas/AttributeValueType"
+                    },
+                    "isArray": {
+                        "type": "boolean"
+                    },
+                    "values": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
                 }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LayerDTO"
-                  }
+            },
+            "AttributeState": {
+                "enum": [
+                    "New",
+                    "Changed",
+                    "Removed",
+                    "Renewed"
+                ],
+                "type": "string"
+            },
+            "CIAttributeDTO": {
+                "required": [
+                    "ciid",
+                    "id",
+                    "name",
+                    "state",
+                    "value"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "value": {
+                        "$ref": "#/components/schemas/AttributeValueDTO"
+                    },
+                    "ciid": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/AttributeState"
+                    }
                 }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LayerDTO"
-                  }
+            },
+            "FragmentDTO": {
+                "required": [
+                    "ciid",
+                    "name",
+                    "value"
+                ],
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "$ref": "#/components/schemas/AttributeValueDTO"
+                    },
+                    "ciid": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
                 }
-              }
+            },
+            "BulkCIAttributeLayerScopeDTO": {
+                "required": [
+                    "fragments",
+                    "layerID",
+                    "namePrefix"
+                ],
+                "type": "object",
+                "properties": {
+                    "namePrefix": {
+                        "type": "string"
+                    },
+                    "layerID": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "fragments": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FragmentDTO"
+                        }
+                    }
+                }
+            },
+            "CIDTO": {
+                "required": [
+                    "attributes",
+                    "id"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "attributes": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/CIAttributeDTO"
+                        },
+                        "readOnly": true
+                    }
+                }
+            },
+            "GraphQLQuery": {
+                "type": "object",
+                "properties": {
+                    "operationName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "namedQuery": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "query": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "variables": {
+                        "type": "object",
+                        "nullable": true
+                    }
+                }
+            },
+            "LayerDTO": {
+                "required": [
+                    "id",
+                    "name"
+                ],
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "PredicateDTO": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "wordingFrom": {
+                        "type": "string",
+                        "nullable": true,
+                        "readOnly": true
+                    },
+                    "wordingTo": {
+                        "type": "string",
+                        "nullable": true,
+                        "readOnly": true
+                    }
+                }
+            },
+            "RelationState": {
+                "enum": [
+                    "New",
+                    "Removed",
+                    "Renewed"
+                ],
+                "type": "string"
+            },
+            "RelationDTO": {
+                "required": [
+                    "fromCIID",
+                    "id",
+                    "predicate",
+                    "predicateID",
+                    "state",
+                    "toCIID"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "fromCIID": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "toCIID": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "predicateID": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "predicate": {
+                        "$ref": "#/components/schemas/PredicateDTO"
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/RelationState"
+                    }
+                }
+            },
+            "RelatedCIDTO": {
+                "required": [
+                    "fromCIID",
+                    "predicateID",
+                    "state",
+                    "toCI"
+                ],
+                "type": "object",
+                "properties": {
+                    "fromCIID": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    },
+                    "toCI": {
+                        "$ref": "#/components/schemas/CIDTO"
+                    },
+                    "predicateID": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/RelationState"
+                    }
+                }
+            },
+            "EffectiveTraitDTO": {
+                "required": [
+                    "traitAttributes",
+                    "traitRelations"
+                ],
+                "type": "object",
+                "properties": {
+                    "traitAttributes": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/CIAttributeDTO"
+                        },
+                        "readOnly": true
+                    },
+                    "traitRelations": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/RelatedCIDTO"
+                            }
+                        },
+                        "readOnly": true
+                    }
+                }
+            },
+            "EffectiveTraitSetDTO": {
+                "required": [
+                    "effectiveTraits",
+                    "underlyingCI"
+                ],
+                "type": "object",
+                "properties": {
+                    "underlyingCI": {
+                        "$ref": "#/components/schemas/CIDTO"
+                    },
+                    "effectiveTraits": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/EffectiveTraitDTO"
+                        },
+                        "readOnly": true
+                    }
+                }
             }
-          }
         },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
-    },
-    "/api/v{version}/Trait/getEffectiveTraitSetsForTraitName": {
-      "get": {
-        "tags": [
-          "Trait"
-        ],
-        "operationId": "GetEffectiveTraitSetsForTraitName",
-        "parameters": [
-          {
-            "name": "layerIDs",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "int64"
-              }
-            }
-          },
-          {
-            "name": "traitName",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "atTime",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time",
-              "nullable": true
-            }
-          },
-          {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EffectiveTraitSetDTO"
-                  }
+        "securitySchemes": {
+            "oauth2": {
+                "type": "oauth2",
+                "flows": {
+                    "clientCredentials": {
+                        "authorizationUrl": "https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/auth",
+                        "tokenUrl": "https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/token",
+                        "scopes": {
+
+                        }
+                    }
                 }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EffectiveTraitSetDTO"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EffectiveTraitSetDTO"
-                  }
-                }
-              }
             }
-          }
-        },
-        "security": [
-          {
-            "oauth2": [ ]
-          }
-        ]
-      }
+        }
     }
-  },
-  "components": {
-    "schemas": {
-      "AnsibleInventoryScanDTO": {
-        "required": [
-          "setupFacts",
-          "yumInstalled",
-          "yumRepos",
-          "yumUpdates"
-        ],
-        "type": "object",
-        "properties": {
-          "setupFacts": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object"
-            }
-          },
-          "yumInstalled": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object"
-            }
-          },
-          "yumRepos": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object"
-            }
-          },
-          "yumUpdates": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object"
-            }
-          }
-        }
-      },
-      "AttributeValueType": {
-        "enum": [
-          "Text",
-          "MultilineText",
-          "Integer",
-          "JSON",
-          "YAML"
-        ],
-        "type": "string"
-      },
-      "AttributeValueDTO": {
-        "required": [
-          "isArray",
-          "type",
-          "values"
-        ],
-        "type": "object",
-        "properties": {
-          "type": {
-            "$ref": "#/components/schemas/AttributeValueType"
-          },
-          "isArray": {
-            "type": "boolean"
-          },
-          "values": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "AttributeState": {
-        "enum": [
-          "New",
-          "Changed",
-          "Removed",
-          "Renewed"
-        ],
-        "type": "string"
-      },
-      "CIAttributeDTO": {
-        "required": [
-          "ciid",
-          "id",
-          "name",
-          "state",
-          "value"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "readOnly": true
-          },
-          "name": {
-            "type": "string",
-            "readOnly": true
-          },
-          "value": {
-            "$ref": "#/components/schemas/AttributeValueDTO"
-          },
-          "ciid": {
-            "type": "string",
-            "format": "uuid",
-            "readOnly": true
-          },
-          "state": {
-            "$ref": "#/components/schemas/AttributeState"
-          }
-        }
-      },
-      "FragmentDTO": {
-        "required": [
-          "ciid",
-          "name",
-          "value"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "$ref": "#/components/schemas/AttributeValueDTO"
-          },
-          "ciid": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
-      },
-      "BulkCIAttributeLayerScopeDTO": {
-        "required": [
-          "fragments",
-          "layerID",
-          "namePrefix"
-        ],
-        "type": "object",
-        "properties": {
-          "namePrefix": {
-            "type": "string"
-          },
-          "layerID": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "fragments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FragmentDTO"
-            }
-          }
-        }
-      },
-      "CITypeDTO": {
-        "required": [
-          "id"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          }
-        }
-      },
-      "CIDTO": {
-        "required": [
-          "attributes",
-          "id",
-          "type"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "readOnly": true
-          },
-          "type": {
-            "$ref": "#/components/schemas/CITypeDTO"
-          },
-          "attributes": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/CIAttributeDTO"
-            },
-            "readOnly": true
-          }
-        }
-      },
-      "GraphQLQuery": {
-        "type": "object",
-        "properties": {
-          "operationName": {
-            "type": "string",
-            "nullable": true
-          },
-          "namedQuery": {
-            "type": "string",
-            "nullable": true
-          },
-          "query": {
-            "type": "string",
-            "nullable": true
-          },
-          "variables": {
-            "type": "object",
-            "nullable": true
-          }
-        }
-      },
-      "LayerDTO": {
-        "required": [
-          "id",
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          }
-        }
-      },
-      "RelationState": {
-        "enum": [
-          "New",
-          "Removed",
-          "Renewed"
-        ],
-        "type": "string"
-      },
-      "RelatedCIDTO": {
-        "required": [
-          "fromCIID",
-          "predicateID",
-          "state",
-          "toCI"
-        ],
-        "type": "object",
-        "properties": {
-          "fromCIID": {
-            "type": "string",
-            "format": "uuid",
-            "readOnly": true
-          },
-          "toCI": {
-            "$ref": "#/components/schemas/CIDTO"
-          },
-          "predicateID": {
-            "type": "string",
-            "readOnly": true
-          },
-          "state": {
-            "$ref": "#/components/schemas/RelationState"
-          }
-        }
-      },
-      "EffectiveTraitDTO": {
-        "required": [
-          "traitAttributes",
-          "traitRelations"
-        ],
-        "type": "object",
-        "properties": {
-          "traitAttributes": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/CIAttributeDTO"
-            },
-            "readOnly": true
-          },
-          "traitRelations": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/RelatedCIDTO"
-              }
-            },
-            "readOnly": true
-          }
-        }
-      },
-      "EffectiveTraitSetDTO": {
-        "required": [
-          "effectiveTraits",
-          "underlyingCI"
-        ],
-        "type": "object",
-        "properties": {
-          "underlyingCI": {
-            "$ref": "#/components/schemas/CIDTO"
-          },
-          "effectiveTraits": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/EffectiveTraitDTO"
-            },
-            "readOnly": true
-          }
-        }
-      }
-    },
-    "securitySchemes": {
-      "oauth2": {
-        "type": "oauth2",
-        "flows": {
-          "clientCredentials": {
-            "authorizationUrl": "https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/auth",
-            "tokenUrl": "https://host.docker.internal:8443/auth/realms/landscape/protocol/openid-connect/token",
-            "scopes": { }
-          }
-        }
-      }
-    }
-  }
 }

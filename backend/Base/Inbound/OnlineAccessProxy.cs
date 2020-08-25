@@ -100,14 +100,14 @@ namespace Landscape.Base.Inbound
             return await plugin.GetLayerAccessProxy(layer).GetRelation(fromCIID, toCIID, predicateID, atTime);
         }
 
-        public async IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(IRelationSelection rl, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
-        {
-            await foreach (var (proxy, layer) in GetAccessProxies(layerset, trans))
-            {
-                await foreach (var relation in proxy.GetRelations(rl, atTime).Select(a => (a, layer.ID)))
-                    yield return relation;
-            }
-        }
+        //public async IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(IRelationSelection rl, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
+        //{
+        //    await foreach (var (proxy, layer) in GetAccessProxies(layerset, trans))
+        //    {
+        //        await foreach (var relation in proxy.GetRelations(rl, atTime).Select(a => (a, layer.ID)))
+        //            yield return relation;
+        //    }
+        //}
         public async IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);

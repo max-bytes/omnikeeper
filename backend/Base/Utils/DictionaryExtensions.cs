@@ -45,15 +45,17 @@ namespace Landscape.Base.Utils
             return dictionary;
         }
 
-        public static void TryGetValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, out TValue? t) where TValue : struct
+        public static bool TryGetValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, out TValue? t) where TValue : struct
         {
             if (dictionary.ContainsKey(key))
             {
                 t = dictionary[key];
+                return true;
             }
             else
             {
                 t = null;
+                return false;
             }
         }
     }

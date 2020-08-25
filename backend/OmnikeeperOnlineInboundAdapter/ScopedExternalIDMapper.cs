@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Inbound;
+using Landscape.Base.Service;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,6 +12,6 @@ namespace OnlineInboundAdapterOmnikeeper
         {
         }
 
-        public override Guid? DeriveCIIDFromExternalID(ExternalIDGuid externalID) => externalID.ID;
+        public override ICIIdentificationMethod GetIdentificationMethod(ExternalIDGuid externalID) => CIIdentificationMethodByCIID.Build(externalID.ID);
     }
 }

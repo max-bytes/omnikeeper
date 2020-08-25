@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Model;
+using Landscape.Base.Service;
 using Landscape.Base.Utils;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -29,7 +30,7 @@ namespace Landscape.Base.Inbound
 
         protected abstract Task<IEnumerable<EID>> GetExternalIDs();
 
-        public async Task<bool> Update(ICIModel ciModel, NpgsqlTransaction trans, ILogger logger)
+        public async Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, NpgsqlTransaction trans, ILogger logger)
         {
             await mapper.Setup();
 
@@ -54,15 +55,17 @@ namespace Landscape.Base.Inbound
                 {
                     logger.LogInformation($"CI with external ID {externalID} does not exist internally, creating...");
 
-                    var derivedCIID = mapper.DeriveCIIDFromExternalID(externalID); // TODO: rework 
+                    ICIIdentificationMethod identificationMethod = mapper.GetIdentificationMethod(externalID);
+                    var foundCIID = await CIMappingService.TryToMatch(externalID.ConvertToString(), identificationMethod, attributeModel, null, TimeThreshold.BuildLatest(), trans, logger);
+
                     Guid ciid;
-                    if (derivedCIID.HasValue)
+                    if (foundCIID.HasValue)
                     {
-                        if (await ciModel.CIIDExists(derivedCIID.Value, trans)) // TODO: performance improvements, do not check every ci separately
-                            ciid = derivedCIID.Value;
+                        if (await ciModel.CIIDExists(foundCIID.Value, trans)) // TODO: performance improvements, do not check every ci separately
+                            ciid = foundCIID.Value;
                         else
                         {
-                            ciid = await ciModel.CreateCI(trans, derivedCIID.Value);
+                            ciid = await ciModel.CreateCI(trans, foundCIID.Value);
                             logger.LogInformation($"Created CI with CIID {ciid}");
                         }
                     } else

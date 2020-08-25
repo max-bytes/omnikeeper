@@ -2,6 +2,7 @@
 using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO.Ingest;
 using Landscape.Base.Model;
+using Landscape.Base.Service;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Service;
@@ -68,7 +69,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                     var fqdn = facts["ansible_fqdn"].Value<string>();
                     var ciName = fqdn;
 
-                    var attributeFragments = new List<BulkCICandidateAttributeData.Fragment>()
+                    var attributeFragments = new List<CICandidateAttributeData.Fragment>()
                     {
                         JValue2TextAttribute(facts, "ansible_architecture", "cpu_architecture"),
                         JValue2JSONAttribute(facts, "ansible_cmdline", "ansible.inventory.cmdline"),
@@ -91,8 +92,8 @@ namespace LandscapeRegistry.Controllers.Ingest
                         String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
                     };
-                    var attributes = BulkCICandidateAttributeData.Build(attributeFragments);
-                    var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }), attributes);
+                    var attributes = CICandidateAttributeData.Build(attributeFragments);
+                    var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }, attributes, searchLayers), attributes);
                     cis.Add(tempCIID, ciCandidate);
 
                     baseCIs.Add(fqdn, (tempCIID, ciCandidate));
@@ -103,7 +104,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                         var tempMountCIID = Guid.NewGuid();
                         var mountValue = mount["mount"].Value<string>();
                         var ciNameMount = $"{fqdn}:{mountValue}";
-                        var attributeFragmentsMount = new List<BulkCICandidateAttributeData.Fragment>
+                        var attributeFragmentsMount = new List<CICandidateAttributeData.Fragment>
                     {
                         JValue2IntegerAttribute(mount, "block_available"),
                         JValue2IntegerAttribute(mount, "block_size"),
@@ -121,10 +122,11 @@ namespace LandscapeRegistry.Controllers.Ingest
                         JValue2TextAttribute(mount, "uuid"),
                         String2Attribute(ICIModel.NameAttribute, ciNameMount)
                     };
+                        var attributeData = CICandidateAttributeData.Build(attributeFragmentsMount);
                         cis.Add(tempMountCIID, CICandidate.Build(
                             // TODO: ansible mounts have an uuid, find out what that is and if they can be used for identification
-                            CIIdentificationMethodByData.Build(new string[] { "device", "mount", ICIModel.NameAttribute }), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
-                            BulkCICandidateAttributeData.Build(attributeFragmentsMount)));
+                            CIIdentificationMethodByData.Build(new string[] { "device", "mount", ICIModel.NameAttribute }, attributeData, searchLayers), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
+                            attributeData));
 
                         relations.Add(RelationCandidate.Build(
                             CIIdentificationMethodByTemporaryCIID.Build(tempCIID),
@@ -139,7 +141,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                         var @interface = facts[jsonTokenName];
                         var tempCIIDInterface = Guid.NewGuid();
                         var ciNameInterface = $"Network Interface {interfaceName}@{fqdn}";
-                        var attributeFragmentsInterface = new List<BulkCICandidateAttributeData.Fragment>
+                        var attributeFragmentsInterface = new List<CICandidateAttributeData.Fragment>
                         {
                             JValue2TextAttribute(@interface, "device"),
                             JValue2TextAttribute(@interface, "active"),
@@ -148,9 +150,10 @@ namespace LandscapeRegistry.Controllers.Ingest
                             // TODO
                             String2Attribute(ICIModel.NameAttribute, ciNameInterface)
                         }.Where(item => item != null);
+                        var attributeData = CICandidateAttributeData.Build(attributeFragmentsInterface);
                         cis.Add(tempCIIDInterface, CICandidate.Build(
-                            CIIdentificationMethodByData.Build(new string[] { ICIModel.NameAttribute }), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
-                            BulkCICandidateAttributeData.Build(attributeFragmentsInterface)));
+                            CIIdentificationMethodByData.Build(new string[] { ICIModel.NameAttribute }, attributeData, searchLayers), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
+                            attributeData));
 
                         relations.Add(RelationCandidate.Build(
                             CIIdentificationMethodByTemporaryCIID.Build(tempCIID),
@@ -166,13 +169,13 @@ namespace LandscapeRegistry.Controllers.Ingest
                     var fqdn = hostID; // TODO: check if using the HostID as fqdn is ok
                     var ciName = hostID;
 
-                    var attributeFragments = new List<BulkCICandidateAttributeData.Fragment>()
+                    var attributeFragments = new List<CICandidateAttributeData.Fragment>()
                     {
                         JToken2JSONAttribute(kvInstalled.Value["results"], "yum.installed"),
                         String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
                     };
-                    var attributes = BulkCICandidateAttributeData.Build(attributeFragments);
+                    var attributes = CICandidateAttributeData.Build(attributeFragments);
 
                     if (baseCIs.TryGetValue(fqdn, out var @base))
                     { // attach to base CI
@@ -180,7 +183,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                     }
                     else
                     { // treat as new CI
-                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }), attributes));
+                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }, attributes, searchLayers), attributes));
                     }
                 }
                 foreach (var kvRepos in data.YumRepos)
@@ -189,13 +192,13 @@ namespace LandscapeRegistry.Controllers.Ingest
                     var fqdn = hostID; // TODO: check if using the HostID as fqdn is ok
                     var ciName = hostID;
 
-                    var attributeFragments = new List<BulkCICandidateAttributeData.Fragment>()
+                    var attributeFragments = new List<CICandidateAttributeData.Fragment>()
                     {
                         JToken2JSONAttribute(kvRepos.Value["results"], "yum.repos"),
                         String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
                     };
-                    var attributes = BulkCICandidateAttributeData.Build(attributeFragments);
+                    var attributes = CICandidateAttributeData.Build(attributeFragments);
 
                     if (baseCIs.TryGetValue(fqdn, out var @base))
                     { // attach to base CI
@@ -203,7 +206,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                     }
                     else
                     { // treat as new CI
-                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }), attributes));
+                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }, attributes, searchLayers), attributes));
                     }
                 }
                 foreach (var kvUpdates in data.YumUpdates)
@@ -212,13 +215,13 @@ namespace LandscapeRegistry.Controllers.Ingest
                     var fqdn = hostID; // TODO: check if using the HostID as fqdn is ok
                     var ciName = hostID;
 
-                    var attributeFragments = new List<BulkCICandidateAttributeData.Fragment>()
+                    var attributeFragments = new List<CICandidateAttributeData.Fragment>()
                     {
                         JToken2JSONAttribute(kvUpdates.Value["results"], "yum.updates"),
                         String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
                     };
-                    var attributes = BulkCICandidateAttributeData.Build(attributeFragments);
+                    var attributes = CICandidateAttributeData.Build(attributeFragments);
 
                     if (baseCIs.TryGetValue(fqdn, out var @base))
                     { // attach to base CI
@@ -226,12 +229,12 @@ namespace LandscapeRegistry.Controllers.Ingest
                     }
                     else
                     { // treat as new CI
-                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }), attributes));
+                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }, attributes, searchLayers), attributes));
                     }
                 }
 
                 var ingestData = IngestData.Build(cis, relations);
-                var (idMapping, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, searchLayers, user, logger);
+                var (idMapping, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user, logger);
 
                 logger.LogInformation($"Ansible Ingest successful; ingested {idMapping.Count} CIs, {numIngestedRelations} relations");
 
@@ -243,7 +246,7 @@ namespace LandscapeRegistry.Controllers.Ingest
             }
         }
 
-        private BulkCICandidateAttributeData.Fragment Try2(Func<BulkCICandidateAttributeData.Fragment> f)
+        private CICandidateAttributeData.Fragment Try2(Func<CICandidateAttributeData.Fragment> f)
         {
             try
             {
@@ -255,33 +258,33 @@ namespace LandscapeRegistry.Controllers.Ingest
             }
         }
 
-        private BulkCICandidateAttributeData.Fragment String2Attribute(string name, string value) =>
-            BulkCICandidateAttributeData.Fragment.Build(name, AttributeScalarValueText.Build(value));
-        private BulkCICandidateAttributeData.Fragment String2IntegerAttribute(string name, long value) =>
-            BulkCICandidateAttributeData.Fragment.Build(name, AttributeValueIntegerScalar.Build(value));
+        private CICandidateAttributeData.Fragment String2Attribute(string name, string value) =>
+            CICandidateAttributeData.Fragment.Build(name, AttributeScalarValueText.Build(value));
+        private CICandidateAttributeData.Fragment String2IntegerAttribute(string name, long value) =>
+            CICandidateAttributeData.Fragment.Build(name, AttributeValueIntegerScalar.Build(value));
 
-        private BulkCICandidateAttributeData.Fragment JValue2TextAttribute(JToken o, string jsonName, string attributeName = null) =>
-            BulkCICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeScalarValueText.Build(o[jsonName].Value<string>()));
-        private BulkCICandidateAttributeData.Fragment JValue2IntegerAttribute(JToken o, string name, string attributeName = null) =>
-            BulkCICandidateAttributeData.Fragment.Build(attributeName ?? name, AttributeValueIntegerScalar.Build(o[name].Value<long>()));
-        private BulkCICandidateAttributeData.Fragment JValue2JSONAttribute(JToken o, string jsonName, string attributeName = null) =>
-            BulkCICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeScalarValueJSON.Build(o[jsonName]));
-        private BulkCICandidateAttributeData.Fragment JValuePath2TextAttribute(JToken o, string jsonPath, string attributeName)
+        private CICandidateAttributeData.Fragment JValue2TextAttribute(JToken o, string jsonName, string attributeName = null) =>
+            CICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeScalarValueText.Build(o[jsonName].Value<string>()));
+        private CICandidateAttributeData.Fragment JValue2IntegerAttribute(JToken o, string name, string attributeName = null) =>
+            CICandidateAttributeData.Fragment.Build(attributeName ?? name, AttributeValueIntegerScalar.Build(o[name].Value<long>()));
+        private CICandidateAttributeData.Fragment JValue2JSONAttribute(JToken o, string jsonName, string attributeName = null) =>
+            CICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeScalarValueJSON.Build(o[jsonName]));
+        private CICandidateAttributeData.Fragment JValuePath2TextAttribute(JToken o, string jsonPath, string attributeName)
         {
             var jo = o.SelectToken(jsonPath);
-            return BulkCICandidateAttributeData.Fragment.Build(attributeName, AttributeScalarValueText.Build(jo.Value<string>()));
+            return CICandidateAttributeData.Fragment.Build(attributeName, AttributeScalarValueText.Build(jo.Value<string>()));
         }
-        private BulkCICandidateAttributeData.Fragment JValue2TextArrayAttribute(JToken o, string jsonName, string attributeName = null)
+        private CICandidateAttributeData.Fragment JValue2TextArrayAttribute(JToken o, string jsonName, string attributeName = null)
         {
-            return BulkCICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeArrayValueText.Build(o[jsonName].Values<string>().ToArray()));
+            return CICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeArrayValueText.Build(o[jsonName].Values<string>().ToArray()));
         }
-        private BulkCICandidateAttributeData.Fragment JArray2JSONArrayAttribute(JArray array, string attributeName)
+        private CICandidateAttributeData.Fragment JArray2JSONArrayAttribute(JArray array, string attributeName)
         {
-            return BulkCICandidateAttributeData.Fragment.Build(attributeName, AttributeArrayValueJSON.Build(array.ToArray()));
+            return CICandidateAttributeData.Fragment.Build(attributeName, AttributeArrayValueJSON.Build(array.ToArray()));
         }
-        private BulkCICandidateAttributeData.Fragment JToken2JSONAttribute(JToken o, string attributeName)
+        private CICandidateAttributeData.Fragment JToken2JSONAttribute(JToken o, string attributeName)
         {
-            return BulkCICandidateAttributeData.Fragment.Build(attributeName, AttributeScalarValueJSON.Build(o));
+            return CICandidateAttributeData.Fragment.Build(attributeName, AttributeScalarValueJSON.Build(o));
         }
     }
 }

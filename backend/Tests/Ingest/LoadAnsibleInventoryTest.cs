@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Controllers.Ingest;
 using LandscapeRegistry.Entity.AttributeValues;
@@ -7,6 +8,7 @@ using LandscapeRegistry.Model.Decorators;
 using LandscapeRegistry.Service;
 using LandscapeRegistry.Utils;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.InternalAbstractions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -57,8 +59,8 @@ namespace Tests.Ingest
             var userGUID = new Guid("7dc848b7-881d-4785-9f25-985e9b6f2715");
 
             var dbcb = new DBConnectionBuilder();
-            //using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            using var conn = dbcb.Build("landscape_prototype", false, true);
+            using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            //using var conn = dbcb.Build("landscape_prototype", false, true);
             var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var layerModel = new LayerModel(conn);
             var userModel = new UserInDatabaseModel(conn);
@@ -67,7 +69,7 @@ namespace Tests.Ingest
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
             var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel, conn), relationModel, conn);
 
-            Layer layer1 = await layerModel.GetLayer("Inventory Scan", null);
+            Layer layer1 = await layerModel.CreateLayer("Inventory Scan", null);
             
             // mock the current user service
             var mockCurrentUserService = new Mock<ICurrentUserService>();
@@ -85,30 +87,45 @@ namespace Tests.Ingest
             await predicateModel.InsertOrUpdate("has_mounted_device", "has mounted device", "is mounted at host", AnchorState.Active, PredicateModel.DefaultConstraits, null);
 
             var controller = new AnsibleIngestController(ingestDataService, layerModel, mockCurrentUserService.Object, mockAuthorizationService.Object, NullLogger<AnsibleIngestController>.Instance);
-            await PerformIngest(insertLayer.ID, layerSet.LayerIDs, hosts, controller);
 
-            //var cis = await ciModel.GetMergedCIs(layerSet, false, null, DateTimeOffset.Now, ingestData.CICandidates.Select(cic => temp2finalCIIDMap[cic.Key]));
-            //Assert.That(cis.Select(ci => ci.Name), Is.SupersetOf(hosts));
+            var response = await PerformIngest(controller, hosts, insertLayer, layerSet);
+            Assert.IsTrue(response is OkResult);
+
+            var cis = await ciModel.GetMergedCIs(layerSet, new AllCIIDsSelection(), false, null, TimeThreshold.BuildLatest());
+            Assert.That(cis.Select(ci => ci.Name), Is.SupersetOf(hosts));
+            Assert.IsTrue(cis.Any(ci => ci.Name == "h1jmplx01.mhx.at:/"));
+            Assert.IsTrue(cis.Any(ci => ci.Name == "h1jmplx01.mhx.at:/boot"));
+            Assert.IsTrue(cis.Any(ci => ci.Name == "Network Interface lo@h1jmplx01.mhx.at"));
+            Assert.IsTrue(cis.Any(ci => ci.Name == "h1lscapet01.mhx.local:/"));
+            Assert.IsTrue(cis.Any(ci => ci.Name == "h1lscapet01.mhx.local:/boot"));
+            Assert.IsTrue(cis.Any(ci => ci.Name == "Network Interface eth0@h1lscapet01.mhx.local"));
+            Assert.AreEqual(34, cis.Count());
+            // TODO: more asserts
+
+            // perform ingest again, ci count must stay equal
+            var response2 = await PerformIngest(controller, hosts, insertLayer, layerSet);
+            Assert.IsTrue(response2 is OkResult);
+            var cis2 = await ciModel.GetMergedCIs(layerSet, new AllCIIDsSelection(), false, null, TimeThreshold.BuildLatest());
+            Assert.AreEqual(34, cis2.Count());
         }
 
-        private async Task PerformIngest(long writeLayerID, long[] searchLayerIDs, string[] hosts, AnsibleIngestController controller)
+        private async Task<ActionResult> PerformIngest(AnsibleIngestController controller, string[] hosts, Layer insertLayer, LayerSet searchLayerSet)
         {
-            //var cis = new Dictionary<Guid, CICandidate>();
-            //var relations = new List<RelationCandidate>();
-            foreach (var fqdn in hosts)
+            var setupFacts = hosts.ToDictionary(fqdn => fqdn, fqdn =>
             {
                 var f = LoadFile($"{fqdn}\\setup_facts.json");
                 var jo = JObject.Parse(f);
+                return jo;
+            });
 
-                await controller.IngestAnsibleInventoryScan(writeLayerID, searchLayerIDs, new Landscape.Base.Entity.DTO.Ingest.AnsibleInventoryScanDTO()
-                {
-                    SetupFacts = new Dictionary<string, JObject>() { { fqdn, jo } }
-                });
-            }
-
-            //var ingestData = IngestData.Build(cis, relations);
-            //var temp2finalCIIDMap = await ingestDataService.Ingest(ingestData, writeLayer, searchLayers, user, NullLogger.Instance);
-            //return (ingestData, temp2finalCIIDMap);
+            var response = await controller.IngestAnsibleInventoryScan(insertLayer.ID, searchLayerSet.LayerIDs, new Landscape.Base.Entity.DTO.Ingest.AnsibleInventoryScanDTO()
+            {
+                SetupFacts = setupFacts,
+                YumInstalled = new Dictionary<string, JObject>() { },
+                YumRepos = new Dictionary<string, JObject>() { },
+                YumUpdates = new Dictionary<string, JObject>() { },
+            });
+            return response;
         }
     }
 }

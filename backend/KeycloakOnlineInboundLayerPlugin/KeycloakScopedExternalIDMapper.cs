@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Inbound;
+using Landscape.Base.Service;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,6 +12,6 @@ namespace OnlineInboundAdapterKeycloak
         {
         }
 
-        public override Guid? DeriveCIIDFromExternalID(ExternalIDString externalID) => null;
+        public override ICIIdentificationMethod GetIdentificationMethod(ExternalIDString externalID) => CIIdentificationMethodNoop.Build();
     }
 }

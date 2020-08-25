@@ -18,6 +18,8 @@ namespace OnlineInboundAdapterOmnikeeper
         private readonly ScopedExternalIDMapper mapper;
         private readonly Layer layer;
 
+        private const string ClientVersion = "1";
+
         public string Name => "Omnikeeper";
 
         public LayerAccessProxy(string[] remoteLayerNames, ILandscapeRegistryRESTAPIClient client, ScopedExternalIDMapper mapper, Layer layer)
@@ -39,9 +41,29 @@ namespace OnlineInboundAdapterOmnikeeper
                 {
                     // TODO: because we use a code generator, it does not use our own DTO classes but generates its own
                     // and we need to manually do a mapping here -> sucks, make that work
-                    yield return CIAttribute.Build(attribute.Id, attribute.Name, attribute.Ciid,
+                    yield return CIAttribute.Build(attribute.Id, attribute.Name, ciid.Value,
                         AttributeValueBuilder.Build(Landscape.Base.Entity.DTO.AttributeValueDTO.Build(attribute.Value.Values.ToArray(), attribute.Value.IsArray, (LandscapeRegistry.Entity.AttributeValues.AttributeValueType)attribute.Value.Type)),
                         Landscape.Base.Entity.AttributeState.New, -1); // TODO: changeset
+                }
+            }
+        }
+
+        private IEnumerable<Relation> RelationDTO2Regular(IEnumerable<RelationDTO> dto)
+        {
+            foreach (var relation in dto)
+            {
+                // we need to reduce the relations to those whose related CIs are actually present in the mapper, to ensure that only relations of mapped cis are fetched
+                var fromCIID = mapper.GetCIID(new ExternalIDGuid(relation.FromCIID));
+                var toCIID = mapper.GetCIID(new ExternalIDGuid(relation.ToCIID));
+
+                if (fromCIID.HasValue && toCIID.HasValue)
+                {
+                    // TODO: because we use a code generator, it does not use our own DTO classes but generates its own
+                    // and we need to manually do a mapping here -> sucks, make that work
+                    yield return Relation.Build(relation.Id, fromCIID.Value, toCIID.Value,
+                        // TODO: can we just create a predicate on the fly?!? ignoring what predicates are actually present in the omnikeeper instance?
+                        Predicate.Build(relation.Predicate.Id, relation.Predicate.WordingFrom, relation.Predicate.WordingTo, AnchorState.Active, PredicateConstraints.Default),
+                        Landscape.Base.Entity.RelationState.New, -1); // TODO: changeset
                 }
             }
         }
@@ -69,11 +91,11 @@ namespace OnlineInboundAdapterOmnikeeper
 
             if (IDPairs.IsEmpty()) yield break; // no ci maps, bail early
 
-            var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, "1");
+            var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
             var remoteLayerIDs = remoteLayers.Select(rl => rl.Id).ToArray();
 
             var externalIDs = IDPairs.Select(p => p.Item2.ID);
-            var attributesDTO = await client.GetMergedAttributesAsync(externalIDs, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, "1");
+            var attributesDTO = await client.GetMergedAttributesAsync(externalIDs, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion);
             foreach (var a in AttributeDTO2Regular(attributesDTO))
                 yield return a;
         }
@@ -95,10 +117,10 @@ namespace OnlineInboundAdapterOmnikeeper
 
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
-            var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, "1");
+            var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
             var remoteLayerIDs = remoteLayers.Select(rl => rl.Id).ToArray();
 
-            var attributesDTO = await client.GetMergedAttributesWithNameAsync(name, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, "1");
+            var attributesDTO = await client.GetMergedAttributesWithNameAsync(name, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion);
 
 
             foreach (var a in AttributeDTO2Regular(attributesDTO))
@@ -115,9 +137,27 @@ namespace OnlineInboundAdapterOmnikeeper
             throw new NotImplementedException(); // TODO
         }
 
-        public IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime)
+        public async IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime)
         {
-            return AsyncEnumerable.Empty<Relation>();// TODO: implement
+            await mapper.Setup();
+
+            if (!atTime.IsLatest) yield break; // TODO: implement historic information
+
+            var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
+            var remoteLayerIDs = remoteLayers.Select(rl => rl.Id).ToArray();
+
+            var relationsDTO = rl switch
+            {
+                RelationSelectionFrom f => await client.GetMergedRelationsOutgoingFromCIAsync(f.fromCIID, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion),
+                RelationSelectionWithPredicate p => await client.GetMergedRelationsWithPredicateAsync(p.predicateID, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion),
+                RelationSelectionEitherFromOrTo fot => await client.GetMergedRelationsFromOrToCIAsync(fot.ciid, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion),
+                RelationSelectionAll a => await client.GetAllMergedRelationsAsync(remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion),
+                _ => null,// must not be
+            };
+
+            // we need to reduce the relations to those whose related CIs are actually present in the mapper, to ensure that only relations of mapped cis are fetched
+            foreach (var r in RelationDTO2Regular(relationsDTO))
+                yield return r;
         }
 
         public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
