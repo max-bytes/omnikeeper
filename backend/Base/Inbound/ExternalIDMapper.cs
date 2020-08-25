@@ -21,7 +21,7 @@ namespace Landscape.Base.Inbound
 
     public class ExternalIDMapper : IExternalIDMapper
     {
-        private readonly IDictionary<string, IScopedExternalIDMapper> scopes = new Dictionary<string, IScopedExternalIDMapper>();
+        private readonly IDictionary<string, IScopedExternalIDMapper> scopes = new ConcurrentDictionary<string, IScopedExternalIDMapper>();
 
         public ExternalIDMapper()
         {
@@ -53,8 +53,6 @@ namespace Landscape.Base.Inbound
             this.string2ExtIDF = string2ExtIDF;
             this.persister = persister;
         }
-
-        //public abstract Guid? DeriveCIIDFromExternalID(EID externalID);
 
         public async Task Setup()
         {
@@ -112,7 +110,7 @@ namespace Landscape.Base.Inbound
         public Guid? GetCIID(EID externalId)
         {
             ext2int.TryGetValue(externalId, out var ciid);
-            return ciid;
+            return ciid == default ? null : new Guid?(ciid); // NOTE: guid is a value type, which is why we need to check for default and return null if so
         }
         public EID GetExternalID(Guid ciid)
         {

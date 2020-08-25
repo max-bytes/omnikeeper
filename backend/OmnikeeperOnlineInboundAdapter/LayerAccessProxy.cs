@@ -35,7 +35,7 @@ namespace OnlineInboundAdapterOmnikeeper
             foreach (var attribute in dto)
             {
                 // we force a mapping to ensure only attributes of properly mapped cis are used
-                var ciid = mapper.GetCIID(new ExternalIDGuid(attribute.Id));
+                var ciid = mapper.GetCIID(new ExternalIDGuid(attribute.Ciid));
 
                 if (ciid.HasValue)
                 {

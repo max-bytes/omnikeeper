@@ -22,6 +22,8 @@ namespace OnlineInboundAdapterOmnikeeper
         private readonly ILandscapeRegistryRESTAPIClient client;
         private readonly Config config;
 
+        private const string ClientVersion = "1";
+
         public ExternalIDManager(ILandscapeRegistryRESTAPIClient client, Config config, ScopedExternalIDMapper mapper) : base(mapper, config.preferredIDMapUpdateRate)
         {
             this.client = client;
@@ -30,9 +32,9 @@ namespace OnlineInboundAdapterOmnikeeper
 
         protected override async Task<IEnumerable<ExternalIDGuid>> GetExternalIDs()
         {
-            var layers = await client.GetLayersByNameAsync(config.remoteLayerNames, "1");
+            var layers = await client.GetLayersByNameAsync(config.remoteLayerNames, ClientVersion);
             var layerIDs = layers.Select(l => l.Id);
-            var ciids = await client.GetCIIDsOfNonEmptyCIsAsync(layerIDs, null, "1"); // get all ciids from cis who have at least one attribute or relation in the specified layerset
+            var ciids = await client.GetCIIDsOfNonEmptyCIsAsync(layerIDs, null, ClientVersion); // get all ciids from cis who have at least one attribute or relation in the specified layerset
             return ciids.Select(id => new ExternalIDGuid(id));
         }
     }
