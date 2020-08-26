@@ -22,6 +22,8 @@ namespace OnlineInboundAdapterKeycloak
 
         public string Name => "Keycloak";
 
+        private static readonly Guid staticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "keycloak");
+
         public KeycloakLayerAccessProxy(KeycloakClient client, string realm, KeycloakScopedExternalIDMapper mapper, Layer layer)
         {
             this.client = client;
@@ -36,10 +38,10 @@ namespace OnlineInboundAdapterKeycloak
                 * we don't have a single source of attribute IDs (or relation IDs, or...)
                 * we use guids for attribute IDs and all other IDs that can also come from external data sources
             */
-            var changesetID = -1; // TODO: how to work with changesets when its online access?
+            var changesetID = staticChangesetID; // TODO: how to work with changesets when its online access?
             var CIName = (user.FirstName != null && user.FirstName.Length > 0 && user.LastName != null && user.LastName.Length > 0) ? $"{user.FirstName} {user.LastName}" : user.UserName;
 
-            CIAttribute BuildAttribute(string name, Guid ciid, IAttributeValue value, long changesetID)
+            CIAttribute BuildAttribute(string name, Guid ciid, IAttributeValue value, Guid changesetID)
             {
                 // create a deterministic, dependent guid from the ciid + attribute name + value
                 //static Guid attributeIDGenerator(Guid ciid, string attributeName, Layer layer, IAttributeValue value) => GuidUtility.Create(ciid, attributeName + layer.ID.ToString() + value.Value2String());

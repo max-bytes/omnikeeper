@@ -83,7 +83,7 @@ namespace LandscapeRegistry.Model
 
                 var id = dr.GetGuid(0);
                 var state = dr.GetFieldValue<RelationState>(1);
-                var changesetID = dr.GetInt64(2);
+                var changesetID = dr.GetGuid(2);
 
                 var predicate = predicates[predicateID];
 
@@ -107,7 +107,7 @@ namespace LandscapeRegistry.Model
                     var toCIID = dr.GetGuid(2);
                     var predicateID = dr.GetString(3);
                     var state = dr.GetFieldValue<RelationState>(4);
-                    var changesetID = dr.GetInt64(5);
+                    var changesetID = dr.GetGuid(5);
 
                     var predicate = predicates[predicateID];
                     var relation = Relation.Build(id, fromCIID, toCIID, predicate, state, changesetID);

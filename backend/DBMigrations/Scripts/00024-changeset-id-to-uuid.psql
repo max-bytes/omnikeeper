@@ -1,0 +1,41 @@
+﻿CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- add new changeset column with uuid
+ALTER TABLE ONLY public.changeset ADD COLUMN uid uuid;
+UPDATE public.changeset SET uid = uuid_generate_v3('c2d5dfc6-c712-4ef3-888e-6bcb819cff5a'::uuid, id::text);
+
+-- drop current constraint (cascade to foreign key constraints)
+ALTER TABLE public.changeset DROP CONSTRAINT changeset_pkey CASCADE;
+
+-- add new primary key
+ALTER TABLE public.changeset ADD PRIMARY KEY (uid);
+
+-- attributes
+ALTER TABLE ONLY public.attribute ADD COLUMN changeset_uid uuid;
+UPDATE public.attribute SET changeset_uid = uuid_generate_v3('c2d5dfc6-c712-4ef3-888e-6bcb819cff5a'::uuid, changeset_id::text);
+ALTER TABLE public.attribute
+    ADD CONSTRAINT f_changeset FOREIGN KEY (changeset_uid)
+    REFERENCES public.changeset (uid) MATCH SIMPLE
+    ON UPDATE CASCADE
+    ON DELETE CASCADE;
+
+
+-- relations
+ALTER TABLE ONLY public.relation ADD COLUMN changeset_uid uuid;
+UPDATE public.relation SET changeset_uid = uuid_generate_v3('c2d5dfc6-c712-4ef3-888e-6bcb819cff5a'::uuid, changeset_id::text);
+ALTER TABLE public.relation
+    ADD CONSTRAINT f_changeset FOREIGN KEY (changeset_uid)
+    REFERENCES public.changeset (uid) MATCH SIMPLE
+    ON UPDATE CASCADE
+    ON DELETE CASCADE;
+
+
+-- drop and rename old changeset column
+ALTER TABLE public.changeset DROP COLUMN id;
+ALTER TABLE public.changeset RENAME COLUMN uid TO id;
+
+ALTER TABLE public.attribute DROP COLUMN changeset_id;
+ALTER TABLE public.attribute RENAME COLUMN changeset_uid TO changeset_id;
+
+ALTER TABLE public.relation DROP COLUMN changeset_id;
+ALTER TABLE public.relation RENAME COLUMN changeset_uid TO changeset_id;

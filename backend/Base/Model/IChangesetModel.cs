@@ -30,6 +30,6 @@ namespace Landscape.Base.Model
         }
 
         Task<Changeset> CreateChangeset(long userID, NpgsqlTransaction trans, DateTimeOffset? timestamp = null);
-        Task<Changeset> GetChangeset(long id, NpgsqlTransaction trans);
+        Task<Changeset> GetChangeset(Guid id, NpgsqlTransaction trans);
         Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, NpgsqlTransaction trans, int? limit = null);   }
 }

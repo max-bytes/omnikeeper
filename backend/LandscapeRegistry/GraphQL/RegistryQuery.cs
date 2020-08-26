@@ -258,14 +258,14 @@ namespace LandscapeRegistry.GraphQL
             FieldAsync<ChangesetType>("changeset",
                 arguments: new QueryArguments(new List<QueryArgument>
                 {
-                    new QueryArgument<NonNullGraphType<LongGraphType>>
+                    new QueryArgument<NonNullGraphType<GuidGraphType>>
                     {
                         Name = "id"
                     }
                 }),
                 resolve: async context =>
                 {
-                    var id = context.GetArgument<long>("id");
+                    var id = context.GetArgument<Guid>("id");
                     var changeset = await changesetModel.GetChangeset(id, null);
                     return changeset;
                 });

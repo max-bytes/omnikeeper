@@ -20,6 +20,8 @@ namespace OnlineInboundAdapterOmnikeeper
 
         private const string ClientVersion = "1";
 
+        private static readonly Guid staticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "omnikeeper");
+
         public string Name => "Omnikeeper";
 
         public LayerAccessProxy(string[] remoteLayerNames, ILandscapeRegistryRESTAPIClient client, ScopedExternalIDMapper mapper, Layer layer)
@@ -43,7 +45,7 @@ namespace OnlineInboundAdapterOmnikeeper
                     // and we need to manually do a mapping here -> sucks, make that work
                     yield return CIAttribute.Build(attribute.Id, attribute.Name, ciid.Value,
                         AttributeValueBuilder.Build(Landscape.Base.Entity.DTO.AttributeValueDTO.Build(attribute.Value.Values.ToArray(), attribute.Value.IsArray, (LandscapeRegistry.Entity.AttributeValues.AttributeValueType)attribute.Value.Type)),
-                        Landscape.Base.Entity.AttributeState.New, -1); // TODO: changeset
+                        Landscape.Base.Entity.AttributeState.New, staticChangesetID); // TODO: changeset
                 }
             }
         }
@@ -63,7 +65,7 @@ namespace OnlineInboundAdapterOmnikeeper
                     yield return Relation.Build(relation.Id, fromCIID.Value, toCIID.Value,
                         // TODO: can we just create a predicate on the fly?!? ignoring what predicates are actually present in the omnikeeper instance?
                         Predicate.Build(relation.Predicate.Id, relation.Predicate.WordingFrom, relation.Predicate.WordingTo, AnchorState.Active, PredicateConstraints.Default),
-                        Landscape.Base.Entity.RelationState.New, -1); // TODO: changeset
+                        Landscape.Base.Entity.RelationState.New, staticChangesetID); // TODO: changeset
                 }
             }
         }

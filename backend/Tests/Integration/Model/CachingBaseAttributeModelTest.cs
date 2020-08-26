@@ -59,26 +59,27 @@ namespace Tests.Integration.Model
         {
             public FilledMockedBaseAttributeModel()
             {
+                Guid staticChangesetID = Guid.NewGuid();
                 Setup(_ => _.GetAttributes(It.Is<MultiCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
-                        CIAttribute.Build(Guid.NewGuid(), "a1", ciid1, AttributeScalarValueText.Build("v1"), AttributeState.New, 1L),
-                        CIAttribute.Build(Guid.NewGuid(), "a2", ciid2, AttributeScalarValueText.Build("v2"), AttributeState.New, 1L)
+                        CIAttribute.Build(Guid.NewGuid(), "a1", ciid1, AttributeScalarValueText.Build("v1"), AttributeState.New, staticChangesetID),
+                        CIAttribute.Build(Guid.NewGuid(), "a2", ciid2, AttributeScalarValueText.Build("v2"), AttributeState.New, staticChangesetID)
                     };
                 });
                 Setup(_ => _.GetAttributes(It.Is<MultiCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
-                        CIAttribute.Build(Guid.NewGuid(), "a1", ciid1, AttributeScalarValueText.Build("v1"), AttributeState.New, 1L)
+                        CIAttribute.Build(Guid.NewGuid(), "a1", ciid1, AttributeScalarValueText.Build("v1"), AttributeState.New, staticChangesetID)
                     };
                 });
                 Setup(_ => _.GetAttributes(It.Is<MultiCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
-                        CIAttribute.Build(Guid.NewGuid(), "a2", ciid2, AttributeScalarValueText.Build("v2"), AttributeState.New, 1L)
+                        CIAttribute.Build(Guid.NewGuid(), "a2", ciid2, AttributeScalarValueText.Build("v2"), AttributeState.New, staticChangesetID)
                     };
                 });
             }

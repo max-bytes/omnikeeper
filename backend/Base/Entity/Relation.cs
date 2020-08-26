@@ -32,13 +32,13 @@ namespace Landscape.Base.Entity
         public string PredicateID { get => Predicate.ID; }
         public Predicate Predicate { get; private set; }
         public RelationState State { get; private set; }
-        public long ChangesetID { get; private set; }
+        public Guid ChangesetID { get; private set; }
 
         // information hash: 
         public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);
         public static string CreateInformationHash(Guid fromCIID, Guid toCIID, string predicateID) => fromCIID + "_" + toCIID + "_" + predicateID;
 
-        public static Relation Build(Guid id, Guid fromCIID, Guid toCIID, Predicate predicate, RelationState state, long changesetID)
+        public static Relation Build(Guid id, Guid fromCIID, Guid toCIID, Predicate predicate, RelationState state, Guid changesetID)
         {
             return new Relation
             {

@@ -28,13 +28,14 @@ namespace Tests.Templating
                 var testPredicateA = Predicate.Build("p_a", "p_a_forward", "p_a_backwards", AnchorState.Active, PredicateModel.DefaultConstraits);
                 var atTime = TimeThreshold.BuildLatest();
 
+                var staticChangesetID = Guid.NewGuid();
                 var testCIA = MergedCI.Build(Guid.NewGuid(), "test-ci-a", new LayerSet(), atTime, new List<MergedCIAttribute>()
                 {
-                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a", Guid.NewGuid(), AttributeScalarValueText.Build("a-value"), AttributeState.New, 0), new long[0]),
-                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.b", Guid.NewGuid(), AttributeScalarValueText.Build("b-value"), AttributeState.New, 0), new long[0]),
-                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.c", Guid.NewGuid(), AttributeArrayValueText.Build(new string[] { "c-value0", "c-value1" }), AttributeState.New, 0), new long[0]),
+                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a", Guid.NewGuid(), AttributeScalarValueText.Build("a-value"), AttributeState.New, staticChangesetID), new long[0]),
+                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.b", Guid.NewGuid(), AttributeScalarValueText.Build("b-value"), AttributeState.New, staticChangesetID), new long[0]),
+                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.c", Guid.NewGuid(), AttributeArrayValueText.Build(new string[] { "c-value0", "c-value1" }), AttributeState.New, staticChangesetID), new long[0]),
                     MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.json", Guid.NewGuid(), AttributeArrayValueJSON.Build(
-                        new string[] { @"{ ""foo"": ""bar""}", @"{ ""second"": { ""yes"": true } }" }), AttributeState.New, 0), new long[0])
+                        new string[] { @"{ ""foo"": ""bar""}", @"{ ""second"": { ""yes"": true } }" }), AttributeState.New, staticChangesetID), new long[0])
                     //MergedCIAttribute.Build(CIAttribute.Build(0, "a.json", Guid.NewGuid(), AttributeValueJSONScalar.Build(
                     //    JObject.Parse(@"{ ""foo"": ""bar""}")), AttributeState.New, 0), new long[0])
                 });
@@ -43,7 +44,7 @@ namespace Tests.Templating
                 var relationModel = new Mock<IRelationModel>();
                 relationModel.Setup(x => x.GetMergedRelations(It.IsAny<IRelationSelection>(), It.IsAny<LayerSet>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()))
                     .ReturnsAsync(() => new MergedRelation[] {
-                        MergedRelation.Build(Relation.Build(Guid.NewGuid(), testCIA.ID, testCIB.ID, testPredicateA, RelationState.New, 0), new long[0])
+                        MergedRelation.Build(Relation.Build(Guid.NewGuid(), testCIA.ID, testCIB.ID, testPredicateA, RelationState.New, staticChangesetID), new long[0])
                     });
 
                 var ciModel = new Mock<ICIModel>();

@@ -94,7 +94,7 @@ export const queries = {
             }
         }`,
     Changeset: gql`
-        query changeset($id: Long!) {
+        query changeset($id: Guid!) {
             changeset(id: $id) {
                 id
                 timestamp

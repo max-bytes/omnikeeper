@@ -26,17 +26,18 @@ namespace LandscapeRegistry.Model
             var user = await userModel.GetUser(userID, trans);
             if (user == null)
                 throw new Exception($"Could not find user with ID {userID}");
-            using var command = new NpgsqlCommand(@"INSERT INTO changeset (timestamp, user_id) VALUES (@timestamp, @user_id) returning id, timestamp", conn, trans);
+            using var command = new NpgsqlCommand(@"INSERT INTO changeset (id, timestamp, user_id) VALUES (@id, @timestamp, @user_id) returning timestamp", conn, trans);
+            var id = Guid.NewGuid();
+            command.Parameters.AddWithValue("id", id);
             command.Parameters.AddWithValue("user_id", userID);
             command.Parameters.AddWithValue("timestamp", timestamp.GetValueOrDefault(DateTimeOffset.Now));
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
-            var id = reader.GetInt64(0);
-            var timestampR = reader.GetDateTime(1);
+            var timestampR = reader.GetDateTime(0);
             return Changeset.Build(id, user, timestampR);
         }
 
-        public async Task<Changeset> GetChangeset(long id, NpgsqlTransaction trans)
+        public async Task<Changeset> GetChangeset(Guid id, NpgsqlTransaction trans)
         {
             using var command = new NpgsqlCommand(@"SELECT c.timestamp, c.user_id, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c
                 LEFT JOIN ""user"" u ON c.user_id = u.id
@@ -108,7 +109,7 @@ namespace LandscapeRegistry.Model
             var ret = new List<Changeset>();
             while (await dr.ReadAsync())
             {
-                var id = dr.GetInt64(0);
+                var id = dr.GetGuid(0);
                 var userID = dr.GetInt64(1);
                 var timestamp = dr.GetTimeStamp(2).ToDateTime();
                 var username = dr.GetString(3);
@@ -149,7 +150,7 @@ namespace LandscapeRegistry.Model
             var ret = new List<Changeset>();
             while (await dr.ReadAsync())
             {
-                var id = dr.GetInt64(0);
+                var id = dr.GetGuid(0);
                 var userID = dr.GetInt64(1);
                 var timestamp = dr.GetTimeStamp(2).ToDateTime();
                 var username = dr.GetString(3);

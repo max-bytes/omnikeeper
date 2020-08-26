@@ -34,14 +34,14 @@ namespace Landscape.Base.Entity
         public Guid CIID { get; private set; }
         public IAttributeValue Value { get; private set; }
         public AttributeState State { get; private set; }
-        public long ChangesetID { get; private set; }
+        public Guid ChangesetID { get; private set; }
 
         // information hash: 
         public string InformationHash => CreateInformationHash(Name, CIID);
         public static string CreateInformationHash(string name, Guid ciid) => name + "_" + ciid;
 
 
-        public static CIAttribute Build(Guid id, string name, Guid CIID, IAttributeValue value, AttributeState state, long changesetID)
+        public static CIAttribute Build(Guid id, string name, Guid CIID, IAttributeValue value, AttributeState state, Guid changesetID)
         {
             return new CIAttribute
             {

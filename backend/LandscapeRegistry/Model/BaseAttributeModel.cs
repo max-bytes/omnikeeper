@@ -46,7 +46,7 @@ namespace LandscapeRegistry.Model
             var value = dr.GetString(3);
             var av = AttributeValueBuilder.BuildFromDatabase(value, type);
             var state = dr.GetFieldValue<AttributeState>(4);
-            var changesetID = dr.GetInt64(5);
+            var changesetID = dr.GetGuid(5);
             var att = CIAttribute.Build(id, name, CIID, av, state, changesetID);
             return att;
         }
@@ -75,7 +75,7 @@ namespace LandscapeRegistry.Model
                 var value = dr.GetString(4);
                 var av = AttributeValueBuilder.BuildFromDatabase(value, type);
                 var state = dr.GetFieldValue<AttributeState>(5);
-                var changesetID = dr.GetInt64(6);
+                var changesetID = dr.GetGuid(6);
 
                 var att = CIAttribute.Build(id, name, CIID, av, state, changesetID);
                 if (state != AttributeState.Removed)
@@ -110,7 +110,7 @@ namespace LandscapeRegistry.Model
                 var value = dr.GetString(4);
                 var av = AttributeValueBuilder.BuildFromDatabase(value, type);
                 var state = dr.GetFieldValue<AttributeState>(5);
-                var changesetID = dr.GetInt64(6);
+                var changesetID = dr.GetGuid(6);
 
                 if (state != AttributeState.Removed)
                 {
@@ -145,7 +145,7 @@ namespace LandscapeRegistry.Model
                     var av = AttributeValueBuilder.BuildFromDatabase(value, type);
 
                     var state = dr.GetFieldValue<AttributeState>(4);
-                    var changesetID = dr.GetInt64(5);
+                    var changesetID = dr.GetGuid(5);
 
                     if (state != AttributeState.Removed)
                         ret.Add(CIAttribute.Build(id, name, CIID, av, state, changesetID));

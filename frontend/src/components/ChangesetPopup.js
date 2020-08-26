@@ -54,7 +54,7 @@ function ChangesetPopup(props) {
 }
 
 ChangesetPopup.propTypes = {
-  changesetID: PropTypes.number.isRequired
+  changesetID: PropTypes.string.isRequired
 }
 
 export default ChangesetPopup;

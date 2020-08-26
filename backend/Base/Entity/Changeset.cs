@@ -7,11 +7,11 @@ namespace Landscape.Base.Entity
     
     public class Changeset
     {
-        public long ID { get; private set; }
+        public Guid ID { get; private set; }
         public DateTimeOffset Timestamp { get; private set; }
         public UserInDatabase User { get; private set; }
 
-        public static Changeset Build(long id, UserInDatabase user, DateTimeOffset timestamp)
+        public static Changeset Build(Guid id, UserInDatabase user, DateTimeOffset timestamp)
         {
             var c = new Changeset
             {
