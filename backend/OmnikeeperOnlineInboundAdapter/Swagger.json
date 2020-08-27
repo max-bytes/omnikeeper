@@ -1,4 +1,4 @@
-// 20200825165905
+// 20200827134246
 // https://localhost:44378/swagger/v1/swagger.json
 
 {
@@ -536,6 +536,165 @@
                                     "items": {
                                         "$ref": "#/components/schemas/CIAttributeDTO"
                                     }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/Attribute/getMergedAttribute": {
+            "get": {
+                "tags": [
+                    "Attribute"
+                ],
+                "summary": "",
+                "operationId": "GetMergedAttribute",
+                "parameters": [
+                    {
+                        "name": "ciid",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "layerIDs",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            },
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "atTime",
+                        "in": "query",
+                        "description": "",
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "date-time",
+                            "nullable": true
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CIAttributeDTO"
                                 }
                             }
                         }

@@ -20,6 +20,7 @@ namespace OnlineInboundAdapterOmnikeeper
 
         private const string ClientVersion = "1";
 
+        // TODO: changeset
         private static readonly Guid staticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "omnikeeper");
 
         public string Name => "Omnikeeper";
@@ -36,18 +37,24 @@ namespace OnlineInboundAdapterOmnikeeper
         {
             foreach (var attribute in dto)
             {
-                // we force a mapping to ensure only attributes of properly mapped cis are used
-                var ciid = mapper.GetCIID(new ExternalIDGuid(attribute.Ciid));
-
-                if (ciid.HasValue)
-                {
-                    // TODO: because we use a code generator, it does not use our own DTO classes but generates its own
-                    // and we need to manually do a mapping here -> sucks, make that work
-                    yield return CIAttribute.Build(attribute.Id, attribute.Name, ciid.Value,
-                        AttributeValueBuilder.Build(Landscape.Base.Entity.DTO.AttributeValueDTO.Build(attribute.Value.Values.ToArray(), attribute.Value.IsArray, (LandscapeRegistry.Entity.AttributeValues.AttributeValueType)attribute.Value.Type)),
-                        Landscape.Base.Entity.AttributeState.New, staticChangesetID); // TODO: changeset
-                }
+                var r = AttributeDTO2Regular(attribute);
+                if (r != null) yield return r;
             }
+        }
+        private CIAttribute AttributeDTO2Regular(CIAttributeDTO dto)
+        {
+            // we force a mapping to ensure only attributes of properly mapped cis are used
+            var ciid = mapper.GetCIID(new ExternalIDGuid(dto.Ciid));
+
+            if (ciid.HasValue)
+            {
+                // TODO: because we use a code generator, it does not use our own DTO classes but generates its own
+                // and we need to manually do a mapping here -> sucks, make that work
+                return CIAttribute.Build(dto.Id, dto.Name, ciid.Value,
+                    AttributeValueBuilder.Build(Landscape.Base.Entity.DTO.AttributeValueDTO.Build(dto.Value.Values.ToArray(), dto.Value.IsArray, (LandscapeRegistry.Entity.AttributeValues.AttributeValueType)dto.Value.Type)),
+                    Landscape.Base.Entity.AttributeState.New, staticChangesetID);
+            }
+            else return null;
         }
 
         private IEnumerable<Relation> RelationDTO2Regular(IEnumerable<RelationDTO> dto)
@@ -65,7 +72,7 @@ namespace OnlineInboundAdapterOmnikeeper
                     yield return Relation.Build(relation.Id, fromCIID.Value, toCIID.Value,
                         // TODO: can we just create a predicate on the fly?!? ignoring what predicates are actually present in the omnikeeper instance?
                         Predicate.Build(relation.Predicate.Id, relation.Predicate.WordingFrom, relation.Predicate.WordingTo, AnchorState.Active, PredicateConstraints.Default),
-                        Landscape.Base.Entity.RelationState.New, staticChangesetID); // TODO: changeset
+                        Landscape.Base.Entity.RelationState.New, staticChangesetID);
                 }
             }
         }
@@ -108,9 +115,16 @@ namespace OnlineInboundAdapterOmnikeeper
 
             if (!atTime.IsLatest) return null; // TODO: implement historic information
 
-            //var externalID = mapper.GetExternalID(ciid);
+            var externalID = mapper.GetExternalID(ciid);
+            if (externalID == null) return null;
 
-            throw new NotImplementedException(); // TODO
+            var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
+            var remoteLayerIDs = remoteLayers.Select(rl => rl.Id).ToArray();
+
+            var attributeDTO = await client.GetMergedAttributeAsync(ciid, name, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion);
+            if (attributeDTO == null) return null;
+
+            return AttributeDTO2Regular(attributeDTO);
         }
 
         public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, TimeThreshold atTime)

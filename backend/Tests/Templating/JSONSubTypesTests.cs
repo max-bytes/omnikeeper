@@ -7,6 +7,8 @@ using System.Text;
 
 namespace Tests.Templating
 {
+    [Explicit]
+    [Ignore("Only manual")]
     class JSONSubTypesTests
     {
         [JsonConverter(typeof(JsonSubtypes), "type")]

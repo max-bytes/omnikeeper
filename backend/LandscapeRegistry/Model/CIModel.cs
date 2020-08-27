@@ -25,7 +25,7 @@ namespace LandscapeRegistry.Model
 
         private string GetNameFromAttributes(IImmutableDictionary<string, MergedCIAttribute> attributes)
         {
-            var nameA = attributes.GetValueOrDefault(ICIModel.NameAttribute, (MergedCIAttribute)null);
+            var nameA = attributes.GetValueOrDefault(ICIModel.NameAttribute, null);
             return nameA?.Attribute.Value.Value2String(); // TODO
         }
         private string GetNameFromAttributes(IEnumerable<CIAttribute> attributes)
@@ -47,7 +47,8 @@ namespace LandscapeRegistry.Model
 
         public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var attributes = await attributeModel.GetMergedAttributes(ciid, layers, trans, atTime);
+            var tmp = await attributeModel.GetMergedAttributes(new SingleCIIDSelection(ciid), layers, trans, atTime);
+            var attributes = tmp.GetValueOrDefault(ciid, ImmutableDictionary<string, MergedCIAttribute>.Empty);
             var name = GetNameFromAttributes(attributes);
             return MergedCI.Build(ciid, name, layers, atTime, attributes);
         }

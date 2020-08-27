@@ -16,7 +16,7 @@ namespace Landscape.Base.Inbound
     /// a) to ensure that the external CIs exist also internally and have a proper CIID
     /// b) keep the mapping table between internal and external IDs up-to-date
     /// </summary>
-    public abstract class ExternalIDManager<EID> : IExternalIDManager where EID : IExternalID
+    public abstract class ExternalIDManager<EID> : IExternalIDManager where EID : struct,IExternalID
     {
         private readonly ScopedExternalIDMapper<EID> mapper;
 

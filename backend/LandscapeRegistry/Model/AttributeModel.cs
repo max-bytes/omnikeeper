@@ -39,6 +39,28 @@ namespace LandscapeRegistry.Model
             return compound.Select(t => MergedCIAttribute.Build(t.Value.First().Value.attribute, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).Reverse().ToArray()));
         }
 
+        public async Task<MergedCIAttribute> GetMergedAttribute(Guid ciid, string name, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            if (layers.IsEmpty)
+                return null; // return empty, an empty layer list can never produce any attributes
+
+            var attributes = new List<(CIAttribute attribute, long layerID)>();
+
+            foreach (var layerID in layers)
+            {
+                var a = await baseModel.GetAttribute(name, layerID, ciid, trans, atTime);
+                if (a != null)
+                    attributes.Add((a, layerID));
+            }
+
+            var mergedAttributes = MergeAttributes(attributes, layers);
+
+            if (mergedAttributes.Count() > 1)
+                throw new Exception("Should never happen!");
+
+            return mergedAttributes.FirstOrDefault();
+        }
+
         public async Task<IImmutableDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var d = await GetMergedAttributes(new SingleCIIDSelection(ciid), layers, trans, atTime);

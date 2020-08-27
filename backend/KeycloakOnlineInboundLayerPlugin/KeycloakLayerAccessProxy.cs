@@ -71,9 +71,11 @@ namespace OnlineInboundAdapterKeycloak
             if (!atTime.IsLatest) return null; // we don't have historic information
 
             var externalID = mapper.GetExternalID(ciid);
+            if (!externalID.HasValue)
+                return null;
 
-            var user = await client.GetUserAsync(realm, externalID.ID);
-            var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.ID);
+            var user = await client.GetUserAsync(realm, externalID.Value.ID);
+            var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.Value.ID);
 
             var attributes = BuildAttributesFromUser(user, ciid, roleMappings);
             return attributes.FirstOrDefault(a => a.Name.Equals(name));
@@ -139,9 +141,11 @@ namespace OnlineInboundAdapterKeycloak
                 case SingleCIIDSelection scs:
                     {
                         var externalID = mapper.GetExternalID(scs.CIID);
+                        if (!externalID.HasValue)
+                            break;
 
-                        var user = await client.GetUserAsync(realm, externalID.ID);
-                        var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.ID);
+                        var user = await client.GetUserAsync(realm, externalID.Value.ID);
+                        var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.Value.ID);
 
                         foreach (var a in BuildAttributesFromUser(user, scs.CIID, roleMappings))
                             if (Regex.IsMatch(a.Name, regex))
@@ -153,9 +157,11 @@ namespace OnlineInboundAdapterKeycloak
                         foreach (var ciid in mcs.CIIDs)
                         {
                             var externalID = mapper.GetExternalID(ciid);
+                            if (!externalID.HasValue)
+                                break;
 
-                            var user = await client.GetUserAsync(realm, externalID.ID);
-                            var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.ID);
+                            var user = await client.GetUserAsync(realm, externalID.Value.ID);
+                            var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.Value.ID);
 
                             foreach (var a in BuildAttributesFromUser(user, ciid, roleMappings))
                                 if (Regex.IsMatch(a.Name, regex))
@@ -163,7 +169,7 @@ namespace OnlineInboundAdapterKeycloak
                         }
                         break;
                     }
-                case AllCIIDsSelection acs:
+                case AllCIIDsSelection _:
                     {
                         var users = await client.GetUsersAsync(realm, true, null, null, null, null, 99999, null, null); // TODO, HACK: magic number, how to properly get all user IDs?
                         foreach (var user in users)

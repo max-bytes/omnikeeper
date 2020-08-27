@@ -35,7 +35,7 @@ namespace Landscape.Base.Inbound
         }
     }
 
-    public abstract class ScopedExternalIDMapper<EID> : IScopedExternalIDMapper where EID : IExternalID
+    public abstract class ScopedExternalIDMapper<EID> : IScopedExternalIDMapper where EID : struct, IExternalID
     {
         private IDictionary<Guid, EID> int2ext;
         private IDictionary<EID, Guid> ext2int;
@@ -112,10 +112,10 @@ namespace Landscape.Base.Inbound
             ext2int.TryGetValue(externalId, out var ciid);
             return ciid == default ? null : new Guid?(ciid); // NOTE: guid is a value type, which is why we need to check for default and return null if so
         }
-        public EID GetExternalID(Guid ciid)
+        public EID? GetExternalID(Guid ciid)
         {
             int2ext.TryGetValue(ciid, out var externalID);
-            return externalID;
+            return externalID.Equals(default(EID)) ? null : new EID?(externalID); // NOTE: EID is a value type, which is why we need to check for default and return null if so
         }
 
         public async Task Persist()
