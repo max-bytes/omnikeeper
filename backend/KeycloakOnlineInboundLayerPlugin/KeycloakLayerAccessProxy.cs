@@ -44,7 +44,6 @@ namespace OnlineInboundAdapterKeycloak
             CIAttribute BuildAttribute(string name, Guid ciid, IAttributeValue value, Guid changesetID)
             {
                 // create a deterministic, dependent guid from the ciid + attribute name + value
-                //static Guid attributeIDGenerator(Guid ciid, string attributeName, Layer layer, IAttributeValue value) => GuidUtility.Create(ciid, attributeName + layer.ID.ToString() + value.Value2String());
                 var id = GuidUtility.Create(ciid, name + layer.ID.ToString());// TODO: determine if we need to factor in value or not
                 return CIAttribute.Build(id, name, ciid, value, AttributeState.New, changesetID);
             }

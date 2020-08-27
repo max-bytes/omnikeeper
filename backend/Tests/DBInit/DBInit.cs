@@ -21,7 +21,7 @@ using Tests.Integration.Model.Mocks;
 namespace Tests.DBInit
 {
     [Explicit]
-    [Ignore("Only manual")]
+    //[Ignore("Only manual")]
     class DBInit
     {
 
@@ -210,23 +210,29 @@ namespace Tests.DBInit
             }
 
             // create monitoring relations
-            var windowsHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), MultiCIIDsSelection.Build(windowsHostCIIds), true, null, TimeThreshold.BuildLatest());
-            foreach (var ci in windowsHosts)
+            if (!windowsHostCIIds.IsEmpty())
             {
-                using var trans = conn.BeginTransaction();
-                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
-                await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
-                await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
-                trans.Commit();
+                var windowsHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), MultiCIIDsSelection.Build(windowsHostCIIds), true, null, TimeThreshold.BuildLatest());
+                foreach (var ci in windowsHosts)
+                {
+                    using var trans = conn.BeginTransaction();
+                    var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                    await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
+                    await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
+                    trans.Commit();
+                }
             }
-            var linuxHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), MultiCIIDsSelection.Build(linuxHostCIIds), true, null, TimeThreshold.BuildLatest());
-            foreach (var ci in linuxHosts)
+            if (!linuxHostCIIds.IsEmpty())
             {
-                using var trans = conn.BeginTransaction();
-                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
-                await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
-                await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
-                trans.Commit();
+                var linuxHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), MultiCIIDsSelection.Build(linuxHostCIIds), true, null, TimeThreshold.BuildLatest());
+                foreach (var ci in linuxHosts)
+                {
+                    using var trans = conn.BeginTransaction();
+                    var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                    await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
+                    await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
+                    trans.Commit();
+                }
             }
 
             // create ansible groups

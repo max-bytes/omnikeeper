@@ -225,19 +225,19 @@ namespace Tests.Integration.Model
             await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("textL2"), layer2.ID, ciid2, changeset3, trans);
             await attributeModel.InsertAttribute("a3", AttributeScalarValueText.Build("textL2"), layer2.ID, ciid2, changeset3, trans);
 
-            var a1 = await attributeModel.FindAttributesByName("a%", new AllCIIDsSelection(), layer1.ID, trans, TimeThreshold.BuildLatest());
+            var a1 = await attributeModel.FindAttributesByName("^a", new AllCIIDsSelection(), layer1.ID, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(2, a1.Count());
 
-            var a2 = await attributeModel.FindAttributesByName("a2", new AllCIIDsSelection(), layer1.ID, trans, TimeThreshold.BuildLatest());
+            var a2 = await attributeModel.FindAttributesByName("^a2$", new AllCIIDsSelection(), layer1.ID, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a2.Count());
 
-            var a3 = await attributeModel.FindAttributesByName("%3", new AllCIIDsSelection(), layer2.ID, trans, TimeThreshold.BuildLatest());
+            var a3 = await attributeModel.FindAttributesByName("3$", new AllCIIDsSelection(), layer2.ID, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a3.Count());
 
-            var a4 = await attributeModel.FindAttributesByName("%3", new AllCIIDsSelection(), layer1.ID, trans, TimeThreshold.BuildLatest());
+            var a4 = await attributeModel.FindAttributesByName("^3", new AllCIIDsSelection(), layer1.ID, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(0, a4.Count());
 
-            var a5 = await attributeModel.FindAttributesByName("a1", new SingleCIIDSelection(ciid2), layer2.ID, trans, TimeThreshold.BuildLatest());
+            var a5 = await attributeModel.FindAttributesByName("^a1$", new SingleCIIDSelection(ciid2), layer2.ID, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a5.Count());
         }
 
@@ -277,10 +277,10 @@ namespace Tests.Integration.Model
                 BulkCIAttributeDataLayerScope.Fragment.Build("a2", AttributeScalarValueText.Build("textNew"), ciid2),
             }), changeset3, trans2);
 
-            var a1 = await attributeModel.FindAttributesByName("prefix1%", new AllCIIDsSelection(), layer1.ID, trans2, TimeThreshold.BuildLatest());
+            var a1 = await attributeModel.FindAttributesByName("^prefix1", new AllCIIDsSelection(), layer1.ID, trans2, TimeThreshold.BuildLatest());
             Assert.AreEqual(3, a1.Count());
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a2").Count());
-            var a2 = await attributeModel.FindAttributesByName("prefix2%", new AllCIIDsSelection(), layer1.ID, trans2, TimeThreshold.BuildLatest());
+            var a2 = await attributeModel.FindAttributesByName("^prefix2", new AllCIIDsSelection(), layer1.ID, trans2, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a2.Count());
         }
     }

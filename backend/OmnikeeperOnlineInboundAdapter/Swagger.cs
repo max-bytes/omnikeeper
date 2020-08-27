@@ -53,6 +53,15 @@ namespace OnlineInboundAdapterOmnikeeper
         /// <exception cref="ApiException">A server side error occurred.</exception>
         System.Threading.Tasks.Task<CIAttributeDTO> GetMergedAttributeAsync(System.Guid ciid, string name, System.Collections.Generic.IEnumerable<long> layerIDs, System.DateTimeOffset? atTime, string version, System.Threading.CancellationToken cancellationToken);
     
+        /// <returns>Success</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CIAttributeDTO>> FindMergedAttributesByNameAsync(string regex, System.Collections.Generic.IEnumerable<System.Guid> ciids, System.Collections.Generic.IEnumerable<long> layerIDs, System.DateTimeOffset? atTime, string version);
+    
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Success</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CIAttributeDTO>> FindMergedAttributesByNameAsync(string regex, System.Collections.Generic.IEnumerable<System.Guid> ciids, System.Collections.Generic.IEnumerable<long> layerIDs, System.DateTimeOffset? atTime, string version, System.Threading.CancellationToken cancellationToken);
+    
         /// <summary>bulk replace all attributes in specified layer</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
@@ -558,6 +567,95 @@ namespace OnlineInboundAdapterOmnikeeper
                         if (status_ == 200)
                         {
                             var objectResponse_ = await ReadObjectResponseAsync<CIAttributeDTO>(response_, headers_).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false); 
+                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (response_ != null)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+            }
+        }
+    
+        /// <returns>Success</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CIAttributeDTO>> FindMergedAttributesByNameAsync(string regex, System.Collections.Generic.IEnumerable<System.Guid> ciids, System.Collections.Generic.IEnumerable<long> layerIDs, System.DateTimeOffset? atTime, string version)
+        {
+            return FindMergedAttributesByNameAsync(regex, ciids, layerIDs, atTime, version, System.Threading.CancellationToken.None);
+        }
+    
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>Success</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CIAttributeDTO>> FindMergedAttributesByNameAsync(string regex, System.Collections.Generic.IEnumerable<System.Guid> ciids, System.Collections.Generic.IEnumerable<long> layerIDs, System.DateTimeOffset? atTime, string version, System.Threading.CancellationToken cancellationToken)
+        {
+            if (version == null)
+                throw new System.ArgumentNullException("version");
+    
+            if (regex == null)
+                throw new System.ArgumentNullException("regex");
+    
+            if (layerIDs == null)
+                throw new System.ArgumentNullException("layerIDs");
+    
+            var urlBuilder_ = new System.Text.StringBuilder();
+            urlBuilder_.Append("api/v{version}/Attribute/findMergedAttributesByName?");
+            urlBuilder_.Replace("{version}", System.Uri.EscapeDataString(ConvertToString(version, System.Globalization.CultureInfo.InvariantCulture)));
+            urlBuilder_.Append(System.Uri.EscapeDataString("regex") + "=").Append(System.Uri.EscapeDataString(ConvertToString(regex, System.Globalization.CultureInfo.InvariantCulture))).Append("&");
+            if (ciids != null) 
+            {
+                foreach (var item_ in ciids) { urlBuilder_.Append(System.Uri.EscapeDataString("ciids") + "=").Append((item_ == null) ? "" : System.Uri.EscapeDataString(ConvertToString(item_, System.Globalization.CultureInfo.InvariantCulture))).Append("&"); }
+            }
+            foreach (var item_ in layerIDs) { urlBuilder_.Append(System.Uri.EscapeDataString("layerIDs") + "=").Append((item_ == null) ? "" : System.Uri.EscapeDataString(ConvertToString(item_, System.Globalization.CultureInfo.InvariantCulture))).Append("&"); }
+            if (atTime != null) 
+            {
+                urlBuilder_.Append(System.Uri.EscapeDataString("atTime") + "=").Append(System.Uri.EscapeDataString(atTime.Value.ToString("s", System.Globalization.CultureInfo.InvariantCulture))).Append("&");
+            }
+            urlBuilder_.Length--;
+    
+            var client_ = _httpClient;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json;odata.metadata=minimal;odata.streaming=true"));
+    
+                    PrepareRequest(client_, request_, urlBuilder_);
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+                    PrepareRequest(client_, request_, url_);
+    
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    try
+                    {
+                        var headers_ = System.Linq.Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+    
+                        ProcessResponse(client_, response_);
+    
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<System.Collections.Generic.ICollection<CIAttributeDTO>>(response_, headers_).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);

@@ -25,21 +25,14 @@ namespace LandscapeRegistry.Model.Decorators
             this.onlineAccessProxy = onlineAccessProxy;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
-                // HACK: we crudly simulate an SQL like, see https://stackoverflow.com/questions/41757762/use-sql-like-operator-in-c-sharp-linq/41757857
-                static string LikeToRegular(string value)
-                {
-                    return "^" + Regex.Escape(value).Replace("_", ".").Replace("%", ".*") + "$";
-                }
-                var regex = LikeToRegular(like);
-
                 return onlineAccessProxy.FindAttributesByName(regex, selection, layerID, trans, atTime).ToEnumerable();
             }
 
-            return await model.FindAttributesByName(like, selection, layerID, trans, atTime);
+            return await model.FindAttributesByName(regex, selection, layerID, trans, atTime);
         }
 
         public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)

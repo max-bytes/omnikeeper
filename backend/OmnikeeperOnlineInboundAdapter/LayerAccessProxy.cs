@@ -150,7 +150,21 @@ namespace OnlineInboundAdapterOmnikeeper
 
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
-            throw new NotImplementedException(); // TODO
+            var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
+            var remoteLayerIDs = remoteLayers.Select(rl => rl.Id).ToArray();
+            var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
+
+            var ciids = selection switch
+            {
+                AllCIIDsSelection _ => null,
+                MultiCIIDsSelection m => m.CIIDs,
+                SingleCIIDSelection s => new Guid[] { s.CIID },
+                _ => throw new NotImplementedException()
+            };
+            var attributesDTO = await client.FindMergedAttributesByNameAsync(regex, ciids, remoteLayerIDs, time, ClientVersion);
+
+            foreach (var r in AttributeDTO2Regular(attributesDTO))
+                yield return r;
         }
 
         public async IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime)
@@ -161,13 +175,14 @@ namespace OnlineInboundAdapterOmnikeeper
 
             var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
             var remoteLayerIDs = remoteLayers.Select(rl => rl.Id).ToArray();
+            var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
 
             var relationsDTO = rl switch
             {
-                RelationSelectionFrom f => await client.GetMergedRelationsOutgoingFromCIAsync(f.fromCIID, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion),
-                RelationSelectionWithPredicate p => await client.GetMergedRelationsWithPredicateAsync(p.predicateID, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion),
-                RelationSelectionEitherFromOrTo fot => await client.GetMergedRelationsFromOrToCIAsync(fot.ciid, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion),
-                RelationSelectionAll a => await client.GetAllMergedRelationsAsync(remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion),
+                RelationSelectionFrom f => await client.GetMergedRelationsOutgoingFromCIAsync(f.fromCIID, remoteLayerIDs, time, ClientVersion),
+                RelationSelectionWithPredicate p => await client.GetMergedRelationsWithPredicateAsync(p.predicateID, remoteLayerIDs, time, ClientVersion),
+                RelationSelectionEitherFromOrTo fot => await client.GetMergedRelationsFromOrToCIAsync(fot.ciid, remoteLayerIDs, time, ClientVersion),
+                RelationSelectionAll a => await client.GetAllMergedRelationsAsync(remoteLayerIDs, time, ClientVersion),
                 _ => null,// must not be
             };
 

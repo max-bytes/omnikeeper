@@ -91,6 +91,28 @@ namespace LandscapeRegistry.Controllers
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="regex"></param>
+        /// <param name="ciids"></param>
+        /// <param name="layerIDs"></param>
+        /// <param name="atTime"></param>
+        /// <returns></returns>
+        [HttpGet("findMergedAttributesByName")]
+        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> FindMergedAttributesByName([FromQuery, Required]string regex, [FromQuery]IEnumerable<Guid> ciids, [FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
+        {
+            ICIIDSelection selection;
+            if (ciids == null)
+                selection = new AllCIIDsSelection();
+            else
+                selection = MultiCIIDsSelection.Build(ciids);
+            var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
+            var layerset = new LayerSet(layerIDs);
+            var attributes = await attributeModel.FindMergedAttributesByName(regex, selection, layerset, null, timeThreshold);
+            return Ok(attributes.Select(a => CIAttributeDTO.Build(a)));
+        }
+
+        /// <summary>
         /// bulk replace all attributes in specified layer
         /// </summary>
         /// <param name="dto"></param>

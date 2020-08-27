@@ -96,6 +96,25 @@ namespace LandscapeRegistry.Model
             return ret.ToImmutableDictionary();
         }
 
+        public async Task<IEnumerable<MergedCIAttribute>> FindMergedAttributesByName(string regex, ICIIDSelection selection, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            if (layers.IsEmpty)
+                return ImmutableList<MergedCIAttribute>.Empty; // return empty, an empty layer list can never produce any attributes
+
+            var attributes = new List<(CIAttribute attribute, long layerID)>();
+
+            foreach (var layerID in layers)
+            {
+                var la = await baseModel.FindAttributesByName(regex, selection, layerID, trans, atTime);
+                foreach (var a in la)
+                    attributes.Add((a, layerID));
+            }
+
+            var mergedAttributes = MergeAttributes(attributes, layers);
+
+            return mergedAttributes;
+        }
+
         public async Task<IImmutableDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var ret = new Dictionary<Guid, MergedCIAttribute>();
@@ -133,9 +152,9 @@ namespace LandscapeRegistry.Model
             return await baseModel.GetAttribute(name, layerID, ciid, trans, atTime);
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string like, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            return await baseModel.FindAttributesByName(like, selection, layerID, trans, atTime);
+            return await baseModel.FindAttributesByName(regex, selection, layerID, trans, atTime);
         }
 
         public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)

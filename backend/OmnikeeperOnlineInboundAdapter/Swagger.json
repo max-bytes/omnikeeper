@@ -1,4 +1,4 @@
-// 20200827134246
+// 20200827155511
 // https://localhost:44378/swagger/v1/swagger.json
 
 {
@@ -695,6 +695,216 @@
                             "text/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/CIAttributeDTO"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/Attribute/findMergedAttributesByName": {
+            "get": {
+                "tags": [
+                    "Attribute"
+                ],
+                "summary": "",
+                "operationId": "FindMergedAttributesByName",
+                "parameters": [
+                    {
+                        "name": "regex",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "ciids",
+                        "in": "query",
+                        "description": "",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            "description": "",
+                            "nullable": true
+                        }
+                    },
+                    {
+                        "name": "layerIDs",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            },
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "atTime",
+                        "in": "query",
+                        "description": "",
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "date-time",
+                            "nullable": true
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CIAttributeDTO"
+                                    }
                                 }
                             }
                         }
