@@ -158,7 +158,7 @@ namespace OnlineInboundAdapterKeycloak
                         {
                             var externalID = mapper.GetExternalID(ciid);
                             if (!externalID.HasValue)
-                                break;
+                                continue;
 
                             var user = await client.GetUserAsync(realm, externalID.Value.ID);
                             var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.Value.ID);
