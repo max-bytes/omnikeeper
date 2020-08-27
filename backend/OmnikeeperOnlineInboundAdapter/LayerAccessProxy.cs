@@ -61,20 +61,26 @@ namespace OnlineInboundAdapterOmnikeeper
         {
             foreach (var relation in dto)
             {
-                // we need to reduce the relations to those whose related CIs are actually present in the mapper, to ensure that only relations of mapped cis are fetched
-                var fromCIID = mapper.GetCIID(new ExternalIDGuid(relation.FromCIID));
-                var toCIID = mapper.GetCIID(new ExternalIDGuid(relation.ToCIID));
-
-                if (fromCIID.HasValue && toCIID.HasValue)
-                {
-                    // TODO: because we use a code generator, it does not use our own DTO classes but generates its own
-                    // and we need to manually do a mapping here -> sucks, make that work
-                    yield return Relation.Build(relation.Id, fromCIID.Value, toCIID.Value,
-                        // TODO: can we just create a predicate on the fly?!? ignoring what predicates are actually present in the omnikeeper instance?
-                        Predicate.Build(relation.Predicate.Id, relation.Predicate.WordingFrom, relation.Predicate.WordingTo, AnchorState.Active, PredicateConstraints.Default),
-                        Landscape.Base.Entity.RelationState.New, staticChangesetID);
-                }
+                var r = RelationDTO2Regular(relation);
+                if (r != null) yield return r;
             }
+        }
+        private Relation RelationDTO2Regular(RelationDTO dto)
+        {
+            // we need to reduce the relations to those whose related CIs are actually present in the mapper, to ensure that only relations of mapped cis are fetched
+            var fromCIID = mapper.GetCIID(new ExternalIDGuid(dto.FromCIID));
+            var toCIID = mapper.GetCIID(new ExternalIDGuid(dto.ToCIID));
+
+            if (fromCIID.HasValue && toCIID.HasValue)
+            {
+                // TODO: because we use a code generator, it does not use our own DTO classes but generates its own
+                // and we need to manually do a mapping here -> sucks, make that work
+                return Relation.Build(dto.Id, fromCIID.Value, toCIID.Value,
+                    // TODO: can we just create a predicate on the fly?!? ignoring what predicates are actually present in the omnikeeper instance?
+                    Predicate.Build(dto.Predicate.Id, dto.Predicate.WordingFrom, dto.Predicate.WordingTo, AnchorState.Active, PredicateConstraints.Default),
+                    Landscape.Base.Entity.RelationState.New, staticChangesetID);
+            }
+            else return null;
         }
 
         public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime)
@@ -193,7 +199,18 @@ namespace OnlineInboundAdapterOmnikeeper
 
         public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
         {
-            return null; // TODO: implement
+            await mapper.Setup();
+
+            if (!atTime.IsLatest) return null; // TODO: implement historic information
+
+            var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
+            var remoteLayerIDs = remoteLayers.Select(rl => rl.Id).ToArray();
+            var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
+
+            var relationDTO = await client.GetMergedRelationAsync(fromCIID, toCIID, predicateID, remoteLayerIDs, time, ClientVersion);
+            if (relationDTO == null) return null;
+
+            return RelationDTO2Regular(relationDTO);
         }
     }
 }

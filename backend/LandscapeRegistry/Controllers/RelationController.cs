@@ -30,6 +30,25 @@ namespace LandscapeRegistry.Controllers
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="fromCIID"></param>
+        /// <param name="toCIID"></param>
+        /// <param name="predicateID"></param>
+        /// <param name="layerIDs"></param>
+        /// <param name="atTime"></param>
+        /// <returns></returns>
+        [HttpGet("getMergedRelation")]
+        public async Task<ActionResult<RelationDTO>> GetMergedRelation([FromQuery, Required]Guid fromCIID, [FromQuery, Required]Guid toCIID, [FromQuery, Required]string predicateID, [FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
+        {
+            var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
+            var layerset = new LayerSet(layerIDs);
+            var relation = await relationModel.GetMergedRelation(fromCIID, toCIID, predicateID, layerset, null, timeThreshold);
+            if (relation == null) return NotFound();
+            return Ok(RelationDTO.Build(relation));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="predicateID"></param>
         /// <param name="layerIDs"></param>
         /// <param name="atTime"></param>

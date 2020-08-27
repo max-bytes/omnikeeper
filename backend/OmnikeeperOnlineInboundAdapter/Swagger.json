@@ -1,4 +1,4 @@
-// 20200827155511
+// 20200827162333
 // https://localhost:44378/swagger/v1/swagger.json
 
 {
@@ -2411,6 +2411,176 @@
                                     "items": {
                                         "$ref": "#/components/schemas/LayerDTO"
                                     }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
+        "/api/v{version}/Relation/getMergedRelation": {
+            "get": {
+                "tags": [
+                    "Relation"
+                ],
+                "summary": "",
+                "operationId": "GetMergedRelation",
+                "parameters": [
+                    {
+                        "name": "fromCIID",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "toCIID",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "predicateID",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "layerIDs",
+                        "in": "query",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer",
+                                "format": "int64"
+                            },
+                            "description": ""
+                        }
+                    },
+                    {
+                        "name": "atTime",
+                        "in": "query",
+                        "description": "",
+                        "schema": {
+                            "type": "string",
+                            "description": "",
+                            "format": "date-time",
+                            "nullable": true
+                        }
+                    },
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json;odata.metadata=minimal;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=minimal;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=minimal": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=full;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=full": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=none;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "application/json;odata.metadata=none": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "application/json;odata.streaming=true": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "application/json;odata.streaming=false": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "application/odata": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RelationDTO"
                                 }
                             }
                         }

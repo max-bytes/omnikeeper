@@ -68,6 +68,27 @@ namespace LandscapeRegistry.Model
             return MergeRelations(relations, layerset);
         }
 
+        public async Task<MergedRelation> GetMergedRelation(Guid fromCIID, Guid toCIID, string predicateID, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            if (layerset.IsEmpty)
+                return null; // return empty, an empty layer list can never produce any relations
+
+            var relations = new List<(Relation relation, long layerID)>();
+
+            foreach (var layerID in layerset)
+            {
+                var r = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
+                relations.Add((r, layerID));
+            }
+
+            var mergedRelations = MergeRelations(relations, layerset);
+
+            if (mergedRelations.Count() > 1)
+                throw new Exception("Should never happen!");
+
+            return mergedRelations.FirstOrDefault();
+        }
+
 
         public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {

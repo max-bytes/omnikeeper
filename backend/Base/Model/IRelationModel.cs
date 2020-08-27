@@ -10,5 +10,6 @@ namespace Landscape.Base.Model
     public interface IRelationModel : IBaseRelationModel
     {
         Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<MergedRelation> GetMergedRelation(Guid fromCIID, Guid toCIID, string predicateID, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime);
     }
 }
