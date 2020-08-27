@@ -3,6 +3,11 @@ using System;
 
 namespace Landscape.Base.Entity
 {
+    public enum UserType
+    {
+        Human, Robot, Unknown
+    }
+
     public class UserInDatabase
     {
         public long ID { get; private set; }

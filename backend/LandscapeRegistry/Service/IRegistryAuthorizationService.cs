@@ -8,20 +8,20 @@ namespace LandscapeRegistry.Service
         string GetWriteAccessRoleNameFromLayerName(string layerName);
         string ParseLayerNameFromWriteAccessRoleName(string roleName);
 
-        bool CanUserWriteToLayer(User user, Layer layer);
+        bool CanUserWriteToLayer(AuthenticatedUser user, Layer layer);
 
-        bool CanUserWriteToLayer(User user, long layerID);
+        bool CanUserWriteToLayer(AuthenticatedUser user, long layerID);
 
-        bool CanUserWriteToLayers(User user, IEnumerable<long> writeLayerIDs);
+        bool CanUserWriteToLayers(AuthenticatedUser user, IEnumerable<long> writeLayerIDs);
 
-        bool CanUserCreateCI(User user);
+        bool CanUserCreateCI(AuthenticatedUser user);
 
-        bool CanUserCreateLayer(User user);
+        bool CanUserCreateLayer(AuthenticatedUser user);
 
-        bool CanUserUpdateLayer(User user);
+        bool CanUserUpdateLayer(AuthenticatedUser user);
 
-        bool CanUserUpsertPredicate(User user);
+        bool CanUserUpsertPredicate(AuthenticatedUser user);
 
-        bool CanUserUpsertCIType(User user);
+        bool CanUserUpsertCIType(AuthenticatedUser user);
     }
 }

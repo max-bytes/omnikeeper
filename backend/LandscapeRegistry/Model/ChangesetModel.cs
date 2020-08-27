@@ -53,11 +53,11 @@ namespace LandscapeRegistry.Model
             var userID = dr.GetInt64(1);
             var username = dr.GetString(2);
             var displayName = dr.GetString(3);
-            var userUUID = dr.GetGuid(4);
+            var keycloakUUID = dr.GetGuid(4);
             var userType = dr.GetFieldValue<UserType>(5);
             var userTimestamp = dr.GetTimeStamp(6).ToDateTime();
 
-            var user = UserInDatabase.Build(userID, userUUID, username, displayName, userType, userTimestamp);
+            var user = UserInDatabase.Build(userID, keycloakUUID, username, displayName, userType, userTimestamp);
             return Changeset.Build(id, user, timestamp);
         }
 

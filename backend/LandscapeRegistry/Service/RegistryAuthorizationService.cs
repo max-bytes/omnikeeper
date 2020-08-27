@@ -31,43 +31,43 @@ namespace LandscapeRegistry.Service
             return layerName.Value;
         }
 
-        public bool CanUserWriteToLayer(User user, Layer layer)
+        public bool CanUserWriteToLayer(AuthenticatedUser user, Layer layer)
         {
             return debugAllowAll || user.WritableLayers.Contains(layer);
         }
 
-        public bool CanUserWriteToLayer(User user, long layerID)
+        public bool CanUserWriteToLayer(AuthenticatedUser user, long layerID)
         {
             return debugAllowAll || user.WritableLayers.Any(l => l.ID == layerID);
         }
 
-        public bool CanUserWriteToLayers(User user, IEnumerable<long> writeLayerIDs)
+        public bool CanUserWriteToLayers(AuthenticatedUser user, IEnumerable<long> writeLayerIDs)
         {
             // writeLayerIDs must be subset of writable layers, otherwise user can't write to all passed layers
             return debugAllowAll || !writeLayerIDs.Except(user.WritableLayers.Select(l => l.ID)).Any();
         }
 
-        public bool CanUserCreateCI(User user)
+        public bool CanUserCreateCI(AuthenticatedUser user)
         {
             return true; // TODO
         }
 
-        public bool CanUserCreateLayer(User user)
+        public bool CanUserCreateLayer(AuthenticatedUser user)
         {
             return true; // TODO
         }
 
-        public bool CanUserUpdateLayer(User user)
+        public bool CanUserUpdateLayer(AuthenticatedUser user)
         {
             return true; // TODO
         }
 
-        public bool CanUserUpsertPredicate(User user)
+        public bool CanUserUpsertPredicate(AuthenticatedUser user)
         {
             return true; // TODO
         }
 
-        public bool CanUserUpsertCIType(User user)
+        public bool CanUserUpsertCIType(AuthenticatedUser user)
         {
             return true; // TODO
         }

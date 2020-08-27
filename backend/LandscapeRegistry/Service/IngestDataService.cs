@@ -36,7 +36,7 @@ namespace LandscapeRegistry.Service
         }
 
         
-        public async Task<(Dictionary<Guid, Guid> idMapping, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, User user, ILogger logger)
+        public async Task<(Dictionary<Guid, Guid> idMapping, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, AuthenticatedUser user, ILogger logger)
         {
             using var trans = Connection.BeginTransaction();
             var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, ChangesetModel);

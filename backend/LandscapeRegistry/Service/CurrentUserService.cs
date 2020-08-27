@@ -32,7 +32,7 @@ namespace LandscapeRegistry.Service
         private IUserInDatabaseModel UserModel { get; }
         private ILayerModel LayerModel { get; }
 
-        public async Task<User> GetCurrentUser(NpgsqlTransaction trans)
+        public async Task<AuthenticatedUser> GetCurrentUser(NpgsqlTransaction trans)
         {
             // TODO: caching
             return await CreateUserFromClaims(HttpContextAccessor.HttpContext.User.Claims, trans);
@@ -48,7 +48,7 @@ namespace LandscapeRegistry.Service
             return claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
         }
 
-        private async Task<User> CreateUserFromClaims(IEnumerable<Claim> claims, NpgsqlTransaction trans)
+        private async Task<AuthenticatedUser> CreateUserFromClaims(IEnumerable<Claim> claims, NpgsqlTransaction trans)
         {
             var username = GetUsernameFromClaims(claims);
 
@@ -56,7 +56,7 @@ namespace LandscapeRegistry.Service
             {
                 var anonymousGuid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef2"); // TODO: ?
                 var userInDatabase = await UserModel.UpsertUser("anonymous", "anonymous", anonymousGuid, UserType.Unknown, null);
-                return User.Build(userInDatabase, new List<Layer>());
+                return AuthenticatedUser.Build(userInDatabase, new List<Layer>());
             }
             else
             {
@@ -97,7 +97,7 @@ namespace LandscapeRegistry.Service
                 var guid = new Guid(guidString); // TODO: check for null, handle case
                 var userInDatabase = await UserModel.UpsertUser(username, displayName, guid, usertype, null);
 
-                return User.Build(userInDatabase, writableLayers);
+                return AuthenticatedUser.Build(userInDatabase, writableLayers);
             }
         }
     }

@@ -73,7 +73,7 @@ namespace Tests.Ingest
             
             // mock the current user service
             var mockCurrentUserService = new Mock<ICurrentUserService>();
-            var user = User.Build(await userModel.UpsertUser(username, displayName, userGUID, UserType.Robot, null), new List<Layer>() { layer1 });
+            var user = AuthenticatedUser.Build(await userModel.UpsertUser(username, displayName, userGUID, UserType.Robot, null), new List<Layer>() { layer1 });
             mockCurrentUserService.Setup(_ => _.GetCurrentUser(It.IsAny<NpgsqlTransaction>())).ReturnsAsync(user);
 
             var mockAuthorizationService = new Mock<IRegistryAuthorizationService>();

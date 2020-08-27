@@ -8,9 +8,9 @@ namespace LandscapeRegistry.GraphQL
 {
     public class RegistryUserContext : Dictionary<string, object>
     {
-        public User User { get; private set; }
+        public AuthenticatedUser User { get; private set; }
 
-        public RegistryUserContext(User user)
+        public RegistryUserContext(AuthenticatedUser user)
         {
             User = user;
         }
