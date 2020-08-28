@@ -16,10 +16,10 @@ namespace Tests.Tools
         [Test]
         public void Build()
         {
-            var config = new ODataAPIContext.ConfigV2()
+            var config = new ODataAPIContext.ConfigV3()
             {
-                WriteLayerName = "CMDB",
-                ReadLayersetNames = new string[] { "CMDB" }
+                WriteLayerID = 1,
+                ReadLayerset = new long[] { 1, 4 }
             };
             var json = ODataAPIContext.SerializeConfigToString(config);
 

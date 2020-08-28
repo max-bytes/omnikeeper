@@ -41,65 +41,74 @@ namespace LandscapeRegistry.Controllers.OData
     [Authorize]
     public class AttributesController : ODataController
     {
-        private readonly IBaseAttributeModel attributeModel;
+        private readonly IAttributeModel attributeModel;
         private readonly ICIModel ciModel;
         private readonly IChangesetModel changesetModel;
         private readonly ICISearchModel ciSearchModel;
+        private readonly IODataAPIContextModel oDataAPIContextModel;
         private readonly NpgsqlConnection conn;
         private readonly ICurrentUserService currentUserService;
         private readonly IRegistryAuthorizationService authorizationService;
 
-        public AttributesController(IBaseAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, ICISearchModel ciSearchModel, ICurrentUserService currentUserService, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
+        public AttributesController(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, ICISearchModel ciSearchModel, IODataAPIContextModel oDataAPIContextModel, 
+            ICurrentUserService currentUserService, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             this.attributeModel = attributeModel;
             this.ciModel = ciModel;
             this.changesetModel = changesetModel;
             this.ciSearchModel = ciSearchModel;
+            this.oDataAPIContextModel = oDataAPIContextModel;
             this.currentUserService = currentUserService;
             this.authorizationService = authorizationService;
             this.conn = conn;
         }
 
-        private AttributeDTO Model2DTO(CIAttribute a, string ciName)
+        private AttributeDTO Model2DTO(MergedCIAttribute a, string ciName)
         {
-            return new AttributeDTO() { CIID = a.CIID, CIName = ciName ?? "[Unnamed]", AttributeName = a.Name, Value = a.Value.Value2String() };
+            return new AttributeDTO() { CIID = a.Attribute.CIID, CIName = ciName ?? "[Unnamed]", AttributeName = a.Attribute.Name, Value = a.Attribute.Value.Value2String() };
         }
 
         [EnableQuery]
-        public async Task<AttributeDTO> GetAttributeDTO([FromODataUri,Required]Guid keyCIID, [FromODataUri]string keyAttributeName, [FromRoute]int layerID)
+        public async Task<AttributeDTO> GetAttributeDTO([FromODataUri,Required]Guid keyCIID, [FromODataUri]string keyAttributeName, [FromRoute]string context)
         {
             if (keyAttributeName.Equals(ICIModel.NameAttribute))
                 throw new Exception("Cannot get name attribute directly");
 
+            var layerset = await oDataAPIContextModel.GetReadLayersetFromContext(context, null);
             var timeThreshold = TimeThreshold.BuildLatest();
-            var a = await attributeModel.GetAttribute(keyAttributeName, layerID, keyCIID, null, timeThreshold);
-            var nameAttribute = await attributeModel.GetAttribute(ICIModel.NameAttribute, layerID, keyCIID, null, timeThreshold);
-            return Model2DTO(a, nameAttribute?.Value.Value2String());
+            var a = await attributeModel.GetMergedAttribute(keyCIID, keyAttributeName, layerset, null, timeThreshold);
+            var nameAttribute = await attributeModel.GetMergedAttribute(keyCIID, ICIModel.NameAttribute, layerset, null, timeThreshold);
+            return Model2DTO(a, nameAttribute?.Attribute?.Value.Value2String());
         }
 
         [EnableQuery]
-        public async Task<IEnumerable<AttributeDTO>> GetAttributes([FromRoute]int layerID)
+        public async Task<IEnumerable<AttributeDTO>> GetAttributes([FromRoute]string context)
         {
-            var attributes = await attributeModel.GetAttributes(new AllCIIDsSelection(), layerID, null, TimeThreshold.BuildLatest());
+            var layerset = await oDataAPIContextModel.GetReadLayersetFromContext(context, null);
+            var attributesDict = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), layerset, null, TimeThreshold.BuildLatest());
 
-            var nameAttributes = attributes.Where(a => a.Name.Equals(ICIModel.NameAttribute)).ToDictionary(a => a.CIID, a => a.Value.Value2String());
+            var attributes = attributesDict.SelectMany(a => a.Value.Values);
+
+            var nameAttributes = attributes.Where(a => a.Attribute.Name.Equals(ICIModel.NameAttribute)).ToDictionary(a => a.Attribute.CIID, a => a.Attribute.Value.Value2String());
 
             return attributes
-                .Where(a => !a.Name.Equals(ICIModel.NameAttribute)) // filter out name attributes
+                .Where(a => !a.Attribute.Name.Equals(ICIModel.NameAttribute)) // filter out name attributes
                 .Select(a => {
-                nameAttributes.TryGetValue(a.CIID, out var name);
+                nameAttributes.TryGetValue(a.Attribute.CIID, out var name);
                 return Model2DTO(a, name);
             });
         }
 
-        public async Task<IActionResult> Patch([FromODataUri]Guid keyCIID, [FromODataUri]string keyCIName, [FromODataUri]string keyAttributeName, [FromBody] Delta<AttributeDTO> test, [FromRoute]int layerID)
+        public async Task<IActionResult> Patch([FromODataUri]Guid keyCIID, [FromODataUri]string keyCIName, [FromODataUri]string keyAttributeName, [FromBody] Delta<AttributeDTO> test, [FromRoute]string context)
         {
+            var writeLayerID = await oDataAPIContextModel.GetWriteLayerIDFromContext(context, null);
+            var readLayerset = await oDataAPIContextModel.GetReadLayersetFromContext(context, null);
+
             var user = await currentUserService.GetCurrentUser(null);
-            if (!authorizationService.CanUserWriteToLayer(user, layerID))
-                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
+            if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
+                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
-
-            var old = await attributeModel.GetAttribute(keyAttributeName, layerID, keyCIID, null, TimeThreshold.BuildLatest());
+            var old = await attributeModel.GetMergedAttribute(keyCIID, keyAttributeName, readLayerset, null, TimeThreshold.BuildLatest());
             if (old == null) return BadRequest();
             var oldDTO = Model2DTO(old, keyCIName);
 
@@ -107,16 +116,17 @@ namespace LandscapeRegistry.Controllers.OData
             var @newDTO = oldDTO;
             using var trans = conn.BeginTransaction();
             var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, AttributeScalarValueText.Build(@newDTO.Value), layerID, @newDTO.CIID, changesetProxy, trans);
+            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, AttributeScalarValueText.Build(@newDTO.Value), writeLayerID, @newDTO.CIID, changesetProxy, trans);
 
+            var newMerged = await attributeModel.GetMergedAttribute(keyCIID, keyAttributeName, readLayerset, trans, TimeThreshold.BuildLatest());
             trans.Commit();
 
-            @newDTO = Model2DTO(@new, keyCIName);
+            @newDTO = Model2DTO(newMerged, keyCIName);
             return Updated(@newDTO);
         }
 
         [EnableQuery]
-        public async Task<IActionResult> Post([FromBody] InsertAttribute attribute, [FromRoute]int layerID)
+        public async Task<IActionResult> Post([FromBody] InsertAttribute attribute, [FromRoute]string context)
         {
             if (attribute == null)
                 return BadRequest($"Could not parse inserted attribute");
@@ -125,9 +135,12 @@ namespace LandscapeRegistry.Controllers.OData
             if (attribute.Value == null)
                 return BadRequest($"Attribute Value must be set");
 
+            var writeLayerID = await oDataAPIContextModel.GetWriteLayerIDFromContext(context, null);
+            var readLayerset = await oDataAPIContextModel.GetReadLayersetFromContext(context, null);
+
             var user = await currentUserService.GetCurrentUser(null);
-            if (!authorizationService.CanUserWriteToLayer(user, layerID))
-                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
+            if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
+                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
             using var trans = conn.BeginTransaction();
             var timeThreshold = TimeThreshold.BuildLatest();
@@ -140,7 +153,7 @@ namespace LandscapeRegistry.Controllers.OData
             }
             else if (attribute.CIName != null && attribute.CIName != "")
             { // ciid not set, try to match using ci name, which is set
-                var foundCIs = (await ciSearchModel.FindCIsWithName(attribute.CIName, new LayerSet(new long[] { layerID }), trans, timeThreshold)).ToList();
+                var foundCIs = (await ciSearchModel.FindCIsWithName(attribute.CIName, readLayerset, trans, timeThreshold)).ToList();
                 if (foundCIs.Count == 0)
                 { // ok case, continue
                 }
@@ -160,36 +173,39 @@ namespace LandscapeRegistry.Controllers.OData
             {
                 await ciModel.CreateCI(trans, finalCIID);
                 if (attribute.CIName != null && attribute.CIName != "")
-                    await attributeModel.InsertCINameAttribute(attribute.CIName, layerID, finalCIID, changesetProxy, trans);
+                    await attributeModel.InsertCINameAttribute(attribute.CIName, writeLayerID, finalCIID, changesetProxy, trans);
             } else
             { // ci exists already, make sure either name is not set or it matches already present name
                 if (attribute.CIName != null && attribute.CIName != "")
                 {
-                    var currentNameAttribute = await attributeModel.GetAttribute(ICIModel.NameAttribute, layerID, finalCIID, null, timeThreshold);
-                    if (currentNameAttribute == null || !attribute.CIName.Equals(currentNameAttribute.Value.Value2String()))
+                    var currentNameAttribute = await attributeModel.GetMergedAttribute(finalCIID, ICIModel.NameAttribute, readLayerset, null, timeThreshold);
+                    if (currentNameAttribute == null || !attribute.CIName.Equals(currentNameAttribute.Attribute.Value.Value2String()))
                         return BadRequest($"Cannot set new CI-Name on insert");
                 }
             }
 
-            var created = await attributeModel.InsertAttribute(attribute.AttributeName, AttributeScalarValueText.Build(attribute.Value), layerID, finalCIID, changesetProxy, trans);
+            var created = await attributeModel.InsertAttribute(attribute.AttributeName, AttributeScalarValueText.Build(attribute.Value), writeLayerID, finalCIID, changesetProxy, trans);
 
-            var nameAttribute = await attributeModel.GetAttribute(ICIModel.NameAttribute, layerID, finalCIID, trans, timeThreshold);
+            var nameAttribute = await attributeModel.GetMergedAttribute(finalCIID, ICIModel.NameAttribute, readLayerset, trans, timeThreshold);
+            var createdMerged = await attributeModel.GetMergedAttribute(finalCIID, attribute.AttributeName, readLayerset, trans, TimeThreshold.BuildLatest());
 
             trans.Commit();
 
-            return Created(Model2DTO(created, nameAttribute?.Value.Value2String()));
+            return Created(Model2DTO(createdMerged, nameAttribute?.Attribute.Value.Value2String()));
         }
 
         [EnableQuery]
-        public async Task<IActionResult> Delete([FromODataUri]Guid keyCIID, [FromODataUri]string keyAttributeName, [FromRoute]int layerID)
+        public async Task<IActionResult> Delete([FromODataUri]Guid keyCIID, [FromODataUri]string keyAttributeName, [FromRoute]string context)
         {
+            var writeLayerID = await oDataAPIContextModel.GetWriteLayerIDFromContext(context, null);
+
             var user = await currentUserService.GetCurrentUser(null);
-            if (!authorizationService.CanUserWriteToLayer(user, layerID))
-                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
+            if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
+                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
             using var trans = conn.BeginTransaction();
             var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var removed = await attributeModel.RemoveAttribute(keyAttributeName, layerID, keyCIID, changesetProxy, trans);
+            var removed = await attributeModel.RemoveAttribute(keyAttributeName, writeLayerID, keyCIID, changesetProxy, trans);
 
             if (removed == null)
                 return NotFound();

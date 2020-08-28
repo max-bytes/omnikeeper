@@ -9,17 +9,11 @@ namespace Landscape.Base.Entity
     {
         public interface IConfig { }
 
-        public class ConfigV1 : IConfig
+        public class ConfigV3 : IConfig
         {
-            public string WriteLayerName { get; set; }
+            public long WriteLayerID { get; set; }
+            public long[] ReadLayerset { get; set; }
         }
-
-        public class ConfigV2 : IConfig
-        {
-            public string WriteLayerName { get; set; }
-            public string[] ReadLayersetNames { get; set; }
-        }
-
 
         public string ID { get; set; }
         public IConfig CConfig { get; set; }
@@ -29,7 +23,7 @@ namespace Landscape.Base.Entity
             return JsonConvert.DeserializeObject<IConfig>(s, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects });
         }
 
-        // TODO: use one serializer for everything
+        // TODO: use one serializer for everything... but newtonsoft json API is confusing
         private static readonly JsonSerializer Serializer = new JsonSerializer()
         {
             TypeNameHandling = TypeNameHandling.Objects

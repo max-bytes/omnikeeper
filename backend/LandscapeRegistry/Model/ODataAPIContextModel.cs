@@ -95,5 +95,26 @@ namespace LandscapeRegistry.Model
 
             return Deserialize(id, config);
         }
+
+        public async Task<LayerSet> GetReadLayersetFromContext(string contextID, NpgsqlTransaction trans)
+        {
+            var context = await GetContextByID(contextID, trans);
+            if (context == null) throw new Exception($"Invalid context ID \"{contextID}\"");
+            return context.CConfig switch
+            {
+                ODataAPIContext.ConfigV3 v3 => new LayerSet(v3.ReadLayerset),
+                _ => throw new Exception("Invalid OData API context config"),
+            };
+        }
+        public async Task<long> GetWriteLayerIDFromContext(string contextID, NpgsqlTransaction trans)
+        {
+            var context = await GetContextByID(contextID, trans);
+            if (context == null) throw new Exception($"Invalid context ID \"{contextID}\"");
+            return context.CConfig switch
+            {
+                ODataAPIContext.ConfigV3 v3 => v3.WriteLayerID,
+                _ => throw new Exception("Invalid OData API context config"),
+            };
+        }
     }
 }
