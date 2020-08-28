@@ -38,6 +38,7 @@ namespace OnlineInboundAdapterOmnikeeper
             public readonly string[] remoteLayerNames;
             public TimeSpan preferredIDMapUpdateRate;
 
+            [Newtonsoft.Json.JsonIgnore]
             public string BuilderName { get; } = Builder.StaticName;
 
             public Config(string apiURL, string authURL, string realm, string clientID, string clientSecret, string[] remoteLayerNames, TimeSpan preferredIDMapUpdateRate, string mapperScope)

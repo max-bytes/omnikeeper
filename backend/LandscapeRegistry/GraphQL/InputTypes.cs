@@ -211,4 +211,18 @@ namespace LandscapeRegistry.GraphQL
             Field(x => x.Config);
         }
     }
+
+    public class UpsertODataAPIContextInput
+    {
+        public string ID { get; private set; }
+        public string Config { get; private set; }
+    }
+    public class UpsertODataAPIContextInputType : InputObjectGraphType<UpsertODataAPIContextInput>
+    {
+        public UpsertODataAPIContextInputType()
+        {
+            Field("id", x => x.ID);
+            Field(x => x.Config);
+        }
+    }
 }

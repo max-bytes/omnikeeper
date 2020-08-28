@@ -147,6 +147,19 @@ CREATE_CI: gql`
   }
   `,
 
+  UPSERT_ODATAAPICONTEXT: gql`
+    mutation UpsertODataAPIContext($odataAPIContext: UpsertODataAPIContextInputType!) {
+      upsertODataAPIContext(odataAPIContext: $odataAPIContext) {
+        id
+        config
+      }
+    }
+  `,
+  DELETE_ODATAAPICONTEXT: gql`
+  mutation DeleteODataAPIContext($id: String!) {
+    deleteODataAPIContext(id: $id)
+  }
+  `,
   
 
   UPSERT_PREDICATE: gql`

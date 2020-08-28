@@ -1,24 +1,20 @@
 ﻿using GraphQL.Types;
-using Keycloak.Net.Models.Root;
 using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
-using LandscapeRegistry.Model;
-using LandscapeRegistry.Model.Decorators;
 using LandscapeRegistry.Service;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using static Landscape.Base.Model.IChangesetModel;
-using static Landscape.Base.Model.IRelationModel;
-
 namespace LandscapeRegistry.GraphQL
 {
     public class RegistryQuery : ObjectGraphType
     {
         public RegistryQuery(ICIModel ciModel, ILayerModel layerModel, IPredicateModel predicateModel, IMemoryCacheModel memoryCacheModel,
-            IChangesetModel changesetModel, ICISearchModel ciSearchModel, IOIAConfigModel oiaConfigModel, ITraitModel traitModel, ITraitsProvider traitsProvider, ICurrentUserService currentUserService)
+            IChangesetModel changesetModel, ICISearchModel ciSearchModel, IOIAConfigModel oiaConfigModel, IODataAPIContextModel odataAPIContextModel,
+            ITraitModel traitModel, ITraitsProvider traitsProvider, ICurrentUserService currentUserService)
         {
             FieldAsync<MergedCIType>("ci",
                 arguments: new QueryArguments(new List<QueryArgument>
@@ -251,6 +247,14 @@ namespace LandscapeRegistry.GraphQL
                 resolve: async context =>
                 {
                     var configs = await oiaConfigModel.GetConfigs(null);
+
+                    return configs;
+                });
+
+            FieldAsync<ListGraphType<ODataAPIContextType>>("odataapicontexts",
+                resolve: async context =>
+                {
+                    var configs = await odataAPIContextModel.GetContexts(null);
 
                     return configs;
                 });

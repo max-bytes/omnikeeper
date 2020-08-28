@@ -19,7 +19,7 @@ namespace LandscapeRegistry.GraphQL
     public class RegistryMutation : ObjectGraphType
     {
         public RegistryMutation(ICIModel ciModel, IBaseAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAConfigModel OIAConfigModel,
-            IChangesetModel changesetModel, IPredicateModel predicateModel, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
+             IODataAPIContextModel odataAPIContextModel, IChangesetModel changesetModel, IPredicateModel predicateModel, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
@@ -278,6 +278,90 @@ namespace LandscapeRegistry.GraphQL
                   userContext.Transaction = transaction;
 
                   var deleted = await OIAConfigModel.Delete(id, transaction);
+                  await transaction.CommitAsync();
+                  return deleted != null;
+              });
+
+
+            FieldAsync<ODataAPIContextType>("upsertODataAPIContext",
+                arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<UpsertODataAPIContextInputType>> { Name = "odataAPIContext" }
+                ),
+                resolve: async context =>
+                {
+                    var contextInput = context.GetArgument<UpsertODataAPIContextInput>("odataAPIContext");
+                    var userContext = context.UserContext as RegistryUserContext;
+
+                    // TODO: auth
+                    //if (!authorizationService.CanUserCreateLayer(userContext.User))
+                    //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create Layers");
+
+                    using var transaction = await conn.BeginTransactionAsync();
+                    userContext.Transaction = transaction;
+
+                    try
+                    {
+                        var config = ODataAPIContext.DeserializeConfig(contextInput.Config);
+
+                        var created = await odataAPIContextModel.Upsert(contextInput.ID, config, transaction);
+
+                        await transaction.CommitAsync();
+
+                        return created;
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ExecutionError($"Could not parse configuration", e);
+                    }
+                });
+            //FieldAsync<OIAConfigType>("updateODataAPIContext",
+            //  arguments: new QueryArguments(
+            //    new QueryArgument<NonNullGraphType<UpdateOIAConfigInputType>> { Name = "odataAPIContext" }
+            //  ),
+            //  resolve: async context =>
+            //  {
+            //      var contextInput = context.GetArgument<UpdateODataAPIContextInput>("odataAPIContext");
+
+            //      var userContext = context.UserContext as RegistryUserContext;
+
+            //      // TODO: auth
+            //      //if (!authorizationService.CanUserUpdateLayer(userContext.User))
+            //      //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update Layers");
+
+            //      using var transaction = await conn.BeginTransactionAsync();
+            //      userContext.Transaction = transaction;
+
+            //      try
+            //      {
+            //          var config = JsonConvert.DeserializeObject<ODataAPIContext.Config>(contextInput.Config, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects });
+            //          var updated = await odataAPIContextModel.Update(contextInput.ID, config, transaction);
+            //          await transaction.CommitAsync();
+
+            //          return updated;
+            //      }
+            //      catch (Exception e)
+            //      {
+            //          throw new ExecutionError($"Could not parse configuration", e);
+            //      }
+            //  });
+            FieldAsync<BooleanGraphType>("deleteODataAPIContext",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
+              ),
+              resolve: async context =>
+              {
+                  var id = context.GetArgument<string>("id");
+
+                  var userContext = context.UserContext as RegistryUserContext;
+
+                  // TODO: auth
+                  //if (!authorizationService.CanUserUpdateLayer(userContext.User))
+                  //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission");
+
+                  using var transaction = await conn.BeginTransactionAsync();
+                  userContext.Transaction = transaction;
+
+                  var deleted = await odataAPIContextModel.Delete(id, transaction);
                   await transaction.CommitAsync();
                   return deleted != null;
               });

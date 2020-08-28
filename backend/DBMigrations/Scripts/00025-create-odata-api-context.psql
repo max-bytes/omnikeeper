@@ -1,0 +1,7 @@
+﻿
+CREATE TABLE public.odataapicontext
+(
+    id text NOT NULL,
+    config json NOT NULL,
+    CONSTRAINT odataapicontext_pkey PRIMARY KEY (id)
+);

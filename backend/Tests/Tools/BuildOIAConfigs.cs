@@ -16,7 +16,7 @@ namespace Tests.Tools
         {
             var config = new OnlineInboundAdapter.Config(
                 "https://mhx.registry-test.mhx.at/backend/api",
-                "https://auth-test.mhx.at/auth/",
+                "https://auth-test.mhx.at/",
                 "mhx",
                 "landscape-registry-api",
                 "9c98eb5f-22f0-47d1-8123-810d7d96104f",

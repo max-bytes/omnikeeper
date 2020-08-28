@@ -81,6 +81,14 @@ export const queries = {
             }
         }
     `,
+    ODataAPIContexts: gql`
+        query odataapicontexts {
+            odataapicontexts {
+                id
+                config
+            }
+        }
+    `,
     Changesets: gql`
         query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciid: Guid, $layers:[String]!, $limit: Int) {
             changesets(from: $from, to:$to, ciid:$ciid, layers: $layers, limit: $limit) {
