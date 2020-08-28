@@ -255,7 +255,6 @@ namespace LandscapeRegistry
                     }
                 });
                 c.OperationFilter<AuthenticationRequirementsOperationFilter>();
-
                 // Use method name as operationId
                 c.CustomOperationIds(apiDesc => apiDesc.TryGetMethodInfo(out MethodInfo methodInfo) ? methodInfo.Name : null);
             });
@@ -351,7 +350,7 @@ namespace LandscapeRegistry
                 c.RouteTemplate = "swagger/{documentName}/swagger.json";
                 c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
                 {
-                    swaggerDoc.Servers = new List<OpenApiServer> { new OpenApiServer { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}{Configuration["BaseURL"]}" } };
+                    swaggerDoc.Servers = new List<OpenApiServer> { new OpenApiServer { Url = $"https://{httpReq.Host.Value}{Configuration["BaseURL"]}" } };
                 });
             });
             app.UseSwaggerUI(c =>
