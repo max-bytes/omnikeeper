@@ -5,10 +5,10 @@ namespace Landscape.Base.Entity.DTO
 {
     public class RelatedCIDTO
     {
-        [Required] public Guid FromCIID { get; private set; }
-        [Required] public CIDTO ToCI { get; private set; }
-        [Required] public string PredicateID { get; private set; }
-        [Required] public RelationState State { get; private set; }
+        [Required] public Guid FromCIID { get; set; }
+        [Required] public CIDTO ToCI { get; set; }
+        [Required] public string PredicateID { get; set; }
+        [Required] public RelationState State { get; set; }
 
         public static RelatedCIDTO Build(MergedRelatedCI relatedCI)
         {
@@ -24,12 +24,12 @@ namespace Landscape.Base.Entity.DTO
 
     public class RelationDTO
     {
-        [Required] public Guid ID { get; private set; }
-        [Required] public Guid FromCIID { get; private set; }
-        [Required] public Guid ToCIID { get; private set; }
+        [Required] public Guid ID { get; set; }
+        [Required] public Guid FromCIID { get; set; }
+        [Required] public Guid ToCIID { get; set; }
         [Required] public string PredicateID { get => Predicate.ID; }
-        [Required] public PredicateDTO Predicate { get; private set; }
-        [Required] public RelationState State { get; private set; }
+        [Required] public PredicateDTO Predicate { get; set; }
+        [Required] public RelationState State { get; set; }
 
         public static RelationDTO Build(MergedRelation r)
         {

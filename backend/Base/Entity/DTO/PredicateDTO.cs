@@ -2,9 +2,9 @@
 {
     public class PredicateDTO
     {
-        public string ID { get; private set; }
-        public string WordingFrom { get; private set; }
-        public string WordingTo { get; private set; }
+        public string ID { get; set; }
+        public string WordingFrom { get; set; }
+        public string WordingTo { get; set; }
 
         private PredicateDTO() { }
 

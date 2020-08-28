@@ -7,8 +7,8 @@ namespace Landscape.Base.Entity.DTO
 {
     public class EffectiveTraitSetDTO
     {
-        [Required] public CIDTO UnderlyingCI { get; private set; }
-        [Required] public IImmutableDictionary<string, EffectiveTraitDTO> EffectiveTraits { get; private set; }
+        [Required] public CIDTO UnderlyingCI { get; set; }
+        [Required] public IImmutableDictionary<string, EffectiveTraitDTO> EffectiveTraits { get; set; }
         public static EffectiveTraitSetDTO Build(EffectiveTraitSet traitSet)
         {
             return new EffectiveTraitSetDTO
@@ -21,8 +21,8 @@ namespace Landscape.Base.Entity.DTO
 
     public class EffectiveTraitDTO
     {
-        [Required] public IImmutableDictionary<string, CIAttributeDTO> TraitAttributes { get; private set; }
-        [Required] public IImmutableDictionary<string, IEnumerable<RelatedCIDTO>> TraitRelations { get; private set; }
+        [Required] public IImmutableDictionary<string, CIAttributeDTO> TraitAttributes { get; set; }
+        [Required] public IImmutableDictionary<string, IEnumerable<RelatedCIDTO>> TraitRelations { get; set; }
 
         public static EffectiveTraitDTO Build(EffectiveTrait et)
         {

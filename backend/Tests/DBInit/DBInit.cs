@@ -21,7 +21,7 @@ using Tests.Integration.Model.Mocks;
 namespace Tests.DBInit
 {
     [Explicit]
-    //[Ignore("Only manual")]
+    [Ignore("Only manual")]
     class DBInit
     {
 

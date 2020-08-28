@@ -8,11 +8,13 @@ namespace Landscape.Base.Entity.DTO
 {
     public class CIAttributeDTO
     {
-        [Required] public Guid ID { get; private set; }
-        [Required] public string Name { get; private set; }
-        [Required] public AttributeValueDTO Value { get; private set; }
-        [Required] public Guid CIID { get; private set; }
-        [Required] public AttributeState State { get; private set; }
+        [Required] public Guid ID { get; set; }
+        [Required] public string Name { get; set; }
+        [Required] public AttributeValueDTO Value { get; set; }
+        [Required] public Guid CIID { get; set; }
+        [Required] public AttributeState State { get; set; }
+
+        private CIAttributeDTO() { }
 
         public static CIAttributeDTO Build(MergedCIAttribute attribute)
         {

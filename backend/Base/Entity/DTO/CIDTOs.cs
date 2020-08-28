@@ -7,8 +7,8 @@ namespace Landscape.Base.Entity.DTO
 {
     public class CIDTO
     {
-        [Required] public Guid ID { get; private set; }
-        [Required] public IDictionary<string, CIAttributeDTO> Attributes { get; private set; }
+        [Required] public Guid ID { get; set; }
+        [Required] public IDictionary<string, CIAttributeDTO> Attributes { get; set; }
 
         public static CIDTO Build(Guid ciid, IEnumerable<CIAttributeDTO> attributes)
         {

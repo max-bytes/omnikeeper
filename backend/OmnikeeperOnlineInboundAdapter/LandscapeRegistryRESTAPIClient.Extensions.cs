@@ -1,5 +1,6 @@
 ﻿using Flurl;
 using Flurl.Http;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -24,6 +25,15 @@ namespace OnlineInboundAdapterOmnikeeper
             string GetAccessToken() => GetAccessTokenAsync(config.authURL, config.realm, config.clientID, config.clientSecret).GetAwaiter().GetResult();
             var accessToken = GetAccessToken(); // TODO: this sucks, we shouldn't execute this in a constructor -> find better way
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        }
+
+        partial void UpdateJsonSerializerSettings(Newtonsoft.Json.JsonSerializerSettings settings)
+        {
+            settings.ContractResolver = new DefaultContractResolver()
+            {
+                NamingStrategy = new CamelCaseNamingStrategy(false, false, false)
+            };
+            settings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
         }
 
         private async Task<string> GetAccessTokenAsync(string url, string realm, string client_id, string client_secret)

@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Entity.DTO;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
@@ -44,15 +45,11 @@ namespace OnlineInboundAdapterOmnikeeper
         private CIAttribute AttributeDTO2Regular(CIAttributeDTO dto)
         {
             // we force a mapping to ensure only attributes of properly mapped cis are used
-            var ciid = mapper.GetCIID(new ExternalIDGuid(dto.Ciid));
+            var ciid = mapper.GetCIID(new ExternalIDGuid(dto.CIID));
 
             if (ciid.HasValue)
             {
-                // TODO: because we use a code generator, it does not use our own DTO classes but generates its own
-                // and we need to manually do a mapping here -> sucks, make that work
-                return CIAttribute.Build(dto.Id, dto.Name, ciid.Value,
-                    AttributeValueBuilder.Build(Landscape.Base.Entity.DTO.AttributeValueDTO.Build(dto.Value.Values.ToArray(), dto.Value.IsArray, (LandscapeRegistry.Entity.AttributeValues.AttributeValueType)dto.Value.Type)),
-                    Landscape.Base.Entity.AttributeState.New, staticChangesetID);
+                return CIAttribute.Build(dto.ID, dto.Name, ciid.Value, AttributeValueBuilder.Build(dto.Value), AttributeState.New, staticChangesetID);
             }
             else return null;
         }
@@ -73,12 +70,11 @@ namespace OnlineInboundAdapterOmnikeeper
 
             if (fromCIID.HasValue && toCIID.HasValue)
             {
-                // TODO: because we use a code generator, it does not use our own DTO classes but generates its own
-                // and we need to manually do a mapping here -> sucks, make that work
-                return Relation.Build(dto.Id, fromCIID.Value, toCIID.Value,
+                return Relation.Build(dto.ID, fromCIID.Value, toCIID.Value,
                     // TODO: can we just create a predicate on the fly?!? ignoring what predicates are actually present in the omnikeeper instance?
-                    Predicate.Build(dto.Predicate.Id, dto.Predicate.WordingFrom, dto.Predicate.WordingTo, AnchorState.Active, PredicateConstraints.Default),
-                    Landscape.Base.Entity.RelationState.New, staticChangesetID);
+                    // apparently we can, because it seems to work, but does that work in all edge-cases?
+                    Predicate.Build(dto.Predicate.ID, dto.Predicate.WordingFrom, dto.Predicate.WordingTo, AnchorState.Active, PredicateConstraints.Default),
+                    RelationState.New, staticChangesetID);
             }
             else return null;
         }
@@ -107,7 +103,7 @@ namespace OnlineInboundAdapterOmnikeeper
             if (IDPairs.IsEmpty()) yield break; // no ci maps, bail early
 
             var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
-            var remoteLayerIDs = remoteLayers.Select(rl => rl.Id).ToArray();
+            var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
 
             var externalIDs = IDPairs.Select(p => p.Item2.ID);
             var attributesDTO = await client.GetMergedAttributesAsync(externalIDs, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion);
@@ -125,7 +121,7 @@ namespace OnlineInboundAdapterOmnikeeper
             if (externalID == null) return null;
 
             var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
-            var remoteLayerIDs = remoteLayers.Select(rl => rl.Id).ToArray();
+            var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
 
             var attributeDTO = await client.GetMergedAttributeAsync(ciid, name, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion);
             if (attributeDTO == null) return null;
@@ -140,7 +136,7 @@ namespace OnlineInboundAdapterOmnikeeper
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
             var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
-            var remoteLayerIDs = remoteLayers.Select(rl => rl.Id).ToArray();
+            var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
 
             var attributesDTO = await client.GetMergedAttributesWithNameAsync(name, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion);
 
@@ -157,7 +153,7 @@ namespace OnlineInboundAdapterOmnikeeper
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
             var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
-            var remoteLayerIDs = remoteLayers.Select(rl => rl.Id).ToArray();
+            var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
             var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
 
             var ciids = selection switch
@@ -180,7 +176,7 @@ namespace OnlineInboundAdapterOmnikeeper
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
             var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
-            var remoteLayerIDs = remoteLayers.Select(rl => rl.Id).ToArray();
+            var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
             var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
 
             var relationsDTO = rl switch
@@ -189,7 +185,7 @@ namespace OnlineInboundAdapterOmnikeeper
                 RelationSelectionWithPredicate p => await client.GetMergedRelationsWithPredicateAsync(p.predicateID, remoteLayerIDs, time, ClientVersion),
                 RelationSelectionEitherFromOrTo fot => await client.GetMergedRelationsFromOrToCIAsync(fot.ciid, remoteLayerIDs, time, ClientVersion),
                 RelationSelectionAll a => await client.GetAllMergedRelationsAsync(remoteLayerIDs, time, ClientVersion),
-                _ => null,// must not be
+                _ => throw new NotImplementedException(),// must not be
             };
 
             // we need to reduce the relations to those whose related CIs are actually present in the mapper, to ensure that only relations of mapped cis are fetched
@@ -204,7 +200,7 @@ namespace OnlineInboundAdapterOmnikeeper
             if (!atTime.IsLatest) return null; // TODO: implement historic information
 
             var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
-            var remoteLayerIDs = remoteLayers.Select(rl => rl.Id).ToArray();
+            var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
             var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
 
             var relationDTO = await client.GetMergedRelationAsync(fromCIID, toCIID, predicateID, remoteLayerIDs, time, ClientVersion);

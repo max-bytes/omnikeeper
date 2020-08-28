@@ -1,6 +1,7 @@
 ﻿using GraphQL;
 using GraphQL.Types;
 using GraphQL.Validation;
+using Landscape.Base.Entity;
 using LandscapeRegistry.GraphQL;
 using LandscapeRegistry.Service;
 using Microsoft.AspNetCore.Authorization;
@@ -15,14 +16,6 @@ using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Controllers
 {
-    public class GraphQLQuery
-    {
-        public string OperationName { get; set; }
-        public string NamedQuery { get; set; }
-        public string Query { get; set; }
-        public JObject Variables { get; set; }
-    }
-
     [ApiController]
     [ApiVersionNeutral]
     [Route("[controller]")]

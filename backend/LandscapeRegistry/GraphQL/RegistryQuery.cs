@@ -250,9 +250,9 @@ namespace LandscapeRegistry.GraphQL
             FieldAsync<ListGraphType<OIAConfigType>>("oiaconfigs",
                 resolve: async context =>
                 {
-                    var layers = await oiaConfigModel.GetConfigs(null);
+                    var configs = await oiaConfigModel.GetConfigs(null);
 
-                    return layers;
+                    return configs;
                 });
 
             FieldAsync<ChangesetType>("changeset",
