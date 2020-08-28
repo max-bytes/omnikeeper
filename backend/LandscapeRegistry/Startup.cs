@@ -223,12 +223,6 @@ namespace LandscapeRegistry
             {
                 var cs = Configuration.GetConnectionString("HangfireConnection");
                 config.UseMemoryStorage();
-                //config.UsePostgreSqlStorage(cs, new PostgreSqlStorageOptions()
-                //{
-                //    InvisibilityTimeout = TimeSpan.FromMinutes(5),
-                //    QueuePollInterval = TimeSpan.FromSeconds(5),
-                //    DistributedLockTimeout = TimeSpan.FromMinutes(1),
-                //});
                 config.UseFilter(new AutomaticRetryAttribute() { Attempts = 0 });
                 //config.UseConsole(); //TODO
             });

@@ -38,7 +38,10 @@ namespace Landscape.Base.Inbound
             return ID;
         }
 
-        public override bool Equals([AllowNull] object other) => Equals(other as ExternalIDString?);
+        public override bool Equals([AllowNull] object other)
+        {
+            try { return Equals((ExternalIDString)other); } catch (InvalidCastException) { return false; };
+        }
         public bool Equals([AllowNull] ExternalIDString other) => ID == other.ID;
         public override int GetHashCode() => ID.GetHashCode();
     }
@@ -58,7 +61,9 @@ namespace Landscape.Base.Inbound
             return ID.ToString();
         }
 
-        public override bool Equals([AllowNull] object other) => Equals(other as ExternalIDGuid?);
+        public override bool Equals([AllowNull] object other) {
+            try { return Equals((ExternalIDGuid)other); } catch (InvalidCastException) { return false; };
+        }
         public bool Equals([AllowNull] ExternalIDGuid other) => ID == other.ID;
         public override int GetHashCode() => ID.GetHashCode();
     }
