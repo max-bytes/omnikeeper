@@ -130,6 +130,7 @@ namespace LandscapeRegistry
             services.Decorate<IPredicateModel, CachingPredicateModel>();
             services.AddScoped<IMemoryCacheModel, MemoryCacheModel>();
             services.AddScoped<IODataAPIContextModel, ODataAPIContextModel>();
+            services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
 
             services.AddScoped<ITraitModel, TraitModel>();
             //services.Decorate<ITraitModel, CachingTraitModel>();

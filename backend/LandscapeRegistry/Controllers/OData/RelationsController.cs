@@ -57,7 +57,7 @@ namespace LandscapeRegistry.Controllers.OData
         public async Task<RelationDTO> GetRelationDTO([FromODataUri, Required]Guid keyFromCIID, [FromODataUri, Required]Guid keyToCIID, [FromODataUri, Required]string keyPredicate, [FromRoute]string context)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
-            var layerset = await oDataAPIContextModel.GetReadLayersetFromContext(context, null);
+            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
             var r = await relationModel.GetMergedRelation(keyFromCIID, keyToCIID, keyPredicate, layerset, null, timeThreshold);
             return Model2DTO(r);
         }
@@ -65,7 +65,7 @@ namespace LandscapeRegistry.Controllers.OData
         [EnableQuery]
         public async Task<IEnumerable<RelationDTO>> GetRelations([FromRoute]string context)
         {
-            var layerset = await oDataAPIContextModel.GetReadLayersetFromContext(context, null);
+            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
             var relations = await relationModel.GetMergedRelations(new RelationSelectionAll(), layerset, null, TimeThreshold.BuildLatest());
 
             return relations.Select(r => Model2DTO(r));
@@ -83,8 +83,8 @@ namespace LandscapeRegistry.Controllers.OData
             if (relation.Predicate == null || relation.Predicate == "")
                 return BadRequest($"Relation Predicate must be set");
 
-            var writeLayerID = await oDataAPIContextModel.GetWriteLayerIDFromContext(context, null);
-            var readLayerset = await oDataAPIContextModel.GetReadLayersetFromContext(context, null);
+            var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, null);
+            var readLayerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
 
             var user = await currentUserService.GetCurrentUser(null);
             if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
@@ -113,7 +113,7 @@ namespace LandscapeRegistry.Controllers.OData
         [EnableQuery]
         public async Task<IActionResult> Delete([FromODataUri]Guid keyFromCIID, [FromODataUri]Guid keyToCIID, [FromODataUri]string keyPredicate, [FromRoute]string context)
         {
-            var writeLayerID = await oDataAPIContextModel.GetWriteLayerIDFromContext(context, null);
+            var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, null);
             var user = await currentUserService.GetCurrentUser(null);
             if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");

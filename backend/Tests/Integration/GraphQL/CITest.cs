@@ -40,12 +40,14 @@ namespace Tests.Integration.GraphQL
             Services.Register<IMemoryCacheModel>(() => null);
             Services.Register<ITraitModel, TraitModel>();
             Services.Register<IOIAConfigModel, OIAConfigModel>();
+            Services.Register<IODataAPIContextModel, ODataAPIContextModel>();
 
             Services.Register<ITraitsProvider, TraitsProvider>();
             Services.Register<ITemplatesProvider, TemplatesProvider>();
 
             Services.Register<ILogger<TraitModel>>(() => NullLogger<TraitModel>.Instance);
             Services.Register<ILogger<OIAConfigModel>>(() => NullLogger<OIAConfigModel>.Instance);
+            Services.Register<ILogger<ODataAPIContextModel>>(() => NullLogger<ODataAPIContextModel>.Instance);
 
             var authorizationService = new Mock<IRegistryAuthorizationService>();
             Services.Register<IRegistryAuthorizationService>(() => authorizationService.Object);

@@ -74,7 +74,7 @@ namespace LandscapeRegistry.Controllers.OData
             if (keyAttributeName.Equals(ICIModel.NameAttribute))
                 throw new Exception("Cannot get name attribute directly");
 
-            var layerset = await oDataAPIContextModel.GetReadLayersetFromContext(context, null);
+            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
             var timeThreshold = TimeThreshold.BuildLatest();
             var a = await attributeModel.GetMergedAttribute(keyCIID, keyAttributeName, layerset, null, timeThreshold);
             var nameAttribute = await attributeModel.GetMergedAttribute(keyCIID, ICIModel.NameAttribute, layerset, null, timeThreshold);
@@ -84,7 +84,7 @@ namespace LandscapeRegistry.Controllers.OData
         [EnableQuery]
         public async Task<IEnumerable<AttributeDTO>> GetAttributes([FromRoute]string context)
         {
-            var layerset = await oDataAPIContextModel.GetReadLayersetFromContext(context, null);
+            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
             var attributesDict = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), layerset, null, TimeThreshold.BuildLatest());
 
             var attributes = attributesDict.SelectMany(a => a.Value.Values);
@@ -101,8 +101,8 @@ namespace LandscapeRegistry.Controllers.OData
 
         public async Task<IActionResult> Patch([FromODataUri]Guid keyCIID, [FromODataUri]string keyCIName, [FromODataUri]string keyAttributeName, [FromBody] Delta<AttributeDTO> test, [FromRoute]string context)
         {
-            var writeLayerID = await oDataAPIContextModel.GetWriteLayerIDFromContext(context, null);
-            var readLayerset = await oDataAPIContextModel.GetReadLayersetFromContext(context, null);
+            var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, null);
+            var readLayerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
 
             var user = await currentUserService.GetCurrentUser(null);
             if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
@@ -135,8 +135,8 @@ namespace LandscapeRegistry.Controllers.OData
             if (attribute.Value == null)
                 return BadRequest($"Attribute Value must be set");
 
-            var writeLayerID = await oDataAPIContextModel.GetWriteLayerIDFromContext(context, null);
-            var readLayerset = await oDataAPIContextModel.GetReadLayersetFromContext(context, null);
+            var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, null);
+            var readLayerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
 
             var user = await currentUserService.GetCurrentUser(null);
             if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
@@ -197,7 +197,7 @@ namespace LandscapeRegistry.Controllers.OData
         [EnableQuery]
         public async Task<IActionResult> Delete([FromODataUri]Guid keyCIID, [FromODataUri]string keyAttributeName, [FromRoute]string context)
         {
-            var writeLayerID = await oDataAPIContextModel.GetWriteLayerIDFromContext(context, null);
+            var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, null);
 
             var user = await currentUserService.GetCurrentUser(null);
             if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))

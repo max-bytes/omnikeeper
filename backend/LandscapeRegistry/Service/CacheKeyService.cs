@@ -35,6 +35,14 @@ namespace LandscapeRegistry.Service
         public static void CancelOIAConfigChangeToken(this IMemoryCache memoryCache, string name) =>
             CancelAndRemoveChangeToken(memoryCache, OIAConfigChangeToken(name));
 
+
+        internal static object ODataAPIContext(string id) => $"odataapicontext_${id}";
+        private static string ODataAPIContextChangeToken(string id) => $"ct_odataapicontext_{id}";
+        public static CancellationChangeToken GetODataAPIContextCancellationChangeToken(this IMemoryCache memoryCache, string id) =>
+            new CancellationChangeToken(memoryCache.GetOrCreate(ODataAPIContextChangeToken(id), (ce) => new CancellationTokenSource()).Token);
+        public static void CancelODataAPIContextChangeToken(this IMemoryCache memoryCache, string id) =>
+            CancelAndRemoveChangeToken(memoryCache, ODataAPIContextChangeToken(id));
+
         private static string PredicatesChangeToken() => $"ct_predicates";
         public static string Predicates(AnchorStateFilter stateFilter) => $"predicates_{stateFilter}";
         public static CancellationChangeToken GetPredicatesCancellationChangeToken(this IMemoryCache memoryCache) =>
