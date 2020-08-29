@@ -102,13 +102,13 @@ namespace MonitoringPlugin
             // prepare list of all monitored cis
             var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).Distinct();
             if (monitoredCIIDs.IsEmpty()) return true;
-            var monitoredCIs = (await ciModel.GetMergedCIs(layerSetAll, MultiCIIDsSelection.Build(monitoredCIIDs), true, trans, timeThreshold))
+            var monitoredCIs = (await ciModel.GetMergedCIs(layerSetAll, SpecificCIIDsSelection.Build(monitoredCIIDs), true, trans, timeThreshold))
                 .ToDictionary(ci => ci.ID);
 
             // prepare list of all monitoring modules
             var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.ToCIID).Distinct();
             if (monitoringModuleCIIDs.IsEmpty()) return true;
-            var monitoringModuleCIs = (await ciModel.GetMergedCIs(layerSetMonitoringDefinitionsOnly, MultiCIIDsSelection.Build(monitoringModuleCIIDs), false, trans, timeThreshold))
+            var monitoringModuleCIs = (await ciModel.GetMergedCIs(layerSetMonitoringDefinitionsOnly, SpecificCIIDsSelection.Build(monitoringModuleCIIDs), false, trans, timeThreshold))
                 .ToDictionary(ci => ci.ID);
 
             logger.LogDebug("Prep");
@@ -318,7 +318,7 @@ namespace MonitoringPlugin
                 }
                 else
                 {
-                    var contactGroupCIs = (await ciModel.GetMergedCIs(layerSetAll, MultiCIIDsSelection.Build(contactGroupRelations.Select(r => r.Relation.ToCIID).Distinct()), false, trans, timeThreshold)).ToDictionary(t => t.ID);
+                    var contactGroupCIs = (await ciModel.GetMergedCIs(layerSetAll, SpecificCIIDsSelection.Build(contactGroupRelations.Select(r => r.Relation.ToCIID).Distinct()), false, trans, timeThreshold)).ToDictionary(t => t.ID);
                     contactGroupsMap = contactGroupRelations.GroupBy(r => r.Relation.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.Relation.ToCIID]));
                     foreach (var ci in contactGroupsMap.Values.SelectMany(t => t).Distinct())
                     {

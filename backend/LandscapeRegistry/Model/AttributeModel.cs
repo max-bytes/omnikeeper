@@ -63,7 +63,7 @@ namespace LandscapeRegistry.Model
 
         public async Task<IImmutableDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var d = await GetMergedAttributes(new SingleCIIDSelection(ciid), layers, trans, atTime);
+            var d = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), layers, trans, atTime);
             return d.GetValueOrDefault(ciid, ImmutableDictionary<string, MergedCIAttribute>.Empty);
         }
 

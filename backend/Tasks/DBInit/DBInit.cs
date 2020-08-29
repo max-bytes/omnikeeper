@@ -238,7 +238,7 @@ namespace Tasks.DBInit
             // create monitoring relations
             if (!windowsHostCIIds.IsEmpty())
             {
-                var windowsHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), MultiCIIDsSelection.Build(windowsHostCIIds), true, null, TimeThreshold.BuildLatest());
+                var windowsHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), SpecificCIIDsSelection.Build(windowsHostCIIds), true, null, TimeThreshold.BuildLatest());
                 foreach (var ci in windowsHosts)
                 {
                     using var trans = conn.BeginTransaction();
@@ -250,7 +250,7 @@ namespace Tasks.DBInit
             }
             if (!linuxHostCIIds.IsEmpty())
             {
-                var linuxHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), MultiCIIDsSelection.Build(linuxHostCIIds), true, null, TimeThreshold.BuildLatest());
+                var linuxHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), SpecificCIIDsSelection.Build(linuxHostCIIds), true, null, TimeThreshold.BuildLatest());
                 foreach (var ci in linuxHosts)
                 {
                     using var trans = conn.BeginTransaction();

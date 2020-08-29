@@ -51,16 +51,38 @@ namespace LandscapeRegistry.Model
             return att;
         }
 
+        private string CIIDSelection2WhereClause(ICIIDSelection selection)
+        {
+            return selection switch
+            {
+                AllCIIDsSelection _ => "1=1",
+                SpecificCIIDsSelection _ => "ci_id = ANY(@ci_ids)",
+                _ => throw new NotImplementedException("")
+            };
+        }
+
+        private void AddQueryParametersFromCIIDSelection(ICIIDSelection selection, NpgsqlParameterCollection p)
+        {
+            switch (selection)
+            {
+                case SpecificCIIDsSelection m:
+                    p.AddWithValue("ci_ids", m.CIIDs);
+                    break;
+                default:
+                    break;
+            };
+        }
+
         public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var ret = new List<CIAttribute>();
 
             using var command = new NpgsqlCommand($@"
             select distinct on(ci_id, name) id, name, ci_id, type, value, state, changeset_id FROM attribute 
-            where timestamp <= @time_threshold and ({selection.WhereClause}) and layer_id = @layer_id
+            where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and layer_id = @layer_id
             order by ci_id, name, timestamp DESC
             ", conn, trans);
-            selection.AddParameters(command.Parameters);
+            AddQueryParametersFromCIIDSelection(selection, command.Parameters);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("time_threshold", atTime.Time);
 
@@ -92,13 +114,13 @@ namespace LandscapeRegistry.Model
 
             using var command = new NpgsqlCommand($@"
             select distinct on(ci_id, name, layer_id) id, name, ci_id, type, value, state, changeset_id from
-                attribute where timestamp <= @time_threshold and layer_id = @layer_id and name ~ @regex and ({selection.WhereClause}) order by ci_id, name, layer_id, timestamp DESC
+                attribute where timestamp <= @time_threshold and layer_id = @layer_id and name ~ @regex and ({CIIDSelection2WhereClause(selection)}) order by ci_id, name, layer_id, timestamp DESC
             ", conn, trans); // TODO: remove order by layer_id, but consider not breaking indices first
 
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("regex", regex);
             command.Parameters.AddWithValue("time_threshold", atTime.Time);
-            selection.AddParameters(command.Parameters);
+            AddQueryParametersFromCIIDSelection(selection, command.Parameters);
 
             using var dr = await command.ExecuteReaderAsync();
             while (dr.Read())
@@ -127,13 +149,13 @@ namespace LandscapeRegistry.Model
 
             using (var command = new NpgsqlCommand(@$"
                 select distinct on (ci_id, name) id, ci_id, type, value, state, changeset_id from
-                    attribute where timestamp <= @time_threshold and ({selection.WhereClause}) and name = @name and layer_id = @layer_id order by ci_id, name, layer_id, timestamp DESC
+                    attribute where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id order by ci_id, name, layer_id, timestamp DESC
             ", conn, trans))// TODO: remove order by layer_id, but consider not breaking indices first
             {
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("name", name);
                 command.Parameters.AddWithValue("layer_id", layerID);
-                selection.AddParameters(command.Parameters);
+                AddQueryParametersFromCIIDSelection(selection, command.Parameters);
                 using var dr = await command.ExecuteReaderAsync();
 
                 while (await dr.ReadAsync())

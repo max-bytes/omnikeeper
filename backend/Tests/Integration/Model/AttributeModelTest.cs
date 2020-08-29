@@ -237,7 +237,7 @@ namespace Tests.Integration.Model
             var a4 = await attributeModel.FindAttributesByName("^3", new AllCIIDsSelection(), layer1.ID, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(0, a4.Count());
 
-            var a5 = await attributeModel.FindAttributesByName("^a1$", new SingleCIIDSelection(ciid2), layer2.ID, trans, TimeThreshold.BuildLatest());
+            var a5 = await attributeModel.FindAttributesByName("^a1$", SpecificCIIDsSelection.Build(ciid2), layer2.ID, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a5.Count());
         }
 

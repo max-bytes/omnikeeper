@@ -47,7 +47,7 @@ namespace LandscapeRegistry.Model
 
         public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var tmp = await attributeModel.GetMergedAttributes(new SingleCIIDSelection(ciid), layers, trans, atTime);
+            var tmp = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), layers, trans, atTime);
             var attributes = tmp.GetValueOrDefault(ciid, ImmutableDictionary<string, MergedCIAttribute>.Empty);
             var name = GetNameFromAttributes(attributes);
             return MergedCI.Build(ciid, name, layers, atTime, attributes);
@@ -55,7 +55,7 @@ namespace LandscapeRegistry.Model
 
         public async Task<CI> GetCI(Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var attributes = await attributeModel.GetAttributes(new SingleCIIDSelection(ciid), layerID, trans, atTime);
+            var attributes = await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid), layerID, trans, atTime);
             var name = GetNameFromAttributes(attributes);
             return CI.Build(ciid, name, layerID, atTime, attributes);
         }
@@ -83,8 +83,7 @@ namespace LandscapeRegistry.Model
             return selection switch
             {
                 AllCIIDsSelection _ => await GetCIIDs(trans),
-                MultiCIIDsSelection multiple => multiple.CIIDs,
-                SingleCIIDSelection single => new Guid[] { single.CIID },
+                SpecificCIIDsSelection multiple => multiple.CIIDs,
                 _ => null,// must not be
             };
         }

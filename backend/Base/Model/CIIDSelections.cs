@@ -9,46 +9,34 @@ namespace Landscape.Base.Model
 {
     public interface ICIIDSelection
     {
-        string WhereClause { get; }
-        void AddParameters(NpgsqlParameterCollection p);
-
         public bool Contains(Guid ciid);
     }
 
-    public class SingleCIIDSelection : ICIIDSelection
-    {
-        public Guid CIID { get; }
-        public SingleCIIDSelection(Guid ciid)
-        {
-            CIID = ciid;
-        }
-        public string WhereClause => "ci_id = @ci_id";
-        public void AddParameters(NpgsqlParameterCollection p) => p.AddWithValue("ci_id", CIID);
-        public bool Contains(Guid ciid) => ciid == CIID;
-    }
-
-    public class MultiCIIDsSelection : ICIIDSelection
+    public class SpecificCIIDsSelection : ICIIDSelection
     {
         public Guid[] CIIDs { get; }
-        private MultiCIIDsSelection(IEnumerable<Guid> ciids)
+        private SpecificCIIDsSelection(IEnumerable<Guid> ciids)
         {
             CIIDs = ciids.ToArray();
         }
+
         public string WhereClause => "ci_id = ANY(@ci_ids)";
-        public void AddParameters(NpgsqlParameterCollection p) => p.AddWithValue("ci_ids", CIIDs);
         public bool Contains(Guid ciid) => CIIDs.Contains(ciid);
 
-        public static MultiCIIDsSelection Build(IEnumerable<Guid> ciids)
+        public static SpecificCIIDsSelection Build(IEnumerable<Guid> ciids)
         {
             if (ciids.IsEmpty()) throw new Exception("Empty MultiCIIDsSelection not allowed");
-            return new MultiCIIDsSelection(ciids);
+            return new SpecificCIIDsSelection(ciids);
+        }
+        public static SpecificCIIDsSelection Build(params Guid[] ciids)
+        {
+            if (ciids.IsEmpty()) throw new Exception("Empty MultiCIIDsSelection not allowed");
+            return new SpecificCIIDsSelection(ciids);
         }
     }
 
     public class AllCIIDsSelection : ICIIDSelection
     {
-        public string WhereClause => "1=1";
-        public void AddParameters(NpgsqlParameterCollection p) { }
         public bool Contains(Guid ciid) => true;
     }
 }

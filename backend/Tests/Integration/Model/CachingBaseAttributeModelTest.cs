@@ -41,17 +41,17 @@ namespace Tests.Integration.Model
 
             var layerID = 1L;
             var timeThreshold = TimeThreshold.BuildLatest();
-            await attributeModel.GetAttributes(new SingleCIIDSelection(ciid1), layerID, null, timeThreshold);
-            mocked.Verify(mock => mock.GetAttributes(It.Is<SingleCIIDSelection>(s => s.CIID == ciid1), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Once());
+            await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid1), layerID, null, timeThreshold);
+            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => s.CIIDs.First() == ciid1), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Once());
 
-            await attributeModel.GetAttributes(new SingleCIIDSelection(ciid1), layerID, null, timeThreshold);
-            mocked.Verify(mock => mock.GetAttributes(It.Is<SingleCIIDSelection>(s => s.CIID == ciid1), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Once()); // still one
+            await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid1), layerID, null, timeThreshold);
+            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => s.CIIDs.First() == ciid1), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Once()); // still one
 
-            await attributeModel.GetAttributes(new SingleCIIDSelection(ciid2), layerID, null, timeThreshold);
-            mocked.Verify(mock => mock.GetAttributes(It.Is<SingleCIIDSelection>(s => s.CIID == ciid2), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Once()); // different parameters
+            await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid2), layerID, null, timeThreshold);
+            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => s.CIIDs.First() == ciid2), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Once()); // different parameters
 
-            await attributeModel.GetAttributes(new SingleCIIDSelection(ciid2), layerID, null, TimeThreshold.BuildAtTime(DateTimeOffset.Now.AddDays(-1)));
-            mocked.Verify(mock => mock.GetAttributes(It.Is<SingleCIIDSelection>(s => s.CIID == ciid2), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Exactly(2)); // not latest time
+            await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid2), layerID, null, TimeThreshold.BuildAtTime(DateTimeOffset.Now.AddDays(-1)));
+            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => s.CIIDs.First() == ciid2), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Exactly(2)); // not latest time
         }
 
 
@@ -60,7 +60,7 @@ namespace Tests.Integration.Model
             public FilledMockedBaseAttributeModel()
             {
                 Guid staticChangesetID = Guid.NewGuid();
-                Setup(_ => _.GetAttributes(It.Is<MultiCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
+                Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
@@ -68,14 +68,14 @@ namespace Tests.Integration.Model
                         CIAttribute.Build(Guid.NewGuid(), "a2", ciid2, AttributeScalarValueText.Build("v2"), AttributeState.New, staticChangesetID)
                     };
                 });
-                Setup(_ => _.GetAttributes(It.Is<MultiCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
+                Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
                         CIAttribute.Build(Guid.NewGuid(), "a1", ciid1, AttributeScalarValueText.Build("v1"), AttributeState.New, staticChangesetID)
                     };
                 });
-                Setup(_ => _.GetAttributes(It.Is<MultiCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
+                Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
@@ -94,10 +94,10 @@ namespace Tests.Integration.Model
 
                 var layerID = 1L;
                 var timeThreshold = TimeThreshold.BuildLatest();
-                await attributeModel.GetAttributes(MultiCIIDsSelection.Build(new Guid[] { ciid1, ciid2 }), layerID, null, timeThreshold);
-                mocked.Verify(mock => mock.GetAttributes(It.Is<MultiCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Once());
-                await attributeModel.GetAttributes(MultiCIIDsSelection.Build(new Guid[] { ciid1, ciid2 }), layerID, null, timeThreshold);
-                mocked.Verify(mock => mock.GetAttributes(It.Is<MultiCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Once()); // still one
+                await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(new Guid[] { ciid1, ciid2 }), layerID, null, timeThreshold);
+                mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Once());
+                await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(new Guid[] { ciid1, ciid2 }), layerID, null, timeThreshold);
+                mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Once()); // still one
             }
 
             await testBasic(new EmptyMockedBaseAttributeModel());
@@ -112,12 +112,12 @@ namespace Tests.Integration.Model
             var attributeModel = new CachingBaseAttributeModel(mocked.Object, memoryCache);
             var layerID = 1L;
             var timeThreshold = TimeThreshold.BuildLatest();
-            await attributeModel.GetAttributes(MultiCIIDsSelection.Build(new Guid[] { ciid1
+            await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(new Guid[] { ciid1
         }), layerID, null, timeThreshold);
-                mocked.Verify(mock => mock.GetAttributes(It.Is<MultiCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Once());
-                await attributeModel.GetAttributes(MultiCIIDsSelection.Build(new Guid[] { ciid1, ciid2 }), layerID, null, timeThreshold);
-            mocked.Verify(mock => mock.GetAttributes(It.Is<MultiCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Never());
-            mocked.Verify(mock => mock.GetAttributes(It.Is<MultiCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Once());
+                mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Once());
+                await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(new Guid[] { ciid1, ciid2 }), layerID, null, timeThreshold);
+            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Never());
+            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()), Times.Once());
         }
     }
 }

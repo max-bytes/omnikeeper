@@ -67,7 +67,7 @@ namespace LandscapeRegistry.Controllers
                 return BadRequest("Empty CIID list");
 
             var layerset = new LayerSet(layerIDs);
-            var cis = await ciModel.GetMergedCIs(layerset, MultiCIIDsSelection.Build(CIIDs), true, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
+            var cis = await ciModel.GetMergedCIs(layerset, SpecificCIIDsSelection.Build(CIIDs), true, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
             return Ok(cis.Select(ci => CIDTO.Build(ci)));
         }
 

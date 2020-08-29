@@ -90,8 +90,7 @@ namespace OnlineInboundAdapterOmnikeeper
                 return selection switch
                 {
                     AllCIIDsSelection _ => mapper.GetAllCIIDs(),
-                    MultiCIIDsSelection multiple => multiple.CIIDs,
-                    SingleCIIDSelection single => new Guid[] { single.CIID },
+                    SpecificCIIDsSelection multiple => multiple.CIIDs,
                     _ => null,// must not be
                 };
             }
@@ -159,8 +158,7 @@ namespace OnlineInboundAdapterOmnikeeper
             var ciids = selection switch
             {
                 AllCIIDsSelection _ => null,
-                MultiCIIDsSelection m => m.CIIDs,
-                SingleCIIDSelection s => new Guid[] { s.CIID },
+                SpecificCIIDsSelection m => m.CIIDs,
                 _ => throw new NotImplementedException()
             };
             var attributesDTO = await client.FindMergedAttributesByNameAsync(regex, ciids, remoteLayerIDs, time, ClientVersion);

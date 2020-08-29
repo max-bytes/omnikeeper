@@ -100,7 +100,7 @@ namespace LandscapeRegistry.Model
             var outdatedAttributes = (data switch
             {
                 BulkCIAttributeDataLayerScope d => (await FindAttributesByName($"^{data.NamePrefix}", new AllCIIDsSelection(), data.LayerID, trans, readTS)),
-                BulkCIAttributeDataCIScope d => (await FindAttributesByName($"^{data.NamePrefix}", new SingleCIIDSelection(d.CIID), data.LayerID, trans, readTS)),
+                BulkCIAttributeDataCIScope d => (await FindAttributesByName($"^{data.NamePrefix}", SpecificCIIDsSelection.Build(d.CIID), data.LayerID, trans, readTS)),
                 _ => null
             }).ToDictionary(a => a.InformationHash);
 

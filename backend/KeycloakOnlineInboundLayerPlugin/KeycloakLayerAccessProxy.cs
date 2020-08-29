@@ -91,8 +91,7 @@ namespace OnlineInboundAdapterKeycloak
                 return selection switch
                 {
                     AllCIIDsSelection _ => mapper.GetAllCIIDs(),
-                    MultiCIIDsSelection multiple => multiple.CIIDs,
-                    SingleCIIDSelection single => new Guid[] { single.CIID },
+                    SpecificCIIDsSelection multiple => multiple.CIIDs,
                     _ => null,// must not be
                 };
             }
@@ -137,21 +136,7 @@ namespace OnlineInboundAdapterKeycloak
 
             switch (selection)
             {
-                case SingleCIIDSelection scs:
-                    {
-                        var externalID = mapper.GetExternalID(scs.CIID);
-                        if (!externalID.HasValue)
-                            break;
-
-                        var user = await client.GetUserAsync(realm, externalID.Value.ID);
-                        var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.Value.ID);
-
-                        foreach (var a in BuildAttributesFromUser(user, scs.CIID, roleMappings))
-                            if (Regex.IsMatch(a.Name, regex))
-                                yield return a;
-                        break;
-                    }
-                case MultiCIIDsSelection mcs:
+                case SpecificCIIDsSelection mcs:
                     {
                         foreach (var ciid in mcs.CIIDs)
                         {

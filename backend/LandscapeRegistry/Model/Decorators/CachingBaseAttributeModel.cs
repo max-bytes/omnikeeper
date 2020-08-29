@@ -44,7 +44,7 @@ namespace LandscapeRegistry.Model.Decorators
                 {
                     var changeToken = memoryCache.GetAttributesCancellationChangeToken(ciid, layerID);
                     ce.AddExpirationToken(changeToken);
-                    return await model.GetAttributes(new SingleCIIDSelection(ciid), layerID, trans, atTime);
+                    return await model.GetAttributes(SpecificCIIDsSelection.Build(ciid), layerID, trans, atTime);
                 });
 
                 attributes.FirstOrDefault(p => p.Name.Equals(name));
@@ -58,17 +58,7 @@ namespace LandscapeRegistry.Model.Decorators
             {
                 switch (selection)
                 {
-                    case SingleCIIDSelection scs:
-                    {
-                        var attributes = await memoryCache.GetOrCreateAsync(CacheKeyService.Attributes(scs.CIID, layerID), async (ce) =>
-                        {
-                            var changeToken = memoryCache.GetAttributesCancellationChangeToken(scs.CIID, layerID);
-                            ce.AddExpirationToken(changeToken);
-                            return await model.GetAttributes(scs, layerID, trans, atTime);
-                        });
-                        return attributes;
-                    }
-                    case MultiCIIDsSelection mcs:
+                    case SpecificCIIDsSelection mcs:
                     {
                         // check which item can be found in the cache
                         var found = new List<CIAttribute>();
@@ -86,7 +76,7 @@ namespace LandscapeRegistry.Model.Decorators
                         // get the non-cached items
                         if (notFoundCIIDs.Count > 0)
                         {
-                            var fetched = (await model.GetAttributes(MultiCIIDsSelection.Build(notFoundCIIDs), layerID, trans, atTime));
+                            var fetched = (await model.GetAttributes(SpecificCIIDsSelection.Build(notFoundCIIDs), layerID, trans, atTime));
 
                             // add them to the cache
                             foreach (var a in fetched.ToLookup(a => a.CIID))
