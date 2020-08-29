@@ -1,6 +1,8 @@
-﻿using Landscape.Base.Inbound;
+﻿using Hangfire.Server;
+using Landscape.Base.Inbound;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
+using LandscapeRegistry.Utils;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
@@ -34,9 +36,12 @@ namespace LandscapeRegistry.Runners
             this.conn = conn;
         }
 
-        public void Run()
+        public void Run(PerformContext context)
         {
-            RunAsync().GetAwaiter().GetResult();
+            using (HangfireConsoleLogger.InContext(context))
+            {
+                RunAsync().GetAwaiter().GetResult();
+            }
         }
 
         public async Task RunAsync()

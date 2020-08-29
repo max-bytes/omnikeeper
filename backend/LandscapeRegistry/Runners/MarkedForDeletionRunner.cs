@@ -1,4 +1,7 @@
-﻿using LandscapeRegistry.Service;
+﻿using Hangfire.Console;
+using Hangfire.Server;
+using LandscapeRegistry.Service;
+using LandscapeRegistry.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace LandscapeRegistry.Runners
@@ -14,11 +17,14 @@ namespace LandscapeRegistry.Runners
             this.logger = logger;
         }
 
-        public void Run()
+        public void Run(PerformContext context)
         {
-            logger.LogInformation("Start");
-            service.Run(logger).GetAwaiter().GetResult();
-            logger.LogInformation("Finished");
+            using (HangfireConsoleLogger.InContext(context))
+            {
+                logger.LogInformation("Start");
+                service.Run(logger).GetAwaiter().GetResult();
+                logger.LogInformation("Finished");
+            }
         }
     }
 }

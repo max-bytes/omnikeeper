@@ -1,4 +1,5 @@
 using DBMigrations;
+using LandscapeRegistry.Utils;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -20,6 +21,7 @@ namespace LandscapeRegistry
                 {
                     builder.AddConfiguration(ctx.Configuration.GetSection("Logging"));
                     builder.AddFile(o => o.RootPath = ctx.HostingEnvironment.ContentRootPath);
+                    builder.AddProvider(new HangfireConsoleLoggerProvider());
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {

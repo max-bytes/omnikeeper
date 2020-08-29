@@ -224,7 +224,7 @@ namespace LandscapeRegistry
                 var cs = Configuration.GetConnectionString("HangfireConnection");
                 config.UseMemoryStorage();
                 config.UseFilter(new AutomaticRetryAttribute() { Attempts = 0 });
-                //config.UseConsole(); //TODO
+                config.UseConsole(); //TODO
             });
 
             services.AddSwaggerGen(c =>
@@ -356,7 +356,6 @@ namespace LandscapeRegistry
 
             // Configure hangfire to use the new JobActivator we defined.
             GlobalConfiguration.Configuration
-                .UseConsole()
                 .UseActivator(new AspNetCoreJobActivator(serviceScopeFactory));
             app.UseHangfireServer();
             if (env.IsDevelopment() || env.IsStaging())
@@ -380,8 +379,8 @@ namespace LandscapeRegistry
             
 
             //RecurringJob.AddOrUpdate<CLBRunner>(runner => runner.Run(), "*/15 * * * * *");
-            RecurringJob.AddOrUpdate<MarkedForDeletionRunner>(s => s.Run(), Cron.Minutely);
-            RecurringJob.AddOrUpdate<ExternalIDManagerRunner>(s => s.Run(), "*/5 * * * * *");
+            RecurringJob.AddOrUpdate<MarkedForDeletionRunner>(s => s.Run(null), Cron.Minutely);
+            RecurringJob.AddOrUpdate<ExternalIDManagerRunner>(s => s.Run(null), "*/5 * * * * *");
         }
     }
 
