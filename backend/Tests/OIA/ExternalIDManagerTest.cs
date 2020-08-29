@@ -68,7 +68,7 @@ namespace Tests.OIA
             newCIIDs.Enqueue(Guid.Parse("226DA01F-9ABD-4D9D-80C7-02AF85C822A8"));
 
             ciModelMock.Setup(x => x.CIIDExists(It.IsAny<Guid>(), null)).ReturnsAsync((Guid ciid, NpgsqlTransaction trans) => existingCIs.Contains(ciid));
-            ciModelMock.Setup(x => x.CreateCI(null, It.IsAny<Guid>()))
+            ciModelMock.Setup(x => x.CreateCI(It.IsAny<Guid>(), null))
                 .Callback((NpgsqlTransaction trans, Guid ciid) => existingCIs.Add(ciid))
                 .ReturnsAsync((NpgsqlTransaction trans, Guid ciid) => ciid);
             ciModelMock.Setup(x => x.CreateCI(null))
@@ -177,7 +177,7 @@ namespace Tests.OIA
             var existingCIs = new List<Guid>();
 
             ciModelMock.Setup(x => x.CIIDExists(It.IsAny<Guid>(), null)).ReturnsAsync((Guid ciid, NpgsqlTransaction trans) => existingCIs.Contains(ciid));
-            ciModelMock.Setup(x => x.CreateCI(null, It.IsAny<Guid>()))
+            ciModelMock.Setup(x => x.CreateCI(It.IsAny<Guid>(), null))
                 .Callback((NpgsqlTransaction trans, Guid ciid) => existingCIs.Add(ciid))
                 .ReturnsAsync((NpgsqlTransaction trans, Guid ciid) => ciid);
             ciModelMock.Setup(x => x.GetCIIDs(null)).ReturnsAsync(() => existingCIs);

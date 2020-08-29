@@ -58,7 +58,7 @@ namespace LandscapeRegistry.Service
                 if (!foundCIID.HasValue) {
                     // CI is new, create it first
                     // TODO: batch process CI creation
-                    await CIModel.CreateCI(trans, finalCIID);
+                    await CIModel.CreateCI(finalCIID, trans);
                 }
 
                 // save ciid mapping

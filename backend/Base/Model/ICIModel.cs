@@ -15,15 +15,15 @@ namespace Landscape.Base.Model
         Task<bool> CIIDExists(Guid id, NpgsqlTransaction trans);
 
         Task<CI> GetCI(Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
-        Task<IEnumerable<CI>> GetCIs(long layerID, ICIIDSelection selection, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<IEnumerable<CI>> GetCIs(ICIIDSelection selection, long layerID, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime);
 
         // merged
         Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
-        Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, ICIIDSelection selection, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime);
-        Task<IEnumerable<CompactCI>> GetCompactCIs(LayerSet visibleLayers, ICIIDSelection selection, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<IEnumerable<MergedCI>> GetMergedCIs(ICIIDSelection selection, LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<IEnumerable<CompactCI>> GetCompactCIs(ICIIDSelection selection, LayerSet visibleLayers, NpgsqlTransaction trans, TimeThreshold atTime);
         Task<IEnumerable<Guid>> GetCIIDsOfNonEmptyCIs(LayerSet layerset, NpgsqlTransaction trans, TimeThreshold timeThreshold);
 
-        Task<Guid> CreateCI(NpgsqlTransaction trans, Guid id);
+        Task<Guid> CreateCI(Guid id, NpgsqlTransaction trans);
         Task<Guid> CreateCI(NpgsqlTransaction trans);
     }
 }

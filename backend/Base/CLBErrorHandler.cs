@@ -44,13 +44,13 @@ namespace Landscape.Base
 
             foreach (var remove in attributesToRemove)
             {
-                await attributeModel.RemoveAttribute(remove.Name, clbLayerID, remove.CIID, changeset, trans);
+                await attributeModel.RemoveAttribute(remove.Name, remove.CIID, clbLayerID, changeset, trans);
             }
         }
 
         public async Task LogError(Guid ciid, string name, string message)
         {
-            var a = await attributeModel.InsertAttribute($"{AttributeNamePrefix}.{name}", AttributeScalarValueText.Build(message, true), clbLayerID, ciid, changeset, trans);
+            var a = await attributeModel.InsertAttribute($"{AttributeNamePrefix}.{name}", AttributeScalarValueText.Build(message, true), ciid, clbLayerID, changeset, trans);
             writtenErrors.Add(a);
         }
     }

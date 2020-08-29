@@ -45,14 +45,6 @@ namespace LandscapeRegistry.Model
             }).ToDictionary(kv => kv.ciid, kv => kv.name);
         }
 
-        public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
-        {
-            var tmp = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), layers, trans, atTime);
-            var attributes = tmp.GetValueOrDefault(ciid, ImmutableDictionary<string, MergedCIAttribute>.Empty);
-            var name = GetNameFromAttributes(attributes);
-            return MergedCI.Build(ciid, name, layers, atTime, attributes);
-        }
-
         public async Task<CI> GetCI(Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var attributes = await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid), layerID, trans, atTime);
@@ -60,7 +52,7 @@ namespace LandscapeRegistry.Model
             return CI.Build(ciid, name, layerID, atTime, attributes);
         }
 
-        public async Task<IEnumerable<CI>> GetCIs(long layerID, ICIIDSelection selection, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CI>> GetCIs(ICIIDSelection selection, long layerID, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var attributes = await attributeModel.GetAttributes(selection, layerID, trans, atTime);
             var groupedAttributes = attributes.GroupBy(a => a.CIID).ToDictionary(a => a.Key, a => a.ToList());
@@ -88,7 +80,7 @@ namespace LandscapeRegistry.Model
             };
         }
 
-        public async Task<IEnumerable<CompactCI>> GetCompactCIs(LayerSet visibleLayers, ICIIDSelection selection, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CompactCI>> GetCompactCIs(ICIIDSelection selection, LayerSet visibleLayers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var CIIDs = await GetCIIDsFromSelection(selection, trans);
             var ciNames = await GetCINames(visibleLayers, selection, trans, atTime);
@@ -171,7 +163,15 @@ namespace LandscapeRegistry.Model
             return true;
         }
 
-        public async Task<IEnumerable<MergedCI>> GetMergedCIs(LayerSet layers, ICIIDSelection selection, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            var tmp = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), layers, trans, atTime);
+            var attributes = tmp.GetValueOrDefault(ciid, ImmutableDictionary<string, MergedCIAttribute>.Empty);
+            var name = GetNameFromAttributes(attributes);
+            return MergedCI.Build(ciid, name, layers, atTime, attributes);
+        }
+
+        public async Task<IEnumerable<MergedCI>> GetMergedCIs(ICIIDSelection selection, LayerSet layers, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var attributes = await attributeModel.GetMergedAttributes(selection, layers, trans, atTime);
 
@@ -195,8 +195,8 @@ namespace LandscapeRegistry.Model
 
         private Guid CreateCIID() => Guid.NewGuid();
 
-        public async Task<Guid> CreateCI(NpgsqlTransaction trans) => await CreateCI(trans, CreateCIID());
-        public async Task<Guid> CreateCI(NpgsqlTransaction trans, Guid id)
+        public async Task<Guid> CreateCI(NpgsqlTransaction trans) => await CreateCI(CreateCIID(), trans);
+        public async Task<Guid> CreateCI(Guid id, NpgsqlTransaction trans)
         {
             using var command = new NpgsqlCommand(@"INSERT INTO ci (id) VALUES (@id)", conn, trans);
             command.Parameters.AddWithValue("id", id);

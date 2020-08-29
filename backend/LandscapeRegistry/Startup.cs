@@ -147,7 +147,7 @@ namespace LandscapeRegistry
 
             services.AddScoped<MergedCIType>();
             services.AddScoped<RelationType>();
-            services.AddScoped<ISchema, RegistrySchema>();
+            services.AddScoped<ISchema, GraphQLSchema>();
 
             services.AddScoped<TraitsSetup>();
 

@@ -45,14 +45,14 @@ namespace LandscapeRegistry.Model.Decorators
             return await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
         }
 
-        public async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<CIAttribute> GetAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
                 return await onlineAccessProxy.GetAttribute(name, layerID, ciid, trans, atTime);
             }
 
-            return await model.GetAttribute(name, layerID, ciid, trans, atTime);
+            return await model.GetAttribute(name, ciid, layerID, trans, atTime);
         }
 
         public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
@@ -65,25 +65,25 @@ namespace LandscapeRegistry.Model.Decorators
             return await model.GetAttributes(selection, layerID, trans, atTime);
         }
 
-        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
 
-            return await model.InsertAttribute(name, value, layerID, ciid, changesetProxy, trans);
+            return await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, trans);
         }
 
-        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
 
-            return await model.InsertCINameAttribute(nameValue, layerID, ciid, changesetProxy, trans);
+            return await model.InsertCINameAttribute(nameValue, ciid, layerID, changesetProxy, trans);
         }
 
-        public async Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<CIAttribute> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
 
-            return await model.RemoveAttribute(name, layerID, ciid, changesetProxy, trans);
+            return await model.RemoveAttribute(name, ciid, layerID, changesetProxy, trans);
         }
 
         public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)

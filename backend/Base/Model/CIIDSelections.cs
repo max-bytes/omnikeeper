@@ -20,7 +20,6 @@ namespace Landscape.Base.Model
             CIIDs = ciids.ToArray();
         }
 
-        public string WhereClause => "ci_id = ANY(@ci_ids)";
         public bool Contains(Guid ciid) => CIIDs.Contains(ciid);
 
         public static SpecificCIIDsSelection Build(IEnumerable<Guid> ciids)

@@ -76,8 +76,8 @@ namespace LandscapeRegistry.Controllers.OData
 
             var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
             var timeThreshold = TimeThreshold.BuildLatest();
-            var a = await attributeModel.GetMergedAttribute(keyCIID, keyAttributeName, layerset, null, timeThreshold);
-            var nameAttribute = await attributeModel.GetMergedAttribute(keyCIID, ICIModel.NameAttribute, layerset, null, timeThreshold);
+            var a = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, layerset, null, timeThreshold);
+            var nameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, keyCIID, layerset, null, timeThreshold);
             return Model2DTO(a, nameAttribute?.Attribute?.Value.Value2String());
         }
 
@@ -108,7 +108,7 @@ namespace LandscapeRegistry.Controllers.OData
             if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
-            var old = await attributeModel.GetMergedAttribute(keyCIID, keyAttributeName, readLayerset, null, TimeThreshold.BuildLatest());
+            var old = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, readLayerset, null, TimeThreshold.BuildLatest());
             if (old == null) return BadRequest();
             var oldDTO = Model2DTO(old, keyCIName);
 
@@ -116,9 +116,9 @@ namespace LandscapeRegistry.Controllers.OData
             var @newDTO = oldDTO;
             using var trans = conn.BeginTransaction();
             var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, AttributeScalarValueText.Build(@newDTO.Value), writeLayerID, @newDTO.CIID, changesetProxy, trans);
+            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, AttributeScalarValueText.Build(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, trans);
 
-            var newMerged = await attributeModel.GetMergedAttribute(keyCIID, keyAttributeName, readLayerset, trans, TimeThreshold.BuildLatest());
+            var newMerged = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, readLayerset, trans, TimeThreshold.BuildLatest());
             trans.Commit();
 
             @newDTO = Model2DTO(newMerged, keyCIName);
@@ -171,23 +171,23 @@ namespace LandscapeRegistry.Controllers.OData
             // check if the ciid exists, create if not
             if (!(await ciModel.CIIDExists(finalCIID, trans)))
             {
-                await ciModel.CreateCI(trans, finalCIID);
+                await ciModel.CreateCI(finalCIID, trans);
                 if (attribute.CIName != null && attribute.CIName != "")
-                    await attributeModel.InsertCINameAttribute(attribute.CIName, writeLayerID, finalCIID, changesetProxy, trans);
+                    await attributeModel.InsertCINameAttribute(attribute.CIName, finalCIID, writeLayerID, changesetProxy, trans);
             } else
             { // ci exists already, make sure either name is not set or it matches already present name
                 if (attribute.CIName != null && attribute.CIName != "")
                 {
-                    var currentNameAttribute = await attributeModel.GetMergedAttribute(finalCIID, ICIModel.NameAttribute, readLayerset, null, timeThreshold);
+                    var currentNameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, finalCIID, readLayerset, null, timeThreshold);
                     if (currentNameAttribute == null || !attribute.CIName.Equals(currentNameAttribute.Attribute.Value.Value2String()))
                         return BadRequest($"Cannot set new CI-Name on insert");
                 }
             }
 
-            var created = await attributeModel.InsertAttribute(attribute.AttributeName, AttributeScalarValueText.Build(attribute.Value), writeLayerID, finalCIID, changesetProxy, trans);
+            var created = await attributeModel.InsertAttribute(attribute.AttributeName, AttributeScalarValueText.Build(attribute.Value), finalCIID, writeLayerID, changesetProxy, trans);
 
-            var nameAttribute = await attributeModel.GetMergedAttribute(finalCIID, ICIModel.NameAttribute, readLayerset, trans, timeThreshold);
-            var createdMerged = await attributeModel.GetMergedAttribute(finalCIID, attribute.AttributeName, readLayerset, trans, TimeThreshold.BuildLatest());
+            var nameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, finalCIID, readLayerset, trans, timeThreshold);
+            var createdMerged = await attributeModel.GetMergedAttribute(attribute.AttributeName, finalCIID, readLayerset, trans, TimeThreshold.BuildLatest());
 
             trans.Commit();
 
@@ -205,7 +205,7 @@ namespace LandscapeRegistry.Controllers.OData
 
             using var trans = conn.BeginTransaction();
             var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var removed = await attributeModel.RemoveAttribute(keyAttributeName, writeLayerID, keyCIID, changesetProxy, trans);
+            var removed = await attributeModel.RemoveAttribute(keyAttributeName, keyCIID, writeLayerID, changesetProxy, trans);
 
             if (removed == null)
                 return NotFound();

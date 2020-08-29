@@ -13,10 +13,10 @@ namespace LandscapeRegistry.Model
 {
     public partial class BaseAttributeModel
     {
-        public async Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<CIAttribute> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var readTS = TimeThreshold.BuildLatest();
-            var currentAttribute = await GetAttribute(name, layerID, ciid, trans, readTS);
+            var currentAttribute = await GetAttribute(name, ciid, layerID, trans, readTS);
 
             if (currentAttribute == null)
             {
@@ -51,13 +51,13 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
-        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
-            => await InsertAttribute(ICIModel.NameAttribute, AttributeScalarValueText.Build(nameValue), layerID, ciid, changesetProxy, trans);
+        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+            => await InsertAttribute(ICIModel.NameAttribute, AttributeScalarValueText.Build(nameValue), ciid, layerID, changesetProxy, trans);
 
-        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var readTS = TimeThreshold.BuildLatest();
-            var currentAttribute = await GetAttribute(name, layerID, ciid, trans, readTS);
+            var currentAttribute = await GetAttribute(name, ciid, layerID, trans, readTS);
 
             var state = AttributeState.New;
             if (currentAttribute != null)

@@ -91,7 +91,7 @@ namespace Tests.Ingest
             var response = await PerformIngest(controller, hosts, insertLayer, layerSet);
             Assert.IsTrue(response is OkResult);
 
-            var cis = await ciModel.GetMergedCIs(layerSet, new AllCIIDsSelection(), false, null, TimeThreshold.BuildLatest());
+            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, null, TimeThreshold.BuildLatest());
             Assert.That(cis.Select(ci => ci.Name), Is.SupersetOf(hosts));
             Assert.IsTrue(cis.Any(ci => ci.Name == "h1jmplx01.mhx.at:/"));
             Assert.IsTrue(cis.Any(ci => ci.Name == "h1jmplx01.mhx.at:/boot"));
@@ -105,7 +105,7 @@ namespace Tests.Ingest
             // perform ingest again, ci count must stay equal
             var response2 = await PerformIngest(controller, hosts, insertLayer, layerSet);
             Assert.IsTrue(response2 is OkResult);
-            var cis2 = await ciModel.GetMergedCIs(layerSet, new AllCIIDsSelection(), false, null, TimeThreshold.BuildLatest());
+            var cis2 = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, null, TimeThreshold.BuildLatest());
             Assert.AreEqual(34, cis2.Count());
         }
 

@@ -39,7 +39,7 @@ namespace LandscapeRegistry.Model
             return compound.Select(t => MergedCIAttribute.Build(t.Value.First().Value.attribute, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).Reverse().ToArray()));
         }
 
-        public async Task<MergedCIAttribute> GetMergedAttribute(Guid ciid, string name, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<MergedCIAttribute> GetMergedAttribute(string name, Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             if (layers.IsEmpty)
                 return null; // return empty, an empty layer list can never produce any attributes
@@ -48,7 +48,7 @@ namespace LandscapeRegistry.Model
 
             foreach (var layerID in layers)
             {
-                var a = await baseModel.GetAttribute(name, layerID, ciid, trans, atTime);
+                var a = await baseModel.GetAttribute(name, ciid, layerID, trans, atTime);
                 if (a != null)
                     attributes.Add((a, layerID));
             }
@@ -147,9 +147,9 @@ namespace LandscapeRegistry.Model
             return await baseModel.GetAttributes(selection, layerID, trans, atTime);
         }
 
-        public async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<CIAttribute> GetAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            return await baseModel.GetAttribute(name, layerID, ciid, trans, atTime);
+            return await baseModel.GetAttribute(name, ciid, layerID, trans, atTime);
         }
 
         public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
@@ -162,19 +162,19 @@ namespace LandscapeRegistry.Model
             return await baseModel.FindAttributesByFullName(name, selection, layerID, trans, atTime);
         }
 
-        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, long layerID, Guid ciid, IChangesetProxy changeset, NpgsqlTransaction trans)
+        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans)
         {
-            return await baseModel.InsertAttribute(name, value, layerID, ciid, changeset, trans);
+            return await baseModel.InsertAttribute(name, value, ciid, layerID, changeset, trans);
         }
 
-        public async Task<CIAttribute> RemoveAttribute(string name, long layerID, Guid ciid, IChangesetProxy changeset, NpgsqlTransaction trans)
+        public async Task<CIAttribute> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans)
         {
-            return await baseModel.RemoveAttribute(name, layerID, ciid, changeset, trans);
+            return await baseModel.RemoveAttribute(name, ciid, layerID, changeset, trans);
         }
 
-        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, long layerID, Guid ciid, IChangesetProxy changeset, NpgsqlTransaction trans)
+        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans)
         {
-            return await baseModel.InsertCINameAttribute(nameValue, layerID, ciid, changeset, trans);
+            return await baseModel.InsertCINameAttribute(nameValue, ciid, layerID, changeset, trans);
         }
 
         public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, NpgsqlTransaction trans)

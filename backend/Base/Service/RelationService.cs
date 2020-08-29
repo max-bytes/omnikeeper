@@ -18,7 +18,7 @@ namespace Landscape.Base.Service
             var relations = await relationModel.GetMergedRelations(new RelationSelectionEitherFromOrTo(ciid), layers, trans, atTime);
             var relationsOtherCIIDs = relations.Select(r => (r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID).Distinct();
             if (relationsOtherCIIDs.IsEmpty()) return new List<MergedRelatedCI>().ToLookup(x => "");
-            var relationsOtherCIs = (await ciModel.GetMergedCIs(layers, SpecificCIIDsSelection.Build(relationsOtherCIIDs), true, trans, atTime)).ToDictionary(ci => ci.ID);
+            var relationsOtherCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(relationsOtherCIIDs), layers, true, trans, atTime)).ToDictionary(ci => ci.ID);
             var relationsAndToCIs = relations.Select(r => MergedRelatedCI.Build(r.Relation, ciid, relationsOtherCIs[(r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID]));
             return relationsAndToCIs.ToLookup(r => r.PredicateID);
         }
@@ -57,7 +57,7 @@ namespace Landscape.Base.Service
 
             if (!relationTuples.IsEmpty())
             {
-                var relatedCompactCIs = (await ciModel.GetCompactCIs(layerset, SpecificCIIDsSelection.Build(relationTuples.Select(t => t.relatedCIID).Distinct()), trans, atTime))
+                var relatedCompactCIs = (await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(relationTuples.Select(t => t.relatedCIID).Distinct()), layerset, trans, atTime))
                     .ToDictionary(ci => ci.ID); // TODO: performance improvements
                 foreach ((var relation, var relatedCIID, var isForwardRelation) in relationTuples)
                 {

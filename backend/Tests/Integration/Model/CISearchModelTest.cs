@@ -79,19 +79,19 @@ namespace Tests.Integration.Model
             using (var trans = conn.BeginTransaction())
             {
                 var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
-                await attributeModel.InsertCINameAttribute("ci1", layerID1, ciid1, changeset, trans);
-                await attributeModel.InsertCINameAttribute("ci2", layerID1, ciid2, changeset, trans);
-                await attributeModel.InsertCINameAttribute("ci3", layerID2, ciid3, changeset, trans); // name on different layer
-                var i1 = await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("text1"), layerID1, ciid1, changeset, trans);
-                var i2 = await attributeModel.InsertAttribute("a2", AttributeScalarValueText.Build("text1"), layerID1, ciid2, changeset, trans);
-                var i3 = await attributeModel.InsertAttribute("a3", AttributeScalarValueText.Build("text1"), layerID2, ciid1, changeset, trans);
+                await attributeModel.InsertCINameAttribute("ci1", ciid1, layerID1, changeset, trans);
+                await attributeModel.InsertCINameAttribute("ci2", ciid2, layerID1, changeset, trans);
+                await attributeModel.InsertCINameAttribute("ci3", ciid3, layerID2, changeset, trans); // name on different layer
+                var i1 = await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("text1"), ciid1, layerID1, changeset, trans);
+                var i2 = await attributeModel.InsertAttribute("a2", AttributeScalarValueText.Build("text1"), ciid2, layerID1, changeset, trans);
+                var i3 = await attributeModel.InsertAttribute("a3", AttributeScalarValueText.Build("text1"), ciid1, layerID2, changeset, trans);
 
                 trans.Commit();
             }
 
             var tt = TimeThreshold.BuildLatest();
 
-            var all = await ciModel.GetCompactCIs(new LayerSet(layerID1, layerID2), new AllCIIDsSelection(), null, tt);
+            var all = await ciModel.GetCompactCIs(new AllCIIDsSelection(), new LayerSet(layerID1, layerID2), null, tt);
 
             (await searchModel.SimpleSearch("ci", null, tt)).Should().BeEquivalentTo(all);
             (await searchModel.SimpleSearch("i", null, tt)).Should().BeEquivalentTo(all);

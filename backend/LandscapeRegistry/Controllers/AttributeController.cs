@@ -83,7 +83,7 @@ namespace LandscapeRegistry.Controllers
         {
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
-            var attribute = await attributeModel.GetMergedAttribute(ciid, name, layerset, null, timeThreshold);
+            var attribute = await attributeModel.GetMergedAttribute(name, ciid, layerset, null, timeThreshold);
             if (attribute == null)
                 return NotFound();
             return Ok(CIAttributeDTO.Build(attribute));

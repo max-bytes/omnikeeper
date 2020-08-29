@@ -41,21 +41,21 @@ namespace LandscapeRegistry.Controllers
         [HttpPost]
         [Route("/graphql")]
         [Authorize]
-        public async Task<IActionResult> Index([FromBody] GraphQLQuery query)
+        public async Task<IActionResult> Index([FromBody] Landscape.Base.Entity.GraphQLQuery query)
         {
             return await ProcessQuery(query);
         }
 
         [HttpPost]
         [Route("/graphql-debug")]
-        public async Task<IActionResult> Debug([FromBody] GraphQLQuery query)
+        public async Task<IActionResult> Debug([FromBody] Landscape.Base.Entity.GraphQLQuery query)
         {
             if (_env.IsProduction())
                 return Forbid("Not allowed");
             return await ProcessQuery(query);
         }
 
-        private async Task<IActionResult> ProcessQuery(GraphQLQuery query)
+        private async Task<IActionResult> ProcessQuery(Landscape.Base.Entity.GraphQLQuery query)
         {
             if (query == null)
                 throw new ArgumentNullException(nameof(query));

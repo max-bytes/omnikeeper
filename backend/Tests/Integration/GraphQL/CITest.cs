@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration.GraphQL
 {
-    class CITest : QueryTestBase<RegistrySchema>
+    class CITest : QueryTestBase<GraphQLSchema>
     {
         public CITest()
         {
@@ -55,7 +55,7 @@ namespace Tests.Integration.GraphQL
             var currentUserService = new Mock<ICurrentUserService>();
             Services.Register<ICurrentUserService>(() => currentUserService.Object);
 
-            Services.Register<RegistryQuery>();
+            Services.Register<LandscapeRegistry.GraphQL.GraphQLQuery>();
             Services.Register<MergedCIType>();
             Services.Singleton(() =>
             {
@@ -65,7 +65,7 @@ namespace Tests.Integration.GraphQL
 
             var sp = new SimpleContainerAdapter(Services);
             Services.Singleton<IServiceProvider>(sp);
-            Services.Singleton(new RegistrySchema(sp));
+            Services.Singleton(new GraphQLSchema(sp));
         }
 
         [OneTimeTearDown]
@@ -90,7 +90,7 @@ namespace Tests.Integration.GraphQL
             var layerID2 = await layerModel.CreateLayer("layer_2", trans);
             var user = AuthenticatedUser.Build(await userModel.UpsertUser(username, username, userGUID, UserType.Robot, trans), new List<Layer>());
             var changeset = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a1", AttributeValueIntegerScalar.Build(3), layer1.ID, ciid1, changeset, trans);
+            await attributeModel.InsertAttribute("a1", AttributeValueIntegerScalar.Build(3), ciid1, layer1.ID, changeset, trans);
             trans.Commit();
 
             string query = @"

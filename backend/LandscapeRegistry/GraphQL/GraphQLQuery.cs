@@ -10,9 +10,9 @@ using System.Linq;
 using static Landscape.Base.Model.IChangesetModel;
 namespace LandscapeRegistry.GraphQL
 {
-    public class RegistryQuery : ObjectGraphType
+    public class GraphQLQuery : ObjectGraphType
     {
-        public RegistryQuery(ICIModel ciModel, ILayerModel layerModel, IPredicateModel predicateModel, IMemoryCacheModel memoryCacheModel,
+        public GraphQLQuery(ICIModel ciModel, ILayerModel layerModel, IPredicateModel predicateModel, IMemoryCacheModel memoryCacheModel,
             IChangesetModel changesetModel, ICISearchModel ciSearchModel, IOIAConfigModel oiaConfigModel, IODataAPIContextModel odataAPIContextModel,
             ITraitModel traitModel, ITraitsProvider traitsProvider, ICurrentUserService currentUserService)
         {
@@ -76,7 +76,7 @@ namespace LandscapeRegistry.GraphQL
                     var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
                     userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
 
-                    var cis = await ciModel.GetCompactCIs(userContext.LayerSet, new AllCIIDsSelection(), null, userContext.TimeThreshold);
+                    var cis = await ciModel.GetCompactCIs(new AllCIIDsSelection(), userContext.LayerSet, null, userContext.TimeThreshold);
                     return cis;
                 });
 
@@ -161,12 +161,12 @@ namespace LandscapeRegistry.GraphQL
 
                     // predicate has no target constraints -> makes it easy, return ALL CIs
                     if ((forward && !predicate.Constraints.HasPreferredTraitsTo) || (!forward && !predicate.Constraints.HasPreferredTraitsFrom))
-                        return await ciModel.GetCompactCIs(userContext.LayerSet, new AllCIIDsSelection(), null, userContext.TimeThreshold);
+                        return await ciModel.GetCompactCIs(new AllCIIDsSelection(), userContext.LayerSet, null, userContext.TimeThreshold);
 
                     var preferredTraits = (forward) ? predicate.Constraints.PreferredTraitsTo : predicate.Constraints.PreferredTraitsFrom;
 
                     // TODO: this has abysmal performance! We fully query ALL CIs and the calculate the effective traits for each of them... :(
-                    var cis = await ciModel.GetMergedCIs(userContext.LayerSet, new AllCIIDsSelection(), true, null, userContext.TimeThreshold);
+                    var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), userContext.LayerSet, true, null, userContext.TimeThreshold);
                     var effectiveTraitSets = await traitModel.CalculateEffectiveTraitSetForCIs(cis, preferredTraits, null, userContext.TimeThreshold);
 
                     return effectiveTraitSets.Where(et =>

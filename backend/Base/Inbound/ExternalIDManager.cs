@@ -65,7 +65,7 @@ namespace Landscape.Base.Inbound
                             ciid = foundCIID.Value;
                         else
                         {
-                            ciid = await ciModel.CreateCI(trans, foundCIID.Value);
+                            ciid = await ciModel.CreateCI(foundCIID.Value, trans);
                             logger.LogInformation($"Created CI with CIID {ciid}");
                         }
                     } else
@@ -89,7 +89,7 @@ namespace Landscape.Base.Inbound
             foreach (var missingCIID in missingCIIDs)
             {
                 logger.LogInformation($"CI with existing mapping to internal CIID {missingCIID} does not exist internally, creating...");
-                await ciModel.CreateCI(trans, missingCIID);
+                await ciModel.CreateCI(missingCIID, trans);
                 logger.LogInformation($"Created CI with CIID {missingCIID}");
 
                 changes = true;

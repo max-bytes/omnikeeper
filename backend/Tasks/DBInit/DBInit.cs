@@ -110,23 +110,23 @@ namespace Tasks.DBInit
                 var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 foreach (var ciid in applicationCIIDs)
                 {
-                    await ciModel.CreateCI(trans, ciid);
-                    await attributeModel.InsertCINameAttribute($"Application_{index}", cmdbLayerID, ciid, changeset, trans); 
-                    await attributeModel.InsertAttribute("application_name", AttributeScalarValueText.Build($"Application_{index}"), cmdbLayerID, ciid, changeset, trans);
+                    await ciModel.CreateCI(ciid, trans);
+                    await attributeModel.InsertCINameAttribute($"Application_{index}", ciid, cmdbLayerID, changeset, trans); 
+                    await attributeModel.InsertAttribute("application_name", AttributeScalarValueText.Build($"Application_{index}"), ciid, cmdbLayerID, changeset, trans);
                     index++;
                 }
                 index = 0;
                 foreach (var ciid in hostCIIDs)
                 {
                     var ciType = new string[] { "Host Linux", "Host Windows" }.GetRandom(random);
-                    var hostCIID = await ciModel.CreateCI(trans, ciid);
+                    var hostCIID = await ciModel.CreateCI(ciid, trans);
                     if (ciType.Equals("Host Linux"))
                         linuxHostCIIds.Add(hostCIID);
                     else
                         windowsHostCIIds.Add(hostCIID);
-                    await attributeModel.InsertCINameAttribute($"{ciType}_{index}", cmdbLayerID, ciid, changeset, trans);
-                    await attributeModel.InsertAttribute("hostname", AttributeScalarValueText.Build($"hostname_{index}.domain"), cmdbLayerID, ciid, changeset, trans);
-                    await attributeModel.InsertAttribute("system", AttributeScalarValueText.Build($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), cmdbLayerID, ciid, changeset, trans);
+                    await attributeModel.InsertCINameAttribute($"{ciType}_{index}", ciid, cmdbLayerID, changeset, trans);
+                    await attributeModel.InsertAttribute("hostname", AttributeScalarValueText.Build($"hostname_{index}.domain"), ciid, cmdbLayerID, changeset, trans);
+                    await attributeModel.InsertAttribute("system", AttributeScalarValueText.Build($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), ciid, cmdbLayerID, changeset, trans);
                     index++;
                 }
 
@@ -152,7 +152,7 @@ namespace Tasks.DBInit
                     var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                     var name = regularAttributeNames.GetRandom(random);
                     var value = regularAttributeValues.GetRandom(random);
-                    await attributeModel.InsertAttribute(name, value, cmdbLayerID, ciid, changeset, trans);
+                    await attributeModel.InsertAttribute(name, value, ciid, cmdbLayerID, changeset, trans);
                     // TODO: attribute removals
                     trans.Commit();
                 }
@@ -180,19 +180,19 @@ namespace Tasks.DBInit
                 var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 ciNaemon01 = await ciModel.CreateCI(null);
                 ciNaemon02 = await ciModel.CreateCI(null);
-                await attributeModel.InsertCINameAttribute("Naemon Instance 01", cmdbLayerID, ciNaemon01, changeset, trans);
-                await attributeModel.InsertCINameAttribute("Naemon Instance 02", cmdbLayerID, ciNaemon02, changeset, trans);
-                await attributeModel.InsertAttribute("naemon.instance_name", AttributeScalarValueText.Build("Naemon Instance 01"), monitoringDefinitionsLayerID, ciNaemon01, changeset, trans);
-                await attributeModel.InsertAttribute("naemon.instance_name", AttributeScalarValueText.Build("Naemon Instance 02"), monitoringDefinitionsLayerID, ciNaemon02, changeset, trans);
+                await attributeModel.InsertCINameAttribute("Naemon Instance 01", ciNaemon01, cmdbLayerID, changeset, trans);
+                await attributeModel.InsertCINameAttribute("Naemon Instance 02", ciNaemon02, cmdbLayerID, changeset, trans);
+                await attributeModel.InsertAttribute("naemon.instance_name", AttributeScalarValueText.Build("Naemon Instance 01"), ciNaemon01, monitoringDefinitionsLayerID, changeset, trans);
+                await attributeModel.InsertAttribute("naemon.instance_name", AttributeScalarValueText.Build("Naemon Instance 02"), ciNaemon02, monitoringDefinitionsLayerID, changeset, trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("1.2.3.4"), cmdbLayerID, ciNaemon01, changeset.ID, trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("4.5.6.7"), cmdbLayerID, ciNaemon02, changeset.ID, trans);
 
                 ciMonModuleHost = await ciModel.CreateCI(null);
                 ciMonModuleHostWindows = await ciModel.CreateCI(null);
                 ciMonModuleHostLinux = await ciModel.CreateCI(null);
-                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host", monitoringDefinitionsLayerID, ciMonModuleHost, changeset, trans);
-                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset, trans);
-                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset, trans);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host", ciMonModuleHost, monitoringDefinitionsLayerID, changeset, trans);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", ciMonModuleHostWindows, monitoringDefinitionsLayerID, changeset, trans);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", ciMonModuleHostLinux, monitoringDefinitionsLayerID, changeset, trans);
                 await attributeModel.InsertAttribute("naemon.config_template",
                     AttributeScalarValueText.Build(@"[{
   ""type"": ""host"",
@@ -201,7 +201,7 @@ namespace Tasks.DBInit
                     ""executable"": ""check_ping"",
     ""parameters"": ""-H {{ target.attributes.hostname }} -w {{ target.attributes.naemon.variables.host.warning_threshold ?? ""3000.0,80 % "" }} -c 5000.0,100% -p 5""
   }
-            }]", true), monitoringDefinitionsLayerID, ciMonModuleHost, changeset, trans);
+            }]", true), ciMonModuleHost, monitoringDefinitionsLayerID, changeset, trans);
                 await attributeModel.InsertAttribute("naemon.config_template",
                     AttributeScalarValueText.Build(
 @"{{~ for related_ci in target.relations.back.runs_on ~}}
@@ -216,8 +216,8 @@ namespace Tasks.DBInit
 }]
 {{~ end ~}}
 "
-                    , true), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset, trans);
-                await attributeModel.InsertAttribute("naemon.config_template", 
+                    , true), ciMonModuleHostWindows, monitoringDefinitionsLayerID, changeset, trans);
+                await attributeModel.InsertAttribute("naemon.config_template",
                     AttributeScalarValueText.Build(
 @"{{~ for related_ci in target.relations.back.runs_on ~}}
 [{
@@ -231,14 +231,14 @@ namespace Tasks.DBInit
 }]
 {{~ end ~}}
             "
-                        , true), monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset, trans);
+                        , true), ciMonModuleHostLinux, monitoringDefinitionsLayerID, changeset, trans);
                 trans.Commit();
             }
 
             // create monitoring relations
             if (!windowsHostCIIds.IsEmpty())
             {
-                var windowsHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), SpecificCIIDsSelection.Build(windowsHostCIIds), true, null, TimeThreshold.BuildLatest());
+                var windowsHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(windowsHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, null), true, null, TimeThreshold.BuildLatest());
                 foreach (var ci in windowsHosts)
                 {
                     using var trans = conn.BeginTransaction();
@@ -250,7 +250,7 @@ namespace Tasks.DBInit
             }
             if (!linuxHostCIIds.IsEmpty())
             {
-                var linuxHosts = await ciModel.GetMergedCIs(await layerModel.BuildLayerSet(new[] { "CMDB" }, null), SpecificCIIDsSelection.Build(linuxHostCIIds), true, null, TimeThreshold.BuildLatest());
+                var linuxHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(linuxHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, null), true, null, TimeThreshold.BuildLatest());
                 foreach (var ci in linuxHosts)
                 {
                     using var trans = conn.BeginTransaction();

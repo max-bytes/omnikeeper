@@ -16,9 +16,9 @@ using System.Linq;
 
 namespace LandscapeRegistry.GraphQL
 {
-    public class RegistryMutation : ObjectGraphType
+    public class GraphQLMutation : ObjectGraphType
     {
-        public RegistryMutation(ICIModel ciModel, IBaseAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAConfigModel OIAConfigModel,
+        public GraphQLMutation(ICIModel ciModel, IBaseAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAConfigModel OIAConfigModel,
              IODataAPIContextModel odataAPIContextModel, IChangesetModel changesetModel, IPredicateModel predicateModel, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
@@ -63,7 +63,7 @@ namespace LandscapeRegistry.GraphQL
                         {
                             var nonGenericAttributeValue = AttributeValueBuilder.Build(attribute.Value);
 
-                            insertedAttributes.Add(await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, attribute.LayerID, ciIdentity, changeset, transaction));
+                            insertedAttributes.Add(await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, attribute.LayerID, changeset, transaction));
                         }
                     }
 
@@ -75,7 +75,7 @@ namespace LandscapeRegistry.GraphQL
                         var ciIdentity = attributeGroup.Key;
                         foreach (var attribute in attributeGroup)
                         {
-                            removedAttributes.Add(await attributeModel.RemoveAttribute(attribute.Name, attribute.LayerID, ciIdentity, changeset, transaction));
+                            removedAttributes.Add(await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, attribute.LayerID, changeset, transaction));
                         }
                     }
 
@@ -100,7 +100,7 @@ namespace LandscapeRegistry.GraphQL
                         .Concat(removedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
                         .Distinct();
                         if (!affectedCIIDs.IsEmpty())
-                            affectedCIs = await ciModel.GetMergedCIs(userContext.LayerSet, SpecificCIIDsSelection.Build(affectedCIIDs), true, transaction, userContext.TimeThreshold);
+                            affectedCIs = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(affectedCIIDs), userContext.LayerSet, true, transaction, userContext.TimeThreshold);
                     }
 
                     await transaction.CommitAsync();
@@ -134,7 +134,7 @@ namespace LandscapeRegistry.GraphQL
                     {
                         Guid ciid = await ciModel.CreateCI(transaction);
 
-                        await attributeModel.InsertCINameAttribute(ci.Name, ci.LayerIDForName, ciid, changeset, transaction);
+                        await attributeModel.InsertCINameAttribute(ci.Name, ciid, ci.LayerIDForName, changeset, transaction);
 
                         createdCIIDs.Add(ciid);
                     }
