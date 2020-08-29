@@ -5,11 +5,11 @@ using Npgsql;
 using System;
 using System.Threading.Tasks;
 
-namespace Tests.Integration
+namespace Tasks
 {
     class DBSetup
     {
-        public static readonly string dbName = "tmp";
+        public static readonly string dbName = "landscape_prototype";
 
         public static void Setup()
         {

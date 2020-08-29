@@ -376,9 +376,9 @@ namespace LandscapeRegistry
                     Authorization = new IDashboardAuthorizationFilter[] { new HangFireAuthorizationFilter() }
                 });
             }
-            
 
-            //RecurringJob.AddOrUpdate<CLBRunner>(runner => runner.Run(), "*/15 * * * * *");
+
+            RecurringJob.AddOrUpdate<CLBRunner>(s => s.Run(null), "*/15 * * * * *");
             RecurringJob.AddOrUpdate<MarkedForDeletionRunner>(s => s.Run(null), Cron.Minutely);
             RecurringJob.AddOrUpdate<ExternalIDManagerRunner>(s => s.Run(null), "*/5 * * * * *");
         }

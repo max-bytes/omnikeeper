@@ -5,10 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Tests.Tools
+namespace Tasks.Tools
 {
     [Explicit]
-    //[Ignore("Only manual")]
     class BuildOIAConfigs
     {
         [Test]

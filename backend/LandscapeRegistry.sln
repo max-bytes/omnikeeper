@@ -25,7 +25,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBMigrate", "DBMigrate\DBMi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineInboundAdapterKeycloak", "KeycloakOnlineInboundLayerPlugin\OnlineInboundAdapterKeycloak.csproj", "{5965EF78-3BE5-4387-8475-2936CBE14FFE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineInboundAdapterOmnikeeper", "OmnikeeperOnlineInboundAdapter\OnlineInboundAdapterOmnikeeper.csproj", "{C8259B95-73D9-492E-9196-75BD8497F66C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineInboundAdapterOmnikeeper", "OmnikeeperOnlineInboundAdapter\OnlineInboundAdapterOmnikeeper.csproj", "{C8259B95-73D9-492E-9196-75BD8497F66C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tasks", "Tasks\Tasks.csproj", "{270B435A-F624-4740-9EEE-F847B210C447}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,6 +67,10 @@ Global
 		{C8259B95-73D9-492E-9196-75BD8497F66C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8259B95-73D9-492E-9196-75BD8497F66C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C8259B95-73D9-492E-9196-75BD8497F66C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{270B435A-F624-4740-9EEE-F847B210C447}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{270B435A-F624-4740-9EEE-F847B210C447}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{270B435A-F624-4740-9EEE-F847B210C447}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{270B435A-F624-4740-9EEE-F847B210C447}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

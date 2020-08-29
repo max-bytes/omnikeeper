@@ -31,7 +31,12 @@ namespace LandscapeRegistry.Utils
             if (PerformContext.Value == null)
                 return;
 
+            // NOTE: exception seems to be ignored and not put into message: https://github.com/aspnet/Logging/issues/442
             var message = formatter(state, exception);
+
+            if (exception != null)
+                message = message + "\n" + exception.ToString();
+
             PerformContext.Value.WriteLine(message);
         }
     }

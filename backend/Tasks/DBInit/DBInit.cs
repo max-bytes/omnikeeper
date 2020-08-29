@@ -14,21 +14,17 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
-using Tests.Integration;
-using Tests.Integration.Model;
-using Tests.Integration.Model.Mocks;
 
-namespace Tests.DBInit
+namespace Tasks.DBInit
 {
     [Explicit]
-    [Ignore("Only manual")]
     class DBInit
     {
 
         [Test]
         public async Task Run()
         {
-            DBSetup._Setup("landscape_prototype");
+            DBSetup.Setup();
 
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build("landscape_prototype", false, true);
@@ -52,9 +48,10 @@ namespace Tests.DBInit
             int numAttributesPerCITo = 40;
             //var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
             var predicateRunsOn = Predicate.Build("runs_on", "runs on", "is running", AnchorState.Active, PredicateModel.DefaultConstraits);
+            
             //var regularPredicates = new[] {
-                //Predicate.Build("is_part_of", "is part of", "has part", AnchorState.Active),
-                //Predicate.Build("is_attached_to", "is attached to", "has attachment", AnchorState.Active),
+            //Predicate.Build("is_part_of", "is part of", "has part", AnchorState.Active),
+            //Predicate.Build("is_attached_to", "is attached to", "has attachment", AnchorState.Active),
             //};
             var regularAttributeNames = new[] { "att_1", "att_2", "att_3", "att_4", "att_5", "att_6", "att_7", "att_8", "att_9" };
             var regularAttributeValues = Enumerable.Range(0, 10).Select<int, IAttributeValue>(i =>
@@ -79,8 +76,9 @@ namespace Tests.DBInit
 
             var monitoringPredicates = new[] {
                 Predicate.Build("has_monitoring_module", "has monitoring module", "is assigned to", AnchorState.Active, PredicateModel.DefaultConstraits),
-                Predicate.Build("is_monitored_by", "is monitored by", "monitors", AnchorState.Active, PredicateModel.DefaultConstraits)
-            };
+                Predicate.Build("is_monitored_by", "is monitored by", "monitors", AnchorState.Active, PredicateModel.DefaultConstraits),
+                Predicate.Build("belongs_to_naemon_contactgroup", "belongs to naemon contactgroup", "has member", AnchorState.Active, PredicateModel.DefaultConstraits)
+        };
 
             //var automationPredicates = new[] {
             //    Predicate.Build("has_ansible_group", "has ansible group", "is assigned to", AnchorState.Active)
@@ -92,13 +90,13 @@ namespace Tests.DBInit
             long automationLayerID;
             using (var trans = conn.BeginTransaction())
             {
-                var cmdbLayer = await layerModel.CreateLayer("CMDB", trans);
+                var cmdbLayer = await layerModel.CreateLayer("CMDB", Color.Blue, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
                 cmdbLayerID = cmdbLayer.ID;
-                await layerModel.CreateLayer("Inventory Scan", trans);
-                var monitoringDefinitionsLayer = await layerModel.CreateLayer("Monitoring Definitions", trans);
+                await layerModel.CreateLayer("Inventory Scan", Color.Violet, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
+                var monitoringDefinitionsLayer = await layerModel.CreateLayer("Monitoring Definitions", Color.MediumOrchid, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
                 monitoringDefinitionsLayerID = monitoringDefinitionsLayer.ID;
                 await layerModel.CreateLayer("Monitoring", ColorTranslator.FromHtml("#FFE6CC"), AnchorState.Active, ComputeLayerBrainLink.Build("MonitoringPlugin.CLBNaemonMonitoring"), OnlineInboundAdapterLink.Build(""), trans);
-                var automationLayer = await layerModel.CreateLayer("Automation", trans);
+                var automationLayer = await layerModel.CreateLayer("Automation", Color.Gray, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
                 automationLayerID = automationLayer.ID;
                 trans.Commit();
             }
@@ -184,8 +182,8 @@ namespace Tests.DBInit
                 ciNaemon02 = await ciModel.CreateCI(null);
                 await attributeModel.InsertCINameAttribute("Naemon Instance 01", cmdbLayerID, ciNaemon01, changeset, trans);
                 await attributeModel.InsertCINameAttribute("Naemon Instance 02", cmdbLayerID, ciNaemon02, changeset, trans);
-                await attributeModel.InsertAttribute("monitoring.naemon.instance_name", AttributeScalarValueText.Build("Naemon Instance 01"), monitoringDefinitionsLayerID, ciNaemon01, changeset, trans);
-                await attributeModel.InsertAttribute("monitoring.naemon.instance_name", AttributeScalarValueText.Build("Naemon Instance 02"), monitoringDefinitionsLayerID, ciNaemon02, changeset, trans);
+                await attributeModel.InsertAttribute("naemon.instance_name", AttributeScalarValueText.Build("Naemon Instance 01"), monitoringDefinitionsLayerID, ciNaemon01, changeset, trans);
+                await attributeModel.InsertAttribute("naemon.instance_name", AttributeScalarValueText.Build("Naemon Instance 02"), monitoringDefinitionsLayerID, ciNaemon02, changeset, trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("1.2.3.4"), cmdbLayerID, ciNaemon01, changeset.ID, trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("4.5.6.7"), cmdbLayerID, ciNaemon02, changeset.ID, trans);
 
@@ -195,16 +193,44 @@ namespace Tests.DBInit
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host", monitoringDefinitionsLayerID, ciMonModuleHost, changeset, trans);
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset, trans);
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset, trans);
-                await attributeModel.InsertAttribute("monitoring.naemon.config_template",
-                    AttributeScalarValueText.Build("check_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" --hostname \"{{ target.attributes.hostname }}\"", true), monitoringDefinitionsLayerID, ciMonModuleHost, changeset, trans);
-                await attributeModel.InsertAttribute("monitoring.naemon.config_template",
-                    AttributeScalarValueText.Build("check_windows_host_cmd -ciid {{ target.ciid }} -type \"{{ target.type }}\" -foo --hostname \"{{ target.attributes.hostname }}\"", true), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset, trans);
-                await attributeModel.InsertAttribute("monitoring.naemon.config_template", 
+                await attributeModel.InsertAttribute("naemon.config_template",
+                    AttributeScalarValueText.Build(@"[{
+  ""type"": ""host"",
+  ""contactgroupSource"": ""{{ target.id }}"",
+  ""command"": {
+                    ""executable"": ""check_ping"",
+    ""parameters"": ""-H {{ target.attributes.hostname }} -w {{ target.attributes.naemon.variables.host.warning_threshold ?? ""3000.0,80 % "" }} -c 5000.0,100% -p 5""
+  }
+            }]", true), monitoringDefinitionsLayerID, ciMonModuleHost, changeset, trans);
+                await attributeModel.InsertAttribute("naemon.config_template",
                     AttributeScalarValueText.Build(
 @"{{~ for related_ci in target.relations.back.runs_on ~}}
-- name: service_name
-  command: check_command {{ related_ci.attributes.application_name}}
-{{~ end ~}}"
+[{
+  ""type"": ""service"",
+  ""contactgroupSource"": ""{{ related_ci.id }}"",
+  ""description"": ""service check windows application"",
+  ""command"": {
+                    ""executable"": ""check_command"",
+    ""parameters"": ""-application_name {{ related_ci.attributes.application_name}}""
+  }
+}]
+{{~ end ~}}
+"
+                    , true), monitoringDefinitionsLayerID, ciMonModuleHostWindows, changeset, trans);
+                await attributeModel.InsertAttribute("naemon.config_template", 
+                    AttributeScalarValueText.Build(
+@"{{~ for related_ci in target.relations.back.runs_on ~}}
+[{
+  ""type"": ""service"",
+  ""contactgroupSource"": ""{{ related_ci.id }}"",
+  ""description"": ""service check linux application"",
+  ""command"": {
+                    ""executable"": ""check_command"",
+    ""parameters"": ""-application_name {{ related_ci.attributes.application_name}}""
+  }
+}]
+{{~ end ~}}
+            "
                         , true), monitoringDefinitionsLayerID, ciMonModuleHostLinux, changeset, trans);
                 trans.Commit();
             }

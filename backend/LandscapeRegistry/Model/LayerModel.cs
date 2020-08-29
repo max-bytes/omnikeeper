@@ -31,6 +31,7 @@ namespace LandscapeRegistry.Model
         public async Task<Layer> CreateLayer(string name, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrain, OnlineInboundAdapterLink oilp, NpgsqlTransaction trans)
         {
             Debug.Assert(computeLayerBrain != null);
+            Debug.Assert(oilp != null);
 
             // create layer
             using var command = new NpgsqlCommand(@"INSERT INTO layer (name) VALUES (@name) returning id", conn, trans);
