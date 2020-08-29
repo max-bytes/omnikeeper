@@ -69,8 +69,8 @@ namespace Tests.OIA
 
             ciModelMock.Setup(x => x.CIIDExists(It.IsAny<Guid>(), null)).ReturnsAsync((Guid ciid, NpgsqlTransaction trans) => existingCIs.Contains(ciid));
             ciModelMock.Setup(x => x.CreateCI(It.IsAny<Guid>(), null))
-                .Callback((NpgsqlTransaction trans, Guid ciid) => existingCIs.Add(ciid))
-                .ReturnsAsync((NpgsqlTransaction trans, Guid ciid) => ciid);
+                .Callback((Guid ciid, NpgsqlTransaction trans) => existingCIs.Add(ciid))
+                .ReturnsAsync((Guid ciid, NpgsqlTransaction trans) => ciid);
             ciModelMock.Setup(x => x.CreateCI(null))
                 .ReturnsAsync((NpgsqlTransaction trans) => { var n = newCIIDs.Dequeue(); existingCIs.Add(n); return n; });
             ciModelMock.Setup(x => x.GetCIIDs(null)).ReturnsAsync(() => existingCIs);
@@ -178,8 +178,8 @@ namespace Tests.OIA
 
             ciModelMock.Setup(x => x.CIIDExists(It.IsAny<Guid>(), null)).ReturnsAsync((Guid ciid, NpgsqlTransaction trans) => existingCIs.Contains(ciid));
             ciModelMock.Setup(x => x.CreateCI(It.IsAny<Guid>(), null))
-                .Callback((NpgsqlTransaction trans, Guid ciid) => existingCIs.Add(ciid))
-                .ReturnsAsync((NpgsqlTransaction trans, Guid ciid) => ciid);
+                .Callback((Guid ciid, NpgsqlTransaction trans) => existingCIs.Add(ciid))
+                .ReturnsAsync((Guid ciid, NpgsqlTransaction trans) => ciid);
             ciModelMock.Setup(x => x.GetCIIDs(null)).ReturnsAsync(() => existingCIs);
 
             // initial run, creating 3 mapped cis
