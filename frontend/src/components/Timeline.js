@@ -33,7 +33,7 @@ function LoadingTimeline(props) {
   var [limit, setLimit] = useState(10);
 
   const { loading: loadingChangesets, error, data, refetch: refetchChangesets } = useQuery(queries.Changesets, {
-    variables: { from: from, to: to, ciid: ciid, layers: props.layers.map(l => l.name), limit: limit } // TODO
+    variables: { from: from, to: to, ciids: [ciid], layers: props.layers.map(l => l.name), limit: limit } // TODO
   });
 
   React.useEffect(() => { if (selectedTime.refreshNonceTimeline) refetchChangesets({fetchPolicy: 'network-only'}); }, [selectedTime, refetchChangesets]);

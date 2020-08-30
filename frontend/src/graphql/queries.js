@@ -53,8 +53,20 @@ export const queries = {
     `,
 
     FullCI: gql`
-        query ci($identity: Guid!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
-            ci(identity: $identity, layers: $layers, timeThreshold: $timeThreshold) {
+        query ci($ciid: Guid!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
+            ci(ciid: $ciid, layers: $layers, timeThreshold: $timeThreshold) {
+                ...FullCI
+            }
+        }
+        ${Fragments.compactCI}
+        ${Fragments.relatedCI}
+        ${Fragments.fullCI}
+        ${Fragments.mergedAttribute}
+        ${Fragments.attribute}
+    `,
+    FullCIs: gql`
+        query cis($ciids: [Guid], $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
+            cis(ciids: $ciids, layers: $layers, timeThreshold: $timeThreshold) {
                 ...FullCI
             }
         }
@@ -90,8 +102,8 @@ export const queries = {
         }
     `,
     Changesets: gql`
-        query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciid: Guid, $layers:[String]!, $limit: Int) {
-            changesets(from: $from, to:$to, ciid:$ciid, layers: $layers, limit: $limit) {
+        query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciids: [Guid], $layers:[String]!, $limit: Int) {
+            changesets(from: $from, to: $to, ciids: $ciids, layers: $layers, limit: $limit) {
                 id
                 user {
                     username

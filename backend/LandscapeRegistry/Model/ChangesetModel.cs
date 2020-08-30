@@ -67,7 +67,8 @@ namespace LandscapeRegistry.Model
         {
             return cs switch
             {
-                ChangesetSelectionSingleCI sci => await GetChangesetsInTimespan(from, to, layers, sci.ciid, trans, limit),
+                ChangesetSelectionSingleCI sci => await GetChangesetsInTimespan(from, to, layers, new Guid[] { sci.ciid }, trans, limit),
+                ChangesetSelectionMultipleCIs mci => await GetChangesetsInTimespan(from, to, layers, mci.CIIDs, trans, limit),
                 ChangesetSelectionAllCIs _ => await GetChangesetsInTimespan(from, to, layers, trans, limit),
                 _ => throw new Exception("Invalid changeset selection"),
             };
@@ -76,14 +77,14 @@ namespace LandscapeRegistry.Model
 
         // returns all changesets affecting this CI, both via attributes OR relations
         // sorted by timestamp
-        private async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, Guid ciid, NpgsqlTransaction trans, int? limit = null)
+        private async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, Guid[] ciids, NpgsqlTransaction trans, int? limit = null)
         {
             var queryAttributes = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 INNER JOIN attribute a ON a.changeset_id = c.id 
                 INNER JOIN ci ci ON a.ci_id = ci.id
                 LEFT JOIN ""user"" u ON c.user_id = u.id
                 WHERE c.timestamp >= @from AND c.timestamp <= @to AND a.layer_id = ANY(@layer_ids)";
-            queryAttributes += " AND ci.id = @ciid";
+            queryAttributes += " AND ci.id = ANY(@ciids)";
 
             var irdClause = "r.from_ci_id = ci.id OR r.to_ci_id = ci.id";
             var queryRelations = $@"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
@@ -91,7 +92,7 @@ namespace LandscapeRegistry.Model
                 INNER JOIN ci ci ON ({irdClause})
                 LEFT JOIN ""user"" u ON c.user_id = u.id
                 WHERE c.timestamp >= @from AND c.timestamp <= @to AND r.layer_id = ANY(@layer_ids)";
-            queryRelations += " AND ci.id = @ciid";
+            queryRelations += " AND ci.id = ANY(@ciids)";
 
             var query = @$" {queryAttributes} UNION {queryRelations} ORDER BY 3 DESC";
             if (limit.HasValue)
@@ -100,7 +101,7 @@ namespace LandscapeRegistry.Model
             using var command = new NpgsqlCommand(query, conn, trans);
             command.Parameters.AddWithValue("from", from);
             command.Parameters.AddWithValue("to", to);
-            command.Parameters.AddWithValue("ciid", ciid);
+            command.Parameters.AddWithValue("ciids", ciids);
             command.Parameters.AddWithValue("layer_ids", layers.LayerIDs);
             if (limit.HasValue)
                 command.Parameters.AddWithValue("limit", limit.Value);

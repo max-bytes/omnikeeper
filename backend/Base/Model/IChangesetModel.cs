@@ -1,7 +1,9 @@
 ﻿using Landscape.Base.Entity;
+using Landscape.Base.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using static Landscape.Base.Model.IRelationModel;
 
@@ -14,6 +16,7 @@ namespace Landscape.Base.Model
 
         }
 
+        // TODO: remove, is just a special case of multipleCIs
         public class ChangesetSelectionSingleCI : IChangesetSelection
         {
             public readonly Guid ciid;
@@ -21,6 +24,27 @@ namespace Landscape.Base.Model
             public ChangesetSelectionSingleCI(Guid ciid)
             {
                 this.ciid = ciid;
+            }
+        }
+        public class ChangesetSelectionMultipleCIs : IChangesetSelection
+        {
+            public Guid[] CIIDs { get; }
+            private ChangesetSelectionMultipleCIs(IEnumerable<Guid> ciids)
+            {
+                CIIDs = ciids.ToArray();
+            }
+
+            public bool Contains(Guid ciid) => CIIDs.Contains(ciid);
+
+            public static ChangesetSelectionMultipleCIs Build(IEnumerable<Guid> ciids)
+            {
+                if (ciids.IsEmpty()) throw new Exception("Empty ChangesetSelectionMultipleCIs not allowed");
+                return new ChangesetSelectionMultipleCIs(ciids);
+            }
+            public static ChangesetSelectionMultipleCIs Build(params Guid[] ciids)
+            {
+                if (ciids.IsEmpty()) throw new Exception("Empty ChangesetSelectionMultipleCIs not allowed");
+                return new ChangesetSelectionMultipleCIs(ciids);
             }
         }
 

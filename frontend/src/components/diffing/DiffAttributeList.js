@@ -2,7 +2,7 @@ import React from 'react';
 import Attribute from 'components/Attribute';
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import _ from 'lodash';
-import { Accordion, Button, Icon } from 'semantic-ui-react'
+import { Accordion, Icon } from 'semantic-ui-react'
 import { onAppear, onExit } from 'utils/animation';
 import { Container, Row, Col } from 'react-bootstrap';
 import { MissingLabel, CompareLabel, EmptyLabel, stateBasedBackgroundColor } from './DiffUtilComponents';
@@ -82,14 +82,14 @@ function DiffAttributeList(props) {
 
   return (
     <>
-       <div className={"d-flex align-items-end flex-column mb-2"} >
+       {/* <div className={"d-flex align-items-end flex-column mb-2"} >
             <Button
                 size={"tiny"}
                 onClick={() => toggleExpandCollapseAll()}
             >
                 Expand/Collapse All
             </Button>
-        </div>
+        </div> */}
         <Accordion styled exclusive={false} fluid>
             {_.values(attributeAccordionItemsSorted)}
         </Accordion>

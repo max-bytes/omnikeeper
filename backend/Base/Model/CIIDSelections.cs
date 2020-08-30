@@ -24,12 +24,12 @@ namespace Landscape.Base.Model
 
         public static SpecificCIIDsSelection Build(IEnumerable<Guid> ciids)
         {
-            if (ciids.IsEmpty()) throw new Exception("Empty MultiCIIDsSelection not allowed");
+            if (ciids.IsEmpty()) throw new Exception("Empty SpecificCIIDsSelection not allowed");
             return new SpecificCIIDsSelection(ciids);
         }
         public static SpecificCIIDsSelection Build(params Guid[] ciids)
         {
-            if (ciids.IsEmpty()) throw new Exception("Empty MultiCIIDsSelection not allowed");
+            if (ciids.IsEmpty()) throw new Exception("Empty SpecificCIIDsSelection not allowed");
             return new SpecificCIIDsSelection(ciids);
         }
     }

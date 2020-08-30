@@ -17,26 +17,15 @@ namespace LandscapeRegistry.GraphQL
             ITraitModel traitModel, ITraitsProvider traitsProvider, ICurrentUserService currentUserService)
         {
             FieldAsync<MergedCIType>("ci",
-                arguments: new QueryArguments(new List<QueryArgument>
-                {
-                    new QueryArgument<NonNullGraphType<GuidGraphType>>
-                    {
-                        Name = "identity"
-                    },
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
-                    {
-                        Name = "layers"
-                    },
-                    new QueryArgument<DateTimeOffsetGraphType>
-                    {
-                        Name = "timeThreshold"
-                    },
-                }),
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "ciid" },
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                    new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as RegistryUserContext;
 
-                    var ciid = context.GetArgument<Guid>("identity");
+                    var ciid = context.GetArgument<Guid>("ciid");
                     var layerStrings = context.GetArgument<string[]>("layers");
                     var ls = await layerModel.BuildLayerSet(layerStrings, null);
                     userContext.LayerSet = ls;
@@ -47,6 +36,30 @@ namespace LandscapeRegistry.GraphQL
 
                     return ci;
                 });
+            FieldAsync<ListGraphType<MergedCIType>>("cis",
+                arguments: new QueryArguments(
+                    new QueryArgument<ListGraphType<GuidGraphType>> { Name = "ciids" },
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                    new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
+                resolve: async context =>
+                {
+                    var userContext = context.UserContext as RegistryUserContext;
+
+                    var ciids = context.GetArgument<Guid[]>("ciids", null);
+                    var layerStrings = context.GetArgument<string[]>("layers");
+                    var ls = await layerModel.BuildLayerSet(layerStrings, null);
+                    userContext.LayerSet = ls;
+                    var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
+                    userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
+
+                    ICIIDSelection ciidSelection = new AllCIIDsSelection();  // if null, query all CIs
+                    if (ciids != null)
+                        ciidSelection = SpecificCIIDsSelection.Build(ciids);
+
+                    var cis = await ciModel.GetMergedCIs(ciidSelection, userContext.LayerSet, false, null, userContext.TimeThreshold);
+
+                    return cis;
+                });
 
             FieldAsync<ListGraphType<StringGraphType>>("ciids",
                 resolve: async context =>
@@ -56,17 +69,9 @@ namespace LandscapeRegistry.GraphQL
                 });
 
             FieldAsync<ListGraphType<CompactCIType>>("compactCIs",
-                arguments: new QueryArguments(new List<QueryArgument>
-                {
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
-                    {
-                        Name = "layers"
-                    },
-                    new QueryArgument<DateTimeOffsetGraphType>
-                    {
-                        Name = "timeThreshold"
-                    },
-                }),
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                    new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as RegistryUserContext;
@@ -81,13 +86,8 @@ namespace LandscapeRegistry.GraphQL
                 });
 
             FieldAsync<ListGraphType<CompactCIType>>("simpleSearchCIs",
-                arguments: new QueryArguments(new List<QueryArgument>
-                {
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "searchString"
-                    }
-                }),
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "searchString" }),
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as RegistryUserContext;
@@ -100,21 +100,10 @@ namespace LandscapeRegistry.GraphQL
                 });
 
             FieldAsync<ListGraphType<CompactCIType>>("advancedSearchCIs",
-                arguments: new QueryArguments(new List<QueryArgument>
-                {
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "searchString"
-                    },
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
-                    {
-                        Name = "withEffectiveTraits"
-                    },
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
-                    {
-                        Name = "layers"
-                    }
-                }),
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "searchString" },
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "withEffectiveTraits" },
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as RegistryUserContext;
@@ -131,21 +120,10 @@ namespace LandscapeRegistry.GraphQL
                 });
 
             FieldAsync<ListGraphType<CompactCIType>>("validRelationTargetCIs",
-                arguments: new QueryArguments(new List<QueryArgument>
-                {
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
-                    {
-                        Name = "layers"
-                    },
-                    new QueryArgument<NonNullGraphType<StringGraphType>>
-                    {
-                        Name = "predicateID"
-                    },
-                    new QueryArgument<NonNullGraphType<BooleanGraphType>>
-                    {
-                        Name = "forward"
-                    }
-                }),
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "predicateID" },
+                    new QueryArgument<NonNullGraphType<BooleanGraphType>> { Name = "forward" }),
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as RegistryUserContext;
@@ -177,17 +155,9 @@ namespace LandscapeRegistry.GraphQL
                 });
 
             FieldAsync<ListGraphType<DirectedPredicateType>>("directedPredicates",
-                arguments: new QueryArguments(new List<QueryArgument>
-                {
-                    new QueryArgument<NonNullGraphType<GuidGraphType>>
-                    {
-                        Name = "preferredForCI"
-                    },
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
-                    {
-                        Name = "layersForEffectiveTraits"
-                    },
-                }),
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "preferredForCI" },
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layersForEffectiveTraits" }),
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as RegistryUserContext;
@@ -217,13 +187,8 @@ namespace LandscapeRegistry.GraphQL
                 });
 
             FieldAsync<ListGraphType<PredicateType>>("predicates",
-                arguments: new QueryArguments(new List<QueryArgument>
-                {
-                    new QueryArgument<NonNullGraphType<AnchorStateFilterType>>
-                    {
-                        Name = "stateFilter"
-                    }
-                }),
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<AnchorStateFilterType>> { Name = "stateFilter" }),
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as RegistryUserContext;
@@ -260,13 +225,8 @@ namespace LandscapeRegistry.GraphQL
                 });
 
             FieldAsync<ChangesetType>("changeset",
-                arguments: new QueryArguments(new List<QueryArgument>
-                {
-                    new QueryArgument<NonNullGraphType<GuidGraphType>>
-                    {
-                        Name = "id"
-                    }
-                }),
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "id" }),
                 resolve: async context =>
                 {
                     var id = context.GetArgument<Guid>("id");
@@ -275,29 +235,12 @@ namespace LandscapeRegistry.GraphQL
                 });
 
             FieldAsync<ListGraphType<ChangesetType>>("changesets",
-                arguments: new QueryArguments(new List<QueryArgument>
-                {
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
-                    {
-                        Name = "layers"
-                    },
-                    new QueryArgument<NonNullGraphType<DateTimeOffsetGraphType>>
-                    {
-                        Name = "from"
-                    },
-                    new QueryArgument<NonNullGraphType<DateTimeOffsetGraphType>>
-                    {
-                        Name = "to"
-                    },
-                    new QueryArgument<GuidGraphType>
-                    {
-                        Name = "ciid"
-                    },
-                    new QueryArgument<IntGraphType>
-                    {
-                        Name = "limit"
-                    }
-                }),
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                    new QueryArgument<NonNullGraphType<DateTimeOffsetGraphType>> { Name = "from"},
+                    new QueryArgument<NonNullGraphType<DateTimeOffsetGraphType>> { Name = "to" },
+                    new QueryArgument<ListGraphType<GuidGraphType>> { Name = "ciids" },
+                    new QueryArgument<IntGraphType> { Name = "limit" }),
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as RegistryUserContext;
@@ -307,12 +250,13 @@ namespace LandscapeRegistry.GraphQL
 
                     var from = context.GetArgument<DateTimeOffset>("from");
                     var to = context.GetArgument<DateTimeOffset>("to");
-                    var ciid = context.GetArgument<Guid?>("ciid", null);
+                    var ciids = context.GetArgument<Guid[]>("ciids", null);
                     var limit = context.GetArgument<int?>("limit", null);
-                    if (ciid != null)
-                        return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, new ChangesetSelectionSingleCI(ciid.Value), null, limit);
-                    else
-                        return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, new ChangesetSelectionAllCIs(), null, limit);
+                    IChangesetSelection selection = new ChangesetSelectionAllCIs();
+                    if (ciids != null)
+                        selection = ChangesetSelectionMultipleCIs.Build(ciids);
+
+                    return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, selection, null, limit);
                 });
 
 
@@ -325,13 +269,7 @@ namespace LandscapeRegistry.GraphQL
                 });
 
             FieldAsync<ListGraphType<EffectiveTraitListItemType>>("effectiveTraitList",
-                arguments: new QueryArguments(new List<QueryArgument>
-                {
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>>
-                    {
-                        Name = "layers"
-                    }
-                }),
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
                 resolve: async context =>
                 {
                     var userContext = context.UserContext as RegistryUserContext;

@@ -7,12 +7,12 @@ import { mergeSettingsAndSortLayers } from 'utils/layers';
 import Form from 'react-bootstrap/Form'
 
 function ChangesetDropdown(props) {
-  const { ciid, layers, timeSettings, setTimeSettings } = props;
+  const { ciids, layers, timeSettings, setTimeSettings } = props;
 
   var from = "2010-01-01 00:00:00"; // TODO?
   var to = "2022-01-01 00:00:00";
   const { loading, data } = useQuery(queries.Changesets, {
-    variables: { from: from, to: to, ciid: ciid, layers: layers }
+    variables: { from: from, to: to, ciids: ciids, layers: layers } // TODO: multiple ciids
   });
 
   let list = [];
@@ -39,7 +39,7 @@ function ChangesetDropdown(props) {
 
 export function DiffTimeSettings(props) {
   
-  const { ciid, layers, alignment, timeSettings, setTimeSettings } = props;
+  const { ciids, layers, alignment, timeSettings, setTimeSettings } = props;
 
   const type = timeSettings?.type ?? 0;
 
@@ -54,11 +54,11 @@ export function DiffTimeSettings(props) {
             type={'radio'}
             value={0}
             id={`time-range-select-latest-${alignment}`}
-            onChange={() => setTimeSettings(ts => ({...ts, type: 0}))}
+            onChange={() => setTimeSettings(ts => ({...ts, type: 0, timeThreshold: undefined}))}
           />
           <Form.Check style={{alignItems: 'center'}}
             checked={type===1}
-            disabled={!!!ciid}
+            disabled={ciids && ciids.length === 0}
             custom
             inline
             label="Changeset"
@@ -70,38 +70,74 @@ export function DiffTimeSettings(props) {
       </div>
       {type === 1 && 
         <div style={{display: 'flex', flexBasis: '300px'}}>
-          <ChangesetDropdown layers={layers} ciid={ciid} timeSettings={timeSettings} setTimeSettings={setTimeSettings} />
+          <ChangesetDropdown layers={layers} ciids={ciids} timeSettings={timeSettings} setTimeSettings={setTimeSettings} />
         </div>}
     </div>
   );
 }
 
+function DiffCISettingsSpecificCIs(props) {
+  const { data, loading } = useQuery(queries.CIList, {
+    variables: { layers: props.layers }
+  });
+
+  var ciList = [];
+  if (data)
+    ciList = data.compactCIs.map(d => {
+      return { key: d.id, value: d.id, text: `${d.name ?? '[UNNAMED]'} - ${d.id}`, orderLast: !!d.name };
+    }).sort((a, b) => {
+      if (a.orderLast !== b.orderLast) return ((a.orderLast) ? -1 : 1);
+      if (a.text && b.text) return a.text.localeCompare(b.text);
+      else return a.key.localeCompare(b.key);
+    }).map(({orderLast, ...rest}) => rest);
+
+  return <Dropdown style={{flexBasis: '550px', flexGrow: 1}} loading={loading}
+                  disabled={loading}
+                  value={props.selectedCIIDs ?? []}
+                  placeholder='Select CIs...'
+                  onChange={(_, data) => { props.setSelectedCIIDs(data.value);}}
+                  fluid
+                  multiple
+                  search
+                  selection
+                  options={ciList}
+                />;
+}
+
 export function DiffCISettings(props) {
-    const { data, loading } = useQuery(queries.CIList, {
-      variables: { layers: props.layers }
-    });
-  
-    var ciList = [];
-    if (data)
-      ciList = data.compactCIs.map(d => {
-        return { key: d.id, value: d.id, text: `${d.name ?? '[UNNAMED]'} - ${d.id}`, orderLast: !!d.name };
-      }).sort((a, b) => {
-        if (a.orderLast !== b.orderLast) return ((a.orderLast) ? -1 : 1);
-        if (a.text && b.text) return a.text.localeCompare(b.text);
-        else return a.key.localeCompare(b.key);
-      }).map(({orderLast, ...rest}) => rest);
-  
-    return (<div style={alignmentStyle(props.alignment)}>
-      <Dropdown style={{flexBasis: '550px', flexGrow: 1}} loading={loading}
-                    disabled={loading}
-                    value={props.selectedCIID}
-                    placeholder='Select CI...'
-                    onChange={(_, data) => props.setSelectedCIID(data.value)}
-                    fluid
-                    search
-                    selection
-                    options={ciList}
-                  /></div>);
+    
+  const { layers, alignment, selectedCIIDs, setSelectedCIIDs } = props;
+
+  const type = (selectedCIIDs === null) ? 0 : 1;
+
+  return <div style={alignmentStyle(alignment)}>
+    <div style={{display: 'flex'}}>
+      <Form.Check style={{alignItems: 'center'}}
+        checked={type===0}
+        custom
+        inline
+        label="All"
+        type={'radio'}
+        value={0}
+        id={`ci-select-all-${alignment}`}
+        onChange={() => setSelectedCIIDs(ts => null)}
+      />
+      <Form.Check style={{alignItems: 'center'}}
+        checked={type===1}
+        custom
+        inline
+        label="Specific"
+        type={'radio'}
+        value={1}
+        id={`ci-select-specific-${alignment}`}
+        onChange={() => setSelectedCIIDs(ts => [])}
+      />
+    </div>
+    {type === 1 && 
+      <div style={{display: 'flex', flexBasis: '300px'}}>
+      <DiffCISettingsSpecificCIs layers={layers} selectedCIIDs={selectedCIIDs} setSelectedCIIDs={setSelectedCIIDs} />
+      </div>}
+  </div>
 }
   
 export function DiffLayerSettings(props) {

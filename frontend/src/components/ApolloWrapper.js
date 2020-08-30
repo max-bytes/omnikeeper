@@ -142,7 +142,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
         },
         layerSettings: null
     };
-    console.log("Writing initial state")
+    // console.log("Writing initial state")
     cache.writeQuery({
         query: gql`
         query InitialState {
