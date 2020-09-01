@@ -94,8 +94,8 @@ namespace Tests.Integration.GraphQL
             trans.Commit();
 
             string query = @"
-                query text($identity: Guid!, $layers: [String]!) {
-                  ci(identity: $identity, layers: $layers) {
+                query text($ciid: Guid!, $layers: [String]!) {
+                  ci(ciid: $ciid, layers: $layers) {
                     mergedAttributes {
                         attribute {
                             name
@@ -113,7 +113,7 @@ namespace Tests.Integration.GraphQL
 
             var inputs = new Inputs(new Dictionary<string, object>()
             {
-                { "identity", ciid1 },
+                { "ciid", ciid1 },
                 { "layers", new string[] { "layer_1", "layer_2" } }
             });
 
