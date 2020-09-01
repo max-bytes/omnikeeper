@@ -87,12 +87,13 @@ namespace MonitoringPlugin
         public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger)
         {
             logger.LogDebug("Start clbMonitoring");
-            var layerSetMonitoringDefinitionsOnly = await layerModel.BuildLayerSet(new[] { "Monitoring Definitions" }, trans);
-
-            var timeThreshold = TimeThreshold.BuildLatestAtTime(changesetProxy.Timestamp);
 
             // TODO: make configurable
+            var layerSetMonitoringDefinitionsOnly = await layerModel.BuildLayerSet(new[] { "Monitoring Definitions" }, trans);
+            // TODO: make configurable
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
+
+            var timeThreshold = TimeThreshold.BuildLatestAtTime(changesetProxy.Timestamp);
 
             var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, timeThreshold);
 

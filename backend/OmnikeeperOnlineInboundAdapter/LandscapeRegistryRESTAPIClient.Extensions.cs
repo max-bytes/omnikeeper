@@ -23,7 +23,7 @@ namespace OnlineInboundAdapterOmnikeeper
         partial void PrepareRequest(HttpClient client, HttpRequestMessage request, string url)
         {
             string GetAccessToken() => GetAccessTokenAsync(config.authURL, config.realm, config.clientID, config.clientSecret).GetAwaiter().GetResult();
-            var accessToken = GetAccessToken(); // TODO: this sucks, we shouldn't execute this in a constructor -> find better way
+            var accessToken = GetAccessToken();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         }
 
