@@ -19,7 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBMigrations", "DBMigrations\DBMigrations.csproj", "{E672E2AF-7283-4E7C-B9EF-177785C9D06E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonitoringPlugin", "MonitoringPlugin\MonitoringPlugin.csproj", "{E7F92D6D-AF0A-4327-B86A-45EE4E35F7F5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CLBMonitoring", "MonitoringPlugin\CLBMonitoring.csproj", "{E7F92D6D-AF0A-4327-B86A-45EE4E35F7F5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBMigrate", "DBMigrate\DBMigrate.csproj", "{5CEA4BAB-01F7-4AD6-B824-9350929A7A89}"
 EndProject
@@ -27,7 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineInboundAdapterKeycloa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineInboundAdapterOmnikeeper", "OmnikeeperOnlineInboundAdapter\OnlineInboundAdapterOmnikeeper.csproj", "{C8259B95-73D9-492E-9196-75BD8497F66C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tasks", "Tasks\Tasks.csproj", "{270B435A-F624-4740-9EEE-F847B210C447}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tasks", "Tasks\Tasks.csproj", "{270B435A-F624-4740-9EEE-F847B210C447}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

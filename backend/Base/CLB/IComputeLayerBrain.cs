@@ -3,7 +3,7 @@ using Landscape.Base.Model;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace Landscape.Base
+namespace Landscape.Base.CLB
 {
     public interface IComputeLayerBrain
     {

@@ -57,7 +57,7 @@
     <ProjectReference Include="..\Base\Landscape.Base.csproj" />
     <ProjectReference Include="..\DBMigrations\DBMigrations.csproj" />
     <ProjectReference Include="..\KeycloakOnlineInboundLayerPlugin\OnlineInboundAdapterKeycloak.csproj" />
-    <ProjectReference Include="..\MonitoringPlugin\MonitoringPlugin.csproj" />
+    <ProjectReference Include="..\MonitoringPlugin\CLBMonitoring.csproj" />
     <ProjectReference Include="..\OmnikeeperOnlineInboundAdapter\OnlineInboundAdapterOmnikeeper.csproj" />
   </ItemGroup>
 

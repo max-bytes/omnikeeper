@@ -1,4 +1,4 @@
-﻿namespace Landscape.Base
+﻿namespace Landscape.Base.CLB
 {
     public class CLBSettings
     {

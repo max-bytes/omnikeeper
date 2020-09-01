@@ -17,8 +17,8 @@ namespace Tasks.Tools
         {
             var config = new ODataAPIContext.ConfigV3()
             {
-                WriteLayerID = 1,
-                ReadLayerset = new long[] { 1, 4 }
+                WriteLayerID = 7,
+                ReadLayerset = new long[] { 1,2,3,4,5,6,7 }
             };
             var json = ODataAPIContext.SerializeConfigToString(config);
 

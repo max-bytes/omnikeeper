@@ -9,6 +9,7 @@ using Hangfire.Console;
 using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
 using Landscape.Base;
+using Landscape.Base.CLB;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;

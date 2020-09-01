@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Landscape.Base
+namespace Landscape.Base.CLB
 {
     public class CLBErrorHandler
     {

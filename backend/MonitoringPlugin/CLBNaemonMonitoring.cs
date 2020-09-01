@@ -24,6 +24,7 @@ using JsonSubTypes;
 using DotLiquid.Util;
 using System.Reflection;
 using Landscape.Base.AttributeValues;
+using Landscape.Base.CLB;
 
 namespace MonitoringPlugin
 {
