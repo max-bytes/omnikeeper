@@ -58,10 +58,6 @@ namespace Landscape.Base.Inbound
 
         private void CreateTableIfNotExists(string tableName, NpgsqlTransaction trans, NpgsqlConnection conn)
         {
-            //var createSchemaSQL = $@"CREATE SCHEMA IF NOT EXISTS {SchemaName}";
-            //using var cmdCreateSchema = new NpgsqlCommand(createSchemaSQL, conn, trans);
-            //var x = cmdCreateSchema.ExecuteNonQuery();
-
             var fullTableName = $"\"{SchemaName}\".{tableName}";
             var createTableSQL = $@"CREATE TABLE IF NOT EXISTS {fullTableName}
                 (
@@ -85,7 +81,9 @@ namespace Landscape.Base.Inbound
 
             CreateTableIfNotExists(tableName, trans, conn);
 
-            // truncate // TODO: maybe find a better way to update the mappings instead of trunating and writing everything anew
+            // truncate 
+            // TODO: find a better way to update the mappings instead of trunating and writing everything anew
+            // maybe the int2ext dictionary needs to be expanded upon, with a proper way to discern old, new and deleted mappings
             using var cmdTruncate = new NpgsqlCommand($"TRUNCATE TABLE {fullTableName}", conn, trans);
             cmdTruncate.ExecuteNonQuery();
 

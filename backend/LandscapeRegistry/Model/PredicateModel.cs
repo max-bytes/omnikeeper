@@ -101,6 +101,7 @@ namespace LandscapeRegistry.Model
         {
             var ret = new Dictionary<string, Predicate>();
 
+            // TODO: does not take into account time yet!
             using var command = new NpgsqlCommand(@"
                 SELECT p.id, pw.wording_from, pw.wording_to, ps.state, pc.constraints
                 FROM predicate p

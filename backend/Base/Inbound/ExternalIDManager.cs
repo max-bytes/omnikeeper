@@ -38,7 +38,7 @@ namespace Landscape.Base.Inbound
 
             var changes = false;
 
-            // remove all mappings that do not have an external item (anymore)
+            // remove all mappings that do not have an external item (anymore) // TODO: make this configurable, there might be data sources that don't want that
             var removedExternalIDs = mapper.RemoveAllExceptExternalIDs(externalIDs);
             if (!removedExternalIDs.IsEmpty())
             {
@@ -73,10 +73,7 @@ namespace Landscape.Base.Inbound
                         ciid = await ciModel.CreateCI(trans);
                         logger.LogInformation($"Created CI with CIID {ciid}");
                     }
-                    /**
-                     * TODO: actually, we should check first if an existing CI may already be a fitting candidate
-                     * this would probably be a similar process as when identifying CIs when doing an ingest 
-                     **/
+
                     mapper.Add(ciid, externalID);
 
                     changes = true;

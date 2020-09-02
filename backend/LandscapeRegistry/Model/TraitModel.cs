@@ -78,7 +78,7 @@ namespace LandscapeRegistry.Model
             var lsValues = LayerSet.CreateLayerSetSQLValues(layerSet);
 
             // TODO: consider case with no required attributes, like when a trait only has dependent traits
-            // TODO: consider external datasources
+            // TODO: consider external datasources, this precursor filtering does not properly work AT ALL!
 
             using (var command = new NpgsqlCommand(@$"
                 select a.ci_id from
@@ -117,8 +117,6 @@ namespace LandscapeRegistry.Model
             // now do a full pass to check which ci's REALLY fulfill the trait's requirements
             var cis = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(candidateCIIDs), layerSet, false, trans, atTime);
 
-
-            // TODO: check that if the current trait has depedent traits that they are properly resolved too
             var candidates = cis.Select(ci => new EffectiveTraitCandidate(trait, ci)).ToList();
             var traits = traitsProvider.GetTraits();
             var ret = await ResolveETCandidates(candidates, traits, trans, atTime);

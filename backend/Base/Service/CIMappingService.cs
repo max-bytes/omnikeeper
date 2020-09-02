@@ -140,8 +140,6 @@ namespace Landscape.Base.Service
 
         public static CIIdentificationMethodByData Build(string[] identifiableAttributes, CICandidateAttributeData allAttributes, LayerSet searchableLayers)
         {
-            // TODO: build from candidate attributes already
-
             var identifiableFragments = identifiableAttributes.Select(ia =>
             {
                 var identifiableFragment = allAttributes.Fragments.FirstOrDefault(f => f.Name.Equals(ia));

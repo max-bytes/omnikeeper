@@ -143,7 +143,9 @@ namespace LandscapeRegistry.GraphQL
 
                     var preferredTraits = (forward) ? predicate.Constraints.PreferredTraitsTo : predicate.Constraints.PreferredTraitsFrom;
 
-                    // TODO: this has abysmal performance! We fully query ALL CIs and the calculate the effective traits for each of them... :(
+                    // TODO: this has abysmal performance! We fully query ALL CIs and then calculate the effective traits for each of them... :(
+                    // we definitely have to look into caching traits as best as we can and provide a better way to query cis with a (array of) effective trait(s) as input
+                    // we might alternatively need to rework this: limit the number of items this works on (with a limit parameter) and provide a search parameter
                     var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), userContext.LayerSet, true, null, userContext.TimeThreshold);
                     var effectiveTraitSets = await traitModel.CalculateEffectiveTraitSetForCIs(cis, preferredTraits, null, userContext.TimeThreshold);
 
