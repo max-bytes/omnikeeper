@@ -23,23 +23,28 @@ function AddNewRelation(props) {
   useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
   useEffect(() => { setOpen(false); setNewRelation(initialRelation); }, [props.ciIdentity, props.visibleLayers, initialRelation]);
 
-  // useEffect(() => { 
-  //   if (!(visible == props.visibleLayers)) {
-  //     setVisible(props.visibleLayers)
-  //   }
-  //   console.log(props.visibleLayers.length == visible.length)
-  //   console.log(visible)
-  //   console.log(props.visibleLayers)
-  // }, [ props.visibleLayers ])
+  useEffect(() => { 
+    // if (!(visible == props.visibleLayers)) {
+    //   setVisible(props.visibleLayers)
+    // }
+    // console.log(props.visibleLayers.length == visible.length)
+    // console.log(visible)
+    console.log(props.visibleLayers)
+  }, [ props.visibleLayers ])
 
   // this line props.visibleLayers is causing the trigger of useEffect
+
   const [getValidTargetCIs, { data: dataCIs, loading: loadingCIs }] = useLazyQuery(queries.ValidRelationTargetCIs, { 
-    variables: {layers: Array.from(props.visibleLayers)}
+    variables: {layers: props.visibleLayers}
   });
+
+  console.log(dataCIs)
+
   const { data: directedPredicates } = useQuery(queries.DirectedPredicateList, {
     variables: { preferredForCI: props.ciIdentity, layersForEffectiveTraits: props.visibleLayers }
   });
   useEffect(() => {
+    console.log(isOpen)
     setNewRelation(e => ({...e, targetCIID: null }));
     if (newRelation.predicateID)
       getValidTargetCIs({variables: { forward: newRelation.forward, predicateID: newRelation.predicateID }});
