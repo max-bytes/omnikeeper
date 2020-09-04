@@ -106,13 +106,13 @@ namespace LandscapeRegistry.Model
                 SELECT p.id, pw.wording_from, pw.wording_to, ps.state, pc.constraints
                 FROM predicate p
                 LEFT JOIN 
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, wording_from, wording_to FROM predicate_wording ORDER BY predicate_id, timestamp DESC) pw
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, wording_from, wording_to FROM predicate_wording WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC) pw
                     ON pw.predicate_id = p.id
                 LEFT JOIN
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, state from predicate_state ORDER BY predicate_id, timestamp DESC) ps
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, state from predicate_state WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC) ps
                     ON ps.predicate_id = p.id
                 LEFT JOIN
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, constraints from predicate_constraints ORDER BY predicate_id, timestamp DESC) pc
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, constraints from predicate_constraints WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC) pc
                     ON pc.predicate_id = p.id
                 WHERE (ps.state = ANY(@states) OR (ps.state IS NULL AND @default_state = ANY(@states)))
             ", conn, trans);
