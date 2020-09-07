@@ -36,7 +36,6 @@ function AddNewRelation(props) {
     variables: { preferredForCI: props.ciIdentity, layersForEffectiveTraits: props.visibleLayers }
   });
   useEffect(() => {
-    console.log(isOpen)
     setNewRelation(e => ({...e, targetCIID: null }));
     if (newRelation.predicateID)
       getValidTargetCIs({variables: { forward: newRelation.forward, predicateID: newRelation.predicateID }});
