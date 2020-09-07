@@ -18,27 +18,19 @@ function AddNewRelation(props) {
   const { current: initialRelation } = useRef({predicateID: null, targetCIID: null, forward: true, layer: null });
   const [isOpen, setOpen] = useState(false);
 
-  // const [visible, setVisible] = useState(Array.from(props.visibleLayers))
   const [newRelation, setNewRelation] = useState(initialRelation);
   useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
-  useEffect(() => { setOpen(false); setNewRelation(initialRelation); }, [props.ciIdentity, props.visibleLayers, initialRelation]);
-
-  useEffect(() => { 
-    // if (!(visible == props.visibleLayers)) {
-    //   setVisible(props.visibleLayers)
-    // }
-    // console.log(props.visibleLayers.length == visible.length)
-    // console.log(visible)
-    console.log(props.visibleLayers)
-  }, [ props.visibleLayers ])
-
-  // this line props.visibleLayers is causing the trigger of useEffect
+  useEffect(() => { setOpen(false); setNewRelation(initialRelation); }, 
+    [
+      props.ciIdentity, 
+      JSON.stringify(props.visibleLayers), // because JS only does reference equality, we need to convert the array to a string
+      initialRelation
+    ]);
 
   const [getValidTargetCIs, { data: dataCIs, loading: loadingCIs }] = useLazyQuery(queries.ValidRelationTargetCIs, { 
     variables: {layers: props.visibleLayers}
   });
 
-  console.log(dataCIs)
 
   const { data: directedPredicates } = useQuery(queries.DirectedPredicateList, {
     variables: { preferredForCI: props.ciIdentity, layersForEffectiveTraits: props.visibleLayers }
@@ -105,7 +97,6 @@ function AddNewRelation(props) {
                 placeholder='Select Predicate'
                 onChange={(_, data) => { 
                   const [predicateID, forwardStr] = data.value.split('$$$$');
-                  // console.log(props.visibleLayers)
                   setNewRelation({...newRelation, predicateID: predicateID, forward: forwardStr === 'forward'});
                 }}
                 fluid
@@ -122,7 +113,6 @@ function AddNewRelation(props) {
                   value={newRelation.targetCIID}
                   placeholder='Target CI'
                   onChange={(_, data) => {
-                    // console.log(props.visibleLayers)
                     setNewRelation({...newRelation, targetCIID: data.value})
                   }}
                   fluid
