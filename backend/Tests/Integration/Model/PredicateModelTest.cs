@@ -88,5 +88,22 @@ namespace Tests.Integration.Model
                 { "p3", Predicate.Build("p3", "p3wf", "p3wt", AnchorState.Active, PredicateModel.DefaultConstraits) }
             }, p);
         }
+
+        [Test]
+        public async Task TestPredicateModel()
+        {
+            var dbcb = new DBConnectionBuilder();
+            using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            var predicateModel = new PredicateModel(conn);
+
+            Assert.AreEqual(new Dictionary<string, Predicate>()
+            {
+                { "p1", Predicate.Build("p1", "p1wf", "p1wt", AnchorState.Active, PredicateModel.DefaultConstraits) },
+                { "p2", Predicate.Build("p2", "p2wf", "p2wt", AnchorState.Active, PredicateModel.DefaultConstraits) },
+                { "p3", Predicate.Build("p3", "p3wf", "p3wt", AnchorState.Active, PredicateModel.DefaultConstraits) },
+                { "p4", Predicate.Build("p4", "p4wf", "p4wt", AnchorState.Active, PredicateModel.DefaultConstraits) }
+            }, await predicateModel.GetPredicates(null, TimeThreshold.BuildLatest(), AnchorStateFilter.All));
+
+        }
     }
 }
