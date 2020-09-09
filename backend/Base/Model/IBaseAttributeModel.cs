@@ -17,10 +17,10 @@ namespace Landscape.Base.Model
         Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
 
         // mutations
-        Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans);
-        Task<CIAttribute> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans);
-        Task<CIAttribute> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans);
-        Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, NpgsqlTransaction trans);
+        Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans);
+        Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans);
+        Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans);
+        Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, NpgsqlTransaction trans);
 
     }
 }

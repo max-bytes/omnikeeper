@@ -24,15 +24,14 @@ namespace LandscapeRegistry.Model.Decorators
             this.memoryCache = memoryCache;
         }
 
-        public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            var success = await model.BulkReplaceRelations(data, changesetProxy, trans);
-            if (success)
-                foreach (var f in data.Fragments)
-                {
-                    EvictFromCache(data.GetFromCIID(f), data.GetToCIID(f), data.GetPredicateID(f), data.LayerID);
-                }
-            return success;
+            var inserted = await model.BulkReplaceRelations(data, changesetProxy, trans);
+            foreach (var (fromCIID, toCIID, predicateID, _) in inserted)
+            {
+                EvictFromCache(fromCIID, toCIID, predicateID, data.LayerID);
+            }
+            return inserted;
         }
 
         private void EvictFromCache(Guid fromCIID, Guid toCIID, string predicateID, long layerID)
@@ -64,16 +63,20 @@ namespace LandscapeRegistry.Model.Decorators
                 return await model.GetRelations(rl, layerID, trans, atTime);
         }
 
-        public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            EvictFromCache(fromCIID, toCIID, predicateID, layerID);
-            return await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
+            var t = await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
+            if (t.changed)
+                EvictFromCache(fromCIID, toCIID, predicateID, layerID);
+            return t;
         }
 
-        public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            EvictFromCache(fromCIID, toCIID, predicateID, layerID);
-            return await model.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
+            var t = await model.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
+            if (t.changed)
+                EvictFromCache(fromCIID, toCIID, predicateID, layerID);
+            return t;
         }
     }
 }

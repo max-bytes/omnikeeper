@@ -120,7 +120,7 @@ namespace LandscapeRegistry.Model
             return relations;
         }
 
-        public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, timeThreshold);
@@ -133,7 +133,7 @@ namespace LandscapeRegistry.Model
             if (currentRelation.State == RelationState.Removed)
             {
                 // the relation is already removed, no-op(?)
-                return currentRelation;
+                return (currentRelation, false);
             }
 
             var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.All);
@@ -156,10 +156,10 @@ namespace LandscapeRegistry.Model
             var predicate = predicates[predicateID]; // TODO: only get one predicate?
 
             await command.ExecuteNonQueryAsync();
-            return Relation.Build(id, fromCIID, toCIID, predicate, RelationState.Removed, changeset.ID);
+            return (Relation.Build(id, fromCIID, toCIID, predicate, RelationState.Removed, changeset.ID), true);
         }
 
-        public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, timeThreshold);
@@ -175,7 +175,7 @@ namespace LandscapeRegistry.Model
                 else
                 {
                     // same predicate already exists and is present // TODO: think about different user inserting
-                    return currentRelation;
+                    return (currentRelation, false);
                 }
             }
 
@@ -202,11 +202,11 @@ namespace LandscapeRegistry.Model
             var predicate = predicates[predicateID]; // TODO: only get one predicate?
 
             await command.ExecuteNonQueryAsync();
-            return Relation.Build(id, fromCIID, toCIID, predicate, state, changeset.ID);
+            return (Relation.Build(id, fromCIID, toCIID, predicate, state, changeset.ID), true);
         }
 
 
-        public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var outdatedRelations = (data switch
@@ -276,7 +276,7 @@ namespace LandscapeRegistry.Model
                 writer.Complete();
             }
 
-            return true;
+            return actualInserts;
         }
     }
 }

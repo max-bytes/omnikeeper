@@ -72,7 +72,7 @@ namespace Tests.Integration.Model
             {
                 var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 var i1 = await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("text1"), ciid1, layerID1, changeset, trans);
-                Assert.AreEqual("a1", i1.Name);
+                Assert.AreEqual("a1", i1.attribute.Name);
 
                 trans.Commit();
             }
@@ -81,7 +81,7 @@ namespace Tests.Integration.Model
             {
                 var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 var i2 = await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("text2"), ciid1, layerID1, changeset, trans);
-                Assert.AreEqual("a1", i2.Name);
+                Assert.AreEqual("a1", i2.attribute.Name);
 
                 var a1 = await attributeModel.GetMergedAttributes(ciid1, layerset, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, a1.Count());
@@ -99,8 +99,8 @@ namespace Tests.Integration.Model
             {
                 var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 var r1 = await attributeModel.RemoveAttribute("a1", ciid1, layerID1, changeset, trans);
-                Assert.AreEqual("a1", r1.Name);
-                Assert.AreEqual(AttributeState.Removed, r1.State);
+                Assert.AreEqual("a1", r1.attribute.Name);
+                Assert.AreEqual(AttributeState.Removed, r1.attribute.State);
 
                 var a2 = await attributeModel.GetMergedAttributes(ciid1, layerset, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(0, a2.Count());
@@ -115,7 +115,7 @@ namespace Tests.Integration.Model
             {
                 var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
                 var i3 = await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("text3"), ciid1, layerID1, changeset, trans);
-                Assert.AreEqual("a1", i3.Name);
+                Assert.AreEqual("a1", i3.attribute.Name);
 
                 var a4 = await attributeModel.GetMergedAttributes(ciid1, layerset, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, a4.Count());
@@ -186,10 +186,12 @@ namespace Tests.Integration.Model
             var layerset1 = new LayerSet(new long[] { layer1.ID });
 
             var changeset1 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("textL1"), ciid1, layer1.ID, changeset1, trans);
+            var (aa1, changed1) = await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("textL1"), ciid1, layer1.ID, changeset1, trans);
+            Assert.IsTrue(changed1);
 
             var changeset2 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("textL1"), ciid1, layer1.ID, changeset2, trans);
+            var (aa2, changed2) = await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("textL1"), ciid1, layer1.ID, changeset2, trans);
+            Assert.IsFalse(changed2);
 
             var a1 = await attributeModel.GetMergedAttributes(ciid1, layerset1, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a1.Count());

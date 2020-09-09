@@ -100,7 +100,7 @@ namespace LandscapeRegistry.Controllers.OData
 
             var changesetProxy = ChangesetProxy.Build(user.InDatabase, timeThreshold.Time, changesetModel);
 
-            var created = await relationModel.InsertRelation(relation.FromCIID, relation.ToCIID, relation.Predicate, writeLayerID, changesetProxy, trans);
+            var (created, changed) = await relationModel.InsertRelation(relation.FromCIID, relation.ToCIID, relation.Predicate, writeLayerID, changesetProxy, trans);
 
             // we fetch the just created relation again, but merged
             var r = await relationModel.GetMergedRelation(created.FromCIID, created.ToCIID, created.PredicateID, readLayerset, trans, timeThreshold);
@@ -118,14 +118,17 @@ namespace LandscapeRegistry.Controllers.OData
             if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
-            using var trans = conn.BeginTransaction();
-            var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var removed = await relationModel.RemoveRelation(keyFromCIID, keyToCIID, keyPredicate, writeLayerID, changesetProxy, trans);
-
-            if (removed == null)
-                return NotFound();
-
-            trans.Commit();
+            try
+            {
+                using var trans = conn.BeginTransaction();
+                var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
+                var (removed, changed) = await relationModel.RemoveRelation(keyFromCIID, keyToCIID, keyPredicate, writeLayerID, changesetProxy, trans);
+                trans.Commit();
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
 
             return NoContent();
         }

@@ -51,7 +51,7 @@ namespace Landscape.Base.CLB
         public async Task LogError(Guid ciid, string name, string message)
         {
             var a = await attributeModel.InsertAttribute($"{AttributeNamePrefix}.{name}", AttributeScalarValueText.Build(message, true), ciid, clbLayerID, changeset, trans);
-            writtenErrors.Add(a);
+            writtenErrors.Add(a.attribute);
         }
     }
 }

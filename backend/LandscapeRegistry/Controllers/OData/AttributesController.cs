@@ -203,14 +203,16 @@ namespace LandscapeRegistry.Controllers.OData
             if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
-            using var trans = conn.BeginTransaction();
-            var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var removed = await attributeModel.RemoveAttribute(keyAttributeName, keyCIID, writeLayerID, changesetProxy, trans);
-
-            if (removed == null)
-                return NotFound();
-
-            trans.Commit();
+            try
+            {
+                using var trans = conn.BeginTransaction();
+                var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
+                await attributeModel.RemoveAttribute(keyAttributeName, keyCIID, writeLayerID, changesetProxy, trans);
+                trans.Commit();
+            } catch (Exception)
+            {
+                return BadRequest();
+            }
 
             return NoContent();
         }

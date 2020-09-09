@@ -104,30 +104,35 @@ namespace LandscapeRegistry.Model.Decorators
                 return await model.GetAttributes(selection, layerID, trans, atTime);
         }
 
-        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            memoryCache.CancelAttributesChangeToken(ciid, layerID);
-            return await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, trans);
+            var t = await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, trans);
+            if (t.changed)
+                memoryCache.CancelAttributesChangeToken(ciid, layerID);
+            return t;
         }
 
-        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            memoryCache.CancelAttributesChangeToken(ciid, layerID);
-            return await model.InsertCINameAttribute(nameValue, ciid, layerID, changesetProxy, trans);
+            var t = await model.InsertCINameAttribute(nameValue, ciid, layerID, changesetProxy, trans);
+            if (t.changed)
+                memoryCache.CancelAttributesChangeToken(ciid, layerID);
+            return t;
         }
 
-        public async Task<CIAttribute> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            memoryCache.CancelAttributesChangeToken(ciid, layerID);
-            return await model.RemoveAttribute(name, ciid, layerID, changesetProxy, trans);
+            var t = await model.RemoveAttribute(name, ciid, layerID, changesetProxy, trans);
+            if (t.changed)
+                memoryCache.CancelAttributesChangeToken(ciid, layerID);
+            return t;
         }
 
-        public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            var success = await model.BulkReplaceAttributes(data, changesetProxy, trans);
-            if (success)
-                foreach (var f in data.Fragments) memoryCache.CancelAttributesChangeToken(data.GetCIID(f), data.LayerID);
-            return success;
+            var inserted = await model.BulkReplaceAttributes(data, changesetProxy, trans);
+            foreach (var (ciid, _, _, _) in inserted) memoryCache.CancelAttributesChangeToken(ciid, data.LayerID); // NOTE: inserted list is not distinct on ciids, but that's ok
+            return inserted;
         }
     }
 }

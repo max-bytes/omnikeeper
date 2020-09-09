@@ -63,7 +63,8 @@ namespace LandscapeRegistry.GraphQL
                         {
                             var nonGenericAttributeValue = AttributeValueBuilder.Build(attribute.Value);
 
-                            insertedAttributes.Add(await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, attribute.LayerID, changeset, transaction));
+                            var (a, changed) = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, attribute.LayerID, changeset, transaction);
+                            insertedAttributes.Add(a);
                         }
                     }
 
@@ -75,20 +76,23 @@ namespace LandscapeRegistry.GraphQL
                         var ciIdentity = attributeGroup.Key;
                         foreach (var attribute in attributeGroup)
                         {
-                            removedAttributes.Add(await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, attribute.LayerID, changeset, transaction));
+                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, attribute.LayerID, changeset, transaction);
+                            removedAttributes.Add(a);
                         }
                     }
 
                     var insertedRelations = new List<Relation>();
                     foreach (var insertRelation in insertRelations)
                     {
-                        insertedRelations.Add(await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.LayerID, changeset, transaction));
+                        var (r, changed) = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.LayerID, changeset, transaction);
+                        insertedRelations.Add(r);
                     }
 
                     var removedRelations = new List<Relation>();
                     foreach (var removeRelation in removeRelations)
                     {
-                        removedRelations.Add(await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, removeRelation.LayerID, changeset, transaction));
+                        var (r, changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, removeRelation.LayerID, changeset, transaction);
+                        removedRelations.Add(r);
                     }
 
                     IEnumerable<MergedCI> affectedCIs = new List<MergedCI>(); ;

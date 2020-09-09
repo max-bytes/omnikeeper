@@ -13,7 +13,7 @@ namespace LandscapeRegistry.Model
 {
     public partial class BaseAttributeModel
     {
-        public async Task<CIAttribute> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var readTS = TimeThreshold.BuildLatest();
             var currentAttribute = await GetAttribute(name, ciid, layerID, trans, readTS);
@@ -26,7 +26,7 @@ namespace LandscapeRegistry.Model
             if (currentAttribute.State == AttributeState.Removed)
             {
                 // the attribute is already removed, no-op(?)
-                return currentAttribute;
+                return (currentAttribute, false);
             }
 
             var changeset = await changesetProxy.GetChangeset(trans);
@@ -48,13 +48,13 @@ namespace LandscapeRegistry.Model
             await command.ExecuteNonQueryAsync();
             var ret = CIAttribute.Build(id, name, ciid, currentAttribute.Value, AttributeState.Removed, changeset.ID);
 
-            return ret;
+            return (ret, true);
         }
 
-        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
             => await InsertAttribute(ICIModel.NameAttribute, AttributeScalarValueText.Build(nameValue), ciid, layerID, changesetProxy, trans);
 
-        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var readTS = TimeThreshold.BuildLatest();
             var currentAttribute = await GetAttribute(name, ciid, layerID, trans, readTS);
@@ -71,7 +71,7 @@ namespace LandscapeRegistry.Model
             // handle equality case
             // which user it is does not make any difference; if the data is the same, no insert is made
             if (currentAttribute != null && currentAttribute.State != AttributeState.Removed && currentAttribute.Value.Equals(value))
-                return currentAttribute;
+                return (currentAttribute, false);
 
             var changeset = await changesetProxy.GetChangeset(trans);
 
@@ -90,10 +90,10 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("changeset_id", changeset.ID);
 
             await command.ExecuteNonQueryAsync();
-            return CIAttribute.Build(id, name, ciid, value, state, changeset.ID);
+            return (CIAttribute.Build(id, name, ciid, value, state, changeset.ID), true);
         }
 
-        public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
             var readTS = TimeThreshold.BuildLatest();
 
@@ -169,7 +169,7 @@ namespace LandscapeRegistry.Model
                 writer.Complete();
             }
 
-            return true;
+            return actualInserts;
         }
     }
 }

@@ -126,13 +126,9 @@ namespace LandscapeRegistry.Controllers
             using var trans = conn.BeginTransaction();
             var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
             var data = BulkCIAttributeDataLayerScope.BuildFromDTO(dto);
-            var success = await attributeModel.BulkReplaceAttributes(data, changesetProxy, trans);
-            if (success)
-            {
-                trans.Commit();
-                return Ok();
-            }
-            else return BadRequest();
+            var inserted = await attributeModel.BulkReplaceAttributes(data, changesetProxy, trans);
+            trans.Commit();
+            return Ok();
         }
 
 
