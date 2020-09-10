@@ -1,6 +1,7 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
+using LandscapeRegistry.GraphQL;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -16,46 +17,13 @@ namespace LandscapeRegistry.Model
 {
     public class OIAConfigModel : IOIAConfigModel
     {
-        //public IDictionary<string, string> oiaConfigs = new Dictionary<string, string>()
-        //{
-        //    // keycloak adapter
-        //    { "Internal Keycloak", "{\"$type\":\"OnlineInboundAdapterKeycloak.OnlineInboundAdapter+ConfigInternal, OnlineInboundAdapterKeycloak\",\"mapperScope\":\"internal_keycloak\",\"preferredIDMapUpdateRate\":\"00:00:05\",\"BuilderName\":\"Keycloak Internal\"}" },
-
-        //        //JsonConvert.SerializeObject(
-        //        //new OnlineInboundAdapterKeycloak.OnlineInboundAdapter.ConfigInternal(new TimeSpan(0, 0, 5), "internal_keycloak")
-        //        //, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects })},
-
-        //    // omnikeeper adapter
-        //    { "Omnikeeper", "{\"$type\":\"OnlineInboundAdapterOmnikeeper.OnlineInboundAdapter+Config, OnlineInboundAdapterOmnikeeper\",\"apiURL\":\"https://localhost:44378/\",\"authURL\":\"https://host.docker.internal:8443\",\"realm\":\"landscape\",\"clientID\":\"landscape-registry-api\",\"clientSecret\":\"d822a6c6-aca4-45bc-aa7e-5d59bc9011cf\",\"mapperScope\":\"omnikeeper\",\"remoteLayerNames\":[\"CMDB\"],\"preferredIDMapUpdateRate\":\"00:00:05\",\"BuilderName\":\"Omnikeeper\"}" }
-
-
-        //        //JsonConvert.SerializeObject(new OnlineInboundAdapterOmnikeeper.OnlineInboundAdapter.Config(
-        //        //"https://localhost:44378/", 
-        //        //"https://host.docker.internal:8443",
-        //        //"landscape",
-        //        //"landscape-registry-api",
-        //        //"d822a6c6-aca4-45bc-aa7e-5d59bc9011cf",
-        //        //new string[] { "CMDB" }, 
-        //        //new TimeSpan(0, 0, 5), 
-        //        //"omnikeeper")
-        //        //, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects })
-        //    //}
-        //};
-
-
         private readonly NpgsqlConnection conn;
         private readonly ILogger<OIAConfigModel> logger;
-        private readonly JsonSerializer serializer;
 
         public OIAConfigModel(ILogger<OIAConfigModel> logger, NpgsqlConnection connection)
         {
             conn = connection;
             this.logger = logger;
-
-            serializer = new JsonSerializer
-            {
-                TypeNameHandling = TypeNameHandling.Objects
-            };
         }
 
         public async Task<IEnumerable<OIAConfig>> GetConfigs(NpgsqlTransaction trans)
@@ -74,7 +42,7 @@ namespace LandscapeRegistry.Model
                     var configJO = s.GetFieldValue<JObject>(2);
                     try
                     {
-                        var config = serializer.Deserialize<IOnlineInboundAdapter.IConfig>(new JTokenReader(configJO));
+                        var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configJO);
                         ret.Add(OIAConfig.Build(name, id, config));
                     }
                     catch (Exception e)
@@ -101,7 +69,7 @@ namespace LandscapeRegistry.Model
             var configJO = s.GetFieldValue<JObject>(1);
             try
             {
-                var config = serializer.Deserialize<IOnlineInboundAdapter.IConfig>(new JTokenReader(configJO));
+                var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configJO);
                 return OIAConfig.Build(name, id, config);
             } catch(Exception e)
             {
@@ -112,7 +80,7 @@ namespace LandscapeRegistry.Model
 
         public async Task<OIAConfig> Create(string name, IOnlineInboundAdapter.IConfig config, NpgsqlTransaction trans)
         {
-            var configJO = JObject.FromObject(config, serializer);
+            var configJO = IOnlineInboundAdapter.IConfig.Serializer.SerializeToJObject(config);
             using var command = new NpgsqlCommand(@"INSERT INTO onlineinboundadapter_config (name, config) VALUES (@name, @config) RETURNING id", conn, trans);
             command.Parameters.AddWithValue("name", name);
             command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJO });
@@ -122,7 +90,7 @@ namespace LandscapeRegistry.Model
 
         public async Task<OIAConfig> Update(long id, string name, IOnlineInboundAdapter.IConfig config, NpgsqlTransaction trans)
         {
-            var configJO = JObject.FromObject(config, serializer);
+            var configJO = IOnlineInboundAdapter.IConfig.Serializer.SerializeToJObject(config);
             using var command = new NpgsqlCommand(@"UPDATE onlineinboundadapter_config SET name = @name, config = @config WHERE id = @id", conn, trans);
             command.Parameters.AddWithValue("name", name);
             command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJO });
@@ -142,7 +110,7 @@ namespace LandscapeRegistry.Model
             var configJO = reader.GetFieldValue<JObject>(1);
             try
             {
-                var config = serializer.Deserialize<IOnlineInboundAdapter.IConfig>(new JTokenReader(configJO));
+                var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configJO);
                 return OIAConfig.Build(name, id, config);
             }
             catch (Exception e)

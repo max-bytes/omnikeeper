@@ -33,7 +33,7 @@ namespace Landscape.Base.CLB
         public string Name => GetType().FullName;
 
         public abstract string[] RequiredPredicates { get; }
-        public abstract Trait[] DefinedTraits { get; }
+        public abstract TraitSet DefinedTraits { get; }
 
         public async Task<bool> Run(CLBSettings settings, ILogger logger)
         {

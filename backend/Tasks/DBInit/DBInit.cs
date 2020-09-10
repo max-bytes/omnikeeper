@@ -7,12 +7,15 @@ using LandscapeRegistry.Model.Decorators;
 using LandscapeRegistry.Utils;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Tasks.DBInit
@@ -36,10 +39,13 @@ namespace Tasks.DBInit
             var layerModel = new LayerModel(conn);
             var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
+            var traitModel = new TraitModel(NullLogger<TraitModel>.Instance, conn);
 
             var random = new Random(3);
 
             var user = await DBSetup.SetupUser(userModel, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
+
+            await traitModel.SetTraitSet(DefaultTraits.Get(), null);
 
             var numApplicationCIs = 1;
             var numHostCIs = 1;
@@ -285,6 +291,83 @@ namespace Tasks.DBInit
             //    await relationModel.InsertRelation(ciNaemon02, ciAutomationAnsibleHostGroupTest2, "has_ansible_group", automationLayerID, changeset.ID, trans);
             //    trans.Commit();
             //}
+        }
+    }
+
+    public static class DefaultTraits
+    {
+        public static TraitSet Get()
+        {
+            return TraitSet.Build(
+                    // hosts
+                    Trait.Build("host", new List<TraitAttribute>() {
+                        TraitAttribute.Build("hostname",
+                            CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        )
+                    }),
+                    Trait.Build("windows_host", new List<TraitAttribute>() {
+                        TraitAttribute.Build("os_family",
+                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
+                                CIAttributeValueConstraintTextRegex.Build(new Regex(@"Windows", RegexOptions.IgnoreCase)))
+                        )
+                    }, requiredTraits: new string[] { "host" }),
+
+                    Trait.Build("linux_host", new List<TraitAttribute>() {
+                        TraitAttribute.Build("os_family",
+                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
+                                CIAttributeValueConstraintTextRegex.Build(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
+                        )
+                    }, requiredTraits: new string[] { "host" }),
+
+                    // linux disk devices
+                    Trait.Build("linux_block_device", new List<TraitAttribute>() {
+                        TraitAttribute.Build("device",
+                            CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        ),
+                        TraitAttribute.Build("mount",
+                            CIAttributeTemplate.BuildFromParams("mount", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        )
+                    }),
+
+                    // linux network_interface
+                    Trait.Build("linux_network_interface", new List<TraitAttribute>() {
+                        TraitAttribute.Build("device",
+                            CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        ),
+                        TraitAttribute.Build("type",
+                            CIAttributeTemplate.BuildFromParams("type", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        ),
+                        TraitAttribute.Build("active",
+                            CIAttributeTemplate.BuildFromParams("active", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        )
+                    }),
+
+                    // applications
+                    Trait.Build("application", new List<TraitAttribute>() {
+                        TraitAttribute.Build("name",
+                            CIAttributeTemplate.BuildFromParams("application_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        )
+                    }),
+
+                    // automation / ansible
+                    Trait.Build("ansible_can_deploy_to_it",
+                        new List<TraitAttribute>() {
+                            TraitAttribute.Build("hostname", // TODO: make this an anyOf[CIAttributeTemplate], or use dependent trait host
+                                CIAttributeTemplate.BuildFromParams("ipAddress",    AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                            )
+                        },
+                        new List<TraitAttribute>() {
+                            TraitAttribute.Build("variables",
+                                CIAttributeTemplate.BuildFromParams("automation.ansible_variables", AttributeValueType.JSON, false)
+                            )
+                        },
+                        new List<TraitRelation>() {
+                            TraitRelation.Build("ansible_groups",
+                                RelationTemplate.Build("has_ansible_group", 1, null)
+                            )
+                        }
+                    )
+                );
         }
     }
 }

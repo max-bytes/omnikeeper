@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Landscape.Base.Inbound;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using OnlineInboundAdapterOmnikeeper;
 using System;
@@ -23,7 +24,7 @@ namespace Tasks.Tools
                 new TimeSpan(0, 1, 0),
                 "omnikeeper_mhx"
                 );
-            var json = JsonConvert.SerializeObject(config, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects });
+            var json = IOnlineInboundAdapter.IConfig.Serializer.SerializeToString(config);
 
             Console.WriteLine(json);
         }

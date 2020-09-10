@@ -1,156 +1,61 @@
-﻿using Landscape.Base;
-using Landscape.Base.CLB;
+﻿using Landscape.Base.CLB;
 using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
-using LandscapeRegistry.Entity.AttributeValues;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Npgsql;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model
 {
     public class TraitsProvider : ITraitsProvider
     {
-        private readonly IDictionary<string, Trait> traits = new Dictionary<string, Trait>();
-
-        public void Register(string source, Trait[] t)
-        { // TODO: consider source
-            foreach (var trait in t)
-                traits.Add(trait.Name, trait);
-        }
-
-        public IImmutableDictionary<string, Trait> GetTraits()
-        {
-            return traits.ToImmutableDictionary();
-        }
-    }
-
-    public class CachedTraitsProvider : ITraitsProvider
-    {
-        private readonly ITraitsProvider TP;
-        private readonly IMemoryCache memoryCache;
-
-        public CachedTraitsProvider(ITraitsProvider tp, IMemoryCache memoryCache)
-        {
-            TP = tp;
-            this.memoryCache = memoryCache;
-        }
-        public IImmutableDictionary<string, Trait> GetTraits()
-        {
-            return memoryCache.GetOrCreate("traits", (ce) =>
-            {
-                return TP.GetTraits();
-            });
-        }
-
-        public void Register(string source, Trait[] t)
-        {
-            TP.Register(source, t);
-        }
-    }
-
-    public class TraitsSetup {
+        private readonly ITraitModel traitModel;
         private readonly IServiceProvider sp;
 
-        public TraitsSetup(IServiceProvider sp)
+        public TraitsProvider(ITraitModel traitModel, IServiceProvider sp)
         {
+            this.traitModel = traitModel;
             this.sp = sp;
         }
 
-        public void Setup()
+        public async Task<TraitSet> GetActiveTraitSet(NpgsqlTransaction trans, TimeThreshold timeThreshold)
         {
-            var computeLayerBrains = sp.GetServices<IComputeLayerBrain>();
-            var traitsProvider = sp.GetService<ITraitsProvider>();
-            traitsProvider.Register("default", DefaultTraits.Get());
+            var dbTraitSet = await traitModel.GetTraitSet(trans, timeThreshold);
+
+            var computeLayerBrains = sp.GetServices<IComputeLayerBrain>(); // HACK: we get the CLBs here and not in the constructor because that would lead to a circular dependency
+            var nonDBTraitSets = new Dictionary<string, TraitSet>();
             foreach (var clb in computeLayerBrains)
-                traitsProvider.Register($"CLB-{clb.Name}", clb.DefinedTraits);
+                nonDBTraitSets.Add($"CLB-{clb.Name}", clb.DefinedTraits);
+
+            // TODO, NOTE: this merges non-DB trait sets, that are not historic and DB traits sets that are... what should we do here?
+            var allTraitSets = new Dictionary<string, TraitSet>() { { "default", dbTraitSet } };
+            foreach(var kv in nonDBTraitSets)
+                allTraitSets.Add(kv.Key, kv.Value);
+
+            // TODO: this merges the traits from all sources/sets, but it does so non-deterministicly
+            var ret = new Dictionary<string, Trait>();
+            foreach (var kv in allTraitSets)
+            {
+                var source = kv.Key;
+                foreach (var kv2 in kv.Value.Traits)
+                    ret[kv2.Key] = kv2.Value;
+            }
+            return TraitSet.Build(ret.Values);
         }
-    }
 
-    public static class DefaultTraits
-    {
-        public static Trait[] Get()
-        {
-            var traits = new Trait[]
-                {
-                    // hosts
-                    Trait.Build("host", new List<TraitAttribute>() {
-                        TraitAttribute.Build("hostname",
-                            CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                        )
-                    }),
-                    Trait.Build("windows_host", new List<TraitAttribute>() {
-                        TraitAttribute.Build("os_family",
-                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
-                                CIAttributeValueConstraintTextRegex.Build(new Regex(@"Windows", RegexOptions.IgnoreCase)))
-                        )
-                    }, requiredTraits: new string[] { "host" }),
-
-                    Trait.Build("linux_host", new List<TraitAttribute>() {
-                        TraitAttribute.Build("os_family",
-                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
-                                CIAttributeValueConstraintTextRegex.Build(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
-                        )
-                    }, requiredTraits: new string[] { "host" }),
-
-                    // linux disk devices
-                    Trait.Build("linux_block_device", new List<TraitAttribute>() {
-                        TraitAttribute.Build("device",
-                            CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                        ),
-                        TraitAttribute.Build("mount",
-                            CIAttributeTemplate.BuildFromParams("mount", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                        )
-                    }),
-
-                    // linux network_interface
-                    Trait.Build("linux_network_interface", new List<TraitAttribute>() {
-                        TraitAttribute.Build("device",
-                            CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                        ),
-                        TraitAttribute.Build("type",
-                            CIAttributeTemplate.BuildFromParams("type", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                        ),
-                        TraitAttribute.Build("active",
-                            CIAttributeTemplate.BuildFromParams("active", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                        )
-                    }),
-
-                    // applications
-                    Trait.Build("application", new List<TraitAttribute>() {
-                        TraitAttribute.Build("name",
-                            CIAttributeTemplate.BuildFromParams("application_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                        )
-                    }),
-
-                    // automation / ansible
-                    Trait.Build("ansible_can_deploy_to_it",
-                        new List<TraitAttribute>() {
-                            TraitAttribute.Build("hostname", // TODO: make this an anyOf[CIAttributeTemplate], or use dependent trait host
-                                CIAttributeTemplate.BuildFromParams("ipAddress",    AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                            )
-                        },
-                        new List<TraitAttribute>() {
-                            TraitAttribute.Build("variables",
-                                CIAttributeTemplate.BuildFromParams("automation.ansible_variables", AttributeValueType.JSON, false)
-                            )
-                        },
-                        new List<TraitRelation>() {
-                            TraitRelation.Build("ansible_groups",
-                                RelationTemplate.Build("has_ansible_group", 1, null)
-                            )
-                        }
-                    ),
-                };
-
-            return traits;
-        }
+        public static MyJSONSerializer<TraitSet> TraitSetSerializer = new MyJSONSerializer<TraitSet>(() => {
+            var s = new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Objects
+            };
+            s.Converters.Add(new StringEnumConverter());
+            return s;
+        });
     }
 }

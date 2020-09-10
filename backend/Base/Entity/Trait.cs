@@ -5,9 +5,9 @@ namespace Landscape.Base.Entity
 {
     public class TraitRelation
     {
-        public RelationTemplate RelationTemplate { get; private set; }
+        public RelationTemplate RelationTemplate { get; set; }
         // TODO: implement anyOf(RelationTemplate[])
-        public string Identifier { get; private set; }
+        public string Identifier { get; set; }
 
         public static TraitRelation Build(string identifier, RelationTemplate relationTemplate)
         {
@@ -20,8 +20,8 @@ namespace Landscape.Base.Entity
     }
     public class TraitAttribute
     {
-        public CIAttributeTemplate AttributeTemplate { get; private set; }
-        public string Identifier { get; private set; }
+        public CIAttributeTemplate AttributeTemplate { get; set; }
+        public string Identifier { get; set; }
 
         // TODO: implement anyOf(CIAttributeTemplate[])
 
@@ -37,14 +37,14 @@ namespace Landscape.Base.Entity
 
     public class Trait
     {
-        public string Name { get; private set; }
+        public string Name { get; set; }
 
-        public IImmutableList<TraitAttribute> RequiredAttributes { get; private set; }
-        public IImmutableList<TraitAttribute> OptionalAttributes { get; private set; }
+        public IImmutableList<TraitAttribute> RequiredAttributes { get; set; }
+        public IImmutableList<TraitAttribute> OptionalAttributes { get; set; }
 
-        public IImmutableList<string> RequiredTraits { get; private set; }
+        public IImmutableList<string> RequiredTraits { get; set; }
 
-        public ImmutableList<TraitRelation> RequiredRelations { get; private set; }
+        public ImmutableList<TraitRelation> RequiredRelations { get; set; }
         // TODO: implement optional relations
 
         public static Trait Build(string name, 
@@ -60,6 +60,26 @@ namespace Landscape.Base.Entity
                 OptionalAttributes = optionalAttributes?.ToImmutableList() ?? ImmutableList<TraitAttribute>.Empty,
                 RequiredRelations = requiredRelations?.ToImmutableList() ?? ImmutableList<TraitRelation>.Empty,
                 RequiredTraits = requiredTraits?.ToImmutableList() ?? ImmutableList<string>.Empty
+            };
+        }
+    }
+
+    public class TraitSet
+    {
+        public IImmutableDictionary<string, Trait> Traits { get; set; }
+
+        public static TraitSet Build(IEnumerable<Trait> traits)
+        {
+            return new TraitSet()
+            {
+                Traits = traits.ToImmutableDictionary(t => t.Name)
+            };
+        }
+        public static TraitSet Build(params Trait[] traits)
+        {
+            return new TraitSet()
+            {
+                Traits = traits.ToImmutableDictionary(t => t.Name)
             };
         }
     }

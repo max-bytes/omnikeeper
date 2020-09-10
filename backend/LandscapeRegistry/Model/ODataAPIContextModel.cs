@@ -29,7 +29,7 @@ namespace LandscapeRegistry.Model
         {
             try
             {
-                var config = ODataAPIContext.DeserializeConfig(configJO);
+                var config = ODataAPIContext.ConfigSerializer.Deserialize(configJO);
                 return new ODataAPIContext { ID = id, CConfig = config };
             }
             catch (Exception e)
@@ -76,7 +76,7 @@ namespace LandscapeRegistry.Model
 
         public async Task<ODataAPIContext> Upsert(string id, ODataAPIContext.IConfig config, NpgsqlTransaction trans)
         {
-            var configJO = ODataAPIContext.SerializeConfigToJObject(config);
+            var configJO = ODataAPIContext.ConfigSerializer.SerializeToJObject(config);
             using var command = new NpgsqlCommand(@"INSERT INTO odataapicontext (id, config) VALUES (@id, @config) ON CONFLICT (id) DO UPDATE SET config = EXCLUDED.config", conn, trans);
             command.Parameters.AddWithValue("id", id);
             command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJO });

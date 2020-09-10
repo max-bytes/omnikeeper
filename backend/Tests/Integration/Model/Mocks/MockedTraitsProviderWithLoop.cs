@@ -1,18 +1,20 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Threading.Tasks;
 
 namespace Tests.Integration.Model.Mocks
 {
     public class MockedTraitsProviderWithLoop : ITraitsProvider
     {
-        public IImmutableDictionary<string, Trait> GetTraits()
+        public async Task<TraitSet> GetActiveTraitSet(NpgsqlTransaction trans, TimeThreshold timeThreshold)
         {
-            return new List<Trait>()
-            {
+            return TraitSet.Build(
                 Trait.Build("test_trait_1", new List<TraitAttribute>()
                 {
                     TraitAttribute.Build("a4",
@@ -34,12 +36,7 @@ namespace Tests.Integration.Model.Mocks
                         CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false)
                     )
                 }, requiredTraits: new List<string>() { "test_trait_1" })
-            }.ToImmutableDictionary(t => t.Name);
-        }
-
-        public void Register(string source, Trait[] t)
-        {
-            throw new NotImplementedException();
+            );
         }
     }
 }

@@ -134,7 +134,8 @@ namespace LandscapeRegistry
             services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
 
             services.AddScoped<ITraitModel, TraitModel>();
-            //services.Decorate<ITraitModel, CachingTraitModel>();
+            services.Decorate<ITraitModel, CachingTraitModel>();
+            services.AddScoped<IEffectiveTraitModel, EffectiveTraitModel>();
 
             services.AddScoped<IOIAConfigModel, OIAConfigModel>();
 
@@ -150,12 +151,9 @@ namespace LandscapeRegistry
             services.AddScoped<RelationType>();
             services.AddScoped<ISchema, GraphQLSchema>();
 
-            services.AddScoped<TraitsSetup>();
-
             services.AddSingleton<NpgsqlLoggingProvider>();
 
-            services.AddSingleton<ITraitsProvider, TraitsProvider>();
-            services.Decorate<ITraitsProvider, CachedTraitsProvider>();
+            services.AddScoped<ITraitsProvider, TraitsProvider>();
 
             services.AddScoped<IOnlineAccessProxy, OnlineAccessProxy>();
 
@@ -290,11 +288,9 @@ namespace LandscapeRegistry
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory,
-            NpgsqlLoggingProvider npgsqlLoggingProvider, TraitsSetup traitsSetup)
+            NpgsqlLoggingProvider npgsqlLoggingProvider)
         {
             NpgsqlLogManager.Provider = npgsqlLoggingProvider;
-
-            traitsSetup.Setup();
 
             app.UseCors("DefaultCORSPolicy");
 

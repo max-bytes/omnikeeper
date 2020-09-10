@@ -3,6 +3,7 @@ using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -119,6 +120,11 @@ namespace Landscape.Base.Inbound
         public interface IConfig
         {
             public string BuilderName { get; }
+
+            public static MyJSONSerializer<IConfig> Serializer = new MyJSONSerializer<IConfig>(new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Objects
+            });
         }
 
         IExternalIDManager GetExternalIDManager();

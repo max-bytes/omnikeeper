@@ -19,9 +19,9 @@ namespace MonitoringPlugin
     {
         private readonly IRelationModel relationModel;
         private readonly ICIModel ciModel;
-        private readonly ITraitModel traitModel;
+        private readonly IEffectiveTraitModel traitModel;
 
-        public CLBMonitoring(ICIModel ciModel, IBaseAttributeModel atributeModel, ILayerModel layerModel, ITraitModel traitModel, IRelationModel relationModel, IPredicateModel predicateModel, 
+        public CLBMonitoring(ICIModel ciModel, IBaseAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel, IPredicateModel predicateModel, 
             IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
             : base(atributeModel, layerModel, predicateModel, changesetModel, userModel, conn)
         {
@@ -32,7 +32,7 @@ namespace MonitoringPlugin
 
         public override string[] RequiredPredicates => new string[] { }; // TODO
 
-        public override Trait[] DefinedTraits => new Trait[] { }; // TODO
+        public override TraitSet DefinedTraits => TraitSet.Build(new Trait[] { }); // TODO
 
         public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger)
         {

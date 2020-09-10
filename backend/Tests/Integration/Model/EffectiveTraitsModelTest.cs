@@ -14,7 +14,7 @@ using Tests.Integration.Model.Mocks;
 
 namespace Tests.Integration.Model
 {
-    partial class TraitsModelTest
+    partial class EffectiveTraitsModelTest
     {
         [SetUp]
         public void Setup()
@@ -71,7 +71,7 @@ namespace Tests.Integration.Model
             Assert.AreEqual(0, t1.Count());
         }
 
-        private async Task<(TraitModel traitModel, LayerSet layerset)> BaseSetup(ITraitsProvider traitsProvider, NpgsqlConnection conn)
+        private async Task<(EffectiveTraitModel traitModel, LayerSet layerset)> BaseSetup(ITraitsProvider traitsProvider, NpgsqlConnection conn)
         {
             var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var ciModel = new CIModel(attributeModel, conn);
@@ -80,7 +80,7 @@ namespace Tests.Integration.Model
             var predicateModel = new PredicateModel(conn);
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
             var layerModel = new LayerModel(conn);
-            var traitModel = new TraitModel(ciModel, relationModel, traitsProvider, NullLogger<TraitModel>.Instance, conn);
+            var traitModel = new EffectiveTraitModel(ciModel, relationModel, traitsProvider, NullLogger<EffectiveTraitModel>.Instance, conn);
             var user = await DBSetup.SetupUser(userModel);
             var ciid1 = await ciModel.CreateCI(null);
             var ciid2 = await ciModel.CreateCI(null);
