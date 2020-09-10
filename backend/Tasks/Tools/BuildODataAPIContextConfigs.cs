@@ -20,7 +20,7 @@ namespace Tasks.Tools
                 WriteLayerID = 7,
                 ReadLayerset = new long[] { 1,2,3,4,5,6,7 }
             };
-            var json = ODataAPIContext.SerializeConfigToString(config);
+            var json = ODataAPIContext.ConfigSerializer.SerializeToString(config);
 
             Console.WriteLine(json);
         }

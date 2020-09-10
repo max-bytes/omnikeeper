@@ -32,9 +32,9 @@ namespace MonitoringPlugin
     {
         private readonly IRelationModel relationModel;
         private readonly ICIModel ciModel;
-        private readonly ITraitModel traitModel;
+        private readonly IEffectiveTraitModel traitModel;
 
-        public CLBNaemonMonitoring(ICIModel ciModel, IBaseAttributeModel atributeModel, ILayerModel layerModel, ITraitModel traitModel, IRelationModel relationModel,
+        public CLBNaemonMonitoring(ICIModel ciModel, IBaseAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
             IPredicateModel predicateModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
             : base(atributeModel, layerModel, predicateModel, changesetModel, userModel, conn)
         {
@@ -82,7 +82,7 @@ namespace MonitoringPlugin
             )
         });
 
-        public override Trait[] DefinedTraits => new Trait[] { moduleTrait, naemonInstanceTrait, contactgroupTrait };
+        public override TraitSet DefinedTraits => TraitSet.Build(moduleTrait, naemonInstanceTrait, contactgroupTrait);
 
         public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger)
         {
@@ -296,13 +296,13 @@ namespace MonitoringPlugin
         {
             private readonly IRelationModel relationModel;
             private readonly ICIModel ciModel;
-            private readonly ITraitModel traitModel;
+            private readonly IEffectiveTraitModel traitModel;
             private readonly ILogger logger;
             private readonly CLBErrorHandler errorHandler;
             private Dictionary<Guid, IEnumerable<MergedCI>> contactGroupsMap;
             private readonly Dictionary<Guid, string> contactGroupNames = new Dictionary<Guid, string>();
 
-            public ContactgroupResolver(IRelationModel relationModel, ICIModel ciModel, ITraitModel traitModel, ILogger logger, CLBErrorHandler errorHandler)
+            public ContactgroupResolver(IRelationModel relationModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILogger logger, CLBErrorHandler errorHandler)
             {
                 this.relationModel = relationModel;
                 this.ciModel = ciModel;

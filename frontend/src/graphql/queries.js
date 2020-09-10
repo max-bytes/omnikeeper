@@ -138,9 +138,9 @@ export const queries = {
             visible @client
         }
     }`,
-    Traits: gql`
-    query traits {
-        traits
+    TraitSet: gql`
+    query traitSet {
+        traitSet
       }
     `,
     CacheKeys: gql`

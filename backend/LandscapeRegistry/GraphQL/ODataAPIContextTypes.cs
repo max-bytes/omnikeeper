@@ -9,7 +9,7 @@ namespace LandscapeRegistry.GraphQL
         public ODataAPIContextType()
         {
             Field("id", x => x.ID);
-            Field("config", x => ODataAPIContext.SerializeConfigToString(x.CConfig), type: typeof(StringGraphType));
+            Field("config", x => ODataAPIContext.ConfigSerializer.SerializeToString(x.CConfig), type: typeof(StringGraphType));
         }
     }
 }

@@ -50,6 +50,13 @@ namespace LandscapeRegistry.Service
         public static void CancelPredicatesChangeToken(this IMemoryCache memoryCache) =>
             CancelAndRemoveChangeToken(memoryCache, PredicatesChangeToken());
 
+        private static string TraitsChangeToken() => $"ct_traits";
+        public static string Traits() => $"traits";
+        public static CancellationChangeToken GetTraitsCancellationChangeToken(this IMemoryCache memoryCache) =>
+            new CancellationChangeToken(memoryCache.GetOrCreate(TraitsChangeToken(), (ce) => new CancellationTokenSource()).Token);
+        public static void CancelTraitsChangeToken(this IMemoryCache memoryCache) =>
+            CancelAndRemoveChangeToken(memoryCache, TraitsChangeToken());
+
 
         public static string LayerSet(string[] layerNames) => $"layerSet_{string.Join(',', layerNames)}";
         public static string AllLayersSet() => $"layerSet_all";

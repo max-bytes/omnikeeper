@@ -15,10 +15,10 @@ namespace LandscapeRegistry.Model
     {
         private readonly IAttributeModel attributeModel;
         private readonly ICIModel ciModel;
-        private readonly ITraitModel traitModel;
+        private readonly IEffectiveTraitModel traitModel;
         private readonly ILayerModel layerModel;
 
-        public CISearchModel(IAttributeModel attributeModel, ICIModel ciModel, ITraitModel traitModel, ILayerModel layerModel)
+        public CISearchModel(IAttributeModel attributeModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILayerModel layerModel)
         {
             this.attributeModel = attributeModel;
             this.ciModel = ciModel;

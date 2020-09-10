@@ -19,7 +19,8 @@ namespace LandscapeRegistry.GraphQL
     public class GraphQLMutation : ObjectGraphType
     {
         public GraphQLMutation(ICIModel ciModel, IBaseAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAConfigModel OIAConfigModel,
-             IODataAPIContextModel odataAPIContextModel, IChangesetModel changesetModel, IPredicateModel predicateModel, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
+             IODataAPIContextModel odataAPIContextModel, IChangesetModel changesetModel, IPredicateModel predicateModel, ITraitModel traitModel,
+             IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
@@ -222,7 +223,7 @@ namespace LandscapeRegistry.GraphQL
                     userContext.Transaction = transaction;
 
                     try {
-                        var config = JsonConvert.DeserializeObject<IOnlineInboundAdapter.IConfig>(configInput.Config, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects });
+                        var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configInput.Config);
 
                         var createdOIAConfig = await OIAConfigModel.Create(configInput.Name, config, transaction);
 
@@ -254,7 +255,7 @@ namespace LandscapeRegistry.GraphQL
 
                   try
                   {
-                      var config = JsonConvert.DeserializeObject<IOnlineInboundAdapter.IConfig>(configInput.Config, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects });
+                      var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configInput.Config);
                       var oiaConfig = await OIAConfigModel.Update(configInput.ID, configInput.Name, config, transaction);
                       await transaction.CommitAsync();
 
@@ -305,7 +306,7 @@ namespace LandscapeRegistry.GraphQL
 
                     try
                     {
-                        var config = ODataAPIContext.DeserializeConfig(contextInput.Config);
+                        var config = ODataAPIContext.ConfigSerializer.Deserialize(contextInput.Config);
 
                         var created = await odataAPIContextModel.Upsert(contextInput.ID, config, transaction);
 
@@ -318,36 +319,7 @@ namespace LandscapeRegistry.GraphQL
                         throw new ExecutionError($"Could not parse configuration", e);
                     }
                 });
-            //FieldAsync<OIAConfigType>("updateODataAPIContext",
-            //  arguments: new QueryArguments(
-            //    new QueryArgument<NonNullGraphType<UpdateOIAConfigInputType>> { Name = "odataAPIContext" }
-            //  ),
-            //  resolve: async context =>
-            //  {
-            //      var contextInput = context.GetArgument<UpdateODataAPIContextInput>("odataAPIContext");
 
-            //      var userContext = context.UserContext as RegistryUserContext;
-
-            //      // TODO: auth
-            //      //if (!authorizationService.CanUserUpdateLayer(userContext.User))
-            //      //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update Layers");
-
-            //      using var transaction = await conn.BeginTransactionAsync();
-            //      userContext.Transaction = transaction;
-
-            //      try
-            //      {
-            //          var config = JsonConvert.DeserializeObject<ODataAPIContext.Config>(contextInput.Config, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects });
-            //          var updated = await odataAPIContextModel.Update(contextInput.ID, config, transaction);
-            //          await transaction.CommitAsync();
-
-            //          return updated;
-            //      }
-            //      catch (Exception e)
-            //      {
-            //          throw new ExecutionError($"Could not parse configuration", e);
-            //      }
-            //  });
             FieldAsync<BooleanGraphType>("deleteODataAPIContext",
               arguments: new QueryArguments(
                 new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
@@ -369,6 +341,40 @@ namespace LandscapeRegistry.GraphQL
                   await transaction.CommitAsync();
                   return deleted != null;
               });
+
+
+            FieldAsync<StringGraphType>("setTraitSet",
+                arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "traitSet" }
+                ),
+                resolve: async context =>
+                {
+                    var traitSetInput = context.GetArgument<string>("traitSet");
+                    var userContext = context.UserContext as RegistryUserContext;
+
+                    // TODO: auth
+                    //if (!authorizationService.CanUserCreateLayer(userContext.User))
+                    //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create Layers");
+
+                    using var transaction = await conn.BeginTransactionAsync();
+                    userContext.Transaction = transaction;
+
+                    try
+                    {
+                        var traitSet = TraitsProvider.TraitSetSerializer.Deserialize(traitSetInput);
+
+                        var created = await traitModel.SetTraitSet(traitSet, transaction);
+
+                        await transaction.CommitAsync();
+
+                        return TraitsProvider.TraitSetSerializer.SerializeToString(created);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ExecutionError($"Could not parse traitSet", e);
+                    }
+                });
+
 
             FieldAsync<PredicateType>("upsertPredicate",
               arguments: new QueryArguments(

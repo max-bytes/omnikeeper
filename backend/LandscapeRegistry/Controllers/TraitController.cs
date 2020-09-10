@@ -19,9 +19,9 @@ namespace LandscapeRegistry.Controllers
     [Authorize]
     public class TraitController : ControllerBase
     {
-        private readonly ITraitModel traitModel;
+        private readonly IEffectiveTraitModel traitModel;
 
-        public TraitController(ITraitModel traitModel)
+        public TraitController(IEffectiveTraitModel traitModel)
         {
             this.traitModel = traitModel;
         }
