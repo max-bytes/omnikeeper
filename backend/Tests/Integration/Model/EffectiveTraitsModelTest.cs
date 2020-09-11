@@ -31,17 +31,17 @@ namespace Tests.Integration.Model
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var t0 = await traitModel.CalculateEffectiveTraitSetsForTraitName("invalid_trait", layerset, null, timeThreshold);
+            var t0 = await traitModel.CalculateEffectiveTraitsForTraitName("invalid_trait", layerset, null, timeThreshold);
             Assert.AreEqual(null, t0);
 
-            var t1 = await traitModel.CalculateEffectiveTraitSetsForTraitName("test_trait_1", layerset, null, timeThreshold);
+            var t1 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_1", layerset, null, timeThreshold);
             Assert.AreEqual(3, t1.Count());
-            var t2 = await traitModel.CalculateEffectiveTraitSetsForTraitName("test_trait_2", layerset, null, timeThreshold);
+            var t2 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_2", layerset, null, timeThreshold);
             Assert.AreEqual(2, t2.Count());
-            Assert.IsTrue(t2.All(t => t.EffectiveTraits["test_trait_2"].TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a2") && t.EffectiveTraits["test_trait_2"].TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a4")));
-            var t3 = await traitModel.CalculateEffectiveTraitSetsForTraitName("test_trait_3", layerset, null, timeThreshold);
+            Assert.IsTrue(t2.All(t => t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a2") && t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a4")));
+            var t3 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_3", layerset, null, timeThreshold);
             Assert.AreEqual(2, t3.Count());
-            Assert.IsTrue(t3.All(t => t.EffectiveTraits["test_trait_3"].TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
+            Assert.IsTrue(t3.All(t => t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
         }
 
 
@@ -54,9 +54,9 @@ namespace Tests.Integration.Model
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var t1 = await traitModel.CalculateEffectiveTraitSetsForTraitName("test_trait_4", layerset, null, timeThreshold);
+            var t1 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_4", layerset, null, timeThreshold);
             Assert.AreEqual(2, t1.Count());
-            var t2 = await traitModel.CalculateEffectiveTraitSetsForTraitName("test_trait_5", layerset, null, timeThreshold);
+            var t2 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_5", layerset, null, timeThreshold);
             Assert.AreEqual(1, t2.Count());
         }
 
@@ -67,7 +67,7 @@ namespace Tests.Integration.Model
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             var (traitModel, layerset) = await BaseSetup(new MockedTraitsProviderWithLoop(), conn);
-            var t1 = await traitModel.CalculateEffectiveTraitSetsForTraitName("test_trait_1", layerset, null, timeThreshold);
+            var t1 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_1", layerset, null, timeThreshold);
             Assert.AreEqual(0, t1.Count());
         }
 

@@ -67,7 +67,8 @@ namespace Landscape.Base.Entity.DTO
             if (isArray)
             {
                 return Build(values[0], type);
-            } else
+            }
+            else
             {
                 return Build(values, type);
             }

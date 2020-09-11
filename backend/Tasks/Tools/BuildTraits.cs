@@ -23,24 +23,24 @@ namespace Tasks.Tools
 
     public static class DefaultTraits
     {
-        public static TraitSet Get()
+        public static RecursiveTraitSet Get()
         {
-            var traits = new Trait[]
+            var traits = new RecursiveTrait[]
                 {
                     // hosts
-                    Trait.Build("host", new List<TraitAttribute>() {
+                    RecursiveTrait.Build("host", new List<TraitAttribute>() {
                         TraitAttribute.Build("hostname",
                             CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
-                    Trait.Build("windows_host", new List<TraitAttribute>() {
+                    RecursiveTrait.Build("windows_host", new List<TraitAttribute>() {
                         TraitAttribute.Build("os_family",
                             CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                                 CIAttributeValueConstraintTextRegex.Build(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                         )
                     }, requiredTraits: new string[] { "host" }),
 
-                    Trait.Build("linux_host", new List<TraitAttribute>() {
+                    RecursiveTrait.Build("linux_host", new List<TraitAttribute>() {
                         TraitAttribute.Build("os_family",
                             CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                                 CIAttributeValueConstraintTextRegex.Build(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
@@ -48,7 +48,7 @@ namespace Tasks.Tools
                     }, requiredTraits: new string[] { "host" }),
 
                     // linux disk devices
-                    Trait.Build("linux_block_device", new List<TraitAttribute>() {
+                    RecursiveTrait.Build("linux_block_device", new List<TraitAttribute>() {
                         TraitAttribute.Build("device",
                             CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         ),
@@ -58,7 +58,7 @@ namespace Tasks.Tools
                     }),
 
                     // linux network_interface
-                    Trait.Build("linux_network_interface", new List<TraitAttribute>() {
+                    RecursiveTrait.Build("linux_network_interface", new List<TraitAttribute>() {
                         TraitAttribute.Build("device",
                             CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         ),
@@ -71,14 +71,14 @@ namespace Tasks.Tools
                     }),
 
                     // applications
-                    Trait.Build("application", new List<TraitAttribute>() {
+                    RecursiveTrait.Build("application", new List<TraitAttribute>() {
                         TraitAttribute.Build("name",
                             CIAttributeTemplate.BuildFromParams("application_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
 
                     // automation / ansible
-                    Trait.Build("ansible_can_deploy_to_it",
+                    RecursiveTrait.Build("ansible_can_deploy_to_it",
                         new List<TraitAttribute>() {
                             TraitAttribute.Build("hostname", // TODO: make this an anyOf[CIAttributeTemplate], or use dependent trait host
                                 CIAttributeTemplate.BuildFromParams("ipAddress",    AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
@@ -97,7 +97,7 @@ namespace Tasks.Tools
                     ),
                 };
 
-            return TraitSet.Build(traits);
+            return RecursiveTraitSet.Build(traits);
         }
     }
 }

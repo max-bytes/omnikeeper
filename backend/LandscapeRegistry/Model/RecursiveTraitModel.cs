@@ -10,18 +10,18 @@ using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model
 {
-    public class TraitModel : ITraitModel
+    public class RecursiveTraitModel : IRecursiveTraitModel
     {
-        private readonly ILogger<TraitModel> logger;
+        private readonly ILogger<RecursiveTraitModel> logger;
         private readonly NpgsqlConnection conn;
 
-        public TraitModel(ILogger<TraitModel> logger, NpgsqlConnection connection)
+        public RecursiveTraitModel(ILogger<RecursiveTraitModel> logger, NpgsqlConnection connection)
         {
             this.logger = logger;
             conn = connection;
         }
 
-        public async Task<TraitSet> GetTraitSet(NpgsqlTransaction trans, TimeThreshold timeThreshold)
+        public async Task<RecursiveTraitSet> GetRecursiveTraitSet(NpgsqlTransaction trans, TimeThreshold timeThreshold)
         {
             using var command = new NpgsqlCommand(@"
                 SELECT config FROM traits WHERE timestamp <= @timestamp 
@@ -31,7 +31,7 @@ namespace LandscapeRegistry.Model
             using var dr = await command.ExecuteReaderAsync();
 
             if (!await dr.ReadAsync())
-                return TraitSet.Build();
+                return RecursiveTraitSet.Build();
 
             var configJO = dr.GetFieldValue<JObject>(0);
             try
@@ -43,11 +43,11 @@ namespace LandscapeRegistry.Model
             catch (Exception e)
             {
                 logger.LogError(e, $"Could not deserialize traits");
-                return TraitSet.Build();
+                return RecursiveTraitSet.Build();
             }
         }
 
-        public async Task<TraitSet> SetTraitSet(TraitSet traitSet, NpgsqlTransaction trans)
+        public async Task<RecursiveTraitSet> SetRecursiveTraitSet(RecursiveTraitSet traitSet, NpgsqlTransaction trans)
         {
             var traitsJO = TraitsProvider.TraitSetSerializer.SerializeToJObject(traitSet);
             using var command = new NpgsqlCommand(@"INSERT INTO traits (config, timestamp) VALUES (@config, @timestamp)", conn, trans);

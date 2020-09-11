@@ -3,12 +3,9 @@ using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Service;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 using Npgsql;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model.Decorators
@@ -51,7 +48,8 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            if (atTime.IsLatest) {
+            if (atTime.IsLatest)
+            {
                 return await memoryCache.GetOrCreateAsync(CacheKeyService.Relations(rl, layerID), async (ce) =>
                 {
                     var changeToken = memoryCache.GetRelationsCancellationChangeToken(rl, layerID);
@@ -59,7 +57,7 @@ namespace LandscapeRegistry.Model.Decorators
                     return await model.GetRelations(rl, layerID, trans, atTime);
                 });
             }
-            else 
+            else
                 return await model.GetRelations(rl, layerID, trans, atTime);
         }
 

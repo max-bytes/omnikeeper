@@ -1,21 +1,17 @@
 ﻿using Landscape.Base.Entity;
-using Landscape.Base.Entity.DTO;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
-using LandscapeRegistry.Model;
+using LandscapeRegistry.Entity.AttributeValues;
+using LandscapeRegistry.Service;
 using Microsoft.AspNet.OData;
-using Microsoft.AspNet.OData.Routing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNet.OData.Query;
-using LandscapeRegistry.Entity.AttributeValues;
-using Npgsql;
-using LandscapeRegistry.Service;
 
 namespace LandscapeRegistry.Controllers.OData
 {
@@ -50,7 +46,7 @@ namespace LandscapeRegistry.Controllers.OData
         private readonly ICurrentUserService currentUserService;
         private readonly IRegistryAuthorizationService authorizationService;
 
-        public AttributesController(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, ICISearchModel ciSearchModel, IODataAPIContextModel oDataAPIContextModel, 
+        public AttributesController(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, ICISearchModel ciSearchModel, IODataAPIContextModel oDataAPIContextModel,
             ICurrentUserService currentUserService, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             this.attributeModel = attributeModel;
@@ -69,7 +65,7 @@ namespace LandscapeRegistry.Controllers.OData
         }
 
         [EnableQuery]
-        public async Task<AttributeDTO> GetAttributeDTO([FromODataUri,Required]Guid keyCIID, [FromODataUri]string keyAttributeName, [FromRoute]string context)
+        public async Task<AttributeDTO> GetAttributeDTO([FromODataUri, Required] Guid keyCIID, [FromODataUri] string keyAttributeName, [FromRoute] string context)
         {
             if (keyAttributeName.Equals(ICIModel.NameAttribute))
                 throw new Exception("Cannot get name attribute directly");
@@ -82,7 +78,7 @@ namespace LandscapeRegistry.Controllers.OData
         }
 
         [EnableQuery]
-        public async Task<IEnumerable<AttributeDTO>> GetAttributes([FromRoute]string context)
+        public async Task<IEnumerable<AttributeDTO>> GetAttributes([FromRoute] string context)
         {
             var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
             var attributesDict = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), layerset, null, TimeThreshold.BuildLatest());
@@ -93,13 +89,14 @@ namespace LandscapeRegistry.Controllers.OData
 
             return attributes
                 .Where(a => !a.Attribute.Name.Equals(ICIModel.NameAttribute)) // filter out name attributes
-                .Select(a => {
-                nameAttributes.TryGetValue(a.Attribute.CIID, out var name);
-                return Model2DTO(a, name);
-            });
+                .Select(a =>
+                {
+                    nameAttributes.TryGetValue(a.Attribute.CIID, out var name);
+                    return Model2DTO(a, name);
+                });
         }
 
-        public async Task<IActionResult> Patch([FromODataUri]Guid keyCIID, [FromODataUri]string keyCIName, [FromODataUri]string keyAttributeName, [FromBody] Delta<AttributeDTO> test, [FromRoute]string context)
+        public async Task<IActionResult> Patch([FromODataUri] Guid keyCIID, [FromODataUri] string keyCIName, [FromODataUri] string keyAttributeName, [FromBody] Delta<AttributeDTO> test, [FromRoute] string context)
         {
             var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, null);
             var readLayerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
@@ -126,7 +123,7 @@ namespace LandscapeRegistry.Controllers.OData
         }
 
         [EnableQuery]
-        public async Task<IActionResult> Post([FromBody] InsertAttribute attribute, [FromRoute]string context)
+        public async Task<IActionResult> Post([FromBody] InsertAttribute attribute, [FromRoute] string context)
         {
             if (attribute == null)
                 return BadRequest($"Could not parse inserted attribute");
@@ -160,7 +157,8 @@ namespace LandscapeRegistry.Controllers.OData
                 else if (foundCIs.Count == 1)
                 { // found a single candidate that fits, set CIID to this
                     finalCIID = foundCIs[0].ID;
-                } else
+                }
+                else
                 {
                     return BadRequest($"Cannot insert attribute via its CI-Name: CI-Name is not unique");
                 }
@@ -174,7 +172,8 @@ namespace LandscapeRegistry.Controllers.OData
                 await ciModel.CreateCI(finalCIID, trans);
                 if (attribute.CIName != null && attribute.CIName != "")
                     await attributeModel.InsertCINameAttribute(attribute.CIName, finalCIID, writeLayerID, changesetProxy, trans);
-            } else
+            }
+            else
             { // ci exists already, make sure either name is not set or it matches already present name
                 if (attribute.CIName != null && attribute.CIName != "")
                 {
@@ -195,7 +194,7 @@ namespace LandscapeRegistry.Controllers.OData
         }
 
         [EnableQuery]
-        public async Task<IActionResult> Delete([FromODataUri]Guid keyCIID, [FromODataUri]string keyAttributeName, [FromRoute]string context)
+        public async Task<IActionResult> Delete([FromODataUri] Guid keyCIID, [FromODataUri] string keyAttributeName, [FromRoute] string context)
         {
             var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, null);
 
@@ -209,7 +208,8 @@ namespace LandscapeRegistry.Controllers.OData
                 var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
                 await attributeModel.RemoveAttribute(keyAttributeName, keyCIID, writeLayerID, changesetProxy, trans);
                 trans.Commit();
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 return BadRequest();
             }

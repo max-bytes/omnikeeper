@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Landscape.Base.Service
@@ -95,7 +94,7 @@ namespace Landscape.Base.Service
         }
     }
 
-    public class CICandidateAttributeData 
+    public class CICandidateAttributeData
     {
         public class Fragment
         {

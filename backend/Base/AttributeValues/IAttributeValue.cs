@@ -2,7 +2,6 @@
 using Landscape.Base.Entity.DTO;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -43,7 +42,7 @@ namespace LandscapeRegistry.Entity.AttributeValues
         public S[] Values { get; }
     }
 
-    public abstract class AttributeArrayValue<S,T> : IAttributeArrayValue<S, T>, IEquatable<AttributeArrayValue<S,T>> where S : IAttributeScalarValue<T>
+    public abstract class AttributeArrayValue<S, T> : IAttributeArrayValue<S, T>, IEquatable<AttributeArrayValue<S, T>> where S : IAttributeScalarValue<T>
     {
         public S[] Values { get; protected set; }
 
@@ -53,8 +52,8 @@ namespace LandscapeRegistry.Entity.AttributeValues
 
         public override string ToString() => $"AV-Array: {Value2String()}";
 
-        public bool Equals(IAttributeValue other) => Equals(other as AttributeArrayValue<S,T>);
-        public bool Equals(AttributeArrayValue<S,T> other) => other != null && Values.SequenceEqual(other.Values); // does this work?, or do we have to use zip()?
+        public bool Equals(IAttributeValue other) => Equals(other as AttributeArrayValue<S, T>);
+        public bool Equals(AttributeArrayValue<S, T> other) => other != null && Values.SequenceEqual(other.Values); // does this work?, or do we have to use zip()?
         public override int GetHashCode() => Values.GetHashCode();
 
         public AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Values.Select(v => v.ToDTO().Values[0]).ToArray(), Type);

@@ -1,7 +1,6 @@
 ﻿using Hangfire.Server;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
-using Landscape.Base.Utils;
 using LandscapeRegistry.Utils;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -87,7 +86,8 @@ namespace LandscapeRegistry.Runners
                             {
                                 trans.Rollback();
                             }
-                        } catch (Exception e)
+                        }
+                        catch (Exception e)
                         {
                             logger.LogError(e, $"An error occured when updating external IDs for OILP {adapterName}");
                         }
@@ -96,7 +96,8 @@ namespace LandscapeRegistry.Runners
                         string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
                         logger.LogInformation($"Done in {elapsedTime}");
                         lastRuns[adapterName] = DateTimeOffset.Now;
-                    } else
+                    }
+                    else
                     {
                         logger.LogInformation($"Skipping external ID update for OILP {adapterName}");
                     }

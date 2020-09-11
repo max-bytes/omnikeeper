@@ -1,16 +1,16 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
+using LandscapeRegistry.Service;
 using Microsoft.AspNet.OData;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using Npgsql;
-using LandscapeRegistry.Service;
 
 namespace LandscapeRegistry.Controllers.OData
 {
@@ -54,7 +54,7 @@ namespace LandscapeRegistry.Controllers.OData
 
 
         [EnableQuery]
-        public async Task<RelationDTO> GetRelationDTO([FromODataUri, Required]Guid keyFromCIID, [FromODataUri, Required]Guid keyToCIID, [FromODataUri, Required]string keyPredicate, [FromRoute]string context)
+        public async Task<RelationDTO> GetRelationDTO([FromODataUri, Required] Guid keyFromCIID, [FromODataUri, Required] Guid keyToCIID, [FromODataUri, Required] string keyPredicate, [FromRoute] string context)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
@@ -63,7 +63,7 @@ namespace LandscapeRegistry.Controllers.OData
         }
 
         [EnableQuery]
-        public async Task<IEnumerable<RelationDTO>> GetRelations([FromRoute]string context)
+        public async Task<IEnumerable<RelationDTO>> GetRelations([FromRoute] string context)
         {
             var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
             var relations = await relationModel.GetMergedRelations(new RelationSelectionAll(), layerset, null, TimeThreshold.BuildLatest());
@@ -72,7 +72,7 @@ namespace LandscapeRegistry.Controllers.OData
         }
 
         [EnableQuery]
-        public async Task<IActionResult> Post([FromBody] RelationDTO relation, [FromRoute]string context)
+        public async Task<IActionResult> Post([FromBody] RelationDTO relation, [FromRoute] string context)
         {
             if (relation == null)
                 return BadRequest($"Could not parse inserted relation");
@@ -107,11 +107,11 @@ namespace LandscapeRegistry.Controllers.OData
 
             trans.Commit();
 
-            return Created(Model2DTO(r)); 
+            return Created(Model2DTO(r));
         }
 
         [EnableQuery]
-        public async Task<IActionResult> Delete([FromODataUri]Guid keyFromCIID, [FromODataUri]Guid keyToCIID, [FromODataUri]string keyPredicate, [FromRoute]string context)
+        public async Task<IActionResult> Delete([FromODataUri] Guid keyFromCIID, [FromODataUri] Guid keyToCIID, [FromODataUri] string keyPredicate, [FromRoute] string context)
         {
             var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, null);
             var user = await currentUserService.GetCurrentUser(null);

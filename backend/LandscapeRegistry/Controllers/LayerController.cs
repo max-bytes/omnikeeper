@@ -1,6 +1,5 @@
 ﻿using Landscape.Base.Entity.DTO;
 using Landscape.Base.Model;
-using LandscapeRegistry.Model.Decorators;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -37,7 +36,7 @@ namespace LandscapeRegistry.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("getLayerByName")]
-        public async Task<ActionResult<LayerDTO>> GetLayerByName([FromQuery, Required]string layerName)
+        public async Task<ActionResult<LayerDTO>> GetLayerByName([FromQuery, Required] string layerName)
         {
             return Ok(LayerDTO.Build(await layerModel.GetLayer(layerName, null)));
         }
@@ -47,7 +46,7 @@ namespace LandscapeRegistry.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("getLayersByName")]
-        public async Task<ActionResult<IEnumerable<LayerDTO>>> GetLayersByName([FromQuery, Required]string[] layerNames)
+        public async Task<ActionResult<IEnumerable<LayerDTO>>> GetLayersByName([FromQuery, Required] string[] layerNames)
         {
             var ret = new List<LayerDTO>();
             // TODO: better performance: use GetLayers()

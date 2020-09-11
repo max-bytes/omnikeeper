@@ -6,7 +6,6 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Landscape.Base.Inbound
@@ -16,7 +15,7 @@ namespace Landscape.Base.Inbound
     /// a) to ensure that the external CIs exist also internally and have a proper CIID
     /// b) keep the mapping table between internal and external IDs up-to-date
     /// </summary>
-    public abstract class ExternalIDManager<EID> : IExternalIDManager where EID : struct,IExternalID
+    public abstract class ExternalIDManager<EID> : IExternalIDManager where EID : struct, IExternalID
     {
         private readonly ScopedExternalIDMapper<EID> mapper;
 
@@ -68,7 +67,8 @@ namespace Landscape.Base.Inbound
                             ciid = await ciModel.CreateCI(foundCIID.Value, trans);
                             logger.LogInformation($"Created CI with CIID {ciid}");
                         }
-                    } else
+                    }
+                    else
                     {
                         ciid = await ciModel.CreateCI(trans);
                         logger.LogInformation($"Created CI with CIID {ciid}");

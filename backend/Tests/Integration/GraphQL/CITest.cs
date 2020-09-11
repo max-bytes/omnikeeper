@@ -41,7 +41,7 @@ namespace Tests.Integration.GraphQL
             Services.Register<IEffectiveTraitModel, EffectiveTraitModel>();
             Services.Register<IOIAConfigModel, OIAConfigModel>();
             Services.Register<IODataAPIContextModel, ODataAPIContextModel>();
-            Services.Register<ITraitModel, TraitModel>();
+            Services.Register<IRecursiveTraitModel, RecursiveTraitModel>();
 
             Services.Register<ITraitsProvider, TraitsProvider>();
             Services.Register<ITemplatesProvider, TemplatesProvider>();
@@ -49,7 +49,7 @@ namespace Tests.Integration.GraphQL
             Services.Register<ILogger<EffectiveTraitModel>>(() => NullLogger<EffectiveTraitModel>.Instance);
             Services.Register<ILogger<OIAConfigModel>>(() => NullLogger<OIAConfigModel>.Instance);
             Services.Register<ILogger<ODataAPIContextModel>>(() => NullLogger<ODataAPIContextModel>.Instance);
-            Services.Register<ILogger<TraitModel>>(() => NullLogger<TraitModel>.Instance);
+            Services.Register<ILogger<RecursiveTraitModel>>(() => NullLogger<RecursiveTraitModel>.Instance);
 
             var authorizationService = new Mock<IRegistryAuthorizationService>();
             Services.Register<IRegistryAuthorizationService>(() => authorizationService.Object);

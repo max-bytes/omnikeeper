@@ -62,7 +62,8 @@ namespace LandscapeRegistry.Model
                 var emptyCIs = allCIIds.Except(groupedAttributes.Select(a => a.Key)).ToDictionary(a => a, a => new List<CIAttribute>());
                 groupedAttributes = groupedAttributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
             }
-            var t = groupedAttributes.Select(ga => {
+            var t = groupedAttributes.Select(ga =>
+            {
                 var att = ga.Value;
                 var name = GetNameFromAttributes(att);
                 return CI.Build(ga.Key, name, layerID, atTime, att);

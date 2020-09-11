@@ -15,26 +15,26 @@ namespace Tests.Integration.Model
         [Test]
         public void TestTraitSerialization()
         {
-            var traitset = TraitSet.Build(
-                Trait.Build("host", new List<TraitAttribute>() {
+            var traitset = RecursiveTraitSet.Build(
+                RecursiveTrait.Build("host", new List<TraitAttribute>() {
                     TraitAttribute.Build("hostname",
                         CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     )
                 }),
-                Trait.Build("windows_host", new List<TraitAttribute>() {
+                RecursiveTrait.Build("windows_host", new List<TraitAttribute>() {
                     TraitAttribute.Build("os_family",
                         CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                             CIAttributeValueConstraintTextRegex.Build(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                     )
                 }, requiredTraits: new string[] { "host" }),
 
-                Trait.Build("linux_host", new List<TraitAttribute>() {
+                RecursiveTrait.Build("linux_host", new List<TraitAttribute>() {
                     TraitAttribute.Build("os_family",
                         CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                             CIAttributeValueConstraintTextRegex.Build(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
                     )
                 }, requiredTraits: new string[] { "host" }),
-                Trait.Build("linux_block_device", new List<TraitAttribute>() {
+                RecursiveTrait.Build("linux_block_device", new List<TraitAttribute>() {
                     TraitAttribute.Build("device",
                         CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     ),
@@ -42,7 +42,7 @@ namespace Tests.Integration.Model
                         CIAttributeTemplate.BuildFromParams("mount", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     )
                 }),
-                Trait.Build("linux_network_interface", new List<TraitAttribute>() {
+                RecursiveTrait.Build("linux_network_interface", new List<TraitAttribute>() {
                     TraitAttribute.Build("device",
                         CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     ),
@@ -53,7 +53,7 @@ namespace Tests.Integration.Model
                         CIAttributeTemplate.BuildFromParams("active", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     )
                 }),
-                Trait.Build("ansible_can_deploy_to_it",
+                RecursiveTrait.Build("ansible_can_deploy_to_it",
                     new List<TraitAttribute>() {
                         TraitAttribute.Build("hostname",
                             CIAttributeTemplate.BuildFromParams("ipAddress", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))

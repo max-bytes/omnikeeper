@@ -2,10 +2,8 @@
 using Landscape.Base.Entity.DTO;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
-using LandscapeRegistry.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -37,7 +35,7 @@ namespace LandscapeRegistry.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedRelation")]
-        public async Task<ActionResult<RelationDTO>> GetMergedRelation([FromQuery, Required]Guid fromCIID, [FromQuery, Required]Guid toCIID, [FromQuery, Required]string predicateID, [FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<RelationDTO>> GetMergedRelation([FromQuery, Required] Guid fromCIID, [FromQuery, Required] Guid toCIID, [FromQuery, Required] string predicateID, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
@@ -54,7 +52,7 @@ namespace LandscapeRegistry.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedRelationsWithPredicate")]
-        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetMergedRelationsWithPredicate([FromQuery, Required]string predicateID, [FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetMergedRelationsWithPredicate([FromQuery, Required] string predicateID, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
@@ -69,7 +67,7 @@ namespace LandscapeRegistry.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getAllMergedRelations")]
-        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetAllMergedRelations([FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetAllMergedRelations([FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
@@ -85,7 +83,7 @@ namespace LandscapeRegistry.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedRelationsOutgoingFromCI")]
-        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetMergedRelationsOutgoingFromCI([FromQuery, Required]Guid fromCIID, [FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetMergedRelationsOutgoingFromCI([FromQuery, Required] Guid fromCIID, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
@@ -101,7 +99,7 @@ namespace LandscapeRegistry.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedRelationsFromOrToCI")]
-        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetMergedRelationsFromOrToCI([FromQuery, Required]Guid ciid, [FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetMergedRelationsFromOrToCI([FromQuery, Required] Guid ciid, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);

@@ -12,14 +12,14 @@ function Attributes(props) {
   </>;
 }
 
-function DependentTraits(props) {
-  return <>
-    <h5 style={{margin: '0px', paddingLeft: '15px'}}>Dependent Traits:</h5>
-    {props.dependentTraits.map(dt => (<div key={dt} style={{paddingLeft: '30px'}}>
-      {dt}
-    </div>))}
-    </>;
-}
+// function DependentTraits(props) {
+//   return <>
+//     <h5 style={{margin: '0px', paddingLeft: '15px'}}>Dependent Traits:</h5>
+//     {props.dependentTraits.map(dt => (<div key={dt} style={{paddingLeft: '30px'}}>
+//       {dt}
+//     </div>))}
+//     </>;
+// }
 
 function EffectiveTraits(props) {
   return <div>
@@ -29,7 +29,8 @@ function EffectiveTraits(props) {
           <h3 style={{margin: '0px'}}>{t.underlyingTrait.name}:</h3>
           
           {t.attributes.length > 0 && <Attributes attributes={t.attributes} />}
-          {t.dependentTraits.length > 0 && <DependentTraits dependentTraits={t.dependentTraits} />}
+          // TODO: relations, etc.
+          {/* {t.dependentTraits.length > 0 && <DependentTraits dependentTraits={t.dependentTraits} />} */}
         </div>);
       })}
     </div>;

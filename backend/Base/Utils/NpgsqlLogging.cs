@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Npgsql.Logging;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Landscape.Base.Utils
 {

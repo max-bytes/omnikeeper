@@ -1,6 +1,4 @@
-﻿using Landscape.Base.Model;
-using LandscapeRegistry.Entity.AttributeValues;
-using Npgsql;
+﻿using LandscapeRegistry.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
@@ -45,7 +43,7 @@ namespace Landscape.Base.Entity
                                 CIAttributeTemplate.BuildFromParams("automation.ansible_group_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                             },
                             new List<RelationTemplate>() {},
-                            new List<Trait>() {}
+                            new List<RecursiveTrait>() {}
                     )
                 }.ToImmutableDictionary(t => t.CITypeID)
             };

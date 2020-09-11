@@ -1,5 +1,4 @@
-﻿using Hangfire.Common;
-using Landscape.Base.Entity;
+﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -9,14 +8,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Service
 {
     public class CurrentUserService : ICurrentUserService
     {
-        public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel, 
+        public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel,
             ILayerModel layerModel, IRegistryAuthorizationService authorizationService, IConfiguration configuration)
         {
             HttpContextAccessor = httpContextAccessor;
@@ -70,7 +68,8 @@ namespace LandscapeRegistry.Service
                 var clientRoles = resourceAccess?[resourceName]?["roles"]?.Select(tt => tt.Value<string>()).ToArray() ?? new string[] { };
 
                 var writableLayers = new List<Layer>();
-                foreach (var role in clientRoles) {
+                foreach (var role in clientRoles)
+                {
                     var layerName = AuthorizationService.ParseLayerNameFromWriteAccessRoleName(role);
                     if (layerName != null)
                     {

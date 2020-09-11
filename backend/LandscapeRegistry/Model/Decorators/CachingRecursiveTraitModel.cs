@@ -3,43 +3,38 @@ using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Service;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 using Npgsql;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model.Decorators
 {
-    public class CachingTraitModel : ITraitModel
+    public class CachingRecursiveTraitModel : IRecursiveTraitModel
     {
-        private readonly ITraitModel model;
+        private readonly IRecursiveTraitModel model;
         private readonly IMemoryCache memoryCache;
 
-        public CachingTraitModel(ITraitModel model, IMemoryCache memoryCache)
+        public CachingRecursiveTraitModel(IRecursiveTraitModel model, IMemoryCache memoryCache)
         {
             this.model = model;
             this.memoryCache = memoryCache;
         }
 
-        public async Task<TraitSet> GetTraitSet(NpgsqlTransaction trans, TimeThreshold timeThreshold)
+        public async Task<RecursiveTraitSet> GetRecursiveTraitSet(NpgsqlTransaction trans, TimeThreshold timeThreshold)
         {
             if (timeThreshold.IsLatest)
                 return await memoryCache.GetOrCreateAsync(CacheKeyService.Traits(), async (ce) =>
                 {
                     var changeToken = memoryCache.GetTraitsCancellationChangeToken();
                     ce.AddExpirationToken(changeToken);
-                    return await model.GetTraitSet(trans, timeThreshold);
+                    return await model.GetRecursiveTraitSet(trans, timeThreshold);
                 });
-            else return await model.GetTraitSet(trans, timeThreshold);
+            else return await model.GetRecursiveTraitSet(trans, timeThreshold);
         }
 
-        public async Task<TraitSet> SetTraitSet(TraitSet traitSet, NpgsqlTransaction trans)
+        public async Task<RecursiveTraitSet> SetRecursiveTraitSet(RecursiveTraitSet traitSet, NpgsqlTransaction trans)
         {
             memoryCache.CancelTraitsChangeToken(); // TODO: only evict cache when insert changes
-            return await model.SetTraitSet(traitSet, trans);
+            return await model.SetRecursiveTraitSet(traitSet, trans);
         }
     }
 }

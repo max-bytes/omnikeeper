@@ -1,7 +1,6 @@
 ﻿using GraphQL.Types;
 using Landscape.Base.Entity;
 using Landscape.Base.Inbound;
-using Newtonsoft.Json;
 
 namespace LandscapeRegistry.GraphQL
 {
