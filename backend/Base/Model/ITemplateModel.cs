@@ -1,7 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Utils;
 using Npgsql;
-using System;
 using System.Threading.Tasks;
 
 namespace Landscape.Base.Model

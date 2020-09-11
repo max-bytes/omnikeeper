@@ -53,7 +53,6 @@ export const Fragments = {
             attributes { 
                 ...FullMergedAttribute
             }
-            dependentTraits
         }
         templateErrors {
           attributeErrors {

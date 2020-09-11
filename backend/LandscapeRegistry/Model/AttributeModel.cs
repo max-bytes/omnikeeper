@@ -4,7 +4,6 @@ using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Utils;
 using Npgsql;
-using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;

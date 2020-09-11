@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
-using static Landscape.Base.Model.IRelationModel;
 
 namespace Landscape.Base.Inbound
 {
@@ -62,7 +61,8 @@ namespace Landscape.Base.Inbound
             return ID.ToString();
         }
 
-        public override bool Equals([AllowNull] object other) {
+        public override bool Equals([AllowNull] object other)
+        {
             try { return Equals((ExternalIDGuid)other); } catch (InvalidCastException) { return false; };
         }
         public bool Equals([AllowNull] ExternalIDGuid other) => ID == other.ID;

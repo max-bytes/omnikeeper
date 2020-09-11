@@ -43,7 +43,7 @@ namespace LandscapeRegistry.Controllers
         /// <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
         /// <returns></returns>
         [HttpGet("getCIByID")]
-        public async Task<ActionResult<CIDTO>> GetCIByID([FromQuery, Required]long[] layerIDs, [FromQuery, Required]Guid CIID, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<CIDTO>> GetCIByID([FromQuery, Required] long[] layerIDs, [FromQuery, Required] Guid CIID, [FromQuery] DateTimeOffset? atTime = null)
         {
             var layerset = new LayerSet(layerIDs);
             var ci = await ciModel.GetMergedCI(CIID, layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
@@ -61,7 +61,7 @@ namespace LandscapeRegistry.Controllers
         /// <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
         /// <returns></returns>
         [HttpGet("getCIsByID")]
-        public async Task<ActionResult<IEnumerable<CIDTO>>> GetCIsByID([FromQuery, Required]long[] layerIDs, [FromQuery, Required]Guid[] CIIDs, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<CIDTO>>> GetCIsByID([FromQuery, Required] long[] layerIDs, [FromQuery, Required] Guid[] CIIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             if (CIIDs.IsEmpty())
                 return BadRequest("Empty CIID list");
@@ -78,13 +78,13 @@ namespace LandscapeRegistry.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getCIIDsOfNonEmptyCIs")]
-        public async Task<ActionResult<IEnumerable<Guid>>> GetCIIDsOfNonEmptyCIs([FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<Guid>>> GetCIIDsOfNonEmptyCIs([FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var layerset = new LayerSet(layerIDs);
             var ciids = await ciModel.GetCIIDsOfNonEmptyCIs(layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
             return Ok(ciids);
         }
 
-        
+
     }
 }

@@ -43,7 +43,7 @@ namespace LandscapeRegistry.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedAttributesWithName")]
-        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> GetMergedAttributesWithName([FromQuery, Required]string name, [FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> GetMergedAttributesWithName([FromQuery, Required] string name, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
@@ -59,7 +59,7 @@ namespace LandscapeRegistry.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedAttributes")]
-        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> GetMergedAttributes([FromQuery, Required]IEnumerable<Guid> ciids, [FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> GetMergedAttributes([FromQuery, Required] IEnumerable<Guid> ciids, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             if (ciids.IsEmpty())
                 return BadRequest("Empty CIID list");
@@ -79,7 +79,7 @@ namespace LandscapeRegistry.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedAttribute")]
-        public async Task<ActionResult<CIAttributeDTO>> GetMergedAttribute([FromQuery, Required]Guid ciid, [FromQuery, Required]string name, [FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<CIAttributeDTO>> GetMergedAttribute([FromQuery, Required] Guid ciid, [FromQuery, Required] string name, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
@@ -98,7 +98,7 @@ namespace LandscapeRegistry.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("findMergedAttributesByName")]
-        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> FindMergedAttributesByName([FromQuery, Required]string regex, [FromQuery]IEnumerable<Guid> ciids, [FromQuery, Required]long[] layerIDs, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> FindMergedAttributesByName([FromQuery, Required] string regex, [FromQuery] IEnumerable<Guid> ciids, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             ICIIDSelection selection;
             if (ciids == null)
@@ -117,7 +117,7 @@ namespace LandscapeRegistry.Controllers
         /// <param name="dto"></param>
         /// <returns></returns>
         [HttpPost("bulkReplaceAttributesInLayer")]
-        public async Task<ActionResult> BulkReplaceAttributesInLayer([FromBody, Required]BulkCIAttributeLayerScopeDTO dto)
+        public async Task<ActionResult> BulkReplaceAttributesInLayer([FromBody, Required] BulkCIAttributeLayerScopeDTO dto)
         {
             var user = await currentUserService.GetCurrentUser(null);
             if (!authorizationService.CanUserWriteToLayer(user, dto.LayerID))

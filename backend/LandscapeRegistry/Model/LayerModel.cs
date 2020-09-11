@@ -240,8 +240,9 @@ namespace LandscapeRegistry.Model
 
         public async Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, NpgsqlTransaction trans)
         {
-            var layers = (await _GetLayers("ls.state = ANY(@states) OR (ls.state IS NULL AND @default_state = ANY(@states))", 
-                (p) => {
+            var layers = (await _GetLayers("ls.state = ANY(@states) OR (ls.state IS NULL AND @default_state = ANY(@states))",
+                (p) =>
+                {
                     p.AddWithValue("states", stateFilter.Filter2States());
                     p.AddWithValue("default_state", DefaultState);
                 }, trans));

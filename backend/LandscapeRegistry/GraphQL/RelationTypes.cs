@@ -1,7 +1,6 @@
 ﻿using GraphQL.Types;
 using Landscape.Base.Entity;
 using Landscape.Base.Model;
-using LandscapeRegistry.Model.Decorators;
 
 namespace LandscapeRegistry.GraphQL
 {

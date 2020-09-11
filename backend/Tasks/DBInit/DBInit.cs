@@ -39,13 +39,13 @@ namespace Tasks.DBInit
             var layerModel = new LayerModel(conn);
             var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
-            var traitModel = new TraitModel(NullLogger<TraitModel>.Instance, conn);
+            var traitModel = new RecursiveTraitModel(NullLogger<RecursiveTraitModel>.Instance, conn);
 
             var random = new Random(3);
 
             var user = await DBSetup.SetupUser(userModel, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
 
-            await traitModel.SetTraitSet(DefaultTraits.Get(), null);
+            await traitModel.SetRecursiveTraitSet(DefaultTraits.Get(), null);
 
             var numApplicationCIs = 1;
             var numHostCIs = 1;
@@ -296,23 +296,23 @@ namespace Tasks.DBInit
 
     public static class DefaultTraits
     {
-        public static TraitSet Get()
+        public static RecursiveTraitSet Get()
         {
-            return TraitSet.Build(
+            return RecursiveTraitSet.Build(
                     // hosts
-                    Trait.Build("host", new List<TraitAttribute>() {
+                    RecursiveTrait.Build("host", new List<TraitAttribute>() {
                         TraitAttribute.Build("hostname",
                             CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
-                    Trait.Build("windows_host", new List<TraitAttribute>() {
+                    RecursiveTrait.Build("windows_host", new List<TraitAttribute>() {
                         TraitAttribute.Build("os_family",
                             CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                                 CIAttributeValueConstraintTextRegex.Build(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                         )
                     }, requiredTraits: new string[] { "host" }),
 
-                    Trait.Build("linux_host", new List<TraitAttribute>() {
+                    RecursiveTrait.Build("linux_host", new List<TraitAttribute>() {
                         TraitAttribute.Build("os_family",
                             CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                                 CIAttributeValueConstraintTextRegex.Build(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
@@ -320,7 +320,7 @@ namespace Tasks.DBInit
                     }, requiredTraits: new string[] { "host" }),
 
                     // linux disk devices
-                    Trait.Build("linux_block_device", new List<TraitAttribute>() {
+                    RecursiveTrait.Build("linux_block_device", new List<TraitAttribute>() {
                         TraitAttribute.Build("device",
                             CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         ),
@@ -330,7 +330,7 @@ namespace Tasks.DBInit
                     }),
 
                     // linux network_interface
-                    Trait.Build("linux_network_interface", new List<TraitAttribute>() {
+                    RecursiveTrait.Build("linux_network_interface", new List<TraitAttribute>() {
                         TraitAttribute.Build("device",
                             CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         ),
@@ -343,14 +343,14 @@ namespace Tasks.DBInit
                     }),
 
                     // applications
-                    Trait.Build("application", new List<TraitAttribute>() {
+                    RecursiveTrait.Build("application", new List<TraitAttribute>() {
                         TraitAttribute.Build("name",
                             CIAttributeTemplate.BuildFromParams("application_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
 
                     // automation / ansible
-                    Trait.Build("ansible_can_deploy_to_it",
+                    RecursiveTrait.Build("ansible_can_deploy_to_it",
                         new List<TraitAttribute>() {
                             TraitAttribute.Build("hostname", // TODO: make this an anyOf[CIAttributeTemplate], or use dependent trait host
                                 CIAttributeTemplate.BuildFromParams("ipAddress",    AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))

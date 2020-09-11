@@ -1,10 +1,8 @@
 ﻿using Landscape.Base.Service;
-using Npgsql;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace Landscape.Base.Inbound
@@ -88,7 +86,7 @@ namespace Landscape.Base.Inbound
         public IEnumerable<EID> RemoveAllExceptExternalIDs(IEnumerable<EID> externalIDsToKeep)
         {
             var remove = ext2int.Keys.Except(externalIDsToKeep).ToList(); // the ToList() is important here, to ensure the Except() is evaluated right now, not later when the collections are modified
-            foreach(var r in remove)
+            foreach (var r in remove)
             {
                 RemoveViaExternalID(r);
             }

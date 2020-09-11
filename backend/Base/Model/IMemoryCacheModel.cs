@@ -1,10 +1,4 @@
-﻿using Landscape.Base.Entity;
-using Landscape.Base.Utils;
-using LandscapeRegistry.Entity.AttributeValues;
-using Npgsql;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Landscape.Base.Model
 {

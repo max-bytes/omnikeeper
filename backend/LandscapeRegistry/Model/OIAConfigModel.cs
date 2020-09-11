@@ -1,16 +1,12 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
-using LandscapeRegistry.GraphQL;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model
@@ -71,7 +67,8 @@ namespace LandscapeRegistry.Model
             {
                 var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configJO);
                 return OIAConfig.Build(name, id, config);
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
                 logger.LogError(e, $"Could not deserialize OIA config \"{name}\"");
                 return null;

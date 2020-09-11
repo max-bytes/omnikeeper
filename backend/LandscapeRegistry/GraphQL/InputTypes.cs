@@ -1,5 +1,4 @@
-﻿using GraphQL.Instrumentation;
-using GraphQL.Types;
+﻿using GraphQL.Types;
 using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
 using System;

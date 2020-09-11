@@ -2,22 +2,16 @@
 using Landscape.Base.Model;
 using Landscape.Base.Service;
 using Landscape.Base.Utils;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
-using LandscapeRegistry.Utils;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
-using Microsoft.AspNetCore.Mvc.TagHelpers;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Service
 {
-    
+
     public class IngestDataService
     {
         private IAttributeModel AttributeModel { get; }
@@ -35,7 +29,7 @@ namespace LandscapeRegistry.Service
             Connection = connection;
         }
 
-        
+
         public async Task<(Dictionary<Guid, Guid> idMapping, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, AuthenticatedUser user, ILogger logger)
         {
             using var trans = Connection.BeginTransaction();
@@ -52,10 +46,11 @@ namespace LandscapeRegistry.Service
                 var ciCandidateID = cic.Key;
 
                 var foundCIID = await CIMappingService.TryToMatch(ciCandidateID.ToString(), cic.Value.IdentificationMethod, AttributeModel, tempCIMappingContext, timeThreshold, trans, logger);
-                
+
                 var finalCIID = foundCIID ?? ciCandidateID;  // TODO: we are simply using the passed ciid here, check if that is ok, or might lead to problems later
 
-                if (!foundCIID.HasValue) {
+                if (!foundCIID.HasValue)
+                {
                     // CI is new, create it first
                     // TODO: batch process CI creation
                     await CIModel.CreateCI(finalCIID, trans);

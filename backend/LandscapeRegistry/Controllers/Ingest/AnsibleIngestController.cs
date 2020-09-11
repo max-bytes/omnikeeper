@@ -1,10 +1,8 @@
-﻿using GraphQL;
-using Landscape.Base.Entity;
+﻿using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO.Ingest;
 using Landscape.Base.Model;
 using Landscape.Base.Service;
 using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
 using LandscapeRegistry.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -41,7 +39,7 @@ namespace LandscapeRegistry.Controllers.Ingest
         }
 
         [HttpPost("IngestAnsibleInventoryScan")]
-        public async Task<ActionResult> IngestAnsibleInventoryScan([FromQuery, Required]long writeLayerID, [FromQuery, Required]long[] searchLayerIDs, [FromBody, Required]AnsibleInventoryScanDTO data)
+        public async Task<ActionResult> IngestAnsibleInventoryScan([FromQuery, Required] long writeLayerID, [FromQuery, Required] long[] searchLayerIDs, [FromBody, Required] AnsibleInventoryScanDTO data)
         {
             try
             {
@@ -239,7 +237,8 @@ namespace LandscapeRegistry.Controllers.Ingest
                 logger.LogInformation($"Ansible Ingest successful; ingested {idMapping.Count} CIs, {numIngestedRelations} relations");
 
                 return Ok();
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 logger.LogError(e, "Ansible Ingest failed");
                 return BadRequest();

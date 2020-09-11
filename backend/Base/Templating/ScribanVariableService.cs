@@ -3,17 +3,13 @@ using Landscape.Base.Model;
 using Landscape.Base.Service;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
-using Newtonsoft.Json.Linq;
 using Npgsql;
 using Scriban;
 using Scriban.Parsing;
 using Scriban.Runtime;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
 
 namespace Landscape.Base.Templating
 {
@@ -107,18 +103,20 @@ namespace Landscape.Base.Templating
             public ScriptObjectRelatedCIs(IEnumerable<CompactRelatedCI> relatedCIs, ScriptObjectContext context)
             {
                 Add("forward", relatedCIs.Where(r => r.IsForwardRelation).GroupBy(r => r.PredicateID)
-                    .ToDictionary(t => t.Key, t => t.Select(r => {
+                    .ToDictionary(t => t.Key, t => t.Select(r =>
+                    {
                         var ci = context.CIModel.GetMergedCI(r.CI.ID, context.Layerset, context.Transaction, context.AtTime).GetAwaiter().GetResult();
                         return new ScriptObjectCI(ci, context);
                     })));
                 Add("back", relatedCIs.Where(r => !r.IsForwardRelation).GroupBy(r => r.PredicateID)
-                    .ToDictionary(t => t.Key, t => t.Select(r => {
+                    .ToDictionary(t => t.Key, t => t.Select(r =>
+                    {
                         var ci = context.CIModel.GetMergedCI(r.CI.ID, context.Layerset, context.Transaction, context.AtTime).GetAwaiter().GetResult();
                         return new ScriptObjectCI(ci, context);
                     })));
             }
         }
-        
+
         public class ScriptObjectCI : ScriptObject
         {
             public ScriptObjectCI(MergedCI ci, ScriptObjectContext context)
@@ -133,7 +131,8 @@ namespace Landscape.Base.Templating
                         AddNested(attributeVariables, $"{monitoredCIAttribute.Attribute.Name}", monitoredCIAttribute.Attribute.Value);
                     return attributeVariables;
                 }));
-                this.Import("relations", new Func<ScriptObjectRelatedCIs>(() => {
+                this.Import("relations", new Func<ScriptObjectRelatedCIs>(() =>
+                {
                     var relatedCIs = RelationService.GetCompactRelatedCIs(ci.ID, context.Layerset, context.CIModel, context.RelationModel, null, context.Transaction, context.AtTime)
                         .GetAwaiter().GetResult(); // HACK, TODO: async
                     return new ScriptObjectRelatedCIs(relatedCIs, context);

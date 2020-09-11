@@ -1,6 +1,5 @@
 ﻿using Landscape.Base.Inbound;
 using System;
-using System.Drawing;
 
 namespace Landscape.Base.Entity
 {

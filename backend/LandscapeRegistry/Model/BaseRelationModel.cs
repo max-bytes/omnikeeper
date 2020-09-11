@@ -1,14 +1,10 @@
-﻿using DotLiquid.Tags;
-using Hangfire.States;
-using Landscape.Base.Entity;
-using Landscape.Base.Inbound;
+﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using Npgsql;
 using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -56,7 +52,7 @@ namespace LandscapeRegistry.Model
             "; // TODO: remove order by layer_id, but consider not breaking indices first
 
             var command = new NpgsqlCommand(query, conn, trans);
-            foreach(var p in parameters)
+            foreach (var p in parameters)
                 command.Parameters.Add(p);
             command.Parameters.AddWithValue("time_threshold", atTime.Time);
             command.Parameters.AddWithValue("layer_id", layerID);

@@ -7,7 +7,6 @@ using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Service;
-using Newtonsoft.Json;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -19,7 +18,7 @@ namespace LandscapeRegistry.GraphQL
     public class GraphQLMutation : ObjectGraphType
     {
         public GraphQLMutation(ICIModel ciModel, IBaseAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAConfigModel OIAConfigModel,
-             IODataAPIContextModel odataAPIContextModel, IChangesetModel changesetModel, IPredicateModel predicateModel, ITraitModel traitModel,
+             IODataAPIContextModel odataAPIContextModel, IChangesetModel changesetModel, IPredicateModel predicateModel, IRecursiveTraitModel traitModel,
              IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
@@ -222,7 +221,8 @@ namespace LandscapeRegistry.GraphQL
                     using var transaction = await conn.BeginTransactionAsync();
                     userContext.Transaction = transaction;
 
-                    try {
+                    try
+                    {
                         var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configInput.Config);
 
                         var createdOIAConfig = await OIAConfigModel.Create(configInput.Name, config, transaction);
@@ -260,7 +260,8 @@ namespace LandscapeRegistry.GraphQL
                       await transaction.CommitAsync();
 
                       return oiaConfig;
-                  } catch (Exception e)
+                  }
+                  catch (Exception e)
                   {
                       throw new ExecutionError($"Could not parse configuration", e);
                   }
@@ -363,7 +364,7 @@ namespace LandscapeRegistry.GraphQL
                     {
                         var traitSet = TraitsProvider.TraitSetSerializer.Deserialize(traitSetInput);
 
-                        var created = await traitModel.SetTraitSet(traitSet, transaction);
+                        var created = await traitModel.SetRecursiveTraitSet(traitSet, transaction);
 
                         await transaction.CommitAsync();
 
