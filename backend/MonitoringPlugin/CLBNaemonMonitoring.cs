@@ -168,7 +168,9 @@ namespace MonitoringPlugin
                     {
                         try
                         {
-                            return JsonConvert.DeserializeObject<INaemonFragmentTemplate[]>(ttt.templateSegment);
+                            var r = JsonConvert.DeserializeObject<INaemonFragmentTemplate[]>(ttt.templateSegment);
+                            if (r == null) return new INaemonFragmentTemplate[0];
+                            return r;
                         }
                         catch (Exception e)
                         {
