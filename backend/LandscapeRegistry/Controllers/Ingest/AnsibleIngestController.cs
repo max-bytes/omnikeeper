@@ -232,9 +232,9 @@ namespace LandscapeRegistry.Controllers.Ingest
                 }
 
                 var ingestData = IngestData.Build(cis, relations);
-                var (idMapping, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user, logger);
+                var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user, logger);
 
-                logger.LogInformation($"Ansible Ingest successful; ingested {idMapping.Count} CIs, {numIngestedRelations} relations");
+                logger.LogInformation($"Ansible Ingest successful; ingested {numIngestedCIs} CIs, {numIngestedRelations} relations");
 
                 return Ok();
             }

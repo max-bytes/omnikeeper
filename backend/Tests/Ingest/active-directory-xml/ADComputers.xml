@@ -1,0 +1,98 @@
+﻿<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
+  <Obj RefId="0">
+    <TN RefId="0">
+      <T>Microsoft.ActiveDirectory.Management.ADComputer</T>
+      <T>Microsoft.ActiveDirectory.Management.ADAccount</T>
+      <T>Microsoft.ActiveDirectory.Management.ADPrincipal</T>
+      <T>Microsoft.ActiveDirectory.Management.ADObject</T>
+      <T>Microsoft.ActiveDirectory.Management.ADEntity</T>
+      <T>Microsoft.ActiveDirectory.Management.ADPropertyCollection</T>
+      <T>System.Object</T>
+    </TN>
+    <ToString>CN=PC-1,OU=ACME,DC=acme,DC=local</ToString>
+    <Props>
+      <S N="CanonicalName">acme.local/ACME/PC-1</S>
+      <S N="Description">PC of Dan Jump</S>
+      <Nil N="DisplayName" />
+      <S N="DistinguishedName">CN=PC-1,OU=ACME,DC=acme,DC=local</S>
+      <Nil N="DNSHostName" />
+      <B N="Enabled">true</B>
+      <S N="Location">Salzburg</S>
+      <S N="ManagedBy">CN=Dan Jump,OU=ACME,DC=acme,DC=local</S>
+      <S N="Name">PC-1</S>
+      <S N="ObjectClass">computer</S>
+      <G N="ObjectGUID">3ad97cb5-b0b2-4bbf-97f0-dc4e1dbdb0b7</G>
+      <S N="SamAccountName">PC-1$</S>
+      <Obj N="SID" RefId="1">
+        <TN RefId="1">
+          <T>System.Security.Principal.SecurityIdentifier</T>
+          <T>System.Security.Principal.IdentityReference</T>
+          <T>System.Object</T>
+        </TN>
+        <ToString>S-1-5-21-1342321449-209706358-2165574607-1674</ToString>
+        <Props>
+          <I32 N="BinaryLength">28</I32>
+          <S N="AccountDomainSid">S-1-5-21-1342321449-209706358-2165574607</S>
+          <S N="Value">S-1-5-21-1342321449-209706358-2165574607-1674</S>
+        </Props>
+      </Obj>
+      <Nil N="UserPrincipalName" />
+    </Props>
+  </Obj>
+  <Obj RefId="2">
+    <TNRef RefId="0" />
+    <ToString>CN=PC-2,OU=ACME,DC=acme,DC=local</ToString>
+    <Props>
+      <S N="CanonicalName">acme.local/ACME/PC-2</S>
+      <S N="Description">PC of Adam Barr</S>
+      <Nil N="DisplayName" />
+      <S N="DistinguishedName">CN=PC-2,OU=ACME,DC=acme,DC=local</S>
+      <Nil N="DNSHostName" />
+      <B N="Enabled">true</B>
+      <S N="Location">Salzburg</S>
+      <S N="ManagedBy">CN=Adam Barr,OU=ACME,DC=acme,DC=local</S>
+      <S N="Name">PC-2</S>
+      <S N="ObjectClass">computer</S>
+      <G N="ObjectGUID">ce0d0862-4b18-48d7-8b75-cf179408052a</G>
+      <S N="SamAccountName">PC-2$</S>
+      <Obj N="SID" RefId="3">
+        <TNRef RefId="1" />
+        <ToString>S-1-5-21-1342321449-209706358-2165574607-1676</ToString>
+        <Props>
+          <I32 N="BinaryLength">28</I32>
+          <S N="AccountDomainSid">S-1-5-21-1342321449-209706358-2165574607</S>
+          <S N="Value">S-1-5-21-1342321449-209706358-2165574607-1676</S>
+        </Props>
+      </Obj>
+      <Nil N="UserPrincipalName" />
+    </Props>
+  </Obj>
+  <Obj RefId="4">
+    <TNRef RefId="0" />
+    <ToString>CN=PC-3,OU=ACME,DC=acme,DC=local</ToString>
+    <Props>
+      <S N="CanonicalName">acme.local/ACME/PC-3</S>
+      <S N="Description">PC of Alan Steiner</S>
+      <Nil N="DisplayName" />
+      <S N="DistinguishedName">CN=PC-3,OU=ACME,DC=acme,DC=local</S>
+      <Nil N="DNSHostName" />
+      <B N="Enabled">true</B>
+      <S N="Location">Graz</S>
+      <S N="ManagedBy">CN=Alan Steiner,OU=ACME,DC=acme,DC=local</S>
+      <S N="Name">PC-3</S>
+      <S N="ObjectClass">computer</S>
+      <G N="ObjectGUID">0ea19987-e9e6-4828-a54e-83e15ead112b</G>
+      <S N="SamAccountName">PC-3$</S>
+      <Obj N="SID" RefId="5">
+        <TNRef RefId="1" />
+        <ToString>S-1-5-21-1342321449-209706358-2165574607-1678</ToString>
+        <Props>
+          <I32 N="BinaryLength">28</I32>
+          <S N="AccountDomainSid">S-1-5-21-1342321449-209706358-2165574607</S>
+          <S N="Value">S-1-5-21-1342321449-209706358-2165574607-1678</S>
+        </Props>
+      </Obj>
+      <Nil N="UserPrincipalName" />
+    </Props>
+  </Obj>
+</Objs>

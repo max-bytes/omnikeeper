@@ -1,6 +1,7 @@
 ﻿using Hangfire.Server;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
+using Landscape.Base.Service;
 using LandscapeRegistry.Utils;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -18,6 +19,7 @@ namespace LandscapeRegistry.Runners
         private readonly ILogger<ExternalIDManagerRunner> logger;
         private readonly IInboundAdapterManager pluginManager;
         private readonly ICIModel ciModel;
+        private readonly CIMappingService ciMappingService;
         private readonly IAttributeModel attributeModel;
         private readonly ILayerModel layerModel;
         private readonly NpgsqlConnection conn;
@@ -25,11 +27,13 @@ namespace LandscapeRegistry.Runners
         // HACK: making this static sucks, find better way, but runner is instantiated anew on each run
         private static readonly IDictionary<string, DateTimeOffset> lastRuns = new ConcurrentDictionary<string, DateTimeOffset>();
 
-        public ExternalIDManagerRunner(IInboundAdapterManager pluginManager, ICIModel ciModel, IAttributeModel attributeModel, ILayerModel layerModel, NpgsqlConnection conn, ILogger<ExternalIDManagerRunner> logger)
+        public ExternalIDManagerRunner(IInboundAdapterManager pluginManager, ICIModel ciModel, CIMappingService ciMappingService, IAttributeModel attributeModel, ILayerModel layerModel, 
+            NpgsqlConnection conn, ILogger<ExternalIDManagerRunner> logger)
         {
             this.logger = logger;
             this.pluginManager = pluginManager;
             this.ciModel = ciModel;
+            this.ciMappingService = ciMappingService;
             this.attributeModel = attributeModel;
             this.layerModel = layerModel;
             this.conn = conn;
@@ -76,7 +80,7 @@ namespace LandscapeRegistry.Runners
                         {
                             using var trans = conn.BeginTransaction();
 
-                            var changes = await manager.Update(ciModel, attributeModel, trans, logger);
+                            var changes = await manager.Update(ciModel, attributeModel, ciMappingService, trans, logger);
 
                             if (changes)
                             {

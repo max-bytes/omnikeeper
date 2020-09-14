@@ -219,7 +219,7 @@ namespace LandscapeRegistry.Model
                 var fromCIID = data.GetFromCIID(fragment);
                 var toCIID = data.GetToCIID(fragment);
 
-                var predicateID = data.GetPredicateID(fragment); // TODO: check if predicates are active
+                var predicateID = data.GetPredicateID(fragment);
                 var informationHash = Relation.CreateInformationHash(fromCIID, toCIID, predicateID);
                 // remove the current relation from the list of relations to remove
                 outdatedRelations.Remove(informationHash, out var currentRelation);
@@ -233,8 +233,12 @@ namespace LandscapeRegistry.Model
                         continue;
                 }
 
+                // TODO: check if predicates actually exist and are active
+
                 actualInserts.Add((fromCIID, toCIID, predicateID, state));
             }
+
+
 
             // changeset is only created and copy mode is only entered when there is actually anything inserted
             if (!actualInserts.IsEmpty() || !outdatedRelations.IsEmpty())

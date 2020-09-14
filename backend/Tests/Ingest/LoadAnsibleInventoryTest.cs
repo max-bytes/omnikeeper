@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Service;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Controllers.Ingest;
 using LandscapeRegistry.Entity.AttributeValues;
@@ -67,7 +68,7 @@ namespace Tests.Ingest
             var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new PredicateModel(conn);
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
-            var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel, conn), relationModel, conn);
+            var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel, conn), relationModel, new CIMappingService(), conn);
 
             Layer layer1 = await layerModel.CreateLayer("Inventory Scan", null);
             
