@@ -34,12 +34,15 @@ namespace LandscapeRegistry.Model
             return Predicate.Build(id, DefaultWordingFrom, DefaultWordingTo, DefaultState, DefaultConstraits);
         }
 
-        public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints, NpgsqlTransaction trans)
+        public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints, NpgsqlTransaction trans, DateTimeOffset? timestamp = null)
         {
             var current = await GetPredicate(id, trans);
 
             if (current == null)
                 current = await Insert(id, trans);
+
+            if (timestamp == null)
+                timestamp = DateTimeOffset.Now;
 
             // update wordings
             if (current.WordingFrom != wordingFrom || current.WordingTo != wordingTo)
@@ -49,7 +52,7 @@ namespace LandscapeRegistry.Model
                 commandWording.Parameters.AddWithValue("predicate_id", id);
                 commandWording.Parameters.AddWithValue("wording_from", wordingFrom);
                 commandWording.Parameters.AddWithValue("wording_to", wordingTo);
-                commandWording.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
+                commandWording.Parameters.AddWithValue("timestamp", timestamp);
                 await commandWording.ExecuteNonQueryAsync();
                 current = Predicate.Build(id, wordingFrom, wordingTo, current.State, current.Constraints);
             }
@@ -63,6 +66,7 @@ namespace LandscapeRegistry.Model
                 commandState.Parameters.AddWithValue("state", state);
                 commandState.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandState.ExecuteNonQueryAsync();
+
                 current = Predicate.Build(id, current.WordingFrom, current.WordingTo, state, current.Constraints);
             }
 
@@ -106,17 +110,18 @@ namespace LandscapeRegistry.Model
                 SELECT p.id, pw.wording_from, pw.wording_to, ps.state, pc.constraints
                 FROM predicate p
                 LEFT JOIN 
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, wording_from, wording_to FROM predicate_wording WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC) pw
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, wording_from, wording_to, timestamp FROM predicate_wording WHERE timestamp <= @at_time ORDER BY predicate_id, timestamp DESC) pw
                     ON pw.predicate_id = p.id
                 LEFT JOIN
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, state from predicate_state WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC) ps
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, state, timestamp FROM predicate_state WHERE timestamp <= @at_time ORDER BY predicate_id, timestamp DESC) ps
                     ON ps.predicate_id = p.id
                 LEFT JOIN
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, constraints from predicate_constraints WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC) pc
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, constraints, timestamp FROM predicate_constraints WHERE timestamp <= @at_time ORDER BY predicate_id, timestamp DESC) pc
                     ON pc.predicate_id = p.id
                 WHERE (ps.state = ANY(@states) OR (ps.state IS NULL AND @default_state = ANY(@states)))
             ", conn, trans);
-            command.Parameters.AddWithValue("atTime", atTime.Time);
+
+            command.Parameters.AddWithValue("at_time", atTime.Time);
             command.Parameters.AddWithValue("states", stateFilter.Filter2States());
             command.Parameters.AddWithValue("default_state", DefaultState);
             using (var s = await command.ExecuteReaderAsync())
