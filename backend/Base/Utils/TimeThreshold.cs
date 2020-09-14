@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Landscape.Base.Utils
 {
     public struct TimeThreshold
     {
-        private TimeThreshold(bool isLatest, DateTimeOffset time) { 
+        private TimeThreshold(bool isLatest, DateTimeOffset time)
+        {
             IsLatest = isLatest;
             Time = time;
         }

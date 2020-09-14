@@ -8,12 +8,13 @@ using Hangfire.AspNetCore;
 using Hangfire.Console;
 using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
-using Landscape.Base;
 using Landscape.Base.CLB;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
+using Landscape.Base.Service;
 using Landscape.Base.Utils;
 using LandscapeRegistry.GraphQL;
+using LandscapeRegistry.Ingest.ActiveDirectoryXML;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Decorators;
 using LandscapeRegistry.Runners;
@@ -34,10 +35,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
-using Microsoft.OData.Edm;
 using Microsoft.OpenApi.Models;
 using MonitoringPlugin;
-using Newtonsoft.Json;
 using Npgsql.Logging;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
@@ -62,7 +61,7 @@ namespace LandscapeRegistry
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddScoped<IServiceProvider>(x => 
+            services.AddScoped<IServiceProvider>(x =>
                 new FuncServiceProvider(x.GetRequiredService)
                 ); // graphql needs this
 
@@ -77,7 +76,7 @@ namespace LandscapeRegistry
             //    .AsPublicImplementedInterfaces(ServiceLifetime.Scoped);
 
             // register compute layer brains
-            services.AddScoped<IComputeLayerBrain, CLBMonitoring>();
+            //services.AddScoped<IComputeLayerBrain, CLBMonitoring>();
             services.AddScoped<IComputeLayerBrain, CLBNaemonMonitoring>();
 
             // register online inbound adapters and managers
@@ -133,8 +132,9 @@ namespace LandscapeRegistry
             services.AddScoped<IODataAPIContextModel, ODataAPIContextModel>();
             services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
 
-            services.AddScoped<ITraitModel, TraitModel>();
-            //services.Decorate<ITraitModel, CachingTraitModel>();
+            services.AddScoped<IRecursiveTraitModel, RecursiveTraitModel>();
+            services.Decorate<IRecursiveTraitModel, CachingRecursiveTraitModel>();
+            services.AddScoped<IEffectiveTraitModel, EffectiveTraitModel>();
 
             services.AddScoped<IOIAConfigModel, OIAConfigModel>();
 
@@ -150,14 +150,15 @@ namespace LandscapeRegistry
             services.AddScoped<RelationType>();
             services.AddScoped<ISchema, GraphQLSchema>();
 
-            services.AddScoped<TraitsSetup>();
-
             services.AddSingleton<NpgsqlLoggingProvider>();
 
-            services.AddSingleton<ITraitsProvider, TraitsProvider>();
-            services.Decorate<ITraitsProvider, CachedTraitsProvider>();
+            services.AddScoped<ITraitsProvider, TraitsProvider>();
 
             services.AddScoped<IOnlineAccessProxy, OnlineAccessProxy>();
+
+            services.AddScoped<IngestActiveDirectoryXMLService, IngestActiveDirectoryXMLService>();
+
+            services.AddScoped<CIMappingService, CIMappingService>();
 
             services.Configure<IISServerOptions>(options =>
             {
@@ -290,11 +291,9 @@ namespace LandscapeRegistry
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory,
-            NpgsqlLoggingProvider npgsqlLoggingProvider, TraitsSetup traitsSetup)
+            NpgsqlLoggingProvider npgsqlLoggingProvider)
         {
             NpgsqlLogManager.Provider = npgsqlLoggingProvider;
-
-            traitsSetup.Setup();
 
             app.UseCors("DefaultCORSPolicy");
 

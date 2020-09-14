@@ -1,9 +1,7 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
-using System;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model

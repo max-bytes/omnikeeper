@@ -1,27 +1,21 @@
-﻿using DotLiquid.Util;
-using GraphQL.Types;
+﻿using GraphQL.Types;
 using Landscape.Base.Entity;
 using Landscape.Base.Entity.DTO;
 using Landscape.Base.Model;
 using Landscape.Base.Service;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
-using LandscapeRegistry.Model.Decorators;
-using LandscapeRegistry.Service;
-using Microsoft.AspNetCore.Server.IIS.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
-using static Landscape.Base.Model.IRelationModel;
 
 namespace LandscapeRegistry.GraphQL
 {
 
     public class MergedCIType : ObjectGraphType<MergedCI>
     {
-        public MergedCIType(IRelationModel relationModel, ITemplateModel templateModel, ITraitModel traitModel, ICIModel ciModel)
+        public MergedCIType(IRelationModel relationModel, ITemplateModel templateModel, IEffectiveTraitModel traitModel, ICIModel ciModel)
         {
             Field("id", x => x.ID);
             Field("name", x => x.Name, nullable: true);

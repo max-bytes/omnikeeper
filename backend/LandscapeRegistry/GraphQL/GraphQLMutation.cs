@@ -7,7 +7,6 @@ using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Service;
-using Newtonsoft.Json;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -19,7 +18,8 @@ namespace LandscapeRegistry.GraphQL
     public class GraphQLMutation : ObjectGraphType
     {
         public GraphQLMutation(ICIModel ciModel, IBaseAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAConfigModel OIAConfigModel,
-             IODataAPIContextModel odataAPIContextModel, IChangesetModel changesetModel, IPredicateModel predicateModel, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
+             IODataAPIContextModel odataAPIContextModel, IChangesetModel changesetModel, IPredicateModel predicateModel, IRecursiveTraitModel traitModel,
+             IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
@@ -63,7 +63,8 @@ namespace LandscapeRegistry.GraphQL
                         {
                             var nonGenericAttributeValue = AttributeValueBuilder.Build(attribute.Value);
 
-                            insertedAttributes.Add(await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, attribute.LayerID, changeset, transaction));
+                            var (a, changed) = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, attribute.LayerID, changeset, transaction);
+                            insertedAttributes.Add(a);
                         }
                     }
 
@@ -75,20 +76,23 @@ namespace LandscapeRegistry.GraphQL
                         var ciIdentity = attributeGroup.Key;
                         foreach (var attribute in attributeGroup)
                         {
-                            removedAttributes.Add(await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, attribute.LayerID, changeset, transaction));
+                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, attribute.LayerID, changeset, transaction);
+                            removedAttributes.Add(a);
                         }
                     }
 
                     var insertedRelations = new List<Relation>();
                     foreach (var insertRelation in insertRelations)
                     {
-                        insertedRelations.Add(await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.LayerID, changeset, transaction));
+                        var (r, changed) = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.LayerID, changeset, transaction);
+                        insertedRelations.Add(r);
                     }
 
                     var removedRelations = new List<Relation>();
                     foreach (var removeRelation in removeRelations)
                     {
-                        removedRelations.Add(await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, removeRelation.LayerID, changeset, transaction));
+                        var (r, changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, removeRelation.LayerID, changeset, transaction);
+                        removedRelations.Add(r);
                     }
 
                     IEnumerable<MergedCI> affectedCIs = new List<MergedCI>(); ;
@@ -217,8 +221,9 @@ namespace LandscapeRegistry.GraphQL
                     using var transaction = await conn.BeginTransactionAsync();
                     userContext.Transaction = transaction;
 
-                    try {
-                        var config = JsonConvert.DeserializeObject<IOnlineInboundAdapter.IConfig>(configInput.Config, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects });
+                    try
+                    {
+                        var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configInput.Config);
 
                         var createdOIAConfig = await OIAConfigModel.Create(configInput.Name, config, transaction);
 
@@ -250,12 +255,13 @@ namespace LandscapeRegistry.GraphQL
 
                   try
                   {
-                      var config = JsonConvert.DeserializeObject<IOnlineInboundAdapter.IConfig>(configInput.Config, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects });
+                      var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configInput.Config);
                       var oiaConfig = await OIAConfigModel.Update(configInput.ID, configInput.Name, config, transaction);
                       await transaction.CommitAsync();
 
                       return oiaConfig;
-                  } catch (Exception e)
+                  }
+                  catch (Exception e)
                   {
                       throw new ExecutionError($"Could not parse configuration", e);
                   }
@@ -301,7 +307,7 @@ namespace LandscapeRegistry.GraphQL
 
                     try
                     {
-                        var config = ODataAPIContext.DeserializeConfig(contextInput.Config);
+                        var config = ODataAPIContext.ConfigSerializer.Deserialize(contextInput.Config);
 
                         var created = await odataAPIContextModel.Upsert(contextInput.ID, config, transaction);
 
@@ -314,36 +320,7 @@ namespace LandscapeRegistry.GraphQL
                         throw new ExecutionError($"Could not parse configuration", e);
                     }
                 });
-            //FieldAsync<OIAConfigType>("updateODataAPIContext",
-            //  arguments: new QueryArguments(
-            //    new QueryArgument<NonNullGraphType<UpdateOIAConfigInputType>> { Name = "odataAPIContext" }
-            //  ),
-            //  resolve: async context =>
-            //  {
-            //      var contextInput = context.GetArgument<UpdateODataAPIContextInput>("odataAPIContext");
 
-            //      var userContext = context.UserContext as RegistryUserContext;
-
-            //      // TODO: auth
-            //      //if (!authorizationService.CanUserUpdateLayer(userContext.User))
-            //      //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update Layers");
-
-            //      using var transaction = await conn.BeginTransactionAsync();
-            //      userContext.Transaction = transaction;
-
-            //      try
-            //      {
-            //          var config = JsonConvert.DeserializeObject<ODataAPIContext.Config>(contextInput.Config, new JsonSerializerSettings() { TypeNameHandling = TypeNameHandling.Objects });
-            //          var updated = await odataAPIContextModel.Update(contextInput.ID, config, transaction);
-            //          await transaction.CommitAsync();
-
-            //          return updated;
-            //      }
-            //      catch (Exception e)
-            //      {
-            //          throw new ExecutionError($"Could not parse configuration", e);
-            //      }
-            //  });
             FieldAsync<BooleanGraphType>("deleteODataAPIContext",
               arguments: new QueryArguments(
                 new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
@@ -365,6 +342,40 @@ namespace LandscapeRegistry.GraphQL
                   await transaction.CommitAsync();
                   return deleted != null;
               });
+
+
+            FieldAsync<StringGraphType>("setTraitSet",
+                arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "traitSet" }
+                ),
+                resolve: async context =>
+                {
+                    var traitSetInput = context.GetArgument<string>("traitSet");
+                    var userContext = context.UserContext as RegistryUserContext;
+
+                    // TODO: auth
+                    //if (!authorizationService.CanUserCreateLayer(userContext.User))
+                    //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create Layers");
+
+                    using var transaction = await conn.BeginTransactionAsync();
+                    userContext.Transaction = transaction;
+
+                    try
+                    {
+                        var traitSet = TraitsProvider.TraitSetSerializer.Deserialize(traitSetInput);
+
+                        var created = await traitModel.SetRecursiveTraitSet(traitSet, transaction);
+
+                        await transaction.CommitAsync();
+
+                        return TraitsProvider.TraitSetSerializer.SerializeToString(created);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ExecutionError($"Could not parse traitSet", e);
+                    }
+                });
+
 
             FieldAsync<PredicateType>("upsertPredicate",
               arguments: new QueryArguments(

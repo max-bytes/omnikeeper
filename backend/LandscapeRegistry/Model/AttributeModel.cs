@@ -4,7 +4,6 @@ using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.Utils;
 using Npgsql;
-using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -162,22 +161,22 @@ namespace LandscapeRegistry.Model
             return await baseModel.FindAttributesByFullName(name, selection, layerID, trans, atTime);
         }
 
-        public async Task<CIAttribute> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans)
         {
             return await baseModel.InsertAttribute(name, value, ciid, layerID, changeset, trans);
         }
 
-        public async Task<CIAttribute> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans)
+        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans)
         {
             return await baseModel.RemoveAttribute(name, ciid, layerID, changeset, trans);
         }
 
-        public async Task<CIAttribute> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans)
         {
             return await baseModel.InsertCINameAttribute(nameValue, ciid, layerID, changeset, trans);
         }
 
-        public async Task<bool> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, NpgsqlTransaction trans)
+        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, NpgsqlTransaction trans)
         {
             return await baseModel.BulkReplaceAttributes(data, changeset, trans);
         }

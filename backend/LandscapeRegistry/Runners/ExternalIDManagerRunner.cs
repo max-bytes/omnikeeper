@@ -1,7 +1,7 @@
 ﻿using Hangfire.Server;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
-using Landscape.Base.Utils;
+using Landscape.Base.Service;
 using LandscapeRegistry.Utils;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -19,6 +19,7 @@ namespace LandscapeRegistry.Runners
         private readonly ILogger<ExternalIDManagerRunner> logger;
         private readonly IInboundAdapterManager pluginManager;
         private readonly ICIModel ciModel;
+        private readonly CIMappingService ciMappingService;
         private readonly IAttributeModel attributeModel;
         private readonly ILayerModel layerModel;
         private readonly NpgsqlConnection conn;
@@ -26,11 +27,13 @@ namespace LandscapeRegistry.Runners
         // HACK: making this static sucks, find better way, but runner is instantiated anew on each run
         private static readonly IDictionary<string, DateTimeOffset> lastRuns = new ConcurrentDictionary<string, DateTimeOffset>();
 
-        public ExternalIDManagerRunner(IInboundAdapterManager pluginManager, ICIModel ciModel, IAttributeModel attributeModel, ILayerModel layerModel, NpgsqlConnection conn, ILogger<ExternalIDManagerRunner> logger)
+        public ExternalIDManagerRunner(IInboundAdapterManager pluginManager, ICIModel ciModel, CIMappingService ciMappingService, IAttributeModel attributeModel, ILayerModel layerModel, 
+            NpgsqlConnection conn, ILogger<ExternalIDManagerRunner> logger)
         {
             this.logger = logger;
             this.pluginManager = pluginManager;
             this.ciModel = ciModel;
+            this.ciMappingService = ciMappingService;
             this.attributeModel = attributeModel;
             this.layerModel = layerModel;
             this.conn = conn;
@@ -77,7 +80,7 @@ namespace LandscapeRegistry.Runners
                         {
                             using var trans = conn.BeginTransaction();
 
-                            var changes = await manager.Update(ciModel, attributeModel, trans, logger);
+                            var changes = await manager.Update(ciModel, attributeModel, ciMappingService, trans, logger);
 
                             if (changes)
                             {
@@ -87,7 +90,8 @@ namespace LandscapeRegistry.Runners
                             {
                                 trans.Rollback();
                             }
-                        } catch (Exception e)
+                        }
+                        catch (Exception e)
                         {
                             logger.LogError(e, $"An error occured when updating external IDs for OILP {adapterName}");
                         }
@@ -96,7 +100,8 @@ namespace LandscapeRegistry.Runners
                         string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
                         logger.LogInformation($"Done in {elapsedTime}");
                         lastRuns[adapterName] = DateTimeOffset.Now;
-                    } else
+                    }
+                    else
                     {
                         logger.LogInformation($"Skipping external ID update for OILP {adapterName}");
                     }

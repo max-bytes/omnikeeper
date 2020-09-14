@@ -1,9 +1,6 @@
 ﻿using Landscape.Base.Entity;
-using Landscape.Base.Model;
 using Npgsql;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Landscape.Base.Model
@@ -13,7 +10,7 @@ namespace Landscape.Base.Model
         public DateTimeOffset Timestamp { get; private set; }
         public UserInDatabase User { get; private set; }
         public IChangesetModel Model { get; private set; }
-        private Changeset Changeset { get;set; }
+        private Changeset Changeset { get; set; }
 
         public async Task<Changeset> GetChangeset(NpgsqlTransaction trans)
         {

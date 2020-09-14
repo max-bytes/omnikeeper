@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static Landscape.Base.Model.IRelationModel;
 
 namespace Landscape.Base.Inbound
 {
@@ -17,7 +16,8 @@ namespace Landscape.Base.Inbound
         private readonly IInboundAdapterManager pluginManager;
         private readonly ILogger<OnlineAccessProxy> logger;
 
-        public OnlineAccessProxy(ILayerModel layerModel, IInboundAdapterManager pluginManager, ILogger<OnlineAccessProxy> logger) {
+        public OnlineAccessProxy(ILayerModel layerModel, IInboundAdapterManager pluginManager, ILogger<OnlineAccessProxy> logger)
+        {
             this.layerModel = layerModel;
             this.pluginManager = pluginManager;
             this.logger = logger;

@@ -7,12 +7,15 @@ using LandscapeRegistry.Model.Decorators;
 using LandscapeRegistry.Utils;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Tasks.DBInit
@@ -36,10 +39,13 @@ namespace Tasks.DBInit
             var layerModel = new LayerModel(conn);
             var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
+            var traitModel = new RecursiveTraitModel(NullLogger<RecursiveTraitModel>.Instance, conn);
 
             var random = new Random(3);
 
             var user = await DBSetup.SetupUser(userModel, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
+
+            await traitModel.SetRecursiveTraitSet(DefaultTraits.Get(), null);
 
             var numApplicationCIs = 1;
             var numHostCIs = 1;
@@ -78,26 +84,27 @@ namespace Tasks.DBInit
                 Predicate.Build("has_monitoring_module", "has monitoring module", "is assigned to", AnchorState.Active, PredicateModel.DefaultConstraits),
                 Predicate.Build("is_monitored_by", "is monitored by", "monitors", AnchorState.Active, PredicateModel.DefaultConstraits),
                 Predicate.Build("belongs_to_naemon_contactgroup", "belongs to naemon contactgroup", "has member", AnchorState.Active, PredicateModel.DefaultConstraits)
-        };
+            };
 
-            //var automationPredicates = new[] {
-            //    Predicate.Build("has_ansible_group", "has ansible group", "is assigned to", AnchorState.Active)
-            //};
+            var baseDataPredicates = new[] {
+                Predicate.Build("member_of_group", "is member of group", "has member", AnchorState.Active, PredicateModel.DefaultConstraits),
+                Predicate.Build("managed_by", "is managed by", "manages", AnchorState.Active, PredicateModel.DefaultConstraits)
+            };
 
             // create layers
             long cmdbLayerID;
             long monitoringDefinitionsLayerID;
-            long automationLayerID;
+            long activeDirectoryLayerID;
             using (var trans = conn.BeginTransaction())
             {
                 var cmdbLayer = await layerModel.CreateLayer("CMDB", Color.Blue, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
                 cmdbLayerID = cmdbLayer.ID;
                 await layerModel.CreateLayer("Inventory Scan", Color.Violet, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
-                var monitoringDefinitionsLayer = await layerModel.CreateLayer("Monitoring Definitions", Color.MediumOrchid, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
+                var monitoringDefinitionsLayer = await layerModel.CreateLayer("Monitoring Definitions", Color.Orange, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
                 monitoringDefinitionsLayerID = monitoringDefinitionsLayer.ID;
                 await layerModel.CreateLayer("Monitoring", ColorTranslator.FromHtml("#FFE6CC"), AnchorState.Active, ComputeLayerBrainLink.Build("MonitoringPlugin.CLBNaemonMonitoring"), OnlineInboundAdapterLink.Build(""), trans);
-                var automationLayer = await layerModel.CreateLayer("Automation", Color.Gray, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
-                automationLayerID = automationLayer.ID;
+                var automationLayer = await layerModel.CreateLayer("Active Directory", Color.Cyan, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
+                activeDirectoryLayerID = automationLayer.ID;
                 trans.Commit();
             }
 
@@ -136,7 +143,7 @@ namespace Tasks.DBInit
             // create predicates
             using (var trans = conn.BeginTransaction())
             {
-                foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates))//.Concat(automationPredicates))
+                foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates).Concat(baseDataPredicates))
                     await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, AnchorState.Active, PredicateModel.DefaultConstraits, trans);
 
                 trans.Commit();
@@ -285,6 +292,83 @@ namespace Tasks.DBInit
             //    await relationModel.InsertRelation(ciNaemon02, ciAutomationAnsibleHostGroupTest2, "has_ansible_group", automationLayerID, changeset.ID, trans);
             //    trans.Commit();
             //}
+        }
+    }
+
+    public static class DefaultTraits
+    {
+        public static RecursiveTraitSet Get()
+        {
+            return RecursiveTraitSet.Build(
+                    // hosts
+                    RecursiveTrait.Build("host", new List<TraitAttribute>() {
+                        TraitAttribute.Build("hostname",
+                            CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        )
+                    }),
+                    RecursiveTrait.Build("windows_host", new List<TraitAttribute>() {
+                        TraitAttribute.Build("os_family",
+                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
+                                CIAttributeValueConstraintTextRegex.Build(new Regex(@"Windows", RegexOptions.IgnoreCase)))
+                        )
+                    }, requiredTraits: new string[] { "host" }),
+
+                    RecursiveTrait.Build("linux_host", new List<TraitAttribute>() {
+                        TraitAttribute.Build("os_family",
+                            CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
+                                CIAttributeValueConstraintTextRegex.Build(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
+                        )
+                    }, requiredTraits: new string[] { "host" }),
+
+                    // linux disk devices
+                    RecursiveTrait.Build("linux_block_device", new List<TraitAttribute>() {
+                        TraitAttribute.Build("device",
+                            CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        ),
+                        TraitAttribute.Build("mount",
+                            CIAttributeTemplate.BuildFromParams("mount", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        )
+                    }),
+
+                    // linux network_interface
+                    RecursiveTrait.Build("linux_network_interface", new List<TraitAttribute>() {
+                        TraitAttribute.Build("device",
+                            CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        ),
+                        TraitAttribute.Build("type",
+                            CIAttributeTemplate.BuildFromParams("type", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        ),
+                        TraitAttribute.Build("active",
+                            CIAttributeTemplate.BuildFromParams("active", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        )
+                    }),
+
+                    // applications
+                    RecursiveTrait.Build("application", new List<TraitAttribute>() {
+                        TraitAttribute.Build("name",
+                            CIAttributeTemplate.BuildFromParams("application_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        )
+                    }),
+
+                    // automation / ansible
+                    RecursiveTrait.Build("ansible_can_deploy_to_it",
+                        new List<TraitAttribute>() {
+                            TraitAttribute.Build("hostname", // TODO: make this an anyOf[CIAttributeTemplate], or use dependent trait host
+                                CIAttributeTemplate.BuildFromParams("ipAddress",    AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                            )
+                        },
+                        new List<TraitAttribute>() {
+                            TraitAttribute.Build("variables",
+                                CIAttributeTemplate.BuildFromParams("automation.ansible_variables", AttributeValueType.JSON, false)
+                            )
+                        },
+                        new List<TraitRelation>() {
+                            TraitRelation.Build("ansible_groups",
+                                RelationTemplate.Build("has_ansible_group", 1, null)
+                            )
+                        }
+                    )
+                );
         }
     }
 }

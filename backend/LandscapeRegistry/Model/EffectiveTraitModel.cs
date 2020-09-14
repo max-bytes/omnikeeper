@@ -14,14 +14,14 @@ using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model
 {
-    public class TraitModel : ITraitModel
+    public class EffectiveTraitModel : IEffectiveTraitModel
     {
         private readonly NpgsqlConnection conn;
         private readonly ITraitsProvider traitsProvider;
         private readonly ICIModel ciModel;
         private readonly IRelationModel relationModel;
-        private readonly ILogger<TraitModel> logger;
-        public TraitModel(ICIModel ciModel, IRelationModel relationModel, ITraitsProvider traitsProvider, ILogger<TraitModel> logger, NpgsqlConnection connection)
+        private readonly ILogger<EffectiveTraitModel> logger;
+        public EffectiveTraitModel(ICIModel ciModel, IRelationModel relationModel, ITraitsProvider traitsProvider, ILogger<EffectiveTraitModel> logger, NpgsqlConnection connection)
         {
             this.traitsProvider = traitsProvider;
             conn = connection;
@@ -32,44 +32,43 @@ namespace LandscapeRegistry.Model
 
         public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetForCIs(IEnumerable<MergedCI> cis, string[] traitNames, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var traits = traitsProvider.GetTraits();
+            var traits = (await traitsProvider.GetActiveTraitSet(trans, atTime)).Traits;
 
             var selectedTraits = traits.Where(t => traitNames.Contains(t.Key)).Select(t => t.Value);
 
             var candidates = cis.SelectMany(ci => selectedTraits.Select(t => new EffectiveTraitCandidate(t, ci))).ToList();
-            var ret = await ResolveETCandidates(candidates, traits, trans, atTime);
+            var ret = await ResolveETCandidates(candidates, trans, atTime);
             return ret;
         }
 
         public async Task<EffectiveTraitSet> CalculateEffectiveTraitSetForCI(MergedCI ci, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var traits = traitsProvider.GetTraits();
+            var traits = (await traitsProvider.GetActiveTraitSet(trans, atTime)).Traits;
 
             var candidates = traits.Values.Select(t => new EffectiveTraitCandidate(t, ci)).ToList();
-            var ret = await ResolveETCandidates(candidates, traits, trans, atTime);
+            var ret = await ResolveETCandidates(candidates, trans, atTime);
             return ret.FirstOrDefault() ?? EffectiveTraitSet.Build(ci, ImmutableList<EffectiveTrait>.Empty);
         }
 
         public async Task<EffectiveTrait> CalculateEffectiveTraitForCI(MergedCI ci, Trait trait, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var traits = traitsProvider.GetTraits();
-            var ret = await ResolveETCandidates(new List<EffectiveTraitCandidate>() { new EffectiveTraitCandidate(trait, ci) }, traits, trans, atTime);
+            var ret = await ResolveETCandidates(new List<EffectiveTraitCandidate>() { new EffectiveTraitCandidate(trait, ci) }, trans, atTime);
             return ret.FirstOrDefault()?.EffectiveTraits[trait.Name]; // TODO: this whole thing can be structured better
         }
 
-        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid, bool> ciFilter = null)
+
+        public async Task<IDictionary<Guid, EffectiveTrait>> CalculateEffectiveTraitsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid, bool> ciFilter = null)
         {
-            var traits = traitsProvider.GetTraits();
+            var traits = (await traitsProvider.GetActiveTraitSet(trans, atTime)).Traits;
             var trait = traits.GetValueOrDefault(traitName);
             if (trait == null) return null; // trait not found by name
-            return await CalculateEffectiveTraitSetsForTrait(trait, layerSet, trans, atTime, ciFilter);
+            return await CalculateEffectiveTraitsForTrait(trait, layerSet, trans, atTime, ciFilter);
         }
 
-        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid,bool> ciFilter = null)
+        public async Task<IDictionary<Guid, EffectiveTrait>> CalculateEffectiveTraitsForTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid, bool> ciFilter)
         {
             if (layerSet.IsEmpty)
-                return ImmutableArray<EffectiveTraitSet>.Empty; // return empty, an empty layer list can never produce any traits
-
+                return ImmutableDictionary<Guid, EffectiveTrait>.Empty; // return empty, an empty layer list can never produce any traits
 
             // do a precursor filtering based on required attribute names
             var requiredAttributeNames = trait.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
@@ -112,111 +111,33 @@ namespace LandscapeRegistry.Model
             }
 
             if (candidateCIIDs.IsEmpty())
-                return ImmutableArray<EffectiveTraitSet>.Empty;
+                return ImmutableDictionary<Guid, EffectiveTrait>.Empty;
 
             // now do a full pass to check which ci's REALLY fulfill the trait's requirements
             var cis = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(candidateCIIDs), layerSet, false, trans, atTime);
 
             var candidates = cis.Select(ci => new EffectiveTraitCandidate(trait, ci)).ToList();
-            var traits = traitsProvider.GetTraits();
-            var ret = await ResolveETCandidates(candidates, traits, trans, atTime);
-            return ret;
+            var ts = await ResolveETCandidates(candidates, trans, atTime);
+            return ts.ToDictionary(ets => ets.UnderlyingCI.ID, ets => ets.EffectiveTraits[trait.Name]);
         }
 
-        private async Task<IEnumerable<EffectiveTraitSet>> ResolveETCandidates(IEnumerable<EffectiveTraitCandidate> candidates, 
-            IImmutableDictionary<string, Trait> traits, NpgsqlTransaction trans, TimeThreshold atTime)
+        private async Task<IEnumerable<EffectiveTraitSet>> ResolveETCandidates(IEnumerable<EffectiveTraitCandidate> candidates, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            // HACK: this is probably a pathetic, iterative implementation of a dependency graph resolver; it works, but is probably not optimal
-            // consider researching for a better implementation
-            // maybe implement https://www.electricmonk.nl/docs/dependency_resolving_algorithm/dependency_resolving_algorithm.html, which is a recursive algorithm
-
-            // TODO: or even better: consider resolving dependent traits once at definition time, create resulting, flat traits
-            var requiresAdditionalPass = false;
-            var loopDetected = false;
-            var unresolvedCandidates = new List<EffectiveTraitCandidate>(candidates);
-            var lookup = candidates.ToDictionary(c => (c.CI.ID, c.Trait.Name), c => c);
-            do
+            var resolved = new List<(EffectiveTraitCandidate candidate, EffectiveTrait result)>();
+            foreach (var c in candidates)
             {
-                requiresAdditionalPass = false;
-                var addedNewCandidates = false;
-                var numResolved = unresolvedCandidates.Count;
-                for (int i = 0;i < unresolvedCandidates.Count;i++)
-                {
-                    var candidate = unresolvedCandidates[i];
-                    var newCandidates = await TryToResolve(candidate, traits, lookup, trans, atTime);
-                    if (newCandidates != null && newCandidates.Count() > 0)
-                    {
-                        addedNewCandidates = true;
-                        unresolvedCandidates.AddRange(newCandidates);
-                        foreach(var nc in newCandidates) lookup.Add((nc.CI.ID, nc.Trait.Name), nc);
-                    }
-                    if (candidate.IsResolved)
-                    {
-                        unresolvedCandidates.RemoveAt(i--);
-                    }
-                    else
-                        requiresAdditionalPass = true;
-                }
-
-                // check for endless loop -> loop in dependency tree
-                if (requiresAdditionalPass && unresolvedCandidates.Count >= numResolved && !addedNewCandidates)
-                { // loop detected!
-                    loopDetected = true;
-                }
-            } while (requiresAdditionalPass && !loopDetected);
-
-            if (loopDetected)
-            { // in case of loop, resolve all unresolveds
-                foreach (var uc in unresolvedCandidates) uc.SetResolved(null);
+                var r = await Resolve(c, trans, atTime);
+                if (r != null)
+                    resolved.Add((c, r));
             }
-            // from here on, assumes every candidate is resolved
 
-            return candidates.Where(c => c.ET != null).GroupBy(c => c.CI).Select(t => EffectiveTraitSet.Build(t.Key, t.Select(t => t.ET)));
+            return resolved.GroupBy(c => c.candidate.CI).Select(t => EffectiveTraitSet.Build(t.Key, t.Select(t => t.result)));
         }
 
-        private async Task<IEnumerable<EffectiveTraitCandidate>> TryToResolve(EffectiveTraitCandidate et, IImmutableDictionary<string, Trait> traits,
-            IDictionary<(Guid ciid, string traitName), EffectiveTraitCandidate> all, NpgsqlTransaction trans, TimeThreshold atTime)
+        private async Task<EffectiveTrait> Resolve(EffectiveTraitCandidate et, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            if (et.IsResolved) throw new Exception("Trying to resolve an already resolved ETCandidate");
-
             var ci = et.CI;
             var trait = et.Trait;
-
-            // check for dependent traits, only continue here if all dependent traits are in resolved
-            var notFoundTraits = new List<EffectiveTraitCandidate>();
-            var requiredTraits = new List<EffectiveTraitCandidate>();
-            foreach(var rtName in trait.RequiredTraits)
-            {
-                all.TryGetValue((ci.ID, rtName), out var rt);
-                if (rt == null)
-                {
-                    if (!traits.TryGetValue(rtName, out var missingTrait))
-                    {
-                        logger.LogWarning($"Could not resolve dependent trait with name {rtName}");
-                    }
-                    notFoundTraits.Add(new EffectiveTraitCandidate(missingTrait, ci));
-                } else
-                {
-                    requiredTraits.Add(rt);
-                }
-            }
-            if (notFoundTraits.Count > 0)
-            { // not all required traits are found, add them to the list of traits to resolve
-                return notFoundTraits;
-            }
-            var hasUnresolvedRequiredTraits = requiredTraits.Any(rt => !rt.IsResolved);
-            if (hasUnresolvedRequiredTraits)
-            { // not all required traits are resolved yet, defer resolving of this trait
-                return null;
-            }
-            if (requiredTraits.Any(rt => rt.ET == null))
-            { // there exist required traits that are NOT fulfilled -> this trait cannot be fulfilled either, resolve and return
-                et.SetResolved(null);
-                return null;
-            }
-
-            // assume dependent traits are resolved
-            var resolvedDependentTraitNames = requiredTraits.Select(rt => rt.Trait.Name).ToList();
 
             var requiredEffectiveTraitAttributes = trait.RequiredAttributes.Select(ta =>
             {
@@ -224,7 +145,7 @@ namespace LandscapeRegistry.Model
                 var (foundAttribute, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
                 return (traitAttributeIdentifier, foundAttribute, checks);
             });
-            IEnumerable<(string traitRelationIdentifier, IEnumerable<MergedRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)> requiredEffectiveTraitRelations 
+            IEnumerable<(string traitRelationIdentifier, IEnumerable<MergedRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)> requiredEffectiveTraitRelations
                 = new List<(string traitRelationIdentifier, IEnumerable<MergedRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)>();
             if (trait.RequiredRelations.Count > 0)
             {
@@ -238,7 +159,7 @@ namespace LandscapeRegistry.Model
                 });
             }
 
-            var isTraitApplicable = requiredEffectiveTraitAttributes.All(t => t.checks.Errors.IsEmpty()) 
+            var isTraitApplicable = requiredEffectiveTraitAttributes.All(t => t.checks.Errors.IsEmpty())
                 && requiredEffectiveTraitRelations.All(t => t.checks.Errors.IsEmpty());
 
             if (isTraitApplicable)
@@ -253,22 +174,19 @@ namespace LandscapeRegistry.Model
 
                 var resolvedET = EffectiveTrait.Build(trait,
                     requiredEffectiveTraitAttributes.Concat(optionalEffectiveTraitAttributes).ToDictionary(t => t.traitAttributeIdentifier, t => t.foundAttribute),
-                    requiredEffectiveTraitRelations.ToDictionary(t => t.traitRelationIdentifier, t => t.mergedRelatedCIs),
-                    resolvedDependentTraitNames);
-                et.SetResolved(resolvedET);
-            } else
-            {
-                et.SetResolved(null);
+                    requiredEffectiveTraitRelations.ToDictionary(t => t.traitRelationIdentifier, t => t.mergedRelatedCIs));
+                return resolvedET;
             }
-            return null;
+            else
+            {
+                return null;
+            }
         }
 
         private class EffectiveTraitCandidate
         {
             public EffectiveTraitCandidate(Trait trait, MergedCI ci)
             {
-                ET = null;
-                IsResolved = false;
                 Trait = trait;
                 CI = ci;
             }
@@ -277,12 +195,6 @@ namespace LandscapeRegistry.Model
             public MergedCI CI { get; }
 
             public EffectiveTrait ET { get; private set; }
-            public bool IsResolved { get; private set; }
-            public void SetResolved(EffectiveTrait et)
-            {
-                IsResolved = true;
-                ET = et;
-            }
         }
     }
 }

@@ -1,14 +1,15 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Service;
 using Landscape.Base.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
-using static Landscape.Base.Model.IRelationModel;
 
 namespace Landscape.Base.Inbound
 {
@@ -61,7 +62,8 @@ namespace Landscape.Base.Inbound
             return ID.ToString();
         }
 
-        public override bool Equals([AllowNull] object other) {
+        public override bool Equals([AllowNull] object other)
+        {
             try { return Equals((ExternalIDGuid)other); } catch (InvalidCastException) { return false; };
         }
         public bool Equals([AllowNull] ExternalIDGuid other) => ID == other.ID;
@@ -75,7 +77,7 @@ namespace Landscape.Base.Inbound
 
     public interface IExternalIDManager
     {
-        Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, NpgsqlTransaction trans, ILogger logger);
+        Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, NpgsqlTransaction trans, ILogger logger);
         TimeSpan PreferredUpdateRate { get; }
     }
 
@@ -119,6 +121,11 @@ namespace Landscape.Base.Inbound
         public interface IConfig
         {
             public string BuilderName { get; }
+
+            public static MyJSONSerializer<IConfig> Serializer = new MyJSONSerializer<IConfig>(new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Objects
+            });
         }
 
         IExternalIDManager GetExternalIDManager();

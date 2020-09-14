@@ -6,7 +6,6 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Landscape.Base.Inbound
@@ -16,7 +15,7 @@ namespace Landscape.Base.Inbound
     /// a) to ensure that the external CIs exist also internally and have a proper CIID
     /// b) keep the mapping table between internal and external IDs up-to-date
     /// </summary>
-    public abstract class ExternalIDManager<EID> : IExternalIDManager where EID : struct,IExternalID
+    public abstract class ExternalIDManager<EID> : IExternalIDManager where EID : struct, IExternalID
     {
         private readonly ScopedExternalIDMapper<EID> mapper;
 
@@ -30,7 +29,7 @@ namespace Landscape.Base.Inbound
 
         protected abstract Task<IEnumerable<EID>> GetExternalIDs();
 
-        public async Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, NpgsqlTransaction trans, ILogger logger)
+        public async Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, NpgsqlTransaction trans, ILogger logger)
         {
             await mapper.Setup();
 
@@ -49,14 +48,15 @@ namespace Landscape.Base.Inbound
             }
 
             // add any (new) CIs that don't exist yet, and add to mapper
+            var ciMappingContext = new CIMappingService.CIMappingContext(attributeModel, TimeThreshold.BuildLatest());
             foreach (var externalID in externalIDs)
             {
                 if (!mapper.ExistsInternally(externalID))
                 {
                     logger.LogInformation($"CI with external ID {externalID} does not exist internally, creating...");
-
+                    
                     ICIIdentificationMethod identificationMethod = mapper.GetIdentificationMethod(externalID);
-                    var foundCIID = await CIMappingService.TryToMatch(externalID.ConvertToString(), identificationMethod, attributeModel, null, TimeThreshold.BuildLatest(), trans, logger);
+                    var foundCIID = await ciMappingService.TryToMatch(externalID.ConvertToString(), identificationMethod, ciMappingContext, trans, logger);
 
                     Guid ciid;
                     if (foundCIID.HasValue)
@@ -68,9 +68,10 @@ namespace Landscape.Base.Inbound
                             ciid = await ciModel.CreateCI(foundCIID.Value, trans);
                             logger.LogInformation($"Created CI with CIID {ciid}");
                         }
-                    } else
+                    }
+                    else
                     {
-                        ciid = await ciModel.CreateCI(trans);
+                        ciid = await ciModel.CreateCI(trans); // creating new CI with new CIID
                         logger.LogInformation($"Created CI with CIID {ciid}");
                     }
 

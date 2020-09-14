@@ -31,7 +31,7 @@ function CI(props) {
       </Row>
     </Tab.Pane> },
     { menuItem: 'Relations', render: () => <Tab.Pane>
-      <CIRelations timeThreshold={props.timeThreshold} related={props.ci.related} isEditable={props.isEditable} ciIdentity={props.ci.id} />
+      <CIRelations timeThreshold={props.timeThreshold} isEditable={props.isEditable} ciIdentity={props.ci.id} />
     </Tab.Pane> },
     { menuItem: 'Effective Traits', render: () => <Tab.Pane>
       <EffectiveTraits timeThreshold={props.timeThreshold} traits={props.ci.effectiveTraits} ciIdentity={props.ci.id} />

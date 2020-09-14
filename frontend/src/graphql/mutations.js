@@ -161,6 +161,11 @@ CREATE_CI: gql`
   }
   `,
   
+  SET_TRAITSET: gql`
+  mutation SetTraitSet($traitSet: String!) {
+    setTraitSet(traitSet: $traitSet)
+  }
+  `,
 
   UPSERT_PREDICATE: gql`
   mutation UpsertPredicate($predicate: UpsertPredicateInputType!) {

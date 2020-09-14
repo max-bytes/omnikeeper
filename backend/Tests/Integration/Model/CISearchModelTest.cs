@@ -50,7 +50,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var layerModel = new LayerModel(conn);
-            var traitModel = new TraitModel(ciModel, relationModel, traitsProvider, NullLogger<TraitModel>.Instance, conn);
+            var traitModel = new EffectiveTraitModel(ciModel, relationModel, traitsProvider, NullLogger<EffectiveTraitModel>.Instance, conn);
             var searchModel = new CISearchModel(attributeModel, ciModel, traitModel, layerModel);
             var user = await DBSetup.SetupUser(userModel);
             Guid ciid1;

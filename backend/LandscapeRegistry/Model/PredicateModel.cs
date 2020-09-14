@@ -1,12 +1,10 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
-using Newtonsoft.Json;
 using Npgsql;
 using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model
@@ -137,7 +135,8 @@ namespace LandscapeRegistry.Model
                     {
                         if (!s.IsDBNull(4))
                             constraints = s.GetFieldValue<PredicateConstraints>(4);
-                    } catch (System.Text.Json.JsonException e)
+                    }
+                    catch (System.Text.Json.JsonException e)
                     {
                         // TODO: error handling?
                     }

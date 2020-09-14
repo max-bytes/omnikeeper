@@ -2,6 +2,7 @@
 using GraphQL;
 using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Service;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using LandscapeRegistry.GraphQL;
@@ -38,16 +39,20 @@ namespace Tests.Integration.GraphQL
             Services.Register<ITemplateModel, TemplateModel>();
             Services.Register<IPredicateModel, PredicateModel>();
             Services.Register<IMemoryCacheModel>(() => null);
-            Services.Register<ITraitModel, TraitModel>();
+            Services.Register<IEffectiveTraitModel, EffectiveTraitModel>();
             Services.Register<IOIAConfigModel, OIAConfigModel>();
             Services.Register<IODataAPIContextModel, ODataAPIContextModel>();
+            Services.Register<IRecursiveTraitModel, RecursiveTraitModel>();
 
             Services.Register<ITraitsProvider, TraitsProvider>();
             Services.Register<ITemplatesProvider, TemplatesProvider>();
 
-            Services.Register<ILogger<TraitModel>>(() => NullLogger<TraitModel>.Instance);
+            Services.Register<ILogger<EffectiveTraitModel>>(() => NullLogger<EffectiveTraitModel>.Instance);
             Services.Register<ILogger<OIAConfigModel>>(() => NullLogger<OIAConfigModel>.Instance);
             Services.Register<ILogger<ODataAPIContextModel>>(() => NullLogger<ODataAPIContextModel>.Instance);
+            Services.Register<ILogger<RecursiveTraitModel>>(() => NullLogger<RecursiveTraitModel>.Instance);
+
+            Services.Register<CIMappingService, CIMappingService>();
 
             var authorizationService = new Mock<IRegistryAuthorizationService>();
             Services.Register<IRegistryAuthorizationService>(() => authorizationService.Object);

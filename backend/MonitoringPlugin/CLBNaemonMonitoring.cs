@@ -32,9 +32,9 @@ namespace MonitoringPlugin
     {
         private readonly IRelationModel relationModel;
         private readonly ICIModel ciModel;
-        private readonly ITraitModel traitModel;
+        private readonly IEffectiveTraitModel traitModel;
 
-        public CLBNaemonMonitoring(ICIModel ciModel, IBaseAttributeModel atributeModel, ILayerModel layerModel, ITraitModel traitModel, IRelationModel relationModel,
+        public CLBNaemonMonitoring(ICIModel ciModel, IBaseAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
             IPredicateModel predicateModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
             : base(atributeModel, layerModel, predicateModel, changesetModel, userModel, conn)
         {
@@ -53,13 +53,13 @@ namespace MonitoringPlugin
             belongsToNaemonContactgroup
         };
 
-        private readonly Trait moduleTrait = Trait.Build("naemon_service_module", new List<TraitAttribute>() {
+        private readonly RecursiveTrait moduleRecursiveTrait = RecursiveTrait.Build("naemon_service_module", new List<TraitAttribute>() {
             TraitAttribute.Build("template",
                 CIAttributeTemplate.BuildFromParams("naemon.config_template", AttributeValueType.MultilineText, null, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
-        private readonly Trait naemonInstanceTrait = Trait.Build("naemon_instance", new List<TraitAttribute>() {
+        private readonly RecursiveTrait naemonInstanceRecursiveTrait = RecursiveTrait.Build("naemon_instance", new List<TraitAttribute>() {
             TraitAttribute.Build("name",
                 CIAttributeTemplate.BuildFromParams("naemon.instance_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
@@ -76,13 +76,13 @@ namespace MonitoringPlugin
             )
         });
 
-        private readonly Trait contactgroupTrait = Trait.Build("naemon_contactgroup", new List<TraitAttribute>() {
+        private readonly RecursiveTrait contactgroupRecursiveTrait = RecursiveTrait.Build("naemon_contactgroup", new List<TraitAttribute>() {
             TraitAttribute.Build("name",
                 CIAttributeTemplate.BuildFromParams("naemon.contactgroup_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
-        public override Trait[] DefinedTraits => new Trait[] { moduleTrait, naemonInstanceTrait, contactgroupTrait };
+        public override RecursiveTraitSet DefinedTraits => RecursiveTraitSet.Build(moduleRecursiveTrait, naemonInstanceRecursiveTrait, contactgroupRecursiveTrait);
 
         public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger)
         {
@@ -92,6 +92,10 @@ namespace MonitoringPlugin
             var layerSetMonitoringDefinitionsOnly = await layerModel.BuildLayerSet(new[] { "Monitoring Definitions" }, trans);
             // TODO: make configurable
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
+
+            var naemonInstanceTrait = TraitSet.Traits["naemon_instance"];
+            var contactgroupTrait = TraitSet.Traits["naemon_contactgroup"];
+            var moduleTrait = TraitSet.Traits["naemon_service_module"];
 
             var timeThreshold = TimeThreshold.BuildLatestAtTime(changesetProxy.Timestamp);
 
@@ -112,6 +116,7 @@ namespace MonitoringPlugin
             if (monitoringModuleCIIDs.IsEmpty()) return true;
             var monitoringModuleCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoringModuleCIIDs), layerSetMonitoringDefinitionsOnly, false, trans, timeThreshold))
                 .ToDictionary(ci => ci.ID);
+
 
             logger.LogDebug("Prep");
 
@@ -163,7 +168,9 @@ namespace MonitoringPlugin
                     {
                         try
                         {
-                            return JsonConvert.DeserializeObject<INaemonFragmentTemplate[]>(ttt.templateSegment);
+                            var r = JsonConvert.DeserializeObject<INaemonFragmentTemplate[]>(ttt.templateSegment);
+                            if (r == null) return new INaemonFragmentTemplate[0];
+                            return r;
                         }
                         catch (Exception e)
                         {
@@ -203,11 +210,11 @@ namespace MonitoringPlugin
 
             // assign monitored cis to naemon instances
             var monitoredByCIIDFragments = new List<BulkRelationDataPredicateScope.Fragment>();
-            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitSetsForTrait(naemonInstanceTrait, layerSetAll, trans, timeThreshold);
+            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTrait(naemonInstanceTrait, layerSetAll, trans, timeThreshold);
             foreach (var naemonInstanceTS in naemonInstancesTS)
                 foreach (var monitoredCI in monitoredCIs.Values)
-                    if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.EffectiveTraits[naemonInstanceTrait.Name]))
-                        monitoredByCIIDFragments.Add(BulkRelationDataPredicateScope.Fragment.Build(monitoredCI.ID, naemonInstanceTS.UnderlyingCI.ID));
+                    if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value))
+                        monitoredByCIIDFragments.Add(BulkRelationDataPredicateScope.Fragment.Build(monitoredCI.ID, naemonInstanceTS.Key));
             await relationModel.BulkReplaceRelations(BulkRelationDataPredicateScope.Build(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, trans);
             logger.LogDebug("Assigned CIs to naemon instances");
 
@@ -296,13 +303,13 @@ namespace MonitoringPlugin
         {
             private readonly IRelationModel relationModel;
             private readonly ICIModel ciModel;
-            private readonly ITraitModel traitModel;
+            private readonly IEffectiveTraitModel traitModel;
             private readonly ILogger logger;
             private readonly CLBErrorHandler errorHandler;
             private Dictionary<Guid, IEnumerable<MergedCI>> contactGroupsMap;
             private readonly Dictionary<Guid, string> contactGroupNames = new Dictionary<Guid, string>();
 
-            public ContactgroupResolver(IRelationModel relationModel, ICIModel ciModel, ITraitModel traitModel, ILogger logger, CLBErrorHandler errorHandler)
+            public ContactgroupResolver(IRelationModel relationModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILogger logger, CLBErrorHandler errorHandler)
             {
                 this.relationModel = relationModel;
                 this.ciModel = ciModel;

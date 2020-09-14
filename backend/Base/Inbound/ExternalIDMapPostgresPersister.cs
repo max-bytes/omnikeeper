@@ -1,5 +1,4 @@
 ﻿using Landscape.Base.Utils;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using System;
@@ -88,7 +87,8 @@ namespace Landscape.Base.Inbound
             cmdTruncate.ExecuteNonQuery();
 
             // TODO: performance improvements -> use COPY feature of postgres
-            foreach (var kv in int2ext) {
+            foreach (var kv in int2ext)
+            {
                 using var command = new NpgsqlCommand(@$"INSERT INTO {fullTableName} (ci_id, external_id) 
                     VALUES (@ci_id, @external_id)", conn, trans);
 

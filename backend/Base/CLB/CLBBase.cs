@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Service;
 using Landscape.Base.Utils;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -33,7 +34,18 @@ namespace Landscape.Base.CLB
         public string Name => GetType().FullName;
 
         public abstract string[] RequiredPredicates { get; }
-        public abstract Trait[] DefinedTraits { get; }
+        public abstract RecursiveTraitSet DefinedTraits { get; }
+
+        private TraitSet cachedTraitSet = null;
+        protected TraitSet TraitSet
+        {
+            get
+            {
+                if (cachedTraitSet == null)
+                    cachedTraitSet = RecursiveTraitService.FlattenRecursiveTraitSet(DefinedTraits);
+                return cachedTraitSet;
+            }
+        }
 
         public async Task<bool> Run(CLBSettings settings, ILogger logger)
         {

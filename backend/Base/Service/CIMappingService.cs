@@ -8,22 +8,31 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Landscape.Base.Service
 {
     public class CIMappingService
     {
-        public static async Task<Guid?> TryToMatch(string ciCandidateID, ICIIdentificationMethod method, IAttributeModel attributeModel,
-            IDictionary<Guid, Guid> tempCIMappingContext, TimeThreshold timeThreshold, NpgsqlTransaction trans, ILogger logger)
+        public async Task<Guid?> TryToMatch(string ciCandidateID, ICIIdentificationMethod method, CIMappingContext ciMappingContext, NpgsqlTransaction trans, ILogger logger)
         {
             Guid? ciid = null;
             switch (method)
             {
                 case CIIdentificationMethodByData d: // use identifiable data for finding out CIID
-                    var dataIdentifier = new DataIdentifier(attributeModel, timeThreshold);
-                    var candidateCIIDs = await dataIdentifier.Identify(d, trans);
+
+                    var candidateCIIDs = new List<Guid>();
+                    var isFirst = true;
+                    foreach (var f in d.IdentifiableFragments)
+                    {
+                        var ma = await ciMappingContext.GetMergedAttributesByAttributeNameAndValue(f.Name, f.Value, d.SearchableLayers, trans);
+                        if (isFirst)
+                            candidateCIIDs = new List<Guid>(ma.Keys);
+                        else
+                            candidateCIIDs = candidateCIIDs.Intersect(ma.Keys).ToList();
+                        isFirst = false;
+                    }
+
                     if (!candidateCIIDs.IsEmpty())
                     { // we found at least one fitting ci, use that // TODO: order matters!!! Find out how to deal with that
                         if (candidateCIIDs.Count > 1)
@@ -41,9 +50,7 @@ namespace Landscape.Base.Service
 
                     break;
                 case CIIdentificationMethodByTemporaryCIID t:
-                    if (tempCIMappingContext == null)
-                        throw new Exception($"Cannot match using temporary CIIDs when tempCIMappingContext is null");
-                    if (!tempCIMappingContext.TryGetValue(t.CIID, out ciid))
+                    if (!ciMappingContext.TryGetMappedTemp2FinalCIID(t.CIID, out ciid))
                         throw new Exception($"Could not find temporary CIID {t.CIID} while trying to match CICandidate {ciCandidateID}");
                     break;
                 case CIIdentificationMethodByCIID c:
@@ -52,50 +59,56 @@ namespace Landscape.Base.Service
                 case CIIdentificationMethodNoop _:
                     break;
             }
+
             return ciid;
         }
 
-        private class DataIdentifier
+        /// <summary>
+        /// class is used to store intermediate data while mapping multiple CIs, such as cached data
+        /// </summary>
+        public class CIMappingContext
         {
-            private readonly IDictionary<string, IImmutableDictionary<Guid, MergedCIAttribute>> attributeCache = new Dictionary<string, IImmutableDictionary<Guid, MergedCIAttribute>>();
             private readonly IAttributeModel attributeModel;
             private readonly TimeThreshold atTime;
 
-            public DataIdentifier(IAttributeModel attributeModel, TimeThreshold atTime)
+            private readonly IDictionary<string, IImmutableDictionary<Guid, MergedCIAttribute>> attributeCache = new Dictionary<string, IImmutableDictionary<Guid, MergedCIAttribute>>();
+            private readonly IDictionary<Guid, Guid> temp2finalCIIDMapping = new Dictionary<Guid, Guid>();
+
+
+            public CIMappingContext(IAttributeModel attributeModel, TimeThreshold atTime)
             {
                 this.attributeModel = attributeModel;
                 this.atTime = atTime;
             }
 
-            private async Task<IDictionary<Guid, MergedCIAttribute>> GetMergedAttributesByAttributeNameAndValue(string name, IAttributeValue value, LayerSet searchableLayers, NpgsqlTransaction trans)
+            internal async Task<IDictionary<Guid, MergedCIAttribute>> GetMergedAttributesByAttributeNameAndValue(string name, IAttributeValue value, LayerSet searchableLayers, NpgsqlTransaction trans)
             {
                 if (!attributeCache.ContainsKey(name))
                 {
                     attributeCache[name] = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsSelection(), searchableLayers, trans, atTime);
                 }
+                // TODO: performance improvement: instead of doing a where() based linear search, use a lookup
                 var found = attributeCache[name].Where(kv => kv.Value.Attribute.Value.Equals(value)).ToDictionary(kv => kv.Key, kv => kv.Value);
                 return found;
             }
 
-            public async Task<IList<Guid>> Identify(CIIdentificationMethodByData d, NpgsqlTransaction trans)
+            public bool TryGetMappedTemp2FinalCIID(Guid temp, out Guid final)
             {
-                var candidateCIIDs = new List<Guid>();
-                var isFirst = true;
-                foreach (var f in d.IdentifiableFragments)
-                {
-                    var ma = await GetMergedAttributesByAttributeNameAndValue(f.Name, f.Value, d.SearchableLayers, trans);
-                    if (isFirst)
-                        candidateCIIDs = new List<Guid>(ma.Keys);
-                    else
-                        candidateCIIDs = candidateCIIDs.Intersect(ma.Keys).ToList();
-                    isFirst = false;
-                }
-                return candidateCIIDs;
+                return temp2finalCIIDMapping.TryGetValue(temp, out final);
+            }
+            public bool TryGetMappedTemp2FinalCIID(Guid temp, out Guid? final)
+            {
+                return temp2finalCIIDMapping.TryGetValue(temp, out final);
+            }
+
+            public void AddTemp2FinallCIIDMapping(Guid temp, Guid final)
+            {
+                temp2finalCIIDMapping.Add(temp, final);
             }
         }
     }
 
-    public class CICandidateAttributeData 
+    public class CICandidateAttributeData
     {
         public class Fragment
         {

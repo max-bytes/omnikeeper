@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static Landscape.Base.Model.IRelationModel;
 
 namespace Landscape.Base.Model
 {
@@ -55,5 +54,6 @@ namespace Landscape.Base.Model
 
         Task<Changeset> CreateChangeset(long userID, NpgsqlTransaction trans, DateTimeOffset? timestamp = null);
         Task<Changeset> GetChangeset(Guid id, NpgsqlTransaction trans);
-        Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, NpgsqlTransaction trans, int? limit = null);   }
+        Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, NpgsqlTransaction trans, int? limit = null);
+    }
 }

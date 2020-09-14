@@ -2,7 +2,6 @@
 using Landscape.Base.Entity.DTO;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
-using LandscapeRegistry.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -19,19 +18,19 @@ namespace LandscapeRegistry.Controllers
     [Authorize]
     public class TraitController : ControllerBase
     {
-        private readonly ITraitModel traitModel;
+        private readonly IEffectiveTraitModel traitModel;
 
-        public TraitController(ITraitModel traitModel)
+        public TraitController(IEffectiveTraitModel traitModel)
         {
             this.traitModel = traitModel;
         }
 
         [HttpGet("getEffectiveTraitSetsForTraitName")]
-        public async Task<ActionResult<IEnumerable<EffectiveTraitSetDTO>>> GetEffectiveTraitSetsForTraitName([FromQuery, Required]long[] layerIDs, [FromQuery, Required]string traitName, [FromQuery]DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IDictionary<Guid, EffectiveTraitDTO>>> GetEffectiveTraitsForTraitName([FromQuery, Required] long[] layerIDs, [FromQuery, Required] string traitName, [FromQuery] DateTimeOffset? atTime = null)
         {
             var layerset = new LayerSet(layerIDs);
-            var traitSets = await traitModel.CalculateEffectiveTraitSetsForTraitName(traitName, layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
-            return Ok(traitSets.Select(traitSet => EffectiveTraitSetDTO.Build(traitSet)));
+            var traitSets = await traitModel.CalculateEffectiveTraitsForTraitName(traitName, layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
+            return Ok(traitSets.ToDictionary(kv => kv.Key, kv => EffectiveTraitDTO.Build(kv.Value)));
         }
     }
 }

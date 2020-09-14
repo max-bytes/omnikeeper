@@ -1,14 +1,9 @@
-﻿using DotLiquid.Util;
-using Landscape.Base.Entity;
+﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
-using Landscape.Base.Utils;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Service
 {
@@ -49,6 +44,13 @@ namespace LandscapeRegistry.Service
             new CancellationChangeToken(memoryCache.GetOrCreate(PredicatesChangeToken(), (ce) => new CancellationTokenSource()).Token);
         public static void CancelPredicatesChangeToken(this IMemoryCache memoryCache) =>
             CancelAndRemoveChangeToken(memoryCache, PredicatesChangeToken());
+
+        private static string TraitsChangeToken() => $"ct_traits";
+        public static string Traits() => $"traits";
+        public static CancellationChangeToken GetTraitsCancellationChangeToken(this IMemoryCache memoryCache) =>
+            new CancellationChangeToken(memoryCache.GetOrCreate(TraitsChangeToken(), (ce) => new CancellationTokenSource()).Token);
+        public static void CancelTraitsChangeToken(this IMemoryCache memoryCache) =>
+            CancelAndRemoveChangeToken(memoryCache, TraitsChangeToken());
 
 
         public static string LayerSet(string[] layerNames) => $"layerSet_{string.Join(',', layerNames)}";

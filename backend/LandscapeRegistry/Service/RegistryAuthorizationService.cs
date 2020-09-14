@@ -1,5 +1,4 @@
 ﻿using Landscape.Base.Entity;
-using Landscape.Base.Model;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;

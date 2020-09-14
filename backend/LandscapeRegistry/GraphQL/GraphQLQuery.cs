@@ -2,8 +2,8 @@
 using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
+using LandscapeRegistry.Model;
 using LandscapeRegistry.Service;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +14,7 @@ namespace LandscapeRegistry.GraphQL
     {
         public GraphQLQuery(ICIModel ciModel, ILayerModel layerModel, IPredicateModel predicateModel, IMemoryCacheModel memoryCacheModel,
             IChangesetModel changesetModel, ICISearchModel ciSearchModel, IOIAConfigModel oiaConfigModel, IODataAPIContextModel odataAPIContextModel,
-            ITraitModel traitModel, ITraitsProvider traitsProvider, ICurrentUserService currentUserService)
+            IEffectiveTraitModel effectiveTraitModel, IRecursiveTraitModel traitModel, ITraitsProvider traitsProvider, ICurrentUserService currentUserService)
         {
             FieldAsync<MergedCIType>("ci",
                 arguments: new QueryArguments(
@@ -147,10 +147,10 @@ namespace LandscapeRegistry.GraphQL
                     // we definitely have to look into caching traits as best as we can and provide a better way to query cis with a (array of) effective trait(s) as input
                     // we might alternatively need to rework this: limit the number of items this works on (with a limit parameter) and provide a search parameter
                     var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), userContext.LayerSet, true, null, userContext.TimeThreshold);
-                    var effectiveTraitSets = await traitModel.CalculateEffectiveTraitSetForCIs(cis, preferredTraits, null, userContext.TimeThreshold);
+                    var effectiveTraitSets = await effectiveTraitModel.CalculateEffectiveTraitSetForCIs(cis, preferredTraits, null, userContext.TimeThreshold);
 
                     return effectiveTraitSets.Where(et =>
-                    { 
+                    {
                         // if CI has ANY of the preferred traits, keep it
                         return preferredTraits.Any(pt => et.EffectiveTraits.ContainsKey(pt));
                     }).Select(et => CompactCI.Build(et.UnderlyingCI));
@@ -173,7 +173,7 @@ namespace LandscapeRegistry.GraphQL
                     // filter predicates by constraints
                     var layers = await layerModel.BuildLayerSet(layersForEffectiveTraits, null);
                     var ci = await ciModel.GetMergedCI(preferredForCI, layers, null, userContext.TimeThreshold);
-                    var effectiveTraitSet = await traitModel.CalculateEffectiveTraitSetForCI(ci, null, userContext.TimeThreshold);
+                    var effectiveTraitSet = await effectiveTraitModel.CalculateEffectiveTraitSetForCI(ci, null, userContext.TimeThreshold);
                     var effectiveTraitNames = effectiveTraitSet.EffectiveTraits.Keys;
                     var directedPredicates = predicates.SelectMany(predicate =>
                     {
@@ -196,7 +196,7 @@ namespace LandscapeRegistry.GraphQL
                     var userContext = context.UserContext as RegistryUserContext;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
                     var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
-                    
+
                     var predicates = (await predicateModel.GetPredicates(null, userContext.TimeThreshold, stateFilter)).Values;
 
                     return predicates;
@@ -239,7 +239,7 @@ namespace LandscapeRegistry.GraphQL
             FieldAsync<ListGraphType<ChangesetType>>("changesets",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
-                    new QueryArgument<NonNullGraphType<DateTimeOffsetGraphType>> { Name = "from"},
+                    new QueryArgument<NonNullGraphType<DateTimeOffsetGraphType>> { Name = "from" },
                     new QueryArgument<NonNullGraphType<DateTimeOffsetGraphType>> { Name = "to" },
                     new QueryArgument<ListGraphType<GuidGraphType>> { Name = "ciids" },
                     new QueryArgument<IntGraphType> { Name = "limit" }),
@@ -262,12 +262,14 @@ namespace LandscapeRegistry.GraphQL
                 });
 
 
-            FieldAsync<StringGraphType>("traits",
+            FieldAsync<StringGraphType>("traitSet",
                 resolve: async context =>
                 {
-                    // TODO: implement properly, just showing json string for now
-                    var traitsJSON = JObject.FromObject(traitsProvider.GetTraits());
-                    return traitsJSON.ToString();
+                    // TODO: implement better, showing string as-is for now
+                    // TODO: should we not deliver non-DB traits (f.e. from CLBs) here?
+                    var traitSet = await traitModel.GetRecursiveTraitSet(null, TimeThreshold.BuildLatest());
+                    var str = TraitsProvider.TraitSetSerializer.SerializeToString(traitSet);
+                    return str;
                 });
 
             FieldAsync<ListGraphType<EffectiveTraitListItemType>>("effectiveTraitList",
@@ -280,11 +282,11 @@ namespace LandscapeRegistry.GraphQL
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
                     // TODO: HORRIBLE performance!, consider aggressive caching
-                    var traits = traitsProvider.GetTraits();
-                    var ret = new List<(string name, int count) > ();
-                    foreach(var trait in traits.Values)
+                    var traits = (await traitsProvider.GetActiveTraitSet(null, userContext.TimeThreshold)).Traits;
+                    var ret = new List<(string name, int count)>();
+                    foreach (var trait in traits.Values)
                     {
-                        var ets = await traitModel.CalculateEffectiveTraitSetsForTrait(trait, userContext.LayerSet, null, userContext.TimeThreshold);
+                        var ets = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(trait, userContext.LayerSet, null, userContext.TimeThreshold);
                         ret.Add((name: trait.Name, count: ets.Count()));
                     }
                     return ret;

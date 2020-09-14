@@ -1,19 +1,27 @@
-﻿using LandscapeRegistry.Entity.AttributeValues;
+﻿using JsonSubTypes;
+using LandscapeRegistry.Entity.AttributeValues;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Landscape.Base.Entity
 {
+    [JsonConverter(typeof(JsonSubtypes), "type")]
+    [JsonSubtypes.KnownSubType(typeof(CIAttributeValueConstraintTextRegex), "textRegex")]
+    [JsonSubtypes.KnownSubType(typeof(CIAttributeValueConstraintTextLength), "textLength")]
     public interface ICIAttributeValueConstraint
     {
+        public string type { get; }
         IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value);
     }
 
     public class CIAttributeValueConstraintTextLength : ICIAttributeValueConstraint
     {
-        public int? Minimum { get; private set; }
-        public int? Maximum { get; private set; }
+        public int? Minimum { get; set; }
+        public int? Maximum { get; set; }
+
+        public string type => "textLength";
 
         public static CIAttributeValueConstraintTextLength Build(int? min, int? max)
         {
@@ -33,7 +41,10 @@ namespace Landscape.Base.Entity
 
     public class CIAttributeValueConstraintTextRegex : ICIAttributeValueConstraint
     {
-        public Regex Regex { get; private set; }
+        public Regex Regex { get; set; }
+
+        public string type => "textRegex";
+
         public static CIAttributeValueConstraintTextRegex Build(Regex regex)
         {
             return new CIAttributeValueConstraintTextRegex()
@@ -50,13 +61,13 @@ namespace Landscape.Base.Entity
 
     public class CIAttributeTemplate
     {
-        public string Name { get; private set; }
+        public string Name { get; set; }
         // TODO: descriptions
-        public AttributeValueType? Type { get; private set; } // TODO: could be more than one type allowed
-        public bool? IsArray { get; private set; }
+        public AttributeValueType? Type { get; set; } // TODO: could be more than one type allowed
+        public bool? IsArray { get; set; }
         // TODO: status: required(default, other statii: optional, not allowed)
         // TODO: required layer (optional)
-        public IEnumerable<ICIAttributeValueConstraint> ValueConstraints { get; private set; }
+        public IEnumerable<ICIAttributeValueConstraint> ValueConstraints { get; set; }
 
         public static CIAttributeTemplate BuildFromParams(string name, AttributeValueType? type, bool? isArray, params ICIAttributeValueConstraint[] valueConstraints)
         {

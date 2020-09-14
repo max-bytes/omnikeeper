@@ -3,12 +3,9 @@ using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Service;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 using Npgsql;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.Model.Decorators
@@ -24,15 +21,14 @@ namespace LandscapeRegistry.Model.Decorators
             this.memoryCache = memoryCache;
         }
 
-        public async Task<bool> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            var success = await model.BulkReplaceRelations(data, changesetProxy, trans);
-            if (success)
-                foreach (var f in data.Fragments)
-                {
-                    EvictFromCache(data.GetFromCIID(f), data.GetToCIID(f), data.GetPredicateID(f), data.LayerID);
-                }
-            return success;
+            var inserted = await model.BulkReplaceRelations(data, changesetProxy, trans);
+            foreach (var (fromCIID, toCIID, predicateID, _) in inserted)
+            {
+                EvictFromCache(fromCIID, toCIID, predicateID, data.LayerID);
+            }
+            return inserted;
         }
 
         private void EvictFromCache(Guid fromCIID, Guid toCIID, string predicateID, long layerID)
@@ -52,7 +48,8 @@ namespace LandscapeRegistry.Model.Decorators
 
         public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            if (atTime.IsLatest) {
+            if (atTime.IsLatest)
+            {
                 return await memoryCache.GetOrCreateAsync(CacheKeyService.Relations(rl, layerID), async (ce) =>
                 {
                     var changeToken = memoryCache.GetRelationsCancellationChangeToken(rl, layerID);
@@ -60,20 +57,24 @@ namespace LandscapeRegistry.Model.Decorators
                     return await model.GetRelations(rl, layerID, trans, atTime);
                 });
             }
-            else 
+            else
                 return await model.GetRelations(rl, layerID, trans, atTime);
         }
 
-        public async Task<Relation> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            EvictFromCache(fromCIID, toCIID, predicateID, layerID);
-            return await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
+            var t = await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
+            if (t.changed)
+                EvictFromCache(fromCIID, toCIID, predicateID, layerID);
+            return t;
         }
 
-        public async Task<Relation> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
-            EvictFromCache(fromCIID, toCIID, predicateID, layerID);
-            return await model.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
+            var t = await model.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
+            if (t.changed)
+                EvictFromCache(fromCIID, toCIID, predicateID, layerID);
+            return t;
         }
     }
 }

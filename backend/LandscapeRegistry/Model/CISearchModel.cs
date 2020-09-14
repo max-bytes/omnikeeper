@@ -1,7 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
 using Landscape.Base.Utils;
-using LandscapeRegistry.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -15,10 +14,10 @@ namespace LandscapeRegistry.Model
     {
         private readonly IAttributeModel attributeModel;
         private readonly ICIModel ciModel;
-        private readonly ITraitModel traitModel;
+        private readonly IEffectiveTraitModel traitModel;
         private readonly ILayerModel layerModel;
 
-        public CISearchModel(IAttributeModel attributeModel, ICIModel ciModel, ITraitModel traitModel, ILayerModel layerModel)
+        public CISearchModel(IAttributeModel attributeModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILayerModel layerModel)
         {
             this.attributeModel = attributeModel;
             this.ciModel = ciModel;
@@ -82,7 +81,7 @@ namespace LandscapeRegistry.Model
                 searchAllCIsBasedOnSearchString = false;
                 foundCIIDs = (await ciModel.GetCIIDs(trans)).Where(ciid => ciid.Equals(guid)).ToHashSet(); // TODO: performance improvement
             }
-            else if(finalSS.Length > 0)
+            else if (finalSS.Length > 0)
             {
                 searchAllCIsBasedOnSearchString = false;
                 // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
@@ -90,22 +89,23 @@ namespace LandscapeRegistry.Model
                 foundCIIDs = ciNamesFromNameAttributes.Where(kv => kv.Value.Attribute.Value.FullTextSearch(finalSS, System.Globalization.CompareOptions.IgnoreCase))
                     .Select(kv => kv.Key).ToHashSet();
             }
-            else 
+            else
             {
                 foundCIIDs = (await ciModel.GetCIIDs(trans)).ToHashSet(); // TODO: performance improvement
             }
 
             var resultIsReducedByETs = false;
-            foreach(var etName in withEffectiveTraits)
+            foreach (var etName in withEffectiveTraits)
             {
                 var ciFilter = (searchAllCIsBasedOnSearchString && !resultIsReducedByETs) ? (Func<Guid, bool>)null : (ciid) => foundCIIDs.Contains(ciid);
-                var ets = await traitModel.CalculateEffectiveTraitSetsForTraitName(etName, layerSet, trans, atTime, ciFilter);
+                // TODO: replace with something less performance intensive, that only fetches the CIIDs (and also cached)
+                var ets = await traitModel.CalculateEffectiveTraitsForTraitName(etName, layerSet, trans, atTime, ciFilter);
                 if (ets == null)
                 { // searching for a non-existing trait -> make result empty and bail
                     foundCIIDs = new HashSet<Guid>();
                     break;
                 }
-                var cisFulfillingTraitRequirement = ets.Select(et => et.UnderlyingCI.ID);
+                var cisFulfillingTraitRequirement = ets.Select(et => et.Key);
                 foundCIIDs = cisFulfillingTraitRequirement.ToHashSet(); // reduce the number of cis to the ones that fulfill this trait requirement
                 resultIsReducedByETs = true;
             }

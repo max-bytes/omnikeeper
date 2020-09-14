@@ -1,5 +1,4 @@
-﻿using Hangfire.Console;
-using Hangfire.Server;
+﻿using Hangfire.Server;
 using LandscapeRegistry.Service;
 using LandscapeRegistry.Utils;
 using Microsoft.Extensions.Logging;

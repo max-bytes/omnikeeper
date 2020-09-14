@@ -1,14 +1,12 @@
 ﻿using GraphQL;
 using GraphQL.Types;
 using GraphQL.Validation;
-using Landscape.Base.Entity;
 using LandscapeRegistry.GraphQL;
 using LandscapeRegistry.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;

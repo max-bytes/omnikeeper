@@ -17,13 +17,21 @@ function AddNewRelation(props) {
   // use useRef to ensure reference is constant and can be properly used in dependency array
   const { current: initialRelation } = useRef({predicateID: null, targetCIID: null, forward: true, layer: null });
   const [isOpen, setOpen] = useState(false);
+
   const [newRelation, setNewRelation] = useState(initialRelation);
   useEffect(() => { if (!canBeEdited) setOpen(false); }, [canBeEdited]);
-  useEffect(() => { setOpen(false); setNewRelation(initialRelation) }, [props.ciIdentity, props.visibleLayers, initialRelation]);
+  useEffect(() => { setOpen(false); setNewRelation(initialRelation); }, 
+    [
+      props.ciIdentity, 
+      JSON.stringify(props.visibleLayers), // because JS only does reference equality, we need to convert the array to a string
+      initialRelation
+    ]);
 
   const [getValidTargetCIs, { data: dataCIs, loading: loadingCIs }] = useLazyQuery(queries.ValidRelationTargetCIs, { 
-    variables: {layers: props.visibleLayers }
+    variables: {layers: props.visibleLayers}
   });
+
+
   const { data: directedPredicates } = useQuery(queries.DirectedPredicateList, {
     variables: { preferredForCI: props.ciIdentity, layersForEffectiveTraits: props.visibleLayers }
   });
@@ -86,7 +94,7 @@ function AddNewRelation(props) {
               <Dropdown
                 value={((newRelation.predicateID) ? `${newRelation.predicateID}$$$$${((newRelation.forward) ? 'forward' : 'back')}` : undefined)}
                 placeholder='Select Predicate'
-                onChange={(_, data) => {
+                onChange={(_, data) => { 
                   const [predicateID, forwardStr] = data.value.split('$$$$');
                   setNewRelation({...newRelation, predicateID: predicateID, forward: forwardStr === 'forward'});
                 }}
@@ -103,7 +111,9 @@ function AddNewRelation(props) {
                   disabled={loadingCIs}
                   value={newRelation.targetCIID}
                   placeholder='Target CI'
-                  onChange={(_, data) => setNewRelation({...newRelation, targetCIID: data.value})}
+                  onChange={(_, data) => {
+                    setNewRelation({...newRelation, targetCIID: data.value})
+                  }}
                   fluid
                   search
                   selection
