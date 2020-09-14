@@ -24,7 +24,7 @@ function Attributes(props) {
 function EffectiveTraits(props) {
   return <div>
       {props.traits.map((t, index) => {
-        // TODO: show required relations
+        {/* TODO: show required relations */}
         return (<div key={index} style={{marginBottom: '30px'}}>
           <h3 style={{margin: '0px'}}>{t.underlyingTrait.name}:</h3>
           

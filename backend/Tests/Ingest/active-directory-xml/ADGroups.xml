@@ -1,0 +1,107 @@
+﻿<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
+  <Obj RefId="0">
+    <TN RefId="0">
+      <T>Microsoft.ActiveDirectory.Management.ADGroup</T>
+      <T>Microsoft.ActiveDirectory.Management.ADPrincipal</T>
+      <T>Microsoft.ActiveDirectory.Management.ADObject</T>
+      <T>Microsoft.ActiveDirectory.Management.ADEntity</T>
+      <T>Microsoft.ActiveDirectory.Management.ADPropertyCollection</T>
+      <T>System.Object</T>
+    </TN>
+    <ToString>CN=HR Team,OU=ACME,DC=acme,DC=local</ToString>
+    <Props>
+      <S N="CanonicalName">acme.local/ACME/HR Team</S>
+      <S N="Description">all members of the HR department</S>
+      <S N="DistinguishedName">CN=HR Team,OU=ACME,DC=acme,DC=local</S>
+      <Obj N="GroupCategory" RefId="1">
+        <TN RefId="1">
+          <T>Microsoft.ActiveDirectory.Management.ADGroupCategory</T>
+          <T>System.Enum</T>
+          <T>System.ValueType</T>
+          <T>System.Object</T>
+        </TN>
+        <ToString>Security</ToString>
+        <I32>1</I32>
+      </Obj>
+      <Obj N="GroupScope" RefId="2">
+        <TN RefId="2">
+          <T>Microsoft.ActiveDirectory.Management.ADGroupScope</T>
+          <T>System.Enum</T>
+          <T>System.ValueType</T>
+          <T>System.Object</T>
+        </TN>
+        <ToString>DomainLocal</ToString>
+        <I32>0</I32>
+      </Obj>
+      <Obj N="Members" RefId="3">
+        <TN RefId="3">
+          <T>Microsoft.ActiveDirectory.Management.ADPropertyValueCollection</T>
+          <T>System.Collections.CollectionBase</T>
+          <T>System.Object</T>
+        </TN>
+        <LST>
+          <S>CN=Alan Steiner,OU=ACME,DC=acme,DC=local</S>
+          <S>CN=Adam Barr,OU=ACME,DC=acme,DC=local</S>
+          <S>CN=Dan Jump,OU=ACME,DC=acme,DC=local</S>
+        </LST>
+      </Obj>
+      <S N="Name">HR Team</S>
+      <S N="ObjectClass">group</S>
+      <G N="ObjectGUID">db533f19-52ec-45f0-87d4-0ac6257e2cf2</G>
+      <Obj N="objectSid" RefId="4">
+        <TN RefId="4">
+          <T>System.Security.Principal.SecurityIdentifier</T>
+          <T>System.Security.Principal.IdentityReference</T>
+          <T>System.Object</T>
+        </TN>
+        <ToString>S-1-5-21-1342321449-209706358-2165574607-2217</ToString>
+        <Props>
+          <I32 N="BinaryLength">28</I32>
+          <S N="AccountDomainSid">S-1-5-21-1342321449-209706358-2165574607</S>
+          <S N="Value">S-1-5-21-1342321449-209706358-2165574607-2217</S>
+        </Props>
+      </Obj>
+      <S N="SamAccountName">HRTeam</S>
+      <Ref N="SID" RefId="4" />
+    </Props>
+  </Obj>
+  <Obj RefId="5">
+    <TNRef RefId="0" />
+    <ToString>CN=IT Team,OU=ACME,DC=acme,DC=local</ToString>
+    <Props>
+      <S N="CanonicalName">acme.local/ACME/IT Team</S>
+      <S N="Description">all members of the IT department</S>
+      <S N="DistinguishedName">CN=IT Team,OU=ACME,DC=acme,DC=local</S>
+      <Obj N="GroupCategory" RefId="6">
+        <TNRef RefId="1" />
+        <ToString>Security</ToString>
+        <I32>1</I32>
+      </Obj>
+      <Obj N="GroupScope" RefId="7">
+        <TNRef RefId="2" />
+        <ToString>DomainLocal</ToString>
+        <I32>0</I32>
+      </Obj>
+      <Obj N="Members" RefId="8">
+        <TNRef RefId="3" />
+        <LST>
+          <S>CN=Alan Steiner,OU=ACME,DC=acme,DC=local</S>
+        </LST>
+      </Obj>
+      <S N="Name">IT Team</S>
+      <S N="ObjectClass">group</S>
+      <G N="ObjectGUID">915ee57a-c92d-4bc1-ad7f-93ac5143330a</G>
+      <Obj N="objectSid" RefId="9">
+        <TNRef RefId="4" />
+        <ToString>S-1-5-21-1342321449-209706358-2165574607-2218</ToString>
+        <Props>
+          <I32 N="BinaryLength">28</I32>
+          <S N="AccountDomainSid">S-1-5-21-1342321449-209706358-2165574607</S>
+          <S N="Value">S-1-5-21-1342321449-209706358-2165574607-2218</S>
+        </Props>
+      </Obj>
+      <S N="SamAccountName">ITTeam</S>
+      <Ref N="SID" RefId="9" />
+    </Props>
+  </Obj>
+</Objs>

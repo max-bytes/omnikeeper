@@ -11,8 +11,10 @@ using Hangfire.MemoryStorage;
 using Landscape.Base.CLB;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
+using Landscape.Base.Service;
 using Landscape.Base.Utils;
 using LandscapeRegistry.GraphQL;
+using LandscapeRegistry.Ingest.ActiveDirectoryXML;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Model.Decorators;
 using LandscapeRegistry.Runners;
@@ -153,6 +155,10 @@ namespace LandscapeRegistry
             services.AddScoped<ITraitsProvider, TraitsProvider>();
 
             services.AddScoped<IOnlineAccessProxy, OnlineAccessProxy>();
+
+            services.AddScoped<IngestActiveDirectoryXMLService, IngestActiveDirectoryXMLService>();
+
+            services.AddScoped<CIMappingService, CIMappingService>();
 
             services.Configure<IISServerOptions>(options =>
             {

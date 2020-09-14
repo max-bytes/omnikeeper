@@ -14,50 +14,55 @@ namespace LandscapeRegistry.Service
 
     public class IngestDataService
     {
+        private readonly CIMappingService ciMappingService;
+
         private IAttributeModel AttributeModel { get; }
         private ICIModel CIModel { get; }
         private NpgsqlConnection Connection { get; }
         private IChangesetModel ChangesetModel { get; }
         private IRelationModel RelationModel { get; }
 
-        public IngestDataService(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, IRelationModel relationModel, NpgsqlConnection connection)
+        public IngestDataService(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, IRelationModel relationModel, CIMappingService ciMappingService, NpgsqlConnection connection)
         {
             AttributeModel = attributeModel;
             CIModel = ciModel;
             ChangesetModel = changesetModel;
             RelationModel = relationModel;
+            this.ciMappingService = ciMappingService;
             Connection = connection;
         }
 
 
-        public async Task<(Dictionary<Guid, Guid> idMapping, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, AuthenticatedUser user, ILogger logger)
+        public async Task<(int numIngestedCIs, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, AuthenticatedUser user, ILogger logger)
         {
             using var trans = Connection.BeginTransaction();
             var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, ChangesetModel);
 
             var timeThreshold = TimeThreshold.BuildLatest();
-            var tempCIMappingContext = new Dictionary<Guid, Guid>();
 
+            var ciMappingContext = new CIMappingService.CIMappingContext(AttributeModel, TimeThreshold.BuildLatest());
             var attributeData = new Dictionary<Guid, CICandidateAttributeData>();
             foreach (var cic in data.CICandidates)
             {
-                // find out if it's a new CI or an existing one
                 var attributes = cic.Value.Attributes;
                 var ciCandidateID = cic.Key;
 
-                var foundCIID = await CIMappingService.TryToMatch(ciCandidateID.ToString(), cic.Value.IdentificationMethod, AttributeModel, tempCIMappingContext, timeThreshold, trans, logger);
+                // find out if it's a new CI or an existing one
+                var foundCIID = await ciMappingService.TryToMatch(ciCandidateID.ToString(), cic.Value.IdentificationMethod, ciMappingContext, trans, logger);
 
-                var finalCIID = foundCIID ?? ciCandidateID;  // TODO: we are simply using the passed ciid here, check if that is ok, or might lead to problems later
-
-                if (!foundCIID.HasValue)
+                Guid finalCIID;
+                if (foundCIID.HasValue)
+                {
+                    finalCIID = foundCIID.Value;
+                } else
                 {
                     // CI is new, create it first
                     // TODO: batch process CI creation
-                    await CIModel.CreateCI(finalCIID, trans);
+                    finalCIID = await CIModel.CreateCI(trans); // use a totally new CIID, do NOT use the temporary CIID of the ciCandidate
                 }
 
-                // save ciid mapping
-                tempCIMappingContext.Add(cic.Key, finalCIID);
+                // add to mapping context
+                ciMappingContext.AddTemp2FinallCIIDMapping(ciCandidateID, finalCIID);
 
                 if (attributeData.ContainsKey(finalCIID))
                     attributeData[finalCIID] = attributeData[finalCIID].Concat(attributes);
@@ -77,10 +82,10 @@ namespace LandscapeRegistry.Service
                 // TODO: make it work with other usecases, such as where the final CIID is known and/or the relevant CIs are already present in omnikeeper
                 // find CIIDs
                 var tempFromCIID = cic.IdentificationMethodFromCI.CIID;
-                if (!tempCIMappingContext.TryGetValue(tempFromCIID, out var fromCIID))
+                if (!ciMappingContext.TryGetMappedTemp2FinalCIID(tempFromCIID, out Guid fromCIID))
                     throw new Exception($"Could not find temporary CIID {tempFromCIID}, tried using it as the \"from\" of a relation");
                 var tempToCIID = cic.IdentificationMethodToCI.CIID;
-                if (!tempCIMappingContext.TryGetValue(tempToCIID, out var toCIID))
+                if (!ciMappingContext.TryGetMappedTemp2FinalCIID(tempToCIID, out Guid toCIID))
                     throw new Exception($"Could not find temporary CIID {tempToCIID}, tried using it as the \"to\" of a relation");
                 relationFragments.Add(BulkRelationDataLayerScope.Fragment.Build(fromCIID, toCIID, cic.PredicateID));
             }
@@ -89,7 +94,7 @@ namespace LandscapeRegistry.Service
 
             trans.Commit();
 
-            return (tempCIMappingContext, bulkRelationData.Fragments.Length);
+            return (attributeData.Keys.Count, bulkRelationData.Fragments.Length);
         }
     }
 

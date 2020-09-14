@@ -29,7 +29,7 @@ namespace Landscape.Base.Inbound
 
         protected abstract Task<IEnumerable<EID>> GetExternalIDs();
 
-        public async Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, NpgsqlTransaction trans, ILogger logger)
+        public async Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, NpgsqlTransaction trans, ILogger logger)
         {
             await mapper.Setup();
 
@@ -48,14 +48,15 @@ namespace Landscape.Base.Inbound
             }
 
             // add any (new) CIs that don't exist yet, and add to mapper
+            var ciMappingContext = new CIMappingService.CIMappingContext(attributeModel, TimeThreshold.BuildLatest());
             foreach (var externalID in externalIDs)
             {
                 if (!mapper.ExistsInternally(externalID))
                 {
                     logger.LogInformation($"CI with external ID {externalID} does not exist internally, creating...");
-
+                    
                     ICIIdentificationMethod identificationMethod = mapper.GetIdentificationMethod(externalID);
-                    var foundCIID = await CIMappingService.TryToMatch(externalID.ConvertToString(), identificationMethod, attributeModel, null, TimeThreshold.BuildLatest(), trans, logger);
+                    var foundCIID = await ciMappingService.TryToMatch(externalID.ConvertToString(), identificationMethod, ciMappingContext, trans, logger);
 
                     Guid ciid;
                     if (foundCIID.HasValue)
@@ -70,7 +71,7 @@ namespace Landscape.Base.Inbound
                     }
                     else
                     {
-                        ciid = await ciModel.CreateCI(trans);
+                        ciid = await ciModel.CreateCI(trans); // creating new CI with new CIID
                         logger.LogInformation($"Created CI with CIID {ciid}");
                     }
 

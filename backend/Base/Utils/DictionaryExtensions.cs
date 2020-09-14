@@ -57,5 +57,17 @@ namespace Landscape.Base.Utils
                 return false;
             }
         }
+
+        public static TValue GetOr<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue or)
+        {
+            if (dictionary.ContainsKey(key))
+            {
+                return dictionary[key];
+            }
+            else
+            {
+                return or;
+            }
+        }
     }
 }

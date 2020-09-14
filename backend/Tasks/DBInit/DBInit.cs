@@ -84,26 +84,27 @@ namespace Tasks.DBInit
                 Predicate.Build("has_monitoring_module", "has monitoring module", "is assigned to", AnchorState.Active, PredicateModel.DefaultConstraits),
                 Predicate.Build("is_monitored_by", "is monitored by", "monitors", AnchorState.Active, PredicateModel.DefaultConstraits),
                 Predicate.Build("belongs_to_naemon_contactgroup", "belongs to naemon contactgroup", "has member", AnchorState.Active, PredicateModel.DefaultConstraits)
-        };
+            };
 
-            //var automationPredicates = new[] {
-            //    Predicate.Build("has_ansible_group", "has ansible group", "is assigned to", AnchorState.Active)
-            //};
+            var baseDataPredicates = new[] {
+                Predicate.Build("member_of_group", "is member of group", "has member", AnchorState.Active, PredicateModel.DefaultConstraits),
+                Predicate.Build("managed_by", "is managed by", "manages", AnchorState.Active, PredicateModel.DefaultConstraits)
+            };
 
             // create layers
             long cmdbLayerID;
             long monitoringDefinitionsLayerID;
-            long automationLayerID;
+            long activeDirectoryLayerID;
             using (var trans = conn.BeginTransaction())
             {
                 var cmdbLayer = await layerModel.CreateLayer("CMDB", Color.Blue, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
                 cmdbLayerID = cmdbLayer.ID;
                 await layerModel.CreateLayer("Inventory Scan", Color.Violet, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
-                var monitoringDefinitionsLayer = await layerModel.CreateLayer("Monitoring Definitions", Color.MediumOrchid, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
+                var monitoringDefinitionsLayer = await layerModel.CreateLayer("Monitoring Definitions", Color.Orange, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
                 monitoringDefinitionsLayerID = monitoringDefinitionsLayer.ID;
                 await layerModel.CreateLayer("Monitoring", ColorTranslator.FromHtml("#FFE6CC"), AnchorState.Active, ComputeLayerBrainLink.Build("MonitoringPlugin.CLBNaemonMonitoring"), OnlineInboundAdapterLink.Build(""), trans);
-                var automationLayer = await layerModel.CreateLayer("Automation", Color.Gray, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
-                automationLayerID = automationLayer.ID;
+                var automationLayer = await layerModel.CreateLayer("Active Directory", Color.Cyan, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
+                activeDirectoryLayerID = automationLayer.ID;
                 trans.Commit();
             }
 
@@ -142,7 +143,7 @@ namespace Tasks.DBInit
             // create predicates
             using (var trans = conn.BeginTransaction())
             {
-                foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates))//.Concat(automationPredicates))
+                foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates).Concat(baseDataPredicates))
                     await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, AnchorState.Active, PredicateModel.DefaultConstraits, trans);
 
                 trans.Commit();

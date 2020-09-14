@@ -1,0 +1,122 @@
+﻿<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
+  <Obj RefId="0">
+    <TN RefId="0">
+      <T>Microsoft.ActiveDirectory.Management.ADUser</T>
+      <T>Microsoft.ActiveDirectory.Management.ADAccount</T>
+      <T>Microsoft.ActiveDirectory.Management.ADPrincipal</T>
+      <T>Microsoft.ActiveDirectory.Management.ADObject</T>
+      <T>Microsoft.ActiveDirectory.Management.ADEntity</T>
+      <T>Microsoft.ActiveDirectory.Management.ADPropertyCollection</T>
+      <T>System.Object</T>
+    </TN>
+    <ToString>CN=Dan Jump,OU=ACME,DC=acme,DC=local</ToString>
+    <Props>
+      <S N="CanonicalName">acme.local/ACME/Dan Jump</S>
+      <S N="Department">Executive</S>
+      <S N="DistinguishedName">CN=Dan Jump,OU=ACME,DC=acme,DC=local</S>
+      <S N="EmailAddress">danj@contoso.com</S>
+      <S N="EmployeeID">1</S>
+      <B N="Enabled">true</B>
+      <S N="GivenName">Dan</S>
+      <Nil N="Manager" />
+      <S N="Name">Dan Jump</S>
+      <S N="ObjectClass">user</S>
+      <G N="ObjectGUID">3386b3e5-2569-4422-9634-4b556a100ff8</G>
+      <Obj N="objectSid" RefId="1">
+        <TN RefId="1">
+          <T>System.Security.Principal.SecurityIdentifier</T>
+          <T>System.Security.Principal.IdentityReference</T>
+          <T>System.Object</T>
+        </TN>
+        <ToString>S-1-5-21-1342321449-209706358-2165574607-1673</ToString>
+        <Props>
+          <I32 N="BinaryLength">28</I32>
+          <S N="AccountDomainSid">S-1-5-21-1342321449-209706358-2165574607</S>
+          <S N="Value">S-1-5-21-1342321449-209706358-2165574607-1673</S>
+        </Props>
+      </Obj>
+      <Nil N="Office" />
+      <S N="OfficePhone">(425) 555-0179</S>
+      <S N="SamAccountName">danj</S>
+      <Ref N="SID" RefId="1" />
+      <S N="sn">Jump</S>
+      <S N="Surname">Jump</S>
+      <S N="telephoneNumber">(425) 555-0179</S>
+      <BA N="thumbnailPhoto"></BA>
+      <S N="Title">CEO</S>
+      <Nil N="UserPrincipalName" />
+    </Props>
+  </Obj>
+  <Obj RefId="2">
+    <TNRef RefId="0" />
+    <ToString>CN=Adam Barr,OU=ACME,DC=acme,DC=local</ToString>
+    <Props>
+      <S N="CanonicalName">acme.local/ACME/Adam Barr</S>
+      <S N="Department">Operations</S>
+      <S N="DistinguishedName">CN=Adam Barr,OU=ACME,DC=acme,DC=local</S>
+      <S N="EmailAddress">adamb@contoso.com</S>
+      <S N="EmployeeID">2</S>
+      <B N="Enabled">true</B>
+      <S N="GivenName">Adam</S>
+      <S N="Manager">CN=Dan Jump,OU=ACME,DC=acme,DC=local</S>
+      <S N="Name">Adam Barr</S>
+      <S N="ObjectClass">user</S>
+      <G N="ObjectGUID">410c9130-c719-4c62-a935-cc560bdab459</G>
+      <Obj N="objectSid" RefId="3">
+        <TNRef RefId="1" />
+        <ToString>S-1-5-21-1342321449-209706358-2165574607-1675</ToString>
+        <Props>
+          <I32 N="BinaryLength">28</I32>
+          <S N="AccountDomainSid">S-1-5-21-1342321449-209706358-2165574607</S>
+          <S N="Value">S-1-5-21-1342321449-209706358-2165574607-1675</S>
+        </Props>
+      </Obj>
+      <Nil N="Office" />
+      <S N="OfficePhone">(206) 555-5472</S>
+      <S N="SamAccountName">adamb</S>
+      <Ref N="SID" RefId="3" />
+      <S N="sn">Barr</S>
+      <S N="Surname">Barr</S>
+      <S N="telephoneNumber">(206) 555-5472</S>
+      <BA N="thumbnailPhoto"></BA>
+      <S N="Title">General Manager of Professional Services</S>
+      <Nil N="UserPrincipalName" />
+    </Props>
+  </Obj>
+  <Obj RefId="4">
+    <TNRef RefId="0" />
+    <ToString>CN=Alan Steiner,OU=ACME,DC=acme,DC=local</ToString>
+    <Props>
+      <S N="CanonicalName">acme.local/ACME/Alan Steiner</S>
+      <S N="Department">Project Management</S>
+      <S N="DistinguishedName">CN=Alan Steiner,OU=ACME,DC=acme,DC=local</S>
+      <S N="EmailAddress">alans@contoso.com</S>
+      <S N="EmployeeID">3</S>
+      <B N="Enabled">true</B>
+      <S N="GivenName">Alan</S>
+      <S N="Manager">CN=Adam Barr,OU=ACME,DC=acme,DC=local</S>
+      <S N="Name">Alan Steiner</S>
+      <S N="ObjectClass">user</S>
+      <G N="ObjectGUID">6153e492-73d3-4d41-a22f-99c911b6cef8</G>
+      <Obj N="objectSid" RefId="5">
+        <TNRef RefId="1" />
+        <ToString>S-1-5-21-1342321449-209706358-2165574607-1677</ToString>
+        <Props>
+          <I32 N="BinaryLength">28</I32>
+          <S N="AccountDomainSid">S-1-5-21-1342321449-209706358-2165574607</S>
+          <S N="Value">S-1-5-21-1342321449-209706358-2165574607-1677</S>
+        </Props>
+      </Obj>
+      <Nil N="Office" />
+      <S N="OfficePhone">(206) 555-2443</S>
+      <S N="SamAccountName">alans</S>
+      <Ref N="SID" RefId="5" />
+      <S N="sn">Steiner</S>
+      <S N="Surname">Steiner</S>
+      <S N="telephoneNumber">(206) 555-2443</S>
+      <BA N="thumbnailPhoto"></BA>
+      <S N="Title">Director of Project Management Team</S>
+      <Nil N="UserPrincipalName" />
+    </Props>
+  </Obj>
+</Objs>
