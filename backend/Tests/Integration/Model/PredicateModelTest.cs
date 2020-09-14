@@ -96,6 +96,15 @@ namespace Tests.Integration.Model
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             var predicateModel = new PredicateModel(conn);
 
+            // we dont return time paramether with predicate this makes hard to test the changes
+
+            await predicateModel.InsertOrUpdate("p1", "p1wf", "p1wt", AnchorState.Active, PredicateModel.DefaultConstraits, null);
+            await predicateModel.InsertOrUpdate("p2", "p2wf", "p2wt", AnchorState.Active, PredicateModel.DefaultConstraits, null);
+            await predicateModel.InsertOrUpdate("p3", "p3wf", "p3wt", AnchorState.Active, PredicateModel.DefaultConstraits, null);
+            await predicateModel.InsertOrUpdate("p4", "p4wf", "p4wt", AnchorState.Active, PredicateModel.DefaultConstraits, null);
+
+
+
             Assert.AreEqual(new Dictionary<string, Predicate>()
             {
                 { "p1", Predicate.Build("p1", "p1wf", "p1wt", AnchorState.Active, PredicateModel.DefaultConstraits) },
