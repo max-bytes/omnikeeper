@@ -3,6 +3,7 @@ using Landscape.Base.Utils;
 using LandscapeRegistry.Model;
 using LandscapeRegistry.Utils;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -87,6 +88,36 @@ namespace Tests.Integration.Model
                 { "p2", Predicate.Build("p2", "p2wfn", "p2wtn", AnchorState.Active, PredicateModel.DefaultConstraits) },
                 { "p3", Predicate.Build("p3", "p3wf", "p3wt", AnchorState.Active, PredicateModel.DefaultConstraits) }
             }, p);
+        }
+
+        [Test]
+        public async Task TestGetPredicatesAtDifferentTimes()
+        {
+            var dbcb = new DBConnectionBuilder();
+            using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            var predicateModel = new PredicateModel(conn);
+
+            var now = DateTimeOffset.Now;
+
+            await predicateModel.InsertOrUpdate("p11", "p1wf", "p1wt", AnchorState.Inactive, PredicateModel.DefaultConstraits, null, now);
+            await predicateModel.InsertOrUpdate("p22", "p2wf", "p2wt", AnchorState.Inactive, PredicateModel.DefaultConstraits, null, now);
+
+            Assert.AreEqual(new Dictionary<string, Predicate>()
+            {
+                { "p11", Predicate.Build("p11", "p1wf", "p1wt", AnchorState.Inactive, PredicateModel.DefaultConstraits) },
+                { "p22", Predicate.Build("p22", "p2wf", "p2wt", AnchorState.Inactive, PredicateModel.DefaultConstraits) }
+            },
+            await predicateModel.GetPredicates(null, TimeThreshold.BuildLatest(), AnchorStateFilter.All));
+
+            await predicateModel.InsertOrUpdate("p11", "test", "test", AnchorState.Active, PredicateModel.DefaultConstraits, null, now.AddHours(-1));
+            await predicateModel.InsertOrUpdate("p22", "p2wf_1", "p2wt_1", AnchorState.Active, PredicateModel.DefaultConstraits, null, now.AddHours(-1));
+
+            Assert.AreEqual(new Dictionary<string, Predicate>()
+            {
+                { "p11", Predicate.Build("p11", "test", "test", AnchorState.Active, PredicateModel.DefaultConstraits) },
+                { "p22", Predicate.Build("p22", "p2wf_1", "p2wt_1", AnchorState.Active, PredicateModel.DefaultConstraits) }
+            },
+            await predicateModel.GetPredicates(null, TimeThreshold.BuildAtTime(now.AddHours(-1)), AnchorStateFilter.All));
         }
     }
 }
