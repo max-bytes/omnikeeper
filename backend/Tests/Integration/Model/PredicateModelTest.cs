@@ -91,14 +91,13 @@ namespace Tests.Integration.Model
         }
 
         [Test]
-        public async Task GetPredicatesTest()
+        public async Task TestGetPredicatesAtDifferentTimes()
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             var predicateModel = new PredicateModel(conn);
 
             var now = DateTimeOffset.Now;
-
 
             await predicateModel.InsertOrUpdate("p11", "p1wf", "p1wt", AnchorState.Inactive, PredicateModel.DefaultConstraits, null, now);
             await predicateModel.InsertOrUpdate("p22", "p2wf", "p2wt", AnchorState.Inactive, PredicateModel.DefaultConstraits, null, now);
