@@ -134,8 +134,7 @@ namespace LandscapeRegistry.GraphQL
                     userContext.LayerSet = ls;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var predicates = (await predicateModel.GetPredicates(null, userContext.TimeThreshold, AnchorStateFilter.ActiveOnly));
-                    var predicate = predicates[predicateID];
+                    var predicate = await predicateModel.GetPredicate(predicateID, userContext.TimeThreshold, AnchorStateFilter.ActiveOnly, null);
 
                     // predicate has no target constraints -> makes it easy, return ALL CIs
                     if ((forward && !predicate.Constraints.HasPreferredTraitsTo) || (!forward && !predicate.Constraints.HasPreferredTraitsFrom))

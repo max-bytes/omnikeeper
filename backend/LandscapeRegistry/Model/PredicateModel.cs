@@ -147,6 +147,39 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
+        public async Task<Predicate> GetPredicate(string id, TimeThreshold atTime, AnchorStateFilter stateFilter, NpgsqlTransaction trans)
+        {
+            using var command = new NpgsqlCommand(@"
+                SELECT pw.wording_from, pw.wording_to, ps.state, pc.constraints
+                FROM predicate p
+                LEFT JOIN 
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, wording_from, wording_to FROM predicate_wording WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC) pw
+                    ON pw.predicate_id = p.id
+                LEFT JOIN
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, state from predicate_state WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC) ps
+                    ON ps.predicate_id = p.id
+                LEFT JOIN
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, constraints from predicate_constraints WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC) pc
+                    ON pc.predicate_id = p.id
+                WHERE p.id = @id AND ((ps.state = ANY(@states) OR (ps.state IS NULL AND @default_state = ANY(@states))))
+            ", conn, trans);
+
+            command.Parameters.AddWithValue("id", id);
+            command.Parameters.AddWithValue("atTime", atTime.Time);
+            command.Parameters.AddWithValue("states", stateFilter.Filter2States());
+            command.Parameters.AddWithValue("default_state", DefaultState);
+
+            using var s = await command.ExecuteReaderAsync();
+            if (!await s.ReadAsync())
+                return null;
+
+            var wordingFrom = (s.IsDBNull(0)) ? DefaultWordingFrom : s.GetString(0);
+            var wordingTo = (s.IsDBNull(1)) ? DefaultWordingTo : s.GetString(1);
+            var state = (s.IsDBNull(2)) ? DefaultState : s.GetFieldValue<AnchorState>(2);
+            var constraints = (s.IsDBNull(3)) ? PredicateConstraints.Default : s.GetFieldValue<PredicateConstraints>(3); // TODO: what if the json cannot be parsed?
+            return Predicate.Build(id, wordingFrom, wordingTo, state, constraints);
+        }
+
         private async Task<Predicate> GetPredicate(string id, NpgsqlTransaction trans)
         {
             using var command = new NpgsqlCommand(@"

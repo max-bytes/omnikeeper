@@ -119,5 +119,20 @@ namespace Tests.Integration.Model
             },
             await predicateModel.GetPredicates(null, TimeThreshold.BuildAtTime(now.AddHours(-1)), AnchorStateFilter.All));
         }
+
+        [Test]
+        public async Task TestGetPredicate()
+        {
+            var dbcb = new DBConnectionBuilder();
+            using var conn = dbcb.Build(DBSetup.dbName, false, true);
+
+            var predicateModel = new PredicateModel(conn);
+
+            await predicateModel.InsertOrUpdate("p1", "p1wf", "p1wt", AnchorState.Active, new PredicateConstraints(new string[0], new string[] { "t1", "t2" }), null);
+
+            var predicate = Predicate.Build("p1", "p1wf", "p1wt", AnchorState.Active, new PredicateConstraints(new string[0], new string[] { "t1", "t2" }));
+
+            Assert.AreEqual(predicate, await predicateModel.GetPredicate("p1", TimeThreshold.BuildLatest(), AnchorStateFilter.ActiveOnly, null));
+        }
     }
 }
