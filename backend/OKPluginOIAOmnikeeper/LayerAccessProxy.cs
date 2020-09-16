@@ -10,9 +10,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace OnlineInboundAdapterOmnikeeper
+namespace OKPluginOIAOmnikeeper
 {
-    public class LayerAccessProxy : IOnlineInboundLayerAccessProxy
+    public class LayerAccessProxy : ILayerAccessProxy
     {
         private readonly string[] remoteLayerNames;
         private readonly ILandscapeRegistryRESTAPIClient client;
@@ -23,8 +23,6 @@ namespace OnlineInboundAdapterOmnikeeper
 
         // TODO: changeset
         private static readonly Guid staticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "omnikeeper");
-
-        public string Name => "Omnikeeper";
 
         public LayerAccessProxy(string[] remoteLayerNames, ILandscapeRegistryRESTAPIClient client, ScopedExternalIDMapper mapper, Layer layer)
         {

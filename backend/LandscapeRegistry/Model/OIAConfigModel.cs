@@ -2,6 +2,7 @@
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
@@ -22,7 +23,7 @@ namespace LandscapeRegistry.Model
             this.logger = logger;
         }
 
-        public async Task<IEnumerable<OIAConfig>> GetConfigs(NpgsqlTransaction trans)
+        public async Task<IEnumerable<OIAConfig>> GetConfigs(bool useFallbackConfig, NpgsqlTransaction trans)
         {
             var ret = new List<OIAConfig>();
 
@@ -36,16 +37,19 @@ namespace LandscapeRegistry.Model
                     var id = s.GetInt64(0);
                     var name = s.GetString(1);
                     var configJO = s.GetFieldValue<JObject>(2);
+                    IOnlineInboundAdapter.IConfig config = null;
                     try
                     {
-                        var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configJO);
-                        ret.Add(OIAConfig.Build(name, id, config));
+                        config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configJO);
                     }
                     catch (Exception e)
                     {
                         logger.LogError(e, $"Could not deserialize OIA config \"{name}\"");
-                        return null;
+                        if (useFallbackConfig)
+                            config = new OIAFallbackConfig(configJO.ToString(Formatting.None));
                     }
+                    if (config != null)
+                        ret.Add(OIAConfig.Build(name, id, config));
                 }
             }
             return ret;

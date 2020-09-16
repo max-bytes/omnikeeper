@@ -27,7 +27,7 @@ namespace Landscape.Base.Inbound
             PreferredUpdateRate = preferredUpdateRate;
         }
 
-        protected abstract Task<IEnumerable<EID>> GetExternalIDs();
+        protected abstract Task<IEnumerable<(EID externalID, ICIIdentificationMethod idMethod)>> GetExternalIDs();
 
         public async Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, NpgsqlTransaction trans, ILogger logger)
         {
@@ -38,7 +38,7 @@ namespace Landscape.Base.Inbound
             var changes = false;
 
             // remove all mappings that do not have an external item (anymore) // TODO: make this configurable, there might be data sources that don't want that
-            var removedExternalIDs = mapper.RemoveAllExceptExternalIDs(externalIDs);
+            var removedExternalIDs = mapper.RemoveAllExceptExternalIDs(externalIDs.Select(t => t.externalID));
             if (!removedExternalIDs.IsEmpty())
             {
                 logger.LogInformation("Removed the following external IDs from mapping: ");
@@ -49,30 +49,46 @@ namespace Landscape.Base.Inbound
 
             // add any (new) CIs that don't exist yet, and add to mapper
             var ciMappingContext = new CIMappingService.CIMappingContext(attributeModel, TimeThreshold.BuildLatest());
-            foreach (var externalID in externalIDs)
+            foreach (var (externalID, idMethod) in externalIDs)
             {
                 if (!mapper.ExistsInternally(externalID))
                 {
-                    logger.LogInformation($"CI with external ID {externalID} does not exist internally, creating...");
+                    logger.LogInformation($"CI with external ID {externalID} does not exist internally, creating new OR mapping to existing...");
                     
-                    ICIIdentificationMethod identificationMethod = mapper.GetIdentificationMethod(externalID);
-                    var foundCIID = await ciMappingService.TryToMatch(externalID.ConvertToString(), identificationMethod, ciMappingContext, trans, logger);
+                    var foundCIIDs = await ciMappingService.TryToMatch(externalID.SerializeToString(), idMethod, ciMappingContext, trans, logger);
 
                     Guid ciid;
-                    if (foundCIID.HasValue)
+                    if (!foundCIIDs.IsEmpty())
                     {
-                        if (await ciModel.CIIDExists(foundCIID.Value, trans)) // TODO: performance improvements, do not check every ci separately
-                            ciid = foundCIID.Value;
+                        // we choose a CIID that is not already mapped
+                        // TODO, NOTE: this is still dependent on the order in which the found CIIDs are returned
+                        var chosenCIID = foundCIIDs.FirstOrDefault(foundCIID => !mapper.ExistsExternally(foundCIID));
+
+                        if (chosenCIID == default)
+                        {
+                            // despite having suitable CIs that would work, we can't use them because they already map to other external items... we must create a new CI
+                            logger.LogWarning($"Cannot map to existing CI because - even though CIs would match - they are all already mapped to other external items");
+                            ciid = await ciModel.CreateCI(trans); // creating new CI with new CIID
+                            logger.LogInformation($"Created new CI with CIID {ciid}");
+                        }
                         else
                         {
-                            ciid = await ciModel.CreateCI(foundCIID.Value, trans);
-                            logger.LogInformation($"Created CI with CIID {ciid}");
+                            if (await ciModel.CIIDExists(chosenCIID, trans))
+                            { // TODO: performance improvements, do not check every ci separately
+                                ciid = chosenCIID;
+                                logger.LogInformation($"Mapping to existing CI with CIID {ciid}");
+                            }
+                            else
+                            {
+                                ciid = await ciModel.CreateCI(chosenCIID, trans);
+                                logger.LogInformation($"Created new CI with CIID {ciid}");
+                            }
                         }
                     }
                     else
                     {
                         ciid = await ciModel.CreateCI(trans); // creating new CI with new CIID
-                        logger.LogInformation($"Created CI with CIID {ciid}");
+                        logger.LogInformation($"Created new CI with CIID {ciid}");
                     }
 
                     mapper.Add(ciid, externalID);
@@ -94,7 +110,7 @@ namespace Landscape.Base.Inbound
             }
 
             if (changes)
-                await mapper.Persist();
+                await mapper.Persist(trans);
 
             return changes;
         }

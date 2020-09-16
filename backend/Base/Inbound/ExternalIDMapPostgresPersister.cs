@@ -24,7 +24,7 @@ namespace Landscape.Base.Inbound
         {
             var tableName = $"{scope}";
             var fullTableName = $"\"{SchemaName}\".{tableName}";
-            var conn = cb.Build(configuration);
+            var conn = cb.Build(configuration); // TODO: not a fan of creating our own db connection here, but the persister is instanced as a singleton and passing a connection is cumbersome
 
             if (conn == null) return ImmutableDictionary<Guid, string>.Empty;
 
@@ -62,21 +62,21 @@ namespace Landscape.Base.Inbound
                 (
                     ci_id uuid NOT NULL,
                     external_id text NOT NULL,
-                    CONSTRAINT {tableName}_pkey PRIMARY KEY(ci_id)
+                    CONSTRAINT {tableName}_pkey PRIMARY KEY(ci_id),
+                    CONSTRAINT {tableName}_ci_id_key UNIQUE (ci_id),
+                    CONSTRAINT {tableName}_external_id_key UNIQUE (external_id),
+                    CONSTRAINT {tableName}_ci_id_fkey FOREIGN KEY (ci_id) REFERENCES public.ci (id) ON UPDATE RESTRICT ON DELETE RESTRICT
                 )";
             using var cmdCreateTable = new NpgsqlCommand(createTableSQL, conn, trans);
             cmdCreateTable.ExecuteNonQuery();
         }
 
-        public async Task Persist(string scope, IDictionary<Guid, string> int2ext)
+        public async Task Persist(string scope, IDictionary<Guid, string> int2ext, NpgsqlTransaction trans)
         {
             var tableName = $"{scope}";
             var fullTableName = $"\"{SchemaName}\".{tableName}";
-            var conn = cb.Build(configuration);
 
-            if (conn == null) return;
-
-            using var trans = conn.BeginTransaction();
+            var conn = trans.Connection;
 
             CreateTableIfNotExists(tableName, trans, conn);
 
@@ -97,10 +97,6 @@ namespace Landscape.Base.Inbound
 
                 await command.ExecuteScalarAsync();
             }
-
-            trans.Commit();
-
-            conn.Close();
         }
     }
 

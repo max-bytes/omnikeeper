@@ -21,10 +21,10 @@ namespace LandscapeRegistry.Model.Decorators
             this.memoryCache = memoryCache;
         }
 
-        public async Task<IEnumerable<OIAConfig>> GetConfigs(NpgsqlTransaction trans)
+        public async Task<IEnumerable<OIAConfig>> GetConfigs(bool useFallbackConfig, NpgsqlTransaction trans)
         {
             // TODO: caching
-            return await Model.GetConfigs(trans);
+            return await Model.GetConfigs(useFallbackConfig, trans);
         }
 
         public async Task<OIAConfig> GetConfigByName(string name, NpgsqlTransaction trans)

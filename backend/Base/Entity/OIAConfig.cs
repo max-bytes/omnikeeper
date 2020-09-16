@@ -3,6 +3,7 @@ using System;
 
 namespace Landscape.Base.Entity
 {
+    // TODO: rename to OIAContext(?)
     public class OIAConfig : IEquatable<OIAConfig>
     {
         public long ID { get; private set; }

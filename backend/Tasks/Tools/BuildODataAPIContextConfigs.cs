@@ -2,7 +2,7 @@
 using LandscapeRegistry.Controllers.OData;
 using Newtonsoft.Json;
 using NUnit.Framework;
-using OnlineInboundAdapterOmnikeeper;
+using OKPluginOIAOmnikeeper;
 using System;
 using System.Collections.Generic;
 using System.Text;

@@ -1,4 +1,5 @@
-﻿using Hangfire.Server;
+﻿using Hangfire;
+using Hangfire.Server;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
 using Landscape.Base.Service;
@@ -39,6 +40,8 @@ namespace LandscapeRegistry.Runners
             this.conn = conn;
         }
 
+        [DisableConcurrentExecution(timeoutInSeconds: 60)]
+        [AutomaticRetry(Attempts = 0)]
         public void Run(PerformContext context)
         {
             using (HangfireConsoleLogger.InContext(context))

@@ -76,11 +76,11 @@ namespace LandscapeRegistry.Service
 
         private static void CancelAndRemoveChangeToken(IMemoryCache memoryCache, string tokenKey)
         {
-            var token = memoryCache.Get<CancellationTokenSource>(tokenKey);
-            if (token != null) // HACK Get() and Remove() are not atomic... is this a problem?
+            var tokenSource = memoryCache.Get<CancellationTokenSource>(tokenKey);
+            if (tokenSource != null) // HACK,TODO Get() and Remove() are not atomic... is this a problem? apparently, yes!
             {
                 memoryCache.Remove(tokenKey);
-                token.Cancel();
+                tokenSource.Cancel();
             }
         }
 

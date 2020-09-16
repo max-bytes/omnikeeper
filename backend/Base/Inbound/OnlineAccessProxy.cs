@@ -26,18 +26,19 @@ namespace Landscape.Base.Inbound
         public async Task<bool> IsOnlineInboundLayer(long layerID, NpgsqlTransaction trans)
         {
             var layer = await layerModel.GetLayer(layerID, trans);
+            if (layer == null) return false;
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
             return plugin != null;
         }
 
-        private async IAsyncEnumerable<(IOnlineInboundLayerAccessProxy proxy, Layer layer)> GetAccessProxies(LayerSet layerset, NpgsqlTransaction trans)
+        private async IAsyncEnumerable<(ILayerAccessProxy proxy, Layer layer)> GetAccessProxies(LayerSet layerset, NpgsqlTransaction trans)
         {
             foreach (var layer in await layerModel.GetLayers(layerset.LayerIDs, trans))
             {
                 var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
                 if (plugin != null)
                 {
-                    yield return (plugin.GetLayerAccessProxy(layer), layer);
+                    yield return (plugin.CreateLayerAccessProxy(layer), layer);
                 }
             }
         }
@@ -55,7 +56,7 @@ namespace Landscape.Base.Inbound
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-            await foreach (var a in plugin.GetLayerAccessProxy(layer).GetAttributes(selection, atTime))
+            await foreach (var a in plugin.CreateLayerAccessProxy(layer).GetAttributes(selection, atTime))
                 yield return a;
         }
 
@@ -63,7 +64,7 @@ namespace Landscape.Base.Inbound
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-            await foreach (var a in plugin.GetLayerAccessProxy(layer).FindAttributesByName(regex, selection, atTime))
+            await foreach (var a in plugin.CreateLayerAccessProxy(layer).FindAttributesByName(regex, selection, atTime))
                 yield return a;
         }
 
@@ -71,7 +72,7 @@ namespace Landscape.Base.Inbound
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-            await foreach (var a in plugin.GetLayerAccessProxy(layer).FindAttributesByFullName(name, selection, atTime))
+            await foreach (var a in plugin.CreateLayerAccessProxy(layer).FindAttributesByFullName(name, selection, atTime))
                 yield return a;
         }
 
@@ -79,14 +80,14 @@ namespace Landscape.Base.Inbound
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-            return await plugin.GetLayerAccessProxy(layer).GetRelation(fromCIID, toCIID, predicateID, atTime);
+            return await plugin.CreateLayerAccessProxy(layer).GetRelation(fromCIID, toCIID, predicateID, atTime);
         }
 
         public async IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-            await foreach (var relation in plugin.GetLayerAccessProxy(layer).GetRelations(rl, atTime))
+            await foreach (var relation in plugin.CreateLayerAccessProxy(layer).GetRelations(rl, atTime))
                 yield return relation;
         }
 
@@ -94,7 +95,7 @@ namespace Landscape.Base.Inbound
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-            return await plugin.GetLayerAccessProxy(layer).GetAttribute(name, ciid, atTime);
+            return await plugin.CreateLayerAccessProxy(layer).GetAttribute(name, ciid, atTime);
         }
     }
 }

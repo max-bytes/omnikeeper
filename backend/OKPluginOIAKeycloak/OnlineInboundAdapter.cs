@@ -5,11 +5,12 @@ using Landscape.Base.Entity;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace OnlineInboundAdapterKeycloak
+namespace OKPluginOIAKeycloak
 {
     public class OnlineInboundAdapter : IOnlineInboundAdapter
     {
@@ -18,7 +19,7 @@ namespace OnlineInboundAdapterKeycloak
             public string Name => StaticName;
             public static string StaticName => "Keycloak";
 
-            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister)
+            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister, ILoggerFactory loggerFactory)
             {
                 var cconfig = config as Config;
                 var scopedExternalIDMapper = externalIDMapper.RegisterScoped(new KeycloakScopedExternalIDMapper(cconfig.mapperScope, persister));
@@ -53,7 +54,7 @@ namespace OnlineInboundAdapterKeycloak
             public string Name => StaticName;
             public static string StaticName => "Keycloak Internal";
 
-            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister)
+            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister, ILoggerFactory loggerFactory)
             {
                 var configInternal = config as ConfigInternal;
 
@@ -119,6 +120,6 @@ namespace OnlineInboundAdapterKeycloak
 
         public IExternalIDManager GetExternalIDManager() => externalIDManager;
 
-        public IOnlineInboundLayerAccessProxy GetLayerAccessProxy(Layer layer) => new KeycloakLayerAccessProxy(client, config.realm, scopedExternalIDMapper, layer);
+        public ILayerAccessProxy CreateLayerAccessProxy(Layer layer) => new KeycloakLayerAccessProxy(client, config.realm, scopedExternalIDMapper, layer);
     }
 }

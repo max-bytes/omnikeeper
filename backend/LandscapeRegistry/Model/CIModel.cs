@@ -85,6 +85,7 @@ namespace LandscapeRegistry.Model
         {
             var CIIDs = await GetCIIDsFromSelection(selection, trans);
             var ciNames = await GetCINames(visibleLayers, selection, trans, atTime);
+            // TODO: this actually returns empty compact CIs for ANY Guid/CI-ID, even ones that don't exist. check if that's expected, I believe not
 
             return CIIDs.Select(ciid => CompactCI.Build(ciid, ciNames[ciid], visibleLayers.LayerHash, atTime));
         }

@@ -23,11 +23,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CLBMonitoring", "Monitoring
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBMigrate", "DBMigrate\DBMigrate.csproj", "{5CEA4BAB-01F7-4AD6-B824-9350929A7A89}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineInboundAdapterKeycloak", "KeycloakOnlineInboundLayerPlugin\OnlineInboundAdapterKeycloak.csproj", "{5965EF78-3BE5-4387-8475-2936CBE14FFE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginOIAKeycloak", "OKPluginOIAKeycloak\OKPluginOIAKeycloak.csproj", "{5965EF78-3BE5-4387-8475-2936CBE14FFE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineInboundAdapterOmnikeeper", "OmnikeeperOnlineInboundAdapter\OnlineInboundAdapterOmnikeeper.csproj", "{C8259B95-73D9-492E-9196-75BD8497F66C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginOIAOmnikeeper", "OKPluginOIAOmnikeeper\OKPluginOIAOmnikeeper.csproj", "{C8259B95-73D9-492E-9196-75BD8497F66C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tasks", "Tasks\Tasks.csproj", "{270B435A-F624-4740-9EEE-F847B210C447}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginOIASharepoint", "OKPluginOIASharepoint\OKPluginOIASharepoint.csproj", "{8AD1FA01-D4AD-4D04-9318-7CB0C78377B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginOIASharepoint.Tests", "OKPluginOIASharepoint.Tests\OKPluginOIASharepoint.Tests.csproj", "{6A10D985-11B9-483E-877B-ED67656BF8A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,6 +75,14 @@ Global
 		{270B435A-F624-4740-9EEE-F847B210C447}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{270B435A-F624-4740-9EEE-F847B210C447}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{270B435A-F624-4740-9EEE-F847B210C447}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8AD1FA01-D4AD-4D04-9318-7CB0C78377B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AD1FA01-D4AD-4D04-9318-7CB0C78377B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8AD1FA01-D4AD-4D04-9318-7CB0C78377B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8AD1FA01-D4AD-4D04-9318-7CB0C78377B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A10D985-11B9-483E-877B-ED67656BF8A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A10D985-11B9-483E-877B-ED67656BF8A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A10D985-11B9-483E-877B-ED67656BF8A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A10D985-11B9-483E-877B-ED67656BF8A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
