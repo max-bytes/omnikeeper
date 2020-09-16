@@ -4,6 +4,7 @@ using Landscape.Base.Utils;
 using LandscapeRegistry.Service;
 using Microsoft.Extensions.Caching.Memory;
 using Npgsql;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -33,10 +34,10 @@ namespace LandscapeRegistry.Model.Decorators
             else return await Model.GetPredicates(trans, atTime, stateFilter);
         }
 
-        public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints, NpgsqlTransaction trans)
+        public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints, NpgsqlTransaction trans, DateTimeOffset? timestamp = null)
         {
             memoryCache.CancelPredicatesChangeToken(); // TODO: only evict cache when insert changes
-            return await Model.InsertOrUpdate(id, wordingFrom, wordingTo, state, constraints, trans);
+            return await Model.InsertOrUpdate(id, wordingFrom, wordingTo, state, constraints, trans, timestamp);
         }
 
         public async Task<bool> TryToDelete(string id, NpgsqlTransaction trans)
