@@ -8,7 +8,7 @@ namespace Landscape.Base.Model
 {
     public interface IOIAConfigModel
     {
-        Task<IEnumerable<OIAConfig>> GetConfigs(NpgsqlTransaction trans);
+        Task<IEnumerable<OIAConfig>> GetConfigs(bool useFallbackConfig, NpgsqlTransaction trans);
         Task<OIAConfig> GetConfigByName(string name, NpgsqlTransaction trans);
         Task<OIAConfig> Create(string name, IOnlineInboundAdapter.IConfig config, NpgsqlTransaction trans);
         Task<OIAConfig> Update(long id, string name, IOnlineInboundAdapter.IConfig config, NpgsqlTransaction trans);

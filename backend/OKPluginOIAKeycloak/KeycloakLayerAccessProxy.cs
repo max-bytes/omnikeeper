@@ -11,16 +11,14 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace OnlineInboundAdapterKeycloak
+namespace OKPluginOIAKeycloak
 {
-    public class KeycloakLayerAccessProxy : IOnlineInboundLayerAccessProxy
+    public class KeycloakLayerAccessProxy : ILayerAccessProxy
     {
         private readonly KeycloakClient client;
         private readonly string realm;
         private readonly KeycloakScopedExternalIDMapper mapper;
         private readonly Layer layer;
-
-        public string Name => "Keycloak";
 
         private static readonly Guid staticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "keycloak");
 

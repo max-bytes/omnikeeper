@@ -85,7 +85,7 @@ namespace LandscapeRegistry.Ingest.ActiveDirectoryXML
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Surname", "user.last_name"));
 
                 var ad = CICandidateAttributeData.Build(fragments);
-                var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.Build(IdentifiableUserAttributes, ad, searchLayers), ad);
+                var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.BuildFromAttributes(IdentifiableUserAttributes, ad, searchLayers), ad);
                 yield return (Guid.NewGuid(), ciCandidate);
             }
         }
@@ -135,7 +135,7 @@ namespace LandscapeRegistry.Ingest.ActiveDirectoryXML
                 }
 
                 var ad = CICandidateAttributeData.Build(fragments);
-                var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.Build(IdentifiableComputerAttributes, ad, searchLayers), ad);
+                var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.BuildFromAttributes(IdentifiableComputerAttributes, ad, searchLayers), ad);
                 computers.Add((computerGuid, ciCandidate));
             }
 
@@ -188,7 +188,7 @@ namespace LandscapeRegistry.Ingest.ActiveDirectoryXML
                 }
 
                 var ad = CICandidateAttributeData.Build(fragments);
-                var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.Build(IdentifiableGroupAttributes, ad, searchLayers), ad);
+                var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.BuildFromAttributes(IdentifiableGroupAttributes, ad, searchLayers), ad);
                 groups.Add((groupGuid, ciCandidate));
             }
 

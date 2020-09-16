@@ -64,7 +64,7 @@ namespace LandscapeRegistry.Model
 
 
             // HACK, properly sort unnamed CIs
-            return cis.OrderBy(t => t.Name ?? "ZZZZZZZZZZZ").Take(500);
+            return cis.OrderBy(t => t.Name ?? "ZZZZZZZZZZZ").Take(1500); // TODO: remove hard limit, customize
         }
 
         public async Task<IEnumerable<CompactCI>> AdvancedSearch(string searchString, string[] withEffectiveTraits, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime)

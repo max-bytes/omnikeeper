@@ -91,7 +91,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                         String2Attribute("fqdn", fqdn)
                     };
                     var attributes = CICandidateAttributeData.Build(attributeFragments);
-                    var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }, attributes, searchLayers), attributes);
+                    var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.BuildFromAttributes(new string[] { "fqdn" }, attributes, searchLayers), attributes);
                     cis.Add(tempCIID, ciCandidate);
 
                     baseCIs.Add(fqdn, (tempCIID, ciCandidate));
@@ -123,7 +123,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                         var attributeData = CICandidateAttributeData.Build(attributeFragmentsMount);
                         cis.Add(tempMountCIID, CICandidate.Build(
                             // TODO: ansible mounts have an uuid, find out what that is and if they can be used for identification
-                            CIIdentificationMethodByData.Build(new string[] { "device", "mount", ICIModel.NameAttribute }, attributeData, searchLayers), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
+                            CIIdentificationMethodByData.BuildFromAttributes(new string[] { "device", "mount", ICIModel.NameAttribute }, attributeData, searchLayers), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
                             attributeData));
 
                         relations.Add(RelationCandidate.Build(
@@ -150,7 +150,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                         }.Where(item => item != null);
                         var attributeData = CICandidateAttributeData.Build(attributeFragmentsInterface);
                         cis.Add(tempCIIDInterface, CICandidate.Build(
-                            CIIdentificationMethodByData.Build(new string[] { ICIModel.NameAttribute }, attributeData, searchLayers), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
+                            CIIdentificationMethodByData.BuildFromAttributes(new string[] { ICIModel.NameAttribute }, attributeData, searchLayers), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
                             attributeData));
 
                         relations.Add(RelationCandidate.Build(
@@ -181,7 +181,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                     }
                     else
                     { // treat as new CI
-                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }, attributes, searchLayers), attributes));
+                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.BuildFromAttributes(new string[] { "fqdn" }, attributes, searchLayers), attributes));
                     }
                 }
                 foreach (var kvRepos in data.YumRepos)
@@ -204,7 +204,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                     }
                     else
                     { // treat as new CI
-                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }, attributes, searchLayers), attributes));
+                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.BuildFromAttributes(new string[] { "fqdn" }, attributes, searchLayers), attributes));
                     }
                 }
                 foreach (var kvUpdates in data.YumUpdates)
@@ -227,7 +227,7 @@ namespace LandscapeRegistry.Controllers.Ingest
                     }
                     else
                     { // treat as new CI
-                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.Build(new string[] { "fqdn" }, attributes, searchLayers), attributes));
+                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.BuildFromAttributes(new string[] { "fqdn" }, attributes, searchLayers), attributes));
                     }
                 }
 

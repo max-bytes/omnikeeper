@@ -14,9 +14,8 @@ namespace Landscape.Base.Service
 {
     public class CIMappingService
     {
-        public async Task<Guid?> TryToMatch(string ciCandidateID, ICIIdentificationMethod method, CIMappingContext ciMappingContext, NpgsqlTransaction trans, ILogger logger)
+        public async Task<IEnumerable<Guid>> TryToMatch(string ciCandidateID, ICIIdentificationMethod method, CIMappingContext ciMappingContext, NpgsqlTransaction trans, ILogger logger)
         {
-            Guid? ciid = null;
             switch (method)
             {
                 case CIIdentificationMethodByData d: // use identifiable data for finding out CIID
@@ -33,34 +32,19 @@ namespace Landscape.Base.Service
                         isFirst = false;
                     }
 
-                    if (!candidateCIIDs.IsEmpty())
-                    { // we found at least one fitting ci, use that // TODO: order matters!!! Find out how to deal with that
-                        if (candidateCIIDs.Count > 1)
-                        {
-                            logger.LogWarning($"Ambiguous identification of CICandidate {ciCandidateID}, using first one");
-                        }
-                        ciid = candidateCIIDs[0]; // simply use first matching ciid for now
-                        logger.LogInformation($"Fitting CI found for identification. CI-ID: {ciid}");
-                    }
-                    else
-                    {
-                        // we didn't find a matching CI
-                        logger.LogInformation($"No fitting CI found for identification");
-                    }
-
-                    break;
+                    return candidateCIIDs;
                 case CIIdentificationMethodByTemporaryCIID t:
-                    if (!ciMappingContext.TryGetMappedTemp2FinalCIID(t.CIID, out ciid))
+                    if (!ciMappingContext.TryGetMappedTemp2FinalCIID(t.CIID, out Guid ciid))
                         throw new Exception($"Could not find temporary CIID {t.CIID} while trying to match CICandidate {ciCandidateID}");
-                    break;
+                    return new List<Guid>() { ciid };
                 case CIIdentificationMethodByCIID c:
-                    ciid = c.CIID;
-                    break;
+                    return new List<Guid>() { c.CIID };
                 case CIIdentificationMethodNoop _:
-                    break;
+                    return new List<Guid>() { };
+                default:
+                    logger.LogWarning("Unknown CI Identification method detected");
+                    return new List<Guid>() { };
             }
-
-            return ciid;
         }
 
         /// <summary>
@@ -93,10 +77,6 @@ namespace Landscape.Base.Service
             }
 
             public bool TryGetMappedTemp2FinalCIID(Guid temp, out Guid final)
-            {
-                return temp2finalCIIDMapping.TryGetValue(temp, out final);
-            }
-            public bool TryGetMappedTemp2FinalCIID(Guid temp, out Guid? final)
             {
                 return temp2finalCIIDMapping.TryGetValue(temp, out final);
             }
@@ -151,7 +131,7 @@ namespace Landscape.Base.Service
         public CICandidateAttributeData.Fragment[] IdentifiableFragments { get; private set; }
         public LayerSet SearchableLayers { get; private set; }
 
-        public static CIIdentificationMethodByData Build(string[] identifiableAttributes, CICandidateAttributeData allAttributes, LayerSet searchableLayers)
+        public static CIIdentificationMethodByData BuildFromAttributes(string[] identifiableAttributes, CICandidateAttributeData allAttributes, LayerSet searchableLayers)
         {
             var identifiableFragments = identifiableAttributes.Select(ia =>
             {
@@ -164,6 +144,11 @@ namespace Landscape.Base.Service
             }).Where(f => f != null).ToList();
 
             return new CIIdentificationMethodByData() { IdentifiableFragments = identifiableFragments.ToArray(), SearchableLayers = searchableLayers };
+        }
+
+        public static CIIdentificationMethodByData BuildFromFragments(IEnumerable<CICandidateAttributeData.Fragment> fragments, LayerSet searchableLayers)
+        {
+            return new CIIdentificationMethodByData() { IdentifiableFragments = fragments.ToArray(), SearchableLayers = searchableLayers };
         }
     }
     public class CIIdentificationMethodByTemporaryCIID : ICIIdentificationMethod

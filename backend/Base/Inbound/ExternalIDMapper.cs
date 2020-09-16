@@ -1,4 +1,5 @@
 ﻿using Landscape.Base.Service;
+using Npgsql;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -59,19 +60,24 @@ namespace Landscape.Base.Inbound
                 var data = await persister.Load(Scope);
                 if (data != null)
                 {
+                    // TODO: ensure that int2ext and ext2int both only contain unique keys AND are "equal"
                     int2ext = data.ToDictionary(kv => kv.Key, kv => string2ExtIDF(kv.Value));
-                    ext2int = int2ext.ToDictionary(x => x.Value, x => x.Key);
+                    ext2int = int2ext.GroupBy(x => x.Value).ToDictionary(x => x.Key, x => x.First().Key);
                 }
                 loaded = true;
             }
         }
 
-        public abstract ICIIdentificationMethod GetIdentificationMethod(EID externalID);
-
         public void Add(Guid ciid, EID externalID)
         {
-            int2ext.Add(ciid, externalID);
-            ext2int.Add(externalID, ciid);
+            try
+            {
+                int2ext.Add(ciid, externalID);
+                ext2int.Add(externalID, ciid);
+            }catch (Exception e)
+            {
+                throw e;
+            }
         }
 
         public void RemoveViaExternalID(EID externalID)
@@ -93,7 +99,7 @@ namespace Landscape.Base.Inbound
             return remove;
         }
 
-        public IEnumerable<(Guid, EID)> GetIDPairs(ISet<Guid> fromSubSelectionCIIDs)
+        public IEnumerable<(Guid ciid, EID externalID)> GetIDPairs(ISet<Guid> fromSubSelectionCIIDs)
         {
             if (fromSubSelectionCIIDs != null)
                 return int2ext.Where(kv => fromSubSelectionCIIDs.Contains(kv.Key)).Select(kv => (kv.Key, kv.Value));
@@ -102,6 +108,7 @@ namespace Landscape.Base.Inbound
         }
 
         public bool ExistsInternally(EID externalID) => ext2int.ContainsKey(externalID);
+        public bool ExistsExternally(Guid ciid) => int2ext.ContainsKey(ciid);
 
         public IEnumerable<Guid> GetAllCIIDs() => int2ext.Keys;
 
@@ -116,9 +123,9 @@ namespace Landscape.Base.Inbound
             return externalID.Equals(default(EID)) ? null : new EID?(externalID); // NOTE: EID is a value type, which is why we need to check for default and return null if so
         }
 
-        public async Task Persist()
+        public async Task Persist(NpgsqlTransaction trans)
         {
-            await persister.Persist(Scope, int2ext.ToDictionary(kv => kv.Key, kv => kv.Value.ConvertToString()));
+            await persister.Persist(Scope, int2ext.ToDictionary(kv => kv.Key, kv => kv.Value.SerializeToString()), trans);
         }
     }
 }

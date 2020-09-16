@@ -1,13 +1,14 @@
 ﻿using Landscape.Base.Inbound;
 using Landscape.Base.Model;
+using Landscape.Base.Service;
 using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static OnlineInboundAdapterOmnikeeper.OnlineInboundAdapter;
+using static OKPluginOIAOmnikeeper.OnlineInboundAdapter;
 
-namespace OnlineInboundAdapterOmnikeeper
+namespace OKPluginOIAOmnikeeper
 {
     public class ExternalCI : IExternalItem<ExternalIDGuid>
     {
@@ -30,12 +31,12 @@ namespace OnlineInboundAdapterOmnikeeper
             this.config = config;
         }
 
-        protected override async Task<IEnumerable<ExternalIDGuid>> GetExternalIDs()
+        protected override async Task<IEnumerable<(ExternalIDGuid externalID, ICIIdentificationMethod idMethod)>> GetExternalIDs()
         {
             var layers = await client.GetLayersByNameAsync(config.remoteLayerNames, ClientVersion);
             var layerIDs = layers.Select(l => l.ID);
             var ciids = await client.GetCIIDsOfNonEmptyCIsAsync(layerIDs, null, ClientVersion); // get all ciids from cis who have at least one attribute or relation in the specified layerset
-            return ciids.Select(id => new ExternalIDGuid(id));
+            return ciids.Select(id => (new ExternalIDGuid(id), (ICIIdentificationMethod)CIIdentificationMethodByCIID.Build(id)));
         }
     }
 }

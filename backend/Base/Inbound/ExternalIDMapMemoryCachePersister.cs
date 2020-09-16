@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -23,7 +24,7 @@ namespace Landscape.Base.Inbound
             return null;
         }
 
-        public async Task Persist(string scope, IDictionary<Guid, string> int2ext)
+        public async Task Persist(string scope, IDictionary<Guid, string> int2ext, NpgsqlTransaction trans)
         {
             mc.Set(scope, int2ext);
         }

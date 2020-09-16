@@ -4,13 +4,14 @@ using Landscape.Base.Entity;
 using Landscape.Base.Inbound;
 using Landscape.Base.Model;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
-namespace OnlineInboundAdapterOmnikeeper
+namespace OKPluginOIAOmnikeeper
 {
     public class OnlineInboundAdapter : IOnlineInboundAdapter
     {
@@ -19,7 +20,7 @@ namespace OnlineInboundAdapterOmnikeeper
             public string Name => StaticName;
             public static string StaticName => "Omnikeeper";
 
-            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister)
+            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister, ILoggerFactory loggerFactory)
             {
                 var cconfig = config as Config;
                 var scopedExternalIDMapper = externalIDMapper.RegisterScoped(new ScopedExternalIDMapper(cconfig.mapperScope, persister));
@@ -77,6 +78,6 @@ namespace OnlineInboundAdapterOmnikeeper
 
         public IExternalIDManager GetExternalIDManager() => externalIDManager;
 
-        public IOnlineInboundLayerAccessProxy GetLayerAccessProxy(Layer layer) => new LayerAccessProxy(config.remoteLayerNames, client, scopedExternalIDMapper, layer);
+        public ILayerAccessProxy CreateLayerAccessProxy(Layer layer) => new LayerAccessProxy(config.remoteLayerNames, client, scopedExternalIDMapper, layer);
     }
 }

@@ -15,13 +15,13 @@ namespace Landscape.Base.Inbound
 {
     public interface IExternalIDMapPersister
     {
-        public Task Persist(string scope, IDictionary<Guid, string> int2ext);
+        public Task Persist(string scope, IDictionary<Guid, string> int2ext, NpgsqlTransaction trans);
         public Task<IDictionary<Guid, string>> Load(string scope);
     }
 
     public interface IExternalID
     {
-        string ConvertToString();
+        string SerializeToString();
     }
 
     public struct ExternalIDString : IExternalID, IEquatable<ExternalIDString>
@@ -33,7 +33,7 @@ namespace Landscape.Base.Inbound
             ID = id;
         }
 
-        public string ConvertToString() => ID;
+        public string SerializeToString() => ID;
         public override string ToString()
         {
             return ID;
@@ -56,7 +56,7 @@ namespace Landscape.Base.Inbound
             ID = id;
         }
 
-        public string ConvertToString() => ID.ToString();
+        public string SerializeToString() => ID.ToString();
         public override string ToString()
         {
             return ID.ToString();
@@ -81,10 +81,8 @@ namespace Landscape.Base.Inbound
         TimeSpan PreferredUpdateRate { get; }
     }
 
-    public interface IOnlineInboundLayerAccessProxy
+    public interface ILayerAccessProxy
     {
-        string Name { get; }
-
         IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime);
         //IAsyncEnumerable<CIAttribute> GetAttributesWithName(string name, TimeThreshold atTime);
         IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, TimeThreshold atTime);
@@ -113,7 +111,7 @@ namespace Landscape.Base.Inbound
     public interface IOnlineInboundAdapterBuilder
     {
         public string Name { get; }
-        public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister);
+        public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister, ILoggerFactory loggerFactory);
     }
 
     public interface IOnlineInboundAdapter
@@ -130,6 +128,6 @@ namespace Landscape.Base.Inbound
 
         IExternalIDManager GetExternalIDManager();
 
-        IOnlineInboundLayerAccessProxy GetLayerAccessProxy(Layer layer);
+        ILayerAccessProxy CreateLayerAccessProxy(Layer layer);
     }
 }

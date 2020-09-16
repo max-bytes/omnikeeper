@@ -212,7 +212,7 @@ namespace LandscapeRegistry.GraphQL
             FieldAsync<ListGraphType<OIAConfigType>>("oiaconfigs",
                 resolve: async context =>
                 {
-                    var configs = await oiaConfigModel.GetConfigs(null);
+                    var configs = await oiaConfigModel.GetConfigs(true, null);
 
                     return configs;
                 });

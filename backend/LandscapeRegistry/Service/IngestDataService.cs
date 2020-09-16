@@ -48,12 +48,12 @@ namespace LandscapeRegistry.Service
                 var ciCandidateID = cic.Key;
 
                 // find out if it's a new CI or an existing one
-                var foundCIID = await ciMappingService.TryToMatch(ciCandidateID.ToString(), cic.Value.IdentificationMethod, ciMappingContext, trans, logger);
+                var foundCIIDs = await ciMappingService.TryToMatch(ciCandidateID.ToString(), cic.Value.IdentificationMethod, ciMappingContext, trans, logger);
 
                 Guid finalCIID;
-                if (foundCIID.HasValue)
+                if (!foundCIIDs.IsEmpty())
                 {
-                    finalCIID = foundCIID.Value;
+                    finalCIID = foundCIIDs.First(); // TODO: how to deal with ambiguities? In other words: more than one CI fit, where to put the data?
                 } else
                 {
                     // CI is new, create it first

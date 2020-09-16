@@ -9,6 +9,7 @@ using NUnit.Framework;
 using NUnit.Framework.Internal;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,20 +19,20 @@ namespace Tests.OIA
     {
         public class TestedExternalIDManager : ExternalIDManager<ExternalIDString>
         {
-            private readonly IList<ExternalIDString> ids = new List<ExternalIDString>();
+            private readonly IList<(ExternalIDString, ICIIdentificationMethod)> ids = new List<(ExternalIDString, ICIIdentificationMethod)>();
 
             public TestedExternalIDManager(ScopedExternalIDMapper<ExternalIDString> mapper) : base(mapper, TimeSpan.Zero)
             {
             }
 
-            protected async override Task<IEnumerable<ExternalIDString>> GetExternalIDs()
+            protected async override Task<IEnumerable<(ExternalIDString, ICIIdentificationMethod)>> GetExternalIDs()
             {
                 return ids;
             }
 
             public TestedExternalIDManager Add(string externalID)
             {
-                ids.Add(new ExternalIDString(externalID));
+                ids.Add((new ExternalIDString(externalID), CIIdentificationMethodNoop.Build()));
                 return this;
             }
 
@@ -47,8 +48,6 @@ namespace Tests.OIA
             public TestedScopedExternalIDMapper(string scope, IExternalIDMapPersister persister) : base(scope, persister, (s) => new ExternalIDString(s))
             {
             }
-
-            public override ICIIdentificationMethod GetIdentificationMethod(ExternalIDString externalID) => CIIdentificationMethodNoop.Build();
         }
 
         [Test]
@@ -132,20 +131,20 @@ namespace Tests.OIA
 
         public class TestedExternalIDManager2 : ExternalIDManager<ExternalIDGuid>
         {
-            private readonly IList<ExternalIDGuid> ids = new List<ExternalIDGuid>();
+            private readonly IList<(ExternalIDGuid, ICIIdentificationMethod)> ids = new List<(ExternalIDGuid, ICIIdentificationMethod)>();
 
             public TestedExternalIDManager2(ScopedExternalIDMapper<ExternalIDGuid> mapper) : base(mapper, TimeSpan.Zero)
             {
             }
 
-            protected async override Task<IEnumerable<ExternalIDGuid>> GetExternalIDs()
+            protected async override Task<IEnumerable<(ExternalIDGuid, ICIIdentificationMethod)>> GetExternalIDs()
             {
                 return ids;
             }
 
             public TestedExternalIDManager2 Add(Guid externalID)
             {
-                ids.Add(new ExternalIDGuid(externalID));
+                ids.Add((new ExternalIDGuid(externalID), CIIdentificationMethodByCIID.Build(externalID)));
                 return this;
             }
 
@@ -160,8 +159,6 @@ namespace Tests.OIA
             public TestedScopedExternalIDMapper2(string scope, IExternalIDMapPersister persister) : base(scope, persister, (s) => new ExternalIDGuid(Guid.Parse(s)))
             {
             }
-
-            public override ICIIdentificationMethod GetIdentificationMethod(ExternalIDGuid externalID) => CIIdentificationMethodByCIID.Build(externalID.ID);
         }
 
         [Test]

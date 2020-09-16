@@ -82,9 +82,10 @@ namespace LandscapeRegistry
             // register online inbound adapters and managers
             services.AddSingleton<IExternalIDMapper, ExternalIDMapper>();
             services.AddSingleton<IExternalIDMapPersister, ExternalIDMapPostgresPersister>();
-            services.AddScoped<IOnlineInboundAdapterBuilder, OnlineInboundAdapterKeycloak.OnlineInboundAdapter.Builder>();
-            services.AddScoped<IOnlineInboundAdapterBuilder, OnlineInboundAdapterKeycloak.OnlineInboundAdapter.BuilderInternal>();
-            services.AddScoped<IOnlineInboundAdapterBuilder, OnlineInboundAdapterOmnikeeper.OnlineInboundAdapter.Builder>();
+            services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.Builder>();
+            services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.BuilderInternal>();
+            services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIAOmnikeeper.OnlineInboundAdapter.Builder>();
+            services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIASharepoint.OnlineInboundAdapter.Builder>();
             services.AddScoped<IInboundAdapterManager, InboundAdapterManager>();
 
             services.AddCors(options => options.AddPolicy("DefaultCORSPolicy", builder =>
