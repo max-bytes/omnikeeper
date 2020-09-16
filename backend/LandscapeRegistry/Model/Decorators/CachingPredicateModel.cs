@@ -34,17 +34,41 @@ namespace LandscapeRegistry.Model.Decorators
             else return await Model.GetPredicates(trans, atTime, stateFilter);
         }
 
+        public async Task<Predicate> GetPredicate(string id, TimeThreshold atTime, AnchorStateFilter stateFilter, NpgsqlTransaction trans)
+        {
+            
+            if (atTime.IsLatest)
+            {
+                return await memoryCache.GetOrCreateAsync(CacheKeyService.Predicate(id), async (ce) =>
+                {
+                    var changeToken = memoryCache.GetPredicateCancellationToken(id);
+                    ce.AddExpirationToken(changeToken);
+
+                    return await Model.GetPredicate(id, atTime, stateFilter, trans);
+                });
+            }
+
+            return await Model.GetPredicate(id, atTime, stateFilter, trans);
+        }
+
         public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints, NpgsqlTransaction trans, DateTimeOffset? timestamp = null)
         {
             memoryCache.CancelPredicatesChangeToken(); // TODO: only evict cache when insert changes
+            memoryCache.CancelPredicateChangeToken(id);
+
             return await Model.InsertOrUpdate(id, wordingFrom, wordingTo, state, constraints, trans, timestamp);
         }
 
         public async Task<bool> TryToDelete(string id, NpgsqlTransaction trans)
         {
             var success = await Model.TryToDelete(id, trans);
+
             if (success)
+            {
                 memoryCache.CancelPredicatesChangeToken();
+                memoryCache.CancelPredicateChangeToken(id);
+            }
+                
             return success;
         }
     }
