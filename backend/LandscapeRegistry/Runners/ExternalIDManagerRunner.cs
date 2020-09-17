@@ -83,7 +83,7 @@ namespace LandscapeRegistry.Runners
                         {
                             using var trans = conn.BeginTransaction();
 
-                            var changes = await manager.Update(ciModel, attributeModel, ciMappingService, trans, logger);
+                            var changes = await manager.Update(ciModel, attributeModel, ciMappingService, conn, trans, logger);
 
                             if (changes)
                             {
