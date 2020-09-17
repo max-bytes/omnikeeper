@@ -22,11 +22,15 @@ namespace OKPluginOIASharepoint
             public string Name => StaticName;
             public static string StaticName => "Sharepoint";
 
-            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister, ILoggerFactory loggerFactory)
+            public IScopedExternalIDMapper BuildIDMapper(IScopedExternalIDMapPersister persister)
+            {
+                return new ScopedExternalIDMapper(persister);
+            }
+
+            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IScopedExternalIDMapper scopedExternalIDMapper, ILoggerFactory loggerFactory)
             {
                 var cconfig = config as Config;
-                var scopedExternalIDMapper = externalIDMapper.RegisterScoped(new ScopedExternalIDMapper(cconfig.mapperScope, persister));
-                return new OnlineInboundAdapter(cconfig, scopedExternalIDMapper, loggerFactory.CreateLogger<OnlineInboundAdapter>());
+                return new OnlineInboundAdapter(cconfig, scopedExternalIDMapper as ScopedExternalIDMapper, loggerFactory.CreateLogger<OnlineInboundAdapter>());
             }
         }
 

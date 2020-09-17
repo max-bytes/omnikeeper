@@ -10,47 +10,29 @@ namespace Landscape.Base.Inbound
 {
     public class ExternalIDMapPostgresPersister : IExternalIDMapPersister
     {
-        private readonly IConfiguration configuration;
-        private readonly DBConnectionBuilder cb;
-
         private readonly static string SchemaName = "ext_id_mapping";
 
-        public ExternalIDMapPostgresPersister(IConfiguration configuration, DBConnectionBuilder cb)
-        {
-            this.configuration = configuration;
-            this.cb = cb;
-        }
-        public async Task<IDictionary<Guid, string>> Load(string scope)
+        public async Task<IDictionary<Guid, string>> Load(string scope, NpgsqlConnection conn, NpgsqlTransaction trans)
         {
             var tableName = $"{scope}";
             var fullTableName = $"\"{SchemaName}\".{tableName}";
-            var conn = cb.Build(configuration); // TODO: not a fan of creating our own db connection here, but the persister is instanced as a singleton and passing a connection is cumbersome
-
-            if (conn == null) return ImmutableDictionary<Guid, string>.Empty;
 
             var ret = new Dictionary<Guid, string>();
 
-            using (var trans = conn.BeginTransaction())
+            CreateTableIfNotExists(tableName, trans, conn);
+
+            using (var command = new NpgsqlCommand(@$"SELECT ci_id, external_id from {fullTableName}", conn, trans))
             {
-                CreateTableIfNotExists(tableName, trans, conn);
+                using var dr = await command.ExecuteReaderAsync();
 
-                using (var command = new NpgsqlCommand(@$"SELECT ci_id, external_id from {fullTableName}", conn, trans))
+                while (await dr.ReadAsync())
                 {
-                    using var dr = await command.ExecuteReaderAsync();
+                    var ciid = dr.GetGuid(0);
+                    var external_id = dr.GetString(1);
 
-                    while (await dr.ReadAsync())
-                    {
-                        var ciid = dr.GetGuid(0);
-                        var external_id = dr.GetString(1);
-
-                        ret.Add(ciid, external_id);
-                    }
+                    ret.Add(ciid, external_id);
                 }
-
-                trans.Commit();
             }
-
-            conn.Close();
 
             return ret;
         }
@@ -71,12 +53,10 @@ namespace Landscape.Base.Inbound
             cmdCreateTable.ExecuteNonQuery();
         }
 
-        public async Task Persist(string scope, IDictionary<Guid, string> int2ext, NpgsqlTransaction trans)
+        public async Task Persist(string scope, IDictionary<Guid, string> int2ext, NpgsqlConnection conn, NpgsqlTransaction trans)
         {
             var tableName = $"{scope}";
             var fullTableName = $"\"{SchemaName}\".{tableName}";
-
-            var conn = trans.Connection;
 
             CreateTableIfNotExists(tableName, trans, conn);
 
@@ -97,6 +77,36 @@ namespace Landscape.Base.Inbound
 
                 await command.ExecuteScalarAsync();
             }
+        }
+
+        public IScopedExternalIDMapPersister CreateScopedPersister(string scope, NpgsqlConnection conn)
+        {
+            return new ScopedExternalIDMapPostgresPersister(scope, this, conn);
+        }
+    }
+
+
+    public class ScopedExternalIDMapPostgresPersister : IScopedExternalIDMapPersister
+    {
+        private readonly IExternalIDMapPersister centralPersister;
+        private readonly NpgsqlConnection conn;
+
+        public string Scope { get; }
+
+        public ScopedExternalIDMapPostgresPersister(string scope, IExternalIDMapPersister centralPersister, NpgsqlConnection conn)
+        {
+            Scope = scope;
+            this.centralPersister = centralPersister;
+            this.conn = conn;
+        }
+        public async Task<IDictionary<Guid, string>> Load(NpgsqlTransaction trans)
+        {
+            return await centralPersister.Load(Scope, conn, trans);
+        }
+
+        public async Task Persist(IDictionary<Guid, string> int2ext, NpgsqlTransaction trans)
+        {
+            await centralPersister.Persist(Scope, int2ext, conn, trans);
         }
     }
 

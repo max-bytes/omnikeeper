@@ -5,7 +5,7 @@ namespace OKPluginOIASharepoint
 {
     public class ScopedExternalIDMapper : ScopedExternalIDMapper<SharepointExternalListItemID>
     {
-        public ScopedExternalIDMapper(string scope, IExternalIDMapPersister persister) : base(scope, persister, (s) => SharepointExternalListItemID.Deserialize(s))
+        public ScopedExternalIDMapper(IScopedExternalIDMapPersister persister) : base(persister, (s) => SharepointExternalListItemID.Deserialize(s))
         {
         }
     }

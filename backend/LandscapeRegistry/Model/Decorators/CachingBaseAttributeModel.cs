@@ -134,5 +134,11 @@ namespace LandscapeRegistry.Model.Decorators
             foreach (var (ciid, _, _, _) in inserted) memoryCache.CancelAttributesChangeToken(ciid, data.LayerID); // NOTE: inserted list is not distinct on ciids, but that's ok
             return inserted;
         }
+
+        public async Task<int> ArchiveOutdatedAttributesOlderThan(DateTimeOffset threshold, long layerID, NpgsqlTransaction trans)
+        {
+            // NOTE: this method SHOULD NOT have any effect on caching, because we only cache the latest timestamp anyways
+            return await model.ArchiveOutdatedAttributesOlderThan(threshold, layerID, trans);
+        }
     }
 }

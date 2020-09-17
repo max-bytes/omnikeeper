@@ -82,7 +82,7 @@ namespace OKPluginOIASharepoint
         public readonly string site;
         public readonly Guid clientID;
         public readonly string clientSecret;
-        public readonly string mapperScope;
+        public string MapperScope { get; }
         public readonly TimeSpan preferredIDMapUpdateRate;
         public readonly ListConfig[] listConfigs;
 
@@ -96,7 +96,7 @@ namespace OKPluginOIASharepoint
             this.site = site;
             this.clientID = clientID;
             this.clientSecret = clientSecret;
-            this.mapperScope = mapperScope;
+            MapperScope = mapperScope;
             this.preferredIDMapUpdateRate = preferredIDMapUpdateRate;
             this.listConfigs = listConfigs;
         }

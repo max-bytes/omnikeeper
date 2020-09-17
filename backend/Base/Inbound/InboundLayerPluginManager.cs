@@ -19,17 +19,19 @@ namespace Landscape.Base.Inbound
         private readonly IExternalIDMapper externalIDMapper;
         private readonly IOIAConfigModel ioaConfigModel;
         private readonly ILoggerFactory loggerFactory;
+        private readonly NpgsqlConnection conn;
         private readonly IExternalIDMapPersister persister;
         private readonly IConfiguration appConfig;
 
         public InboundAdapterManager(IEnumerable<IOnlineInboundAdapterBuilder> onlinePluginBuilders, IExternalIDMapper externalIDMapper,
-            IOIAConfigModel ioaConfigModel, ILoggerFactory loggerFactory,
+            IOIAConfigModel ioaConfigModel, ILoggerFactory loggerFactory, NpgsqlConnection conn,
             IExternalIDMapPersister persister, IConfiguration appConfig)
         {
             this.onlinePluginsBuilders = onlinePluginBuilders.ToDictionary(p => p.Name);
             this.externalIDMapper = externalIDMapper;
             this.ioaConfigModel = ioaConfigModel;
             this.loggerFactory = loggerFactory;
+            this.conn = conn;
             this.persister = persister;
             this.appConfig = appConfig;
         }
@@ -40,7 +42,14 @@ namespace Landscape.Base.Inbound
             if (config != null)
             {
                 if (onlinePluginsBuilders.TryGetValue(config.Config.BuilderName, out var builder))
-                    return builder.Build(config.Config, appConfig, externalIDMapper, persister, loggerFactory);
+                {
+                    var idMapper = await externalIDMapper.CreateOrGetScoped(
+                        config.Config.MapperScope, 
+                        () => builder.BuildIDMapper(persister.CreateScopedPersister(config.Config.MapperScope, conn)), 
+                        trans);
+                    
+                    return builder.Build(config.Config, appConfig, idMapper, loggerFactory);
+                }
             }
             return null;
         }

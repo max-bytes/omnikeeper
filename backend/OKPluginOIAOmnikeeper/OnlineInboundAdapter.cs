@@ -20,11 +20,14 @@ namespace OKPluginOIAOmnikeeper
             public string Name => StaticName;
             public static string StaticName => "Omnikeeper";
 
-            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister, ILoggerFactory loggerFactory)
+            public IScopedExternalIDMapper BuildIDMapper(IScopedExternalIDMapPersister persister)
+            {
+                return new ScopedExternalIDMapper(persister);
+            }
+            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IScopedExternalIDMapper scopedExternalIDMapper, ILoggerFactory loggerFactory)
             {
                 var cconfig = config as Config;
-                var scopedExternalIDMapper = externalIDMapper.RegisterScoped(new ScopedExternalIDMapper(cconfig.mapperScope, persister));
-                return new OnlineInboundAdapter(cconfig, scopedExternalIDMapper);
+                return new OnlineInboundAdapter(cconfig, scopedExternalIDMapper as ScopedExternalIDMapper);
             }
         }
 
@@ -35,7 +38,7 @@ namespace OKPluginOIAOmnikeeper
             public readonly string realm;
             public readonly string clientID;
             public readonly string clientSecret;
-            public readonly string mapperScope;
+            public string MapperScope { get; }
             public readonly string[] remoteLayerNames;
             public TimeSpan preferredIDMapUpdateRate;
 
@@ -49,7 +52,7 @@ namespace OKPluginOIAOmnikeeper
                 this.realm = realm;
                 this.clientID = clientID;
                 this.clientSecret = clientSecret;
-                this.mapperScope = mapperScope;
+                MapperScope = mapperScope;
                 this.remoteLayerNames = remoteLayerNames;
                 this.preferredIDMapUpdateRate = preferredIDMapUpdateRate;
             }

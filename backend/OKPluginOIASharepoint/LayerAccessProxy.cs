@@ -44,8 +44,6 @@ namespace OKPluginOIASharepoint
 
         public async Task<CIAttribute> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
         {
-            await mapper.Setup();
-
             if (!atTime.IsLatest) return null; // we don't have historic information
 
             var externalID = mapper.GetExternalID(ciid);
@@ -81,8 +79,6 @@ namespace OKPluginOIASharepoint
 
         public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime)
         {
-            await mapper.Setup();
-
             if (!atTime.IsLatest) yield break; // we don't have historic information
 
             var ciids = GetCIIDsFromSelections(selection).ToHashSet();
@@ -133,8 +129,6 @@ namespace OKPluginOIASharepoint
 
         public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string attributeName, ICIIDSelection selection, TimeThreshold atTime)
         {
-            await mapper.Setup();
-
             if (!atTime.IsLatest) yield break; // we don't have historic information
 
             var ciids = GetCIIDsFromSelections(selection).ToHashSet();
@@ -185,8 +179,6 @@ namespace OKPluginOIASharepoint
 
         public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, TimeThreshold atTime)
         {
-            //await mapper.Setup();
-
             //if (!atTime.IsLatest) yield break; // we don't have historic information
 
 

@@ -89,5 +89,12 @@ namespace LandscapeRegistry.Model.Decorators
 
             return await model.BulkReplaceAttributes(data, changesetProxy, trans);
         }
+
+        public async Task<int> ArchiveOutdatedAttributesOlderThan(DateTimeOffset threshold, long layerID, NpgsqlTransaction trans)
+        {
+            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
+
+            return await model.ArchiveOutdatedAttributesOlderThan(threshold, layerID, trans);
+        }
     }
 }

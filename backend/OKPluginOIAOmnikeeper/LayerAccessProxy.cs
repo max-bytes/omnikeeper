@@ -79,8 +79,6 @@ namespace OKPluginOIAOmnikeeper
 
         public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime)
         {
-            await mapper.Setup();
-
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
             IEnumerable<Guid> GetCIIDs(ICIIDSelection selection)
@@ -110,8 +108,6 @@ namespace OKPluginOIAOmnikeeper
 
         public async Task<CIAttribute> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
         {
-            await mapper.Setup();
-
             if (!atTime.IsLatest) return null; // TODO: implement historic information
 
             var externalID = mapper.GetExternalID(ciid);
@@ -128,8 +124,6 @@ namespace OKPluginOIAOmnikeeper
 
         public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, TimeThreshold atTime)
         {
-            await mapper.Setup();
-
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
             var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
@@ -145,8 +139,6 @@ namespace OKPluginOIAOmnikeeper
 
         public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, TimeThreshold atTime)
         {
-            await mapper.Setup();
-
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
             var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
@@ -167,8 +159,6 @@ namespace OKPluginOIAOmnikeeper
 
         public async IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime)
         {
-            await mapper.Setup();
-
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
             var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
@@ -191,8 +181,6 @@ namespace OKPluginOIAOmnikeeper
 
         public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
         {
-            await mapper.Setup();
-
             if (!atTime.IsLatest) return null; // TODO: implement historic information
 
             var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);

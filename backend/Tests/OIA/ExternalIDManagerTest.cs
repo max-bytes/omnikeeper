@@ -45,7 +45,7 @@ namespace Tests.OIA
 
         public class TestedScopedExternalIDMapper : ScopedExternalIDMapper<ExternalIDString>
         {
-            public TestedScopedExternalIDMapper(string scope, IExternalIDMapPersister persister) : base(scope, persister, (s) => new ExternalIDString(s))
+            public TestedScopedExternalIDMapper(IScopedExternalIDMapPersister persister) : base(persister, (s) => new ExternalIDString(s))
             {
             }
         }
@@ -53,8 +53,8 @@ namespace Tests.OIA
         [Test]
         public async Task TestBasics()
         {
-            var persisterMock = new Mock<IExternalIDMapPersister>();
-            var scopedExternalIDMapper = new TestedScopedExternalIDMapper("testscope", persisterMock.Object);
+            var persisterMock = new Mock<IScopedExternalIDMapPersister>();
+            var scopedExternalIDMapper = new TestedScopedExternalIDMapper(persisterMock.Object);
             var eidManager = new TestedExternalIDManager(scopedExternalIDMapper);
             eidManager.Add("eid0").Add("eid1").Add("eid2");
 
@@ -156,7 +156,7 @@ namespace Tests.OIA
         }
         public class TestedScopedExternalIDMapper2 : ScopedExternalIDMapper<ExternalIDGuid>
         {
-            public TestedScopedExternalIDMapper2(string scope, IExternalIDMapPersister persister) : base(scope, persister, (s) => new ExternalIDGuid(Guid.Parse(s)))
+            public TestedScopedExternalIDMapper2(IScopedExternalIDMapPersister persister) : base(persister, (s) => new ExternalIDGuid(Guid.Parse(s)))
             {
             }
         }
@@ -164,8 +164,8 @@ namespace Tests.OIA
         [Test]
         public async Task TestExternalGuidsAsCIIDs()
         {
-            var persisterMock = new Mock<IExternalIDMapPersister>();
-            var scopedExternalIDMapper = new TestedScopedExternalIDMapper2("testscope", persisterMock.Object);
+            var persisterMock = new Mock<IScopedExternalIDMapPersister>();
+            var scopedExternalIDMapper = new TestedScopedExternalIDMapper2(persisterMock.Object);
             var eidManager = new TestedExternalIDManager2(scopedExternalIDMapper);
             eidManager.Add(Guid.Parse("006DA01F-9ABD-4D9D-80C7-02AF85C822A8")).Add(Guid.Parse("116DA01F-9ABD-4D9D-80C7-02AF85C822A8")).Add(Guid.Parse("226DA01F-9ABD-4D9D-80C7-02AF85C822A8"));
 
