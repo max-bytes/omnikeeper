@@ -10,11 +10,11 @@ namespace Landscape.Base.Inbound
 {
     public interface IExternalIDMapper
     {
-        Task<S> CreateOrGetScoped<S>(string scope, Func<S> scopedF, NpgsqlTransaction trans) where S : class, IScopedExternalIDMapper;
+        Task<S> CreateOrGetScoped<S>(string scope, Func<S> scopedF, NpgsqlConnection conn, NpgsqlTransaction trans) where S : class, IScopedExternalIDMapper;
     }
     public interface IScopedExternalIDMapper
     {
-        Task Setup(NpgsqlTransaction trans);
+        Task Setup(NpgsqlConnection conn, NpgsqlTransaction trans);
     }
 
     /// <summary>
@@ -24,11 +24,12 @@ namespace Landscape.Base.Inbound
     {
         private readonly IDictionary<string, IScopedExternalIDMapper> scopes = new ConcurrentDictionary<string, IScopedExternalIDMapper>();
 
-        public async Task<S> CreateOrGetScoped<S>(string scope, Func<S> scopedF, NpgsqlTransaction trans) where S : class, IScopedExternalIDMapper
+        public async Task<S> CreateOrGetScoped<S>(string scope, Func<S> scopedF, NpgsqlConnection conn, NpgsqlTransaction trans) where S : class, IScopedExternalIDMapper
         {
-            if (scopes.TryGetValue(scope, out var existingScoped)) return existingScoped as S;
+            if (scopes.TryGetValue(scope, out var existingScoped)) 
+                return existingScoped as S;
             var scoped = scopedF();
-            await scoped.Setup(trans);
+            await scoped.Setup(conn, trans);
             scopes.Add(scope, scoped);
             return scoped;
         }
@@ -55,11 +56,11 @@ namespace Landscape.Base.Inbound
             this.persister = persister;
         }
 
-        public async Task Setup(NpgsqlTransaction trans)
+        public async Task Setup(NpgsqlConnection conn, NpgsqlTransaction trans)
         {
             if (!loaded)
             {
-                var data = await persister.Load(trans);
+                var data = await persister.Load(conn, trans);
                 if (data != null)
                 {
                     // TODO: ensure that int2ext and ext2int both only contain unique keys AND are "equal"
@@ -125,9 +126,9 @@ namespace Landscape.Base.Inbound
             return externalID.Equals(default(EID)) ? null : new EID?(externalID); // NOTE: EID is a value type, which is why we need to check for default and return null if so
         }
 
-        public async Task Persist(NpgsqlTransaction trans)
+        public async Task Persist(NpgsqlConnection conn, NpgsqlTransaction trans)
         {
-            await persister.Persist(int2ext.ToDictionary(kv => kv.Key, kv => kv.Value.SerializeToString()), trans);
+            await persister.Persist(int2ext.ToDictionary(kv => kv.Key, kv => kv.Value.SerializeToString()), conn, trans);
         }
     }
 }

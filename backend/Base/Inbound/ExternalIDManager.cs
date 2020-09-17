@@ -29,7 +29,7 @@ namespace Landscape.Base.Inbound
 
         protected abstract Task<IEnumerable<(EID externalID, ICIIdentificationMethod idMethod)>> GetExternalIDs();
 
-        public async Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, NpgsqlTransaction trans, ILogger logger)
+        public async Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, NpgsqlConnection conn, NpgsqlTransaction trans, ILogger logger)
         {
             var externalIDs = await GetExternalIDs();
 
@@ -108,7 +108,7 @@ namespace Landscape.Base.Inbound
             }
 
             if (changes)
-                await mapper.Persist(trans);
+                await mapper.Persist(conn, trans); // TODO: handle case when persisting fails... keep trying? or revert whole ID finding process?
 
             return changes;
         }

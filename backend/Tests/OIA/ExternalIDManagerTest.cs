@@ -75,7 +75,7 @@ namespace Tests.OIA
             ciModelMock.Setup(x => x.GetCIIDs(null)).ReturnsAsync(() => existingCIs);
 
             // initial run, creating 3 mapped cis
-            var changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, NullLogger.Instance);
+            var changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
             Assert.IsTrue(changed);
             Assert.IsEmpty(newCIIDs); // all ciids from the queue have been used
             Assert.AreEqual(3, existingCIs.Count); // new cis have been created
@@ -87,12 +87,12 @@ namespace Tests.OIA
             });
 
             // nothing must have changed if called again
-            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, NullLogger.Instance);
+            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
             Assert.IsFalse(changed);
 
             // remove one ci from the external source
             eidManager.RemoveAt(1);
-            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, NullLogger.Instance);
+            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
             Assert.IsTrue(changed);
             Assert.AreEqual(3, existingCIs.Count); // there should still be all three cis present in the model
             CollectionAssert.AreEquivalent(scopedExternalIDMapper.GetIDPairs(existingCIs.ToHashSet()), new List<(Guid, ExternalIDString)>()
@@ -104,7 +104,7 @@ namespace Tests.OIA
             // add a new ci in external source
             newCIIDs.Enqueue(Guid.Parse("336DA01F-9ABD-4D9D-80C7-02AF85C822A8"));
             eidManager.Add("eid3");
-            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, NullLogger.Instance);
+            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
             Assert.IsTrue(changed);
             Assert.AreEqual(4, existingCIs.Count);
             CollectionAssert.AreEquivalent(scopedExternalIDMapper.GetIDPairs(existingCIs.ToHashSet()), new List<(Guid, ExternalIDString)>()
@@ -117,7 +117,7 @@ namespace Tests.OIA
             // delete cis from model, should be recreated on update, if mapped
             existingCIs.RemoveAt(2); // this ci (22xxx...) is still mapped and must be re-created
             existingCIs.RemoveAt(1); // this ci (11xxx...) is not mapped anymore, should stay removed
-            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, NullLogger.Instance);
+            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
             Assert.IsTrue(changed);
             Assert.AreEqual(3, existingCIs.Count);
             CollectionAssert.AreEquivalent(scopedExternalIDMapper.GetIDPairs(existingCIs.ToHashSet()), new List<(Guid, ExternalIDString)>()
@@ -180,7 +180,7 @@ namespace Tests.OIA
             ciModelMock.Setup(x => x.GetCIIDs(null)).ReturnsAsync(() => existingCIs);
 
             // initial run, creating 3 mapped cis
-            var changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, NullLogger.Instance);
+            var changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
             Assert.IsTrue(changed);
             Assert.AreEqual(3, existingCIs.Count); // new cis have been created
             ciModelMock.Verify(x => x.CreateCI(null), Times.Never); // cis are never created with a new ciid, the external ones are used

@@ -13,6 +13,9 @@ namespace Landscape.Base.Inbound
         Task<IOnlineInboundAdapter> GetOnlinePluginInstance(string instanceName, NpgsqlTransaction trans);
     }
 
+    /// <summary>
+    /// scoped
+    /// </summary>
     public class InboundAdapterManager : IInboundAdapterManager
     {
         private readonly IDictionary<string, IOnlineInboundAdapterBuilder> onlinePluginsBuilders;
@@ -45,8 +48,8 @@ namespace Landscape.Base.Inbound
                 {
                     var idMapper = await externalIDMapper.CreateOrGetScoped(
                         config.Config.MapperScope, 
-                        () => builder.BuildIDMapper(persister.CreateScopedPersister(config.Config.MapperScope, conn)), 
-                        trans);
+                        () => builder.BuildIDMapper(persister.CreateScopedPersister(config.Config.MapperScope)), 
+                        conn, trans);
                     
                     return builder.Build(config.Config, appConfig, idMapper, loggerFactory);
                 }

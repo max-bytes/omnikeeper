@@ -14,7 +14,7 @@ namespace Landscape.Base.Inbound
 
         public async Task<IDictionary<Guid, string>> Load(string scope, NpgsqlConnection conn, NpgsqlTransaction trans)
         {
-            var tableName = $"{scope}";
+            var tableName = $"{scope}"; // TODO: validate table name/scope
             var fullTableName = $"\"{SchemaName}\".{tableName}";
 
             var ret = new Dictionary<Guid, string>();
@@ -55,7 +55,7 @@ namespace Landscape.Base.Inbound
 
         public async Task Persist(string scope, IDictionary<Guid, string> int2ext, NpgsqlConnection conn, NpgsqlTransaction trans)
         {
-            var tableName = $"{scope}";
+            var tableName = $"{scope}"; // TODO: validate table name/scope
             var fullTableName = $"\"{SchemaName}\".{tableName}";
 
             CreateTableIfNotExists(tableName, trans, conn);
@@ -79,9 +79,9 @@ namespace Landscape.Base.Inbound
             }
         }
 
-        public IScopedExternalIDMapPersister CreateScopedPersister(string scope, NpgsqlConnection conn)
+        public IScopedExternalIDMapPersister CreateScopedPersister(string scope)
         {
-            return new ScopedExternalIDMapPostgresPersister(scope, this, conn);
+            return new ScopedExternalIDMapPostgresPersister(scope, this);
         }
     }
 
@@ -89,22 +89,20 @@ namespace Landscape.Base.Inbound
     public class ScopedExternalIDMapPostgresPersister : IScopedExternalIDMapPersister
     {
         private readonly IExternalIDMapPersister centralPersister;
-        private readonly NpgsqlConnection conn;
 
         public string Scope { get; }
 
-        public ScopedExternalIDMapPostgresPersister(string scope, IExternalIDMapPersister centralPersister, NpgsqlConnection conn)
+        public ScopedExternalIDMapPostgresPersister(string scope, IExternalIDMapPersister centralPersister)
         {
             Scope = scope;
             this.centralPersister = centralPersister;
-            this.conn = conn;
         }
-        public async Task<IDictionary<Guid, string>> Load(NpgsqlTransaction trans)
+        public async Task<IDictionary<Guid, string>> Load(NpgsqlConnection conn, NpgsqlTransaction trans)
         {
             return await centralPersister.Load(Scope, conn, trans);
         }
 
-        public async Task Persist(IDictionary<Guid, string> int2ext, NpgsqlTransaction trans)
+        public async Task Persist(IDictionary<Guid, string> int2ext, NpgsqlConnection conn, NpgsqlTransaction trans)
         {
             await centralPersister.Persist(Scope, int2ext, conn, trans);
         }

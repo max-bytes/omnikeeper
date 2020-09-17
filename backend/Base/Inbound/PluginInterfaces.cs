@@ -17,13 +17,13 @@ namespace Landscape.Base.Inbound
     {
         public Task Persist(string scope, IDictionary<Guid, string> int2ext, NpgsqlConnection conn, NpgsqlTransaction trans);
         public Task<IDictionary<Guid, string>> Load(string scope, NpgsqlConnection conn, NpgsqlTransaction trans);
-        public IScopedExternalIDMapPersister CreateScopedPersister(string scope, NpgsqlConnection conn);
+        public IScopedExternalIDMapPersister CreateScopedPersister(string scope);
     }
 
-    public interface IScopedExternalIDMapPersister
+    public interface IScopedExternalIDMapPersister // TODO: needed? or can be merged into IExternalIDMapPersister?
     {
-        public Task Persist(IDictionary<Guid, string> int2ext, NpgsqlTransaction trans);
-        public Task<IDictionary<Guid, string>> Load(NpgsqlTransaction trans);
+        public Task Persist(IDictionary<Guid, string> int2ext, NpgsqlConnection conn, NpgsqlTransaction trans);
+        public Task<IDictionary<Guid, string>> Load(NpgsqlConnection conn, NpgsqlTransaction trans);
         public string Scope { get; }
     }
 
@@ -85,7 +85,7 @@ namespace Landscape.Base.Inbound
 
     public interface IExternalIDManager
     {
-        Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, NpgsqlTransaction trans, ILogger logger);
+        Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, NpgsqlConnection conn, NpgsqlTransaction trans, ILogger logger);
         TimeSpan PreferredUpdateRate { get; }
     }
 
