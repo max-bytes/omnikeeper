@@ -15,8 +15,16 @@ namespace Landscape.Base.Inbound
 {
     public interface IExternalIDMapPersister
     {
-        public Task Persist(string scope, IDictionary<Guid, string> int2ext, NpgsqlTransaction trans);
-        public Task<IDictionary<Guid, string>> Load(string scope);
+        public Task Persist(string scope, IDictionary<Guid, string> int2ext, NpgsqlConnection conn, NpgsqlTransaction trans);
+        public Task<IDictionary<Guid, string>> Load(string scope, NpgsqlConnection conn, NpgsqlTransaction trans);
+        public IScopedExternalIDMapPersister CreateScopedPersister(string scope, NpgsqlConnection conn);
+    }
+
+    public interface IScopedExternalIDMapPersister
+    {
+        public Task Persist(IDictionary<Guid, string> int2ext, NpgsqlTransaction trans);
+        public Task<IDictionary<Guid, string>> Load(NpgsqlTransaction trans);
+        public string Scope { get; }
     }
 
     public interface IExternalID
@@ -111,7 +119,8 @@ namespace Landscape.Base.Inbound
     public interface IOnlineInboundAdapterBuilder
     {
         public string Name { get; }
-        public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister, ILoggerFactory loggerFactory);
+        public IScopedExternalIDMapper BuildIDMapper(IScopedExternalIDMapPersister persister);
+        public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IScopedExternalIDMapper scopedExternalIDMapper, ILoggerFactory loggerFactory);
     }
 
     public interface IOnlineInboundAdapter
@@ -119,6 +128,7 @@ namespace Landscape.Base.Inbound
         public interface IConfig
         {
             public string BuilderName { get; }
+            public string MapperScope { get; }
 
             public static MyJSONSerializer<IConfig> Serializer = new MyJSONSerializer<IConfig>(new JsonSerializerSettings()
             {

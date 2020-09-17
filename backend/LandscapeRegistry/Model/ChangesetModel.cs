@@ -1,5 +1,6 @@
 ﻿using Landscape.Base.Entity;
 using Landscape.Base.Model;
+using Landscape.Base.Utils;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -144,6 +145,75 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("layer_ids", layers.LayerIDs);
             if (limit.HasValue)
                 command.Parameters.AddWithValue("limit", limit.Value);
+            using var dr = await command.ExecuteReaderAsync();
+
+            var ret = new List<Changeset>();
+            while (await dr.ReadAsync())
+            {
+                var id = dr.GetGuid(0);
+                var userID = dr.GetInt64(1);
+                var timestamp = dr.GetTimeStamp(2).ToDateTime();
+                var username = dr.GetString(3);
+                var displayName = dr.GetString(4);
+                var userUUID = dr.GetGuid(5);
+                var userType = dr.GetFieldValue<UserType>(6);
+                var userTimestamp = dr.GetTimeStamp(7).ToDateTime();
+
+                var user = UserInDatabase.Build(userID, userUUID, username, displayName, userType, userTimestamp);
+                var c = Changeset.Build(id, user, timestamp);
+                ret.Add(c);
+            }
+            return ret;
+        }
+
+        public async Task<int> ArchiveUnusedChangesetsOlderThan(DateTimeOffset threshold, NpgsqlTransaction trans)
+        {
+            var query = @"delete from changeset where
+                id NOT in (
+	                SELECT distinct c.id FROM changeset c
+	                INNER JOIN attribute a ON a.changeset_id = c.id
+	                WHERE c.timestamp >= @delete_threshold
+	                OR a.timestamp >= @delete_threshold
+	                OR (a.state != 'removed' AND a.id IN (
+		                select distinct on(layer_id, ci_id, name) id FROM attribute
+				                where timestamp <= @now
+				                order by layer_id, ci_id, name, timestamp DESC
+	                ))
+	                UNION
+	                SELECT distinct c.id FROM changeset c
+	                INNER JOIN relation r ON r.changeset_id = c.id
+	                WHERE c.timestamp >= @delete_threshold
+	                OR r.timestamp >= @delete_threshold
+	                OR (r.state != 'removed' AND  r.id IN (
+		                select distinct on(layer_id, from_ci_id, to_ci_id, predicate_id) id FROM relation
+				                where timestamp <= @now
+				                order by layer_id, from_ci_id, to_ci_id, predicate_id, timestamp DESC
+	                ))
+                )";
+
+            using var command = new NpgsqlCommand(query, conn, trans);
+
+            var now = TimeThreshold.BuildLatest();
+            command.Parameters.AddWithValue("delete_threshold", threshold);
+            command.Parameters.AddWithValue("now", now.Time);
+
+            var numArchived = await command.ExecuteNonQueryAsync();
+
+            return numArchived;
+
+        }
+
+        [Obsolete]
+        public async Task<IEnumerable<Changeset>> GetChangesetsOlderThan(DateTimeOffset threshold, NpgsqlTransaction trans)
+        {
+            var query = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
+                LEFT JOIN ""user"" u ON c.user_id = u.id
+                WHERE c.timestamp < @threshold
+                ORDER BY c.timestamp DESC";
+            using var command = new NpgsqlCommand(query, conn, trans);
+
+            command.Parameters.AddWithValue("threshold", threshold);
+
             using var dr = await command.ExecuteReaderAsync();
 
             var ret = new List<Changeset>();

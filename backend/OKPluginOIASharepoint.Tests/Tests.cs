@@ -36,7 +36,7 @@ namespace OKPluginOIASharepoint.Tests
                         new Config.ListColumnConfig("Surname", "__name")
                     }, new string[] { "last_name" }, new long[] { 0L })
                 });
-            var oia = new OnlineInboundAdapter.Builder().Build(config, new Mock<IConfiguration>().Object, new ExternalIDMapper(), new Mock<IExternalIDMapPersister>().Object, NullLoggerFactory.Instance);
+            var oia = new OnlineInboundAdapter.Builder().Build(config, new Mock<IConfiguration>().Object, new Mock<IScopedExternalIDMapper>().Object, NullLoggerFactory.Instance);
 
             // TODO: mock instead?
             var layer = Layer.Build("testlayer", 0, Color.White, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""));

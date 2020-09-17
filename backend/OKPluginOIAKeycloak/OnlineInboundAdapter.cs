@@ -19,11 +19,14 @@ namespace OKPluginOIAKeycloak
             public string Name => StaticName;
             public static string StaticName => "Keycloak";
 
-            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister, ILoggerFactory loggerFactory)
+            public IScopedExternalIDMapper BuildIDMapper(IScopedExternalIDMapPersister persister)
             {
-                var cconfig = config as Config;
-                var scopedExternalIDMapper = externalIDMapper.RegisterScoped(new KeycloakScopedExternalIDMapper(cconfig.mapperScope, persister));
-                return new OnlineInboundAdapter(cconfig, scopedExternalIDMapper);
+                return new KeycloakScopedExternalIDMapper(persister);
+            }
+
+            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IScopedExternalIDMapper scopedExternalIDMapper, ILoggerFactory loggerFactory)
+            {
+                return new OnlineInboundAdapter(config as Config, scopedExternalIDMapper as KeycloakScopedExternalIDMapper);
             }
         }
 
@@ -33,17 +36,17 @@ namespace OKPluginOIAKeycloak
             public readonly string realm;
             public readonly string clientID;
             public readonly string clientSecret;
-            public readonly string mapperScope;
+            public string MapperScope { get; }
             public TimeSpan preferredIDMapUpdateRate;
             public string BuilderName { get; } = Builder.StaticName;
 
             public Config(string apiURL, string realm, string clientID, string clientSecret, TimeSpan preferredIDMapUpdateRate, string mapperScope)
             {
+                MapperScope = mapperScope;
                 this.apiURL = apiURL;
                 this.realm = realm;
                 this.clientID = clientID;
                 this.clientSecret = clientSecret;
-                this.mapperScope = mapperScope;
                 this.preferredIDMapUpdateRate = preferredIDMapUpdateRate;
             }
         }
@@ -54,7 +57,12 @@ namespace OKPluginOIAKeycloak
             public string Name => StaticName;
             public static string StaticName => "Keycloak Internal";
 
-            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IExternalIDMapper externalIDMapper, IExternalIDMapPersister persister, ILoggerFactory loggerFactory)
+            public IScopedExternalIDMapper BuildIDMapper(IScopedExternalIDMapPersister persister)
+            {
+                return new KeycloakScopedExternalIDMapper(persister);
+            }
+
+            public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IScopedExternalIDMapper scopedExternalIDMapper, ILoggerFactory loggerFactory)
             {
                 var configInternal = config as ConfigInternal;
 
@@ -63,22 +71,21 @@ namespace OKPluginOIAKeycloak
                 var realm = keycloakConfig["Realm"];
                 var clientID = keycloakConfig["ClientID"];
                 var clientSecret = keycloakConfig["ClientSecret"];
-                var cconfig = new Config(authURL, realm, clientID, clientSecret, configInternal.preferredIDMapUpdateRate, configInternal.mapperScope);
+                var cconfig = new Config(authURL, realm, clientID, clientSecret, configInternal.preferredIDMapUpdateRate, configInternal.MapperScope);
 
-                var scopedExternalIDMapper = externalIDMapper.RegisterScoped(new KeycloakScopedExternalIDMapper(cconfig.mapperScope, persister));
-                return new OnlineInboundAdapter(cconfig, scopedExternalIDMapper);
+                return new OnlineInboundAdapter(cconfig, scopedExternalIDMapper as KeycloakScopedExternalIDMapper);
             }
         }
 
         public class ConfigInternal : IOnlineInboundAdapter.IConfig
         {
-            public readonly string mapperScope;
+            public string MapperScope { get; }
             public TimeSpan preferredIDMapUpdateRate;
             public string BuilderName { get; } = BuilderInternal.StaticName;
 
             public ConfigInternal(TimeSpan preferredIDMapUpdateRate, string mapperScope)
             {
-                this.mapperScope = mapperScope;
+                MapperScope = mapperScope;
                 this.preferredIDMapUpdateRate = preferredIDMapUpdateRate;
             }
         }

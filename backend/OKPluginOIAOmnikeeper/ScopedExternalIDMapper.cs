@@ -8,7 +8,7 @@ namespace OKPluginOIAOmnikeeper
 {
     public class ScopedExternalIDMapper : ScopedExternalIDMapper<ExternalIDGuid>
     {
-        public ScopedExternalIDMapper(string scope, IExternalIDMapPersister persister) : base(scope, persister, (s) => new ExternalIDGuid(Guid.Parse(s)))
+        public ScopedExternalIDMapper(IScopedExternalIDMapPersister persister) : base(persister, (s) => new ExternalIDGuid(Guid.Parse(s)))
         {
         }
     }

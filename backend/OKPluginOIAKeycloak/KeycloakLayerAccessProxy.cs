@@ -63,8 +63,6 @@ namespace OKPluginOIAKeycloak
 
         public async Task<CIAttribute> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
         {
-            await mapper.Setup();
-
             if (!atTime.IsLatest) return null; // we don't have historic information
 
             var externalID = mapper.GetExternalID(ciid);
@@ -80,8 +78,6 @@ namespace OKPluginOIAKeycloak
 
         public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime)
         {
-            await mapper.Setup();
-
             if (!atTime.IsLatest) yield break; // we don't have historic information
 
             IEnumerable<Guid> GetCIIDs(ICIIDSelection selection)
@@ -109,8 +105,6 @@ namespace OKPluginOIAKeycloak
 
         public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, TimeThreshold atTime)
         {
-            await mapper.Setup();
-
             if (!atTime.IsLatest) yield break; // we don't have historic information
 
             var users = await client.GetUsersAsync(realm, true, null, null, null, null, 99999, null, null); // TODO, HACK: magic number, how to properly get all user IDs?
@@ -128,8 +122,6 @@ namespace OKPluginOIAKeycloak
 
         public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, TimeThreshold atTime)
         {
-            await mapper.Setup();
-
             if (!atTime.IsLatest) yield break; // we don't have historic information
 
             switch (selection)

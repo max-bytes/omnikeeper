@@ -37,6 +37,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using MonitoringPlugin;
+using Newtonsoft.Json;
 using Npgsql.Logging;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
@@ -382,6 +383,7 @@ namespace LandscapeRegistry
             RecurringJob.AddOrUpdate<CLBRunner>(s => s.Run(null), "*/15 * * * * *");
             RecurringJob.AddOrUpdate<MarkedForDeletionRunner>(s => s.Run(null), Cron.Minutely);
             RecurringJob.AddOrUpdate<ExternalIDManagerRunner>(s => s.Run(null), "*/5 * * * * *");
+            RecurringJob.AddOrUpdate<ArchiveOldDataRunner>(s => s.Run(null), "*/5 * * * * *");
         }
     }
 

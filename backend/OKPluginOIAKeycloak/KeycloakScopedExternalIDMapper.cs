@@ -8,7 +8,7 @@ namespace OKPluginOIAKeycloak
 {
     public class KeycloakScopedExternalIDMapper : ScopedExternalIDMapper<ExternalIDString>
     {
-        public KeycloakScopedExternalIDMapper(string scope, IExternalIDMapPersister persister) : base(scope, persister, (s) => new ExternalIDString(s))
+        public KeycloakScopedExternalIDMapper(IScopedExternalIDMapPersister persister) : base(persister, (s) => new ExternalIDString(s))
         {
         }
     }

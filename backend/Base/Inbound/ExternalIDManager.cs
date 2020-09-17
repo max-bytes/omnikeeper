@@ -31,8 +31,6 @@ namespace Landscape.Base.Inbound
 
         public async Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, NpgsqlTransaction trans, ILogger logger)
         {
-            await mapper.Setup();
-
             var externalIDs = await GetExternalIDs();
 
             var changes = false;

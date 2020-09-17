@@ -32,6 +32,7 @@
     <None Remove="Scripts\00024-changeset-id-to-uuid.psql" />
     <None Remove="Scripts\00025-create-odata-api-context.psql" />
     <None Remove="Scripts\00026-create-traits.psql" />
+    <None Remove="Scripts\00027-fix-foreign-key-changeset-to-attribute-and-relation.psql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,6 +43,7 @@
     <EmbeddedResource Include="Scripts\00005-predicate-constraints.psql" />
     <EmbeddedResource Include="Scripts\00004-predicate-state-add-marked_for_deletion.psql" />
     <EmbeddedResource Include="Scripts\00003-predicate-state-add-deprecated.psql" />
+    <EmbeddedResource Include="Scripts\00027-fix-foreign-key-changeset-to-attribute-and-relation.psql" />
     <EmbeddedResource Include="Scripts\00026-create-traits.psql" />
     <EmbeddedResource Include="Scripts\00025-create-odata-api-context.psql" />
     <EmbeddedResource Include="Scripts\00024-changeset-id-to-uuid.psql" />

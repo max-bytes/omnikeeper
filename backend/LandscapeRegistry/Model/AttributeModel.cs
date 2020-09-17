@@ -180,5 +180,10 @@ namespace LandscapeRegistry.Model
         {
             return await baseModel.BulkReplaceAttributes(data, changeset, trans);
         }
+
+        public async Task<int> ArchiveOutdatedAttributesOlderThan(DateTimeOffset threshold, long layerID, NpgsqlTransaction trans)
+        {
+            return await baseModel.ArchiveOutdatedAttributesOlderThan(threshold, layerID, trans);
+        }
     }
 }

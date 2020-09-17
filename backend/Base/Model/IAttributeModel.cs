@@ -15,5 +15,6 @@ namespace Landscape.Base.Model
         Task<IEnumerable<MergedCIAttribute>> FindMergedAttributesByName(string regex, ICIIDSelection selection, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
         Task<IImmutableDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
         Task<MergedCIAttribute> GetMergedAttribute(string name, Guid ciid, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime);
+
     }
 }

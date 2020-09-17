@@ -10,54 +10,56 @@ namespace Landscape.Base.Inbound
 {
     public interface IExternalIDMapper
     {
-        S RegisterScoped<S>(S scoped) where S : class, IScopedExternalIDMapper;
+        Task<S> CreateOrGetScoped<S>(string scope, Func<S> scopedF, NpgsqlTransaction trans) where S : class, IScopedExternalIDMapper;
     }
     public interface IScopedExternalIDMapper
     {
-        Task Setup();
-        string Scope { get; }
+        Task Setup(NpgsqlTransaction trans);
     }
 
+    /// <summary>
+    /// singleton
+    /// </summary>
     public class ExternalIDMapper : IExternalIDMapper
     {
         private readonly IDictionary<string, IScopedExternalIDMapper> scopes = new ConcurrentDictionary<string, IScopedExternalIDMapper>();
 
-        public ExternalIDMapper()
+        public async Task<S> CreateOrGetScoped<S>(string scope, Func<S> scopedF, NpgsqlTransaction trans) where S : class, IScopedExternalIDMapper
         {
-        }
-
-        public S RegisterScoped<S>(S scoped) where S : class, IScopedExternalIDMapper
-        {
-            if (scopes.TryGetValue(scoped.Scope, out var existingScoped)) return existingScoped as S;
-            scopes.Add(scoped.Scope, scoped);
+            if (scopes.TryGetValue(scope, out var existingScoped)) return existingScoped as S;
+            var scoped = scopedF();
+            await scoped.Setup(trans);
+            scopes.Add(scope, scoped);
             return scoped;
         }
     }
 
+    /// <summary>
+    /// scoped
+    /// </summary>
+    /// <typeparam name="EID"></typeparam>
     public abstract class ScopedExternalIDMapper<EID> : IScopedExternalIDMapper where EID : struct, IExternalID
     {
         private IDictionary<Guid, EID> int2ext;
         private IDictionary<EID, Guid> ext2int;
-        public string Scope { get; }
         private readonly Func<string, EID> string2ExtIDF;
-        private readonly IExternalIDMapPersister persister;
+        private readonly IScopedExternalIDMapPersister persister;
 
         private bool loaded = false;
 
-        public ScopedExternalIDMapper(string scope, IExternalIDMapPersister persister, Func<string, EID> string2ExtIDF)
+        public ScopedExternalIDMapper(IScopedExternalIDMapPersister persister, Func<string, EID> string2ExtIDF)
         {
             int2ext = new ConcurrentDictionary<Guid, EID>();
             ext2int = new ConcurrentDictionary<EID, Guid>();
-            Scope = scope;
             this.string2ExtIDF = string2ExtIDF;
             this.persister = persister;
         }
 
-        public async Task Setup()
+        public async Task Setup(NpgsqlTransaction trans)
         {
             if (!loaded)
             {
-                var data = await persister.Load(Scope);
+                var data = await persister.Load(trans);
                 if (data != null)
                 {
                     // TODO: ensure that int2ext and ext2int both only contain unique keys AND are "equal"
@@ -125,7 +127,7 @@ namespace Landscape.Base.Inbound
 
         public async Task Persist(NpgsqlTransaction trans)
         {
-            await persister.Persist(Scope, int2ext.ToDictionary(kv => kv.Key, kv => kv.Value.SerializeToString()), trans);
+            await persister.Persist(int2ext.ToDictionary(kv => kv.Key, kv => kv.Value.SerializeToString()), trans);
         }
     }
 }

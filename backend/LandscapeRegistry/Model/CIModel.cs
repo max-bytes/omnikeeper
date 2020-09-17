@@ -3,6 +3,7 @@ using Landscape.Base.Model;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Utils;
 using Npgsql;
+using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -15,7 +16,6 @@ namespace LandscapeRegistry.Model
     {
         private readonly NpgsqlConnection conn;
         private readonly IAttributeModel attributeModel;
-        //private static readonly AnchorState DefaultState = AnchorState.Active;
 
         public CIModel(IAttributeModel attributeModel, NpgsqlConnection connection)
         {
@@ -204,6 +204,30 @@ namespace LandscapeRegistry.Model
             command.Parameters.AddWithValue("id", id);
             await command.ExecuteNonQueryAsync();
             return id;
+        }
+
+        public async Task<int> ArchiveUnusedCIs(NpgsqlTransaction trans)
+        {
+            var allCIIDs = await GetCIIDs(trans);
+            using var command = new NpgsqlCommand(@"DELETE FROM ci WHERE id = @id RETURNING *", conn, trans);
+            command.Parameters.Add("id", NpgsqlDbType.Uuid);
+            command.Prepare();
+            var deleted = 0;
+            // TODO: build a query based solution, because just trying to delete leads to way too many postgres exception in the output
+            //foreach (var ciid in allCIIDs)
+            //{
+            //    try
+            //    {
+            //        command.Parameters[0].Value = ciid;
+            //        var d = await command.ExecuteScalarAsync();
+            //        deleted++;
+            //    } catch (PostgresException e)
+            //    {
+
+            //    }
+            //}
+            // TODO
+            return deleted;
         }
     }
 }

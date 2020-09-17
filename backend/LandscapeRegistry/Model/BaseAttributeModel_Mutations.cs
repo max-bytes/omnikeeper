@@ -170,6 +170,29 @@ namespace LandscapeRegistry.Model
             }
 
             return actualInserts;
+
+        }
+
+
+        [Obsolete("Should not be used; favor using ChangesetModel.ArchiveUnusedChangesetsOlderThan() instead")]
+        public async Task<int> ArchiveOutdatedAttributesOlderThan(DateTimeOffset threshold, long layerID, NpgsqlTransaction trans)
+        {
+            using var command = new NpgsqlCommand(@$"delete from attribute where timestamp < @delete_threshold and ""id"" not in (
+               select i.id from (
+                   select distinct on(ci_id, name, layer_id) id, state from attribute
+                   where timestamp <= @now and layer_id = @layer_id
+                    order by ci_id, name, layer_id, timestamp DESC
+                ) i where i.state != 'removed'
+            )", conn, trans);
+
+            var timeThreshold = TimeThreshold.BuildLatest();
+            command.Parameters.AddWithValue("delete_threshold", threshold);
+            command.Parameters.AddWithValue("layer_id", layerID);
+            command.Parameters.AddWithValue("now", timeThreshold.Time);
+
+            var numArchived = await command.ExecuteNonQueryAsync();
+
+            return numArchived;
         }
     }
 }
