@@ -20,16 +20,18 @@ namespace OKPluginOIASharepoint
     {
         private readonly SharepointClient client;
         private readonly Layer layer;
+        private readonly bool useCurrentForHistoric;
         private readonly ScopedExternalIDMapper mapper;
 
         public static readonly Guid StaticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "sharepoint");
 
         private readonly IDictionary<Guid, CachedListConfig> cachedListConfigs;
 
-        public LayerAccessProxy(IDictionary<Guid, CachedListConfig> cachedListConfigs, SharepointClient client, ScopedExternalIDMapper mapper, Layer layer)
+        public LayerAccessProxy(IDictionary<Guid, CachedListConfig> cachedListConfigs, SharepointClient client, ScopedExternalIDMapper mapper, Layer layer, bool useCurrentForHistoric)
         {
             this.client = client;
             this.layer = layer;
+            this.useCurrentForHistoric = useCurrentForHistoric;
             this.mapper = mapper;
 
             this.cachedListConfigs = cachedListConfigs;
@@ -44,15 +46,15 @@ namespace OKPluginOIASharepoint
 
         public async Task<CIAttribute> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
         {
-            if (!atTime.IsLatest) return null; // we don't have historic information
+            if (!atTime.IsLatest && !useCurrentForHistoric) return null; // we don't have historic information
 
             var externalID = mapper.GetExternalID(ciid);
             if (!externalID.HasValue)
                 return null;
 
-            return await GetAttribute(name, ciid, externalID.Value, atTime);
+            return await GetAttribute(name, ciid, externalID.Value);
         }
-        public async Task<CIAttribute> GetAttribute(string name, Guid ciid, SharepointExternalListItemID externalID, TimeThreshold atTime)
+        public async Task<CIAttribute> GetAttribute(string name, Guid ciid, SharepointExternalListItemID externalID)
         {
             if (!cachedListConfigs.TryGetValue(externalID.listID, out var listConfig))
                 return null; // list is not configured (anymore)
@@ -79,15 +81,15 @@ namespace OKPluginOIASharepoint
 
         public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime)
         {
-            if (!atTime.IsLatest) yield break; // we don't have historic information
+            if (!atTime.IsLatest && !useCurrentForHistoric) yield break; // we don't have historic information
 
             var ciids = GetCIIDsFromSelections(selection).ToHashSet();
             var idPairs = mapper.GetIDPairs(ciids);
 
-            await foreach (var a in GetAttributes(idPairs, atTime))
+            await foreach (var a in GetAttributes(idPairs))
                 yield return a;
         }
-        public async IAsyncEnumerable<CIAttribute> GetAttributes(IEnumerable<(Guid ciid, SharepointExternalListItemID externalID)> idPairs, TimeThreshold atTime)
+        public async IAsyncEnumerable<CIAttribute> GetAttributes(IEnumerable<(Guid ciid, SharepointExternalListItemID externalID)> idPairs)
         {
             var listIDGroups = idPairs.GroupBy(f => f.externalID.listID);
 
@@ -129,7 +131,7 @@ namespace OKPluginOIASharepoint
 
         public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string attributeName, ICIIDSelection selection, TimeThreshold atTime)
         {
-            if (!atTime.IsLatest) yield break; // we don't have historic information
+            if (!atTime.IsLatest && !useCurrentForHistoric) yield break; // we don't have historic information
 
             var ciids = GetCIIDsFromSelections(selection).ToHashSet();
             var idPairs = mapper.GetIDPairs(ciids);

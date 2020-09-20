@@ -55,7 +55,7 @@ namespace OKPluginOIASharepoint
 
         public IExternalIDManager GetExternalIDManager() => externalIDManager;
 
-        public ILayerAccessProxy CreateLayerAccessProxy(Layer layer) => new LayerAccessProxy(cachedListConfigs, client, scopedExternalIDMapper, layer);
+        public ILayerAccessProxy CreateLayerAccessProxy(Layer layer) => new LayerAccessProxy(cachedListConfigs, client, scopedExternalIDMapper, layer, config.useCurrentForHistoric);
     }
 
     public class AccessTokenGetter

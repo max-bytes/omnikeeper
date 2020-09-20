@@ -82,6 +82,8 @@ namespace OKPluginOIASharepoint
         public readonly string site;
         public readonly Guid clientID;
         public readonly string clientSecret;
+        public readonly bool useCurrentForHistoric;
+
         public string MapperScope { get; }
         public readonly TimeSpan preferredIDMapUpdateRate;
         public readonly ListConfig[] listConfigs;
@@ -89,13 +91,14 @@ namespace OKPluginOIASharepoint
         [Newtonsoft.Json.JsonIgnore]
         public string BuilderName { get; } = OnlineInboundAdapter.Builder.StaticName;
 
-        public Config(Guid tenantID, string siteDomain, string site, Guid clientID, string clientSecret, TimeSpan preferredIDMapUpdateRate, string mapperScope, ListConfig[] listConfigs)
+        public Config(Guid tenantID, string siteDomain, string site, Guid clientID, string clientSecret, bool useCurrentForHistoric, TimeSpan preferredIDMapUpdateRate, string mapperScope, ListConfig[] listConfigs)
         {
             this.tenantID = tenantID;
             this.siteDomain = siteDomain;
             this.site = site;
             this.clientID = clientID;
             this.clientSecret = clientSecret;
+            this.useCurrentForHistoric = useCurrentForHistoric;
             MapperScope = mapperScope;
             this.preferredIDMapUpdateRate = preferredIDMapUpdateRate;
             this.listConfigs = listConfigs;

@@ -37,7 +37,7 @@ namespace Tasks.Tools
             var ExternalSharepointListID = new Guid("37800a8f-0107-445b-b70b-c783ba5a5ce3");
 
             var config = new OKPluginOIASharepoint.Config(ExternalSharepointTenantID, "mhxconsulting.sharepoint.com", "play2", ExternalSharepointClientID,
-                ExternalSharepointClientSecret, new TimeSpan(0, 1, 0), "sharepoint",
+                ExternalSharepointClientSecret, true, new TimeSpan(0, 1, 0), "sharepoint",
                 new OKPluginOIASharepoint.Config.ListConfig[] { new OKPluginOIASharepoint.Config.ListConfig(ExternalSharepointListID,
                     new OKPluginOIASharepoint.Config.ListColumnConfig[] {
                         new OKPluginOIASharepoint.Config.ListColumnConfig("MobilePhone", "user.mobile_phone"),
