@@ -22,6 +22,7 @@ using LandscapeRegistry.Service;
 using LandscapeRegistry.Utils;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
+using Microsoft.AspNet.OData.Formatter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -31,6 +32,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -96,13 +98,13 @@ namespace LandscapeRegistry
                 .AllowAnyHeader())
             );
 
+            services.AddOData();//.EnableApiVersioning();
+
             services.AddControllers().AddNewtonsoftJson(options =>
             {
                 // enums to string conversion
                 options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
             });
-
-            services.AddOData();//.EnableApiVersioning();
 
             services.AddSingleton<DBConnectionBuilder>();
             services.AddScoped((sp) =>
@@ -188,6 +190,11 @@ namespace LandscapeRegistry
                     ValidateAudience = true,
                     ValidAudience = Configuration.GetSection("Authentication")["Audience"]
                 };
+
+                // NOTE: according to https://social.technet.microsoft.com/Forums/en-US/2f889c6f-b500-4ba6-bba0-a2a4fee1604f/cannot-authenticate-odata-feed-using-an-organizational-account
+                // windows applications want to receive an authorization_uri in the challenge response with an URI where the user can authenticate
+                // unfortunately, this does not work as microsoft apps only seem to trust Azure AD, but not other IDPs
+                //options.Challenge = $"Bearer authorization_uri=\"{Configuration.GetSection("Authentication")["Authority"]}/protocol/openid-connect/auth\"";
                 options.Authority = Configuration.GetSection("Authentication")["Authority"];
                 options.Audience = Configuration.GetSection("Authentication")["Audience"];
                 options.RequireHttpsMetadata = false;
@@ -272,9 +279,44 @@ namespace LandscapeRegistry
                 {
                     inputFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/odata"));
                 }
-            });
 
+                // NOTE: in order for the OData service to work behind a reverse proxy, we need to modify the base URL
+                // adding the BaseURL from the configuration and forcing https
+                Uri ModifyBaseAddress(HttpRequest m)
+                {
+                    var logger = m.HttpContext.RequestServices.GetRequiredService<ILogger<IODataAPIContextModel>>();
+                    var std = ODataInputFormatter.GetDefaultBaseAddress(m);
+                    string newBaseURLPrefix;
+                    string replaceStr;
+                    if (CurrentEnvironment.IsDevelopment())
+                    {
+                        newBaseURLPrefix = $"https://{m.Host.Host}:{m.Host.Port}{Configuration["BaseURL"]}";
+                        replaceStr = m.Scheme + "://" + m.Host.Host + ":" + m.Host.Port;
+                    }
+                    else
+                    {
+                        newBaseURLPrefix = $"https://{m.Host.Host}{Configuration["BaseURL"]}";
+                        replaceStr = m.Scheme + "://" + m.Host.Host;
+                    }
+                    var oldBaseURL = std.ToString();
+                    var newBaseURL = oldBaseURL.Replace(replaceStr, newBaseURLPrefix, StringComparison.InvariantCultureIgnoreCase);
+
+                    logger.LogDebug($"Built new base URL prefix: {newBaseURLPrefix}");
+                    logger.LogDebug($"Modifying base URL from {oldBaseURL} to {newBaseURL}");
+                    return new Uri(newBaseURL);
+                }
+                foreach (var outputFormatter in options.OutputFormatters.OfType<ODataOutputFormatter>())
+                {
+                    outputFormatter.BaseAddressFactory = (m) => ModifyBaseAddress(m);
+                }
+
+                foreach (var inputFormatter in options.InputFormatters.OfType<ODataInputFormatter>())
+                {
+                    inputFormatter.BaseAddressFactory = (m) => ModifyBaseAddress(m);
+                }
+            });
         }
+
         public class AuthenticationRequirementsOperationFilter : IOperationFilter
         {
             public void Apply(OpenApiOperation operation, OperationFilterContext context)
@@ -337,6 +379,7 @@ namespace LandscapeRegistry
                 //endpoints.EnableDependencyInjection();
                 endpoints.Select().Expand().Filter().OrderBy().Count();
                 var edmModel = builder.GetEdmModel();
+                //endpoints.MapODataRoute("odata", "api/v{version:apiVersion}/odata/{context}", edmModel);
                 endpoints.MapODataRoute("odata", "api/odata/{context}", edmModel);
 
             });
