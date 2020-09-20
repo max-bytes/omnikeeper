@@ -35,6 +35,7 @@ namespace LandscapeRegistry.Controllers.OData
     }
 
     [Authorize]
+    //[ApiVersion("1.0")]
     public class AttributesController : ODataController
     {
         private readonly IAttributeModel attributeModel;
