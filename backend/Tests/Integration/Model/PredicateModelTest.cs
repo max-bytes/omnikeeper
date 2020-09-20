@@ -38,7 +38,7 @@ namespace Tests.Integration.Model
             }, await predicateModel.GetPredicates(null, TimeThreshold.BuildLatest(), AnchorStateFilter.All));
 
             // update a wording
-            Assert.AreEqual(Predicate.Build("p2", "p2wfn", "p2wtn", AnchorState.Active, PredicateModel.DefaultConstraits), await predicateModel.InsertOrUpdate("p2", "p2wfn", "p2wtn", AnchorState.Active, PredicateModel.DefaultConstraits, null));
+            Assert.AreEqual((Predicate.Build("p2", "p2wfn", "p2wtn", AnchorState.Active, PredicateModel.DefaultConstraits), true), await predicateModel.InsertOrUpdate("p2", "p2wfn", "p2wtn", AnchorState.Active, PredicateModel.DefaultConstraits, null));
             Assert.AreEqual(new Dictionary<string, Predicate>()
             {
                 { "p1", Predicate.Build("p1", "p1wf", "p1wt", AnchorState.Active, PredicateModel.DefaultConstraits) },
@@ -48,7 +48,7 @@ namespace Tests.Integration.Model
             }, await predicateModel.GetPredicates(null, TimeThreshold.BuildLatest(), AnchorStateFilter.All));
 
             // update a state
-            Assert.AreEqual(Predicate.Build("p3", "p3wf", "p3wt", AnchorState.Inactive, PredicateModel.DefaultConstraits), await predicateModel.InsertOrUpdate("p3", "p3wf", "p3wt", AnchorState.Inactive, PredicateModel.DefaultConstraits, null));
+            Assert.AreEqual((Predicate.Build("p3", "p3wf", "p3wt", AnchorState.Inactive, PredicateModel.DefaultConstraits), true), await predicateModel.InsertOrUpdate("p3", "p3wf", "p3wt", AnchorState.Inactive, PredicateModel.DefaultConstraits, null));
             Assert.AreEqual(new Dictionary<string, Predicate>()
             {
                 { "p1", Predicate.Build("p1", "p1wf", "p1wt", AnchorState.Active, PredicateModel.DefaultConstraits) },
@@ -59,8 +59,8 @@ namespace Tests.Integration.Model
 
 
             // update multiple states
-            Assert.AreEqual(Predicate.Build("p3", "p3wf", "p3wt", AnchorState.Active, PredicateModel.DefaultConstraits), await predicateModel.InsertOrUpdate("p3", "p3wf", "p3wt", AnchorState.Active, PredicateModel.DefaultConstraits, null));
-            Assert.AreEqual(Predicate.Build("p4", "p4wf", "p4wt", AnchorState.Inactive, PredicateModel.DefaultConstraits), await predicateModel.InsertOrUpdate("p4", "p4wf", "p4wt", AnchorState.Inactive, PredicateModel.DefaultConstraits, null));
+            Assert.AreEqual((Predicate.Build("p3", "p3wf", "p3wt", AnchorState.Active, PredicateModel.DefaultConstraits), true), await predicateModel.InsertOrUpdate("p3", "p3wf", "p3wt", AnchorState.Active, PredicateModel.DefaultConstraits, null));
+            Assert.AreEqual((Predicate.Build("p4", "p4wf", "p4wt", AnchorState.Inactive, PredicateModel.DefaultConstraits), true), await predicateModel.InsertOrUpdate("p4", "p4wf", "p4wt", AnchorState.Inactive, PredicateModel.DefaultConstraits, null));
             Assert.AreEqual(new Dictionary<string, Predicate>()
             {
                 { "p1", Predicate.Build("p1", "p1wf", "p1wt", AnchorState.Active, PredicateModel.DefaultConstraits) },
@@ -133,6 +133,26 @@ namespace Tests.Integration.Model
             var predicate = Predicate.Build("p1", "p1wf", "p1wt", AnchorState.Active, new PredicateConstraints(new string[0], new string[] { "t1", "t2" }));
 
             Assert.AreEqual(predicate, await predicateModel.GetPredicate("p1", TimeThreshold.BuildLatest(), AnchorStateFilter.ActiveOnly, null));
+        }
+
+        [Test]
+        public async Task TestPredicateChange()
+        {
+            var dbcb = new DBConnectionBuilder();
+            using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            var predicateModel = new PredicateModel(conn);
+
+            // should return changed true since predicate is inserting
+            Assert.AreEqual((Predicate.Build("p1", "p1wf", "p1wt", AnchorState.Active, PredicateModel.DefaultConstraits), true),
+                  await predicateModel.InsertOrUpdate("p1", "p1wf", "p1wt", AnchorState.Active, PredicateModel.DefaultConstraits, null));
+
+            // should return changed false since nothing has changed
+            Assert.AreEqual((Predicate.Build("p1", "p1wf", "p1wt", AnchorState.Active, PredicateModel.DefaultConstraits), false),
+                  await predicateModel.InsertOrUpdate("p1", "p1wf", "p1wt", AnchorState.Active, PredicateModel.DefaultConstraits, null));
+
+            // should return changed true since predicate has changed
+            Assert.AreEqual((Predicate.Build("p1", "p1wf_u", "p1wt_u", AnchorState.Active, PredicateModel.DefaultConstraits), true),
+                  await predicateModel.InsertOrUpdate("p1", "p1wf_u", "p1wt_u", AnchorState.Active, PredicateModel.DefaultConstraits, null));
         }
     }
 }
