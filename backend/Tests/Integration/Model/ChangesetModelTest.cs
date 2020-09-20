@@ -111,8 +111,8 @@ namespace Tests.Integration.Model
             using var trans = conn.BeginTransaction();
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
-            var predicate1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
-            var predicate2 = await predicateModel.InsertOrUpdate("predicate_2", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
+            var (predicate1, changedP1) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
+            var (predicate2, changedP2) = await predicateModel.InsertOrUpdate("predicate_2", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
             trans.Commit();
 
             var t1 = DateTimeOffset.Now;
@@ -162,8 +162,8 @@ namespace Tests.Integration.Model
             using var trans = conn.BeginTransaction();
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
-            var predicate1 = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
-            var predicate2 = await predicateModel.InsertOrUpdate("predicate_2", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
+            var (predicate1, changedp1) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
+            var (predicate2, changedp2) = await predicateModel.InsertOrUpdate("predicate_2", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
             trans.Commit();
 
             using var trans2 = conn.BeginTransaction();

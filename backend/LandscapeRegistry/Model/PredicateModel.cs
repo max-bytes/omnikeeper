@@ -32,12 +32,16 @@ namespace LandscapeRegistry.Model
             return Predicate.Build(id, DefaultWordingFrom, DefaultWordingTo, DefaultState, DefaultConstraits);
         }
 
-        public async Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints, NpgsqlTransaction trans, DateTimeOffset? timestamp = null)
+        public async Task<(Predicate predicate, bool changed)> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints, NpgsqlTransaction trans, DateTimeOffset? timestamp = null)
         {
             var current = await GetPredicate(id, trans);
+            var changed = false;
 
             if (current == null)
+            {
                 current = await Insert(id, trans);
+                changed = true;
+            }
 
             if (timestamp == null)
                 timestamp = DateTimeOffset.Now;
@@ -53,6 +57,8 @@ namespace LandscapeRegistry.Model
                 commandWording.Parameters.AddWithValue("timestamp", timestamp);
                 await commandWording.ExecuteNonQueryAsync();
                 current = Predicate.Build(id, wordingFrom, wordingTo, current.State, current.Constraints);
+
+                changed = true;
             }
 
             // update state
@@ -66,6 +72,7 @@ namespace LandscapeRegistry.Model
                 await commandState.ExecuteNonQueryAsync();
 
                 current = Predicate.Build(id, current.WordingFrom, current.WordingTo, state, current.Constraints);
+                changed = true;
             }
 
             // update constraits
@@ -79,9 +86,10 @@ namespace LandscapeRegistry.Model
                 commandConstraints.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandConstraints.ExecuteNonQueryAsync();
                 current = Predicate.Build(id, current.WordingFrom, current.WordingTo, state, constraints);
+                changed = true;
             }
 
-            return current;
+            return (current, changed);
         }
 
         public async Task<bool> TryToDelete(string id, NpgsqlTransaction trans)

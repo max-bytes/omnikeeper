@@ -9,7 +9,7 @@ namespace Landscape.Base.Model
 {
     public interface IPredicateModel
     {
-        Task<Predicate> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints, NpgsqlTransaction trans, DateTimeOffset? timestamp = null);
+        Task<(Predicate predicate, bool changed)> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints, NpgsqlTransaction trans, DateTimeOffset? timestamp = null);
         Task<bool> TryToDelete(string id, NpgsqlTransaction trans);
         Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, TimeThreshold atTime, AnchorStateFilter stateFilter);
         Task<Predicate> GetPredicate(string id, TimeThreshold atTime, AnchorStateFilter stateFilter, NpgsqlTransaction trans);
