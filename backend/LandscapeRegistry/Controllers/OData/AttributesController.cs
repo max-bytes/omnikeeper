@@ -34,7 +34,7 @@ namespace LandscapeRegistry.Controllers.OData
         public string Value { get; set; }
     }
 
-    [Authorize]
+    //[Authorize]
     //[ApiVersion("1.0")]
     public class AttributesController : ODataController
     {

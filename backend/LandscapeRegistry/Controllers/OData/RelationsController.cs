@@ -24,7 +24,7 @@ namespace LandscapeRegistry.Controllers.OData
         public string Predicate { get; set; }
     }
 
-    [Authorize]
+    //[Authorize]
     public class RelationsController : ODataController
     {
         private readonly IRelationModel relationModel;
