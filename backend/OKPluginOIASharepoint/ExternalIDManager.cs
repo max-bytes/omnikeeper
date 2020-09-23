@@ -36,11 +36,12 @@ namespace OKPluginOIASharepoint
                 {
                     var l = client.GetListItems(lc.listID, lc.identifiableColumnsAttributeTuples.Select(t => t.columnName).ToArray());
 
-                    r.AddRange(l.Select(i =>
+                    await foreach(var (itemGuid, data) in l)
                     {
                         var identifiableFragments = new List<CICandidateAttributeData.Fragment>();
-                        foreach (var (columnName, attributeName) in lc.identifiableColumnsAttributeTuples) {
-                            if (!((IDictionary<string, object>)i.data).TryGetValue(columnName, out var value))
+                        foreach (var (columnName, attributeName) in lc.identifiableColumnsAttributeTuples)
+                        {
+                            if (!((IDictionary<string, object>)data).TryGetValue(columnName, out var value))
                             {
                                 logger.LogWarning($"Could not get (supposedly identifiable) column \"{columnName}\" in list \"{lc.listID}\"");
                                 continue;
@@ -58,16 +59,19 @@ namespace OKPluginOIASharepoint
                         if (identifiableFragments.IsEmpty())
                         {
                             logger.LogWarning($"No identifiable columns/fragments found in list \"{lc.listID}\"");
-                        } else
+                        }
+                        else
                         {
                             idMethod = CIIdentificationMethodByData.BuildFromFragments(identifiableFragments, lc.searchableLayerSet);
                         }
 
-                        return (new SharepointExternalListItemID(lc.listID, i.itemGuid), idMethod);
-                    }));
+                        r.Add((new SharepointExternalListItemID(lc.listID, itemGuid), idMethod));
+                    }
+
                 } catch (Exception e)
                 {
                     logger.LogWarning($"Unable to get external IDs for sharepoint list {lc.listID}", e);
+                    throw e; // we must fail and throw, so that we don't run the ExternalIDManager with an empty set of external IDs
                 }
             }
             return r;

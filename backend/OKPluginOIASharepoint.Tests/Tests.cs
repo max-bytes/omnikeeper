@@ -1,9 +1,11 @@
 using FluentAssertions;
 using Landscape.Base.Entity;
 using Landscape.Base.Inbound;
+using Landscape.Base.Service;
 using Landscape.Base.Utils;
 using LandscapeRegistry.Entity.AttributeValues;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NUnit.Framework;
@@ -15,6 +17,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using static OKPluginOIASharepoint.Config;
 
 namespace OKPluginOIASharepoint.Tests
 {
@@ -23,12 +26,15 @@ namespace OKPluginOIASharepoint.Tests
         private static readonly Guid ExternalSharepointTenantID = new Guid("98061435-3c72-44d1-b37a-057e21f42801");
         private static readonly Guid ExternalSharepointClientID = new Guid("3d6e9642-5430-438c-b435-34d35b323b3a");
         private static readonly Guid ExternalSharepointListID = new Guid("37800a8f-0107-445b-b70b-c783ba5a5ce3");
+        private static readonly string ExternalSharepointClientSecret = "/w5tskeWck6EV2sx6Mue1tkL+dSw42VdMHlPS5plohw=";
+        private static readonly string ExternalSharepointBaseURL = "mhxconsulting.sharepoint.com";
+        private static readonly string ExternalSharepointSite = "play2";
 
         [Test]
         public async Task TestLayerAccessProxy()
         {
-            var config = new Config(ExternalSharepointTenantID, "mhxconsulting.sharepoint.com", "play2", ExternalSharepointClientID, 
-                "/w5tskeWck6EV2sx6Mue1tkL+dSw42VdMHlPS5plohw=", true, new TimeSpan(100), "sharepoint_test", 
+            var config = new Config(ExternalSharepointTenantID, ExternalSharepointBaseURL, ExternalSharepointSite, ExternalSharepointClientID,
+                ExternalSharepointClientSecret, true, new TimeSpan(100), "sharepoint_test", 
                 new Config.ListConfig[] { new Config.ListConfig(ExternalSharepointListID,
                     new Config.ListColumnConfig[] {
                         new Config.ListColumnConfig("Title", "title_attribute"),
@@ -71,16 +77,16 @@ namespace OKPluginOIASharepoint.Tests
         }
 
         [Test]
-        public void TestSharepointClient()
+        public async Task TestSharepointClient()
         {
-            var config = new Config(ExternalSharepointTenantID, "mhxconsulting.sharepoint.com", "play2", ExternalSharepointClientID, 
-                "/w5tskeWck6EV2sx6Mue1tkL+dSw42VdMHlPS5plohw=", true, new TimeSpan(100), "sharepoint_test",
+            var config = new Config(ExternalSharepointTenantID, ExternalSharepointBaseURL, ExternalSharepointSite, ExternalSharepointClientID,
+                ExternalSharepointClientSecret, true, new TimeSpan(100), "sharepoint_test",
                 new Config.ListConfig[] { });
             var accessTokenGetter = new AccessTokenGetter(config);
 
             var client = new SharepointClient(config.siteDomain, config.site, accessTokenGetter);
 
-            var items = client.GetListItems(ExternalSharepointListID, new string[] { "Title" });
+            var items = await client.GetListItems(ExternalSharepointListID, new string[] { "Title" }).ToListAsync();
 
             items.Should().BeEquivalentTo(listItems.Select(t => (t.itemGuid, Dyn2Dict(t.data))));
 
@@ -90,14 +96,80 @@ namespace OKPluginOIASharepoint.Tests
             //}
 
             var invalidListGuid = new Guid("11111111-1111-1111-1111-111111111111");
-            Assert.Throws<WebException>(() =>
+            Assert.ThrowsAsync<WebException>(async () =>
             {
-                client.GetListItems(invalidListGuid, new string[] { "Title" }).ToList(); // NOTE: ToList() is necessary to force yielding function to evaluate
+                await client.GetListItems(invalidListGuid, new string[] { "Title" }).ToListAsync(); // NOTE: ToList() is necessary to force yielding function to evaluate
             });
 
             // test single item
-            var singleItem = client.GetListItem(ExternalSharepointListID, new Guid("fa715c1c-8c22-4f7d-a4be-76c252fc3212"), new string[] { "Title" });
+            var singleItem = await client.GetListItem(ExternalSharepointListID, new Guid("fa715c1c-8c22-4f7d-a4be-76c252fc3212"), new string[] { "Title" });
             Assert.AreEqual(Dyn2Dict(listItems[1].data), singleItem);
+        }
+
+        private class ExposedExternalIDManager : ExternalIDManager
+        {
+            public ExposedExternalIDManager(IDictionary<Guid, Config.CachedListConfig> cachedListConfigs, SharepointClient client, ScopedExternalIDMapper mapper, TimeSpan preferredUpdateRate, ILogger logger) : base(cachedListConfigs, client, mapper, preferredUpdateRate, logger)
+            {
+            }
+
+            public async Task<IEnumerable<(SharepointExternalListItemID externalID, ICIIdentificationMethod idMethod)>> ExposeGetExternalIDs()
+            {
+                return await GetExternalIDs();
+            }
+        }
+
+
+        [Test]
+        public async Task TestSuccessfulExternalIDManager()
+        {
+            var config = new Config(ExternalSharepointTenantID, ExternalSharepointBaseURL, ExternalSharepointSite, ExternalSharepointClientID,
+                ExternalSharepointClientSecret, true, new TimeSpan(100), "sharepoint_test",
+                new Config.ListConfig[] { new Config.ListConfig(ExternalSharepointListID, 
+                    new Config.ListColumnConfig[] {
+                        new Config.ListColumnConfig("Title", "title_attribute"),
+                        new Config.ListColumnConfig("Surname", "last_name"),
+                        new Config.ListColumnConfig("Surname", "__name")
+                    }, new string[] { "last_name" }, new long[] { 0L })});
+            var accessTokenGetter = new AccessTokenGetter(config);
+
+            var client = new SharepointClient(config.siteDomain, config.site, accessTokenGetter);
+
+            var cachedListConfigs = config.listConfigs.ToDictionary(lc => lc.listID, lc => new CachedListConfig(lc)); ;
+            var m = new ExposedExternalIDManager(cachedListConfigs, client, new ScopedExternalIDMapper(new Mock<IScopedExternalIDMapPersister>().Object), new TimeSpan(0), NullLogger.Instance);
+
+            var eIDs = await m.ExposeGetExternalIDs();
+
+            var expected = listItems.Select(li => (new SharepointExternalListItemID(ExternalSharepointListID, li.itemGuid),
+                    CIIdentificationMethodByData.BuildFromFragments(new CICandidateAttributeData.Fragment[] { CICandidateAttributeData.Fragment.Build("last_name", AttributeScalarValueText.Build(li.data.Title as string)) }, new LayerSet(0))
+                )
+            );
+
+            eIDs.Should().BeEquivalentTo(expected);
+        }
+
+
+        [Test]
+        public async Task TestFailedExternalIDManager()
+        {
+            var config = new Config(ExternalSharepointTenantID, "nonexisting", ExternalSharepointSite, ExternalSharepointClientID,
+                ExternalSharepointClientSecret, true, new TimeSpan(100), "sharepoint_test",
+                new Config.ListConfig[] { new Config.ListConfig(ExternalSharepointListID,
+                    new Config.ListColumnConfig[] {
+                        new Config.ListColumnConfig("Title", "title_attribute"),
+                        new Config.ListColumnConfig("Surname", "last_name"),
+                        new Config.ListColumnConfig("Surname", "__name")
+                    }, new string[] { "last_name" }, new long[] { 0L })});
+            var accessTokenGetter = new AccessTokenGetter(config);
+
+            var client = new SharepointClient(config.siteDomain, config.site, accessTokenGetter);
+
+            var cachedListConfigs = config.listConfigs.ToDictionary(lc => lc.listID, lc => new CachedListConfig(lc)); ;
+            var m = new ExposedExternalIDManager(cachedListConfigs, client, new ScopedExternalIDMapper(new Mock<IScopedExternalIDMapPersister>().Object), new TimeSpan(0), NullLogger.Instance);
+
+            Assert.ThrowsAsync<WebException>(async () =>
+            {
+                await m.ExposeGetExternalIDs();
+            });
         }
 
         [Test]
