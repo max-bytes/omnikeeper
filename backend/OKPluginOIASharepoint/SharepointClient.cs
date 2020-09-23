@@ -6,6 +6,7 @@ using System.Dynamic;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml;
 
 namespace OKPluginOIASharepoint
@@ -23,13 +24,12 @@ namespace OKPluginOIASharepoint
             this.accessTokenGetter = accessTokenGetter;
         }
 
-        // TODO: make async
-        public IEnumerable<(Guid itemGuid, ExpandoObject data)> GetListItems(Guid listID, string[] columns)
+        public async IAsyncEnumerable<(Guid itemGuid, ExpandoObject data)> GetListItems(Guid listID, string[] columns)
         {
             var itemXml = new XmlDocument();
             try
             {
-                var accessToken = accessTokenGetter.GetAccessToken();
+                var accessToken = await accessTokenGetter.GetAccessTokenAsync();
 
                 var maxItems = 10000; // TODO: find better way... paginate?
 
@@ -40,9 +40,9 @@ namespace OKPluginOIASharepoint
                 itemRequest.Accept = "application/atom+xml";
                 itemRequest.ContentType = "application/atom+xml;type=entry";
                 itemRequest.Headers.Add("Authorization", "Bearer " + accessToken);
-                HttpWebResponse itemResponse = (HttpWebResponse)itemRequest.GetResponse();
+                HttpWebResponse itemResponse = (HttpWebResponse)await itemRequest.GetResponseAsync();
                 StreamReader itemReader = new StreamReader(itemResponse.GetResponseStream());
-                itemXml.LoadXml(itemReader.ReadToEnd());
+                itemXml.LoadXml(await itemReader.ReadToEndAsync());
             }
             catch (WebException e)
             {
@@ -69,8 +69,7 @@ namespace OKPluginOIASharepoint
             }
         }
 
-        // TODO: make async
-        public ExpandoObject GetListItem(Guid listID, Guid itemID, string[] columns)
+        public async Task<ExpandoObject> GetListItem(Guid listID, Guid itemID, string[] columns)
         {
             var itemXml = new XmlDocument();
             try
@@ -83,9 +82,9 @@ namespace OKPluginOIASharepoint
                 itemRequest.Accept = "application/atom+xml";
                 itemRequest.ContentType = "application/atom+xml;type=entry";
                 itemRequest.Headers.Add("Authorization", "Bearer " + accessToken);
-                HttpWebResponse itemResponse = (HttpWebResponse)itemRequest.GetResponse();
+                HttpWebResponse itemResponse = (HttpWebResponse)await itemRequest.GetResponseAsync();
                 StreamReader itemReader = new StreamReader(itemResponse.GetResponseStream());
-                itemXml.LoadXml(itemReader.ReadToEnd());
+                itemXml.LoadXml(await itemReader.ReadToEndAsync());
             }
             catch (WebException e)
             {

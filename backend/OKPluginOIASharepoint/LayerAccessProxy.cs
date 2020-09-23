@@ -65,7 +65,7 @@ namespace OKPluginOIASharepoint
 
             try
             {
-                var item = client.GetListItem(externalID.listID, externalID.itemID, new string[] { columnName });
+                var item = await client.GetListItem(externalID.listID, externalID.itemID, new string[] { columnName });
 
                 var value = item.GetOr(columnName, null) as string;
                 if (value == null)
@@ -104,7 +104,7 @@ namespace OKPluginOIASharepoint
                 IEnumerable<(Guid itemGuid, System.Dynamic.ExpandoObject data)> items;
                 try
                 {
-                    items = client.GetListItems(listID, listConfig.columnNames);
+                    items = await client.GetListItems(listID, listConfig.columnNames).ToListAsync();
                 }
                 catch (Exception e)
                 { // TODO: handle
@@ -154,7 +154,7 @@ namespace OKPluginOIASharepoint
                 try
                 {
                     // TODO: restrict the items to get to the ones where the guid is requested (or should we simply fetch all and discard later?)
-                    items = client.GetListItems(listID, new string[] { columnName });
+                    items = await client.GetListItems(listID, new string[] { columnName }).ToListAsync();
                 }
                 catch (Exception e)
                 { // TODO: handle
