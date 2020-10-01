@@ -44,7 +44,6 @@ namespace LandscapeRegistry.Model
             IEnumerable<CompactCI> cis = ImmutableArray<CompactCI>.Empty;
             if (Guid.TryParse(finalSS, out var guid))
             {
-                //foundCIIDs = (await ciModel.GetCIIDs(trans)).Where(ciid => ciid.Equals(guid)).ToHashSet(); // TODO: performance improvement
                 cis = await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(guid), ls, trans, atTime);
             }
             else if (finalSS.Length > 0)
@@ -58,7 +57,6 @@ namespace LandscapeRegistry.Model
             }
             else
             {
-                //foundCIIDs = (await ciModel.GetCIIDs(trans)).ToHashSet();
                 cis = await ciModel.GetCompactCIs(new AllCIIDsSelection(), ls, trans, atTime);
             }
 
@@ -113,7 +111,7 @@ namespace LandscapeRegistry.Model
             if (foundCIIDs.IsEmpty())
                 return ImmutableArray<CompactCI>.Empty;
 
-            var cis = await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(foundCIIDs), layerSet, trans, atTime); // TODO: performance improvement
+            var cis = await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(foundCIIDs), layerSet, trans, atTime);
 
             // HACK, properly sort unnamed CIs
             return cis.OrderBy(t => t.Name ?? "ZZZZZZZZZZZ").Take(500);

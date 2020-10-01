@@ -166,6 +166,13 @@ namespace LandscapeRegistry.Model
             return ret;
         }
 
+        /// <summary>
+        /// approach: only archive a changeset when ALL of its changes can be archived... which means that ALL of its changes to attribute and relations can be archived
+        /// this is the case when the timestamp of the attribute/relation is older than the threshold AND the attribute/relation is NOT part of the latest/current data
+        /// </summary>
+        /// <param name="threshold"></param>
+        /// <param name="trans"></param>
+        /// <returns></returns>
         public async Task<int> ArchiveUnusedChangesetsOlderThan(DateTimeOffset threshold, NpgsqlTransaction trans)
         {
             var query = @"delete from changeset where

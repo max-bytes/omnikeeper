@@ -271,6 +271,8 @@ namespace LandscapeRegistry.GraphQL
                     return str;
                 });
 
+            // returns counts for each trait within the specified layers
+            // TODO: consider renaming
             FieldAsync<ListGraphType<EffectiveTraitListItemType>>("effectiveTraitList",
                 arguments: new QueryArguments(new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
                 resolve: async context =>

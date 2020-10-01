@@ -143,7 +143,7 @@ namespace LandscapeRegistry.Service
     {
         public IDictionary<Guid, CICandidate> CICandidates { get; private set; }
         public IEnumerable<RelationCandidate> RelationCandidates { get; private set; }
-        // TODO: relation candidates
+
         public static IngestData Build(IDictionary<Guid, CICandidate> cis, IEnumerable<RelationCandidate> relationCandidates)
         {
             return new IngestData()

@@ -55,7 +55,6 @@ namespace LandscapeRegistry.Model
 
         private async Task<UserInDatabase> GetUser(string username, Guid uuid, NpgsqlTransaction trans)
         {
-            // TODO: order by timestamp and get latest user
             using var command = new NpgsqlCommand(@"SELECT id, timestamp, type, displayName FROM ""user"" WHERE keycloak_id = @uuid AND username = @username ORDER BY timestamp DESC LIMIT 1", conn, trans);
 
             command.Parameters.AddWithValue("uuid", uuid);

@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace LandscapeRegistry.Service
 {
+    // TODO: rename to OmnikeeperAuthorizationService and IOmnikeeperAuthorizationService
     public class RegistryAuthorizationService : IRegistryAuthorizationService
     {
         private static readonly string ROLE_NAME_LAYER_WRITE_ACCESS_PREFIX = "layer_writeaccess_";
@@ -70,5 +71,7 @@ namespace LandscapeRegistry.Service
         {
             return true; // TODO
         }
+
+        // TODO: add missing stubs for various management tasks (OIA, OData, ...)
     }
 }

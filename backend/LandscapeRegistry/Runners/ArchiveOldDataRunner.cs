@@ -32,8 +32,6 @@ namespace LandscapeRegistry.Runners
                 // TODO: make configurable
                 var threshold = DateTimeOffset.Now.AddMonths(-3);
 
-                // approach: only archive a changeset when ALL of its changes can be archived... which means that ALL of its changes to attribute and relations can be archived
-                // this is the case when the timestamp of the attribute/relation is older than the threshold AND the attribute/relation is NOT part of the latest/current data
                 var numArchived = await changesetModel.ArchiveUnusedChangesetsOlderThan(threshold, trans);
 
                 if (numArchived > 0)

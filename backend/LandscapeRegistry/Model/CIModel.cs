@@ -26,12 +26,12 @@ namespace LandscapeRegistry.Model
         private string GetNameFromAttributes(IImmutableDictionary<string, MergedCIAttribute> attributes)
         {
             var nameA = attributes.GetValueOrDefault(ICIModel.NameAttribute, null);
-            return nameA?.Attribute.Value.Value2String(); // TODO
+            return nameA?.Attribute.Value.Value2String(); // TODO: we assume we can convert the name to a string, is this correct?
         }
         private string GetNameFromAttributes(IEnumerable<CIAttribute> attributes)
         {
             var nameA = attributes.FirstOrDefault(a => a.Name == ICIModel.NameAttribute);
-            return nameA?.Value.Value2String(); // TODO
+            return nameA?.Value.Value2String(); // TODO: we assume we can convert the name to a string, is this correct?
         }
 
         private async Task<IDictionary<Guid, string>> GetCINames(LayerSet layerset, ICIIDSelection selection, NpgsqlTransaction trans, TimeThreshold atTime)
