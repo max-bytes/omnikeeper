@@ -16,16 +16,6 @@ namespace Landscape.Base.Model
 
         }
 
-        // TODO: remove, is just a special case of multipleCIs
-        public class ChangesetSelectionSingleCI : IChangesetSelection
-        {
-            public readonly Guid ciid;
-
-            public ChangesetSelectionSingleCI(Guid ciid)
-            {
-                this.ciid = ciid;
-            }
-        }
         public class ChangesetSelectionMultipleCIs : IChangesetSelection
         {
             public Guid[] CIIDs { get; }
