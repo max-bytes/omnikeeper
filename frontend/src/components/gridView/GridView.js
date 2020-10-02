@@ -45,6 +45,26 @@ export default function GridView(props) {
         filter: true,
         editable: true,
         resizable: true,
+        valueSetter: function (params) {
+            // undefined -> ""
+            if (params.oldValue === undefined && params.newValue === "") {
+                return true;
+            }
+            // [set] -> undefined
+            else if (params.newValue === undefined) {
+                params.data[params.colDef.field] = "";
+                return true;
+            }
+            // normal input
+            else {
+                params.data[params.colDef.field] = params.newValue;
+                return true;
+            }
+        },
+        valueFormatter: (params) => {
+            if (params.value === undefined) return "[not set]";
+            else return params.value;
+        },
     };
 
     return (
