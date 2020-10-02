@@ -34,6 +34,8 @@
     <PackageReference Include="Hangfire.PostgreSql" Version="1.6.4.1" />
     <PackageReference Include="Karambolo.Extensions.Logging.File" Version="3.1.1" />
     <PackageReference Include="Keycloak.Net" Version="1.0.8" />
+    <PackageReference Include="MediatR" Version="8.1.0" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="8.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="4.1.1" />
@@ -69,6 +71,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="GridView\Commands\" />
+    <Folder Include="GridView\Queries\" />
     <Folder Include="Logs\" />
   </ItemGroup>
 
