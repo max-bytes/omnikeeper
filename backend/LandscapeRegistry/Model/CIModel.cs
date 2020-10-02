@@ -208,25 +208,40 @@ namespace LandscapeRegistry.Model
 
         public async Task<int> ArchiveUnusedCIs(NpgsqlTransaction trans)
         {
-            var allCIIDs = await GetCIIDs(trans);
-            using var command = new NpgsqlCommand(@"DELETE FROM ci WHERE id = @id RETURNING *", conn, trans);
-            command.Parameters.Add("id", NpgsqlDbType.Uuid);
-            command.Prepare();
-            var deleted = 0;
-            // TODO: build a query based solution, because just trying to delete leads to way too many postgres exception in the output
-            //foreach (var ciid in allCIIDs)
-            //{
-            //    try
-            //    {
-            //        command.Parameters[0].Value = ciid;
-            //        var d = await command.ExecuteScalarAsync();
-            //        deleted++;
-            //    } catch (PostgresException e)
-            //    {
+            // prefetch a list of CIIDs that do not have any attributes nor any relations (also historic)
+            var unusedCIIDs = new List<Guid>();
+            var queryUnusedCIIDs = @"SELECT id FROM ci ci WHERE
+                NOT EXISTS (SELECT 1 FROM attribute a WHERE a.ci_id = ci.id) AND 
+                NOT EXISTS (SELECT 1 FROM relation r WHERE r.from_ci_id = ci.id OR r.to_ci_id = ci.id)";
+            using (var commandUnusedCIIDs = new NpgsqlCommand(queryUnusedCIIDs, conn, trans))
+            {
+                using var s = await commandUnusedCIIDs.ExecuteReaderAsync();
+                while (await s.ReadAsync())
+                    unusedCIIDs.Add(s.GetGuid(0));
+            }
 
-            //    }
-            //}
-            // TODO
+            // NOTE: we should check for the existence of the CIIDs in foreign data mapping tables, but this is hard to implement properly.
+            // That's why we don't explicitly do that, but - in the case when there are no attributes/relations associated to a CI, yet mapping 
+            // table entries exist - rely on the foreign key constraints of the database, so that it does not let us delete CIs that are still in use
+
+            using var commandDelete = new NpgsqlCommand(@"DELETE FROM ci WHERE id = @id RETURNING *", conn, trans);
+            commandDelete.Parameters.Add("id", NpgsqlDbType.Uuid);
+            commandDelete.Prepare();
+            var deleted = 0;
+            foreach (var ciid in unusedCIIDs)
+            {
+                try
+                {
+                    commandDelete.Parameters[0].Value = ciid;
+                    var d = await commandDelete.ExecuteScalarAsync();
+                    deleted++;
+                }
+                catch (PostgresException e)
+                {
+
+                }
+            }
+
             return deleted;
         }
     }
