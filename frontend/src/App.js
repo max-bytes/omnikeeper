@@ -11,6 +11,7 @@ import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/AddNewCI'
 import SearchCI from './components/SearchCI'
+import GridView from './components/gridView/GridView'
 import Manage from './components/manage/Manage'
 import UserBar from './components/UserBar';
 import { Redirect, Route, Switch, BrowserRouter, Link  } from 'react-router-dom'
@@ -72,6 +73,7 @@ function App() {
                 <Menu.Item><Link to="/createCI"><Icon name="plus" /> Create New CI</Link></Menu.Item>
                 <Menu.Item><Link to="/explorer"><Icon name="search" /> Search CI</Link></Menu.Item>
                 <Menu.Item><Link to="/diffing"><Icon name="exchange" /> Diffing</Link></Menu.Item>
+                <Menu.Item><Link to="/grid-view"><Icon name="grid layout" /> Grid View</Link></Menu.Item>
               </Route>
               <UserBar />
             </div>
@@ -92,6 +94,9 @@ function App() {
               </PrivateRoute>
               <PrivateRoute path="/explorer">
                 <SearchCI />
+              </PrivateRoute>
+              <PrivateRoute path="/grid-view">
+                <GridView />
               </PrivateRoute>
               
               <PrivateRoute path="/manage/predicates">
