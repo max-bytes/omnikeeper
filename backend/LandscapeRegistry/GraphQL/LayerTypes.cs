@@ -31,4 +31,18 @@ namespace LandscapeRegistry.GraphQL
             Field("ids", x => x.LayerIDs);
         }
     }
+
+
+    public class LayerStatisticsType : ObjectGraphType<LayerStatistics>
+    {
+        public LayerStatisticsType()
+        {
+            Field("numActiveAttributes", x => x.NumActiveAttributes);
+            Field("numAttributeChangesHistory", x => x.NumAttributeChangesHistory);
+            Field("numActiveRelations", x => x.NumActiveRelations);
+            Field("numRelationChangesHistory", x => x.NumRelationChangesHistory);
+            Field("numLayerChangesetsHistory", x => x.NumLayerChangesetsHistory);
+            Field("layer", x => x.Layer, type: typeof(LayerType));
+        }
+    }
 }
