@@ -25,6 +25,7 @@ import ManageCache from './components/manage/ManageCache';
 import ManageCurrentUser from './components/manage/ManageCurrentUser';
 import { useKeycloak } from '@react-keycloak/web'
 import { useEffect } from 'react';
+import LayerStatistics from 'components/manage/LayerStatistics';
 
   // TODO: move?
 function KeycloakTokenSetter() {
@@ -96,6 +97,9 @@ function App() {
               
               <PrivateRoute path="/manage/predicates">
                 <ManagePredicates />
+              </PrivateRoute>
+              <PrivateRoute path="/manage/layers/statistics/:layerID">
+                <LayerStatistics />
               </PrivateRoute>
               <PrivateRoute path="/manage/layers">
                 <ManageLayers />

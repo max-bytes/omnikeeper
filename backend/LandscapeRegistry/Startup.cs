@@ -124,6 +124,7 @@ namespace LandscapeRegistry
             services.AddScoped<IUserInDatabaseModel, UserInDatabaseModel>();
             services.AddScoped<ILayerModel, LayerModel>();
             services.Decorate<ILayerModel, CachingLayerModel>();
+            services.AddScoped<ILayerStatisticsModel, LayerStatisticsModel>();
             services.AddScoped<IRelationModel, RelationModel>();
             services.AddScoped<IBaseRelationModel, BaseRelationModel>();
             services.Decorate<IBaseRelationModel, CachingBaseRelationModel>();

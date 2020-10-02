@@ -43,6 +43,7 @@ namespace Tests.Integration.GraphQL
             Services.Register<IOIAConfigModel, OIAConfigModel>();
             Services.Register<IODataAPIContextModel, ODataAPIContextModel>();
             Services.Register<IRecursiveTraitModel, RecursiveTraitModel>();
+            Services.Register<ILayerStatisticsModel, LayerStatisticsModel>();
 
             Services.Register<ITraitsProvider, TraitsProvider>();
             Services.Register<ITemplatesProvider, TemplatesProvider>();

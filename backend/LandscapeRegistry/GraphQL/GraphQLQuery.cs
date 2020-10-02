@@ -14,6 +14,7 @@ namespace LandscapeRegistry.GraphQL
     {
         public GraphQLQuery(ICIModel ciModel, ILayerModel layerModel, IPredicateModel predicateModel, IMemoryCacheModel memoryCacheModel,
             IChangesetModel changesetModel, ICISearchModel ciSearchModel, IOIAConfigModel oiaConfigModel, IODataAPIContextModel odataAPIContextModel,
+            ILayerStatisticsModel layerStatisticsModel,
             IEffectiveTraitModel effectiveTraitModel, IRecursiveTraitModel traitModel, ITraitsProvider traitsProvider, ICurrentUserService currentUserService)
         {
             FieldAsync<MergedCIType>("ci",
@@ -207,6 +208,37 @@ namespace LandscapeRegistry.GraphQL
                     var layers = await layerModel.GetLayers(null);
 
                     return layers;
+                });
+
+            FieldAsync<LayerStatisticsType>("layerStatistics",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<LongGraphType>> { Name = "layerID" }),
+                resolve: async context =>
+                {
+                    var layerID = context.GetArgument<long>("layerID");
+
+                    var layer = await layerModel.GetLayer(layerID, null);
+                    if (layer == null)
+                        throw new Exception($"Could not get layer with ID {layerID}");
+
+
+                    var numActiveAttributes = await layerStatisticsModel.GetActiveAttributes(layer, null);
+
+                    var numAttributeChangesHistory = await layerStatisticsModel.GetAttributeChangesHistory(layer, null);
+
+                    var numActiveRelations = await layerStatisticsModel.GetActiveRelations(layer, null);
+
+                    var numRelationChangesHistory = await layerStatisticsModel.GetRelationChangesHistory(layer, null);
+
+                    var numLayerChangesetsHistory = await layerStatisticsModel.GetLayerChangesetsHistory(layer, null);
+
+                    return LayerStatistics.Build(
+                        layer, 
+                        numActiveAttributes, 
+                        numAttributeChangesHistory,
+                        numActiveRelations,
+                        numRelationChangesHistory, 
+                        numLayerChangesetsHistory);
                 });
 
             FieldAsync<ListGraphType<OIAConfigType>>("oiaconfigs",

@@ -32,6 +32,9 @@ export default function ManageLayers(props) {
     { headerName: "State", field: "state", cellEditor: 'agSelectCellEditor', cellEditorParams: {
         values: ['ACTIVE', 'DEPRECATED', 'INACTIVE', 'MARKED_FOR_DELETION'],
       },
+    },
+    { headerName: "Statistics", cellRenderer: 'linkCellRenderer', editable: false,
+      cellRendererParams: { link: (props) => `/manage/layers/statistics/${props.node.id}`, content: (props) => 'Statistics' }
     }
   ];
 
