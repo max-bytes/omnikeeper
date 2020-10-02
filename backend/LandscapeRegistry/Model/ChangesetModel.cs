@@ -66,7 +66,6 @@ namespace LandscapeRegistry.Model
         {
             return cs switch
             {
-                ChangesetSelectionSingleCI sci => await GetChangesetsInTimespan(from, to, layers, new Guid[] { sci.ciid }, trans, limit),
                 ChangesetSelectionMultipleCIs mci => await GetChangesetsInTimespan(from, to, layers, mci.CIIDs, trans, limit),
                 ChangesetSelectionAllCIs _ => await GetChangesetsInTimespan(from, to, layers, trans, limit),
                 _ => throw new Exception("Invalid changeset selection"),
