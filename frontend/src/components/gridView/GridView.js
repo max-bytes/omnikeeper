@@ -2,8 +2,15 @@ import React, { useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-balham.css";
+import { Layout } from "antd";
+import GridViewButtonToolbar from "./GridViewButtonToolbar";
+
+const { Header, Content } = Layout;
 
 export default function GridView(props) {
+    const [gridApi, setGridApi] = useState(null);
+    const [gridColumnApi, setGridColumnApi] = useState(null);
+
     const [rowData, setRowData] = useState([
         {
             ciName: "CI-A",
@@ -50,11 +57,6 @@ export default function GridView(props) {
             if (params.oldValue === undefined && params.newValue === "") {
                 return true;
             }
-            // [set] -> undefined
-            else if (params.newValue === undefined) {
-                params.data[params.colDef.field] = "";
-                return true;
-            }
             // normal input
             else {
                 params.data[params.colDef.field] = params.newValue;
@@ -67,16 +69,60 @@ export default function GridView(props) {
         },
     };
 
+    function onGridReady(params) {
+        setGridApi(params.api);
+        setGridColumnApi(params.columnApi);
+    }
+
+    function setCellToNotSet() {
+        var focusedCell = gridApi.getFocusedCell();
+        var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
+        rowNode.setDataValue(focusedCell.column.colId, undefined);
+    }
+
+    function setCellToEmpty() {
+        var focusedCell = gridApi.getFocusedCell();
+        var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
+        rowNode.setDataValue(focusedCell.column.colId, "");
+    }
+
     return (
-        <div
-            className="ag-theme-balham"
-            style={{ flexGrow: 1, height: "100%", width: "100%" }}
+        <Layout
+            style={{
+                height: "100%",
+                maxHeight: "100%",
+                width: "100%",
+                maxWidth: "100%",
+                padding: "10px",
+            }}
         >
-            <AgGridReact
-                rowData={rowData}
-                columnDefs={columnDefs}
-                defaultColDef={defaultColDef}
-            ></AgGridReact>
-        </div>
+            <Header
+                style={{
+                    paddingLeft: "0px",
+                    background: "none",
+                }}
+            >
+                <GridViewButtonToolbar
+                    setCellToNotSet={setCellToNotSet}
+                    setCellToEmpty={setCellToEmpty}
+                />
+            </Header>
+            <Content>
+                <div
+                    className="ag-theme-balham"
+                    style={{
+                        height: "100%",
+                        width: "100%",
+                    }}
+                >
+                    <AgGridReact
+                        onGridReady={onGridReady}
+                        rowData={rowData}
+                        columnDefs={columnDefs}
+                        defaultColDef={defaultColDef}
+                    ></AgGridReact>
+                </div>
+            </Content>
+        </Layout>
     );
 }
