@@ -20,6 +20,7 @@ namespace Landscape.Base.Inbound
         private readonly ScopedExternalIDMapper<EID> mapper;
 
         public TimeSpan PreferredUpdateRate { get; }
+        public string PersisterScope => mapper.PersisterScope;
 
         public ExternalIDManager(ScopedExternalIDMapper<EID> mapper, TimeSpan preferredUpdateRate)
         {

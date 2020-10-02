@@ -15,6 +15,8 @@ namespace Landscape.Base.Inbound
     public interface IScopedExternalIDMapper
     {
         Task Setup(NpgsqlConnection conn, NpgsqlTransaction trans);
+
+        string PersisterScope { get; }
     }
 
     /// <summary>
@@ -45,7 +47,6 @@ namespace Landscape.Base.Inbound
         private IDictionary<EID, Guid> ext2int;
         private readonly Func<string, EID> string2ExtIDF;
         private readonly IScopedExternalIDMapPersister persister;
-
         private bool loaded = false;
 
         public ScopedExternalIDMapper(IScopedExternalIDMapPersister persister, Func<string, EID> string2ExtIDF)
@@ -112,6 +113,8 @@ namespace Landscape.Base.Inbound
 
         public bool ExistsInternally(EID externalID) => ext2int.ContainsKey(externalID);
         public bool ExistsExternally(Guid ciid) => int2ext.ContainsKey(ciid);
+
+        public string PersisterScope => persister.Scope;
 
         public IEnumerable<Guid> GetAllCIIDs() => int2ext.Keys;
 

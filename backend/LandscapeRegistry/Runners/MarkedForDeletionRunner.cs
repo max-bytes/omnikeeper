@@ -16,6 +16,9 @@ namespace LandscapeRegistry.Runners
             this.logger = logger;
         }
 
+        // TODO: enable and test
+        //[DisableConcurrentExecution(timeoutInSeconds: 60)]
+        //[AutomaticRetry(Attempts = 0)]
         public void Run(PerformContext context)
         {
             using (HangfireConsoleLogger.InContext(context))

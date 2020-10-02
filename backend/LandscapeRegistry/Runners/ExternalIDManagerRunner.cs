@@ -19,6 +19,7 @@ namespace LandscapeRegistry.Runners
     {
         private readonly ILogger<ExternalIDManagerRunner> logger;
         private readonly IInboundAdapterManager pluginManager;
+        private readonly IExternalIDMapPersister externalIDMapPersister;
         private readonly ICIModel ciModel;
         private readonly CIMappingService ciMappingService;
         private readonly IAttributeModel attributeModel;
@@ -28,11 +29,12 @@ namespace LandscapeRegistry.Runners
         // HACK: making this static sucks, find better way, but runner is instantiated anew on each run
         private static readonly IDictionary<string, DateTimeOffset> lastRuns = new ConcurrentDictionary<string, DateTimeOffset>();
 
-        public ExternalIDManagerRunner(IInboundAdapterManager pluginManager, ICIModel ciModel, CIMappingService ciMappingService, IAttributeModel attributeModel, ILayerModel layerModel, 
-            NpgsqlConnection conn, ILogger<ExternalIDManagerRunner> logger)
+        public ExternalIDManagerRunner(IInboundAdapterManager pluginManager, IExternalIDMapPersister externalIDMapPersister, ICIModel ciModel, CIMappingService ciMappingService, 
+            IAttributeModel attributeModel, ILayerModel layerModel, NpgsqlConnection conn, ILogger<ExternalIDManagerRunner> logger)
         {
             this.logger = logger;
             this.pluginManager = pluginManager;
+            this.externalIDMapPersister = externalIDMapPersister;
             this.ciModel = ciModel;
             this.ciMappingService = ciMappingService;
             this.attributeModel = attributeModel;
@@ -60,6 +62,8 @@ namespace LandscapeRegistry.Runners
             var adapters = layersWithOILPs.Select(l => l.OnlineInboundAdapterLink.AdapterName)
                 .Distinct(); // distinct because multiple layers can have the same adapter configured
 
+            var usedPersisterScopes = new HashSet<string>();
+
             foreach (var adapterName in adapters)
             {
                 lastRuns.TryGetValue(adapterName, out var lastRun);
@@ -72,8 +76,11 @@ namespace LandscapeRegistry.Runners
                 }
                 else
                 {
-                    var manager = plugin.GetExternalIDManager();
-                    if (lastRun == null || (DateTimeOffset.Now - lastRun) > manager.PreferredUpdateRate)
+                    var EIDManager = plugin.GetExternalIDManager();
+
+                    usedPersisterScopes.Add(EIDManager.PersisterScope);
+
+                    if (lastRun == null || (DateTimeOffset.Now - lastRun) > EIDManager.PreferredUpdateRate)
                     {
                         logger.LogInformation($"Running external ID update for OILP {adapterName}");
 
@@ -83,7 +90,7 @@ namespace LandscapeRegistry.Runners
                         {
                             using var trans = conn.BeginTransaction();
 
-                            var changes = await manager.Update(ciModel, attributeModel, ciMappingService, conn, trans, logger);
+                            var changes = await EIDManager.Update(ciModel, attributeModel, ciMappingService, conn, trans, logger);
 
                             if (changes)
                             {
@@ -109,6 +116,17 @@ namespace LandscapeRegistry.Runners
                         logger.LogInformation($"Skipping external ID update for OILP {adapterName}");
                     }
                 }
+            }
+
+            try
+            {
+                using var trans = conn.BeginTransaction();
+                await externalIDMapPersister.DeleteUnusedScopes(usedPersisterScopes, conn, trans);
+                trans.Commit();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, $"An error occured when deleting unused persisted scopes");
             }
 
             logger.LogInformation("Finished");

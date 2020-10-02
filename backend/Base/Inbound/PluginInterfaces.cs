@@ -18,6 +18,8 @@ namespace Landscape.Base.Inbound
         public Task Persist(string scope, IDictionary<Guid, string> int2ext, NpgsqlConnection conn, NpgsqlTransaction trans);
         public Task<IDictionary<Guid, string>> Load(string scope, NpgsqlConnection conn, NpgsqlTransaction trans);
         public IScopedExternalIDMapPersister CreateScopedPersister(string scope);
+        public Task<int> DeleteUnusedScopes(ISet<string> usedScopes, NpgsqlConnection conn, NpgsqlTransaction trans);
+        public Task<ISet<Guid>> GetAllMappedCIIDs(NpgsqlConnection conn, NpgsqlTransaction trans);
     }
 
     public interface IScopedExternalIDMapPersister // TODO: needed? or can be merged into IExternalIDMapPersister?
@@ -87,6 +89,7 @@ namespace Landscape.Base.Inbound
     {
         Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, NpgsqlConnection conn, NpgsqlTransaction trans, ILogger logger);
         TimeSpan PreferredUpdateRate { get; }
+        string PersisterScope { get; }
     }
 
     public interface ILayerAccessProxy

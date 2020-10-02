@@ -205,44 +205,5 @@ namespace LandscapeRegistry.Model
             await command.ExecuteNonQueryAsync();
             return id;
         }
-
-        public async Task<int> ArchiveUnusedCIs(NpgsqlTransaction trans)
-        {
-            // prefetch a list of CIIDs that do not have any attributes nor any relations (also historic)
-            var unusedCIIDs = new List<Guid>();
-            var queryUnusedCIIDs = @"SELECT id FROM ci ci WHERE
-                NOT EXISTS (SELECT 1 FROM attribute a WHERE a.ci_id = ci.id) AND 
-                NOT EXISTS (SELECT 1 FROM relation r WHERE r.from_ci_id = ci.id OR r.to_ci_id = ci.id)";
-            using (var commandUnusedCIIDs = new NpgsqlCommand(queryUnusedCIIDs, conn, trans))
-            {
-                using var s = await commandUnusedCIIDs.ExecuteReaderAsync();
-                while (await s.ReadAsync())
-                    unusedCIIDs.Add(s.GetGuid(0));
-            }
-
-            // NOTE: we should check for the existence of the CIIDs in foreign data mapping tables, but this is hard to implement properly.
-            // That's why we don't explicitly do that, but - in the case when there are no attributes/relations associated to a CI, yet mapping 
-            // table entries exist - rely on the foreign key constraints of the database, so that it does not let us delete CIs that are still in use
-
-            using var commandDelete = new NpgsqlCommand(@"DELETE FROM ci WHERE id = @id RETURNING *", conn, trans);
-            commandDelete.Parameters.Add("id", NpgsqlDbType.Uuid);
-            commandDelete.Prepare();
-            var deleted = 0;
-            foreach (var ciid in unusedCIIDs)
-            {
-                try
-                {
-                    commandDelete.Parameters[0].Value = ciid;
-                    var d = await commandDelete.ExecuteScalarAsync();
-                    deleted++;
-                }
-                catch (PostgresException e)
-                {
-
-                }
-            }
-
-            return deleted;
-        }
     }
 }

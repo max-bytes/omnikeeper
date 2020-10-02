@@ -4,10 +4,12 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Landscape.Base.Inbound
 {
+    // TODO: consider reworking this into using a single table, not one per scope
     public class ExternalIDMapPostgresPersister : IExternalIDMapPersister
     {
         private readonly static string SchemaName = "ext_id_mapping";
@@ -82,6 +84,60 @@ namespace Landscape.Base.Inbound
         public IScopedExternalIDMapPersister CreateScopedPersister(string scope)
         {
             return new ScopedExternalIDMapPostgresPersister(scope, this);
+        }
+
+        private async Task<ISet<string>> GetAllTableNames(NpgsqlConnection conn, NpgsqlTransaction trans)
+        {
+            var allTablesQuery = $"SELECT tablename FROM pg_tables WHERE schemaname = '{SchemaName}'";
+            var allTableNames = new HashSet<string>();
+            using (var command = new NpgsqlCommand(allTablesQuery, conn, trans))
+            {
+                using var dr = await command.ExecuteReaderAsync();
+
+                while (await dr.ReadAsync())
+                {
+                    var tableName = dr.GetString(0);
+                    allTableNames.Add(tableName);
+                }
+            }
+            return allTableNames;
+        }
+
+        public async Task<int> DeleteUnusedScopes(ISet<string> usedScopes, NpgsqlConnection conn, NpgsqlTransaction trans)
+        {
+            var allTableNames = await GetAllTableNames(conn, trans);
+
+            var unusedScopes = allTableNames.Except(usedScopes);
+
+            var numDeleted = 0;
+            foreach(var unusedScope in unusedScopes)
+            {
+                var fullTableName = $"\"{SchemaName}\".{unusedScope}";
+                using var command = new NpgsqlCommand($"DROP TABLE {fullTableName}", conn, trans);
+                command.ExecuteNonQuery();
+                numDeleted++;
+            }
+
+            return numDeleted;
+        }
+
+        public async Task<ISet<Guid>> GetAllMappedCIIDs(NpgsqlConnection conn, NpgsqlTransaction trans)
+        {
+            var ret = new HashSet<Guid>();
+            var allTableNames = await GetAllTableNames(conn, trans);
+            foreach(var tableName in allTableNames)
+            {
+                var fullTableName = $"\"{SchemaName}\".{tableName}";
+                using var command = new NpgsqlCommand(@$"SELECT ci_id from {fullTableName}", conn, trans);
+                using var dr = await command.ExecuteReaderAsync();
+                while (await dr.ReadAsync())
+                {
+                    var ciid = dr.GetGuid(0);
+
+                    ret.Add(ciid);
+                }
+            }
+            return ret;
         }
     }
 

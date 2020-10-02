@@ -27,7 +27,5 @@ namespace Landscape.Base.Model
 
         Task<Guid> CreateCI(Guid id, NpgsqlTransaction trans);
         Task<Guid> CreateCI(NpgsqlTransaction trans);
-
-        Task<int> ArchiveUnusedCIs(NpgsqlTransaction trans);
     }
 }
