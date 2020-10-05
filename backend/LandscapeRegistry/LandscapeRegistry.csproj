@@ -72,7 +72,6 @@
 
   <ItemGroup>
     <Folder Include="GridView\Commands\" />
-    <Folder Include="GridView\Queries\" />
     <Folder Include="Logs\" />
   </ItemGroup>
 
