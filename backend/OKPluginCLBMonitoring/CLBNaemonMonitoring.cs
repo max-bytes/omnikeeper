@@ -26,7 +26,7 @@ using System.Reflection;
 using Landscape.Base.AttributeValues;
 using Landscape.Base.CLB;
 
-namespace MonitoringPlugin
+namespace OKPluginCLBMonitoring
 {
     public class CLBNaemonMonitoring : CLBBase
     {

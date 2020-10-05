@@ -57,6 +57,7 @@
     <ProjectReference Include="..\Base\Landscape.Base.csproj" />
     <ProjectReference Include="..\DBMigrations\DBMigrations.csproj" />
     <ProjectReference Include="..\MonitoringPlugin\CLBMonitoring.csproj" />
+    <ProjectReference Include="..\OKPluginCLBMonitoring\OKPluginCLBMonitoring.csproj" />
     <ProjectReference Include="..\OKPluginOIAKeycloak\OKPluginOIAKeycloak.csproj" />
     <ProjectReference Include="..\OKPluginOIAOmnikeeper\OKPluginOIAOmnikeeper.csproj" />
     <ProjectReference Include="..\OKPluginOIASharepoint\OKPluginOIASharepoint.csproj" />
