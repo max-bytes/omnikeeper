@@ -20,6 +20,7 @@ using LandscapeRegistry.Model.Decorators;
 using LandscapeRegistry.Runners;
 using LandscapeRegistry.Service;
 using LandscapeRegistry.Utils;
+using MediatR;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Formatter;
@@ -64,6 +65,8 @@ namespace LandscapeRegistry
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMediatR(Assembly.GetExecutingAssembly());
+
             services.AddScoped<IServiceProvider>(x =>
                 new FuncServiceProvider(x.GetRequiredService)
                 ); // graphql needs this
