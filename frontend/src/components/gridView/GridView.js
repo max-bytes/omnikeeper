@@ -53,8 +53,11 @@ export default function GridView(props) {
         editable: true,
         resizable: true,
         valueSetter: function (params) {
-            // undefined -> ""
-            if (params.oldValue === undefined && params.newValue === "") {
+            // undefined/null -> ""
+            if (
+                (params.oldValue === undefined || params.oldValue === null) &&
+                params.newValue === ""
+            ) {
                 return true;
             }
             // normal input
@@ -64,7 +67,8 @@ export default function GridView(props) {
             }
         },
         valueFormatter: (params) => {
-            if (params.value === undefined) return "[not set]";
+            if (params.value === undefined || params.value === null)
+                return "[not set]";
             else return params.value;
         },
     };
@@ -77,7 +81,7 @@ export default function GridView(props) {
     function setCellToNotSet() {
         var focusedCell = gridApi.getFocusedCell();
         var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
-        rowNode.setDataValue(focusedCell.column.colId, undefined);
+        rowNode.setDataValue(focusedCell.column.colId, null);
     }
 
     function setCellToEmpty() {
