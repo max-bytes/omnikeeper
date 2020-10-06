@@ -31,7 +31,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tasks", "Tasks\Tasks.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginOIASharepoint", "OKPluginOIASharepoint\OKPluginOIASharepoint.csproj", "{8AD1FA01-D4AD-4D04-9318-7CB0C78377B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginOIASharepoint.Tests", "OKPluginOIASharepoint.Tests\OKPluginOIASharepoint.Tests.csproj", "{6A10D985-11B9-483E-877B-ED67656BF8A0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginOIASharepoint.Tests", "OKPluginOIASharepoint.Tests\OKPluginOIASharepoint.Tests.csproj", "{6A10D985-11B9-483E-877B-ED67656BF8A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
