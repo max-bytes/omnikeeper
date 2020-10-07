@@ -5,6 +5,7 @@ import "ag-grid-community/dist/styles/ag-theme-balham.css";
 import { Layout } from "antd";
 import GridViewButtonToolbar from "./GridViewButtonToolbar";
 import _ from "lodash";
+import "./GridView.css";
 import getMockUpData from "./GridViewMockUpDataProvider"; // returns mockUp-data for testing // TODO: remove, when finally using API
 
 const { Header, Content } = Layout;
@@ -16,6 +17,15 @@ export default function GridView(props) {
     const [columnDefs, setColumnDefs] = useState(null);
     const [rowData, setRowData] = useState(null);
     const defaultColDef = initDefaultColDef(); // Init defaultColDef
+
+    // status objects
+    const rowStatus = {
+        new: { id: 0, name: "New" },
+        edited: { id: 1, name: "Edit" },
+        clean: { id: 2, name: "Clean" },
+        deleted: { id: 3, name: "Del" },
+        error: { id: 4, name: "Err" },
+    };
 
     return (
         <Layout
@@ -82,6 +92,7 @@ export default function GridView(props) {
                 dataCellTemp[value.name] = value.value;
             });
             dataTemp.push({
+                status: rowStatus.clean, // set status to 'clean'
                 ciid: value.ciid,
                 ...dataCellTemp,
             });
@@ -93,11 +104,30 @@ export default function GridView(props) {
     function initColumnDefs(schema) {
         let columnDefsTemp = [
             {
+                // new, edited, clean, deleted
+                headerName: "Status",
+                field: "status",
+                editable: false,
+                checkboxSelection: true, // checkbox for selecting row
+                pinned: "left", // pinn to the left
+                // set width = minWidth = maxWith, so fitting is suppressed in every possible way
+                width: 92,
+                minWidth: 92,
+                maxWidth: 92,
+                resizable: false,
+                suppressSizeToFit: true, // suppress sizeToFit
+                // get name of status
+                valueGetter: function (params) {
+                    if (params.data.status !== undefined)
+                        return params.data.status.name;
+                },
+            },
+            {
                 headerName: "CIID",
                 field: "ciid",
                 editable: false,
                 hide: !schema.showCIIDColumn,
-                cellStyle: { backgroundColor: "#f2f2f2" },
+                cellStyle: { fontStyle: "italic" },
             },
         ];
         _.forEach(schema.columns, function (value) {
@@ -111,7 +141,7 @@ export default function GridView(props) {
                 },
                 cellStyle: function (params) {
                     const editable = params.colDef.editable(params);
-                    return editable ? {} : { backgroundColor: "#f2f2f2" };
+                    return editable ? {} : { fontStyle: "italic" };
                 },
             });
         });
@@ -125,6 +155,24 @@ export default function GridView(props) {
             filter: true,
             editable: true,
             resizable: true,
+            cellClassRules: {
+                // specified in css
+                new: function (params) {
+                    if (params.data.status.id === rowStatus.new.id) return true;
+                },
+                edited: function (params) {
+                    if (params.data.status.id === rowStatus.edited.id)
+                        return true;
+                },
+                clean: function (params) {
+                    if (params.data.status.id === rowStatus.clean.id)
+                        return true;
+                },
+                deleted: function (params) {
+                    if (params.data.status.id === rowStatus.deleted.id)
+                        return true;
+                },
+            },
             valueSetter: function (params) {
                 // undefined/null -> ""
                 if (
@@ -202,7 +250,11 @@ export default function GridView(props) {
             var numberOfNewRows = e.currentTarget.value; // how many rows to add
             for (var i = 0; i < numberOfNewRows; i++)
                 gridApi.applyTransaction({
-                    add: [{}], // add empty values
+                    add: [
+                        {
+                            status: rowStatus.new, // set status to 'new'
+                        },
+                    ], // remaining attributes: undefined
                 });
         }
     }
