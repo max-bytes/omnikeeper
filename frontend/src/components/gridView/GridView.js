@@ -34,11 +34,13 @@ export default function GridView(props) {
                 style={{
                     paddingLeft: "0px",
                     background: "none",
+                    height: "auto",
                 }}
             >
                 <GridViewButtonToolbar
                     setCellToNotSet={setCellToNotSet}
                     setCellToEmpty={setCellToEmpty}
+                    newRows={newRows}
                 />
             </Header>
             <Content>
@@ -60,7 +62,7 @@ export default function GridView(props) {
         </Layout>
     );
 
-    // ########## INIT FUNCTIONS ##########
+    // ######################################## INIT FUNCTIONS ########################################
 
     // grid ready
     function onGridReady(params) {
@@ -143,30 +145,34 @@ export default function GridView(props) {
         };
     }
 
-    // ########## CELL FUNCTIONS ##########
+    // ######################################## CELL FUNCTIONS ########################################
 
     // sets focused cell to [not set]
     function setCellToNotSet() {
         var focusedCell = gridApi.getFocusedCell();
-        var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
-        const name = focusedCell.column.colDef.field;
-        const ciid = rowNode.data.ciid;
-        const editableCell = getCellEditable(ciid, name);
-        const editableCol = focusedCell.column.colDef.editable;
-        if (editableCol && editableCell)
-            rowNode.setDataValue(focusedCell.column.colId, null);
+        if (focusedCell) {
+            var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
+            const name = focusedCell.column.colDef.field;
+            const ciid = rowNode.data.ciid;
+            const editableCell = getCellEditable(ciid, name);
+            const editableCol = focusedCell.column.colDef.editable;
+            if (editableCol && editableCell)
+                rowNode.setDataValue(focusedCell.column.colId, null);
+        }
     }
 
     // sets focused cell to ""
     function setCellToEmpty() {
         var focusedCell = gridApi.getFocusedCell();
-        var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
-        const name = focusedCell.column.colDef.field;
-        const ciid = rowNode.data.ciid;
-        const editableCell = getCellEditable(ciid, name);
-        const editableCol = focusedCell.column.colDef.editable;
-        if (editableCol && editableCell)
-            rowNode.setDataValue(focusedCell.column.colId, "");
+        if (focusedCell) {
+            var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
+            const name = focusedCell.column.colDef.field;
+            const ciid = rowNode.data.ciid;
+            const editableCell = getCellEditable(ciid, name);
+            const editableCol = focusedCell.column.colDef.editable;
+            if (editableCol && editableCell)
+                rowNode.setDataValue(focusedCell.column.colId, "");
+        }
     }
 
     // returns editable/changeable-attr of cell, defined by its ciid and name/colName
@@ -174,9 +180,23 @@ export default function GridView(props) {
         let obj = _.find(data.rows, function (o) {
             return o.ciid === ciid;
         });
-        obj = _.find(obj.cells, function (o) {
-            return o.name === name;
-        });
+        if (obj)
+            obj = _.find(obj.cells, function (o) {
+                return o.name === name;
+            });
         return obj ? obj.changeable : true;
+    }
+
+    // ######################################## ROW FUNCTIONS ########################################
+
+    // add new row(s)
+    function newRows(e) {
+        if (e) {
+            var numberOfNewRows = e.currentTarget.value; // how many rows to add
+            for (var i = 0; i < numberOfNewRows; i++)
+                gridApi.updateRowData({
+                    add: [{}], // add empty values
+                });
+        }
     }
 }
