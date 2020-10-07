@@ -35,12 +35,17 @@ export default function GridView(props) {
                     paddingLeft: "0px",
                     background: "none",
                     height: "auto",
+                    padding: "unset",
                 }}
             >
                 <GridViewButtonToolbar
                     setCellToNotSet={setCellToNotSet}
                     setCellToEmpty={setCellToEmpty}
                     newRows={newRows}
+                    markRowAsDeleted={markRowAsDeleted}
+                    autoSizeAll={autoSizeAll}
+                    save={save}
+                    refreshData={refreshData}
                 />
             </Header>
             <Content>
@@ -198,5 +203,29 @@ export default function GridView(props) {
                     add: [{}], // add empty values
                 });
         }
+    }
+
+    // ######################################## CRUD OPERATIONS ########################################
+
+    // mark row as 'deleted' // TODO
+    function markRowAsDeleted() {
+        alert("not implemented yet");
+    }
+
+    // CREATE / UPDATE / DELETE on pressing 'save' // TODO
+    function save() {
+        alert("not implemented yet");
+    }
+
+    // refresh data // TODO
+    function refreshData() {
+        alert("not implemented yet");
+    }
+
+    // ######################################## AG GRID FORMATTING ########################################
+
+    // resize table and fit to column sizes
+    function autoSizeAll() {
+        gridColumnApi.autoSizeAllColumns();
     }
 }
