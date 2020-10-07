@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DBMigrations\DBMigrations.csproj" />
-    <ProjectReference Include="..\LandscapeRegistry\LandscapeRegistry.csproj" />
+    <ProjectReference Include="..\Omnikeeper\Omnikeeper.csproj" />
   </ItemGroup>
 
 </Project>

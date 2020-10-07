@@ -1,5 +1,5 @@
-﻿using Landscape.Base.Entity;
-using LandscapeRegistry.Controllers.OData;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Controllers.OData;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using OKPluginOIAOmnikeeper;

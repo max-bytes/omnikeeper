@@ -1,5 +1,5 @@
-﻿using Landscape.Base.Inbound;
-using Landscape.Base.Service;
+﻿using Omnikeeper.Base.Inbound;
+using Omnikeeper.Base.Service;
 
 namespace OKPluginOIASharepoint
 {

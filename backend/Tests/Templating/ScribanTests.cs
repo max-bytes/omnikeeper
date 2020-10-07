@@ -1,9 +1,9 @@
-﻿using Landscape.Base.Entity;
-using Landscape.Base.Model;
-using Landscape.Base.Templating;
-using Landscape.Base.Utils;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Templating;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.Model;
 using Moq;
 using Newtonsoft.Json.Linq;
 using Npgsql;
@@ -15,7 +15,7 @@ using Scriban.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using static Landscape.Base.Templating.ScribanVariableService;
+using static Omnikeeper.Base.Templating.ScribanVariableService;
 
 namespace Tests.Templating
 {

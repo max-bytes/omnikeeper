@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
-using Landscape.Base.Utils;
+using Omnikeeper.Base.Utils;
 
 namespace Tests
 {

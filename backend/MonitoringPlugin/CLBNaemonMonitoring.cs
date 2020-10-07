@@ -1,10 +1,10 @@
 ﻿using Scriban;
-using Landscape.Base;
-using Landscape.Base.Entity;
-using Landscape.Base.Model;
-using Landscape.Base.Templating;
-using Landscape.Base.Utils;
-using LandscapeRegistry.Entity.AttributeValues;
+using Omnikeeper.Base;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Templating;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Scriban.Runtime;
-using static Landscape.Base.Templating.ScribanVariableService;
+using static Omnikeeper.Base.Templating.ScribanVariableService;
 using YamlDotNet.Core;
 using System.IO;
 using YamlDotNet.RepresentationModel;
@@ -23,8 +23,8 @@ using YamlDotNet.Serialization.NamingConventions;
 using JsonSubTypes;
 using DotLiquid.Util;
 using System.Reflection;
-using Landscape.Base.AttributeValues;
-using Landscape.Base.CLB;
+using Omnikeeper.Base.AttributeValues;
+using Omnikeeper.Base.CLB;
 
 namespace MonitoringPlugin
 {

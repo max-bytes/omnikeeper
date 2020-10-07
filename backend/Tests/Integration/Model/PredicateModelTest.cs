@@ -1,7 +1,7 @@
-﻿using Landscape.Base.Entity;
-using Landscape.Base.Utils;
-using LandscapeRegistry.Model;
-using LandscapeRegistry.Utils;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Model;
+using Omnikeeper.Utils;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
