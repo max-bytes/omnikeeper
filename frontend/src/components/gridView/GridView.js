@@ -13,11 +13,8 @@ export default function GridView(props) {
     const [gridApi, setGridApi] = useState(null);
     const [gridColumnApi, setGridColumnApi] = useState(null);
 
-    // Load mockup data
-    const schema = getMockUpData("schema");
-    const data = getMockUpData("data");
-    const [columnDefs, setColumnDefs] = useState(initColumnDefs(schema)); // Init Schema/columnDefs
-    const [rowData, setRowData] = useState(initRowData(data)); // Init Data/rowData
+    const [columnDefs, setColumnDefs] = useState(null);
+    const [rowData, setRowData] = useState(null);
     const defaultColDef = initDefaultColDef(); // Init defaultColDef
 
     return (
@@ -73,6 +70,7 @@ export default function GridView(props) {
     function onGridReady(params) {
         setGridApi(params.api);
         setGridColumnApi(params.columnApi);
+        refreshData();
     }
 
     // Init Data/rowData
@@ -182,13 +180,17 @@ export default function GridView(props) {
 
     // returns editable/changeable-attr of cell, defined by its ciid and name/colName
     function getCellEditable(ciid, name) {
-        let obj = _.find(data.rows, function (o) {
-            return o.ciid === ciid;
-        });
-        if (obj)
-            obj = _.find(obj.cells, function (o) {
-                return o.name === name;
+        const data = getMockUpData("data");
+        let obj;
+        if (data) {
+            obj = _.find(data.rows, function (o) {
+                return o.ciid === ciid;
             });
+            if (obj)
+                obj = _.find(obj.cells, function (o) {
+                    return o.name === name;
+                });
+        }
         return obj ? obj.changeable : true;
     }
 
@@ -199,7 +201,7 @@ export default function GridView(props) {
         if (e) {
             var numberOfNewRows = e.currentTarget.value; // how many rows to add
             for (var i = 0; i < numberOfNewRows; i++)
-                gridApi.updateRowData({
+                gridApi.applyTransaction({
                     add: [{}], // add empty values
                 });
         }
@@ -217,9 +219,15 @@ export default function GridView(props) {
         alert("not implemented yet");
     }
 
-    // refresh data // TODO
+    // READ / refresh data
     function refreshData() {
-        alert("not implemented yet");
+        // TODO: use API, when implemented
+        const schema = getMockUpData("schema"); // get mockUp schema
+        const data = getMockUpData("data"); // get mockUp data
+
+        setColumnDefs(initColumnDefs(schema)); // Init Schema/columnDefs
+        setRowData(initRowData(data)); // Init Data/rowData
+        if (gridApi) gridApi.setRowData(rowData); // Tell it AgGrid
     }
 
     // ######################################## AG GRID FORMATTING ########################################
