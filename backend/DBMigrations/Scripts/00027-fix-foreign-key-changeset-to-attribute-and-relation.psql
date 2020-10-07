@@ -1,0 +1,13 @@
+﻿
+ALTER TABLE ONLY public.attribute
+    DROP CONSTRAINT f_changeset;
+    
+ALTER TABLE ONLY public.attribute
+    ADD CONSTRAINT f_changeset FOREIGN KEY (changeset_id) REFERENCES public.changeset(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+ALTER TABLE ONLY public.relation
+    DROP CONSTRAINT f_changeset;
+    
+ALTER TABLE ONLY public.relation
+    ADD CONSTRAINT f_changeset FOREIGN KEY (changeset_id) REFERENCES public.changeset(id) ON UPDATE CASCADE ON DELETE CASCADE;

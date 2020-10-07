@@ -55,7 +55,6 @@ export default function ManagePredicates(props) {
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
       saveRow={async row => {
         const constraints = row.constraints ?? { preferredTraitsFrom: [], preferredTraitsTo: [] };
-        
         const predicate = { id: row.id, wordingFrom: row.wordingFrom, wordingTo: row.wordingTo, state: row.state, constraints: constraints };
         return upsert({ variables: { predicate: predicate } })
           .then(r => ({result: removeTypename(r.data.upsertPredicate), id: row.id}))

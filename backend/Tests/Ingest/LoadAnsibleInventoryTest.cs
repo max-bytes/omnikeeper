@@ -1,13 +1,13 @@
-﻿using Landscape.Base.Entity;
-using Landscape.Base.Model;
-using Landscape.Base.Service;
-using Landscape.Base.Utils;
-using LandscapeRegistry.Controllers.Ingest;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
-using LandscapeRegistry.Model.Decorators;
-using LandscapeRegistry.Service;
-using LandscapeRegistry.Utils;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Controllers.Ingest;
+using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.Model;
+using Omnikeeper.Model.Decorators;
+using Omnikeeper.Service;
+using Omnikeeper.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.InternalAbstractions;
@@ -119,7 +119,7 @@ namespace Tests.Ingest
                 return jo;
             });
 
-            var response = await controller.IngestAnsibleInventoryScan(insertLayer.ID, searchLayerSet.LayerIDs, new Landscape.Base.Entity.DTO.Ingest.AnsibleInventoryScanDTO()
+            var response = await controller.IngestAnsibleInventoryScan(insertLayer.ID, searchLayerSet.LayerIDs, new Omnikeeper.Base.Entity.DTO.Ingest.AnsibleInventoryScanDTO()
             {
                 SetupFacts = setupFacts,
                 YumInstalled = new Dictionary<string, JObject>() { },

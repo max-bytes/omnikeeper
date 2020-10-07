@@ -4,6 +4,7 @@ import { Button } from 'semantic-ui-react';
 import { ErrorModalCellRenderer } from '../ErrorModalCellRenderer';
 import { RowStateCellRenderer } from '../RowStateCellRenderer';
 import { LayerColorCellRenderer } from '../LayerColorCellRenderer';
+import LinkCellRenderer from '../LinkCellRenderer';
 import PredicateConstraintsCellEditor from './PredicateConstraintsCellEditor';
 import DeleteRowCellRenderer from '../DeleteRowCellRenderer';
 import ARGBColorCellEditor from './ARGBColorCellEditor';
@@ -169,6 +170,7 @@ export default function AgGridCrud(props) {
         frameworkComponents={{
           errorModalCellRenderer: ErrorModalCellRenderer, rowStateCellRenderer: RowStateCellRenderer,
           layerColorCellRenderer: LayerColorCellRenderer, deleteRowCellRenderer: DeleteRowCellRenderer,
+          linkCellRenderer: LinkCellRenderer,
           predicateConstraintsCellEditor: PredicateConstraintsCellEditor, ARGBColorCellEditor: ARGBColorCellEditor }}
         columnDefs={columnDefs}
         defaultColDef={defaultColDef}

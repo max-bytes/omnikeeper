@@ -1,7 +1,7 @@
-﻿using Landscape.Base.Inbound;
-using Landscape.Base.Model;
-using Landscape.Base.Service;
-using Landscape.Base.Utils;
+﻿using Omnikeeper.Base.Inbound;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Npgsql;
@@ -9,6 +9,7 @@ using NUnit.Framework;
 using NUnit.Framework.Internal;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,20 +19,20 @@ namespace Tests.OIA
     {
         public class TestedExternalIDManager : ExternalIDManager<ExternalIDString>
         {
-            private readonly IList<ExternalIDString> ids = new List<ExternalIDString>();
+            private readonly IList<(ExternalIDString, ICIIdentificationMethod)> ids = new List<(ExternalIDString, ICIIdentificationMethod)>();
 
             public TestedExternalIDManager(ScopedExternalIDMapper<ExternalIDString> mapper) : base(mapper, TimeSpan.Zero)
             {
             }
 
-            protected async override Task<IEnumerable<ExternalIDString>> GetExternalIDs()
+            protected async override Task<IEnumerable<(ExternalIDString, ICIIdentificationMethod)>> GetExternalIDs()
             {
                 return ids;
             }
 
             public TestedExternalIDManager Add(string externalID)
             {
-                ids.Add(new ExternalIDString(externalID));
+                ids.Add((new ExternalIDString(externalID), CIIdentificationMethodNoop.Build()));
                 return this;
             }
 
@@ -44,18 +45,16 @@ namespace Tests.OIA
 
         public class TestedScopedExternalIDMapper : ScopedExternalIDMapper<ExternalIDString>
         {
-            public TestedScopedExternalIDMapper(string scope, IExternalIDMapPersister persister) : base(scope, persister, (s) => new ExternalIDString(s))
+            public TestedScopedExternalIDMapper(IScopedExternalIDMapPersister persister) : base(persister, (s) => new ExternalIDString(s))
             {
             }
-
-            public override ICIIdentificationMethod GetIdentificationMethod(ExternalIDString externalID) => CIIdentificationMethodNoop.Build();
         }
 
         [Test]
         public async Task TestBasics()
         {
-            var persisterMock = new Mock<IExternalIDMapPersister>();
-            var scopedExternalIDMapper = new TestedScopedExternalIDMapper("testscope", persisterMock.Object);
+            var persisterMock = new Mock<IScopedExternalIDMapPersister>();
+            var scopedExternalIDMapper = new TestedScopedExternalIDMapper(persisterMock.Object);
             var eidManager = new TestedExternalIDManager(scopedExternalIDMapper);
             eidManager.Add("eid0").Add("eid1").Add("eid2");
 
@@ -76,7 +75,7 @@ namespace Tests.OIA
             ciModelMock.Setup(x => x.GetCIIDs(null)).ReturnsAsync(() => existingCIs);
 
             // initial run, creating 3 mapped cis
-            var changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, NullLogger.Instance);
+            var changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
             Assert.IsTrue(changed);
             Assert.IsEmpty(newCIIDs); // all ciids from the queue have been used
             Assert.AreEqual(3, existingCIs.Count); // new cis have been created
@@ -88,12 +87,12 @@ namespace Tests.OIA
             });
 
             // nothing must have changed if called again
-            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, NullLogger.Instance);
+            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
             Assert.IsFalse(changed);
 
             // remove one ci from the external source
             eidManager.RemoveAt(1);
-            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, NullLogger.Instance);
+            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
             Assert.IsTrue(changed);
             Assert.AreEqual(3, existingCIs.Count); // there should still be all three cis present in the model
             CollectionAssert.AreEquivalent(scopedExternalIDMapper.GetIDPairs(existingCIs.ToHashSet()), new List<(Guid, ExternalIDString)>()
@@ -105,7 +104,7 @@ namespace Tests.OIA
             // add a new ci in external source
             newCIIDs.Enqueue(Guid.Parse("336DA01F-9ABD-4D9D-80C7-02AF85C822A8"));
             eidManager.Add("eid3");
-            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, NullLogger.Instance);
+            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
             Assert.IsTrue(changed);
             Assert.AreEqual(4, existingCIs.Count);
             CollectionAssert.AreEquivalent(scopedExternalIDMapper.GetIDPairs(existingCIs.ToHashSet()), new List<(Guid, ExternalIDString)>()
@@ -118,7 +117,7 @@ namespace Tests.OIA
             // delete cis from model, should be recreated on update, if mapped
             existingCIs.RemoveAt(2); // this ci (22xxx...) is still mapped and must be re-created
             existingCIs.RemoveAt(1); // this ci (11xxx...) is not mapped anymore, should stay removed
-            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, NullLogger.Instance);
+            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
             Assert.IsTrue(changed);
             Assert.AreEqual(3, existingCIs.Count);
             CollectionAssert.AreEquivalent(scopedExternalIDMapper.GetIDPairs(existingCIs.ToHashSet()), new List<(Guid, ExternalIDString)>()
@@ -132,20 +131,20 @@ namespace Tests.OIA
 
         public class TestedExternalIDManager2 : ExternalIDManager<ExternalIDGuid>
         {
-            private readonly IList<ExternalIDGuid> ids = new List<ExternalIDGuid>();
+            private readonly IList<(ExternalIDGuid, ICIIdentificationMethod)> ids = new List<(ExternalIDGuid, ICIIdentificationMethod)>();
 
             public TestedExternalIDManager2(ScopedExternalIDMapper<ExternalIDGuid> mapper) : base(mapper, TimeSpan.Zero)
             {
             }
 
-            protected async override Task<IEnumerable<ExternalIDGuid>> GetExternalIDs()
+            protected async override Task<IEnumerable<(ExternalIDGuid, ICIIdentificationMethod)>> GetExternalIDs()
             {
                 return ids;
             }
 
             public TestedExternalIDManager2 Add(Guid externalID)
             {
-                ids.Add(new ExternalIDGuid(externalID));
+                ids.Add((new ExternalIDGuid(externalID), CIIdentificationMethodByCIID.Build(externalID)));
                 return this;
             }
 
@@ -157,18 +156,16 @@ namespace Tests.OIA
         }
         public class TestedScopedExternalIDMapper2 : ScopedExternalIDMapper<ExternalIDGuid>
         {
-            public TestedScopedExternalIDMapper2(string scope, IExternalIDMapPersister persister) : base(scope, persister, (s) => new ExternalIDGuid(Guid.Parse(s)))
+            public TestedScopedExternalIDMapper2(IScopedExternalIDMapPersister persister) : base(persister, (s) => new ExternalIDGuid(Guid.Parse(s)))
             {
             }
-
-            public override ICIIdentificationMethod GetIdentificationMethod(ExternalIDGuid externalID) => CIIdentificationMethodByCIID.Build(externalID.ID);
         }
 
         [Test]
         public async Task TestExternalGuidsAsCIIDs()
         {
-            var persisterMock = new Mock<IExternalIDMapPersister>();
-            var scopedExternalIDMapper = new TestedScopedExternalIDMapper2("testscope", persisterMock.Object);
+            var persisterMock = new Mock<IScopedExternalIDMapPersister>();
+            var scopedExternalIDMapper = new TestedScopedExternalIDMapper2(persisterMock.Object);
             var eidManager = new TestedExternalIDManager2(scopedExternalIDMapper);
             eidManager.Add(Guid.Parse("006DA01F-9ABD-4D9D-80C7-02AF85C822A8")).Add(Guid.Parse("116DA01F-9ABD-4D9D-80C7-02AF85C822A8")).Add(Guid.Parse("226DA01F-9ABD-4D9D-80C7-02AF85C822A8"));
 
@@ -183,7 +180,7 @@ namespace Tests.OIA
             ciModelMock.Setup(x => x.GetCIIDs(null)).ReturnsAsync(() => existingCIs);
 
             // initial run, creating 3 mapped cis
-            var changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, NullLogger.Instance);
+            var changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
             Assert.IsTrue(changed);
             Assert.AreEqual(3, existingCIs.Count); // new cis have been created
             ciModelMock.Verify(x => x.CreateCI(null), Times.Never); // cis are never created with a new ciid, the external ones are used
