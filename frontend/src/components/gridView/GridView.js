@@ -45,18 +45,9 @@ export default function GridView(props) {
             headerName: value.description,
             field: value.name,
             editable: function (params) {
-                const name = params.colDef.field;
                 const ciid = params.node.data.ciid;
-
-                let obj = _.find(data.rows, function (o) {
-                    return o.ciid === ciid;
-                });
-
-                obj = _.find(obj.cells, function (o) {
-                    return o.name === name;
-                });
-
-                return obj ? obj.changeable : true;
+                const name = params.colDef.field;
+                return getCellEditable(ciid, name);
             },
             cellStyle: function (params) {
                 const editable = params.colDef.editable(params);
@@ -143,13 +134,23 @@ export default function GridView(props) {
     function setCellToNotSet() {
         var focusedCell = gridApi.getFocusedCell();
         var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
-        rowNode.setDataValue(focusedCell.column.colId, null);
+        const name = focusedCell.column.colDef.field;
+        const ciid = rowNode.data.ciid;
+        const editableCell = getCellEditable(ciid, name);
+        const editableCol = focusedCell.column.colDef.editable;
+        if (editableCol && editableCell)
+            rowNode.setDataValue(focusedCell.column.colId, null);
     }
 
     function setCellToEmpty() {
         var focusedCell = gridApi.getFocusedCell();
         var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
-        rowNode.setDataValue(focusedCell.column.colId, "");
+        const name = focusedCell.column.colDef.field;
+        const ciid = rowNode.data.ciid;
+        const editableCell = getCellEditable(ciid, name);
+        const editableCol = focusedCell.column.colDef.editable;
+        if (editableCol && editableCell)
+            rowNode.setDataValue(focusedCell.column.colId, "");
     }
 
     // ########## HELPER FUNCTIONS ##########
@@ -161,6 +162,16 @@ export default function GridView(props) {
     //     clonedObj[newKey] = targetKey;
     //     return clonedObj;
     // }
+
+    function getCellEditable(ciid, name) {
+        let obj = _.find(data.rows, function (o) {
+            return o.ciid === ciid;
+        });
+        obj = _.find(obj.cells, function (o) {
+            return o.name === name;
+        });
+        return obj ? obj.changeable : true;
+    }
 
     // ########## MOCK UP DATA FUNCTIONS ##########
 
