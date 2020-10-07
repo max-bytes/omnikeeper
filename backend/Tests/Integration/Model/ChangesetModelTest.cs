@@ -1,10 +1,10 @@
-﻿using Landscape.Base.Entity;
-using Landscape.Base.Model;
-using Landscape.Base.Utils;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
-using LandscapeRegistry.Model.Decorators;
-using LandscapeRegistry.Utils;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.Model;
+using Omnikeeper.Model.Decorators;
+using Omnikeeper.Utils;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
@@ -13,8 +13,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Tests.Integration.Model.Mocks;
-using static Landscape.Base.Model.IChangesetModel;
-using static Landscape.Base.Model.IRelationModel;
+using static Omnikeeper.Base.Model.IChangesetModel;
+using static Omnikeeper.Base.Model.IRelationModel;
 
 namespace Tests.Integration.Model
 {

@@ -12,9 +12,9 @@
 
 namespace OKPluginOIAOmnikeeper
 {
-    using Landscape.Base.Entity;
-    using Landscape.Base.Entity.DTO;
-    using Landscape.Base.Entity.DTO.Ingest;
+    using Omnikeeper.Base.Entity;
+    using Omnikeeper.Base.Entity.DTO;
+    using Omnikeeper.Base.Entity.DTO.Ingest;
     using System = global::System;
     
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "13.7.0.0 (NJsonSchema v10.1.24.0 (Newtonsoft.Json v12.0.0.2))")]

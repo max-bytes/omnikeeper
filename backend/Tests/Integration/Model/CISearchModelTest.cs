@@ -1,11 +1,11 @@
 ﻿using Castle.Core.Logging;
 using FluentAssertions;
-using Landscape.Base.Entity;
-using Landscape.Base.Model;
-using Landscape.Base.Utils;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
-using LandscapeRegistry.Utils;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.Model;
+using Omnikeeper.Utils;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualBasic;
 using Npgsql;

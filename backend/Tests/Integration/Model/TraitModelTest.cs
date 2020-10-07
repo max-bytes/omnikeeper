@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
-using Landscape.Base.Entity;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using NUnit.Framework;

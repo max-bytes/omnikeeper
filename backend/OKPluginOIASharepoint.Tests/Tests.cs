@@ -1,9 +1,9 @@
 using FluentAssertions;
-using Landscape.Base.Entity;
-using Landscape.Base.Inbound;
-using Landscape.Base.Service;
-using Landscape.Base.Utils;
-using LandscapeRegistry.Entity.AttributeValues;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Inbound;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
