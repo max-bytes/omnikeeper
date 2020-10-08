@@ -7,8 +7,8 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 WORKDIR /src
-COPY ["Omnikeeper/Omnikeeper.csproj", "LandscapeRegistry/"]
-COPY ["Omnikeeper.Base/Omnikeeper.Base.csproj", "Base/"]
+COPY ["Omnikeeper/Omnikeeper.csproj", "Omnikeeper/"]
+COPY ["Omnikeeper.Base/Omnikeeper.Base.csproj", "Omnikeeper.Base/"]
 RUN dotnet restore "Omnikeeper/Omnikeeper.csproj"
 COPY . .
 WORKDIR "/src/Omnikeeper"
