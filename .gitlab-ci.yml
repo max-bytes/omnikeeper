@@ -26,7 +26,7 @@ build-backend:
     - "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
   script:
     - "cd backend"
-    - "docker build -t $CI_REGISTRY/landscape/omnikeeper/backend:latest -f ./LandscapeRegistry/Dockerfile ."
+    - "docker build -t $CI_REGISTRY/landscape/omnikeeper/backend:latest -f ./Omnikeeper/Dockerfile ."
     - "docker push $CI_REGISTRY/landscape/omnikeeper/backend:latest"
 
 build-frontend:
