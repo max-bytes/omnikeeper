@@ -7,12 +7,12 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 WORKDIR /src
-COPY ["LandscapeRegistry/LandscapeRegistry.csproj", "LandscapeRegistry/"]
-COPY ["Base/Landscape.Base.csproj", "Base/"]
-RUN dotnet restore "LandscapeRegistry/LandscapeRegistry.csproj"
+COPY ["Omnikeeper/Omnikeeper.csproj", "LandscapeRegistry/"]
+COPY ["Omnikeeper.Base/Omnikeeper.Base.csproj", "Base/"]
+RUN dotnet restore "Omnikeeper/Omnikeeper.csproj"
 COPY . .
-WORKDIR "/src/LandscapeRegistry"
-RUN dotnet build "LandscapeRegistry.csproj" -c Release -o /app/build
+WORKDIR "/src/Omnikeeper"
+RUN dotnet build "Omnikeeper.csproj" -c Release -o /app/build
 
 #WORKDIR /src
 #COPY ["MonitoringPlugin/MonitoringPlugin.csproj", "MonitoringPlugin/"]
@@ -27,8 +27,8 @@ WORKDIR "/src/DBMigrate"
 RUN dotnet build "DBMigrate.csproj" -c Release -o /app/build
 
 FROM build AS publish
-WORKDIR "/src/LandscapeRegistry"
-RUN dotnet publish "LandscapeRegistry.csproj" -c Release -o /app/publish
+WORKDIR "/src/Omnikeeper"
+RUN dotnet publish "Omnikeeper.csproj" -c Release -o /app/publish
 #WORKDIR "/src/MonitoringPlugin"
 #RUN dotnet publish "MonitoringPlugin.csproj" -c Release -o /app/publish/plugins
 WORKDIR "/src/DBMigrate"
@@ -37,6 +37,6 @@ RUN dotnet publish "DBMigrate.csproj" -c Release -o /app/publish/DBMigrate
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-#ENTRYPOINT ["dotnet", "LandscapeRegistry.dll"]
+#ENTRYPOINT ["dotnet", "Omnikeeper.dll"]
 RUN chmod +x entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
