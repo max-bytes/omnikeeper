@@ -7,6 +7,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Omnikeeper.GridView.Queries;
 
 namespace LandscapeRegistry.GridView
 {
@@ -28,6 +29,14 @@ namespace LandscapeRegistry.GridView
         {
             var res = await _mediatr.Send(new GetPredicatesQuery { PredicateId = id });
             return Ok(res);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("schema")]
+        public async Task<IActionResult> GetSchema()
+        {
+            var result = await _mediatr.Send(new GetSchemaQuery.Query());
+            return Ok(result);
         }
     }
 }
