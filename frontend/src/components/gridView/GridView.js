@@ -16,6 +16,7 @@ export default function GridView(props) {
 
     const [columnDefs, setColumnDefs] = useState(null);
     const [rowData, setRowData] = useState(null);
+    const [tempId, setTempId] = useState(null);
     const defaultColDef = initDefaultColDef(); // Init defaultColDef
 
     // status objects
@@ -69,6 +70,7 @@ export default function GridView(props) {
                         columnDefs={columnDefs}
                         defaultColDef={defaultColDef}
                         animateRows={true}
+                        rowSelection="multiple"
                         onCellValueChanged={updateCellValue}
                         getRowNodeId={function (data) {
                             return data.ciid;
@@ -253,7 +255,7 @@ export default function GridView(props) {
         if (rowNode) {
             if (
                 e.colDef.field !== "status" && // ignore status changes
-                e.data.status !== rowStatus.new // ignore status "new"
+                e.data.status.id !== rowStatus.new.id // ignore status "new"
             ) {
                 const oldValue =
                     e.oldValue === null || e.oldValue === undefined // [not set]-Attributes: null, undefined
@@ -283,10 +285,12 @@ export default function GridView(props) {
                 gridApi.applyTransaction({
                     add: [
                         {
+                            ciid: "_t_" + tempId, // set tempId
                             status: rowStatus.new, // set status to 'new'
                         },
                     ], // remaining attributes: undefined
                 });
+            setTempId(tempId + 1); // increment tempId
         }
     }
 
@@ -294,7 +298,17 @@ export default function GridView(props) {
 
     // mark row as 'deleted' // TODO
     function markRowAsDeleted() {
-        alert("not implemented yet");
+        var selectedRows = gridApi.getSelectedRows(); // get selected rows
+        var numberOfSelectedRows = selectedRows.length;
+
+        for (var i = 0; i < numberOfSelectedRows; i++) {
+            var rowNode = gridApi.getRowNode(selectedRows[i].ciid);
+            // directly delete entry, if "new"
+            if (rowNode && selectedRows[i].status.id === rowStatus.new.id)
+                gridApi.applyTransaction({ remove: [selectedRows[i]] });
+            // set status to "deleted", when not "new"
+            else if (rowNode) rowNode.setDataValue("status", rowStatus.deleted);
+        }
     }
 
     // CREATE / UPDATE / DELETE on pressing 'save' // TODO
@@ -310,6 +324,7 @@ export default function GridView(props) {
 
         setColumnDefs(initColumnDefs(schema)); // Init Schema/columnDefs
         setRowData(initRowData(data)); // Init Data/rowData
+        setTempId(0); // Reset tempId
         if (gridApi) gridApi.setRowData(rowData); // Tell it AgGrid
     }
 

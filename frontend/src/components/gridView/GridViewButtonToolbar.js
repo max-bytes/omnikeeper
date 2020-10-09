@@ -36,12 +36,12 @@ export default function GridViewButtonToolbar(props) {
                     </Button>
 
                     {/* Delete row // TODO */}
-                    {/* <Button
+                    <Button
                         style={{ marginLeft: "10px" }}
                         onClick={props.markRowAsDeleted}
                     >
                         Delete row
-                    </Button> */}
+                    </Button>
                 </div>
 
                 <div
