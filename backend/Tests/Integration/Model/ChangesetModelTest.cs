@@ -1,10 +1,10 @@
-﻿using Landscape.Base.Entity;
-using Landscape.Base.Model;
-using Landscape.Base.Utils;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
-using LandscapeRegistry.Model.Decorators;
-using LandscapeRegistry.Utils;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.Model;
+using Omnikeeper.Model.Decorators;
+using Omnikeeper.Utils;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
@@ -13,8 +13,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Tests.Integration.Model.Mocks;
-using static Landscape.Base.Model.IChangesetModel;
-using static Landscape.Base.Model.IRelationModel;
+using static Omnikeeper.Base.Model.IChangesetModel;
+using static Omnikeeper.Base.Model.IRelationModel;
 
 namespace Tests.Integration.Model
 {
@@ -72,7 +72,7 @@ namespace Tests.Integration.Model
             var changesets = await changesetModel.GetChangesetsInTimespan(t1, t2, layerset, new ChangesetSelectionAllCIs(), null);
             Assert.AreEqual(2, changesets.Count());
 
-            var changesets2 = await changesetModel.GetChangesetsInTimespan(t1, t3, layerset, new ChangesetSelectionSingleCI(ciid3), null);
+            var changesets2 = await changesetModel.GetChangesetsInTimespan(t1, t3, layerset, ChangesetSelectionMultipleCIs.Build(ciid3), null);
             Assert.AreEqual(2, changesets2.Count());
 
 
@@ -88,7 +88,7 @@ namespace Tests.Integration.Model
             Assert.AreEqual(3, changesets3.Count());
             var changesets4 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, new ChangesetSelectionAllCIs(), null, 2);
             Assert.AreEqual(2, changesets4.Count());
-            var changesets5 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, new ChangesetSelectionSingleCI(ciid2), null, 1);
+            var changesets5 = await changesetModel.GetChangesetsInTimespan(t1, t4, layerset, ChangesetSelectionMultipleCIs.Build(ciid2), null, 1);
             Assert.AreEqual(1, changesets5.Count());
         }
 
@@ -135,10 +135,10 @@ namespace Tests.Integration.Model
             Thread.Sleep(500);
             var t3 = DateTimeOffset.Now;
 
-            var changesets1 = await changesetModel.GetChangesetsInTimespan(t1, t2, layerset, new ChangesetSelectionSingleCI(ciid1), null);
+            var changesets1 = await changesetModel.GetChangesetsInTimespan(t1, t2, layerset, ChangesetSelectionMultipleCIs.Build(ciid1), null);
             Assert.AreEqual(1, changesets1.Count());
 
-            var changesets2 = await changesetModel.GetChangesetsInTimespan(t1, t3, layerset, new ChangesetSelectionSingleCI(ciid1), null);
+            var changesets2 = await changesetModel.GetChangesetsInTimespan(t1, t3, layerset, ChangesetSelectionMultipleCIs.Build(ciid1), null);
             Assert.AreEqual(2, changesets2.Count());
         }
 

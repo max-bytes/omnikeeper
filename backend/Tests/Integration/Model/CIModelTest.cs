@@ -1,14 +1,16 @@
 ﻿using FluentAssertions;
-using Landscape.Base.Entity;
-using Landscape.Base.Inbound;
-using Landscape.Base.Model;
-using Landscape.Base.Utils;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
-using LandscapeRegistry.Utils;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Inbound;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.Model;
+using Omnikeeper.Service;
+using Omnikeeper.Utils;
 using Npgsql;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Tests.Integration.Model.Mocks;
@@ -177,39 +179,6 @@ namespace Tests.Integration.Model
             Assert.AreEqual(1, a1.Count()); // layerID1 shines through deleted
             Assert.AreEqual(AttributeScalarValueText.Build("textL1"), a1.First().Value.Attribute.Value);
         }
-
-        //[Test]
-        //public async Task TestArchiveUnusedCIs()
-        //{
-        //    var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
-        //    var userModel = new UserInDatabaseModel(conn);
-        //    var changesetModel = new ChangesetModel(userModel, conn);
-        //    var model = new CIModel(attributeModel, conn);
-        //    var layerModel = new LayerModel(conn);
-        //    var user = await DBSetup.SetupUser(userModel);
-
-        //    var layer = await layerModel.CreateLayer("l1", null);
-
-        //    Assert.AreEqual(0, await model.ArchiveUnusedCIs(null));
-
-        //    await model.CreateCI(null);
-
-        //    Assert.AreEqual(1, await model.ArchiveUnusedCIs(null));
-        //    Assert.AreEqual(0, await model.ArchiveUnusedCIs(null));
-
-        //    var ciid = await model.CreateCI(null);
-        //    var changeset1 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
-        //    await attributeModel.InsertAttribute("foo", AttributeScalarValueText.Build("bar"), ciid, layer.ID, changeset1, null);
-
-        //    Assert.AreEqual(0, await model.ArchiveUnusedCIs(null));
-
-        //    // create another empty ci
-        //    var ciid2 = await model.CreateCI(null);
-        //    Assert.AreEqual(1, await model.ArchiveUnusedCIs(null));
-        //    Assert.AreEqual(1, (await model.GetCIIDs(null)).Count());
-
-        //    //var externalIDPersister = new ExternalIDMapPostgresPersister(Mock)
-        //}
 
 
         [Test]

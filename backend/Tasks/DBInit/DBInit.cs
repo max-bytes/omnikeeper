@@ -1,10 +1,10 @@
-﻿using Landscape.Base.Entity;
-using Landscape.Base.Model;
-using Landscape.Base.Utils;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
-using LandscapeRegistry.Model.Decorators;
-using LandscapeRegistry.Utils;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.Model;
+using Omnikeeper.Model.Decorators;
+using Omnikeeper.Utils;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -102,7 +102,7 @@ namespace Tasks.DBInit
                 await layerModel.CreateLayer("Inventory Scan", Color.Violet, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
                 var monitoringDefinitionsLayer = await layerModel.CreateLayer("Monitoring Definitions", Color.Orange, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
                 monitoringDefinitionsLayerID = monitoringDefinitionsLayer.ID;
-                await layerModel.CreateLayer("Monitoring", ColorTranslator.FromHtml("#FFE6CC"), AnchorState.Active, ComputeLayerBrainLink.Build("MonitoringPlugin.CLBNaemonMonitoring"), OnlineInboundAdapterLink.Build(""), trans);
+                await layerModel.CreateLayer("Monitoring", ColorTranslator.FromHtml("#FFE6CC"), AnchorState.Active, ComputeLayerBrainLink.Build("OKPluginCLBMonitoring.CLBNaemonMonitoring"), OnlineInboundAdapterLink.Build(""), trans);
                 var automationLayer = await layerModel.CreateLayer("Active Directory", Color.Cyan, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
                 activeDirectoryLayerID = automationLayer.ID;
                 trans.Commit();

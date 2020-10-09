@@ -1,6 +1,6 @@
 ﻿using DBMigrations;
-using Landscape.Base.Entity;
-using Landscape.Base.Model;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 using Npgsql;
 using System;
 using System.Threading.Tasks;

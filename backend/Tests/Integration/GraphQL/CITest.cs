@@ -1,14 +1,14 @@
 ﻿
 using GraphQL;
-using Landscape.Base.Entity;
-using Landscape.Base.Model;
-using Landscape.Base.Service;
-using Landscape.Base.Utils;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.GraphQL;
-using LandscapeRegistry.Model;
-using LandscapeRegistry.Service;
-using LandscapeRegistry.Utils;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.GraphQL;
+using Omnikeeper.Model;
+using Omnikeeper.Service;
+using Omnikeeper.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -43,6 +43,7 @@ namespace Tests.Integration.GraphQL
             Services.Register<IOIAConfigModel, OIAConfigModel>();
             Services.Register<IODataAPIContextModel, ODataAPIContextModel>();
             Services.Register<IRecursiveTraitModel, RecursiveTraitModel>();
+            Services.Register<ILayerStatisticsModel, LayerStatisticsModel>();
 
             Services.Register<ITraitsProvider, TraitsProvider>();
             Services.Register<ITemplatesProvider, TemplatesProvider>();
@@ -60,7 +61,7 @@ namespace Tests.Integration.GraphQL
             var currentUserService = new Mock<ICurrentUserService>();
             Services.Register<ICurrentUserService>(() => currentUserService.Object);
 
-            Services.Register<LandscapeRegistry.GraphQL.GraphQLQuery>();
+            Services.Register<Omnikeeper.GraphQL.GraphQLQuery>();
             Services.Register<MergedCIType>();
             Services.Singleton(() =>
             {

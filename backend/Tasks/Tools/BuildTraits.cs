@@ -1,6 +1,6 @@
-﻿using Landscape.Base.Entity;
-using LandscapeRegistry.Entity.AttributeValues;
-using LandscapeRegistry.Model;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.Model;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;

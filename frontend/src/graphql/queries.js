@@ -101,6 +101,20 @@ export const queries = {
             }
         }
     `,
+    LayerStatistics: gql`
+        query layerStatistics($layerID: Long!) {
+            layerStatistics(layerID: $layerID) {
+                numActiveAttributes
+                numAttributeChangesHistory
+                numActiveRelations
+                numRelationChangesHistory
+                numLayerChangesetsHistory
+                layer {
+                    name
+                }
+            }
+        }
+    `,
     Changesets: gql`
         query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciids: [Guid], $layers:[String]!, $limit: Int) {
             changesets(from: $from, to: $to, ciids: $ciids, layers: $layers, limit: $limit) {
@@ -151,6 +165,11 @@ export const queries = {
     DebugCurrentUserClaims: gql`
     query debugCurrentUserClaims {
         debugCurrentUserClaims
+      }
+    `,
+    Version: gql`
+    query version {
+        version
       }
     `
 };
