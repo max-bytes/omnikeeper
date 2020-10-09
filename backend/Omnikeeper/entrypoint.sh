@@ -2,4 +2,4 @@
 
 ./DBMigrate/DBMigrate "$ConnectionStrings__LandscapeDatabaseConnection"
 
-dotnet LandscapeRegistry.dll
+dotnet Omnikeeper.dll

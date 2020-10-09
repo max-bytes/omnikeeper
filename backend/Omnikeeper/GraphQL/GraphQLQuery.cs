@@ -338,6 +338,13 @@ namespace Omnikeeper.GraphQL
                     var claims = currentUserService.DebugGetAllClaims();
                     return claims.Select(kv => $"{kv.type}: {kv.value}");
                 });
+
+            Field<StringGraphType>("version",
+                resolve: context =>
+                {
+                    var version = VersionService.GetVersion();
+                    return version;
+                });
         }
     }
 }

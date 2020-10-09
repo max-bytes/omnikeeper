@@ -6,33 +6,27 @@ EXPOSE 80
 EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
+ARG version
 WORKDIR /src
 COPY ["Omnikeeper/Omnikeeper.csproj", "Omnikeeper/"]
 COPY ["Omnikeeper.Base/Omnikeeper.Base.csproj", "Omnikeeper.Base/"]
-RUN dotnet restore "Omnikeeper/Omnikeeper.csproj"
+RUN dotnet restore "Omnikeeper/Omnikeeper.csproj" /p:Version="${version}"
 COPY . .
 WORKDIR "/src/Omnikeeper"
-RUN dotnet build "Omnikeeper.csproj" -c Release -o /app/build
-
-#WORKDIR /src
-#COPY ["MonitoringPlugin/MonitoringPlugin.csproj", "MonitoringPlugin/"]
-#RUN dotnet restore "MonitoringPlugin/MonitoringPlugin.csproj"
-#WORKDIR "/src/MonitoringPlugin"
-#RUN dotnet build "MonitoringPlugin.csproj" -c Release -o /app/build
+RUN dotnet build "Omnikeeper.csproj" /p:Version="${version}" -c Release -o /app/build
 
 WORKDIR /src
 COPY ["DBMigrate/DBMigrate.csproj", "DBMigrate/"]
-RUN dotnet restore "DBMigrate/DBMigrate.csproj"
+RUN dotnet restore "DBMigrate/DBMigrate.csproj" /p:Version="${version}"
 WORKDIR "/src/DBMigrate"
-RUN dotnet build "DBMigrate.csproj" -c Release -o /app/build
+RUN dotnet build "DBMigrate.csproj" /p:Version="${version}" -c Release -o /app/build
 
 FROM build AS publish
+ARG version
 WORKDIR "/src/Omnikeeper"
-RUN dotnet publish "Omnikeeper.csproj" -c Release -o /app/publish
-#WORKDIR "/src/MonitoringPlugin"
-#RUN dotnet publish "MonitoringPlugin.csproj" -c Release -o /app/publish/plugins
+RUN dotnet publish "Omnikeeper.csproj" /p:Version="${version}" -c Release -o /app/publish
 WORKDIR "/src/DBMigrate"
-RUN dotnet publish "DBMigrate.csproj" -c Release -o /app/publish/DBMigrate
+RUN dotnet publish "DBMigrate.csproj" /p:Version="${version}" -c Release -o /app/publish/DBMigrate
 
 FROM base AS final
 WORKDIR /app

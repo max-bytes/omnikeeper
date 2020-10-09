@@ -166,5 +166,10 @@ export const queries = {
     query debugCurrentUserClaims {
         debugCurrentUserClaims
       }
+    `,
+    Version: gql`
+    query version {
+        version
+      }
     `
 };
