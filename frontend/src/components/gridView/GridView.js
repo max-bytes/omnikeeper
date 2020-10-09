@@ -31,7 +31,7 @@ export default function GridView(props) {
     const gridViewDataParseController = new GridViewDataParseController(
         rowStatus
     );
-    const gridViewMockUpDataProvider = new GridViewMockUpDataController();
+    const gridViewMockUpDataController = new GridViewMockUpDataController();
 
     return (
         <Layout
@@ -203,16 +203,17 @@ export default function GridView(props) {
     function newRows(e) {
         if (e) {
             var numberOfNewRows = e.currentTarget.value; // how many rows to add
-            for (var i = 0; i < numberOfNewRows; i++)
+            for (var i = 0; i < numberOfNewRows; i++) {
                 gridApi.applyTransaction({
                     add: [
                         {
-                            ciid: "_t_" + tempId, // set tempId
+                            ciid: "_t_" + Number(tempId + i), // set tempId
                             status: rowStatus.new, // set status to 'new'
                         },
                     ], // remaining attributes: undefined
                 });
-            setTempId(tempId + 1); // increment tempId
+                setTempId(Number(tempId) + Number(numberOfNewRows)); // set tempId (state)
+            }
         }
     }
 
@@ -234,18 +235,43 @@ export default function GridView(props) {
     }
 
     // CREATE / UPDATE / DELETE on pressing 'save' // TODO
-    function save() {
-        alert("not implemented yet");
+    async function save() {
+        // TODO: changes should only contain the cells of row, that changed -> currently contains full row
+
+        let changes = [];
+        await gridApi.forEachNode(async (node) => {
+            // CREATE
+            if (node.data.status.id === rowStatus.new.id) {
+                changes.push(node.data); // add to changes
+                node.setDataValue("status", rowStatus.clean); // set to clean
+            }
+            // UPDATE
+            else if (node.data.status.id === rowStatus.edited.id) {
+                changes.push(node.data); // add to changes
+                node.setDataValue("status", rowStatus.clean); // set to clean
+            }
+            // DELETE
+            else if (node.data.status.id === rowStatus.deleted.id) {
+                changes.push(node.data); // add to changes // TODO: HOW TO MARK AS 'TO DELETE'?
+                gridApi.applyTransaction({ remove: [node.data] }); // delete from grid
+            }
+        });
+
+        let sparseData = gridViewDataParseController.createChanges(changes); // Create changes from rowData (delta)
+        console.log(sparseData);
+        // TODO: pass changes to BackEnd
     }
 
     // READ / refresh data
     function refreshData() {
         // TODO: use API, when implemented
-        const schema = gridViewMockUpDataProvider.getMockUpData("schema"); // get mockUp schema
-        const data = gridViewMockUpDataProvider.getMockUpData("data"); // get mockUp data
+        const schema = gridViewMockUpDataController.getMockUpData("schema"); // get mockUp schema
+        const data = gridViewMockUpDataController.getMockUpData("data"); // get mockUp data
 
-        setColumnDefs(gridViewDataParseController.initColumnDefs(schema, data)); // Init and set columnDefs from schema and data
-        setRowData(gridViewDataParseController.initRowData(data)); // Init and set rowData from data
+        setColumnDefs(
+            gridViewDataParseController.createColumnDefs(schema, data)
+        ); // Create columnDefs from schema and data
+        setRowData(gridViewDataParseController.createRowData(data)); // Create rowData from data
         setTempId(0); // Reset tempId
         if (gridApi) gridApi.setRowData(rowData); // Tell it AgGrid
     }

@@ -3,9 +3,9 @@ import _ from "lodash";
 export default function GridViewDataParseController(rowStatus) {
     // ########## FROM BACKEND-STRUCTURE TO FRONTEND/AG-GRID-STRUCTURE ##########
 
-    // Init columnDefs from schema and data
-    const initColumnDefs = (schema, data) => {
-        let columnDefsTemp = [
+    // Create columnDefs from schema and data
+    const createColumnDefs = (schema, data) => {
+        let columnDefs = [
             {
                 // new, edited, clean, deleted
                 headerName: "Status",
@@ -34,7 +34,7 @@ export default function GridViewDataParseController(rowStatus) {
             },
         ];
         _.forEach(schema.columns, function (value) {
-            columnDefsTemp.push({
+            columnDefs.push({
                 headerName: value.description,
                 field: value.name,
                 editable: function (params) {
@@ -48,24 +48,49 @@ export default function GridViewDataParseController(rowStatus) {
                 },
             });
         });
-        return columnDefsTemp;
+        return columnDefs;
     };
 
-    // Init rowData from data
-    const initRowData = (data) => {
-        let dataTemp = [];
+    // Create rowData from data
+    const createRowData = (data) => {
+        let rowdata = [];
         _.forEach(data.rows, function (value) {
-            let dataCellTemp = [];
+            let dataCell = [];
             _.forEach(value.cells, function (value) {
-                dataCellTemp[value.name] = value.value;
+                dataCell[value.name] = value.value;
             });
-            dataTemp.push({
+            rowdata.push({
                 status: rowStatus.clean, // set status to 'clean'
                 ciid: value.ciid,
-                ...dataCellTemp,
+                ...dataCell,
             });
         });
-        return dataTemp;
+        return rowdata;
+    };
+
+    // ##########  FRONTEND/AG-GRID-STRUCTURE TO FROM BACKEND-STRUCTURE ##########
+
+    // Create changes from rowData (delta)
+    const createChanges = (rowData) => {
+        let sparseRows = [];
+        _.forEach(rowData, function (value) {
+            let cells = [];
+            _.forEach(value, function (value, key) {
+                if (key !== "ciid" && key !== "status")
+                    cells.push({
+                        name: key,
+                        value: value,
+                    });
+            });
+            let row = {
+                ciid: value.ciid,
+                cells: cells,
+            };
+            sparseRows.push(row);
+        });
+
+        const changes = { sparseRows: sparseRows };
+        return changes;
     };
 
     // ########## HELPERS ##########
@@ -86,7 +111,10 @@ export default function GridViewDataParseController(rowStatus) {
     }
 
     return {
-        initColumnDefs,
-        initRowData,
+        // ########## FROM BACKEND-STRUCTURE TO FRONTEND/AG-GRID-STRUCTURE ##########
+        createColumnDefs,
+        createRowData,
+        // ##########  FRONTEND/AG-GRID-STRUCTURE TO FROM BACKEND-STRUCTURE ##########
+        createChanges,
     };
 }
