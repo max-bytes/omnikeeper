@@ -1,0 +1,13 @@
+{
+    "sparseRows": [
+        {
+            "ciid": "035fbf89-1ed2-4432-a67e-620577cc806d",
+            "cells": [
+                {
+                    "name": "attributeA",
+                    "value": "Value A-1 changed"
+                }
+            ]
+        }
+    ]
+}

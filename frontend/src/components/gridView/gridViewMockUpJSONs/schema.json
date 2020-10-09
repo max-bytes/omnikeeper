@@ -1,0 +1,17 @@
+{
+    "showCIIDColumn": true,
+    "columns": [
+        {
+            "name": "attr1",
+            "description": "Attribute 1"
+        },
+        {
+            "name": "attr2",
+            "description": "Attribute 2"
+        },
+        {
+            "name": "attr3",
+            "description": "Attribute 3"
+        }
+    ]
+}

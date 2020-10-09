@@ -1,0 +1,14 @@
+{
+    "configuredContexts": [
+        {
+            "name": "test",
+            "speakingName": "Test-Context",
+            "description": "This is a context used to test out basic GridView capabilities"
+        },
+        {
+            "name": "test2",
+            "speakingName": "Test-Context2",
+            "description": "This is a context2 used to test out basic GridView capabilities"
+        }
+    ]
+}

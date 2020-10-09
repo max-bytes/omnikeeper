@@ -1,0 +1,64 @@
+{
+    "rows": [
+        {
+            "ciid": "035fbf89-1ed2-4432-a67e-620577cc806d",
+            "cells": [
+                {
+                    "name": "attr1",
+                    "value": "Value A-1",
+                    "changeable": false
+                },
+                {
+                    "name": "attr2",
+                    "value": "Value A-2",
+                    "changeable": false
+                },
+                {
+                    "name": "attr3",
+                    "value": "Value A-3",
+                    "changeable": true
+                }
+            ]
+        },
+        {
+            "ciid": "620577cc806d-a67e-035fbf89-4432-1ed2",
+            "cells": [
+                {
+                    "name": "attr1",
+                    "value": "Value B-1",
+                    "changeable": true
+                },
+                {
+                    "name": "attr3",
+                    "value": "Value B-3",
+                    "changeable": true
+                }
+            ]
+        },
+        {
+            "ciid": "4432-a67e-620577cc806d-035fbf89-1ed2",
+            "cells": [
+                {
+                    "name": "attr1",
+                    "value": "Value C-1",
+                    "changeable": true
+                },
+                {
+                    "name": "attr2",
+                    "value": "",
+                    "changeable": true
+                },
+                {
+                    "name": "attr3",
+                    "value": "Value C-3",
+                    "changeable": false
+                },
+                {
+                    "name": "attr4",
+                    "value": "Value C-4",
+                    "changeable": true
+                }
+            ]
+        }
+    ]
+}
