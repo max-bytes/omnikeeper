@@ -48,6 +48,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using MediatR;
 
 namespace Omnikeeper
 {
@@ -69,6 +70,8 @@ namespace Omnikeeper
                 ); // graphql needs this
 
             services.AddApiVersioning();
+
+            services.AddMediatR(Assembly.GetExecutingAssembly());
 
             // add plugins
             //var testAssembly = Assembly.LoadFrom(@"C:\Users\Maximilian Csuk\Projects\Landscape\TestPlugin\bin\Debug\netstandard2.1\TestPlugin.dll");
