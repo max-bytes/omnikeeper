@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { StepContent } from "semantic-ui-react";
+import { useState } from "react";
 // TODO: delete this file, when finally using API
 // returns mockUp-data for testing
 // also see: https://www.mhx.at/gitlab/landscape/registry/snippets/1

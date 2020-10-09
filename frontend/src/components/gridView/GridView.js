@@ -4,8 +4,8 @@ import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-balham.css";
 import { Layout } from "antd";
 import GridViewButtonToolbar from "./GridViewButtonToolbar";
-import _ from "lodash";
 import "./GridView.css";
+import GridViewDataParseController from "./GridViewDataParseController";
 import GridViewMockUpDataController from "./GridViewMockUpDataController"; // returns mockUp-data for testing // TODO: remove, when finally using API
 
 const { Header, Content } = Layout;
@@ -19,8 +19,6 @@ export default function GridView(props) {
     const [tempId, setTempId] = useState(null);
     const defaultColDef = initDefaultColDef(); // Init defaultColDef
 
-    const gridViewMockUpDataProvider = new GridViewMockUpDataController();
-
     // status objects
     const rowStatus = {
         new: { id: 0, name: "New" },
@@ -29,6 +27,11 @@ export default function GridView(props) {
         deleted: { id: 3, name: "Del" },
         error: { id: 4, name: "Err" },
     };
+
+    const gridViewDataParseController = new GridViewDataParseController(
+        rowStatus
+    );
+    const gridViewMockUpDataProvider = new GridViewMockUpDataController();
 
     return (
         <Layout
@@ -92,71 +95,6 @@ export default function GridView(props) {
         refreshData();
     }
 
-    // Init Data/rowData
-    function initRowData(data) {
-        let dataTemp = [];
-        _.forEach(data.rows, function (value) {
-            let dataCellTemp = [];
-            _.forEach(value.cells, function (value) {
-                dataCellTemp[value.name] = value.value;
-            });
-            dataTemp.push({
-                status: rowStatus.clean, // set status to 'clean'
-                ciid: value.ciid,
-                ...dataCellTemp,
-            });
-        });
-        return dataTemp;
-    }
-
-    // Init Schema/columnDefs
-    function initColumnDefs(schema) {
-        let columnDefsTemp = [
-            {
-                // new, edited, clean, deleted
-                headerName: "Status",
-                field: "status",
-                editable: false,
-                checkboxSelection: true, // checkbox for selecting row
-                pinned: "left", // pinn to the left
-                // set width = minWidth = maxWith, so fitting is suppressed in every possible way
-                width: 92,
-                minWidth: 92,
-                maxWidth: 92,
-                resizable: false,
-                suppressSizeToFit: true, // suppress sizeToFit
-                // get name of status
-                valueGetter: function (params) {
-                    if (params.data.status.id !== undefined)
-                        return params.data.status.name;
-                },
-            },
-            {
-                headerName: "CIID",
-                field: "ciid",
-                editable: false,
-                hide: !schema.showCIIDColumn,
-                cellStyle: { fontStyle: "italic" },
-            },
-        ];
-        _.forEach(schema.columns, function (value) {
-            columnDefsTemp.push({
-                headerName: value.description,
-                field: value.name,
-                editable: function (params) {
-                    const ciid = params.node.data.ciid;
-                    const name = params.colDef.field;
-                    return getCellEditable(ciid, name);
-                },
-                cellStyle: function (params) {
-                    const editable = params.colDef.editable(params);
-                    return editable ? {} : { fontStyle: "italic" };
-                },
-            });
-        });
-        return columnDefsTemp;
-    }
-
     // Init defaultColDef
     function initDefaultColDef() {
         return {
@@ -212,9 +150,8 @@ export default function GridView(props) {
         var focusedCell = gridApi.getFocusedCell();
         if (focusedCell) {
             var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
-            const name = focusedCell.column.colDef.field;
-            const ciid = rowNode.data.ciid;
-            const editableCell = getCellEditable(ciid, name);
+            const params = { ...focusedCell.column, node: rowNode }; // HACK: build needed 'params'-information
+            const editableCell = focusedCell.column.colDef.editable(params);
             const editableCol = focusedCell.column.colDef.editable;
             if (editableCol && editableCell)
                 rowNode.setDataValue(focusedCell.column.colId, null);
@@ -226,29 +163,12 @@ export default function GridView(props) {
         var focusedCell = gridApi.getFocusedCell();
         if (focusedCell) {
             var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
-            const name = focusedCell.column.colDef.field;
-            const ciid = rowNode.data.ciid;
-            const editableCell = getCellEditable(ciid, name);
+            const params = { ...focusedCell.column, node: rowNode }; // HACK: build needed 'params'-information
+            const editableCell = focusedCell.column.colDef.editable(params);
             const editableCol = focusedCell.column.colDef.editable;
             if (editableCol && editableCell)
                 rowNode.setDataValue(focusedCell.column.colId, "");
         }
-    }
-
-    // returns editable/changeable-attr of cell, defined by its ciid and name/colName
-    function getCellEditable(ciid, name) {
-        const data = gridViewMockUpDataProvider.getMockUpData("data");
-        let obj;
-        if (data) {
-            obj = _.find(data.rows, function (o) {
-                return o.ciid === ciid;
-            });
-            if (obj)
-                obj = _.find(obj.cells, function (o) {
-                    return o.name === name;
-                });
-        }
-        return obj ? obj.changeable : true;
     }
 
     // update cell
@@ -298,7 +218,7 @@ export default function GridView(props) {
 
     // ######################################## CRUD OPERATIONS ########################################
 
-    // mark row as 'deleted' // TODO
+    // mark row as 'deleted'
     function markRowAsDeleted() {
         var selectedRows = gridApi.getSelectedRows(); // get selected rows
         var numberOfSelectedRows = selectedRows.length;
@@ -324,8 +244,8 @@ export default function GridView(props) {
         const schema = gridViewMockUpDataProvider.getMockUpData("schema"); // get mockUp schema
         const data = gridViewMockUpDataProvider.getMockUpData("data"); // get mockUp data
 
-        setColumnDefs(initColumnDefs(schema)); // Init Schema/columnDefs
-        setRowData(initRowData(data)); // Init Data/rowData
+        setColumnDefs(gridViewDataParseController.initColumnDefs(schema, data)); // Init and set columnDefs from schema and data
+        setRowData(gridViewDataParseController.initRowData(data)); // Init and set rowData from data
         setTempId(0); // Reset tempId
         if (gridApi) gridApi.setRowData(rowData); // Tell it AgGrid
     }
