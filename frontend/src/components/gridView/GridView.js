@@ -6,7 +6,7 @@ import { Layout } from "antd";
 import GridViewButtonToolbar from "./GridViewButtonToolbar";
 import _ from "lodash";
 import "./GridView.css";
-import getMockUpData from "./GridViewMockUpDataProvider"; // returns mockUp-data for testing // TODO: remove, when finally using API
+import GridViewMockUpDataController from "./GridViewMockUpDataController"; // returns mockUp-data for testing // TODO: remove, when finally using API
 
 const { Header, Content } = Layout;
 
@@ -18,6 +18,8 @@ export default function GridView(props) {
     const [rowData, setRowData] = useState(null);
     const [tempId, setTempId] = useState(null);
     const defaultColDef = initDefaultColDef(); // Init defaultColDef
+
+    const gridViewMockUpDataProvider = new GridViewMockUpDataController();
 
     // status objects
     const rowStatus = {
@@ -125,7 +127,7 @@ export default function GridView(props) {
                 suppressSizeToFit: true, // suppress sizeToFit
                 // get name of status
                 valueGetter: function (params) {
-                    if (params.data.status !== undefined)
+                    if (params.data.status.id !== undefined)
                         return params.data.status.name;
                 },
             },
@@ -235,7 +237,7 @@ export default function GridView(props) {
 
     // returns editable/changeable-attr of cell, defined by its ciid and name/colName
     function getCellEditable(ciid, name) {
-        const data = getMockUpData("data");
+        const data = gridViewMockUpDataProvider.getMockUpData("data");
         let obj;
         if (data) {
             obj = _.find(data.rows, function (o) {
@@ -319,8 +321,8 @@ export default function GridView(props) {
     // READ / refresh data
     function refreshData() {
         // TODO: use API, when implemented
-        const schema = getMockUpData("schema"); // get mockUp schema
-        const data = getMockUpData("data"); // get mockUp data
+        const schema = gridViewMockUpDataProvider.getMockUpData("schema"); // get mockUp schema
+        const data = gridViewMockUpDataProvider.getMockUpData("data"); // get mockUp data
 
         setColumnDefs(initColumnDefs(schema)); // Init Schema/columnDefs
         setRowData(initRowData(data)); // Init Data/rowData
