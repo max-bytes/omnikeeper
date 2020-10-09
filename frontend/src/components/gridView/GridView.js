@@ -68,6 +68,11 @@ export default function GridView(props) {
                         rowData={rowData}
                         columnDefs={columnDefs}
                         defaultColDef={defaultColDef}
+                        animateRows={true}
+                        onCellValueChanged={updateCellValue}
+                        getRowNodeId={function (data) {
+                            return data.ciid;
+                        }}
                     ></AgGridReact>
                 </div>
             </Content>
@@ -240,6 +245,32 @@ export default function GridView(props) {
                 });
         }
         return obj ? obj.changeable : true;
+    }
+
+    // update cell
+    function updateCellValue(e) {
+        var rowNode = gridApi.getRowNode(e.data.ciid);
+        if (rowNode) {
+            if (
+                e.colDef.field !== "status" && // ignore status changes
+                e.data.status !== rowStatus.new // ignore status "new"
+            ) {
+                const oldValue =
+                    e.oldValue === null || e.oldValue === undefined // [not set]-Attributes: null, undefined
+                        ? null // set [not set]-Attributes to null, so js-comparison does not detect a difference
+                        : e.oldValue.toString(); // [set]-Attributes: e.g. "" (empty string), any other set value
+
+                // analog to oldValue
+                const newValue =
+                    e.newValue === null || e.newValue === undefined
+                        ? null
+                        : e.newValue.toString();
+
+                // ignore unchanged data
+                if (newValue !== oldValue)
+                    rowNode.setDataValue("status", rowStatus.edited);
+            }
+        }
     }
 
     // ######################################## ROW FUNCTIONS ########################################

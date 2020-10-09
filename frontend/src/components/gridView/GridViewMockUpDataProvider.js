@@ -94,7 +94,7 @@ export default function getMockUpData(type) {
                             },
                             {
                                 name: "attr2",
-                                value: "Value C-2",
+                                value: "",
                                 changeable: true,
                             },
                             {
