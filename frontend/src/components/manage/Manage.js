@@ -10,6 +10,8 @@ export default function Manage(props) {
       <li><Link to="/manage/cache">Manage Cache</Link></li>
       <li><Link to="/manage/oiaconfigs">Manage Online Inbound Layer Configurations</Link></li>
       <li><Link to="/manage/odataapicontexts">Manage OData API Contexts</Link></li>
+      <li><Link to="/manage/version">Version</Link></li>
+      <li><Link to="/manage/current-user">Debug: current user</Link></li>
       
     </ul>
   </div>;

@@ -336,8 +336,11 @@ namespace Omnikeeper
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory,
-            NpgsqlLoggingProvider npgsqlLoggingProvider)
+            NpgsqlLoggingProvider npgsqlLoggingProvider, ILogger<Startup> logger)
         {
+            var version = VersionService.GetVersion();
+            logger.LogInformation($"Running version: {version}");
+
             NpgsqlLogManager.Provider = npgsqlLoggingProvider;
 
             app.UseCors("DefaultCORSPolicy");

@@ -6,33 +6,6 @@ import { setContext } from "apollo-link-context";
 import moment from 'moment'
 import env from "@beam-australia/react-env";
 
-// let toHSL = function(string, opts) {
-//   var h, s, l;
-//   opts = opts || {};
-//   opts.hue = opts.hue || [0, 360];
-//   opts.sat = opts.sat || [60, 75];
-//   opts.lit = opts.lit || [60, 80];
-
-//   var range = function(hash, min, max) {
-//       var diff = max - min;
-//       var x = ((hash % diff) + diff) % diff;
-//       return x + min;
-//   }
-
-//   var hash = 0;
-//   if (string.length === 0) return hash;
-//   for (var i = string.length - 1; i >= 0; i--) {
-//       hash = string.charCodeAt(i) + ((hash << 10) - hash);
-//       hash = hash & hash;
-//   }
-
-//   h = range(hash, opts.hue[0], opts.hue[1]);
-//   s = range(hash, opts.sat[0], opts.sat[1]);
-//   l = range(hash, opts.lit[0], opts.lit[1]);
-
-//   return `hsl(${h}, ${s}%, ${l}%)`;
-// }
-
 function ApolloWrapper({ component: Component, ...rest }) {
 
     const typeDefs = gql`

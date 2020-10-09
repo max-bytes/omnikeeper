@@ -2,6 +2,8 @@ using Omnikeeper.Utils;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System;
+using Omnikeeper.Service;
 
 namespace Omnikeeper
 {
@@ -9,6 +11,9 @@ namespace Omnikeeper
     {
         public static void Main(string[] args)
         {
+            var version = VersionService.GetVersion();
+            Console.WriteLine($"Running version: {version}");
+
             CreateHostBuilder(args).Build().Run();
         }
 
