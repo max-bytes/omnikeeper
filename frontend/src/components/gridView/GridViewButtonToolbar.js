@@ -35,7 +35,7 @@ export default function GridViewButtonToolbar(props) {
                         50
                     </Button>
 
-                    {/* Delete row // TODO */}
+                    {/* Delete row */}
                     <Button
                         style={{ marginLeft: "10px" }}
                         onClick={props.markRowAsDeleted}
@@ -57,7 +57,7 @@ export default function GridViewButtonToolbar(props) {
                         Fit
                     </Button>
 
-                    {/* Save // TODO */}
+                    {/* Save */}
                     <Button onClick={props.save}>Save</Button>
 
                     {/* Refresh */}

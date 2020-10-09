@@ -234,7 +234,7 @@ export default function GridView(props) {
         }
     }
 
-    // CREATE / UPDATE / DELETE on pressing 'save' // TODO
+    // CREATE / UPDATE / DELETE on pressing 'save'
     async function save() {
         // TODO: changes should only contain the cells of row, that changed -> currently contains full row
 
@@ -259,7 +259,7 @@ export default function GridView(props) {
 
         let sparseData = gridViewDataParseController.createChanges(changes); // Create changes from rowData (delta)
         console.log(sparseData);
-        // TODO: pass changes to BackEnd
+        // TODO: pass sparseData to API, when implemented
     }
 
     // READ / refresh data
