@@ -7,7 +7,9 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Omnikeeper.GridView.Commands;
 using Omnikeeper.GridView.Queries;
+using Omnikeeper.GridView.Request;
 
 namespace LandscapeRegistry.GridView
 {
@@ -44,6 +46,14 @@ namespace LandscapeRegistry.GridView
         public async Task<IActionResult> GetData()
         {
             var result = await _mediatr.Send(new GetDataQuery.Query());
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpPut]
+        public async Task<IActionResult> ChangeData([FromBody] ChangeDataRequest changes)
+        {
+            var result = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes });
             return Ok(result);
         }
     }

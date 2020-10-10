@@ -73,7 +73,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="GridView\Commands\" />
     <Folder Include="Logs\" />
   </ItemGroup>
 
