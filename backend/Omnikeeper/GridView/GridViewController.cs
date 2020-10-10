@@ -22,7 +22,7 @@ namespace LandscapeRegistry.GridView
             _mediatr = mediatr;
         }
 
-
+        // test endpoint
         [AllowAnonymous]
         [HttpGet("predicate/{id}")]
         public async Task<IActionResult> GetPredicate(int id)
@@ -36,6 +36,14 @@ namespace LandscapeRegistry.GridView
         public async Task<IActionResult> GetSchema()
         {
             var result = await _mediatr.Send(new GetSchemaQuery.Query());
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("data")]
+        public async Task<IActionResult> GetData()
+        {
+            var result = await _mediatr.Send(new GetDataQuery.Query());
             return Ok(result);
         }
     }
