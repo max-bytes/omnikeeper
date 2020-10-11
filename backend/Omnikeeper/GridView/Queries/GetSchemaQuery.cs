@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Npgsql;
 using Omnikeeper.GridView.Response;
+using Omnikeeper.GridView.Service;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,12 +14,14 @@ namespace Omnikeeper.GridView.Queries
         {
 
         }
-        public class GetSchemaQueryHandler : IRequestHandler<GetSchemaQuery.Query, GetSchemaResponse>
+        public class GetSchemaQueryHandler : IRequestHandler<Query, GetSchemaResponse>
         {
             private readonly NpgsqlConnection conn;
-            public GetSchemaQueryHandler(NpgsqlConnection connection)
+            private readonly GridViewConfigService _gridViewConfigService;
+            public GetSchemaQueryHandler(NpgsqlConnection connection, GridViewConfigService gridViewConfigService)
             {
                 conn = connection;
+                _gridViewConfigService = gridViewConfigService;
             }
             public async Task<GetSchemaResponse> Handle(Query request, CancellationToken cancellationToken)
             {
@@ -27,6 +30,8 @@ namespace Omnikeeper.GridView.Queries
                     ShowCIIDColumn = true,
                     Columns = new List<Column>()
                 };
+
+                var config = await _gridViewConfigService.GetConfiguration("test");
 
                 // TO DO
                 //var trans = null;
