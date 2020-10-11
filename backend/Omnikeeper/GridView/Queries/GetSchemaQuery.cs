@@ -25,38 +25,25 @@ namespace Omnikeeper.GridView.Queries
             }
             public async Task<GetSchemaResponse> Handle(Query request, CancellationToken cancellationToken)
             {
-                var result = new GetSchemaResponse 
-                {
-                    ShowCIIDColumn = true,
-                    Columns = new List<Column>()
-                };
 
                 var config = await _gridViewConfigService.GetConfiguration("test");
 
+                var result = new GetSchemaResponse 
+                {
+                    ShowCIIDColumn = config.ShowCIIDColumn,
+                    Columns = new List<Column>()
+                };
                 // TO DO
                 //var trans = null;
 
-                using var command = new NpgsqlCommand($@"
-                    SELECT CI.id, ATTR.name, ATTR.value
-                    FROM attribute ATTR
-                    INNER JOIN ci CI ON ATTR.ci_id = CI.id
-                    ORDER BY CI.id
-                ", conn, null);
+                // TO DO
+                // Only CIs that fulfill/ have ALL of the traits in the Traitset are shown in the GridView
 
-                using var dr = await command.ExecuteReaderAsync();
-
-                while (dr.Read())
+                config.Columns.ForEach(el => result.Columns.Add(new Column
                 {
-                    var id = dr.GetGuid(0);
-                    var name = dr.GetString(1);
-                    var value = dr.GetString(2);
-
-                    result.Columns.Add(new Column
-                    {
-                        Name = name,
-                        Description = ""
-                    });
-                }
+                    Name = el.SourceAttributeName,
+                    Description = el.ColumnDescription
+                }));
 
                 return result;
             }
