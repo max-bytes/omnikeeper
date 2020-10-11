@@ -36,9 +36,6 @@ namespace Omnikeeper.GridView.Queries
                 // TO DO
                 //var trans = null;
 
-                // TO DO
-                // Only CIs that fulfill/ have ALL of the traits in the Traitset are shown in the GridView
-
                 config.Columns.ForEach(el => result.Columns.Add(new Column
                 {
                     Name = el.SourceAttributeName,
