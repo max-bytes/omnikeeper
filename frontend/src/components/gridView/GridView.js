@@ -275,23 +275,27 @@ export default function GridView(props) {
 
     // CREATE / UPDATE / DELETE on pressing 'save'
     async function save() {
-        // TODO: changes should only contain the cells of row, that changed -> currently contains full row
-
         let changes = [];
         await gridApi.forEachNode(async (node) => {
+            const rowSnapshot = _.find(rowDataSnapshot, function (rowSnapshot) {
+                return rowSnapshot.ciid === node.data.ciid;
+            });
+            let change = getDiffBetweenObjects(node.data, rowSnapshot);
+            change["ciid"] = node.data.ciid; // add ciid
+
             // CREATE
             if (node.data.status.id === rowStatus.new.id) {
-                changes.push(node.data); // add to changes
+                changes.push(change); // add to changes
                 node.setDataValue("status", rowStatus.clean); // set to clean
             }
             // UPDATE
             else if (node.data.status.id === rowStatus.edited.id) {
-                changes.push(node.data); // add to changes
+                changes.push(change); // add to changes
                 node.setDataValue("status", rowStatus.clean); // set to clean
             }
             // DELETE
             else if (node.data.status.id === rowStatus.deleted.id) {
-                changes.push(node.data); // add to changes // TODO: HOW TO MARK AS 'TO DELETE'?
+                changes.push(change); // add to changes // TODO: HOW TO MARK AS 'TO DELETE'?
                 gridApi.applyTransaction({ remove: [node.data] }); // delete from grid
             }
         });
@@ -326,5 +330,21 @@ export default function GridView(props) {
     // resize table and fit to column sizes
     function autoSizeAll() {
         gridColumnApi.autoSizeAllColumns();
+    }
+
+    // ######################################## HELPERS ########################################
+
+    function getDiffBetweenObjects(newObj, oldObj) {
+        function changes(v, oldObj) {
+            return _.transform(newObj, function (result, value, key) {
+                if (!_.isEqual(value, oldObj[key])) {
+                    result[key] =
+                        _.isObject(value) && _.isObject(oldObj[key])
+                            ? changes(value, oldObj[key])
+                            : value;
+                }
+            });
+        }
+        return changes(newObj, oldObj);
     }
 }
