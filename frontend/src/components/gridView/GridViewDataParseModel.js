@@ -1,6 +1,6 @@
 import _ from "lodash";
 
-export default function GridViewDataParseController(rowStatus) {
+export default function GridViewDataParseModel(rowStatus) {
     // ########## FROM BACKEND-STRUCTURE TO FRONTEND/AG-GRID-STRUCTURE ##########
 
     // Create columnDefs from schema and data

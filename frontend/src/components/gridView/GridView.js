@@ -5,8 +5,8 @@ import "ag-grid-community/dist/styles/ag-theme-balham.css";
 import { Layout } from "antd";
 import GridViewButtonToolbar from "./GridViewButtonToolbar";
 import "./GridView.css";
-import GridViewDataParseController from "./GridViewDataParseController";
-import GridViewMockUpDataController from "./GridViewMockUpDataController"; // returns mockUp-data for testing // TODO: remove, when finally using API
+import GridViewDataParseModel from "./GridViewDataParseModel";
+import GridViewMockUpDataModel from "./GridViewMockUpDataModel"; // returns mockUp-data for testing // TODO: remove, when finally using API
 import _ from "lodash";
 
 const { Header, Content } = Layout;
@@ -30,10 +30,8 @@ export default function GridView(props) {
         error: { id: 4, name: "Err" },
     };
 
-    const gridViewDataParseController = new GridViewDataParseController(
-        rowStatus
-    );
-    const gridViewMockUpDataController = new GridViewMockUpDataController();
+    const gridViewDataParseModel = new GridViewDataParseModel(rowStatus);
+    const gridViewMockUpDataModel = new GridViewMockUpDataModel();
 
     return (
         <Layout
@@ -298,7 +296,7 @@ export default function GridView(props) {
             }
         });
 
-        let sparseData = gridViewDataParseController.createChanges(changes); // Create changes from rowData (delta)
+        let sparseData = gridViewDataParseModel.createChanges(changes); // Create changes from rowData (delta)
         console.log(sparseData);
         // TODO: pass sparseData to API, when implemented
     }
@@ -306,14 +304,14 @@ export default function GridView(props) {
     // READ / refresh data
     function refreshData() {
         // TODO: use API, when implemented
-        const schema = gridViewMockUpDataController.getMockUpData("schema"); // get mockUp schema
-        const data = gridViewMockUpDataController.getMockUpData("data"); // get mockUp data
+        const schema = gridViewMockUpDataModel.getMockUpData("schema"); // get mockUp schema
+        const data = gridViewMockUpDataModel.getMockUpData("data"); // get mockUp data
 
-        const parsedColumnDefs = gridViewDataParseController.createColumnDefs(
+        const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
             schema,
             data
         ); // Create columnDefs from schema and data
-        const parsedRowData = gridViewDataParseController.createRowData(data); // Create rowData from data
+        const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
 
         setColumnDefs(parsedColumnDefs); // set columnDefs
         setRowData(parsedRowData); // set rowData

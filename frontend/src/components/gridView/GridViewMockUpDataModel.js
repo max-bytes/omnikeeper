@@ -3,7 +3,7 @@ import { useState } from "react";
 // returns mockUp-data for testing
 // also see: https://www.mhx.at/gitlab/landscape/registry/snippets/1
 
-export default function GridViewMockUpDataController() {
+export default function GridViewMockUpDataModel() {
     const [context, setContext] = useState(
         require("./gridViewMockUpJSONs/context.json")
     );
