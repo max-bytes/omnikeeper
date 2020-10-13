@@ -19,10 +19,7 @@ export default function GridViewButtonToolbar(props) {
                     }}
                 >
                     {/* New rows: */}
-                    <Button
-                        type="text"
-                        style={{ cursor: "default", paddingLeft: "19px" }}
-                    >
+                    {/* <Button type="text" style={{ cursor: "default" }}>
                         New rows:
                     </Button>
                     <Button value={1} onClick={props.newRows}>
@@ -33,22 +30,44 @@ export default function GridViewButtonToolbar(props) {
                     </Button>
                     <Button value={50} onClick={props.newRows}>
                         50
-                    </Button>
+                    </Button> */}
 
                     {/* Delete row */}
-                    <Button
+                    {/* <Button
                         style={{ marginLeft: "10px" }}
                         onClick={props.markRowAsDeleted}
                     >
                         Delete row
-                    </Button>
+                    </Button> */}
 
                     {/* Reset row */}
                     <Button
-                        style={{ marginLeft: "10px" }}
+                        // style={{ marginLeft: "10px" }}
                         onClick={props.resetRow}
                     >
                         Reset row
+                    </Button>
+                </div>
+
+                <div
+                    style={{
+                        display: "flex",
+                    }}
+                >
+                    {/* Set cell to '[not set]' (= null/undefined) */}
+                    <Button
+                        style={{ marginLeft: "10px" }}
+                        onClick={props.setCellToNotSet}
+                    >
+                        Set to '[not set]'
+                    </Button>
+
+                    {/* Set cell empty */}
+                    <Button
+                        onClick={props.setCellToEmpty}
+                        style={{ marginLeft: "10px" }}
+                    >
+                        Set empty
                     </Button>
                 </div>
 
@@ -71,20 +90,6 @@ export default function GridViewButtonToolbar(props) {
                     {/* Refresh */}
                     <Button onClick={props.refreshData}>Refresh</Button>
                 </div>
-            </div>
-            <div
-                className="button-toolbar-row"
-                style={{ display: "flex", marginBottom: "10px" }}
-            >
-                <Button onClick={props.setCellToNotSet}>
-                    Set to '[not set]'
-                </Button>
-                <Button
-                    onClick={props.setCellToEmpty}
-                    style={{ marginLeft: "10px" }}
-                >
-                    Set empty
-                </Button>
             </div>
         </div>
     );
