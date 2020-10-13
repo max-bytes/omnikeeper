@@ -7,6 +7,7 @@ import GridViewButtonToolbar from "./GridViewButtonToolbar";
 import "./GridView.css";
 import GridViewDataParseController from "./GridViewDataParseController";
 import GridViewMockUpDataController from "./GridViewMockUpDataController"; // returns mockUp-data for testing // TODO: remove, when finally using API
+import _ from "lodash";
 
 const { Header, Content } = Layout;
 
@@ -16,6 +17,7 @@ export default function GridView(props) {
 
     const [columnDefs, setColumnDefs] = useState(null);
     const [rowData, setRowData] = useState(null);
+    const [rowDataSnapshot, setRowDataSnapshot] = useState(null);
     const [tempId, setTempId] = useState(null);
     const defaultColDef = initDefaultColDef(); // Init defaultColDef
 
@@ -56,6 +58,7 @@ export default function GridView(props) {
                     setCellToEmpty={setCellToEmpty}
                     newRows={newRows}
                     markRowAsDeleted={markRowAsDeleted}
+                    resetRow={resetRow}
                     autoSizeAll={autoSizeAll}
                     save={save}
                     refreshData={refreshData}
@@ -234,6 +237,44 @@ export default function GridView(props) {
         }
     }
 
+    // undo changes made to row
+    function resetRow() {
+        var selectedRows = gridApi.getSelectedRows(); // get selected rows
+        var numberOfSelectedRows = selectedRows.length;
+
+        for (var i = 0; i < numberOfSelectedRows; i++) {
+            const row = selectedRows[i];
+            const rowNode = gridApi.getRowNode(row.ciid);
+
+            if (rowNode) {
+                if (rowNode.data.status.id === rowStatus.new.id) {
+                    // reset row
+                    gridApi.applyTransaction({
+                        update: [
+                            {
+                                ciid: row.ciid,
+                                status: rowStatus.new,
+                            },
+                        ],
+                    });
+                } else {
+                    // reset row
+                    gridApi.applyTransaction({
+                        update: [
+                            _.cloneDeep(
+                                _.find(rowDataSnapshot, function (rowSnapshot) {
+                                    return rowSnapshot.ciid === row.ciid;
+                                })
+                            ),
+                        ],
+                    });
+                    // set status to "clean"
+                    rowNode.setDataValue("status", rowStatus.clean);
+                }
+            }
+        }
+    }
+
     // CREATE / UPDATE / DELETE on pressing 'save'
     async function save() {
         // TODO: changes should only contain the cells of row, that changed -> currently contains full row
@@ -268,12 +309,18 @@ export default function GridView(props) {
         const schema = gridViewMockUpDataController.getMockUpData("schema"); // get mockUp schema
         const data = gridViewMockUpDataController.getMockUpData("data"); // get mockUp data
 
-        setColumnDefs(
-            gridViewDataParseController.createColumnDefs(schema, data)
+        const parsedColumnDefs = gridViewDataParseController.createColumnDefs(
+            schema,
+            data
         ); // Create columnDefs from schema and data
-        setRowData(gridViewDataParseController.createRowData(data)); // Create rowData from data
+        const parsedRowData = gridViewDataParseController.createRowData(data); // Create rowData from data
+
+        setColumnDefs(parsedColumnDefs); // set columnDefs
+        setRowData(parsedRowData); // set rowData
+        setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
+        if (gridApi) gridApi.setRowData(parsedRowData); // Tell it AgGrid
+
         setTempId(0); // Reset tempId
-        if (gridApi) gridApi.setRowData(rowData); // Tell it AgGrid
     }
 
     // ######################################## AG GRID FORMATTING ########################################

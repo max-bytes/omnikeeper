@@ -42,6 +42,14 @@ export default function GridViewButtonToolbar(props) {
                     >
                         Delete row
                     </Button>
+
+                    {/* Reset row */}
+                    <Button
+                        style={{ marginLeft: "10px" }}
+                        onClick={props.resetRow}
+                    >
+                        Reset row
+                    </Button>
                 </div>
 
                 <div
