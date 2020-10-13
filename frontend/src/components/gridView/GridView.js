@@ -18,6 +18,7 @@ export default function GridView(props) {
     const [columnDefs, setColumnDefs] = useState(null);
     const [rowData, setRowData] = useState(null);
     const [rowDataSnapshot, setRowDataSnapshot] = useState(null);
+    const [context, setContext] = useState(null);
     const [tempId, setTempId] = useState(null);
     const defaultColDef = initDefaultColDef(); // Init defaultColDef
 
@@ -52,6 +53,8 @@ export default function GridView(props) {
                 }}
             >
                 <GridViewButtonToolbar
+                    context={context}
+                    applyContext={applyContext}
                     setCellToNotSet={setCellToNotSet}
                     setCellToEmpty={setCellToEmpty}
                     newRows={newRows}
@@ -142,6 +145,20 @@ export default function GridView(props) {
                 else return params.value;
             },
         };
+    }
+
+    // TODO: Context handling
+    function applyContext(contextName) {
+        if (contextName)
+            console.log(
+                "Want to apply '" +
+                    contextName +
+                    "', but it's not implemented yet."
+            );
+        else
+            console.log(
+                "Want to undo any context, but it's not implemented yet."
+            );
     }
 
     // ######################################## CELL FUNCTIONS ########################################
@@ -323,6 +340,7 @@ export default function GridView(props) {
         // TODO: use API, when implemented
         const schema = gridViewMockUpDataModel.getMockUpData("schema"); // get mockUp schema
         const data = gridViewMockUpDataModel.getMockUpData("data"); // get mockUp data
+        const context = gridViewMockUpDataModel.getMockUpData("context"); // get mockUp context
 
         const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
             schema,
@@ -330,6 +348,7 @@ export default function GridView(props) {
         ); // Create columnDefs from schema and data
         const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
 
+        setContext(context); // set context
         setColumnDefs(parsedColumnDefs); // set columnDefs
         setRowData(parsedRowData); // set rowData
         setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot

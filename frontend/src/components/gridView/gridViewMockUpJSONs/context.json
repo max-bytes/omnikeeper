@@ -1,14 +1,49 @@
 {
     "configuredContexts": [
         {
-            "name": "test",
-            "speakingName": "Test-Context",
-            "description": "This is a context used to test out basic GridView capabilities"
+            "name": "context1",
+            "speakingName": "Test-Context 1",
+            "description": "This is a context used to test out basic GridView capabilities (1)",
+            "config": {
+                "readLayerset": [2, 3, 1],
+                "showCIIDColumn": true,
+                "writeLayer": 1,
+                "columns": [
+                    {
+                        "sourceAttributeName": "attr1",
+                        "columnDescription": "A1"
+                    },
+                    {
+                        "sourceAttributeName": "attr2",
+                        "columnDescription": "A2",
+                        "writeLayer": 2
+                    }
+                ],
+                "traitset": ["host", "host linux"]
+            }
         },
         {
-            "name": "test2",
-            "speakingName": "Test-Context2",
-            "description": "This is a context2 used to test out basic GridView capabilities"
+            "name": "context2",
+            "speakingName": "Test-Context 2",
+            "description": "This is a context2 used to test out basic GridView capabilities (2)",
+            "config": {
+                "readLayerset": [1, 2],
+                "showCIIDColumn": false,
+                "writeLayer": 2,
+                "columns": [
+                    {
+                        "sourceAttributeName": "attr2",
+                        "columnDescription": "Attr 2",
+                        "writeLayer": null
+                    },
+                    {
+                        "sourceAttributeName": "attr3",
+                        "columnDescription": "Attr 3",
+                        "writeLayer": 1
+                    }
+                ],
+                "traitset": ["host", "linux"]
+            }
         }
     ]
 }
