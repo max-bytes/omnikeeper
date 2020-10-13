@@ -48,6 +48,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using MediatR;
+using Omnikeeper.GridView.Service;
 
 namespace Omnikeeper
 {
@@ -69,6 +71,8 @@ namespace Omnikeeper
                 ); // graphql needs this
 
             services.AddApiVersioning();
+
+            services.AddMediatR(Assembly.GetExecutingAssembly());
 
             // add plugins
             //var testAssembly = Assembly.LoadFrom(@"C:\Users\Maximilian Csuk\Projects\Landscape\TestPlugin\bin\Debug\netstandard2.1\TestPlugin.dll");
@@ -164,6 +168,8 @@ namespace Omnikeeper
             services.AddScoped<IngestActiveDirectoryXMLService, IngestActiveDirectoryXMLService>();
 
             services.AddScoped<CIMappingService, CIMappingService>();
+
+            services.AddScoped<GridViewConfigService>();
 
             services.Configure<IISServerOptions>(options =>
             {

@@ -1,0 +1,8 @@
+CREATE TABLE public.gridview_config 
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    config json NOT NULL,
+	name text,
+    "timestamp" timestamp with time zone NOT NULL,
+    CONSTRAINT gridview_config_pkey PRIMARY KEY (id)
+);
