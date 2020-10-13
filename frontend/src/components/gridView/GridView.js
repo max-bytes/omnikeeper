@@ -275,34 +275,47 @@ export default function GridView(props) {
 
     // CREATE / UPDATE / DELETE on pressing 'save'
     async function save() {
-        let changes = [];
-        await gridApi.forEachNode(async (node) => {
-            const rowSnapshot = _.find(rowDataSnapshot, function (rowSnapshot) {
-                return rowSnapshot.ciid === node.data.ciid;
-            });
-            let change = getDiffBetweenObjects(node.data, rowSnapshot);
-            change["ciid"] = node.data.ciid; // add ciid
+        let rowDataDiffs = [];
+        let rowDataDiffsFullRow = []; // TODO: remove, when finally using API
 
-            // CREATE
-            if (node.data.status.id === rowStatus.new.id) {
-                changes.push(change); // add to changes
-                node.setDataValue("status", rowStatus.clean); // set to clean
-            }
-            // UPDATE
-            else if (node.data.status.id === rowStatus.edited.id) {
-                changes.push(change); // add to changes
-                node.setDataValue("status", rowStatus.clean); // set to clean
-            }
-            // DELETE
-            else if (node.data.status.id === rowStatus.deleted.id) {
-                changes.push(change); // add to changes // TODO: HOW TO MARK AS 'TO DELETE'?
-                gridApi.applyTransaction({ remove: [node.data] }); // delete from grid
+        await gridApi.forEachNode(async (node) => {
+            if (
+                node.data.status.id === rowStatus.new.id || // CREATE
+                node.data.status.id === rowStatus.edited.id || // UPDATE
+                node.data.status.id === rowStatus.deleted.id // DELETE // TODO: HOW TO MARK AS 'TO DELETE'?
+            ) {
+                const rowSnapshot = _.find(rowDataSnapshot, function (
+                    rowSnapshot
+                ) {
+                    return rowSnapshot.ciid === node.data.ciid;
+                });
+                let rowDataDiff = getDiffBetweenObjects(node.data, rowSnapshot);
+                rowDataDiff["ciid"] = node.data.ciid; // add ciid
+
+                rowDataDiffs.push(rowDataDiff); // add to rowDataDiffs
+                rowDataDiffsFullRow.push(node.data); // TODO: remove, when finally using API
             }
         });
 
-        let sparseData = gridViewDataParseModel.createChanges(changes); // Create changes from rowData (delta)
-        console.log(sparseData);
-        // TODO: pass sparseData to API, when implemented
+        const changes = gridViewDataParseModel.createChanges(rowDataDiffs); // Create changes from rowData (delta)
+        console.log(changes);
+
+        // fake changeResults data here
+        // TODO: pass 'changes' to API and get 'changeResults' back, when implemented
+        const changeResults = {
+            rows: gridViewDataParseModel.createChanges(rowDataDiffsFullRow)
+                .sparseRows,
+        };
+
+        // Create rowData from changeResults
+        const rowDataChangeResults = gridViewDataParseModel.createRowData(
+            changeResults
+        );
+
+        // update rows
+        _.forEach(rowDataChangeResults, function (value) {
+            gridApi.applyTransaction({ update: [value] }); // delete from grid
+        });
     }
 
     // READ / refresh data

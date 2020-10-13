@@ -51,7 +51,7 @@ export default function GridViewDataParseModel(rowStatus) {
         return columnDefs;
     };
 
-    // Create rowData from data
+    // Create rowData from data (or changeResults)
     const createRowData = (data) => {
         let rowdata = [];
         _.forEach(data.rows, function (value) {
