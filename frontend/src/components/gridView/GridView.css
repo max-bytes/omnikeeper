@@ -17,3 +17,8 @@
 .ag-theme-balham .deleted {
     background-color: #fc8d62;
 }
+
+/* ant design popover */
+.ant-popover {
+    z-index: 1050; /* seems like antd's select has a z-index of 1049 -> use 1050 to show antd-popover on top of that '*/
+}

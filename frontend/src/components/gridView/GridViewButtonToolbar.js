@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Select } from "antd";
+import { Button, Select, Popover } from "antd";
 const { Option } = Select;
 
 export default function GridViewButtonToolbar(props) {
@@ -30,7 +30,13 @@ export default function GridViewButtonToolbar(props) {
                             style={{ minWidth: "75%" }}
                         >
                             <Option key={"noContext"} value={null}>
-                                [No Context]
+                                <Popover
+                                    title={"[No Context]"}
+                                    content={"No context."}
+                                    placement={"right"}
+                                >
+                                    [No Context]
+                                </Popover>
                             </Option>
                             {props.context.configuredContexts.map(
                                 (configuredContext) => (
@@ -38,7 +44,17 @@ export default function GridViewButtonToolbar(props) {
                                         key={configuredContext.name}
                                         value={configuredContext.name}
                                     >
-                                        {configuredContext.speakingName}
+                                        <Popover
+                                            title={
+                                                configuredContext.speakingName
+                                            }
+                                            content={
+                                                configuredContext.description
+                                            }
+                                            placement={"right"}
+                                        >
+                                            {configuredContext.speakingName}
+                                        </Popover>
                                     </Option>
                                 )
                             )}
