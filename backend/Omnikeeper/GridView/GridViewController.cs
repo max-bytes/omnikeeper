@@ -56,5 +56,13 @@ namespace LandscapeRegistry.GridView
             var result = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes });
             return Ok(result);
         }
+
+        [AllowAnonymous]
+        [HttpGet("contexts")]
+        public async Task<IActionResult> GetContexts()
+        {
+            var result = await _mediatr.Send(new GetContextsQuery.Query());
+            return Ok(result);
+        }
     }
 }

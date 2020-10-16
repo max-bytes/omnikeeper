@@ -40,6 +40,9 @@ namespace Omnikeeper.GridView.Queries
                 // 1. Filter using a traitset
                 // 2. Only CIs that fulfill/ have ALL of the traits in the Traitset are shown in the GridView
 
+                // TO DO: Call the model directly no need to fetch data from db in this case
+
+
                 using var command = new NpgsqlCommand($@"
                     SELECT CI.id, ATTR.name, ATTR.value
                     FROM attribute ATTR
