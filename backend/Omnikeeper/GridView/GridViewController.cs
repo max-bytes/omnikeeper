@@ -43,9 +43,9 @@ namespace LandscapeRegistry.GridView
 
         [AllowAnonymous]
         [HttpGet("data")]
-        public async Task<IActionResult> GetData()
+        public async Task<IActionResult> GetData([FromQuery] string configurationName)
         {
-            var result = await _mediatr.Send(new GetDataQuery.Query());
+            var result = await _mediatr.Send(new GetDataQuery.Query { ConfigurationName = configurationName });
             return Ok(result);
         }
 

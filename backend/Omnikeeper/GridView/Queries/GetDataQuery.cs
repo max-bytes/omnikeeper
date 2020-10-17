@@ -1,8 +1,10 @@
 ﻿using MediatR;
 using Npgsql;
+using Omnikeeper.Base.Model;
 using Omnikeeper.GridView.Response;
 using Omnikeeper.GridView.Service;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,23 +14,25 @@ namespace Omnikeeper.GridView.Queries
     {
         public class Query : IRequest<GetDataResponse>
         {
-
+            public string ConfigurationName { get; set; }
         }
 
         public class GetDataQueryHandler : IRequestHandler<Query, GetDataResponse>
         {
             private readonly NpgsqlConnection conn;
             private readonly GridViewConfigService _gridViewConfigService;
+            private readonly IAttributeModel attributeModel;
 
-            public GetDataQueryHandler(NpgsqlConnection connection, GridViewConfigService gridViewConfigService)
+            public GetDataQueryHandler(NpgsqlConnection connection, GridViewConfigService gridViewConfigService, IAttributeModel attributeModel)
             {
                 conn = connection;
                 _gridViewConfigService = gridViewConfigService;
+                this.attributeModel = attributeModel;
             }
 
             public async Task<GetDataResponse> Handle(Query request, CancellationToken cancellationToken)
             {
-                var config = await _gridViewConfigService.GetConfiguration("test");
+                var config = await _gridViewConfigService.GetConfiguration(request.ConfigurationName);
 
                 var result = new GetDataResponse
                 {
@@ -42,6 +46,7 @@ namespace Omnikeeper.GridView.Queries
 
                 // TO DO: Call the model directly no need to fetch data from db in this case
 
+                //var attributes = await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid), layerID, trans, atTime);
 
                 using var command = new NpgsqlCommand($@"
                     SELECT CI.id, ATTR.name, ATTR.value
@@ -57,6 +62,11 @@ namespace Omnikeeper.GridView.Queries
                     var id = dr.GetGuid(0);
                     var name = dr.GetString(1);
                     var value = dr.GetString(2);
+
+                    if (!config.Columns.Any(el => el.SourceAttributeName == name))
+                    {
+                        continue;
+                    }
 
                     var el = result.Rows.Find(el => el.Ciid == id);
 
