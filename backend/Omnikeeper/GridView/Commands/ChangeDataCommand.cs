@@ -5,6 +5,7 @@ using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Request;
 using Omnikeeper.GridView.Response;
 using Omnikeeper.GridView.Service;
@@ -52,14 +53,15 @@ namespace Omnikeeper.GridView.Commands
 
                 // we should do all changes in a single transaction
 
+                var config = await gridViewConfigService.GetConfiguration(request.ConfigurationName);
+
+
                 foreach (var row in request.Changes.SparseRows)
                 {
                     var ciExists = await ciModel.CIIDExists(row.Ciid, null);
 
                     if (ciExists)
                     {
-                        // add attributes for this ci for this ci
-
                         using var trans = conn.BeginTransaction();
                         try
                         {
@@ -72,11 +74,11 @@ namespace Omnikeeper.GridView.Commands
                                     Type = AttributeValueType.Text
                                 });
 
-                                var a = await attributeModel.InsertAttribute(
+                                await attributeModel.InsertAttribute(
                                     cell.Name,
                                     val,
                                     row.Ciid,
-                                    1, // how to get this layer id ??
+                                    config.WriteLayer.Value,
                                     changesetProxy,
                                     trans);
                             }
@@ -91,14 +93,12 @@ namespace Omnikeeper.GridView.Commands
                 }
 
 
-                var result = await FetchData(request.ConfigurationName);
+                var result = await FetchData(config);
                 return result;
             }
 
-            private async Task<ChangeDataResponse> FetchData(string confirgurationName)
+            private async Task<ChangeDataResponse> FetchData(GridViewConfiguration config)
             {
-                var config = await gridViewConfigService.GetConfiguration(confirgurationName);
-
 
                 var result = new ChangeDataResponse
                 {
