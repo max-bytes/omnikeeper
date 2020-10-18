@@ -5,7 +5,7 @@ namespace Omnikeeper.GridView.Model
     public class GridViewConfiguration
     {
         public bool ShowCIIDColumn { get; set; }
-        public int? WriteLayer { get; set; }
+        public int WriteLayer { get; set; }
         public List<int> ReadLayerset { get; set; }
         public List<GridViewColumn> Columns { get; set; }
         public List<string> Traitset { get; set; }

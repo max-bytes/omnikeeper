@@ -53,8 +53,14 @@ namespace LandscapeRegistry.GridView
         [HttpPost]
         public async Task<IActionResult> ChangeData([FromBody] ChangeDataRequest changes, [FromQuery] string configurationName)
         {
-            var result = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes , ConfigurationName = configurationName });
-            return Ok(result);
+            var (result, isSuccess) = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes, ConfigurationName = configurationName });
+
+            if (isSuccess)
+            {
+                return Ok(result);
+            }
+
+            return NotFound(new { Error = "The provided ci id not found!" });
         }
 
         [AllowAnonymous]

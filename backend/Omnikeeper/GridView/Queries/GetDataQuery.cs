@@ -69,7 +69,9 @@ namespace Omnikeeper.GridView.Queries
                 foreach (var attribute in attributes)
                 {
 
-                    if (!config.Columns.Any(el => el.SourceAttributeName == attribute.Name))
+                    var col = config.Columns.Find(el => el.SourceAttributeName == attribute.Name);
+
+                    if (col == null)
                     {
                         continue;
                     }
@@ -82,7 +84,7 @@ namespace Omnikeeper.GridView.Queries
                         {
                             Name = attribute.Name,
                             Value = attribute.Value.ToString(),
-                            Changeable = true
+                            Changeable = col.WriteLayer != null
                         });
                     }
                     else
@@ -96,7 +98,7 @@ namespace Omnikeeper.GridView.Queries
                                         {
                                             Name = attribute.Name,
                                             Value = attribute.Value.ToString(),
-                                            Changeable = true
+                                            Changeable = col.WriteLayer != null
                                         }
                                     }
                         });

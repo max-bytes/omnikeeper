@@ -20,13 +20,13 @@ namespace Omnikeeper.GridView.Commands
 {
     public class ChangeDataCommand
     {
-        public class Command : IRequest<ChangeDataResponse>
+        public class Command : IRequest<(ChangeDataResponse, bool)>
         {
             public ChangeDataRequest Changes { get; set; }
             public string ConfigurationName { get; set; }
         }
 
-        public class ChangeDataCommandHandler : IRequestHandler<Command, ChangeDataResponse>
+        public class ChangeDataCommandHandler : IRequestHandler<Command, (ChangeDataResponse, bool)>
         {
             private readonly NpgsqlConnection conn;
             private readonly ICIModel ciModel;
@@ -34,7 +34,7 @@ namespace Omnikeeper.GridView.Commands
             private readonly IChangesetModel changesetModel;
             private readonly ICurrentUserService currentUserService;
             private readonly GridViewConfigService gridViewConfigService;
-            public ChangeDataCommandHandler(NpgsqlConnection connection, ICIModel ciModel, IAttributeModel attributeModel, 
+            public ChangeDataCommandHandler(NpgsqlConnection connection, ICIModel ciModel, IAttributeModel attributeModel,
                 IChangesetModel changesetModel, ICurrentUserService currentUserService, GridViewConfigService gridViewConfigService)
             {
                 conn = connection;
@@ -44,10 +44,11 @@ namespace Omnikeeper.GridView.Commands
                 this.currentUserService = currentUserService;
                 this.gridViewConfigService = gridViewConfigService;
             }
-            public async Task<ChangeDataResponse> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<(ChangeDataResponse, bool)> Handle(Command request, CancellationToken cancellationToken)
             {
                 var user = await currentUserService.GetCurrentUser(null);
                 var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
+
                 // check if ci with provided id exists
                 // we need layer id for this
 
@@ -55,51 +56,51 @@ namespace Omnikeeper.GridView.Commands
 
                 var config = await gridViewConfigService.GetConfiguration(request.ConfigurationName);
 
-
                 foreach (var row in request.Changes.SparseRows)
                 {
                     var ciExists = await ciModel.CIIDExists(row.Ciid, null);
 
-                    if (ciExists)
+                    if (!ciExists)
                     {
-                        using var trans = conn.BeginTransaction();
-                        try
+                        return (new ChangeDataResponse(), false);
+                    }
+
+                    using var trans = conn.BeginTransaction();
+                    try
+                    {
+                        foreach (var cell in row.Cells)
                         {
-                            foreach (var cell in row.Cells)
+                            var val = AttributeValueBuilder.Build(new AttributeValueDTO
                             {
-                                var val = AttributeValueBuilder.Build(new AttributeValueDTO
-                                {
-                                    IsArray = false,
-                                    Values = new string[] { cell.Value },
-                                    Type = AttributeValueType.Text
-                                });
+                                IsArray = false,
+                                Values = new string[] { cell.Value },
+                                Type = AttributeValueType.Text
+                            });
 
-                                await attributeModel.InsertAttribute(
-                                    cell.Name,
-                                    val,
-                                    row.Ciid,
-                                    config.WriteLayer.Value,
-                                    changesetProxy,
-                                    trans);
-                            }
+                            var writeLayer = cell.WriteLayer != null ? cell.WriteLayer.Value : config.WriteLayer;
 
-                            trans.Commit();
+                            await attributeModel.InsertAttribute(
+                                cell.Name,
+                                val,
+                                row.Ciid,
+                                writeLayer,
+                                changesetProxy,
+                                trans);
                         }
-                        catch
-                        {
-                            trans.Rollback();
-                        }
+
+                        trans.Commit();
+                    }
+                    catch
+                    {
+                        trans.Rollback();
                     }
                 }
 
-
-                var result = await FetchData(config);
-                return result;
+                return (await FetchData(config), true);
             }
 
             private async Task<ChangeDataResponse> FetchData(GridViewConfiguration config)
             {
-
                 var result = new ChangeDataResponse
                 {
                     Rows = new List<ChangeDataRow>()
@@ -117,8 +118,9 @@ namespace Omnikeeper.GridView.Commands
 
                 foreach (var attribute in attributes)
                 {
+                    var col = config.Columns.Find(el => el.SourceAttributeName == attribute.Name);
 
-                    if (!config.Columns.Any(el => el.SourceAttributeName == attribute.Name))
+                    if (col == null)
                     {
                         continue;
                     }
@@ -131,7 +133,7 @@ namespace Omnikeeper.GridView.Commands
                         {
                             Name = attribute.Name,
                             Value = attribute.Value.ToString(),
-                            Changeable = true
+                            Changeable = col.WriteLayer != null
                         });
                     }
                     else
@@ -145,7 +147,7 @@ namespace Omnikeeper.GridView.Commands
                                         {
                                             Name = attribute.Name,
                                             Value = attribute.Value.ToString(),
-                                            Changeable = true
+                                            Changeable = col.WriteLayer != null
                                         }
                                     }
                         });
