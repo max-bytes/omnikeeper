@@ -36,6 +36,7 @@ namespace Omnikeeper.GridView.Queries
 
             public async Task<GetDataResponse> Handle(Query request, CancellationToken cancellationToken)
             {
+                // TO DO: implement pagination
 
                 var pageSize = request.PageSize ?? 10;
                 var pageIndex = request.PageIndex ?? 0;
@@ -52,11 +53,6 @@ namespace Omnikeeper.GridView.Queries
                 // TO DO
                 // 1. Filter using a traitset
                 // 2. Only CIs that fulfill/ have ALL of the traits in the Traitset are shown in the GridView
-
-                // TO DO: Call the model directly no need to fetch data from db in this case
-
-                // get the list of cii that should be included in response
-
 
                 var ciIds = await ciModel.GetCIIDs(null);
 

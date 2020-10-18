@@ -50,7 +50,7 @@ namespace LandscapeRegistry.GridView
         }
 
         [AllowAnonymous]
-        [HttpPut]
+        [HttpPost]
         public async Task<IActionResult> ChangeData([FromBody] ChangeDataRequest changes)
         {
             var result = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes });
