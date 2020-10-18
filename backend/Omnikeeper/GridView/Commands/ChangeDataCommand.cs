@@ -1,12 +1,17 @@
 ﻿using MediatR;
 using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GridView.Request;
 using Omnikeeper.GridView.Response;
+using Omnikeeper.GridView.Service;
 using Omnikeeper.Service;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,6 +22,7 @@ namespace Omnikeeper.GridView.Commands
         public class Command : IRequest<ChangeDataResponse>
         {
             public ChangeDataRequest Changes { get; set; }
+            public string ConfigurationName { get; set; }
         }
 
         public class ChangeDataCommandHandler : IRequestHandler<Command, ChangeDataResponse>
@@ -26,13 +32,16 @@ namespace Omnikeeper.GridView.Commands
             private readonly IAttributeModel attributeModel;
             private readonly IChangesetModel changesetModel;
             private readonly ICurrentUserService currentUserService;
-            public ChangeDataCommandHandler(NpgsqlConnection connection, ICIModel ciModel, IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserService currentUserService)
+            private readonly GridViewConfigService gridViewConfigService;
+            public ChangeDataCommandHandler(NpgsqlConnection connection, ICIModel ciModel, IAttributeModel attributeModel, 
+                IChangesetModel changesetModel, ICurrentUserService currentUserService, GridViewConfigService gridViewConfigService)
             {
                 conn = connection;
                 this.ciModel = ciModel;
                 this.attributeModel = attributeModel;
                 this.changesetModel = changesetModel;
                 this.currentUserService = currentUserService;
+                this.gridViewConfigService = gridViewConfigService;
             }
             public async Task<ChangeDataResponse> Handle(Command request, CancellationToken cancellationToken)
             {
@@ -51,49 +60,97 @@ namespace Omnikeeper.GridView.Commands
                     {
                         // add attributes for this ci for this ci
 
-                        using (var trans = conn.BeginTransaction())
+                        using var trans = conn.BeginTransaction();
+                        try
                         {
-                            try
+                            foreach (var cell in row.Cells)
                             {
-                                foreach (var cell in row.Cells)
+                                var val = AttributeValueBuilder.Build(new AttributeValueDTO
                                 {
-                                    var val = AttributeValueBuilder.Build(new AttributeValueDTO
-                                    {
-                                        IsArray = false,
-                                        Values = new string[] { cell.Value },
-                                        Type = AttributeValueType.Text
-                                    });
+                                    IsArray = false,
+                                    Values = new string[] { cell.Value },
+                                    Type = AttributeValueType.Text
+                                });
 
-                                    var a = await attributeModel.InsertAttribute(
-                                        cell.Name,
-                                        val,
-                                        row.Ciid,
-                                        1, // how to get this layer id ??
-                                        changesetProxy,
-                                        trans);
-                                }
-
-                                trans.Commit();
-                            }
-                            catch (Exception ex)
-                            {
-                                trans.Rollback();
+                                var a = await attributeModel.InsertAttribute(
+                                    cell.Name,
+                                    val,
+                                    row.Ciid,
+                                    1, // how to get this layer id ??
+                                    changesetProxy,
+                                    trans);
                             }
 
+                            trans.Commit();
                         }
-
-
+                        catch
+                        {
+                            trans.Rollback();
+                        }
                     }
                 }
 
 
-                var result = await FetchData();
+                var result = await FetchData(request.ConfigurationName);
                 return result;
             }
 
-            private async Task<ChangeDataResponse> FetchData()
+            private async Task<ChangeDataResponse> FetchData(string confirgurationName)
             {
-                var result = new ChangeDataResponse();
+                var config = await gridViewConfigService.GetConfiguration(confirgurationName);
+
+
+                var result = new ChangeDataResponse
+                {
+                    Rows = new List<ChangeDataRow>()
+                };
+
+                var ciIds = await ciModel.GetCIIDs(null);
+
+                var attributes = new List<CIAttribute>();
+
+                foreach (var layerId in config.ReadLayerset)
+                {
+                    var attrs = await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciIds), layerId, null, TimeThreshold.BuildLatest());
+                    attributes.AddRange(attrs);
+                }
+
+                foreach (var attribute in attributes)
+                {
+
+                    if (!config.Columns.Any(el => el.SourceAttributeName == attribute.Name))
+                    {
+                        continue;
+                    }
+
+                    var el = result.Rows.Find(el => el.Ciid == attribute.CIID);
+
+                    if (el != null)
+                    {
+                        el.Cells.Add(new Response.ChangeDataCell
+                        {
+                            Name = attribute.Name,
+                            Value = attribute.Value.ToString(),
+                            Changeable = true
+                        });
+                    }
+                    else
+                    {
+                        result.Rows.Add(new ChangeDataRow
+                        {
+                            Ciid = attribute.CIID,
+                            Cells = new List<Response.ChangeDataCell>
+                                    {
+                                        new Response.ChangeDataCell
+                                        {
+                                            Name = attribute.Name,
+                                            Value = attribute.Value.ToString(),
+                                            Changeable = true
+                                        }
+                                    }
+                        });
+                    }
+                }
 
                 return result;
             }

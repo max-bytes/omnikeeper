@@ -51,9 +51,9 @@ namespace LandscapeRegistry.GridView
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> ChangeData([FromBody] ChangeDataRequest changes)
+        public async Task<IActionResult> ChangeData([FromBody] ChangeDataRequest changes, [FromQuery] string configurationName)
         {
-            var result = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes });
+            var result = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes , ConfigurationName = configurationName });
             return Ok(result);
         }
 
