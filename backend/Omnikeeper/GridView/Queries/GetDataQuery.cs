@@ -1,8 +1,12 @@
 ﻿using MediatR;
 using Npgsql;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.GridView.Response;
 using Omnikeeper.GridView.Service;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,23 +16,33 @@ namespace Omnikeeper.GridView.Queries
     {
         public class Query : IRequest<GetDataResponse>
         {
-
+            public string ConfigurationName { get; set; }
+            public int? PageSize { get; set; }
+            public int? PageIndex { get; set; }
         }
 
         public class GetDataQueryHandler : IRequestHandler<Query, GetDataResponse>
         {
-            private readonly NpgsqlConnection conn;
-            private readonly GridViewConfigService _gridViewConfigService;
+            private readonly GridViewConfigService gridViewConfigService;
+            private readonly IAttributeModel attributeModel;
+            private readonly ICIModel ciModel;
 
-            public GetDataQueryHandler(NpgsqlConnection connection, GridViewConfigService gridViewConfigService)
+            public GetDataQueryHandler(GridViewConfigService gridViewConfigService, IAttributeModel attributeModel, ICIModel ciModel)
             {
-                conn = connection;
-                _gridViewConfigService = gridViewConfigService;
+                this.gridViewConfigService = gridViewConfigService;
+                this.attributeModel = attributeModel;
+                this.ciModel = ciModel;
             }
 
             public async Task<GetDataResponse> Handle(Query request, CancellationToken cancellationToken)
             {
-                var config = await _gridViewConfigService.GetConfiguration("test");
+                // TO DO: implement pagination
+
+                var pageSize = request.PageSize ?? 10;
+                var pageIndex = request.PageIndex ?? 0;
+
+                var config = await gridViewConfigService.GetConfiguration(request.ConfigurationName);
+
 
                 var result = new GetDataResponse
                 {
@@ -40,44 +54,51 @@ namespace Omnikeeper.GridView.Queries
                 // 1. Filter using a traitset
                 // 2. Only CIs that fulfill/ have ALL of the traits in the Traitset are shown in the GridView
 
-                using var command = new NpgsqlCommand($@"
-                    SELECT CI.id, ATTR.name, ATTR.value
-                    FROM attribute ATTR
-                    INNER JOIN ci CI ON ATTR.ci_id = CI.id
-                    ORDER BY CI.id
-                ", conn, null);
+                var ciIds = await ciModel.GetCIIDs(null);
 
-                using var dr = await command.ExecuteReaderAsync();
+                var attributes = new List<CIAttribute>();
 
-                while (dr.Read())
+                // TO DO transaction parameter should not be null
+
+                foreach (var layerId in config.ReadLayerset)
                 {
-                    var id = dr.GetGuid(0);
-                    var name = dr.GetString(1);
-                    var value = dr.GetString(2);
+                    var attrs = await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciIds), layerId, null, TimeThreshold.BuildLatest());
+                    attributes.AddRange(attrs);
+                }
 
-                    var el = result.Rows.Find(el => el.Ciid == id);
+                foreach (var attribute in attributes)
+                {
+
+                    var col = config.Columns.Find(el => el.SourceAttributeName == attribute.Name);
+
+                    if (col == null)
+                    {
+                        continue;
+                    }
+
+                    var el = result.Rows.Find(el => el.Ciid == attribute.CIID);
 
                     if (el != null)
                     {
                         el.Cells.Add(new Cell
                         {
-                            Name = name,
-                            Value = value,
-                            Changeable = true
+                            Name = attribute.Name,
+                            Value = attribute.Value.ToString(),
+                            Changeable = col.WriteLayer != null
                         });
                     }
                     else
                     {
                         result.Rows.Add(new Row
                         {
-                            Ciid = id,
+                            Ciid = attribute.CIID,
                             Cells = new List<Cell>
                                     {
-                                        new Cell 
+                                        new Cell
                                         {
-                                            Name = name,
-                                            Value = value,
-                                            Changeable = true
+                                            Name = attribute.Name,
+                                            Value = attribute.Value.ToString(),
+                                            Changeable = col.WriteLayer != null
                                         }
                                     }
                         });

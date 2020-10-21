@@ -43,17 +43,31 @@ namespace LandscapeRegistry.GridView
 
         [AllowAnonymous]
         [HttpGet("data")]
-        public async Task<IActionResult> GetData()
+        public async Task<IActionResult> GetData([FromQuery] string configurationName)
         {
-            var result = await _mediatr.Send(new GetDataQuery.Query());
+            var result = await _mediatr.Send(new GetDataQuery.Query { ConfigurationName = configurationName });
             return Ok(result);
         }
 
         [AllowAnonymous]
-        [HttpPut]
-        public async Task<IActionResult> ChangeData([FromBody] ChangeDataRequest changes)
+        [HttpPost]
+        public async Task<IActionResult> ChangeData([FromBody] ChangeDataRequest changes, [FromQuery] string configurationName)
         {
-            var result = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes });
+            var (result, isSuccess) = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes, ConfigurationName = configurationName });
+
+            if (isSuccess)
+            {
+                return Ok(result);
+            }
+
+            return NotFound(new { Error = "The provided ci id not found!" });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("contexts")]
+        public async Task<IActionResult> GetContexts()
+        {
+            var result = await _mediatr.Send(new GetContextsQuery.Query());
             return Ok(result);
         }
     }
