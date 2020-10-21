@@ -8,6 +8,12 @@ import "./GridView.css";
 import GridViewDataParseModel from "./GridViewDataParseModel";
 import GridViewMockUpDataModel from "./GridViewMockUpDataModel"; // returns mockUp-data for testing // TODO: remove, when finally using API
 import _ from "lodash";
+import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
+const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
+    AgGridReact, // React-AgGrid component
+    { className: "ag-theme-balham" }, // hocProps
+    false // logging off
+);
 
 const { Header, Content } = Layout;
 
@@ -66,26 +72,18 @@ export default function GridView(props) {
                 />
             </Header>
             <Content>
-                <div
-                    className="ag-theme-balham"
-                    style={{
-                        height: "100%",
-                        width: "100%",
+                <AgGridCopyCutPaste
+                    onGridReady={onGridReady}
+                    rowData={rowData}
+                    columnDefs={columnDefs}
+                    defaultColDef={defaultColDef}
+                    animateRows={true}
+                    rowSelection="multiple"
+                    onCellValueChanged={updateCellValue}
+                    getRowNodeId={function (data) {
+                        return data.ciid;
                     }}
-                >
-                    <AgGridReact
-                        onGridReady={onGridReady}
-                        rowData={rowData}
-                        columnDefs={columnDefs}
-                        defaultColDef={defaultColDef}
-                        animateRows={true}
-                        rowSelection="multiple"
-                        onCellValueChanged={updateCellValue}
-                        getRowNodeId={function (data) {
-                            return data.ciid;
-                        }}
-                    ></AgGridReact>
-                </div>
+                />
             </Content>
         </Layout>
     );
@@ -168,11 +166,13 @@ export default function GridView(props) {
         var focusedCell = gridApi.getFocusedCell();
         if (focusedCell) {
             var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
-            const params = { ...focusedCell.column, node: rowNode }; // HACK: build needed 'params'-information
-            const editableCell = focusedCell.column.colDef.editable(params);
-            const editableCol = focusedCell.column.colDef.editable;
-            if (editableCol && editableCell)
-                rowNode.setDataValue(focusedCell.column.colId, null);
+            if (rowNode) {
+                const params = { ...focusedCell.column, node: rowNode }; // HACK: build needed 'params'-information
+                const editableCell = focusedCell.column.colDef.editable(params);
+                const editableCol = focusedCell.column.colDef.editable;
+                if (editableCol && editableCell)
+                    rowNode.setDataValue(focusedCell.column.colId, null);
+            }
         }
     }
 
@@ -181,11 +181,13 @@ export default function GridView(props) {
         var focusedCell = gridApi.getFocusedCell();
         if (focusedCell) {
             var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
-            const params = { ...focusedCell.column, node: rowNode }; // HACK: build needed 'params'-information
-            const editableCell = focusedCell.column.colDef.editable(params);
-            const editableCol = focusedCell.column.colDef.editable;
-            if (editableCol && editableCell)
-                rowNode.setDataValue(focusedCell.column.colId, "");
+            if (rowNode) {
+                const params = { ...focusedCell.column, node: rowNode }; // HACK: build needed 'params'-information
+                const editableCell = focusedCell.column.colDef.editable(params);
+                const editableCol = focusedCell.column.colDef.editable;
+                if (editableCol && editableCell)
+                    rowNode.setDataValue(focusedCell.column.colId, "");
+            }
         }
     }
 
