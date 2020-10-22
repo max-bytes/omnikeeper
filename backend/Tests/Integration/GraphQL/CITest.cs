@@ -40,7 +40,7 @@ namespace Tests.Integration.GraphQL
             Services.Register<IPredicateModel, PredicateModel>();
             Services.Register<IMemoryCacheModel>(() => null);
             Services.Register<IEffectiveTraitModel, EffectiveTraitModel>();
-            Services.Register<IOIAConfigModel, OIAConfigModel>();
+            Services.Register<IOIAContextModel, OIAContextModel>();
             Services.Register<IODataAPIContextModel, ODataAPIContextModel>();
             Services.Register<IRecursiveTraitModel, RecursiveTraitModel>();
             Services.Register<ILayerStatisticsModel, LayerStatisticsModel>();
@@ -49,7 +49,7 @@ namespace Tests.Integration.GraphQL
             Services.Register<ITemplatesProvider, TemplatesProvider>();
 
             Services.Register<ILogger<EffectiveTraitModel>>(() => NullLogger<EffectiveTraitModel>.Instance);
-            Services.Register<ILogger<OIAConfigModel>>(() => NullLogger<OIAConfigModel>.Instance);
+            Services.Register<ILogger<OIAContextModel>>(() => NullLogger<OIAContextModel>.Instance);
             Services.Register<ILogger<ODataAPIContextModel>>(() => NullLogger<ODataAPIContextModel>.Instance);
             Services.Register<ILogger<RecursiveTraitModel>>(() => NullLogger<RecursiveTraitModel>.Instance);
 

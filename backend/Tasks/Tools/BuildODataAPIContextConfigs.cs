@@ -22,7 +22,7 @@ namespace Tasks.Tools
             };
             var json = ODataAPIContext.ConfigSerializer.SerializeToString(config);
 
-            Console.WriteLine(json);
+            Console.WriteLine(json); // {"$type":"Omnikeeper.Base.Entity.ODataAPIContext+ConfigV3, Omnikeeper.Base","WriteLayerID":7,"ReadLayerset":[1,2,3,4,5,6,7]}
         }
     }
 }

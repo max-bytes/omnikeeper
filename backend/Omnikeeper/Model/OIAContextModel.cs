@@ -12,23 +12,23 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Model
 {
-    public class OIAConfigModel : IOIAConfigModel
+    public class OIAContextModel : IOIAContextModel
     {
         private readonly NpgsqlConnection conn;
-        private readonly ILogger<OIAConfigModel> logger;
+        private readonly ILogger<OIAContextModel> logger;
 
-        public OIAConfigModel(ILogger<OIAConfigModel> logger, NpgsqlConnection connection)
+        public OIAContextModel(ILogger<OIAContextModel> logger, NpgsqlConnection connection)
         {
             conn = connection;
             this.logger = logger;
         }
 
-        public async Task<IEnumerable<OIAConfig>> GetConfigs(bool useFallbackConfig, NpgsqlTransaction trans)
+        public async Task<IEnumerable<OIAContext>> GetContexts(bool useFallbackConfig, NpgsqlTransaction trans)
         {
-            var ret = new List<OIAConfig>();
+            var ret = new List<OIAContext>();
 
             using var command = new NpgsqlCommand(@"
-                SELECT id, name, config FROM onlineinboundadapter_config
+                SELECT id, name, config FROM config.onlineinboundadapter_context
             ", conn, trans);
             using (var s = await command.ExecuteReaderAsync())
             {
@@ -49,16 +49,16 @@ namespace Omnikeeper.Model
                             config = new OIAFallbackConfig(configJO.ToString(Formatting.None));
                     }
                     if (config != null)
-                        ret.Add(OIAConfig.Build(name, id, config));
+                        ret.Add(OIAContext.Build(name, id, config));
                 }
             }
             return ret;
         }
 
-        public async Task<OIAConfig> GetConfigByName(string name, NpgsqlTransaction trans)
+        public async Task<OIAContext> GetContextByName(string name, NpgsqlTransaction trans)
         {
             using var command = new NpgsqlCommand(@"
-                SELECT id, config FROM onlineinboundadapter_config WHERE name = @name LIMIT 1
+                SELECT id, config FROM config.onlineinboundadapter_context WHERE name = @name LIMIT 1
             ", conn, trans);
             command.Parameters.AddWithValue("name", name);
             using var s = await command.ExecuteReaderAsync();
@@ -70,7 +70,7 @@ namespace Omnikeeper.Model
             try
             {
                 var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configJO);
-                return OIAConfig.Build(name, id, config);
+                return OIAContext.Build(name, id, config);
             }
             catch (Exception e)
             {
@@ -79,30 +79,30 @@ namespace Omnikeeper.Model
             }
         }
 
-        public async Task<OIAConfig> Create(string name, IOnlineInboundAdapter.IConfig config, NpgsqlTransaction trans)
+        public async Task<OIAContext> Create(string name, IOnlineInboundAdapter.IConfig config, NpgsqlTransaction trans)
         {
             var configJO = IOnlineInboundAdapter.IConfig.Serializer.SerializeToJObject(config);
-            using var command = new NpgsqlCommand(@"INSERT INTO onlineinboundadapter_config (name, config) VALUES (@name, @config) RETURNING id", conn, trans);
+            using var command = new NpgsqlCommand(@"INSERT INTO config.onlineinboundadapter_context (name, config) VALUES (@name, @config) RETURNING id", conn, trans);
             command.Parameters.AddWithValue("name", name);
             command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJO });
             var id = (long)await command.ExecuteScalarAsync();
-            return OIAConfig.Build(name, id, config);
+            return OIAContext.Build(name, id, config);
         }
 
-        public async Task<OIAConfig> Update(long id, string name, IOnlineInboundAdapter.IConfig config, NpgsqlTransaction trans)
+        public async Task<OIAContext> Update(long id, string name, IOnlineInboundAdapter.IConfig config, NpgsqlTransaction trans)
         {
             var configJO = IOnlineInboundAdapter.IConfig.Serializer.SerializeToJObject(config);
-            using var command = new NpgsqlCommand(@"UPDATE onlineinboundadapter_config SET name = @name, config = @config WHERE id = @id", conn, trans);
+            using var command = new NpgsqlCommand(@"UPDATE config.onlineinboundadapter_context SET name = @name, config = @config WHERE id = @id", conn, trans);
             command.Parameters.AddWithValue("name", name);
             command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJO });
             command.Parameters.AddWithValue("id", id);
             await command.ExecuteNonQueryAsync();
-            return OIAConfig.Build(name, id, config);
+            return OIAContext.Build(name, id, config);
         }
 
-        public async Task<OIAConfig> Delete(long id, NpgsqlTransaction trans)
+        public async Task<OIAContext> Delete(long id, NpgsqlTransaction trans)
         {
-            using var command = new NpgsqlCommand(@"DELETE FROM onlineinboundadapter_config WHERE id = @id RETURNING name, config", conn, trans);
+            using var command = new NpgsqlCommand(@"DELETE FROM config.onlineinboundadapter_context WHERE id = @id RETURNING name, config", conn, trans);
             command.Parameters.AddWithValue("id", id);
 
             using var reader = await command.ExecuteReaderAsync();
@@ -112,7 +112,7 @@ namespace Omnikeeper.Model
             try
             {
                 var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configJO);
-                return OIAConfig.Build(name, id, config);
+                return OIAContext.Build(name, id, config);
             }
             catch (Exception e)
             {

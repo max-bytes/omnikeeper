@@ -40,7 +40,7 @@ namespace Omnikeeper.Model
             var ret = new List<ODataAPIContext>();
 
             using var command = new NpgsqlCommand(@"
-                SELECT id, config FROM odataapicontext
+                SELECT id, config FROM config.odataapi_context
             ", conn, trans);
             using (var s = await command.ExecuteReaderAsync())
             {
@@ -59,7 +59,7 @@ namespace Omnikeeper.Model
         public async Task<ODataAPIContext> GetContextByID(string id, NpgsqlTransaction trans)
         {
             using var command = new NpgsqlCommand(@"
-                SELECT config FROM odataapicontext WHERE id = @id LIMIT 1
+                SELECT config FROM config.odataapi_context WHERE id = @id LIMIT 1
             ", conn, trans);
             command.Parameters.AddWithValue("id", id);
             using var s = await command.ExecuteReaderAsync();
@@ -73,7 +73,7 @@ namespace Omnikeeper.Model
         public async Task<ODataAPIContext> Upsert(string id, ODataAPIContext.IConfig config, NpgsqlTransaction trans)
         {
             var configJO = ODataAPIContext.ConfigSerializer.SerializeToJObject(config);
-            using var command = new NpgsqlCommand(@"INSERT INTO odataapicontext (id, config) VALUES (@id, @config) ON CONFLICT (id) DO UPDATE SET config = EXCLUDED.config", conn, trans);
+            using var command = new NpgsqlCommand(@"INSERT INTO config.odataapi_context (id, config) VALUES (@id, @config) ON CONFLICT (id) DO UPDATE SET config = EXCLUDED.config", conn, trans);
             command.Parameters.AddWithValue("id", id);
             command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJO });
             await command.ExecuteNonQueryAsync();
@@ -82,7 +82,7 @@ namespace Omnikeeper.Model
 
         public async Task<ODataAPIContext> Delete(string id, NpgsqlTransaction trans)
         {
-            using var command = new NpgsqlCommand(@"DELETE FROM odataapicontext WHERE id = @id RETURNING config", conn, trans);
+            using var command = new NpgsqlCommand(@"DELETE FROM config.odataapi_context WHERE id = @id RETURNING config", conn, trans);
             command.Parameters.AddWithValue("id", id);
 
             using var reader = await command.ExecuteReaderAsync();

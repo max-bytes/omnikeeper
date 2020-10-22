@@ -4,9 +4,9 @@ using Omnikeeper.Base.Inbound;
 
 namespace Omnikeeper.GraphQL
 {
-    public class OIAConfigType : ObjectGraphType<OIAConfig>
+    public class OIAContextType : ObjectGraphType<OIAContext>
     {
-        public OIAConfigType()
+        public OIAContextType()
         {
             Field("id", x => x.ID);
             Field(x => x.Name);

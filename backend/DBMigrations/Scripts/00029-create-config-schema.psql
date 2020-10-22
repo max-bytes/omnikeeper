@@ -1,0 +1,7 @@
+﻿CREATE SCHEMA config AUTHORIZATION postgres;
+
+ALTER TABLE onlineinboundadapter_config SET SCHEMA config;
+ALTER TABLE config.onlineinboundadapter_config RENAME TO onlineinboundadapter_context;
+
+ALTER TABLE odataapicontext SET SCHEMA config;
+ALTER TABLE config.odataapicontext RENAME TO odataapi_context;

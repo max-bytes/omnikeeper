@@ -149,7 +149,7 @@ namespace OKPluginOIASharepoint.Tests
 
 
         [Test]
-        public async Task TestFailedExternalIDManager()
+        public void TestFailedExternalIDManager()
         {
             var config = new Config(ExternalSharepointTenantID, "nonexisting", ExternalSharepointSite, ExternalSharepointClientID,
                 ExternalSharepointClientSecret, true, new TimeSpan(100), "sharepoint_test",

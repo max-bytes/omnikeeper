@@ -13,7 +13,7 @@ namespace Omnikeeper.GraphQL
     public class GraphQLQuery : ObjectGraphType
     {
         public GraphQLQuery(ICIModel ciModel, ILayerModel layerModel, IPredicateModel predicateModel, IMemoryCacheModel memoryCacheModel,
-            IChangesetModel changesetModel, ICISearchModel ciSearchModel, IOIAConfigModel oiaConfigModel, IODataAPIContextModel odataAPIContextModel,
+            IChangesetModel changesetModel, ICISearchModel ciSearchModel, IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel,
             ILayerStatisticsModel layerStatisticsModel,
             IEffectiveTraitModel effectiveTraitModel, IRecursiveTraitModel traitModel, ITraitsProvider traitsProvider, ICurrentUserService currentUserService)
         {
@@ -241,10 +241,10 @@ namespace Omnikeeper.GraphQL
                         numLayerChangesetsHistory);
                 });
 
-            FieldAsync<ListGraphType<OIAConfigType>>("oiaconfigs",
+            FieldAsync<ListGraphType<OIAContextType>>("oiacontexts",
                 resolve: async context =>
                 {
-                    var configs = await oiaConfigModel.GetConfigs(true, null);
+                    var configs = await oiaContextModel.GetContexts(true, null);
 
                     return configs;
                 });

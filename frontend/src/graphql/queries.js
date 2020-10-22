@@ -84,9 +84,9 @@ export const queries = {
         }
         ${Fragments.fullLayer}
     `,
-    OIAConfigs: gql`
-        query oiaconfigs {
-            oiaconfigs {
+    OIAContexts: gql`
+        query oiacontexts {
+            oiacontexts {
                 id
                 name
                 config

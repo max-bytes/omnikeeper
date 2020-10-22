@@ -166,9 +166,9 @@ namespace OKPluginOIAKeycloak
             return AsyncEnumerable.Empty<Relation>();// TODO: implement
         }
 
-        public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
+        public Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
         {
-            return null;// TODO: implement
+            return Task.FromResult<Relation>(null);// TODO: implement
         }
     }
 }

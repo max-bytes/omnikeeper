@@ -141,7 +141,7 @@ namespace Omnikeeper
             services.Decorate<IRecursiveTraitModel, CachingRecursiveTraitModel>();
             services.AddScoped<IEffectiveTraitModel, EffectiveTraitModel>();
 
-            services.AddScoped<IOIAConfigModel, OIAConfigModel>();
+            services.AddScoped<IOIAContextModel, OIAContextModel>();
 
             services.AddScoped<IOmnikeeperAuthorizationService, OmnikeeperAuthorizationService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();

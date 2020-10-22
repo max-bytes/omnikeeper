@@ -18,7 +18,7 @@ import ApolloWrapper from './components/ApolloWrapper';
 import env from "@beam-australia/react-env";
 import ManagePredicates from './components/manage/ManagePredicates';
 import ManageLayers from './components/manage/ManageLayers';
-import ManageOIAConfigs from './components/manage/ManageOIAConfigs';
+import ManageOIAContexts from './components/manage/ManageOIAContexts';
 import ManageODataAPIContexts from './components/manage/ManageODataAPIContexts';
 import ManageTraits from './components/manage/ManageTraits';
 import ManageCache from './components/manage/ManageCache';
@@ -105,8 +105,8 @@ function App() {
               <PrivateRoute path="/manage/layers">
                 <ManageLayers />
               </PrivateRoute>
-              <PrivateRoute path="/manage/oiaconfigs">
-                <ManageOIAConfigs />
+              <PrivateRoute path="/manage/oiacontexts">
+                <ManageOIAContexts />
               </PrivateRoute>
               <PrivateRoute path="/manage/odataapicontexts">
                 <ManageODataAPIContexts />

@@ -20,14 +20,14 @@ namespace Omnikeeper.Base.Inbound
     {
         private readonly IDictionary<string, IOnlineInboundAdapterBuilder> onlinePluginsBuilders;
         private readonly IExternalIDMapper externalIDMapper;
-        private readonly IOIAConfigModel ioaConfigModel;
+        private readonly IOIAContextModel ioaConfigModel;
         private readonly ILoggerFactory loggerFactory;
         private readonly NpgsqlConnection conn;
         private readonly IExternalIDMapPersister persister;
         private readonly IConfiguration appConfig;
 
         public InboundAdapterManager(IEnumerable<IOnlineInboundAdapterBuilder> onlinePluginBuilders, IExternalIDMapper externalIDMapper,
-            IOIAConfigModel ioaConfigModel, ILoggerFactory loggerFactory, NpgsqlConnection conn,
+            IOIAContextModel ioaConfigModel, ILoggerFactory loggerFactory, NpgsqlConnection conn,
             IExternalIDMapPersister persister, IConfiguration appConfig)
         {
             this.onlinePluginsBuilders = onlinePluginBuilders.ToDictionary(p => p.Name);
@@ -41,7 +41,7 @@ namespace Omnikeeper.Base.Inbound
 
         public async Task<IOnlineInboundAdapter> GetOnlinePluginInstance(string instanceName, NpgsqlTransaction trans)
         {
-            var config = await ioaConfigModel.GetConfigByName(instanceName, trans);
+            var config = await ioaConfigModel.GetContextByName(instanceName, trans);
             if (config != null)
             {
                 if (onlinePluginsBuilders.TryGetValue(config.Config.BuilderName, out var builder))

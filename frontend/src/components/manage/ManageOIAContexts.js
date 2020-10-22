@@ -8,21 +8,21 @@ import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import AgGridCrud from './AgGridCrud';
 
-export default function ManageOIAConfigs(props) {
+export default function ManageOIAContexts(props) {
   var [rowData, setRowData] = useState([]);
-  const { loading, refetch } = useQuery(queries.OIAConfigs, { 
+  const { loading, refetch } = useQuery(queries.OIAContexts, { 
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
-      setRowData(data.oiaconfigs);
+      setRowData(data.oiacontexts);
     },
     onError: (e) => {
       console.log("error"); // TODO
       console.log(e);
     }
   });
-  const [createOIAConfig] = useMutation(mutations.CREATE_OIACONFIG);
-  const [updateOIAConfig] = useMutation(mutations.UPDATE_OIACONFIG);
-  const [deleteOIAConfig] = useMutation(mutations.DELETE_OIACONFIG);
+  const [createOIAContext] = useMutation(mutations.CREATE_OIACONTEXT);
+  const [updateOIAContext] = useMutation(mutations.UPDATE_OIACONTEXT);
+  const [deleteOIAContext] = useMutation(mutations.DELETE_OIACONTEXT);
 
   const columnDefs = [
     { headerName: "ID", field: "id", editable: false },
@@ -32,7 +32,7 @@ export default function ManageOIAConfigs(props) {
   ];
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
-    <h2>Online Inbound Adapter Configurations</h2>
+    <h2>Online Inbound Adapter Contexts</h2>
     <div style={{marginBottom: '10px'}}><Link to="/manage"><Icon name="angle left" fitted /> Back</Link></div>
 
     <AgGridCrud idIsUserCreated={false} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
@@ -41,19 +41,19 @@ export default function ManageOIAConfigs(props) {
         if (row.id === undefined && row.frontend_id !== undefined) {
           // TODO
         } else {
-          return deleteOIAConfig({variables: {oiaID: row.id}}).catch(e => ({result: e, id: row.id }))
+          return deleteOIAContext({variables: {oiaID: row.id}}).catch(e => ({result: e, id: row.id }))
           .then(r => ({result: true, id: row.id}))
           .catch(e => ({result: e, id: row.id }));
         }
       }}
       saveRow={async row => {
         if (row.id === undefined && row.frontend_id !== undefined) {
-          return createOIAConfig({variables: { oiaConfig: { name: row.name, config: row.config }}})
-            .then(r => ({result: r.data.createOIAConfig, frontend_id: row.frontend_id}))
+          return createOIAContext({variables: { oiaContext: { name: row.name, config: row.config }}})
+            .then(r => ({result: r.data.createOIAContext, frontend_id: row.frontend_id}))
             .catch(e => ({result: e, frontend_id: row.frontend_id }));
         } else {
-          return updateOIAConfig({variables: { oiaConfig: { id: row.id, name: row.name, config: row.config }}})
-            .then(r => ({result: r.data.updateOIAConfig, id: row.id}))
+          return updateOIAContext({variables: { oiaContext: { id: row.id, name: row.name, config: row.config }}})
+            .then(r => ({result: r.data.updateOIAContext, id: row.id}))
             .catch(e => ({result: e, id: row.id }));
         }
       }} />

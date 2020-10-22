@@ -17,7 +17,7 @@ namespace Omnikeeper.GraphQL
 {
     public class GraphQLMutation : ObjectGraphType
     {
-        public GraphQLMutation(ICIModel ciModel, IBaseAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAConfigModel OIAConfigModel,
+        public GraphQLMutation(ICIModel ciModel, IBaseAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAContextModel OIAContextModel,
              IODataAPIContextModel odataAPIContextModel, IChangesetModel changesetModel, IPredicateModel predicateModel, IRecursiveTraitModel traitModel,
              IOmnikeeperAuthorizationService authorizationService, NpgsqlConnection conn)
         {
@@ -205,13 +205,13 @@ namespace Omnikeeper.GraphQL
               });
 
 
-            FieldAsync<OIAConfigType>("createOIAConfig",
+            FieldAsync<OIAContextType>("createOIAContext",
                 arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<CreateOIAConfigInputType>> { Name = "oiaConfig" }
+                new QueryArgument<NonNullGraphType<CreateOIAContextInputType>> { Name = "oiaContext" }
                 ),
                 resolve: async context =>
                 {
-                    var configInput = context.GetArgument<CreateOIAConfigInput>("oiaConfig");
+                    var configInput = context.GetArgument<CreateOIAContextInput>("oiaContext");
                     var userContext = context.UserContext as OmnikeeperUserContext;
 
                     // TODO: auth
@@ -225,24 +225,24 @@ namespace Omnikeeper.GraphQL
                     {
                         var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configInput.Config);
 
-                        var createdOIAConfig = await OIAConfigModel.Create(configInput.Name, config, transaction);
+                        var createdOIAContext = await OIAContextModel.Create(configInput.Name, config, transaction);
 
                         await transaction.CommitAsync();
 
-                        return createdOIAConfig;
+                        return createdOIAContext;
                     }
                     catch (Exception e)
                     {
                         throw new ExecutionError($"Could not parse configuration", e);
                     }
                 });
-            FieldAsync<OIAConfigType>("updateOIAConfig",
+            FieldAsync<OIAContextType>("updateOIAContext",
               arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<UpdateOIAConfigInputType>> { Name = "oiaConfig" }
+                new QueryArgument<NonNullGraphType<UpdateOIAContextInputType>> { Name = "oiaContext" }
               ),
               resolve: async context =>
               {
-                  var configInput = context.GetArgument<UpdateOIAConfigInput>("oiaConfig");
+                  var configInput = context.GetArgument<UpdateOIAContextInput>("oiaContext");
 
                   var userContext = context.UserContext as OmnikeeperUserContext;
 
@@ -256,17 +256,17 @@ namespace Omnikeeper.GraphQL
                   try
                   {
                       var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configInput.Config);
-                      var oiaConfig = await OIAConfigModel.Update(configInput.ID, configInput.Name, config, transaction);
+                      var oiaContext = await OIAContextModel.Update(configInput.ID, configInput.Name, config, transaction);
                       await transaction.CommitAsync();
 
-                      return oiaConfig;
+                      return oiaContext;
                   }
                   catch (Exception e)
                   {
                       throw new ExecutionError($"Could not parse configuration", e);
                   }
               });
-            FieldAsync<BooleanGraphType>("deleteOIAConfig",
+            FieldAsync<BooleanGraphType>("deleteOIAContext",
               arguments: new QueryArguments(
                 new QueryArgument<NonNullGraphType<LongGraphType>> { Name = "oiaID" }
               ),
@@ -283,7 +283,7 @@ namespace Omnikeeper.GraphQL
                   using var transaction = await conn.BeginTransactionAsync();
                   userContext.Transaction = transaction;
 
-                  var deleted = await OIAConfigModel.Delete(id, transaction);
+                  var deleted = await OIAContextModel.Delete(id, transaction);
                   await transaction.CommitAsync();
                   return deleted != null;
               });
