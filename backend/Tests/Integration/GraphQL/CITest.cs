@@ -55,8 +55,8 @@ namespace Tests.Integration.GraphQL
 
             Services.Register<CIMappingService, CIMappingService>();
 
-            var authorizationService = new Mock<IRegistryAuthorizationService>();
-            Services.Register<IRegistryAuthorizationService>(() => authorizationService.Object);
+            var authorizationService = new Mock<IOmnikeeperAuthorizationService>();
+            Services.Register<IOmnikeeperAuthorizationService>(() => authorizationService.Object);
 
             var currentUserService = new Mock<ICurrentUserService>();
             Services.Register<ICurrentUserService>(() => currentUserService.Object);
@@ -142,7 +142,7 @@ namespace Tests.Integration.GraphQL
                 }";
 
             var httpContext = new DefaultHttpContext();
-            AssertQuerySuccess(query, expected, inputs, userContext: new RegistryUserContext(user));
+            AssertQuerySuccess(query, expected, inputs, userContext: new OmnikeeperUserContext(user));
         }
     }
 }

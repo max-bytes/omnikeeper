@@ -11,11 +11,11 @@ using static OKPluginOIAOmnikeeper.OnlineInboundAdapter;
 
 namespace OKPluginOIAOmnikeeper
 {
-    public partial class LandscapeRegistryRESTAPIClient
+    public partial class LandscapeomnikeeperRESTAPIClient
     {
         private readonly Config config;
 
-        public LandscapeRegistryRESTAPIClient(Config config, HttpClient httpClient) : this(httpClient)
+        public LandscapeomnikeeperRESTAPIClient(Config config, HttpClient httpClient) : this(httpClient)
         {
             this.config = config;
         }

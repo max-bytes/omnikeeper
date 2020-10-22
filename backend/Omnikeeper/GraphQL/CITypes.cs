@@ -30,7 +30,7 @@ namespace Omnikeeper.GraphQL
             }),
             resolve: async (context) =>
             {
-                var userContext = context.UserContext as RegistryUserContext;
+                var userContext = context.UserContext as OmnikeeperUserContext;
                 var layerset = userContext.LayerSet;
                 if (layerset == null)
                     throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!");
@@ -61,14 +61,14 @@ namespace Omnikeeper.GraphQL
             FieldAsync<TemplateErrorsCIType>("templateErrors",
             resolve: async (context) =>
             {
-                var userContext = context.UserContext as RegistryUserContext;
+                var userContext = context.UserContext as OmnikeeperUserContext;
                 return await templateModel.CalculateTemplateErrors(context.Source, userContext.Transaction, userContext.TimeThreshold);
             });
 
             FieldAsync<ListGraphType<EffectiveTraitType>>("effectiveTraits",
             resolve: async (context) =>
             {
-                var userContext = context.UserContext as RegistryUserContext;
+                var userContext = context.UserContext as OmnikeeperUserContext;
 
                 var et = await traitModel.CalculateEffectiveTraitSetForCI(context.Source, userContext.Transaction, userContext.TimeThreshold);
                 return et.EffectiveTraits.Values;
@@ -98,7 +98,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<LayerType>>("layerStack",
             resolve: async (context) =>
             {
-                var userContext = context.UserContext as RegistryUserContext;
+                var userContext = context.UserContext as OmnikeeperUserContext;
                 var layerstackIDs = context.Source.LayerStackIDs;
                 return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
             });

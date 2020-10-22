@@ -1,9 +1,10 @@
-// 20200827163144
+// 20201022112935
 // https://localhost:44378/swagger/v1/swagger.json
+
 {
     "openapi": "3.0.1",
     "info": {
-        "title": "Landscape Registry REST API",
+        "title": "Landscape omnikeeper REST API",
         "version": "v1"
     },
     "servers": [
@@ -12,6 +13,81 @@
         }
     ],
     "paths": {
+        "/api/v{version}/Ingest/AD-XML": {
+            "post": {
+                "tags": [
+                    "ActiveDirectoryXMLIngest"
+                ],
+                "operationId": "Ingest",
+                "parameters": [
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "files",
+                                    "searchLayerIDs",
+                                    "writeLayerID"
+                                ],
+                                "type": "object",
+                                "properties": {
+                                    "writeLayerID": {
+                                        "type": "integer",
+                                        "format": "int64"
+                                    },
+                                    "searchLayerIDs": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        }
+                                    },
+                                    "files": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                }
+                            },
+                            "encoding": {
+                                "writeLayerID": {
+                                    "style": "form"
+                                },
+                                "searchLayerIDs": {
+                                    "style": "form"
+                                },
+                                "files": {
+                                    "style": "form"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "security": [
+                    {
+                        "oauth2": [
+
+                        ]
+                    }
+                ]
+            }
+        },
         "/api/v{version}/AnsibleIngest/IngestAnsibleInventoryScan": {
             "post": {
                 "tags": [
@@ -3375,7 +3451,7 @@
                 "tags": [
                     "Trait"
                 ],
-                "operationId": "GetEffectiveTraitSetsForTraitName",
+                "operationId": "GetEffectiveTraitsForTraitName",
                 "parameters": [
                     {
                         "name": "layerIDs",
@@ -3421,129 +3497,129 @@
                         "content": {
                             "application/json;odata.metadata=minimal;odata.streaming=true": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "application/json;odata.metadata=minimal;odata.streaming=false": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "application/json;odata.metadata=minimal": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "application/json;odata.metadata=full;odata.streaming=true": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "application/json;odata.metadata=full;odata.streaming=false": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "application/json;odata.metadata=full": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "application/json;odata.metadata=none;odata.streaming=true": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "application/json;odata.metadata=none;odata.streaming=false": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "application/json;odata.metadata=none": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "application/json;odata.streaming=true": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "application/json;odata.streaming=false": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "application/xml": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "application/odata": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "text/plain": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             },
                             "text/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EffectiveTraitSetDTO"
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "$ref": "#/components/schemas/EffectiveTraitDTO"
                                     }
                                 }
                             }
@@ -3650,20 +3726,17 @@
                 "properties": {
                     "id": {
                         "type": "string",
-                        "format": "uuid",
-                        "readOnly": true
+                        "format": "uuid"
                     },
                     "name": {
-                        "type": "string",
-                        "readOnly": true
+                        "type": "string"
                     },
                     "value": {
                         "$ref": "#/components/schemas/AttributeValueDTO"
                     },
                     "ciid": {
                         "type": "string",
-                        "format": "uuid",
-                        "readOnly": true
+                        "format": "uuid"
                     },
                     "state": {
                         "$ref": "#/components/schemas/AttributeState"
@@ -3722,15 +3795,13 @@
                 "properties": {
                     "id": {
                         "type": "string",
-                        "format": "uuid",
-                        "readOnly": true
+                        "format": "uuid"
                     },
                     "attributes": {
                         "type": "object",
                         "additionalProperties": {
                             "$ref": "#/components/schemas/CIAttributeDTO"
-                        },
-                        "readOnly": true
+                        }
                     }
                 }
             },
@@ -3776,18 +3847,15 @@
                 "properties": {
                     "id": {
                         "type": "string",
-                        "nullable": true,
-                        "readOnly": true
+                        "nullable": true
                     },
                     "wordingFrom": {
                         "type": "string",
-                        "nullable": true,
-                        "readOnly": true
+                        "nullable": true
                     },
                     "wordingTo": {
                         "type": "string",
-                        "nullable": true,
-                        "readOnly": true
+                        "nullable": true
                     }
                 }
             },
@@ -3812,18 +3880,15 @@
                 "properties": {
                     "id": {
                         "type": "string",
-                        "format": "uuid",
-                        "readOnly": true
+                        "format": "uuid"
                     },
                     "fromCIID": {
                         "type": "string",
-                        "format": "uuid",
-                        "readOnly": true
+                        "format": "uuid"
                     },
                     "toCIID": {
                         "type": "string",
-                        "format": "uuid",
-                        "readOnly": true
+                        "format": "uuid"
                     },
                     "predicateID": {
                         "type": "string",
@@ -3848,15 +3913,13 @@
                 "properties": {
                     "fromCIID": {
                         "type": "string",
-                        "format": "uuid",
-                        "readOnly": true
+                        "format": "uuid"
                     },
                     "toCI": {
                         "$ref": "#/components/schemas/CIDTO"
                     },
                     "predicateID": {
-                        "type": "string",
-                        "readOnly": true
+                        "type": "string"
                     },
                     "state": {
                         "$ref": "#/components/schemas/RelationState"
@@ -3874,8 +3937,7 @@
                         "type": "object",
                         "additionalProperties": {
                             "$ref": "#/components/schemas/CIAttributeDTO"
-                        },
-                        "readOnly": true
+                        }
                     },
                     "traitRelations": {
                         "type": "object",
@@ -3884,27 +3946,7 @@
                             "items": {
                                 "$ref": "#/components/schemas/RelatedCIDTO"
                             }
-                        },
-                        "readOnly": true
-                    }
-                }
-            },
-            "EffectiveTraitSetDTO": {
-                "required": [
-                    "effectiveTraits",
-                    "underlyingCI"
-                ],
-                "type": "object",
-                "properties": {
-                    "underlyingCI": {
-                        "$ref": "#/components/schemas/CIDTO"
-                    },
-                    "effectiveTraits": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "$ref": "#/components/schemas/EffectiveTraitDTO"
-                        },
-                        "readOnly": true
+                        }
                     }
                 }
             }

@@ -5,11 +5,11 @@ using System.Collections.Generic;
 
 namespace Omnikeeper.GraphQL
 {
-    public class RegistryUserContext : Dictionary<string, object>
+    public class OmnikeeperUserContext : Dictionary<string, object>
     {
         public AuthenticatedUser User { get; private set; }
 
-        public RegistryUserContext(AuthenticatedUser user)
+        public OmnikeeperUserContext(AuthenticatedUser user)
         {
             User = user;
         }

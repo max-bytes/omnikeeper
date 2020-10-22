@@ -14,7 +14,7 @@ namespace Tests.Integration.Model.Mocks
 {
     public class MockedTraitsProviderWithLoop : ITraitsProvider
     {
-        public async Task<TraitSet> GetActiveTraitSet(NpgsqlTransaction trans, TimeThreshold timeThreshold)
+        public Task<TraitSet> GetActiveTraitSet(NpgsqlTransaction trans, TimeThreshold timeThreshold)
         {
             var r = new List<RecursiveTrait>() {
                 RecursiveTrait.Build("test_trait_1", new List<TraitAttribute>()
@@ -41,7 +41,7 @@ namespace Tests.Integration.Model.Mocks
             };
 
             // TODO: should we really flatten here in a mocked class?
-            return TraitSet.Build(RecursiveTraitService.FlattenDependentTraits(r.ToImmutableDictionary(r => r.Name)));
+            return Task.FromResult(TraitSet.Build(RecursiveTraitService.FlattenDependentTraits(r.ToImmutableDictionary(r => r.Name))));
         }
     }
 }

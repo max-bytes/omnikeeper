@@ -19,7 +19,7 @@ namespace Omnikeeper.GraphQL
     {
         public GraphQLMutation(ICIModel ciModel, IBaseAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAConfigModel OIAConfigModel,
              IODataAPIContextModel odataAPIContextModel, IChangesetModel changesetModel, IPredicateModel predicateModel, IRecursiveTraitModel traitModel,
-             IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
+             IOmnikeeperAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
@@ -37,7 +37,7 @@ namespace Omnikeeper.GraphQL
                     var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>());
                     var removeRelations = context.GetArgument("RemoveRelations", new List<RemoveRelationInput>());
 
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
                     var writeLayerIDs = insertAttributes.Select(a => a.LayerID)
                     .Concat(removeAttributes.Select(a => a.LayerID))
@@ -120,7 +120,7 @@ namespace Omnikeeper.GraphQL
                 {
                     var createCIs = context.GetArgument("cis", new List<CreateCIInput>());
 
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
                     if (!authorizationService.CanUserCreateCI(userContext.User))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create CIs");
@@ -154,7 +154,7 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var createLayer = context.GetArgument<CreateLayerInput>("layer");
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
                     if (!authorizationService.CanUserCreateLayer(userContext.User))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create Layers");
@@ -188,7 +188,7 @@ namespace Omnikeeper.GraphQL
               {
                   var layer = context.GetArgument<UpdateLayerInput>("layer");
 
-                  var userContext = context.UserContext as RegistryUserContext;
+                  var userContext = context.UserContext as OmnikeeperUserContext;
 
                   if (!authorizationService.CanUserUpdateLayer(userContext.User))
                       throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update Layers");
@@ -212,7 +212,7 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var configInput = context.GetArgument<CreateOIAConfigInput>("oiaConfig");
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
                     // TODO: auth
                     //if (!authorizationService.CanUserCreateLayer(userContext.User))
@@ -244,7 +244,7 @@ namespace Omnikeeper.GraphQL
               {
                   var configInput = context.GetArgument<UpdateOIAConfigInput>("oiaConfig");
 
-                  var userContext = context.UserContext as RegistryUserContext;
+                  var userContext = context.UserContext as OmnikeeperUserContext;
 
                   // TODO: auth
                   //if (!authorizationService.CanUserUpdateLayer(userContext.User))
@@ -274,7 +274,7 @@ namespace Omnikeeper.GraphQL
               {
                   var id = context.GetArgument<long>("oiaID");
 
-                  var userContext = context.UserContext as RegistryUserContext;
+                  var userContext = context.UserContext as OmnikeeperUserContext;
 
                   // TODO: auth
                   //if (!authorizationService.CanUserUpdateLayer(userContext.User))
@@ -296,7 +296,7 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var contextInput = context.GetArgument<UpsertODataAPIContextInput>("odataAPIContext");
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
                     // TODO: auth
                     //if (!authorizationService.CanUserCreateLayer(userContext.User))
@@ -329,7 +329,7 @@ namespace Omnikeeper.GraphQL
               {
                   var id = context.GetArgument<string>("id");
 
-                  var userContext = context.UserContext as RegistryUserContext;
+                  var userContext = context.UserContext as OmnikeeperUserContext;
 
                   // TODO: auth
                   //if (!authorizationService.CanUserUpdateLayer(userContext.User))
@@ -351,7 +351,7 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var traitSetInput = context.GetArgument<string>("traitSet");
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
                     // TODO: auth
                     //if (!authorizationService.CanUserCreateLayer(userContext.User))
@@ -385,7 +385,7 @@ namespace Omnikeeper.GraphQL
               {
                   var predicate = context.GetArgument<UpsertPredicateInput>("predicate");
 
-                  var userContext = context.UserContext as RegistryUserContext;
+                  var userContext = context.UserContext as OmnikeeperUserContext;
 
                   if (!authorizationService.CanUserUpsertPredicate(userContext.User))
                       throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update or insert Predicates");

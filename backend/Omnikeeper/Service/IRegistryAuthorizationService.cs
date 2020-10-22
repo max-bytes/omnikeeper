@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Omnikeeper.Service
 {
-    public interface IRegistryAuthorizationService
+    public interface IOmnikeeperAuthorizationService
     {
         string GetWriteAccessRoleNameFromLayerName(string layerName);
         string ParseLayerNameFromWriteAccessRoleName(string roleName);

@@ -27,11 +27,11 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly ICurrentUserService currentUserService;
         private readonly ILayerModel layerModel;
         private readonly IngestActiveDirectoryXMLService ingestActiveDirectoryXMLService;
-        private readonly IRegistryAuthorizationService authorizationService;
+        private readonly IOmnikeeperAuthorizationService authorizationService;
         private readonly ILogger<ActiveDirectoryXMLIngestController> logger;
 
         public ActiveDirectoryXMLIngestController(IngestDataService ingestDataService, ICurrentUserService currentUserService, ILayerModel layerModel, IngestActiveDirectoryXMLService ingestActiveDirectoryXMLService,
-            IRegistryAuthorizationService authorizationService, ILogger<ActiveDirectoryXMLIngestController> logger)
+            IOmnikeeperAuthorizationService authorizationService, ILogger<ActiveDirectoryXMLIngestController> logger)
         {
             this.ingestDataService = ingestDataService;
             this.currentUserService = currentUserService;

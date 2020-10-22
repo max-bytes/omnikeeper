@@ -16,7 +16,7 @@ namespace Omnikeeper.GraphQL
     //        FieldAsync<ListGraphType<LayerType>>("layerStack",
     //        resolve: async (context) =>
     //        {
-    //            var userContext = context.UserContext as RegistryUserContext;
+    //            var userContext = context.UserContext as OmnikeeperUserContext;
     //            var layerstackIDs = context.Source.LayerStackIDs;
     //            return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
     //        });
@@ -57,7 +57,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<LayerType>>("layerStack",
             resolve: async (context) =>
             {
-                var userContext = context.UserContext as RegistryUserContext;
+                var userContext = context.UserContext as OmnikeeperUserContext;
                 var layerstackIDs = context.Source.LayerStackIDs;
                 return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
             });

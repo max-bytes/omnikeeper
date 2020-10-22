@@ -143,7 +143,7 @@ namespace Omnikeeper
 
             services.AddScoped<IOIAConfigModel, OIAConfigModel>();
 
-            services.AddScoped<IRegistryAuthorizationService, RegistryAuthorizationService>();
+            services.AddScoped<IOmnikeeperAuthorizationService, OmnikeeperAuthorizationService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<MarkedForDeletionService>();
             services.AddScoped<IngestDataService>();
@@ -203,20 +203,20 @@ namespace Omnikeeper
                 {
                     OnForbidden = c =>
                     {
-                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<IRegistryAuthorizationService>>();
+                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<IOmnikeeperAuthorizationService>>();
                         logger.LogInformation($"Rejected user");
                         return Task.CompletedTask;
                     },
                     OnTokenValidated = c =>
                     {
-                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<IRegistryAuthorizationService>>();
+                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<IOmnikeeperAuthorizationService>>();
                         var userService = c.HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
                         logger.LogInformation($"Validated token for user {userService.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
                         return Task.CompletedTask;
                     },
                     OnAuthenticationFailed = c =>
                     {
-                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<IRegistryAuthorizationService>>();
+                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<IOmnikeeperAuthorizationService>>();
                         logger.LogError(c.Exception, $"Failure when trying to authenticate user");
                         return Task.CompletedTask;
                     }
@@ -241,8 +241,8 @@ namespace Omnikeeper
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Landscape Registry REST API", Version = "v1" });
-                var filePath = Path.Combine(AppContext.BaseDirectory, "LandscapeRegistry.xml");
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Landscape omnikeeper REST API", Version = "v1" });
+                var filePath = Path.Combine(AppContext.BaseDirectory, "omnikeeper.xml");
                 c.IncludeXmlComments(filePath);
                 c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
                 {
@@ -398,7 +398,7 @@ namespace Omnikeeper
             });
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint($"{Configuration["BaseURL"]}/swagger/v1/swagger.json", "Landscape Registry REST API V1");
+                c.SwaggerEndpoint($"{Configuration["BaseURL"]}/swagger/v1/swagger.json", "Landscape omnikeeper REST API V1");
                 c.OAuthClientId("landscape-registry-api");
                 c.OAuthClientSecret(Configuration.GetSection("SwaggerUI")["OAuthClientSecret"]);
             });

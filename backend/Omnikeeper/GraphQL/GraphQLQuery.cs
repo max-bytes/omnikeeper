@@ -24,7 +24,7 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
                     var ciid = context.GetArgument<Guid>("ciid");
                     var layerStrings = context.GetArgument<string[]>("layers");
@@ -44,7 +44,7 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
                     var ciids = context.GetArgument<Guid[]>("ciids", null);
                     var layerStrings = context.GetArgument<string[]>("layers");
@@ -75,7 +75,7 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
                     var layerStrings = context.GetArgument<string[]>("layers");
                     var ls = await layerModel.BuildLayerSet(layerStrings, null);
                     userContext.LayerSet = ls;
@@ -91,7 +91,7 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "searchString" }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
                     var searchString = context.GetArgument<string>("searchString");
                     var ciid = context.GetArgument<Guid>("identity");
@@ -107,7 +107,7 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
                     var searchString = context.GetArgument<string>("searchString");
                     var withEffectiveTraits = context.GetArgument<string[]>("withEffectiveTraits");
@@ -127,7 +127,7 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<BooleanGraphType>> { Name = "forward" }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
                     var predicateID = context.GetArgument<string>("predicateID");
                     var forward = context.GetArgument<bool>("forward");
                     var layerStrings = context.GetArgument<string[]>("layers");
@@ -162,7 +162,7 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layersForEffectiveTraits" }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
                     var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
                     var preferredForCI = context.GetArgument<Guid>("preferredForCI");
@@ -193,7 +193,7 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<AnchorStateFilterType>> { Name = "stateFilter" }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
                     var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
 
@@ -276,7 +276,7 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<IntGraphType> { Name = "limit" }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
                     var layerStrings = context.GetArgument<string[]>("layers");
                     userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, null);
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
@@ -309,7 +309,7 @@ namespace Omnikeeper.GraphQL
                 arguments: new QueryArguments(new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
                 resolve: async context =>
                 {
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
                     var layerStrings = context.GetArgument<string[]>("layers");
                     userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, null);
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();

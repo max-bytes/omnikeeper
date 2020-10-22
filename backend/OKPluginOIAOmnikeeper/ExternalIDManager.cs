@@ -20,12 +20,12 @@ namespace OKPluginOIAOmnikeeper
     }
     public class ExternalIDManager : ExternalIDManager<ExternalIDGuid>
     {
-        private readonly ILandscapeRegistryRESTAPIClient client;
+        private readonly ILandscapeomnikeeperRESTAPIClient client;
         private readonly Config config;
 
         private const string ClientVersion = "1";
 
-        public ExternalIDManager(ILandscapeRegistryRESTAPIClient client, Config config, ScopedExternalIDMapper mapper) : base(mapper, config.preferredIDMapUpdateRate)
+        public ExternalIDManager(ILandscapeomnikeeperRESTAPIClient client, Config config, ScopedExternalIDMapper mapper) : base(mapper, config.preferredIDMapUpdateRate)
         {
             this.client = client;
             this.config = config;
