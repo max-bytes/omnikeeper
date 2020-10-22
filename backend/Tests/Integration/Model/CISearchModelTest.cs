@@ -15,6 +15,8 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Tests.Integration.Model.Mocks;
+using Omnikeeper.Base.Inbound;
+using Moq;
 
 namespace Tests.Integration.Model
 {
@@ -42,6 +44,8 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestBasics()
         {
+            var oap = new Mock<IOnlineAccessProxy>();
+            oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<long>(), It.IsAny<NpgsqlTransaction>())).ReturnsAsync(false);
             var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var ciModel = new CIModel(attributeModel, conn);
             var predicateModel = new PredicateModel(conn);
@@ -50,7 +54,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel(conn);
             var changesetModel = new ChangesetModel(userModel, conn);
             var layerModel = new LayerModel(conn);
-            var traitModel = new EffectiveTraitModel(ciModel, relationModel, traitsProvider, NullLogger<EffectiveTraitModel>.Instance, conn);
+            var traitModel = new EffectiveTraitModel(ciModel, relationModel, traitsProvider, oap.Object, NullLogger<EffectiveTraitModel>.Instance, conn);
             var searchModel = new CISearchModel(attributeModel, ciModel, traitModel, layerModel);
             var user = await DBSetup.SetupUser(userModel);
             Guid ciid1;

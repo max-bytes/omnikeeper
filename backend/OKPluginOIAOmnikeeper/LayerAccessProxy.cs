@@ -100,7 +100,7 @@ namespace OKPluginOIAOmnikeeper
             var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
             var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
 
-            var externalIDs = IDPairs.Select(p => p.Item2.ID);
+            var externalIDs = IDPairs.Select(p => p.externalID.ID);
             var attributesDTO = await client.GetMergedAttributesAsync(externalIDs, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion);
             foreach (var a in AttributeDTO2Regular(attributesDTO))
                 yield return a;
