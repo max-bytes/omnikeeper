@@ -100,7 +100,7 @@ namespace Omnikeeper.Model
 
             var candidateCIIDs = new List<Guid>();
             // do a precursor filtering based on required attribute names
-            // we can only do this filtering (which saves performance) when the trait has required attributes AND no online inbound layers are in play
+            // we can only do this filtering (better performance) when the trait has required attributes AND no online inbound layers are in play
             if (trait.RequiredAttributes.Count > 0 && !hasOnlineInboundLayers)
             {
                 var requiredAttributeNames = trait.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
@@ -228,8 +228,6 @@ namespace Omnikeeper.Model
 
             public Trait Trait { get; }
             public MergedCI CI { get; }
-
-            public EffectiveTrait ET { get; private set; }
         }
     }
 }
