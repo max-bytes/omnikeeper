@@ -45,10 +45,10 @@ namespace Omnikeeper.Controllers.OData
         private readonly IODataAPIContextModel oDataAPIContextModel;
         private readonly NpgsqlConnection conn;
         private readonly ICurrentUserService currentUserService;
-        private readonly IRegistryAuthorizationService authorizationService;
+        private readonly IOmnikeeperAuthorizationService authorizationService;
 
         public AttributesController(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, ICISearchModel ciSearchModel, IODataAPIContextModel oDataAPIContextModel,
-            ICurrentUserService currentUserService, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
+            ICurrentUserService currentUserService, IOmnikeeperAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             this.attributeModel = attributeModel;
             this.ciModel = ciModel;

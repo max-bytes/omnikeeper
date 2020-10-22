@@ -26,10 +26,10 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly ILayerModel layerModel;
         private readonly ILogger<AnsibleIngestController> logger;
         private readonly ICurrentUserService currentUserService;
-        private readonly IRegistryAuthorizationService authorizationService;
+        private readonly IOmnikeeperAuthorizationService authorizationService;
 
         public AnsibleIngestController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService,
-            IRegistryAuthorizationService authorizationService, ILogger<AnsibleIngestController> logger)
+            IOmnikeeperAuthorizationService authorizationService, ILogger<AnsibleIngestController> logger)
         {
             this.ingestDataService = ingestDataService;
             this.layerModel = layerModel;

@@ -23,10 +23,10 @@ namespace Omnikeeper.Controllers
         private readonly IAttributeModel attributeModel;
         private readonly IChangesetModel changesetModel;
         private readonly ICurrentUserService currentUserService;
-        private readonly IRegistryAuthorizationService authorizationService;
+        private readonly IOmnikeeperAuthorizationService authorizationService;
         private readonly NpgsqlConnection conn;
 
-        public AttributeController(IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserService currentUserService, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
+        public AttributeController(IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserService currentUserService, IOmnikeeperAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             this.conn = conn;
             this.changesetModel = changesetModel;

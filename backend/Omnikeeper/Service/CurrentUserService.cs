@@ -15,7 +15,7 @@ namespace Omnikeeper.Service
     public class CurrentUserService : ICurrentUserService
     {
         public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel,
-            ILayerModel layerModel, IRegistryAuthorizationService authorizationService, IConfiguration configuration)
+            ILayerModel layerModel, IOmnikeeperAuthorizationService authorizationService, IConfiguration configuration)
         {
             HttpContextAccessor = httpContextAccessor;
             UserModel = userModel;
@@ -25,7 +25,7 @@ namespace Omnikeeper.Service
         }
 
         private IConfiguration Configuration { get; }
-        private IRegistryAuthorizationService AuthorizationService { get; }
+        private IOmnikeeperAuthorizationService AuthorizationService { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
         private IUserInDatabaseModel UserModel { get; }
         private ILayerModel LayerModel { get; }

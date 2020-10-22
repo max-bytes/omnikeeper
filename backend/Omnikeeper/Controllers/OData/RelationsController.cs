@@ -33,10 +33,10 @@ namespace Omnikeeper.Controllers.OData
         private readonly IODataAPIContextModel oDataAPIContextModel;
         private readonly NpgsqlConnection conn;
         private readonly ICurrentUserService currentUserService;
-        private readonly IRegistryAuthorizationService authorizationService;
+        private readonly IOmnikeeperAuthorizationService authorizationService;
 
         public RelationsController(IRelationModel relationModel, ICIModel ciModel, IChangesetModel changesetModel, IODataAPIContextModel oDataAPIContextModel,
-            ICurrentUserService currentUserService, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
+            ICurrentUserService currentUserService, IOmnikeeperAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             this.relationModel = relationModel;
             this.ciModel = ciModel;

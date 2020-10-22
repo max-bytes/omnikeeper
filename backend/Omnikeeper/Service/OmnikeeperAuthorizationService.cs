@@ -8,12 +8,12 @@ using System.Text.RegularExpressions;
 namespace Omnikeeper.Service
 {
     // TODO: rename to OmnikeeperAuthorizationService and IOmnikeeperAuthorizationService
-    public class RegistryAuthorizationService : IRegistryAuthorizationService
+    public class OmnikeeperAuthorizationService : IOmnikeeperAuthorizationService
     {
         private static readonly string ROLE_NAME_LAYER_WRITE_ACCESS_PREFIX = "layer_writeaccess_";
         private readonly bool debugAllowAll;
 
-        public RegistryAuthorizationService(IConfiguration configuration)
+        public OmnikeeperAuthorizationService(IConfiguration configuration)
         {
             debugAllowAll = configuration.GetSection("Authorization").GetValue("debugAllowAll", false);
         }

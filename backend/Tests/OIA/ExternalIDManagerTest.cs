@@ -25,9 +25,9 @@ namespace Tests.OIA
             {
             }
 
-            protected async override Task<IEnumerable<(ExternalIDString, ICIIdentificationMethod)>> GetExternalIDs()
+            protected override Task<IEnumerable<(ExternalIDString, ICIIdentificationMethod)>> GetExternalIDs()
             {
-                return ids;
+                return Task.FromResult(ids.AsEnumerable());
             }
 
             public TestedExternalIDManager Add(string externalID)
@@ -137,9 +137,9 @@ namespace Tests.OIA
             {
             }
 
-            protected async override Task<IEnumerable<(ExternalIDGuid, ICIIdentificationMethod)>> GetExternalIDs()
+            protected override Task<IEnumerable<(ExternalIDGuid, ICIIdentificationMethod)>> GetExternalIDs()
             {
-                return ids;
+                return Task.FromResult(ids.AsEnumerable());
             }
 
             public TestedExternalIDManager2 Add(Guid externalID)

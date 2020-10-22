@@ -77,7 +77,7 @@ namespace Tests.Ingest
             var user = AuthenticatedUser.Build(await userModel.UpsertUser(username, displayName, userGUID, UserType.Robot, null), new List<Layer>() { layer1 });
             mockCurrentUserService.Setup(_ => _.GetCurrentUser(It.IsAny<NpgsqlTransaction>())).ReturnsAsync(user);
 
-            var mockAuthorizationService = new Mock<IRegistryAuthorizationService>();
+            var mockAuthorizationService = new Mock<IOmnikeeperAuthorizationService>();
             mockAuthorizationService.Setup(_ => _.CanUserWriteToLayer(user, layer1)).Returns(true);
 
             var insertLayer = layer1;
