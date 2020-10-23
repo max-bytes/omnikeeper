@@ -16,7 +16,7 @@ namespace Omnikeeper.GridView.Queries
     {
         public class Query : IRequest<GetDataResponse>
         {
-            public string ConfigurationName { get; set; }
+            public string Context { get; set; }
             public int? PageSize { get; set; }
             public int? PageIndex { get; set; }
         }
@@ -41,7 +41,7 @@ namespace Omnikeeper.GridView.Queries
                 var pageSize = request.PageSize ?? 10;
                 var pageIndex = request.PageIndex ?? 0;
 
-                var config = await gridViewConfigService.GetConfiguration(request.ConfigurationName);
+                var config = await gridViewConfigService.GetConfiguration(request.Context);
 
 
                 var result = new GetDataResponse

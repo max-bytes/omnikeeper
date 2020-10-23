@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using LandscapeRegistry.GridView.Queries;
+﻿using System.Threading.Tasks;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Omnikeeper.GridView.Commands;
 using Omnikeeper.GridView.Queries;
@@ -13,10 +8,14 @@ using Omnikeeper.GridView.Request;
 
 namespace LandscapeRegistry.GridView
 {
-    [Route("api/[controller]")]
+    //[Authorize]
     [ApiController]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class GridViewController : ControllerBase
     {
+        // TO DO: api versioning
+
         private readonly IMediator _mediatr;
 
         public GridViewController(IMediator mediatr)
@@ -24,36 +23,55 @@ namespace LandscapeRegistry.GridView
             _mediatr = mediatr;
         }
 
-        // test endpoint
+        /// <summary>
+        /// Returns a list of contexts for grid view.
+        /// </summary>
+        /// <returns>200</returns>
         [AllowAnonymous]
-        [HttpGet("predicate/{id}")]
-        public async Task<IActionResult> GetPredicate(int id)
+        [HttpGet("contexts")]
+        public async Task<IActionResult> GetContexts()
         {
-            var res = await _mediatr.Send(new GetPredicatesQuery { PredicateId = id });
-            return Ok(res);
-        }
-
-        [AllowAnonymous]
-        [HttpGet("schema")]
-        public async Task<IActionResult> GetSchema()
-        {
-            var result = await _mediatr.Send(new GetSchemaQuery.Query());
+            var result = await _mediatr.Send(new GetContextsQuery.Query());
             return Ok(result);
         }
 
+        /// <summary>
+        /// Returns grid view schema for specific context.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns>200</returns>
         [AllowAnonymous]
-        [HttpGet("data")]
-        public async Task<IActionResult> GetData([FromQuery] string configurationName)
+        [HttpGet("contexts/{context}/schema")]
+        public async Task<IActionResult> GetSchema([FromRoute] string context)
         {
-            var result = await _mediatr.Send(new GetDataQuery.Query { ConfigurationName = configurationName });
+            var result = await _mediatr.Send(new GetSchemaQuery.Query { Context = context });
             return Ok(result);
         }
 
+        /// <summary>
+        /// Returns grid view data for specific context.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns>200</returns>
         [AllowAnonymous]
-        [HttpPost]
-        public async Task<IActionResult> ChangeData([FromBody] ChangeDataRequest changes, [FromQuery] string configurationName)
+        [HttpGet("contexts/{context}/data")]
+        public async Task<IActionResult> GetData([FromRoute] string context)
         {
-            var (result, isSuccess) = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes, ConfigurationName = configurationName });
+            var result = await _mediatr.Send(new GetDataQuery.Query { Context = context });
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Saves grid view row changes and returns change results.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="changes"></param>
+        /// <returns>200</returns>
+        [AllowAnonymous]
+        [HttpPost("contexts/{context}/data")]
+        public async Task<IActionResult> ChangeData([FromRoute] string context, [FromBody] ChangeDataRequest changes)
+        {
+            var (result, isSuccess) = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes, Context = context });
 
             if (isSuccess)
             {
@@ -61,14 +79,6 @@ namespace LandscapeRegistry.GridView
             }
 
             return NotFound(new { Error = "The provided ci id not found!" });
-        }
-
-        [AllowAnonymous]
-        [HttpGet("contexts")]
-        public async Task<IActionResult> GetContexts()
-        {
-            var result = await _mediatr.Send(new GetContextsQuery.Query());
-            return Ok(result);
         }
     }
 }

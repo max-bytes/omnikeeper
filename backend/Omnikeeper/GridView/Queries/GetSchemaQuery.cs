@@ -12,7 +12,7 @@ namespace Omnikeeper.GridView.Queries
     {
         public class Query : IRequest<GetSchemaResponse>
         {
-
+            public string Context { get; set; }
         }
         public class GetSchemaQueryHandler : IRequestHandler<Query, GetSchemaResponse>
         {
@@ -26,13 +26,14 @@ namespace Omnikeeper.GridView.Queries
             public async Task<GetSchemaResponse> Handle(Query request, CancellationToken cancellationToken)
             {
 
-                var config = await _gridViewConfigService.GetConfiguration("test");
+                var config = await _gridViewConfigService.GetConfiguration(request.Context);
 
                 var result = new GetSchemaResponse 
                 {
                     ShowCIIDColumn = config.ShowCIIDColumn,
                     Columns = new List<Column>()
                 };
+
                 // TO DO
                 //var trans = null;
 

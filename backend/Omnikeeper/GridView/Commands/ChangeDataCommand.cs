@@ -23,7 +23,7 @@ namespace Omnikeeper.GridView.Commands
         public class Command : IRequest<(ChangeDataResponse, bool)>
         {
             public ChangeDataRequest Changes { get; set; }
-            public string ConfigurationName { get; set; }
+            public string Context { get; set; }
         }
 
         public class ChangeDataCommandHandler : IRequestHandler<Command, (ChangeDataResponse, bool)>
@@ -54,7 +54,7 @@ namespace Omnikeeper.GridView.Commands
 
                 // we should do all changes in a single transaction
 
-                var config = await gridViewConfigService.GetConfiguration(request.ConfigurationName);
+                var config = await gridViewConfigService.GetConfiguration(request.Context);
 
                 foreach (var row in request.Changes.SparseRows)
                 {
@@ -76,14 +76,12 @@ namespace Omnikeeper.GridView.Commands
                                 Values = new string[] { cell.Value },
                                 Type = AttributeValueType.Text
                             });
-
-                            var writeLayer = cell.WriteLayer != null ? cell.WriteLayer.Value : config.WriteLayer;
-
+                            
                             await attributeModel.InsertAttribute(
                                 cell.Name,
                                 val,
                                 row.Ciid,
-                                writeLayer,
+                                config.WriteLayer,
                                 changesetProxy,
                                 trans);
                         }
