@@ -2,7 +2,7 @@
 using GraphQL.Execution;
 using GraphQL.Language.AST;
 
-namespace Omnikeeper.Utils
+namespace Omnikeeper.GraphQL
 {
     public class MyDocumentExecutor : DocumentExecuter
     {

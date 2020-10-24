@@ -157,6 +157,11 @@ export const queries = {
         traitSet
       }
     `,
+    BaseConfiguration: gql`
+    query baseConfiguration {
+        baseConfiguration
+      }
+    `,
     CacheKeys: gql`
     query cacheKeys {
         cacheKeys

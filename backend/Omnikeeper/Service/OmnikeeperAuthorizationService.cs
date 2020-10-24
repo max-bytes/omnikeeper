@@ -7,7 +7,6 @@ using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Service
 {
-    // TODO: rename to OmnikeeperAuthorizationService and IOmnikeeperAuthorizationService
     public class OmnikeeperAuthorizationService : IOmnikeeperAuthorizationService
     {
         private static readonly string ROLE_NAME_LAYER_WRITE_ACCESS_PREFIX = "layer_writeaccess_";

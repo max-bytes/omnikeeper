@@ -3,7 +3,6 @@ using System;
 
 namespace Omnikeeper.Base.Entity
 {
-    // TODO: rename to OIAContext(?)
     public class OIAContext : IEquatable<OIAContext>
     {
         public long ID { get; private set; }

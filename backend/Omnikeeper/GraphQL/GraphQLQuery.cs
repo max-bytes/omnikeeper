@@ -1,6 +1,8 @@
 ﻿using GraphQL.Types;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Model;
 using Omnikeeper.Service;
@@ -14,7 +16,7 @@ namespace Omnikeeper.GraphQL
     {
         public GraphQLQuery(ICIModel ciModel, ILayerModel layerModel, IPredicateModel predicateModel, IMemoryCacheModel memoryCacheModel,
             IChangesetModel changesetModel, ICISearchModel ciSearchModel, IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel,
-            ILayerStatisticsModel layerStatisticsModel,
+            ILayerStatisticsModel layerStatisticsModel, IBaseConfigurationModel baseConfigurationModel,
             IEffectiveTraitModel effectiveTraitModel, IRecursiveTraitModel traitModel, ITraitsProvider traitsProvider, ICurrentUserService currentUserService)
         {
             FieldAsync<MergedCIType>("ci",
@@ -255,6 +257,13 @@ namespace Omnikeeper.GraphQL
                     var configs = await odataAPIContextModel.GetContexts(null);
 
                     return configs;
+                });
+
+            FieldAsync<StringGraphType>("baseConfiguration",
+                resolve: async context =>
+                {
+                    var cfg = await baseConfigurationModel.GetConfigOrDefault(null);
+                    return BaseConfigurationV1.Serializer.SerializeToString(cfg);
                 });
 
             FieldAsync<ChangesetType>("changeset",

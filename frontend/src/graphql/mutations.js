@@ -161,6 +161,12 @@ CREATE_CI: gql`
   }
   `,
   
+  SET_BASECONFIGURATION: gql`
+  mutation SetBaseConfiguration($baseConfiguration: String!) {
+    setBaseConfiguration(baseConfiguration: $baseConfiguration)
+  }
+  `,
+
   SET_TRAITSET: gql`
   mutation SetTraitSet($traitSet: String!) {
     setTraitSet(traitSet: $traitSet)

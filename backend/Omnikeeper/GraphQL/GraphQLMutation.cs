@@ -12,6 +12,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Entity.Config;
 
 namespace Omnikeeper.GraphQL
 {
@@ -19,7 +21,7 @@ namespace Omnikeeper.GraphQL
     {
         public GraphQLMutation(ICIModel ciModel, IBaseAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAContextModel OIAContextModel,
              IODataAPIContextModel odataAPIContextModel, IChangesetModel changesetModel, IPredicateModel predicateModel, IRecursiveTraitModel traitModel,
-             IOmnikeeperAuthorizationService authorizationService, NpgsqlConnection conn)
+             IBaseConfigurationModel baseConfigurationModel, IOmnikeeperAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
@@ -376,6 +378,37 @@ namespace Omnikeeper.GraphQL
                     }
                 });
 
+
+            FieldAsync<StringGraphType>("setBaseConfiguration",
+                arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "baseConfiguration" }
+                ),
+                resolve: async context =>
+                {
+                    var configStr = context.GetArgument<string>("baseConfiguration");
+                    var userContext = context.UserContext as OmnikeeperUserContext;
+
+                    // TODO: auth
+                    //if (!authorizationService.CanUserCreateLayer(userContext.User))
+                    //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create Layers");
+
+                    using var transaction = await conn.BeginTransactionAsync();
+                    userContext.Transaction = transaction;
+
+                    try
+                    {
+                        var config = BaseConfigurationV1.Serializer.Deserialize(configStr);
+                        var created = await baseConfigurationModel.SetConfig(config, transaction);
+
+                        await transaction.CommitAsync();
+
+                        return BaseConfigurationV1.Serializer.SerializeToString(created);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ExecutionError($"Could not save base configuration", e);
+                    }
+                });
 
             FieldAsync<PredicateType>("upsertPredicate",
               arguments: new QueryArguments(

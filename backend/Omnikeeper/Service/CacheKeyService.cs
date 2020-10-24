@@ -17,6 +17,13 @@ namespace Omnikeeper.Service
         public static void CancelAttributesChangeToken(this IMemoryCache memoryCache, Guid ciid, long layerID) =>
             CancelAndRemoveChangeToken(memoryCache, AttributesChangeToken(ciid, layerID));
 
+        public static object BaseConfiguration() => $"baseConfiguration";
+        private static string BaseConfigurationChangeToken() => $"ct_baseConfiguration";
+        public static CancellationChangeToken GetBaseConfigurationCancellationChangeToken(this IMemoryCache memoryCache) =>
+            new CancellationChangeToken(memoryCache.GetOrCreateThreadSafe(BaseConfigurationChangeToken(), (ce) => new CancellationTokenSource()).Token);
+        public static void CancelBaseConfigurationChangeToken(this IMemoryCache memoryCache) =>
+            CancelAndRemoveChangeToken(memoryCache, BaseConfigurationChangeToken());
+
         public static string Relations(IRelationSelection rs, long layerID) => $"relations_{rs.ToHashKey()}_{layerID}";
         private static string RelationsChangeToken(IRelationSelection rs, long layerID) => $"ct_rel_{rs.ToHashKey()}_{layerID}";
         public static CancellationChangeToken GetRelationsCancellationChangeToken(this IMemoryCache memoryCache, IRelationSelection rs, long layerID) =>

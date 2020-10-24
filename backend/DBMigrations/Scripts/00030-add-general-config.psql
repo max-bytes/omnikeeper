@@ -1,0 +1,10 @@
+﻿CREATE TABLE config.general
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    key text NOT NULL,
+    config json NOT NULL,
+    CONSTRAINT general_pkey PRIMARY KEY (id)
+);
+
+ALTER TABLE config.general
+    ADD CONSTRAINT key UNIQUE (key);

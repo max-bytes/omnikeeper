@@ -34,6 +34,7 @@
     <None Remove="Scripts\00026-create-traits.psql" />
     <None Remove="Scripts\00027-fix-foreign-key-changeset-to-attribute-and-relation - Copy.psql" />
     <None Remove="Scripts\00029-create-config-schema.psql" />
+    <None Remove="Scripts\00030-add-general-config.psql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -45,6 +46,7 @@
     <EmbeddedResource Include="Scripts\00004-predicate-state-add-marked_for_deletion.psql" />
     <EmbeddedResource Include="Scripts\00003-predicate-state-add-deprecated.psql" />
     <EmbeddedResource Include="Scripts\00027-fix-foreign-key-changeset-to-attribute-and-relation - Copy.psql" />
+    <EmbeddedResource Include="Scripts\00030-add-general-config.psql" />
     <EmbeddedResource Include="Scripts\00029-create-config-schema.psql" />
     <EmbeddedResource Include="Scripts\00026-create-traits.psql" />
     <EmbeddedResource Include="Scripts\00025-create-odata-api-context.psql" />

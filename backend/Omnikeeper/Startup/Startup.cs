@@ -3,7 +3,6 @@ using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using GraphQL.Types;
 using Hangfire;
-using Hangfire.Annotations;
 using Hangfire.AspNetCore;
 using Hangfire.Console;
 using Hangfire.Dashboard;
@@ -17,9 +16,7 @@ using Omnikeeper.GraphQL;
 using Omnikeeper.Ingest.ActiveDirectoryXML;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Decorators;
-using Omnikeeper.Runners;
 using Omnikeeper.Service;
-using Omnikeeper.Utils;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Formatter;
@@ -32,13 +29,11 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
-using Newtonsoft.Json;
 using Npgsql.Logging;
 using OKPluginCLBMonitoring;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -48,10 +43,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Model.Config;
 
-namespace Omnikeeper
+namespace Omnikeeper.Startup
 {
-    public class Startup
+    public partial class Startup
     {
         public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
@@ -142,6 +138,8 @@ namespace Omnikeeper
             services.AddScoped<IEffectiveTraitModel, EffectiveTraitModel>();
 
             services.AddScoped<IOIAContextModel, OIAContextModel>();
+            services.AddScoped<IBaseConfigurationModel, BaseConfigurationModel>();
+            services.Decorate<IBaseConfigurationModel, CachingBaseConfigurationModel>();
 
             services.AddScoped<IOmnikeeperAuthorizationService, OmnikeeperAuthorizationService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -318,25 +316,11 @@ namespace Omnikeeper
             });
         }
 
-        public class AuthenticationRequirementsOperationFilter : IOperationFilter
-        {
-            public void Apply(OpenApiOperation operation, OperationFilterContext context)
-            {
-                if (operation.Security == null)
-                    operation.Security = new List<OpenApiSecurityRequirement>();
-                var scheme = new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oauth2" } };
-                operation.Security.Add(new OpenApiSecurityRequirement
-                {
-                    [scheme] = new List<string>()
-                });
-            }
-        }
-
         private IWebHostEnvironment CurrentEnvironment { get; set; }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory,
-            NpgsqlLoggingProvider npgsqlLoggingProvider, ILogger<Startup> logger)
+            NpgsqlLoggingProvider npgsqlLoggingProvider, ILogger<Startup> logger, DBConnectionBuilder dBConnectionBuilder)
         {
             var version = VersionService.GetVersion();
             logger.LogInformation($"Running version: {version}");
@@ -425,21 +409,6 @@ namespace Omnikeeper
                     Authorization = new IDashboardAuthorizationFilter[] { new HangFireAuthorizationFilter() }
                 });
             }
-
-
-            RecurringJob.AddOrUpdate<CLBRunner>(s => s.Run(null), "*/15 * * * * *");
-            RecurringJob.AddOrUpdate<MarkedForDeletionRunner>(s => s.Run(null), Cron.Minutely);
-            RecurringJob.AddOrUpdate<ExternalIDManagerRunner>(s => s.Run(null), "*/5 * * * * *");
-            RecurringJob.AddOrUpdate<ArchiveOldDataRunner>(s => s.Run(null), "*/5 * * * * *");
-        }
-    }
-
-    // in a docker-based environment, we need a custom authorization filter for the hangfire dashboard because non-localhost access is blocked by default
-    public class HangFireAuthorizationFilter : IDashboardAuthorizationFilter
-    {
-        public bool Authorize([NotNull] DashboardContext context)
-        {
-            return true; // TODO: proper auth
         }
     }
 }
