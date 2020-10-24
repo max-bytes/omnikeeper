@@ -24,14 +24,12 @@ namespace Omnikeeper.GridView.Queries
         public class GetDataQueryHandler : IRequestHandler<Query, GetDataResponse>
         {
             private readonly GridViewConfigService gridViewConfigService;
-            private readonly IAttributeModel attributeModel;
-            private readonly ICIModel ciModel;
+            private readonly IEffectiveTraitModel effectiveTraitModel;
 
-            public GetDataQueryHandler(GridViewConfigService gridViewConfigService, IAttributeModel attributeModel, ICIModel ciModel)
+            public GetDataQueryHandler(GridViewConfigService gridViewConfigService, IEffectiveTraitModel effectiveTraitModel)
             {
                 this.gridViewConfigService = gridViewConfigService;
-                this.attributeModel = attributeModel;
-                this.ciModel = ciModel;
+                this.effectiveTraitModel = effectiveTraitModel;
             }
 
             public async Task<GetDataResponse> Handle(Query request, CancellationToken cancellationToken)
@@ -49,59 +47,60 @@ namespace Omnikeeper.GridView.Queries
                     Rows = new List<Row>()
                 };
 
-
-                // TO DO
-                // 1. Filter using a traitset
-                // 2. Only CIs that fulfill/ have ALL of the traits in the Traitset are shown in the GridView
-
-                var ciIds = await ciModel.GetCIIDs(null);
-
                 var attributes = new List<CIAttribute>();
 
                 // TO DO transaction parameter should not be null
 
-                foreach (var layerId in config.ReadLayerset)
+                var res = await effectiveTraitModel.CalculateEffectiveTraitsForTraitName(
+                    config.Trait,
+                    new LayerSet(config.ReadLayerset.ToArray()),
+                    null,
+                    TimeThreshold.BuildLatest()
+                    );
+
+                foreach (var item in res)
                 {
-                    var attrs = await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciIds), layerId, null, TimeThreshold.BuildLatest());
-                    attributes.AddRange(attrs);
-                }
+                    var ci_id = item.Key;
 
-                foreach (var attribute in attributes)
-                {
-
-                    var col = config.Columns.Find(el => el.SourceAttributeName == attribute.Name);
-
-                    if (col == null)
+                    foreach (var attr in item.Value.TraitAttributes)
                     {
-                        continue;
-                    }
+                        var c = attr.Value;
+                        var name = attr.Value.Attribute.Name;
 
-                    var el = result.Rows.Find(el => el.Ciid == attribute.CIID);
+                        var col = config.Columns.Find(el => el.SourceAttributeName == name);
 
-                    if (el != null)
-                    {
-                        el.Cells.Add(new Cell
+                        if (col == null)
                         {
-                            Name = attribute.Name,
-                            Value = attribute.Value.ToString(),
-                            Changeable = col.WriteLayer != null
-                        });
-                    }
-                    else
-                    {
-                        result.Rows.Add(new Row
+                            continue;
+                        }
+
+                        var el = result.Rows.Find(el => el.Ciid == ci_id);
+
+                        if (el != null)
                         {
-                            Ciid = attribute.CIID,
-                            Cells = new List<Cell>
+                            el.Cells.Add(new Cell
+                            {
+                                Name = name,
+                                Value = attr.Value.Attribute.Value.Value2String(),
+                                Changeable = col.WriteLayer != null
+                            });
+                        }
+                        else
+                        {
+                            result.Rows.Add(new Row
+                            {
+                                Ciid = ci_id,
+                                Cells = new List<Cell>
                                     {
                                         new Cell
                                         {
-                                            Name = attribute.Name,
-                                            Value = attribute.Value.ToString(),
+                                            Name = name,
+                                            Value = attr.Value.Attribute.Value.Value2String(),
                                             Changeable = col.WriteLayer != null
                                         }
                                     }
-                        });
+                            });
+                        }
                     }
                 }
 
