@@ -47,9 +47,12 @@ namespace Omnikeeper.GridView.Queries
                     Rows = new List<Row>()
                 };
 
-                var attributes = new List<CIAttribute>();
+                // var attributes = new List<CIAttribute>();
 
-                // TO DO transaction parameter should not be null
+                // TO DO: transaction parameter should not be null
+
+                // TO DO: layerset from which to read the omnikeeper data, order by layerset
+                // item.Value.TraitAttributes.ToList()[0].Value.LayerStackIDs
 
                 var res = await effectiveTraitModel.CalculateEffectiveTraitsForTraitName(
                     config.Trait,
@@ -62,7 +65,16 @@ namespace Omnikeeper.GridView.Queries
                 {
                     var ci_id = item.Key;
 
-                    foreach (var attr in item.Value.TraitAttributes)
+                    // order by layers
+
+                    var attributes = item.Value.TraitAttributes.OrderBy(item => item.Value.LayerStackIDs[0]);
+                    //{
+                    //    return (
+                    //        item.Value.LayerStackIDs[0]
+                    //    );
+                    //});
+
+                    foreach (var attr in attributes)
                     {
                         var c = attr.Value;
                         var name = attr.Value.Attribute.Name;

@@ -57,6 +57,9 @@ namespace Omnikeeper.GridView.Commands
 
                 // we should do all changes in a single transaction
 
+                // The consistency validation per CI consists 
+                // of checking whether or not the CI still fulfills/has the configured trait.
+
                 var config = await gridViewConfigService.GetConfiguration(request.Context);
 
                 using var trans = conn.BeginTransaction();
