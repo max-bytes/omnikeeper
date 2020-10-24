@@ -1,8 +1,10 @@
 ﻿using System.Threading.Tasks;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Omnikeeper.GridView.Commands;
+using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Queries;
 using Omnikeeper.GridView.Request;
 
@@ -14,7 +16,6 @@ namespace LandscapeRegistry.GridView
     [Route("api/v{version:apiVersion}/[controller]")]
     public class GridViewController : ControllerBase
     {
-        // TO DO: api versioning
 
         private readonly IMediator _mediatr;
 
@@ -36,12 +37,89 @@ namespace LandscapeRegistry.GridView
         }
 
         /// <summary>
+        /// Adds new context.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns>Created context</returns>
+        /// <response code="201">Returns the newly created context</response>
+        /// <response code="400">If creating context fails</response>  
+        [AllowAnonymous]
+        [HttpPost("context")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> AddContext([FromBody] AddContextRequest context)
+        {
+            var isSuccess = await _mediatr.Send(new AddContextCommand.Command { Context = context });
+
+            if (isSuccess)
+            {
+                return CreatedAtAction(nameof(AddContext), new { context.Name });
+            }
+
+            return BadRequest(new { Error = "An error ocurred trying to add this context!" });
+        }
+
+        /// <summary>
+        /// Edit specific context
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="configuration"></param>
+        /// <returns>Status indication request status</returns>
+        /// <response code="200">If request is successful</response>
+        /// <response code="400">If editing the context fails</response>  
+        [AllowAnonymous]
+        [HttpPut("context/{name}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> EditContext([FromRoute] string name, [FromBody] GridViewConfiguration configuration)
+        {
+            var isSuccess = await _mediatr.Send(new EditContextCommand.Command
+            {
+                Name = name,
+                Configuration = configuration
+            });
+
+            if (isSuccess)
+            {
+                return Ok();
+            }
+
+            return BadRequest(new { Error = $"An error ocurred trying to edit context: {name}!" });
+
+        }
+
+        /// <summary>
+        /// Returns a list of contexts for grid view.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns>Status indication request status</returns>
+        /// <response code="200">If request is successful</response>
+        /// <response code="400">If editing the context fails</response>  
+        [AllowAnonymous]
+        [HttpDelete("context/{name}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> DeleteContext([FromRoute] string name)
+        {
+            var isSuccess = await _mediatr.Send(new DeleteContextCommand.Command { Name = name });
+
+            if (isSuccess)
+            {
+                return Ok();
+            }
+
+            return BadRequest(new { Error = $"An error ocurred trying to delete context: {name}!" });
+        }
+
+        /// <summary>
         /// Returns grid view schema for specific context.
         /// </summary>
         /// <param name="context"></param>
-        /// <returns>200</returns>
+        /// <returns>Returns schema object for specififc context</returns>
+        /// <response code="200"></response>
         [AllowAnonymous]
         [HttpGet("contexts/{context}/schema")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetSchema([FromRoute] string context)
         {
             var result = await _mediatr.Send(new GetSchemaQuery.Query { Context = context });
@@ -52,9 +130,11 @@ namespace LandscapeRegistry.GridView
         /// Returns grid view data for specific context.
         /// </summary>
         /// <param name="context"></param>
-        /// <returns>200</returns>
+        /// <returns>An object which contains rows for grid view</returns>
+        /// <response code="200"></response>
         [AllowAnonymous]
         [HttpGet("contexts/{context}/data")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetData([FromRoute] string context)
         {
             var result = await _mediatr.Send(new GetDataQuery.Query { Context = context });
@@ -66,9 +146,13 @@ namespace LandscapeRegistry.GridView
         /// </summary>
         /// <param name="context"></param>
         /// <param name="changes"></param>
-        /// <returns>200</returns>
+        /// <returns>A list of changes or an error</returns>
+        /// <response code="200">If request is successful</response>
+        /// <response code="400">If saving changes fails</response>  
         [AllowAnonymous]
         [HttpPost("contexts/{context}/data")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ChangeData([FromRoute] string context, [FromBody] ChangeDataRequest changes)
         {
             var (result, isSuccess) = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes, Context = context });
