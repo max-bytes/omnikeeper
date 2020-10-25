@@ -20,13 +20,13 @@ namespace Omnikeeper.GridView.Commands
 {
     public class ChangeDataCommand
     {
-        public class Command : IRequest<(ChangeDataResponse, bool)>
+        public class Command : IRequest<(ChangeDataResponse, bool, string)>
         {
             public ChangeDataRequest Changes { get; set; }
             public string Context { get; set; }
         }
 
-        public class ChangeDataCommandHandler : IRequestHandler<Command, (ChangeDataResponse, bool)>
+        public class ChangeDataCommandHandler : IRequestHandler<Command, (ChangeDataResponse, bool, string)>
         {
             private readonly NpgsqlConnection conn;
             private readonly ICIModel ciModel;
@@ -46,16 +46,11 @@ namespace Omnikeeper.GridView.Commands
                 this.currentUserService = currentUserService;
                 this.gridViewConfigService = gridViewConfigService;
                 this.effectiveTraitModel = effectiveTraitModel;
-            } 
-            public async Task<(ChangeDataResponse, bool)> Handle(Command request, CancellationToken cancellationToken)
+            }
+            public async Task<(ChangeDataResponse, bool, string)> Handle(Command request, CancellationToken cancellationToken)
             {
                 var user = await currentUserService.GetCurrentUser(null);
                 var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
-
-                // check if ci with provided id exists
-                // we need layer id for this
-
-                // we should do all changes in a single transaction
 
                 // The consistency validation per CI consists 
                 // of checking whether or not the CI still fulfills/has the configured trait.
@@ -69,43 +64,68 @@ namespace Omnikeeper.GridView.Commands
 
                     if (!ciExists)
                     {
-                        return (new ChangeDataResponse(), false);
+                        return (new ChangeDataResponse(), false, $"The provided ci id: {row.Ciid} was not found!");
                     }
 
-
-                    try
+                    foreach (var cell in row.Cells)
                     {
-                        foreach (var cell in row.Cells)
+                        var configItem = config.Columns.Find(item => item.SourceAttributeName == cell.Name);
+
+                        var writeLayer = configItem.WriteLayer != null ? configItem.WriteLayer.Value : config.WriteLayer;
+
+                        if (cell.Value == null)
                         {
-                            var val = AttributeValueBuilder.Build(new AttributeValueDTO
+                            try
                             {
-                                IsArray = false,
-                                Values = new string[] { cell.Value },
-                                Type = AttributeValueType.Text
-                            });
+                                await attributeModel.RemoveAttribute(
+                                    cell.Name,
+                                    row.Ciid,
+                                    writeLayer,
+                                    changesetProxy,
+                                    trans);
+                            }
+                            catch (Exception)
+                            {
+                                trans.Rollback();
+                                return (new ChangeDataResponse(), false, $"Removing attribute {cell.Name} for ci with id: {row.Ciid} failed!");
+                            }
 
-                            var configItem = config.Columns.Find(item => item.SourceAttributeName == cell.Name);
-
-                            var writeLayer = configItem.WriteLayer != null ? configItem.WriteLayer.Value : config.WriteLayer;
-
-                            await attributeModel.InsertAttribute(
-                                cell.Name,
-                                val,
-                                row.Ciid,
-                                writeLayer,
-                                changesetProxy,
-                                trans);
                         }
 
-                        trans.Commit();
+                        else
+                        {
+                            try
+                            {
+
+                                var val = AttributeValueBuilder.Build(new AttributeValueDTO
+                                {
+                                    IsArray = false,
+                                    Values = new string[] { cell.Value },
+                                    Type = AttributeValueType.Text
+                                });
+
+                                await attributeModel.InsertAttribute(
+                                    cell.Name,
+                                    val,
+                                    row.Ciid,
+                                    writeLayer,
+                                    changesetProxy,
+                                    trans);
+                            }
+                            catch
+                            {
+                                trans.Rollback();
+                                return (new ChangeDataResponse(), false, $"Inserting attribute {cell.Name} for ci with id: {row.Ciid} failed!");
+                            }
+                        }
+
                     }
-                    catch
-                    {
-                        trans.Rollback();
-                    }
+
+
                 }
 
-                return (await FetchData(config), true);
+                trans.Commit();
+                return (await FetchData(config), true, "");
             }
 
             private async Task<ChangeDataResponse> FetchData(GridViewConfiguration config)

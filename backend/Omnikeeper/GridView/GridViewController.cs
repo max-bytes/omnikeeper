@@ -89,7 +89,7 @@ namespace LandscapeRegistry.GridView
         }
 
         /// <summary>
-        /// Returns a list of contexts for grid view.
+        /// Delete specific context
         /// </summary>
         /// <param name="name"></param>
         /// <returns>Status indication request status</returns>
@@ -155,14 +155,14 @@ namespace LandscapeRegistry.GridView
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ChangeData([FromRoute] string context, [FromBody] ChangeDataRequest changes)
         {
-            var (result, isSuccess) = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes, Context = context });
+            var (result, isSuccess, error) = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes, Context = context });
 
             if (isSuccess)
             {
                 return Ok(result);
             }
 
-            return NotFound(new { Error = "The provided ci id not found!" });
+            return NotFound(new { Error = error });
         }
     }
 }
