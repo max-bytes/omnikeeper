@@ -28,7 +28,6 @@ namespace LandscapeRegistry.GridView
         /// Returns a list of contexts for grid view.
         /// </summary>
         /// <returns>200</returns>
-        [AllowAnonymous]
         [HttpGet("contexts")]
         public async Task<IActionResult> GetContexts()
         {
@@ -37,13 +36,12 @@ namespace LandscapeRegistry.GridView
         }
 
         /// <summary>
-        /// Adds new context.
+        /// Adds new context
         /// </summary>
         /// <param name="context"></param>
         /// <returns>Created context</returns>
         /// <response code="201">Returns the newly created context</response>
         /// <response code="400">If creating context fails</response>  
-        [AllowAnonymous]
         [HttpPost("context")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -60,14 +58,13 @@ namespace LandscapeRegistry.GridView
         }
 
         /// <summary>
-        /// Edit specific context
+        /// Edits specific context
         /// </summary>
         /// <param name="name"></param>
         /// <param name="configuration"></param>
         /// <returns>Status indication request status</returns>
         /// <response code="200">If request is successful</response>
         /// <response code="400">If editing the context fails</response>  
-        [AllowAnonymous]
         [HttpPut("context/{name}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -89,13 +86,12 @@ namespace LandscapeRegistry.GridView
         }
 
         /// <summary>
-        /// Delete specific context
+        /// Deletes specific context
         /// </summary>
         /// <param name="name"></param>
         /// <returns>Status indication request status</returns>
         /// <response code="200">If request is successful</response>
         /// <response code="400">If editing the context fails</response>  
-        [AllowAnonymous]
         [HttpDelete("context/{name}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -112,12 +108,11 @@ namespace LandscapeRegistry.GridView
         }
 
         /// <summary>
-        /// Returns grid view schema for specific context.
+        /// Returns grid view schema for specific context
         /// </summary>
         /// <param name="context"></param>
         /// <returns>Returns schema object for specififc context</returns>
         /// <response code="200"></response>
-        [AllowAnonymous]
         [HttpGet("contexts/{context}/schema")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetSchema([FromRoute] string context)
@@ -127,12 +122,11 @@ namespace LandscapeRegistry.GridView
         }
 
         /// <summary>
-        /// Returns grid view data for specific context.
+        /// Returns grid view data for specific context
         /// </summary>
         /// <param name="context"></param>
         /// <returns>An object which contains rows for grid view</returns>
         /// <response code="200"></response>
-        [AllowAnonymous]
         [HttpGet("contexts/{context}/data")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetData([FromRoute] string context)
@@ -142,14 +136,13 @@ namespace LandscapeRegistry.GridView
         }
 
         /// <summary>
-        /// Saves grid view row changes and returns change results.
+        /// Saves grid view row changes and returns change results
         /// </summary>
         /// <param name="context"></param>
         /// <param name="changes"></param>
         /// <returns>A list of changes or an error</returns>
         /// <response code="200">If request is successful</response>
         /// <response code="400">If saving changes fails</response>  
-        [AllowAnonymous]
         [HttpPost("contexts/{context}/data")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
