@@ -20,13 +20,13 @@ namespace Omnikeeper.GridView.Commands
 {
     public class ChangeDataCommand
     {
-        public class Command : IRequest<(ChangeDataResponse, bool)>
+        public class Command : IRequest<(ChangeDataResponse, bool, string)>
         {
             public ChangeDataRequest Changes { get; set; }
-            public string ConfigurationName { get; set; }
+            public string Context { get; set; }
         }
 
-        public class ChangeDataCommandHandler : IRequestHandler<Command, (ChangeDataResponse, bool)>
+        public class ChangeDataCommandHandler : IRequestHandler<Command, (ChangeDataResponse, bool, string)>
         {
             private readonly NpgsqlConnection conn;
             private readonly ICIModel ciModel;
@@ -34,8 +34,10 @@ namespace Omnikeeper.GridView.Commands
             private readonly IChangesetModel changesetModel;
             private readonly ICurrentUserService currentUserService;
             private readonly GridViewConfigService gridViewConfigService;
+            private readonly IEffectiveTraitModel effectiveTraitModel;
             public ChangeDataCommandHandler(NpgsqlConnection connection, ICIModel ciModel, IAttributeModel attributeModel,
-                IChangesetModel changesetModel, ICurrentUserService currentUserService, GridViewConfigService gridViewConfigService)
+                IChangesetModel changesetModel, ICurrentUserService currentUserService, GridViewConfigService gridViewConfigService,
+                IEffectiveTraitModel effectiveTraitModel)
             {
                 conn = connection;
                 this.ciModel = ciModel;
@@ -43,60 +45,87 @@ namespace Omnikeeper.GridView.Commands
                 this.changesetModel = changesetModel;
                 this.currentUserService = currentUserService;
                 this.gridViewConfigService = gridViewConfigService;
+                this.effectiveTraitModel = effectiveTraitModel;
             }
-            public async Task<(ChangeDataResponse, bool)> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<(ChangeDataResponse, bool, string)> Handle(Command request, CancellationToken cancellationToken)
             {
                 var user = await currentUserService.GetCurrentUser(null);
                 var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
 
-                // check if ci with provided id exists
-                // we need layer id for this
+                // TO DO:
+                // The consistency validation per CI consists 
+                // of checking whether or not the CI still fulfills/has the configured trait.
 
-                // we should do all changes in a single transaction
+                var config = await gridViewConfigService.GetConfiguration(request.Context);
 
-                var config = await gridViewConfigService.GetConfiguration(request.ConfigurationName);
-
+                using var trans = conn.BeginTransaction();
                 foreach (var row in request.Changes.SparseRows)
                 {
                     var ciExists = await ciModel.CIIDExists(row.Ciid, null);
 
                     if (!ciExists)
                     {
-                        return (new ChangeDataResponse(), false);
+                        return (new ChangeDataResponse(), false, $"The provided ci id: {row.Ciid} was not found!");
                     }
 
-                    using var trans = conn.BeginTransaction();
-                    try
+                    foreach (var cell in row.Cells)
                     {
-                        foreach (var cell in row.Cells)
+                        var configItem = config.Columns.Find(item => item.SourceAttributeName == cell.Name);
+
+                        var writeLayer = configItem.WriteLayer != null ? configItem.WriteLayer.Value : config.WriteLayer;
+
+                        if (cell.Value == null)
                         {
-                            var val = AttributeValueBuilder.Build(new AttributeValueDTO
+                            try
                             {
-                                IsArray = false,
-                                Values = new string[] { cell.Value },
-                                Type = AttributeValueType.Text
-                            });
+                                await attributeModel.RemoveAttribute(
+                                    cell.Name,
+                                    row.Ciid,
+                                    writeLayer,
+                                    changesetProxy,
+                                    trans);
+                            }
+                            catch (Exception)
+                            {
+                                trans.Rollback();
+                                return (new ChangeDataResponse(), false, $"Removing attribute {cell.Name} for ci with id: {row.Ciid} failed!");
+                            }
 
-                            var writeLayer = cell.WriteLayer != null ? cell.WriteLayer.Value : config.WriteLayer;
+                        }
+                        else
+                        {
+                            try
+                            {
 
-                            await attributeModel.InsertAttribute(
-                                cell.Name,
-                                val,
-                                row.Ciid,
-                                writeLayer,
-                                changesetProxy,
-                                trans);
+                                var val = AttributeValueBuilder.Build(new AttributeValueDTO
+                                {
+                                    IsArray = false,
+                                    Values = new string[] { cell.Value },
+                                    Type = AttributeValueType.Text
+                                });
+
+                                await attributeModel.InsertAttribute(
+                                    cell.Name,
+                                    val,
+                                    row.Ciid,
+                                    writeLayer,
+                                    changesetProxy,
+                                    trans);
+                            }
+                            catch
+                            {
+                                trans.Rollback();
+                                return (new ChangeDataResponse(), false, $"Inserting attribute {cell.Name} for ci with id: {row.Ciid} failed!");
+                            }
                         }
 
-                        trans.Commit();
                     }
-                    catch
-                    {
-                        trans.Rollback();
-                    }
+
+
                 }
 
-                return (await FetchData(config), true);
+                trans.Commit();
+                return (await FetchData(config), true, "");
             }
 
             private async Task<ChangeDataResponse> FetchData(GridViewConfiguration config)
@@ -106,51 +135,56 @@ namespace Omnikeeper.GridView.Commands
                     Rows = new List<ChangeDataRow>()
                 };
 
-                var ciIds = await ciModel.GetCIIDs(null);
+                var res = await effectiveTraitModel.CalculateEffectiveTraitsForTraitName(
+                    config.Trait,
+                    new LayerSet(config.ReadLayerset.ToArray()),
+                    null,
+                    TimeThreshold.BuildLatest()
+                    );
 
-                var attributes = new List<CIAttribute>();
-
-                foreach (var layerId in config.ReadLayerset)
+                foreach (var item in res)
                 {
-                    var attrs = await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciIds), layerId, null, TimeThreshold.BuildLatest());
-                    attributes.AddRange(attrs);
-                }
+                    var ci_id = item.Key;
 
-                foreach (var attribute in attributes)
-                {
-                    var col = config.Columns.Find(el => el.SourceAttributeName == attribute.Name);
-
-                    if (col == null)
+                    foreach (var attr in item.Value.TraitAttributes)
                     {
-                        continue;
-                    }
+                        var c = attr.Value;
+                        var name = attr.Value.Attribute.Name;
 
-                    var el = result.Rows.Find(el => el.Ciid == attribute.CIID);
+                        var col = config.Columns.Find(el => el.SourceAttributeName == name);
 
-                    if (el != null)
-                    {
-                        el.Cells.Add(new Response.ChangeDataCell
+                        if (col == null)
                         {
-                            Name = attribute.Name,
-                            Value = attribute.Value.ToString(),
-                            Changeable = col.WriteLayer != null
-                        });
-                    }
-                    else
-                    {
-                        result.Rows.Add(new ChangeDataRow
+                            continue;
+                        }
+
+                        var el = result.Rows.Find(el => el.Ciid == ci_id);
+
+                        if (el != null)
                         {
-                            Ciid = attribute.CIID,
-                            Cells = new List<Response.ChangeDataCell>
+                            el.Cells.Add(new Response.ChangeDataCell
+                            {
+                                Name = name,
+                                Value = attr.Value.Attribute.Value.Value2String(),
+                                Changeable = col.WriteLayer != null
+                            });
+                        }
+                        else
+                        {
+                            result.Rows.Add(new ChangeDataRow
+                            {
+                                Ciid = ci_id,
+                                Cells = new List<Response.ChangeDataCell>
                                     {
                                         new Response.ChangeDataCell
                                         {
-                                            Name = attribute.Name,
-                                            Value = attribute.Value.ToString(),
+                                            Name = name,
+                                            Value = attr.Value.Attribute.Value.Value2String(),
                                             Changeable = col.WriteLayer != null
                                         }
                                     }
-                        });
+                            });
+                        }
                     }
                 }
 

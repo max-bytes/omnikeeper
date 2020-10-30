@@ -16,7 +16,7 @@ namespace Omnikeeper.GridView.Queries
     {
         public class Query : IRequest<GetDataResponse>
         {
-            public string ConfigurationName { get; set; }
+            public string Context { get; set; }
             public int? PageSize { get; set; }
             public int? PageIndex { get; set; }
         }
@@ -24,14 +24,12 @@ namespace Omnikeeper.GridView.Queries
         public class GetDataQueryHandler : IRequestHandler<Query, GetDataResponse>
         {
             private readonly GridViewConfigService gridViewConfigService;
-            private readonly IAttributeModel attributeModel;
-            private readonly ICIModel ciModel;
+            private readonly IEffectiveTraitModel effectiveTraitModel;
 
-            public GetDataQueryHandler(GridViewConfigService gridViewConfigService, IAttributeModel attributeModel, ICIModel ciModel)
+            public GetDataQueryHandler(GridViewConfigService gridViewConfigService, IEffectiveTraitModel effectiveTraitModel)
             {
                 this.gridViewConfigService = gridViewConfigService;
-                this.attributeModel = attributeModel;
-                this.ciModel = ciModel;
+                this.effectiveTraitModel = effectiveTraitModel;
             }
 
             public async Task<GetDataResponse> Handle(Query request, CancellationToken cancellationToken)
@@ -41,7 +39,7 @@ namespace Omnikeeper.GridView.Queries
                 var pageSize = request.PageSize ?? 10;
                 var pageIndex = request.PageIndex ?? 0;
 
-                var config = await gridViewConfigService.GetConfiguration(request.ConfigurationName);
+                var config = await gridViewConfigService.GetConfiguration(request.Context);
 
 
                 var result = new GetDataResponse
@@ -49,59 +47,64 @@ namespace Omnikeeper.GridView.Queries
                     Rows = new List<Row>()
                 };
 
+                // var attributes = new List<CIAttribute>();
 
-                // TO DO
-                // 1. Filter using a traitset
-                // 2. Only CIs that fulfill/ have ALL of the traits in the Traitset are shown in the GridView
+                // TO DO: transaction parameter should not be null
 
-                var ciIds = await ciModel.GetCIIDs(null);
+                // TO DO: layerset from which to read the omnikeeper data, order by layerset
+                // item.Value.TraitAttributes.ToList()[0].Value.LayerStackIDs 
+                // is this implemented with layerset parametter ?
 
-                var attributes = new List<CIAttribute>();
+                var res = await effectiveTraitModel.CalculateEffectiveTraitsForTraitName(
+                    config.Trait,
+                    new LayerSet(config.ReadLayerset.ToArray()),
+                    null,
+                    TimeThreshold.BuildLatest()
+                    );
 
-                // TO DO transaction parameter should not be null
-
-                foreach (var layerId in config.ReadLayerset)
+                foreach (var item in res)
                 {
-                    var attrs = await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciIds), layerId, null, TimeThreshold.BuildLatest());
-                    attributes.AddRange(attrs);
-                }
+                    var ci_id = item.Key;
 
-                foreach (var attribute in attributes)
-                {
-
-                    var col = config.Columns.Find(el => el.SourceAttributeName == attribute.Name);
-
-                    if (col == null)
+                    foreach (var attr in item.Value.TraitAttributes)
                     {
-                        continue;
-                    }
+                        var c = attr.Value;
+                        var name = attr.Value.Attribute.Name;
 
-                    var el = result.Rows.Find(el => el.Ciid == attribute.CIID);
+                        var col = config.Columns.Find(el => el.SourceAttributeName == name);
 
-                    if (el != null)
-                    {
-                        el.Cells.Add(new Cell
+                        if (col == null)
                         {
-                            Name = attribute.Name,
-                            Value = attribute.Value.ToString(),
-                            Changeable = col.WriteLayer != null
-                        });
-                    }
-                    else
-                    {
-                        result.Rows.Add(new Row
+                            continue;
+                        }
+
+                        var el = result.Rows.Find(el => el.Ciid == ci_id);
+
+                        if (el != null)
                         {
-                            Ciid = attribute.CIID,
-                            Cells = new List<Cell>
+                            el.Cells.Add(new Cell
+                            {
+                                Name = name,
+                                Value = attr.Value.Attribute.Value.Value2String(),
+                                Changeable = col.WriteLayer != null
+                            });
+                        }
+                        else
+                        {
+                            result.Rows.Add(new Row
+                            {
+                                Ciid = ci_id,
+                                Cells = new List<Cell>
                                     {
                                         new Cell
                                         {
-                                            Name = attribute.Name,
-                                            Value = attribute.Value.ToString(),
+                                            Name = name,
+                                            Value = attr.Value.Attribute.Value.Value2String(),
                                             Changeable = col.WriteLayer != null
                                         }
                                     }
-                        });
+                            });
+                        }
                     }
                 }
 
