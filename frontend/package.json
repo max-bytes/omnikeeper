@@ -14,7 +14,7 @@
     "ace-builds": "^1.4.11",
     "ag-grid-community": "^23.0.2",
     "ag-grid-react": "^23.0.3",
-    "aggrid_copy_cut_paste": "git+https://www.mhx.at/gitlab/alexandria/node_modules/aggrid_copy_cut_paste.git#1.0.7",
+    "aggrid_copy_cut_paste": "git+https://www.mhx.at/gitlab/alexandria/node_modules/aggrid_copy_cut_paste.git#1.0.8",
     "antd": "^4.6.6",
     "apollo-client": "^2.6.8",
     "apollo-link-context": "^1.0.20",
