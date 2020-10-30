@@ -3,7 +3,6 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.GridView.Response;
-using Omnikeeper.GridView.Service;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,18 +18,18 @@ namespace Omnikeeper.GridView.Queries
 
         public class GetDataQueryHandler : IRequestHandler<Query, GetDataResponse>
         {
-            private readonly GridViewConfigService gridViewConfigService;
+            private readonly IGridViewConfigModel gridViewConfigModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
 
-            public GetDataQueryHandler(GridViewConfigService gridViewConfigService, IEffectiveTraitModel effectiveTraitModel)
+            public GetDataQueryHandler(IGridViewConfigModel gridViewConfigModel, IEffectiveTraitModel effectiveTraitModel)
             {
-                this.gridViewConfigService = gridViewConfigService;
+                this.gridViewConfigModel = gridViewConfigModel;
                 this.effectiveTraitModel = effectiveTraitModel;
             }
 
             public async Task<GetDataResponse> Handle(Query request, CancellationToken cancellationToken)
             {
-                var config = await gridViewConfigService.GetConfiguration(request.Context);
+                var config = await gridViewConfigModel.GetConfiguration(request.Context);
 
 
                 var result = new GetDataResponse

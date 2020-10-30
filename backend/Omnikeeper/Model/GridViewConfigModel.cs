@@ -1,23 +1,21 @@
 ﻿using Newtonsoft.Json;
 using Npgsql;
-using Omnikeeper.GridView.Model;
-using System.IO;
-using System.Text.Json;
+using Omnikeeper.Base.Entity.GridView;
+using Omnikeeper.Base.Model;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.GridView.Service
+namespace Omnikeeper.Model
 {
-    public class GridViewConfigService
+    public class GridViewConfigModel : IGridViewConfigModel
     {
-        // get grid view config data
-        // try to save config data on cache memory
-
         private readonly NpgsqlConnection conn;
-        public GridViewConfigService(NpgsqlConnection connection)
+        public GridViewConfigModel(NpgsqlConnection connection)
         {
             conn = connection;
         }
-
         public async Task<GridViewConfiguration> GetConfiguration(string configName)
         {
             using var command = new NpgsqlCommand($@"
@@ -37,17 +35,6 @@ namespace Omnikeeper.GridView.Service
                 configJson = dr.GetString(1);
                 name = dr.GetString(2);
             }
-
-            // TO DO: use System.Text.Json to deserialize objects
-
-            //var options = new JsonSerializerOptions
-            //{
-            //    AllowTrailingCommas = true,
-            //    IgnoreNullValues = true,
-            //    WriteIndented = true
-            //};
-
-            //config = JsonSerializer.Deserialize<GridViewConfiguration>(configJson, options);
 
             var config = JsonConvert.DeserializeObject<GridViewConfiguration>(configJson);
 

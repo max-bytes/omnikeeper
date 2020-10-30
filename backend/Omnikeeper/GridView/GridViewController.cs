@@ -3,8 +3,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Omnikeeper.Base.Entity.GridView;
 using Omnikeeper.GridView.Commands;
-using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Queries;
 using Omnikeeper.GridView.Request;
 

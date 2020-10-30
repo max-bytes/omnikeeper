@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Omnikeeper.GridView.Model
+namespace Omnikeeper.Base.Entity.GridView
 {
     public class GridViewConfiguration
     {

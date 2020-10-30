@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Newtonsoft.Json;
 using Npgsql;
-using Omnikeeper.GridView.Model;
+using Omnikeeper.Base.Entity.GridView;
 using System.Threading;
 using System.Threading.Tasks;
 

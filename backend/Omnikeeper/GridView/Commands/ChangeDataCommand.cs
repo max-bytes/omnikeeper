@@ -2,17 +2,15 @@
 using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
+using Omnikeeper.Base.Entity.GridView;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Request;
 using Omnikeeper.GridView.Response;
-using Omnikeeper.GridView.Service;
 using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,10 +31,10 @@ namespace Omnikeeper.GridView.Commands
             private readonly IAttributeModel attributeModel;
             private readonly IChangesetModel changesetModel;
             private readonly ICurrentUserService currentUserService;
-            private readonly GridViewConfigService gridViewConfigService;
+            private readonly IGridViewConfigModel gridViewConfigModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
             public ChangeDataCommandHandler(NpgsqlConnection connection, ICIModel ciModel, IAttributeModel attributeModel,
-                IChangesetModel changesetModel, ICurrentUserService currentUserService, GridViewConfigService gridViewConfigService,
+                IChangesetModel changesetModel, ICurrentUserService currentUserService, IGridViewConfigModel gridViewConfigModel,
                 IEffectiveTraitModel effectiveTraitModel)
             {
                 conn = connection;
@@ -44,7 +42,7 @@ namespace Omnikeeper.GridView.Commands
                 this.attributeModel = attributeModel;
                 this.changesetModel = changesetModel;
                 this.currentUserService = currentUserService;
-                this.gridViewConfigService = gridViewConfigService;
+                this.gridViewConfigModel = gridViewConfigModel;
                 this.effectiveTraitModel = effectiveTraitModel;
             }
             public async Task<(ChangeDataResponse, bool, string)> Handle(Command request, CancellationToken cancellationToken)
@@ -56,7 +54,7 @@ namespace Omnikeeper.GridView.Commands
                 // The consistency validation per CI consists 
                 // of checking whether or not the CI still fulfills/has the configured trait.
 
-                var config = await gridViewConfigService.GetConfiguration(request.Context);
+                var config = await gridViewConfigModel.GetConfiguration(request.Context);
 
                 using var trans = conn.BeginTransaction();
                 foreach (var row in request.Changes.SparseRows)
