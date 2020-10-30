@@ -135,7 +135,7 @@ namespace Omnikeeper.GridView.Commands
                     Rows = new List<ChangeDataRow>()
                 };
 
-                var res = await effectiveTraitModel.CalculateEffectiveTraitsForTraitName(
+                var res = await effectiveTraitModel.CalculateMergedCIsWithTrait(
                     config.Trait,
                     new LayerSet(config.ReadLayerset.ToArray()),
                     null,
@@ -144,9 +144,9 @@ namespace Omnikeeper.GridView.Commands
 
                 foreach (var item in res)
                 {
-                    var ci_id = item.Key;
+                    var ci_id = item.ID;
 
-                    foreach (var attr in item.Value.TraitAttributes)
+                    foreach (var attr in item.MergedAttributes)
                     {
                         var c = attr.Value;
                         var name = attr.Value.Attribute.Name;
