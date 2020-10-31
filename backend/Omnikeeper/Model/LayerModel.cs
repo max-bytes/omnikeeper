@@ -143,7 +143,7 @@ namespace Omnikeeper.Model
                 await command.ExecuteNonQueryAsync();
                 return true;
             }
-            catch (PostgresException e)
+            catch (PostgresException)
             {
                 return false;
             }

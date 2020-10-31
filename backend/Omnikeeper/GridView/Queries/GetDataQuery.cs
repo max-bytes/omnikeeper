@@ -39,6 +39,11 @@ namespace Omnikeeper.GridView.Queries
 
                 // TO DO: transaction parameter should not be null
 
+                // TO DO: layerset from which to read the omnikeeper data, order by layerset
+                // item.Value.TraitAttributes.ToList()[0].Value.LayerStackIDs 
+                // is this implemented with layerset parametter ?
+
+                // NOTE mcsuk: use effectiveTraitModel.GetMergedCIsWithTrait() instead
                 var res = await effectiveTraitModel.CalculateMergedCIsWithTrait(
                     config.Trait,
                     new LayerSet(config.ReadLayerset.ToArray()),

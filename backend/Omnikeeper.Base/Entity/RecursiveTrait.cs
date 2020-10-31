@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Omnikeeper.Base.Utils;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace Omnikeeper.Base.Entity
@@ -106,6 +109,16 @@ namespace Omnikeeper.Base.Entity
                 Traits = traits.ToImmutableDictionary(t => t.Name)
             };
         }
+
+        public static MyJSONSerializer<RecursiveTraitSet> Serializer = new MyJSONSerializer<RecursiveTraitSet>(() =>
+        {
+            var s = new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Objects
+            };
+            s.Converters.Add(new StringEnumConverter());
+            return s;
+        });
     }
 
     public class TraitSet

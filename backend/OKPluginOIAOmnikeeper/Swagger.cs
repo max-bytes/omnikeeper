@@ -228,12 +228,12 @@ namespace OKPluginOIAOmnikeeper
     
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<System.Collections.Generic.ICollection<EffectiveTraitSetDTO>> GetEffectiveTraitSetsForTraitNameAsync(System.Collections.Generic.IEnumerable<long> layerIDs, string traitName, System.DateTimeOffset? atTime, string version);
+        System.Threading.Tasks.Task<System.Collections.Generic.ICollection<EffectiveTraitDTO>> GetEffectiveTraitsForTraitNameAsync(System.Collections.Generic.IEnumerable<long> layerIDs, string traitName, System.DateTimeOffset? atTime, string version);
     
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<System.Collections.Generic.ICollection<EffectiveTraitSetDTO>> GetEffectiveTraitSetsForTraitNameAsync(System.Collections.Generic.IEnumerable<long> layerIDs, string traitName, System.DateTimeOffset? atTime, string version, System.Threading.CancellationToken cancellationToken);
+        System.Threading.Tasks.Task<System.Collections.Generic.ICollection<EffectiveTraitDTO>> GetEffectiveTraitsForTraitNameAsync(System.Collections.Generic.IEnumerable<long> layerIDs, string traitName, System.DateTimeOffset? atTime, string version, System.Threading.CancellationToken cancellationToken);
     
     }
     
@@ -1900,15 +1900,15 @@ namespace OKPluginOIAOmnikeeper
     
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public System.Threading.Tasks.Task<System.Collections.Generic.ICollection<EffectiveTraitSetDTO>> GetEffectiveTraitSetsForTraitNameAsync(System.Collections.Generic.IEnumerable<long> layerIDs, string traitName, System.DateTimeOffset? atTime, string version)
+        public System.Threading.Tasks.Task<System.Collections.Generic.ICollection<EffectiveTraitDTO>> GetEffectiveTraitsForTraitNameAsync(System.Collections.Generic.IEnumerable<long> layerIDs, string traitName, System.DateTimeOffset? atTime, string version)
         {
-            return GetEffectiveTraitSetsForTraitNameAsync(layerIDs, traitName, atTime, version, System.Threading.CancellationToken.None);
+            return GetEffectiveTraitsForTraitNameAsync(layerIDs, traitName, atTime, version, System.Threading.CancellationToken.None);
         }
     
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<EffectiveTraitSetDTO>> GetEffectiveTraitSetsForTraitNameAsync(System.Collections.Generic.IEnumerable<long> layerIDs, string traitName, System.DateTimeOffset? atTime, string version, System.Threading.CancellationToken cancellationToken)
+        public async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<EffectiveTraitDTO>> GetEffectiveTraitsForTraitNameAsync(System.Collections.Generic.IEnumerable<long> layerIDs, string traitName, System.DateTimeOffset? atTime, string version, System.Threading.CancellationToken cancellationToken)
         {
             if (version == null)
                 throw new System.ArgumentNullException("version");
@@ -1958,7 +1958,7 @@ namespace OKPluginOIAOmnikeeper
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<System.Collections.Generic.ICollection<EffectiveTraitSetDTO>>(response_, headers_).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<System.Collections.Generic.ICollection<EffectiveTraitDTO>>(response_, headers_).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
