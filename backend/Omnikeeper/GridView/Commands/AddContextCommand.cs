@@ -1,7 +1,5 @@
 ﻿using MediatR;
-using Newtonsoft.Json;
-using Npgsql;
-using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Model;
 using Omnikeeper.GridView.Request;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,30 +15,17 @@ namespace Omnikeeper.GridView.Commands
 
         public class AddContextHandler : IRequestHandler<Command, bool>
         {
-            private readonly NpgsqlConnection conn;
-            public AddContextHandler(NpgsqlConnection conn)
+            private readonly IGridViewConfigModel gridViewConfigModel;
+            public AddContextHandler(IGridViewConfigModel gridViewConfigModel)
             {
-                this.conn = conn;
+                this.gridViewConfigModel = gridViewConfigModel;
             }
 
             public async Task<bool> Handle(Command request, CancellationToken cancellationToken)
             {
-                using var command = new NpgsqlCommand($@"
-                    INSERT INTO gridview_config
-                    (config, name, timestamp)
-                    VALUES
-                    (@config, @name, @timestamp)
-                ", conn, null);
+                var isSuccess = await gridViewConfigModel.AddContext(request.Context.Name, request.Context.Configuration);
 
-                var config = JsonConvert.SerializeObject(request.Context.Configuration);
-
-                command.Parameters.AddWithValue("config", config);
-                command.Parameters.AddWithValue("name", request.Context.Name);
-                command.Parameters.AddWithValue("timestamp", TimeThreshold.BuildLatest());
-
-                var result = await command.ExecuteNonQueryAsync();
-
-                return result > 0;
+                return isSuccess;
             }
         }
     }

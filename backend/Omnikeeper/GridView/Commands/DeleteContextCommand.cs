@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using Npgsql;
+using Omnikeeper.Base.Model;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,24 +14,17 @@ namespace Omnikeeper.GridView.Commands
 
         public class DeleteContextCommandHandler : IRequestHandler<Command, bool>
         {
-            private readonly NpgsqlConnection conn;
-            public DeleteContextCommandHandler(NpgsqlConnection conn)
+            private readonly IGridViewConfigModel gridViewConfigModel;
+            public DeleteContextCommandHandler(IGridViewConfigModel gridViewConfigModel)
             {
-                this.conn = conn;
+                this.gridViewConfigModel = gridViewConfigModel;
             }
 
             public async Task<bool> Handle(Command request, CancellationToken cancellationToken)
             {
-                using var command = new NpgsqlCommand($@"
-                    DELETE FROM gridview_config
-                    WHERE name = @name
-                ", conn, null);
+                var isSuccess = await gridViewConfigModel.DeleteContext(request.Name);
 
-                command.Parameters.AddWithValue("name", request.Name);
-
-                var result = await command.ExecuteNonQueryAsync();
-
-                return result > 0;
+                return isSuccess;
             }
         }
     }
