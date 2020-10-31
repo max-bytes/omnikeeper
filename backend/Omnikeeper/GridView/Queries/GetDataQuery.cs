@@ -20,11 +20,14 @@ namespace Omnikeeper.GridView.Queries
         {
             private readonly IGridViewConfigModel gridViewConfigModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
+            private readonly ITraitsProvider traitsProvider;
 
-            public GetDataQueryHandler(IGridViewConfigModel gridViewConfigModel, IEffectiveTraitModel effectiveTraitModel)
+            public GetDataQueryHandler(IGridViewConfigModel gridViewConfigModel, IEffectiveTraitModel effectiveTraitModel,
+                ITraitsProvider traitsProvider)
             {
                 this.gridViewConfigModel = gridViewConfigModel;
                 this.effectiveTraitModel = effectiveTraitModel;
+                this.traitsProvider = traitsProvider;
             }
 
             public async Task<GetDataResponse> Handle(Query request, CancellationToken cancellationToken)
@@ -44,8 +47,10 @@ namespace Omnikeeper.GridView.Queries
                 // is this implemented with layerset parametter ?
 
                 // NOTE mcsuk: use effectiveTraitModel.GetMergedCIsWithTrait() instead
-                var res = await effectiveTraitModel.CalculateMergedCIsWithTrait(
-                    config.Trait,
+
+                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, null, TimeThreshold.BuildLatest());
+                var res = await effectiveTraitModel.GetMergedCIsWithTrait(
+                    activeTrait,
                     new LayerSet(config.ReadLayerset.ToArray()),
                     null,
                     TimeThreshold.BuildLatest()

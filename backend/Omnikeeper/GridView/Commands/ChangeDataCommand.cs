@@ -33,9 +33,10 @@ namespace Omnikeeper.GridView.Commands
             private readonly ICurrentUserService currentUserService;
             private readonly IGridViewConfigModel gridViewConfigModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
+            private readonly ITraitsProvider traitsProvider;
             public ChangeDataCommandHandler(NpgsqlConnection connection, ICIModel ciModel, IAttributeModel attributeModel,
                 IChangesetModel changesetModel, ICurrentUserService currentUserService, IGridViewConfigModel gridViewConfigModel,
-                IEffectiveTraitModel effectiveTraitModel)
+                IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider)
             {
                 conn = connection;
                 this.ciModel = ciModel;
@@ -44,6 +45,7 @@ namespace Omnikeeper.GridView.Commands
                 this.currentUserService = currentUserService;
                 this.gridViewConfigModel = gridViewConfigModel;
                 this.effectiveTraitModel = effectiveTraitModel;
+                this.traitsProvider = traitsProvider;
             }
             public async Task<(ChangeDataResponse, bool, string)> Handle(Command request, CancellationToken cancellationToken)
             {
@@ -148,8 +150,9 @@ namespace Omnikeeper.GridView.Commands
                     Rows = new List<ChangeDataRow>()
                 };
 
-                var res = await effectiveTraitModel.CalculateMergedCIsWithTrait(
-                    config.Trait,
+                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, null, TimeThreshold.BuildLatest());
+                var res = await effectiveTraitModel.GetMergedCIsWithTrait(
+                    activeTrait,
                     new LayerSet(config.ReadLayerset.ToArray()),
                     null,
                     TimeThreshold.BuildLatest()
