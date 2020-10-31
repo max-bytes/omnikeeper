@@ -34,62 +34,49 @@ namespace Omnikeeper.Model
             this.logger = logger;
         }
 
-        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetForCIs(IEnumerable<MergedCI> cis, string[] traitNames, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<EffectiveTrait>> CalculateEffectiveTraitsForCI(MergedCI ci, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var traits = (await traitsProvider.GetActiveTraitSet(trans, atTime)).Traits;
 
-            var selectedTraits = traits.Where(t => traitNames.Contains(t.Key)).Select(t => t.Value);
+            var resolved = new List<EffectiveTrait>();
+            foreach (var trait in traits.Values)
+            {
+                var r = await ResolveETCandidate(new EffectiveTraitCandidate(trait, ci), trans, atTime);
+                if (r != null)
+                    resolved.Add(r);
+            }
 
-            var candidates = cis.SelectMany(ci => selectedTraits.Select(t => new EffectiveTraitCandidate(t, ci))).ToList();
-            var ret = await ResolveETCandidates(candidates, trans, atTime);
-            return ret;
+            return resolved;
         }
 
-        public async Task<EffectiveTraitSet> CalculateEffectiveTraitSetForCI(MergedCI ci, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<bool> DoesCIHaveTrait(MergedCI ci, Trait trait, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var traits = (await traitsProvider.GetActiveTraitSet(trans, atTime)).Traits;
-
-            var candidates = traits.Values.Select(t => new EffectiveTraitCandidate(t, ci)).ToList();
-            var ret = await ResolveETCandidates(candidates, trans, atTime);
-            return ret.FirstOrDefault() ?? EffectiveTraitSet.Build(ci, ImmutableList<EffectiveTrait>.Empty);
+            var ret = await ResolveETCandidate(new EffectiveTraitCandidate(trait, ci), trans, atTime);
+            return ret != null;
         }
 
         public async Task<EffectiveTrait> CalculateEffectiveTraitForCI(MergedCI ci, Trait trait, NpgsqlTransaction trans, TimeThreshold atTime)
         {
-            var ret = await ResolveETCandidates(new List<EffectiveTraitCandidate>() { new EffectiveTraitCandidate(trait, ci) }, trans, atTime);
-            return ret.FirstOrDefault()?.EffectiveTraits[trait.Name]; // TODO: this whole thing can be structured better
+            return await ResolveETCandidate(new EffectiveTraitCandidate(trait, ci), trans, atTime);
         }
 
-        public async Task<IEnumerable<MergedCI>> CalculateMergedCIsWithTrait(string traitName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid, bool> ciFilter = null)
+        public async Task<IEnumerable<MergedCI>> GetMergedCIsWithTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid, bool> ciFilter = null)
         {
-            var traits = (await traitsProvider.GetActiveTraitSet(trans, atTime)).Traits;
-            var trait = traits.GetValueOrDefault(traitName);
-            if (trait == null) return null; // trait not found by name
-            return await CalculateMergedCIsWithTrait(trait, layerSet, trans, atTime, ciFilter);
-        }
-        public async Task<IEnumerable<MergedCI>> CalculateMergedCIsWithTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid, bool> ciFilter = null)
-        {
-            var ts = await CalculateEffectiveTraitSetsForTrait(trait, layerSet, trans, atTime, ciFilter);
-            return ts.Select(ts => ts.UnderlyingCI);
+            var ts = await CalculateEffectiveTraitsForTrait(trait, layerSet, trans, atTime, ciFilter);
+            return ts.Select(ts => ts.Value.ci);
         }
 
-        public async Task<IDictionary<Guid, EffectiveTrait>> CalculateEffectiveTraitsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid, bool> ciFilter = null)
+        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> CalculateEffectiveTraitsForTraitName(string traitName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid, bool> ciFilter = null)
         {
-            var traits = (await traitsProvider.GetActiveTraitSet(trans, atTime)).Traits;
-            var trait = traits.GetValueOrDefault(traitName);
+            var trait = await traitsProvider.GetActiveTrait(traitName, trans, atTime);
             if (trait == null) return null; // trait not found by name
             return await CalculateEffectiveTraitsForTrait(trait, layerSet, trans, atTime, ciFilter);
         }
-        public async Task<IDictionary<Guid, EffectiveTrait>> CalculateEffectiveTraitsForTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid, bool> ciFilter)
-        {
-            var ts = await CalculateEffectiveTraitSetsForTrait(trait, layerSet, trans, atTime, ciFilter);
-            return ts.ToDictionary(ets => ets.UnderlyingCI.ID, ets => ets.EffectiveTraits[trait.Name]);
-        }
 
-        private async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid, bool> ciFilter)
+        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> CalculateEffectiveTraitsForTrait(Trait trait, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime, Func<Guid, bool> ciFilter = null)
         {
             if (layerSet.IsEmpty)
-                return ImmutableList<EffectiveTraitSet>.Empty; // return empty, an empty layer list can never produce any traits
+                return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty; // return empty, an empty layer list can never produce any traits
 
             var hasOnlineInboundLayers = false;
             foreach(var l in layerSet)
@@ -146,30 +133,23 @@ namespace Omnikeeper.Model
             }
 
             if (candidateCIIDs.IsEmpty())
-                return ImmutableList<EffectiveTraitSet>.Empty;
+                return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty;
 
             // now do a full pass to check which ci's REALLY fulfill the trait's requirements
             var cis = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(candidateCIIDs), layerSet, false, trans, atTime);
 
-            var candidates = cis.Select(ci => new EffectiveTraitCandidate(trait, ci)).ToList();
-            var ts = await ResolveETCandidates(candidates, trans, atTime);
-            return ts;
-        }
+            var candidates = cis.Select(ci => new EffectiveTraitCandidate(trait, ci));
 
-        private async Task<IEnumerable<EffectiveTraitSet>> ResolveETCandidates(IEnumerable<EffectiveTraitCandidate> candidates, NpgsqlTransaction trans, TimeThreshold atTime)
-        {
-            var resolved = new List<(EffectiveTraitCandidate candidate, EffectiveTrait result)>();
-            foreach (var c in candidates)
-            {
-                var r = await Resolve(c, trans, atTime);
-                if (r != null)
-                    resolved.Add((c, r));
+            var ret = new Dictionary<Guid, (MergedCI ci, EffectiveTrait et)>();
+            foreach (var c in candidates) {
+                var et = await ResolveETCandidate(c, trans, atTime);
+                if (et != null)
+                    ret.Add(c.CI.ID, (c.CI, et));
             }
-
-            return resolved.GroupBy(c => c.candidate.CI).Select(t => EffectiveTraitSet.Build(t.Key, t.Select(t => t.result)));
+            return ret;
         }
 
-        private async Task<EffectiveTrait> Resolve(EffectiveTraitCandidate et, NpgsqlTransaction trans, TimeThreshold atTime)
+        private async Task<EffectiveTrait> ResolveETCandidate(EffectiveTraitCandidate et, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             var ci = et.CI;
             var trait = et.Trait;

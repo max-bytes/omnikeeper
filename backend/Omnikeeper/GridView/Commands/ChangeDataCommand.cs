@@ -54,8 +54,23 @@ namespace Omnikeeper.GridView.Commands
                 // The consistency validation per CI consists 
                 // of checking whether or not the CI still fulfills/has the configured trait.
 
-                var config = await gridViewConfigModel.GetConfiguration(request.Context);
+                /* NOTE mcsuk: 
+                 * I'd structure this in the following way, hope that works:
+                 * begin transaction
+                 * foreach changed CI
+                 *   perform all the changes for this CI using AttributeModel methods
+                 * end foreach
+                 * fetch all changed CIs using CIModel.GetMergedCIs()
+                 * foreach MergedCI
+                 *   check if it still has trait via EffectiveTraitModel.DoesCIHaveTrait()
+                 *   if it does not, rollback transaction and return error
+                 * end foreach
+                 * commit transaction
+                 * return changed CIs/rows, re-using fetched CIs from above as data basis
+                 */
 
+
+                var config = await gridViewConfigModel.GetConfiguration(request.Context);
                 using var trans = conn.BeginTransaction();
                 foreach (var row in request.Changes.SparseRows)
                 {

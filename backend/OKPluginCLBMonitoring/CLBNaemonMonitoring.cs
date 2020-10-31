@@ -213,7 +213,7 @@ namespace OKPluginCLBMonitoring
             var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTrait(naemonInstanceTrait, layerSetAll, trans, timeThreshold);
             foreach (var naemonInstanceTS in naemonInstancesTS)
                 foreach (var monitoredCI in monitoredCIs.Values)
-                    if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value))
+                    if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value.et))
                         monitoredByCIIDFragments.Add(BulkRelationDataPredicateScope.Fragment.Build(monitoredCI.ID, naemonInstanceTS.Key));
             await relationModel.BulkReplaceRelations(BulkRelationDataPredicateScope.Build(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, trans);
             logger.LogDebug("Assigned CIs to naemon instances");

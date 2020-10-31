@@ -72,9 +72,9 @@ namespace Tests.Integration.Model
                 )
             );
 
-            var json = TraitsProvider.TraitSetSerializer.SerializeToString(traitset);
+            var json = RecursiveTraitSet.Serializer.SerializeToString(traitset);
 
-            var x = TraitsProvider.TraitSetSerializer.Deserialize(json);
+            var x = RecursiveTraitSet.Serializer.Deserialize(json);
 
             x.Should().BeEquivalentTo(traitset);
         }

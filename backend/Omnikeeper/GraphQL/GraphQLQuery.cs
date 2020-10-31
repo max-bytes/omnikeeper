@@ -143,17 +143,32 @@ namespace Omnikeeper.GraphQL
 
                     var preferredTraits = (forward) ? predicate.Constraints.PreferredTraitsTo : predicate.Constraints.PreferredTraitsFrom;
 
-                    // TODO: this has abysmal performance! We fully query ALL CIs and then calculate the effective traits for each of them... :(
+                    // TODO: this has abysmal performance! We fully query ALL CIs and then check the effective traits for each of them... :(
                     // we definitely have to look into caching traits as best as we can and provide a better way to query cis with a (array of) effective trait(s) as input
                     // we might alternatively need to rework this: limit the number of items this works on (with a limit parameter) and provide a search parameter
                     var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), userContext.LayerSet, true, null, userContext.TimeThreshold);
-                    var effectiveTraitSets = await effectiveTraitModel.CalculateEffectiveTraitSetForCIs(cis, preferredTraits, null, userContext.TimeThreshold);
+                    var traits = (await traitsProvider.GetActiveTraitSet(null, userContext.TimeThreshold)).Traits;
+                    var selectedTraits = traits.Where(t => preferredTraits.Contains(t.Key)).Select(t => t.Value);
 
-                    return effectiveTraitSets.Where(et =>
+                    var ret = new List<CompactCI>();
+                    foreach(var ci in cis)
                     {
+                        var hasAtLeastOneTrait = false;
+                        foreach(var trait in selectedTraits)
+                        {
+                            if (await effectiveTraitModel.DoesCIHaveTrait(ci, trait, null, userContext.TimeThreshold))
+                            {
+                                hasAtLeastOneTrait = true;
+                                break;
+                            }
+                        }
                         // if CI has ANY of the preferred traits, keep it
-                        return preferredTraits.Any(pt => et.EffectiveTraits.ContainsKey(pt));
-                    }).Select(et => CompactCI.Build(et.UnderlyingCI));
+                        if (hasAtLeastOneTrait)
+                        {
+                            ret.Add(CompactCI.Build(ci));
+                        }
+                    }
+                    return ret;
                 });
 
             FieldAsync<ListGraphType<DirectedPredicateType>>("directedPredicates",
@@ -173,8 +188,8 @@ namespace Omnikeeper.GraphQL
                     // filter predicates by constraints
                     var layers = await layerModel.BuildLayerSet(layersForEffectiveTraits, null);
                     var ci = await ciModel.GetMergedCI(preferredForCI, layers, null, userContext.TimeThreshold);
-                    var effectiveTraitSet = await effectiveTraitModel.CalculateEffectiveTraitSetForCI(ci, null, userContext.TimeThreshold);
-                    var effectiveTraitNames = effectiveTraitSet.EffectiveTraits.Keys;
+                    var effectiveTraits = await effectiveTraitModel.CalculateEffectiveTraitsForCI(ci, null, userContext.TimeThreshold);
+                    var effectiveTraitNames = effectiveTraits.Select(et => et.UnderlyingTrait.Name);
                     var directedPredicates = predicates.SelectMany(predicate =>
                     {
                         var ret = new List<DirectedPredicate>();
@@ -299,7 +314,7 @@ namespace Omnikeeper.GraphQL
                     // TODO: implement better, showing string as-is for now
                     // TODO: should we not deliver non-DB traits (f.e. from CLBs) here?
                     var traitSet = await traitModel.GetRecursiveTraitSet(null, TimeThreshold.BuildLatest());
-                    var str = TraitsProvider.TraitSetSerializer.SerializeToString(traitSet);
+                    var str = RecursiveTraitSet.Serializer.SerializeToString(traitSet);
                     return str;
                 });
 
