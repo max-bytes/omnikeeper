@@ -11,6 +11,7 @@ using Omnikeeper.GridView.Response;
 using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -73,6 +74,7 @@ namespace Omnikeeper.GridView.Commands
 
 
                 var config = await gridViewConfigModel.GetConfiguration(request.Context);
+
                 using var trans = conn.BeginTransaction();
                 foreach (var row in request.Changes.SparseRows)
                 {
@@ -137,6 +139,28 @@ namespace Omnikeeper.GridView.Commands
                     }
 
 
+                }
+
+                var cisList = SpecificCIIDsSelection.Build(request.Changes.SparseRows.Select(i => i.Ciid));
+                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, null, TimeThreshold.BuildLatest());
+
+                var mergedCIs = await ciModel.GetMergedCIs(
+                    cisList,
+                    new LayerSet(config.ReadLayerset.ToArray()),
+                    true,
+                    null,
+                    TimeThreshold.BuildLatest()
+                    );
+
+                foreach (var mergedCI in mergedCIs)
+                {
+                    var hasTrait = await effectiveTraitModel.DoesCIHaveTrait(mergedCI, activeTrait, null, TimeThreshold.BuildLatest());
+
+                    if (!hasTrait)
+                    {
+                        trans.Rollback();
+                        return (new ChangeDataResponse(), false, $"Consistency validation for CI with id={mergedCI.ID} failed. CI doesn't has the configured trait {activeTrait.Name}!");
+                    }
                 }
 
                 trans.Commit();
