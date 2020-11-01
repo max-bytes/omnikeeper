@@ -48,14 +48,14 @@ namespace Omnikeeper.Model
                     INSERT INTO gridview_config
                     (config, name, timestamp)
                     VALUES
-                    (@config, @name, @timestamp)
+                    (CAST(@config AS json), @name, @timestamp)
                 ", conn, null);
 
             var config = JsonConvert.SerializeObject(configuration);
 
             command.Parameters.AddWithValue("config", config);
             command.Parameters.AddWithValue("name", name);
-            command.Parameters.AddWithValue("timestamp", TimeThreshold.BuildLatest());
+            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
 
             var result = await command.ExecuteNonQueryAsync();
 
@@ -66,7 +66,7 @@ namespace Omnikeeper.Model
         {
             using var command = new NpgsqlCommand($@"
                     UPDATE gridview_config
-                    SET config = @config
+                    SET config = CAST(@config AS json)
                     WHERE name = @name
                 ", conn, null);
 

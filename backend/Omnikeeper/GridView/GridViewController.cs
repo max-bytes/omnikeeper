@@ -47,14 +47,14 @@ namespace LandscapeRegistry.GridView
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> AddContext([FromBody] AddContextRequest context)
         {
-            var isSuccess = await _mediatr.Send(new AddContextCommand.Command { Context = context });
+            var (isSuccess, error) = await _mediatr.Send(new AddContextCommand.Command { Context = context });
 
             if (isSuccess)
             {
                 return CreatedAtAction(nameof(AddContext), new { context.Name });
             }
 
-            return BadRequest(new { Error = "An error ocurred trying to add this context!" });
+            return BadRequest(new { Error = error });
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace LandscapeRegistry.GridView
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> EditContext([FromRoute] string name, [FromBody] GridViewConfiguration configuration)
         {
-            var isSuccess = await _mediatr.Send(new EditContextCommand.Command
+            var (isSuccess, error) = await _mediatr.Send(new EditContextCommand.Command
             {
                 Name = name,
                 Configuration = configuration
@@ -81,7 +81,7 @@ namespace LandscapeRegistry.GridView
                 return Ok();
             }
 
-            return BadRequest(new { Error = $"An error ocurred trying to edit context: {name}!" });
+            return BadRequest(new { Error = error });
 
         }
 

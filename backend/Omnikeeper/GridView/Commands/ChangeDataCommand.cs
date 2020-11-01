@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using FluentValidation;
+using MediatR;
 using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
@@ -6,6 +7,7 @@ using Omnikeeper.Base.Entity.GridView;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.GridView.Helper;
 using Omnikeeper.GridView.Request;
 using Omnikeeper.GridView.Response;
 using Omnikeeper.Service;
@@ -23,6 +25,14 @@ namespace Omnikeeper.GridView.Commands
         {
             public ChangeDataRequest Changes { get; set; }
             public string Context { get; set; }
+        }
+
+        public class CommandValidator : AbstractValidator<Command>
+        {
+            public CommandValidator()
+            {
+                RuleFor(x => x.Context).NotEmpty().NotNull();
+            }
         }
 
         public class ChangeDataCommandHandler : IRequestHandler<Command, (ChangeDataResponse, bool, string)>
@@ -50,6 +60,15 @@ namespace Omnikeeper.GridView.Commands
             }
             public async Task<(ChangeDataResponse, bool, string)> Handle(Command request, CancellationToken cancellationToken)
             {
+                var validator = new CommandValidator();
+
+                var validation = validator.Validate(request);
+
+                if (!validation.IsValid)
+                {
+                    return (new ChangeDataResponse(), false, ValidationHelper.CreateErrorMessage(validation));
+                }
+
                 var user = await currentUserService.GetCurrentUser(null);
                 var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
 

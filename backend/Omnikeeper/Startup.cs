@@ -49,6 +49,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using MediatR;
+using FluentValidation.AspNetCore;
 
 namespace Omnikeeper
 {
@@ -320,7 +321,7 @@ namespace Omnikeeper
                 {
                     inputFormatter.BaseAddressFactory = (m) => ModifyBaseAddress(m);
                 }
-            });
+            }).AddFluentValidation();
         }
 
         public class AuthenticationRequirementsOperationFilter : IOperationFilter

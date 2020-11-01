@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using FluentValidation;
+using MediatR;
 using Omnikeeper.Base.Model;
 using Omnikeeper.GridView.Response;
 using System.Collections.Generic;
@@ -13,6 +14,15 @@ namespace Omnikeeper.GridView.Queries
         {
             public string Context { get; set; }
         }
+
+        public class QueryValidator : AbstractValidator<Query>
+        {
+            public QueryValidator()
+            {
+                RuleFor(x => x.Context).NotEmpty();
+            }
+        }
+
         public class GetSchemaQueryHandler : IRequestHandler<Query, GetSchemaResponse>
         {
             private readonly IGridViewConfigModel gridViewConfigModel;
@@ -22,6 +32,8 @@ namespace Omnikeeper.GridView.Queries
             }
             public async Task<GetSchemaResponse> Handle(Query request, CancellationToken cancellationToken)
             {
+                var validator = new QueryValidator();
+                validator.ValidateAndThrow(request);
 
                 var config = await gridViewConfigModel.GetConfiguration(request.Context);
 

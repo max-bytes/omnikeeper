@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using FluentValidation;
+using MediatR;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
@@ -14,6 +15,14 @@ namespace Omnikeeper.GridView.Queries
         public class Query : IRequest<GetDataResponse>
         {
             public string Context { get; set; }
+        }
+
+        public class QueryValidator : AbstractValidator<Query>
+        {
+            public QueryValidator()
+            {
+                RuleFor(x => x.Context).NotEmpty();
+            }
         }
 
         public class GetDataQueryHandler : IRequestHandler<Query, GetDataResponse>
@@ -32,9 +41,11 @@ namespace Omnikeeper.GridView.Queries
 
             public async Task<GetDataResponse> Handle(Query request, CancellationToken cancellationToken)
             {
+                var validator = new QueryValidator();
+                validator.ValidateAndThrow(request);
+ 
                 var config = await gridViewConfigModel.GetConfiguration(request.Context);
-
-
+                
                 var result = new GetDataResponse
                 {
                     Rows = new List<Row>()
