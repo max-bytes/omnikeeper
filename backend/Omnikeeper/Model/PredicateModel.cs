@@ -101,7 +101,7 @@ namespace Omnikeeper.Model
                 await command.ExecuteNonQueryAsync();
                 return true;
             }
-            catch (PostgresException e)
+            catch (PostgresException)
             {
                 return false;
             }
@@ -143,7 +143,7 @@ namespace Omnikeeper.Model
                         if (!s.IsDBNull(4))
                             constraints = s.GetFieldValue<PredicateConstraints>(4);
                     }
-                    catch (System.Text.Json.JsonException e)
+                    catch (System.Text.Json.JsonException)
                     {
                         // TODO: error handling?
                     }

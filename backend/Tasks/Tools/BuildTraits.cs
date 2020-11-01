@@ -15,7 +15,7 @@ namespace Tasks.Tools
         public void Build()
         {
             var traits = DefaultTraits.Get();
-            var json = TraitsProvider.TraitSetSerializer.SerializeToString(traits);
+            var json = RecursiveTraitSet.Serializer.SerializeToString(traits);
 
             Console.WriteLine(json);
         }

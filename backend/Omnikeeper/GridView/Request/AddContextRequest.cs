@@ -1,4 +1,5 @@
-﻿using Omnikeeper.GridView.Model;
+﻿
+using Omnikeeper.Base.Entity.GridView;
 
 namespace Omnikeeper.GridView.Request
 {

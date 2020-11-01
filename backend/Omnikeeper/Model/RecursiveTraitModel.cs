@@ -36,7 +36,7 @@ namespace Omnikeeper.Model
             var configJO = dr.GetFieldValue<JObject>(0);
             try
             {
-                var traits = TraitsProvider.TraitSetSerializer.Deserialize(configJO);
+                var traits = RecursiveTraitSet.Serializer.Deserialize(configJO);
 
                 return traits;
             }
@@ -49,7 +49,7 @@ namespace Omnikeeper.Model
 
         public async Task<RecursiveTraitSet> SetRecursiveTraitSet(RecursiveTraitSet traitSet, NpgsqlTransaction trans)
         {
-            var traitsJO = TraitsProvider.TraitSetSerializer.SerializeToJObject(traitSet);
+            var traitsJO = RecursiveTraitSet.Serializer.SerializeToJObject(traitSet);
             using var command = new NpgsqlCommand(@"INSERT INTO traits (config, timestamp) VALUES (@config, @timestamp)", conn, trans);
             command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = traitsJO });
             command.Parameters.AddWithValue("timestamp", TimeThreshold.BuildLatest().Time);

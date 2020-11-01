@@ -1,6 +1,6 @@
 ﻿using MediatR;
+using Omnikeeper.Base.Model;
 using Omnikeeper.GridView.Response;
-using Omnikeeper.GridView.Service;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,15 +15,15 @@ namespace Omnikeeper.GridView.Queries
         }
         public class GetSchemaQueryHandler : IRequestHandler<Query, GetSchemaResponse>
         {
-            private readonly GridViewConfigService _gridViewConfigService;
-            public GetSchemaQueryHandler(GridViewConfigService gridViewConfigService)
+            private readonly IGridViewConfigModel gridViewConfigModel;
+            public GetSchemaQueryHandler(IGridViewConfigModel gridViewConfigModel)
             {
-                _gridViewConfigService = gridViewConfigService;
+                this.gridViewConfigModel = gridViewConfigModel;
             }
             public async Task<GetSchemaResponse> Handle(Query request, CancellationToken cancellationToken)
             {
 
-                var config = await _gridViewConfigService.GetConfiguration(request.Context);
+                var config = await gridViewConfigModel.GetConfiguration(request.Context);
 
                 var result = new GetSchemaResponse 
                 {

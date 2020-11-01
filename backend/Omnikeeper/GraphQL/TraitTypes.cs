@@ -4,13 +4,6 @@ using System;
 
 namespace Omnikeeper.GraphQL
 {
-    public class EffectiveTraitSetType : ObjectGraphType<EffectiveTraitSet>
-    {
-        public EffectiveTraitSetType()
-        {
-            Field(x => x.EffectiveTraits, type: typeof(ListGraphType<EffectiveTraitType>));
-        }
-    }
     public class EffectiveTraitType : ObjectGraphType<EffectiveTrait>
     {
         public EffectiveTraitType()

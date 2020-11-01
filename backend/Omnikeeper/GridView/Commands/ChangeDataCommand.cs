@@ -2,17 +2,15 @@
 using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
+using Omnikeeper.Base.Entity.GridView;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Request;
 using Omnikeeper.GridView.Response;
-using Omnikeeper.GridView.Service;
 using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,19 +31,21 @@ namespace Omnikeeper.GridView.Commands
             private readonly IAttributeModel attributeModel;
             private readonly IChangesetModel changesetModel;
             private readonly ICurrentUserService currentUserService;
-            private readonly GridViewConfigService gridViewConfigService;
+            private readonly IGridViewConfigModel gridViewConfigModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
+            private readonly ITraitsProvider traitsProvider;
             public ChangeDataCommandHandler(NpgsqlConnection connection, ICIModel ciModel, IAttributeModel attributeModel,
-                IChangesetModel changesetModel, ICurrentUserService currentUserService, GridViewConfigService gridViewConfigService,
-                IEffectiveTraitModel effectiveTraitModel)
+                IChangesetModel changesetModel, ICurrentUserService currentUserService, IGridViewConfigModel gridViewConfigModel,
+                IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider)
             {
                 conn = connection;
                 this.ciModel = ciModel;
                 this.attributeModel = attributeModel;
                 this.changesetModel = changesetModel;
                 this.currentUserService = currentUserService;
-                this.gridViewConfigService = gridViewConfigService;
+                this.gridViewConfigModel = gridViewConfigModel;
                 this.effectiveTraitModel = effectiveTraitModel;
+                this.traitsProvider = traitsProvider;
             }
             public async Task<(ChangeDataResponse, bool, string)> Handle(Command request, CancellationToken cancellationToken)
             {
@@ -56,8 +56,23 @@ namespace Omnikeeper.GridView.Commands
                 // The consistency validation per CI consists 
                 // of checking whether or not the CI still fulfills/has the configured trait.
 
-                var config = await gridViewConfigService.GetConfiguration(request.Context);
+                /* NOTE mcsuk: 
+                 * I'd structure this in the following way, hope that works:
+                 * begin transaction
+                 * foreach changed CI
+                 *   perform all the changes for this CI using AttributeModel methods
+                 * end foreach
+                 * fetch all changed CIs using CIModel.GetMergedCIs()
+                 * foreach MergedCI
+                 *   check if it still has trait via EffectiveTraitModel.DoesCIHaveTrait()
+                 *   if it does not, rollback transaction and return error
+                 * end foreach
+                 * commit transaction
+                 * return changed CIs/rows, re-using fetched CIs from above as data basis
+                 */
 
+
+                var config = await gridViewConfigModel.GetConfiguration(request.Context);
                 using var trans = conn.BeginTransaction();
                 foreach (var row in request.Changes.SparseRows)
                 {
@@ -135,8 +150,9 @@ namespace Omnikeeper.GridView.Commands
                     Rows = new List<ChangeDataRow>()
                 };
 
-                var res = await effectiveTraitModel.CalculateEffectiveTraitsForTraitName(
-                    config.Trait,
+                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, null, TimeThreshold.BuildLatest());
+                var res = await effectiveTraitModel.GetMergedCIsWithTrait(
+                    activeTrait,
                     new LayerSet(config.ReadLayerset.ToArray()),
                     null,
                     TimeThreshold.BuildLatest()
@@ -144,9 +160,9 @@ namespace Omnikeeper.GridView.Commands
 
                 foreach (var item in res)
                 {
-                    var ci_id = item.Key;
+                    var ci_id = item.ID;
 
-                    foreach (var attr in item.Value.TraitAttributes)
+                    foreach (var attr in item.MergedAttributes)
                     {
                         var c = attr.Value;
                         var name = attr.Value.Attribute.Name;

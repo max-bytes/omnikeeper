@@ -362,13 +362,13 @@ namespace Omnikeeper.GraphQL
 
                     try
                     {
-                        var traitSet = TraitsProvider.TraitSetSerializer.Deserialize(traitSetInput);
+                        var traitSet = RecursiveTraitSet.Serializer.Deserialize(traitSetInput);
 
                         var created = await traitModel.SetRecursiveTraitSet(traitSet, transaction);
 
                         await transaction.CommitAsync();
 
-                        return TraitsProvider.TraitSetSerializer.SerializeToString(created);
+                        return RecursiveTraitSet.Serializer.SerializeToString(created);
                     }
                     catch (Exception e)
                     {

@@ -19,18 +19,24 @@ namespace Omnikeeper.Controllers
     public class TraitController : ControllerBase
     {
         private readonly IEffectiveTraitModel traitModel;
+        private readonly ITraitsProvider traitsProvider;
 
-        public TraitController(IEffectiveTraitModel traitModel)
+        public TraitController(IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider)
         {
             this.traitModel = traitModel;
+            this.traitsProvider = traitsProvider;
         }
 
-        [HttpGet("getEffectiveTraitSetsForTraitName")]
+        [HttpGet("getEffectiveTraitsForTraitName")]
         public async Task<ActionResult<IDictionary<Guid, EffectiveTraitDTO>>> GetEffectiveTraitsForTraitName([FromQuery, Required] long[] layerIDs, [FromQuery, Required] string traitName, [FromQuery] DateTimeOffset? atTime = null)
         {
+            var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
-            var traitSets = await traitModel.CalculateEffectiveTraitsForTraitName(traitName, layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
-            return Ok(traitSets.ToDictionary(kv => kv.Key, kv => EffectiveTraitDTO.Build(kv.Value)));
+            var trait = await traitsProvider.GetActiveTrait(traitName, null, timeThreshold);
+            if (trait == null)
+                return BadRequest($"Trait with name \"{traitName}\" not found");
+            var traitSets = await traitModel.CalculateEffectiveTraitsForTrait(trait, layerset, null, timeThreshold);
+            return Ok(traitSets.ToDictionary(kv => kv.Key, kv => EffectiveTraitDTO.Build(kv.Value.et)));
         }
     }
 }

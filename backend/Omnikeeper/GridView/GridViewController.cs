@@ -3,8 +3,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Omnikeeper.Base.Entity.GridView;
 using Omnikeeper.GridView.Commands;
-using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Queries;
 using Omnikeeper.GridView.Request;
 
@@ -143,7 +143,7 @@ namespace LandscapeRegistry.GridView
         /// <returns>A list of changes or an error</returns>
         /// <response code="200">If request is successful</response>
         /// <response code="400">If saving changes fails</response>  
-        [HttpPost("contexts/{context}/data")]
+        [HttpPost("contexts/{context}/change")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ChangeData([FromRoute] string context, [FromBody] ChangeDataRequest changes)

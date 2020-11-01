@@ -30,33 +30,35 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var (traitModel, layerset, ciids) = await BaseSetup(new MockedTraitsProvider(), conn);
+            var traitsProvider = new MockedTraitsProvider();
+            var (traitModel, layerset, ciids) = await BaseSetup(traitsProvider, conn);
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var t0 = await traitModel.CalculateEffectiveTraitsForTraitName("invalid_trait", layerset, null, timeThreshold);
-            Assert.AreEqual(null, t0);
+            // TODO: move test for TraitsProvider to its own test-class
+            var invalidTrait = await traitsProvider.GetActiveTrait("invalid_trait", null, timeThreshold);
+            Assert.AreEqual(null, invalidTrait);
 
-            var t1 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_1", layerset, null, timeThreshold);
-            Assert.AreEqual(3, t1.Count());
-            var t2 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_2", layerset, null, timeThreshold);
-            Assert.AreEqual(2, t2.Count());
-            Assert.IsTrue(t2.All(t => t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a2") && t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a4")));
-            var t3 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_3", layerset, null, timeThreshold);
-            Assert.AreEqual(2, t3.Count());
-            Assert.IsTrue(t3.All(t => t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
+            var testTrait1 = await traitsProvider.GetActiveTrait("test_trait_1", null, timeThreshold);
+            var testTrait2 = await traitsProvider.GetActiveTrait("test_trait_2", null, timeThreshold);
+            var testTrait3 = await traitsProvider.GetActiveTrait("test_trait_3", null, timeThreshold);
 
-            var tt0 = await traitModel.CalculateMergedCIsWithTrait("invalid_trait", layerset, null, timeThreshold);
-            Assert.AreEqual(null, tt0);
+            var et1 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait1, layerset, null, timeThreshold);
+            Assert.AreEqual(3, et1.Count());
+            var et2 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait2, layerset, null, timeThreshold);
+            Assert.AreEqual(2, et2.Count());
+            Assert.IsTrue(et2.All(t => t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a2") && t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a4")));
+            var et3 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait3, layerset, null, timeThreshold);
+            Assert.AreEqual(2, et3.Count());
+            Assert.IsTrue(et3.All(t => t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
 
+            var cis1 = await traitModel.GetMergedCIsWithTrait(testTrait1, layerset, null, timeThreshold);
+            Assert.AreEqual(3, cis1.Count());
+            cis1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
 
-            var tt1 = await traitModel.CalculateMergedCIsWithTrait("test_trait_1", layerset, null, timeThreshold);
-            Assert.AreEqual(3, tt1.Count());
-            tt1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
-
-            var tt2 = await traitModel.CalculateMergedCIsWithTrait("test_trait_2", layerset, null, timeThreshold);
-            Assert.AreEqual(2, tt2.Count());
-            tt2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
+            var cis2 = await traitModel.GetMergedCIsWithTrait(testTrait2, layerset, null, timeThreshold);
+            Assert.AreEqual(2, cis2.Count());
+            cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
         }
 
         [Test]
@@ -64,13 +66,17 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var (traitModel, layerset, _) = await BaseSetup(new MockedTraitsProvider(), conn);
+            var traitsProvider = new MockedTraitsProvider();
+            var (traitModel, layerset, _) = await BaseSetup(traitsProvider, conn);
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var t1 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_4", layerset, null, timeThreshold);
+            var testTrait4 = await traitsProvider.GetActiveTrait("test_trait_4", null, timeThreshold);
+            var testTrait5 = await traitsProvider.GetActiveTrait("test_trait_5", null, timeThreshold);
+
+            var t1 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait4, layerset, null, timeThreshold);
             Assert.AreEqual(2, t1.Count());
-            var t2 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_5", layerset, null, timeThreshold);
+            var t2 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait5, layerset, null, timeThreshold);
             Assert.AreEqual(1, t2.Count());
         }
 
@@ -80,8 +86,10 @@ namespace Tests.Integration.Model
             var timeThreshold = TimeThreshold.BuildLatest();
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var (traitModel, layerset, _) = await BaseSetup(new MockedTraitsProviderWithLoop(), conn);
-            var t1 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_1", layerset, null, timeThreshold);
+            var traitsProvider = new MockedTraitsProviderWithLoop();
+            var (traitModel, layerset, _) = await BaseSetup(traitsProvider, conn);
+            var testTrait1 = await traitsProvider.GetActiveTrait("test_trait_1", null, timeThreshold);
+            var t1 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait1, layerset, null, timeThreshold);
             Assert.AreEqual(0, t1.Count());
         }
 

@@ -18,6 +18,8 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Inbound;
+using Microsoft.Extensions.Configuration;
 
 namespace Tests.Integration.GraphQL
 {
@@ -44,14 +46,22 @@ namespace Tests.Integration.GraphQL
             Services.Register<IODataAPIContextModel, ODataAPIContextModel>();
             Services.Register<IRecursiveTraitModel, RecursiveTraitModel>();
             Services.Register<ILayerStatisticsModel, LayerStatisticsModel>();
+            Services.Register<IOnlineAccessProxy, OnlineAccessProxy>();
+            Services.Register<IInboundAdapterManager, InboundAdapterManager>();
+            Services.Register<IEnumerable<IOnlineInboundAdapterBuilder>>(() => new List<IOnlineInboundAdapterBuilder>());
+            Services.Register<IExternalIDMapper, ExternalIDMapper>();
+            Services.Register<IExternalIDMapPersister, ExternalIDMapPostgresPersister>();
 
             Services.Register<ITraitsProvider, TraitsProvider>();
             Services.Register<ITemplatesProvider, TemplatesProvider>();
 
+            Services.Register<ILoggerFactory, NullLoggerFactory>();
             Services.Register<ILogger<EffectiveTraitModel>>(() => NullLogger<EffectiveTraitModel>.Instance);
             Services.Register<ILogger<OIAConfigModel>>(() => NullLogger<OIAConfigModel>.Instance);
             Services.Register<ILogger<ODataAPIContextModel>>(() => NullLogger<ODataAPIContextModel>.Instance);
             Services.Register<ILogger<RecursiveTraitModel>>(() => NullLogger<RecursiveTraitModel>.Instance);
+            Services.Register<ILogger<OnlineAccessProxy>>(() => NullLogger<OnlineAccessProxy>.Instance);
+            Services.Register<IConfiguration>(() => new Mock<IConfiguration>().Object);
 
             Services.Register<CIMappingService, CIMappingService>();
 

@@ -8,5 +8,6 @@ namespace Omnikeeper.Base.Model
     public interface ITraitsProvider
     {
         Task<TraitSet> GetActiveTraitSet(NpgsqlTransaction trans, TimeThreshold timeThreshold);
+        Task<Trait> GetActiveTrait(string traitName, NpgsqlTransaction trans, TimeThreshold timeThreshold);
     }
 }
