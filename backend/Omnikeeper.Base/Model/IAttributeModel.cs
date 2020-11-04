@@ -14,7 +14,11 @@ namespace Omnikeeper.Base.Model
         Task<IImmutableDictionary<Guid, IImmutableDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
         Task<IEnumerable<MergedCIAttribute>> FindMergedAttributesByName(string regex, ICIIDSelection selection, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
         Task<IImmutableDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
+        /**
+         * NOTE: unlike IAttributeModel.GetAttribute(), GetMergedAttribute() does NOT return removed attributes
+         */
         Task<MergedCIAttribute> GetMergedAttribute(string name, Guid ciid, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime);
+        Task<MergedCIAttribute> GetFullBinaryMergedAttribute(string name, Guid ciid, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime);
 
     }
 }

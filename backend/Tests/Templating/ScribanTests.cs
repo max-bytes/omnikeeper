@@ -31,10 +31,10 @@ namespace Tests.Templating
                 var staticChangesetID = Guid.NewGuid();
                 var testCIA = MergedCI.Build(Guid.NewGuid(), "test-ci-a", new LayerSet(), atTime, new List<MergedCIAttribute>()
                 {
-                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a", Guid.NewGuid(), AttributeScalarValueText.Build("a-value"), AttributeState.New, staticChangesetID), new long[0]),
-                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.b", Guid.NewGuid(), AttributeScalarValueText.Build("b-value"), AttributeState.New, staticChangesetID), new long[0]),
-                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.c", Guid.NewGuid(), AttributeArrayValueText.Build(new string[] { "c-value0", "c-value1" }), AttributeState.New, staticChangesetID), new long[0]),
-                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.json", Guid.NewGuid(), AttributeArrayValueJSON.Build(
+                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a", Guid.NewGuid(), AttributeScalarValueText.BuildFromString("a-value"), AttributeState.New, staticChangesetID), new long[0]),
+                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.b", Guid.NewGuid(), AttributeScalarValueText.BuildFromString("b-value"), AttributeState.New, staticChangesetID), new long[0]),
+                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.c", Guid.NewGuid(), AttributeArrayValueText.BuildFromString(new string[] { "c-value0", "c-value1" }), AttributeState.New, staticChangesetID), new long[0]),
+                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.json", Guid.NewGuid(), AttributeArrayValueJSON.BuildFromString(
                         new string[] { @"{ ""foo"": ""bar""}", @"{ ""second"": { ""yes"": true } }" }), AttributeState.New, staticChangesetID), new long[0])
                     //MergedCIAttribute.Build(CIAttribute.Build(0, "a.json", Guid.NewGuid(), AttributeValueJSONScalar.Build(
                     //    JObject.Parse(@"{ ""foo"": ""bar""}")), AttributeState.New, 0), new long[0])

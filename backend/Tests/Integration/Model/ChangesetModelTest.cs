@@ -50,21 +50,21 @@ namespace Tests.Integration.Model
             var layer1 = await layerModel.CreateLayer("l1", trans2);
             var layerset = new LayerSet(new long[] { layer1.ID });
             var changeset1 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("textL1"), ciid2, layer1.ID, changeset1, trans2);
+            await attributeModel.InsertAttribute("a1", AttributeScalarValueText.BuildFromString("textL1"), ciid2, layer1.ID, changeset1, trans2);
             trans2.Commit();
 
             Thread.Sleep(500);
 
             using var trans3 = conn.BeginTransaction();
             var changeset2 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a2", AttributeScalarValueText.Build("textL1"), ciid3, layer1.ID, changeset2, trans3);
+            await attributeModel.InsertAttribute("a2", AttributeScalarValueText.BuildFromString("textL1"), ciid3, layer1.ID, changeset2, trans3);
             trans3.Commit();
 
             var t2 = DateTimeOffset.Now;
 
             using var trans4 = conn.BeginTransaction();
             var changeset3 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a3", AttributeScalarValueText.Build("textL1"), ciid3, layer1.ID, changeset3, trans4);
+            await attributeModel.InsertAttribute("a3", AttributeScalarValueText.BuildFromString("textL1"), ciid3, layer1.ID, changeset3, trans4);
             trans4.Commit();
 
             var t3 = DateTimeOffset.Now;
@@ -79,7 +79,7 @@ namespace Tests.Integration.Model
             using (var trans = conn.BeginTransaction())
             {
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await attributeModel.InsertAttribute("a3", AttributeScalarValueText.Build("textL1"), ciid2, layer1.ID, changeset3, trans);
+                await attributeModel.InsertAttribute("a3", AttributeScalarValueText.BuildFromString("textL1"), ciid2, layer1.ID, changeset3, trans);
                 trans.Commit();
             }
             var t4 = DateTimeOffset.Now;
@@ -178,8 +178,8 @@ namespace Tests.Integration.Model
 
             using var trans3 = conn.BeginTransaction();
             var changeset2 = ChangesetProxy.Build(user, DateTimeOffset.FromUnixTimeSeconds(150), changesetModel);
-            await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("foo"), ciid1, layer1.ID, changeset2, trans3);
-            await attributeModel.InsertAttribute("a2", AttributeScalarValueText.Build("bar"), ciid1, layer1.ID, changeset2, trans3);
+            await attributeModel.InsertAttribute("a1", AttributeScalarValueText.BuildFromString("foo"), ciid1, layer1.ID, changeset2, trans3);
+            await attributeModel.InsertAttribute("a2", AttributeScalarValueText.BuildFromString("bar"), ciid1, layer1.ID, changeset2, trans3);
             trans3.Commit();
 
             Assert.AreEqual(0, await changesetModel.ArchiveUnusedChangesetsOlderThan(DateTimeOffset.FromUnixTimeSeconds(50), null));
@@ -201,7 +201,7 @@ namespace Tests.Integration.Model
             // overwrite attribute a1
             using var trans5 = conn.BeginTransaction();
             var changeset4 = ChangesetProxy.Build(user, DateTimeOffset.FromUnixTimeSeconds(200), changesetModel);
-            await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("new foo"), ciid1, layer1.ID, changeset4, trans5);
+            await attributeModel.InsertAttribute("a1", AttributeScalarValueText.BuildFromString("new foo"), ciid1, layer1.ID, changeset4, trans5);
             trans5.Commit();
 
             // changeset2 is now old "enough", but still cannot be deleted because one of its attributes (a2) is the latest

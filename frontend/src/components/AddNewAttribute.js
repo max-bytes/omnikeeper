@@ -95,7 +95,9 @@ function AddNewAttribute(props) {
           <Form.Group as={Row} controlId="value">
             <Form.Label column>{((newAttribute.isArray) ? 'Values' : 'Value')}</Form.Label>
             <Col sm={10}>
-              <EditableAttributeValue setHasErrors={setHasErrors} name={'newAttribute'} autoFocus={valueAutofocussed} values={newAttribute.values} setValues={vs => setNewAttribute({...newAttribute, values: vs})} type={newAttribute.type} isArray={newAttribute.isArray} />
+              <EditableAttributeValue setHasErrors={setHasErrors} name={'newAttribute'} autoFocus={valueAutofocussed} 
+                values={newAttribute.values} setValues={vs => setNewAttribute({...newAttribute, values: vs})} 
+                type={newAttribute.type} isArray={newAttribute.isArray} ciid={props.ciIdentity} />
             </Col>
           </Form.Group>
           <Button secondary className="mr-2" onClick={() => setOpen(false)}>Cancel</Button>

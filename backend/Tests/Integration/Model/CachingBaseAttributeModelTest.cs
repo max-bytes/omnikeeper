@@ -64,22 +64,22 @@ namespace Tests.Integration.Model
                 {
                     return new List<CIAttribute>()
                     {
-                        CIAttribute.Build(Guid.NewGuid(), "a1", ciid1, AttributeScalarValueText.Build("v1"), AttributeState.New, staticChangesetID),
-                        CIAttribute.Build(Guid.NewGuid(), "a2", ciid2, AttributeScalarValueText.Build("v2"), AttributeState.New, staticChangesetID)
+                        CIAttribute.Build(Guid.NewGuid(), "a1", ciid1, AttributeScalarValueText.BuildFromString("v1"), AttributeState.New, staticChangesetID),
+                        CIAttribute.Build(Guid.NewGuid(), "a2", ciid2, AttributeScalarValueText.BuildFromString("v2"), AttributeState.New, staticChangesetID)
                     };
                 });
                 Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
-                        CIAttribute.Build(Guid.NewGuid(), "a1", ciid1, AttributeScalarValueText.Build("v1"), AttributeState.New, staticChangesetID)
+                        CIAttribute.Build(Guid.NewGuid(), "a1", ciid1, AttributeScalarValueText.BuildFromString("v1"), AttributeState.New, staticChangesetID)
                     };
                 });
                 Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
-                        CIAttribute.Build(Guid.NewGuid(), "a2", ciid2, AttributeScalarValueText.Build("v2"), AttributeState.New, staticChangesetID)
+                        CIAttribute.Build(Guid.NewGuid(), "a2", ciid2, AttributeScalarValueText.BuildFromString("v2"), AttributeState.New, staticChangesetID)
                     };
                 });
             }

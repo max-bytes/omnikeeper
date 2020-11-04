@@ -58,7 +58,7 @@ namespace Tests.Integration.Service
 
             var ciid2 = await model.CreateCI(null);
             var changeset1 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("foo", AttributeScalarValueText.Build("bar"), ciid2, layer.ID, changeset1, null);
+            await attributeModel.InsertAttribute("foo", AttributeScalarValueText.BuildFromString("bar"), ciid2, layer.ID, changeset1, null);
 
             Assert.AreEqual(0, await ArchiveUnusedCIsService.ArchiveUnusedCIs(e, conn, NullLogger.Instance));
 

@@ -97,5 +97,11 @@ namespace Omnikeeper.Base.Inbound
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
             return await plugin.CreateLayerAccessProxy(layer).GetAttribute(name, ciid, atTime);
         }
+        public async Task<CIAttribute> GetFullBinaryAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            var layer = await layerModel.GetLayer(layerID, trans);
+            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
+            return await plugin.CreateLayerAccessProxy(layer).GetFullBinaryAttribute(name, ciid, atTime);
+        }
     }
 }

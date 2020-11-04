@@ -1,7 +1,10 @@
-﻿using Omnikeeper.Entity.AttributeValues;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Dynamic;
 using System.Linq;
 
 namespace Omnikeeper.Base.Entity.DTO
@@ -18,9 +21,10 @@ namespace Omnikeeper.Base.Entity.DTO
 
         public static CIAttributeDTO Build(MergedCIAttribute attribute)
         {
-            return Build(attribute.Attribute.ID, attribute.Attribute.Name, attribute.Attribute.Value.ToDTO(), attribute.Attribute.CIID, attribute.Attribute.State);
+            var DTOValue = AttributeValueDTO.Build(attribute.Attribute.Value);
+            return Build(attribute.Attribute.ID, attribute.Attribute.Name, DTOValue, attribute.Attribute.CIID, attribute.Attribute.State);
         }
-        public static CIAttributeDTO Build(Guid id, string name, AttributeValueDTO value, Guid ciid, AttributeState state)
+        private static CIAttributeDTO Build(Guid id, string name, AttributeValueDTO value, Guid ciid, AttributeState state)
         {
             return new CIAttributeDTO
             {
@@ -58,74 +62,18 @@ namespace Omnikeeper.Base.Entity.DTO
         [Required] public bool IsArray { get; set; }
         [Required] public string[] Values { get; set; }
 
-        public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeValueDTO);
+        public override bool Equals([AllowNull] object other) => Equals(other as AttributeValueDTO);
         public bool Equals([AllowNull] AttributeValueDTO other) => other != null && Values.SequenceEqual(other.Values);
         public override int GetHashCode() => HashCode.Combine(IsArray, Values.GetHashCode());
 
-        public static AttributeValueDTO Build(string[] values, bool isArray, AttributeValueType type)
-        {
-            if (isArray)
-            {
-                return Build(values[0], type);
-            }
-            else
-            {
-                return Build(values, type);
-            }
-        }
-
-        public static AttributeValueDTO Build(string value, AttributeValueType type)
+        public static AttributeValueDTO Build(IAttributeValue a)
         {
             return new AttributeValueDTO()
             {
-                Values = new string[] { value },
-                IsArray = false,
-                Type = type
+                Values = a.ToRawDTOValues(),
+                IsArray = a.IsArray,
+                Type = a.Type
             };
-        }
-        public static AttributeValueDTO Build(string[] values, AttributeValueType type)
-        {
-            return new AttributeValueDTO()
-            {
-                Values = values,
-                IsArray = true,
-                Type = type
-            };
-        }
-
-        public string Value2DatabaseString()
-        {
-            if (IsArray)
-            {
-                return $"A{MarshalValues(Values)}";
-            }
-            else
-            {
-                return $"S{Values[0]}";
-            }
-
-        }
-
-        public static AttributeValueDTO BuildFromDatabase(string value, AttributeValueType type)
-        {
-            var multiplicityIndicator = value.Substring(0, 1);
-            var finalValue = value.Substring(1);
-            if (multiplicityIndicator == "A")
-            {
-                var finalValues = UnmarshalValues(finalValue);
-                return Build(finalValues, type);
-            }
-            else
-                return Build(finalValue, type);
-        }
-        public static string MarshalValues(string[] values)
-        {
-            return string.Join(",", values.Select(value => value.Replace("\\", "\\\\").Replace(",", "\\,")));
-        }
-        public static string[] UnmarshalValues(string value)
-        {
-            var values = value.Tokenize(',', '\\');
-            return values.Select(v => v.Replace("\\\\", "\\")).ToArray();
         }
     }
 }

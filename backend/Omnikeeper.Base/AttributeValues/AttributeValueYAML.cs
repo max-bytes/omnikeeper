@@ -20,7 +20,7 @@ namespace Omnikeeper.Entity.AttributeValues
         public override string ToString() => $"AV-YAML: {Value2String()}";
 
         public string Value2String() => ValueStr;
-        public AttributeValueDTO ToDTO() => AttributeValueDTO.Build(ValueStr, Type);
+        public string[] ToRawDTOValues() => new string[] { ValueStr };
         public object ToGenericObject() => Value;
         public bool IsArray => false;
 
@@ -30,22 +30,7 @@ namespace Omnikeeper.Entity.AttributeValues
         public bool Equals([AllowNull] AttributeScalarValueYAML other) => other != null && false;// TODO: implement proper equals
         public override int GetHashCode() => Value.GetHashCode();
 
-        public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
-        { // does not make sense for YAML
-            yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, Type);
-        }
-
-        public IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex)
-        { // does not make sense for YAML
-            yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, Type);
-        }
-
-        public bool FullTextSearch(string searchString, CompareOptions compareOptions)
-        {
-            throw new NotImplementedException("FullTextSearch not implemented yet for YAML");
-        }
-
-        public static AttributeScalarValueYAML Build(string value)
+        public static AttributeScalarValueYAML BuildFromString(string value)
         {
             var stream = new YamlStream();
             stream.Load(new StringReader(value));
@@ -85,7 +70,7 @@ namespace Omnikeeper.Entity.AttributeValues
     {
         public override AttributeValueType Type => AttributeValueType.YAML;
 
-        public static AttributeArrayValueYAML Build(string[] values)
+        public static AttributeArrayValueYAML BuildFromString(string[] values)
         {
             var yamlDocuments = values.Select(value =>
             {

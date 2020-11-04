@@ -35,7 +35,14 @@ namespace Omnikeeper.Base.Entity
 
         public IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value)
         {
-            return value.ApplyTextLengthConstraint(Minimum, Maximum);
+            // HACK: this is a bit unclean, as we do CLR type-checking, but return an error based on the AttributeValueType value
+            if (value is IAttributeValueText v)
+            {
+                return v.ApplyTextLengthConstraint(Minimum, Maximum);
+            } else
+            {
+                return new ITemplateErrorAttribute[] { TemplateErrorAttributeWrongType.Build(new AttributeValueType[] { AttributeValueType.Text, AttributeValueType.MultilineText }, value.Type) };
+            }
         }
     }
 
@@ -55,7 +62,15 @@ namespace Omnikeeper.Base.Entity
 
         public IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value)
         {
-            return value.MatchRegex(Regex);
+            // HACK: this is a bit unclean, as we do CLR type-checking, but return an error based on the AttributeValueType value
+            if (value is IAttributeValueText v)
+            {
+                return v.MatchRegex(Regex);
+            }
+            else
+            {
+                return new ITemplateErrorAttribute[] { TemplateErrorAttributeWrongType.Build(new AttributeValueType[] { AttributeValueType.Text, AttributeValueType.MultilineText }, value.Type) };
+            }
         }
     }
 

@@ -114,7 +114,7 @@ namespace Omnikeeper.Controllers.OData
             var @newDTO = oldDTO;
             using var trans = conn.BeginTransaction();
             var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, AttributeScalarValueText.Build(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, trans);
+            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, AttributeScalarValueText.BuildFromString(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, trans);
 
             var newMerged = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, readLayerset, trans, TimeThreshold.BuildLatest());
             trans.Commit();
@@ -184,7 +184,7 @@ namespace Omnikeeper.Controllers.OData
                 }
             }
 
-            var created = await attributeModel.InsertAttribute(attribute.AttributeName, AttributeScalarValueText.Build(attribute.Value), finalCIID, writeLayerID, changesetProxy, trans);
+            var created = await attributeModel.InsertAttribute(attribute.AttributeName, AttributeScalarValueText.BuildFromString(attribute.Value), finalCIID, writeLayerID, changesetProxy, trans);
 
             var nameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, finalCIID, readLayerset, trans, timeThreshold);
             var createdMerged = await attributeModel.GetMergedAttribute(attribute.AttributeName, finalCIID, readLayerset, trans, TimeThreshold.BuildLatest());

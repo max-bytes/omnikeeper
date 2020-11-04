@@ -101,7 +101,9 @@ function LoadingTimeline(props) {
             const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.displayName}</span> : '';
             const label = <span style={((activeChangeset === cs) ? {fontWeight: 'bold'} : {})}>{formatTimestamp(cs.timestamp)} - {userLabel}</span>;
             if (activeChangeset === cs) {
-              return (<Button style={buttonStyle} variant="link" size="sm" disabled key={cs.id}>{label}</Button>);
+              return (<div style={lineStyle} key={cs.id}>
+                <Button style={buttonStyle} variant="link" size="sm" disabled key={cs.id}>{label}</Button>
+                </div>);
             }
             const isLatest = latestChangeset === cs;
             const diffQuery = buildDiffingURLQueryBetweenChangesets(layerSettingsData.layerSettings, ciid, (latestChangeset === activeChangeset) ? null : activeChangeset.timestamp, (isLatest) ? null : cs.timestamp);

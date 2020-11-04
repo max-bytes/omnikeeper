@@ -40,6 +40,15 @@ namespace Omnikeeper.Model
 
         public async Task<MergedCIAttribute> GetMergedAttribute(string name, Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
         {
+            return await _GetMergedAttribute(name, ciid, layers, trans, atTime, false);
+        }
+        public async Task<MergedCIAttribute> GetFullBinaryMergedAttribute(string name, Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            return await _GetMergedAttribute(name, ciid, layers, trans, atTime, true);
+        }
+
+        public async Task<MergedCIAttribute> _GetMergedAttribute(string name, Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime, bool fullBinary)
+        {
             if (layers.IsEmpty)
                 return null; // return empty, an empty layer list can never produce any attributes
 
@@ -47,7 +56,11 @@ namespace Omnikeeper.Model
 
             foreach (var layerID in layers)
             {
-                var a = await baseModel.GetAttribute(name, ciid, layerID, trans, atTime);
+                CIAttribute a;
+                if (fullBinary)
+                    a = await baseModel.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
+                else
+                    a = await baseModel.GetAttribute(name, ciid, layerID, trans, atTime);
                 if (a != null)
                     attributes.Add((a, layerID));
             }
@@ -57,7 +70,11 @@ namespace Omnikeeper.Model
             if (mergedAttributes.Count() > 1)
                 throw new Exception("Should never happen!");
 
-            return mergedAttributes.FirstOrDefault();
+            var ma = mergedAttributes.FirstOrDefault();
+            // if the attribute is removed, we don't return it
+            if (ma.Attribute.State == AttributeState.Removed) 
+                return null;
+            return ma;
         }
 
         public async Task<IImmutableDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
@@ -149,6 +166,10 @@ namespace Omnikeeper.Model
         public async Task<CIAttribute> GetAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             return await baseModel.GetAttribute(name, ciid, layerID, trans, atTime);
+        }
+        public async Task<CIAttribute> GetFullBinaryAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            return await baseModel.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
         public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
