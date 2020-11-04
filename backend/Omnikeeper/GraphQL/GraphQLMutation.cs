@@ -429,7 +429,7 @@ namespace Omnikeeper.GraphQL
                   var newPredicate = await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, predicate.State, predicate.Constraints, transaction);
                   await transaction.CommitAsync();
 
-                  return newPredicate;
+                  return newPredicate.predicate;
               });
         }
     }
