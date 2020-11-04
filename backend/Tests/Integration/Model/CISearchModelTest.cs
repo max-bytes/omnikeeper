@@ -82,9 +82,9 @@ namespace Tests.Integration.Model
                 await attributeModel.InsertCINameAttribute("ci1", ciid1, layerID1, changeset, trans);
                 await attributeModel.InsertCINameAttribute("ci2", ciid2, layerID1, changeset, trans);
                 await attributeModel.InsertCINameAttribute("ci3", ciid3, layerID2, changeset, trans); // name on different layer
-                var i1 = await attributeModel.InsertAttribute("a1", AttributeScalarValueText.Build("text1"), ciid1, layerID1, changeset, trans);
-                var i2 = await attributeModel.InsertAttribute("a2", AttributeScalarValueText.Build("text1"), ciid2, layerID1, changeset, trans);
-                var i3 = await attributeModel.InsertAttribute("a3", AttributeScalarValueText.Build("text1"), ciid1, layerID2, changeset, trans);
+                var i1 = await attributeModel.InsertAttribute("a1", AttributeScalarValueText.BuildFromString("text1"), ciid1, layerID1, changeset, trans);
+                var i2 = await attributeModel.InsertAttribute("a2", AttributeScalarValueText.BuildFromString("text1"), ciid2, layerID1, changeset, trans);
+                var i3 = await attributeModel.InsertAttribute("a3", AttributeScalarValueText.BuildFromString("text1"), ciid1, layerID2, changeset, trans);
 
                 trans.Commit();
             }

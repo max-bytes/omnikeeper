@@ -6,6 +6,8 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Entity.DTO;
+using System.Linq;
 
 namespace Omnikeeper.Model
 {
@@ -20,8 +22,17 @@ namespace Omnikeeper.Model
 
         public async Task<CIAttribute> GetAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
+            return await _GetAttribute(name, ciid, layerID, trans, atTime, false);
+        }
+        public async Task<CIAttribute> GetFullBinaryAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            return await _GetAttribute(name, ciid, layerID, trans, atTime, true);
+        }
+
+        private async Task<CIAttribute> _GetAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime, bool fullBinary)
+        {
             using var command = new NpgsqlCommand(@"
-            select id, ci_id, type, value, state, changeset_id FROM attribute 
+            select id, ci_id, type, value_text, value_binary, value_control, state, changeset_id FROM attribute 
             where timestamp <= @time_threshold and ci_id = @ci_id and layer_id = @layer_id and name = @name
             order by timestamp DESC LIMIT 1
             ", conn, trans);
@@ -38,10 +49,12 @@ namespace Omnikeeper.Model
             var id = dr.GetGuid(0);
             var CIID = dr.GetGuid(1);
             var type = dr.GetFieldValue<AttributeValueType>(2);
-            var value = dr.GetString(3);
-            var av = AttributeValueBuilder.BuildFromDatabase(value, type);
-            var state = dr.GetFieldValue<AttributeState>(4);
-            var changesetID = dr.GetGuid(5);
+            var valueText = dr.GetString(3);
+            var valueBinary = dr.GetFieldValue<byte[]>(4); 
+            var valueControl = dr.GetFieldValue<byte[]>(5);
+            var av = Unmarshal(valueText, valueBinary, valueControl, type, fullBinary);
+            var state = dr.GetFieldValue<AttributeState>(6);
+            var changesetID = dr.GetGuid(7);
             var att = CIAttribute.Build(id, name, CIID, av, state, changesetID);
             return att;
         }
@@ -73,7 +86,7 @@ namespace Omnikeeper.Model
             var ret = new List<CIAttribute>();
 
             using var command = new NpgsqlCommand($@"
-            select distinct on(ci_id, name) id, name, ci_id, type, value, state, changeset_id FROM attribute 
+            select distinct on(ci_id, name) id, name, ci_id, type, value_text, value_binary, value_control, state, changeset_id FROM attribute 
             where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and layer_id = @layer_id
             order by ci_id, name, timestamp DESC
             ", conn, trans);
@@ -89,10 +102,12 @@ namespace Omnikeeper.Model
                 var name = dr.GetString(1);
                 var CIID = dr.GetGuid(2);
                 var type = dr.GetFieldValue<AttributeValueType>(3);
-                var value = dr.GetString(4);
-                var av = AttributeValueBuilder.BuildFromDatabase(value, type);
-                var state = dr.GetFieldValue<AttributeState>(5);
-                var changesetID = dr.GetGuid(6);
+                var valueText = dr.GetString(4);
+                var valueBinary = dr.GetFieldValue<byte[]>(5);
+                var valueControl = dr.GetFieldValue<byte[]>(6);
+                var av = Unmarshal(valueText, valueBinary, valueControl, type, false);
+                var state = dr.GetFieldValue<AttributeState>(7);
+                var changesetID = dr.GetGuid(8);
 
                 var att = CIAttribute.Build(id, name, CIID, av, state, changesetID);
                 if (state != AttributeState.Removed)
@@ -108,7 +123,7 @@ namespace Omnikeeper.Model
             var ret = new List<CIAttribute>();
 
             using var command = new NpgsqlCommand($@"
-            select distinct on(ci_id, name, layer_id) id, name, ci_id, type, value, state, changeset_id from
+            select distinct on(ci_id, name, layer_id) id, name, ci_id, type, value_text, value_binary, value_control, state, changeset_id from
                 attribute where timestamp <= @time_threshold and layer_id = @layer_id and name ~ @regex and ({CIIDSelection2WhereClause(selection)}) order by ci_id, name, layer_id, timestamp DESC
             ", conn, trans); // TODO: remove order by layer_id, but consider not breaking indices first
 
@@ -124,10 +139,12 @@ namespace Omnikeeper.Model
                 var name = dr.GetString(1);
                 var CIID = dr.GetGuid(2);
                 var type = dr.GetFieldValue<AttributeValueType>(3);
-                var value = dr.GetString(4);
-                var av = AttributeValueBuilder.BuildFromDatabase(value, type);
-                var state = dr.GetFieldValue<AttributeState>(5);
-                var changesetID = dr.GetGuid(6);
+                var valueText = dr.GetString(4);
+                var valueBinary = dr.GetFieldValue<byte[]>(5);
+                var valueControl = dr.GetFieldValue<byte[]>(6);
+                var av = Unmarshal(valueText, valueBinary, valueControl, type, false);
+                var state = dr.GetFieldValue<AttributeState>(7);
+                var changesetID = dr.GetGuid(8);
 
                 if (state != AttributeState.Removed)
                 {
@@ -143,7 +160,7 @@ namespace Omnikeeper.Model
             var ret = new List<CIAttribute>();
 
             using (var command = new NpgsqlCommand(@$"
-                select distinct on (ci_id, name) id, ci_id, type, value, state, changeset_id from
+                select distinct on (ci_id, name) id, ci_id, type, value_text, value_binary, value_control, state, changeset_id from
                     attribute where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id order by ci_id, name, layer_id, timestamp DESC
             ", conn, trans))// TODO: remove order by layer_id, but consider not breaking indices first
             {
@@ -158,11 +175,12 @@ namespace Omnikeeper.Model
                     var id = dr.GetGuid(0);
                     var CIID = dr.GetGuid(1);
                     var type = dr.GetFieldValue<AttributeValueType>(2);
-                    var value = dr.GetString(3);
-                    var av = AttributeValueBuilder.BuildFromDatabase(value, type);
-
-                    var state = dr.GetFieldValue<AttributeState>(4);
-                    var changesetID = dr.GetGuid(5);
+                    var valueText = dr.GetString(3);
+                    var valueBinary = dr.GetFieldValue<byte[]>(4);
+                    var valueControl = dr.GetFieldValue<byte[]>(5);
+                    var av = Unmarshal(valueText, valueBinary, valueControl, type, false);
+                    var state = dr.GetFieldValue<AttributeState>(6);
+                    var changesetID = dr.GetGuid(7);
 
                     if (state != AttributeState.Removed)
                         ret.Add(CIAttribute.Build(id, name, CIID, av, state, changesetID));
@@ -171,7 +189,6 @@ namespace Omnikeeper.Model
 
             return ret;
         }
-
 
     }
 }

@@ -11,20 +11,18 @@ namespace Omnikeeper.Entity.AttributeValues
 {
     public enum AttributeValueType
     {
-        Text, MultilineText, Integer, JSON, YAML
+        Text, MultilineText, Integer, JSON, YAML, Image
     }
 
     public interface IAttributeValue : IEquatable<IAttributeValue>
     {
         public string Value2String();
         public int GetHashCode();
-        public AttributeValueDTO ToDTO();
         public object ToGenericObject();
         public AttributeValueType Type { get; }
+        public bool IsArray { get; }
 
-        IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum);
-        bool FullTextSearch(string searchString, CompareOptions compareOptions);
-        IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex);
+        public string[] ToRawDTOValues();
     }
 
     public interface IAttributeScalarValue<T> : IAttributeValue
@@ -56,31 +54,10 @@ namespace Omnikeeper.Entity.AttributeValues
         public bool Equals(AttributeArrayValue<S, T> other) => other != null && Values.SequenceEqual(other.Values); // does this work?, or do we have to use zip()?
         public override int GetHashCode() => Values.GetHashCode();
 
-        public AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Values.Select(v => v.ToDTO().Values[0]).ToArray(), Type);
+        public string[] ToRawDTOValues() => Values.Select(v => v.ToRawDTOValues()[0]).ToArray();
 
         public object ToGenericObject() => Values.Select(v => v.Value).ToArray();
         public string Value2String() => string.Join(",", Values.Select(value => value.Value2String().Replace(",", "\\,")));
-
-        public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
-        {
-            for (int i = 0; i < Values.Length; i++)
-            {
-                foreach (var e in Values[i].ApplyTextLengthConstraint(minimum, maximum)) yield return e;
-            }
-        }
-
-        public bool FullTextSearch(string searchString, CompareOptions compareOptions)
-        {
-            return Values.Any(v => v.FullTextSearch(searchString, compareOptions));
-        }
-
-        public IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex)
-        {
-            for (int i = 0; i < Values.Length; i++)
-            {
-                foreach (var e in Values[i].MatchRegex(regex)) yield return e;
-            }
-        }
     }
 
     public static class Extensions
@@ -124,42 +101,30 @@ namespace Omnikeeper.Entity.AttributeValues
 
     public static class AttributeValueBuilder
     {
-        public static IAttributeValue Build(AttributeValueDTO generic)
+        public static IAttributeValue BuildFromDTO(AttributeValueDTO generic)
         {
             if (generic.IsArray)
-                return BuildArray(generic.Type, generic.Values);
+                return generic.Type switch
+                {
+                    AttributeValueType.Text => AttributeArrayValueText.BuildFromString(generic.Values, false),
+                    AttributeValueType.MultilineText => AttributeArrayValueText.BuildFromString(generic.Values, true),
+                    AttributeValueType.Integer => AttributeArrayValueInteger.BuildFromString(generic.Values),
+                    AttributeValueType.JSON => AttributeArrayValueJSON.BuildFromString(generic.Values),
+                    AttributeValueType.YAML => AttributeArrayValueYAML.BuildFromString(generic.Values),
+                    AttributeValueType.Image => throw new Exception("Building AttributeValueImage from DTO not allowed"),
+                    _ => throw new Exception($"Unknown type {generic.Type} encountered"),
+                };
             else
-                return BuildScalar(generic.Type, generic.Values[0]);
-        }
-        private static IAttributeValue BuildScalar(AttributeValueType type, string value)
-        {
-            return type switch
-            {
-                AttributeValueType.Text => AttributeScalarValueText.Build(value, false),
-                AttributeValueType.MultilineText => AttributeScalarValueText.Build(value, true),
-                AttributeValueType.Integer => AttributeValueIntegerScalar.Build(value),
-                AttributeValueType.JSON => AttributeScalarValueJSON.Build(value),
-                AttributeValueType.YAML => AttributeScalarValueYAML.Build(value),
-                _ => throw new Exception($"Unknown type {type} encountered"),
-            };
-        }
-        private static IAttributeValue BuildArray(AttributeValueType type, string[] values)
-        {
-            return type switch
-            {
-                AttributeValueType.Text => AttributeArrayValueText.Build(values, false),
-                AttributeValueType.MultilineText => AttributeArrayValueText.Build(values, true),
-                AttributeValueType.Integer => AttributeValueIntegerArray.Build(values),
-                AttributeValueType.JSON => AttributeArrayValueJSON.Build(values),
-                AttributeValueType.YAML => AttributeArrayValueYAML.Build(values),
-                _ => throw new Exception($"Unknown type {type} encountered"),
-            };
-        }
-
-        public static IAttributeValue BuildFromDatabase(string value, AttributeValueType type)
-        {
-            var generic = AttributeValueDTO.BuildFromDatabase(value, type);
-            return Build(generic);
+                return generic.Type switch
+                {
+                    AttributeValueType.Text => AttributeScalarValueText.BuildFromString(generic.Values[0], false),
+                    AttributeValueType.MultilineText => AttributeScalarValueText.BuildFromString(generic.Values[0], true),
+                    AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(generic.Values[0]),
+                    AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(generic.Values[0]),
+                    AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(generic.Values[0]),
+                    AttributeValueType.Image => throw new Exception("Building AttributeValueImage from DTO not allowed"),
+                    _ => throw new Exception($"Unknown type {generic.Type} encountered"),
+                };
         }
     }
 }

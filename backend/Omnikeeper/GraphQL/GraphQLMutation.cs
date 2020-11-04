@@ -63,7 +63,7 @@ namespace Omnikeeper.GraphQL
                         var ciIdentity = attributeGroup.Key;
                         foreach (var attribute in attributeGroup)
                         {
-                            var nonGenericAttributeValue = AttributeValueBuilder.Build(attribute.Value);
+                            var nonGenericAttributeValue = AttributeValueBuilder.BuildFromDTO(attribute.Value);
 
                             var (a, changed) = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, attribute.LayerID, changeset, transaction);
                             insertedAttributes.Add(a);

@@ -114,7 +114,7 @@ namespace Omnikeeper.GraphQL
             Field(x => x.ChangesetID);
             Field(x => x.Name);
             Field(x => x.State, type: typeof(AttributeStateType));
-            Field("value", x => x.Value.ToDTO(), type: typeof(AttributeValueDTOType));
+            Field("value", x => AttributeValueDTO.Build(x.Value), type: typeof(AttributeValueDTOType));
         }
     }
 

@@ -41,7 +41,7 @@ namespace OKPluginOIASharepoint
         {
             // create a deterministic, dependent guid from the ciid + attribute name + value
             var id = GuidUtility.Create(ciid, name + layer.ID.ToString());// TODO: determine if we need to factor in value or not
-            return CIAttribute.Build(id, name, ciid, AttributeScalarValueText.Build(value), AttributeState.New, StaticChangesetID);
+            return CIAttribute.Build(id, name, ciid, AttributeScalarValueText.BuildFromString(value), AttributeState.New, StaticChangesetID);
         }
 
         public async Task<CIAttribute> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
@@ -77,6 +77,11 @@ namespace OKPluginOIASharepoint
             { // TODO: handle
                 return null;
             }
+        }
+
+        public Task<CIAttribute> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime)
+        {
+            return Task.FromResult<CIAttribute>(null); // TODO: not implemented
         }
 
         public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime)

@@ -258,24 +258,24 @@ namespace Omnikeeper.Controllers.Ingest
         }
 
         private CICandidateAttributeData.Fragment String2Attribute(string name, string value) =>
-            CICandidateAttributeData.Fragment.Build(name, AttributeScalarValueText.Build(value));
+            CICandidateAttributeData.Fragment.Build(name, AttributeScalarValueText.BuildFromString(value));
         private CICandidateAttributeData.Fragment String2IntegerAttribute(string name, long value) =>
-            CICandidateAttributeData.Fragment.Build(name, AttributeValueIntegerScalar.Build(value));
+            CICandidateAttributeData.Fragment.Build(name, AttributeScalarValueInteger.Build(value));
 
         private CICandidateAttributeData.Fragment JValue2TextAttribute(JToken o, string jsonName, string attributeName = null) =>
-            CICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeScalarValueText.Build(o[jsonName].Value<string>()));
+            CICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeScalarValueText.BuildFromString(o[jsonName].Value<string>()));
         private CICandidateAttributeData.Fragment JValue2IntegerAttribute(JToken o, string name, string attributeName = null) =>
-            CICandidateAttributeData.Fragment.Build(attributeName ?? name, AttributeValueIntegerScalar.Build(o[name].Value<long>()));
+            CICandidateAttributeData.Fragment.Build(attributeName ?? name, AttributeScalarValueInteger.Build(o[name].Value<long>()));
         private CICandidateAttributeData.Fragment JValue2JSONAttribute(JToken o, string jsonName, string attributeName = null) =>
             CICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeScalarValueJSON.Build(o[jsonName]));
         private CICandidateAttributeData.Fragment JValuePath2TextAttribute(JToken o, string jsonPath, string attributeName)
         {
             var jo = o.SelectToken(jsonPath);
-            return CICandidateAttributeData.Fragment.Build(attributeName, AttributeScalarValueText.Build(jo.Value<string>()));
+            return CICandidateAttributeData.Fragment.Build(attributeName, AttributeScalarValueText.BuildFromString(jo.Value<string>()));
         }
         private CICandidateAttributeData.Fragment JValue2TextArrayAttribute(JToken o, string jsonName, string attributeName = null)
         {
-            return CICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeArrayValueText.Build(o[jsonName].Values<string>().ToArray()));
+            return CICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeArrayValueText.BuildFromString(o[jsonName].Values<string>().ToArray()));
         }
         private CICandidateAttributeData.Fragment JArray2JSONArrayAttribute(JArray array, string attributeName)
         {

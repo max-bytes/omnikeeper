@@ -52,6 +52,16 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetAttribute(name, ciid, layerID, trans, atTime);
         }
 
+        public async Task<CIAttribute> GetFullBinaryAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
+            {
+                return await onlineAccessProxy.GetFullBinaryAttribute(name, layerID, ciid, trans, atTime);
+            }
+
+            return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
+        }
+
         public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))

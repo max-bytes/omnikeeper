@@ -5,7 +5,7 @@ import { Icon } from 'semantic-ui-react'
 import { InputControl } from '../utils/attributeTypes'
 
 function EditableAttributeValue(props) {
-  var {values, setValues, type, isArray, autoFocus, isEditable, setHasErrors, name, controlIdSuffix} = props;
+  var {values, setValues, type, isArray, autoFocus, isEditable, setHasErrors, name, controlIdSuffix, ciid} = props;
   
   isEditable = isEditable ?? true;
 
@@ -18,9 +18,9 @@ function EditableAttributeValue(props) {
     return <div style={{ display: 'flex', flexDirection: 'column', flexGrow: '1', alignSelf: 'center' }}>
         {values.map((v, index) => {
           return <Form.Group controlId={`value:${name}:${index}:${controlIdSuffix}`} key={index} style={{display: 'flex', flexGrow: 1, alignItems: 'center'}}>
-            <InputControl name={name + "_" + index} setHasErrors={e => {
+            <InputControl arrayIndex={index} setHasErrors={e => {
               setErrorsInArray(oldErrorsInArray => { let newErrorsInArray = [...oldErrorsInArray]; newErrorsInArray[index] = e; return newErrorsInArray;});
-            }} key={index} type={type} isArray={isArray} value={v} disabled={!isEditable} autoFocus={autoFocus && index === 0}
+            }} key={index} type={type} isArray={isArray} value={v} ciid={ciid} attributeName={name} disabled={!isEditable} autoFocus={autoFocus && index === 0}
               onChange={value => {
                 let newValues = values.slice();
                 newValues[index] = value;
@@ -62,8 +62,8 @@ function EditableAttributeValue(props) {
         }
     </div>;
   } else {
-    return <InputControl name={name} setHasErrors={setHasErrors} isArray={isArray} type={type} value={values[0]} 
-      disabled={!isEditable} autoFocus={autoFocus} onChange={value => setValues([value])} />
+    return <InputControl setHasErrors={setHasErrors} isArray={false} arrayIndex={0} type={type} value={values[0]} 
+    ciid={ciid} attributeName={name} disabled={!isEditable} autoFocus={autoFocus} onChange={value => setValues([value])} />
   }
 }
 

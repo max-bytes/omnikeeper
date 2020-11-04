@@ -1,0 +1,1 @@
+﻿ALTER TYPE attributevaluetype ADD VALUE 'image' AFTER 'yaml';

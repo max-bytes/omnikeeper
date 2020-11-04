@@ -96,7 +96,7 @@ namespace Tests.Integration.GraphQL
             var layerID2 = await layerModel.CreateLayer("layer_2", trans);
             var user = AuthenticatedUser.Build(await userModel.UpsertUser(username, username, userGUID, UserType.Robot, trans), new List<Layer>());
             var changeset = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a1", AttributeValueIntegerScalar.Build(3), ciid1, layer1.ID, changeset, trans);
+            await attributeModel.InsertAttribute("a1", AttributeScalarValueInteger.Build(3), ciid1, layer1.ID, changeset, trans);
             trans.Commit();
 
             string query = @"

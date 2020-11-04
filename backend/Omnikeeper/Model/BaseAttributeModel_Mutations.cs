@@ -31,15 +31,19 @@ namespace Omnikeeper.Model
 
             var changeset = await changesetProxy.GetChangeset(trans);
 
-            using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
-                VALUES (@id, @name, @ci_id, @type, @value, @layer_id, @state, @timestamp, @changeset_id)", conn, trans);
+            using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id) 
+                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id)", conn, trans);
+
+            var (valueText, valueBinary, valueControl) = Marshal(currentAttribute.Value);
 
             var id = Guid.NewGuid();
             command.Parameters.AddWithValue("id", id);
             command.Parameters.AddWithValue("name", name);
             command.Parameters.AddWithValue("ci_id", ciid);
             command.Parameters.AddWithValue("type", currentAttribute.Value.Type);
-            command.Parameters.AddWithValue("value", currentAttribute.Value.ToDTO().Value2DatabaseString());
+            command.Parameters.AddWithValue("value_text", valueText);
+            command.Parameters.AddWithValue("value_binary", valueBinary);
+            command.Parameters.AddWithValue("value_control", valueControl);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", AttributeState.Removed);
             command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
@@ -52,7 +56,7 @@ namespace Omnikeeper.Model
         }
 
         public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
-            => await InsertAttribute(ICIModel.NameAttribute, AttributeScalarValueText.Build(nameValue), ciid, layerID, changesetProxy, trans);
+            => await InsertAttribute(ICIModel.NameAttribute, AttributeScalarValueText.BuildFromString(nameValue), ciid, layerID, changesetProxy, trans);
 
         public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
         {
@@ -75,15 +79,19 @@ namespace Omnikeeper.Model
 
             var changeset = await changesetProxy.GetChangeset(trans);
 
-            using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) 
-                VALUES (@id, @name, @ci_id, @type, @value, @layer_id, @state, @timestamp, @changeset_id)", conn, trans);
+            using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id) 
+                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id)", conn, trans);
+
+            var (valueText, valueBinary, valueControl) = Marshal(value);
 
             var id = Guid.NewGuid();
             command.Parameters.AddWithValue("id", id);
             command.Parameters.AddWithValue("name", name);
             command.Parameters.AddWithValue("ci_id", ciid);
             command.Parameters.AddWithValue("type", value.Type);
-            command.Parameters.AddWithValue("value", value.ToDTO().Value2DatabaseString());
+            command.Parameters.AddWithValue("value_text", valueText);
+            command.Parameters.AddWithValue("value_binary", valueBinary);
+            command.Parameters.AddWithValue("value_control", valueControl);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("state", state);
             command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
@@ -137,15 +145,19 @@ namespace Omnikeeper.Model
                 Changeset changeset = await changesetProxy.GetChangeset(trans);
 
                 // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
-                using var writer = conn.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value, layer_id, state, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)");
+                using var writer = conn.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)");
                 foreach (var (ciid, fullName, value, state) in actualInserts)
                 {
+                    var (valueText, valueBinary, valueControl) = Marshal(value);
+
                     writer.StartRow();
                     writer.Write(Guid.NewGuid());
                     writer.Write(fullName);
                     writer.Write(ciid);
                     writer.Write(value.Type, "attributevaluetype");
-                    writer.Write(value.ToDTO().Value2DatabaseString());
+                    writer.Write(valueText);
+                    writer.Write(valueBinary);
+                    writer.Write(valueControl);
                     writer.Write(data.LayerID);
                     writer.Write(state, "attributestate");
                     writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
@@ -155,12 +167,16 @@ namespace Omnikeeper.Model
                 // remove outdated 
                 foreach (var outdatedAttribute in outdatedAttributes.Values)
                 {
+                    var (valueText, valueBinary, valueControl) = Marshal(outdatedAttribute.Value);
+
                     writer.StartRow();
                     writer.Write(Guid.NewGuid());
                     writer.Write(outdatedAttribute.Name);
                     writer.Write(outdatedAttribute.CIID);
                     writer.Write(outdatedAttribute.Value.Type, "attributevaluetype");
-                    writer.Write(outdatedAttribute.Value.ToDTO().Value2DatabaseString());
+                    writer.Write(valueText);
+                    writer.Write(valueBinary);
+                    writer.Write(valueControl);
                     writer.Write(data.LayerID);
                     writer.Write(AttributeState.Removed, "attributestate");
                     writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);

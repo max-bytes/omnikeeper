@@ -1,0 +1,8 @@
+﻿ALTER TABLE public.attribute
+    RENAME value TO value_text;
+
+ALTER TABLE public.attribute
+    ADD COLUMN value_control bytea NOT NULL DEFAULT ''::bytea;
+
+ALTER TABLE public.attribute
+    ADD COLUMN value_binary bytea NOT NULL DEFAULT ''::bytea;

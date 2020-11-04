@@ -52,7 +52,7 @@ namespace OKPluginOIASharepoint
                                 continue;
                             }
 
-                            identifiableFragments.Add(CICandidateAttributeData.Fragment.Build(attributeName, AttributeScalarValueText.Build(value as string)));
+                            identifiableFragments.Add(CICandidateAttributeData.Fragment.Build(attributeName, AttributeScalarValueText.BuildFromString(value as string)));
                         }
 
                         ICIIdentificationMethod idMethod = CIIdentificationMethodNoop.Build();
