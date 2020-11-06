@@ -1,0 +1,34 @@
+{
+    "rows": [
+        {
+            "ciid": "2-035fbf89-1ed2-4432-a67e-620577cc806d",
+            "cells": [
+                {
+                    "name": "2-attr1",
+                    "value": "2 - Value A-1",
+                    "changeable": false
+                },
+                {
+                    "name": "2-attr3",
+                    "value": "2 - Value A-3",
+                    "changeable": true
+                }
+            ]
+        },
+        {
+            "ciid": "2-620577cc806d-a67e-035fbf89-4432-1ed2",
+            "cells": [
+                {
+                    "name": "2-attr1",
+                    "value": "2 - Value B-1",
+                    "changeable": true
+                },
+                {
+                    "name": "2-attr3",
+                    "value": "2 - Value B-3",
+                    "changeable": true
+                }
+            ]
+        }
+    ]
+}

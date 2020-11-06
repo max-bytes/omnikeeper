@@ -8,6 +8,7 @@ import "./GridView.css";
 import GridViewDataParseModel from "./GridViewDataParseModel";
 import GridViewMockUpDataModel from "./GridViewMockUpDataModel"; // returns mockUp-data for testing // TODO: remove, when finally using API
 import _ from "lodash";
+// import SwaggerClient from "swagger-client";
 // TODO: use aggrid_copy_cut_paste - USE THIS:
 // import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
 // const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
@@ -16,6 +17,10 @@ import _ from "lodash";
 //     false // logging off
 // );
 
+// const swaggerDefUrl =
+//     "https://acme.omnikeeper-dev.bymhx.at/backend/swagger/v1/swagger.json";
+// const apiVersion = 1;
+
 const { Header, Content } = Layout;
 
 export default function GridView(props) {
@@ -23,8 +28,8 @@ export default function GridView(props) {
     const [gridColumnApi, setGridColumnApi] = useState(null);
 
     const [columnDefs, setColumnDefs] = useState(null);
-    const [rowData, setRowData] = useState(null);
-    const [rowDataSnapshot, setRowDataSnapshot] = useState(null);
+    const [rowData, setRowData] = useState([]);
+    const [rowDataSnapshot, setRowDataSnapshot] = useState([]);
     const [context, setContext] = useState(null);
     const [tempId, setTempId] = useState(null);
     const defaultColDef = initDefaultColDef(); // Init defaultColDef
@@ -73,7 +78,6 @@ export default function GridView(props) {
                 />
             </Header>
             <Content>
-
                 {/* TODO: use aggrid_copy_cut_paste */}
                 {/* REMOVE THIS: */}
                 <div
@@ -94,6 +98,12 @@ export default function GridView(props) {
                         getRowNodeId={function (data) {
                             return data.ciid;
                         }}
+                        overlayLoadingTemplate={
+                            '<span class="ag-overlay-loading-center">Loading...</span>'
+                        }
+                        overlayNoRowsTemplate={
+                            '<span class="ag-overlay-loading-center">Please choose context.</span>'
+                        }
                     />
                 </div>
                 {/* USE THIS: */}
@@ -108,8 +118,13 @@ export default function GridView(props) {
                     getRowNodeId={function (data) {
                         return data.ciid;
                     }}
+                    overlayLoadingTemplate={
+                        '<span class="ag-overlay-loading-center">Loading...</span>'
+                    }
+                    overlayNoRowsTemplate={
+                        '<span class="ag-overlay-loading-center">Please choose context.</span>'
+                    }
                 /> */}
-
             </Content>
         </Layout>
     );
@@ -171,18 +186,8 @@ export default function GridView(props) {
         };
     }
 
-    // TODO: Context handling
     function applyContext(contextName) {
-        if (contextName)
-            console.log(
-                "Want to apply '" +
-                    contextName +
-                    "', but it's not implemented yet."
-            );
-        else
-            console.log(
-                "Want to undo any context, but it's not implemented yet."
-            );
+        refreshData(contextName);
     }
 
     // ######################################## CELL FUNCTIONS ########################################
@@ -364,25 +369,72 @@ export default function GridView(props) {
     }
 
     // READ / refresh data
-    function refreshData() {
-        // TODO: use API, when implemented
-        const schema = gridViewMockUpDataModel.getMockUpData("schema"); // get mockUp schema
-        const data = gridViewMockUpDataModel.getMockUpData("data"); // get mockUp data
-        const context = gridViewMockUpDataModel.getMockUpData("context"); // get mockUp context
+    async function refreshData(contextName) {
+        // Tell AgGrid to reset columnDefs and rowData // important!
+        if (gridApi) {
+            gridApi.setColumnDefs(null);
+            gridApi.setRowData("");
+        }
 
-        const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
-            schema,
-            data
-        ); // Create columnDefs from schema and data
-        const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
+        // if called without a contextName -> fetch only context
+        if (!contextName) {
+            const context = gridViewMockUpDataModel.getMockUpData("context"); // get mockUp data
+            // TODO: use API
+            // const context = await new SwaggerClient(swaggerDefUrl)
+            //     .then((client) =>
+            //         client.apis.GridView.GetContexts({ version: apiVersion })
+            //     )
+            //     .then((result) => result.body);
 
-        setContext(context); // set context
-        setColumnDefs(parsedColumnDefs); // set columnDefs
-        setRowData(parsedRowData); // set rowData
-        setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
-        if (gridApi) gridApi.setRowData(parsedRowData); // Tell it AgGrid
+            setContext(context); // set context
+        }
 
-        setTempId(0); // Reset tempId
+        // if called with a contextName -> fetch schema & data
+        else {
+            const schema = gridViewMockUpDataModel.getMockUpData(
+                "schema",
+                contextName
+            ); // get mockUp schema
+            const data = gridViewMockUpDataModel.getMockUpData(
+                "data",
+                contextName
+            ); // get mockUp data
+            // TODO: use API
+            // const schema = await new SwaggerClient(swaggerDefUrl)
+            //     .then((client) =>
+            //         client.apis.GridView.GetSchema({
+            //             version: apiVersion,
+            //             context: contextName,
+            //         })
+            //     )
+            //     .then((result) => result.body);
+            // const data = await new SwaggerClient(swaggerDefUrl)
+            //     .then((client) =>
+            //         client.apis.GridView.GetData({
+            //             version: apiVersion,
+            //             context: contextName,
+            //         })
+            //     )
+            //     .then((result) => result.body);
+
+            const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
+                schema,
+                data
+            ); // Create columnDefs from schema and data
+            const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
+
+            setColumnDefs(parsedColumnDefs); // set columnDefs
+            setRowData(parsedRowData); // set rowData
+            setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
+
+            // Tell AgGrid to set columnDefs and rowData
+            if (gridApi) {
+                gridApi.setColumnDefs(parsedColumnDefs);
+                gridApi.setRowData(parsedRowData);
+            }
+
+            setTempId(0); // Reset tempId
+        }
     }
 
     // ######################################## AG GRID FORMATTING ########################################

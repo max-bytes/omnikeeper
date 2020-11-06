@@ -4,17 +4,13 @@ import { useState } from "react";
 // also see: https://www.mhx.at/gitlab/landscape/registry/snippets/1
 
 export default function GridViewMockUpDataModel() {
-    const [context, setContext] = useState(
-        require("./gridViewMockUpJSONs/context.json")
-    );
-    const [schema, setSchema] = useState(
-        require("./gridViewMockUpJSONs/schema.json")
-    );
-    const [data, setData] = useState(
-        require("./gridViewMockUpJSONs/data.json")
-    );
+    const [context] = useState(require("./gridViewMockUpJSONs/context.json"));
+    const [schema1] = useState(require("./gridViewMockUpJSONs/schema1.json"));
+    const [schema2] = useState(require("./gridViewMockUpJSONs/schema2.json"));
+    const [data1] = useState(require("./gridViewMockUpJSONs/data1.json"));
+    const [data2] = useState(require("./gridViewMockUpJSONs/data2.json"));
 
-    const getMockUpData = (type) => {
+    const getMockUpData = (type, contextId) => {
         switch (type) {
             // Contexts:
             // note: when implementing, don't start with this. We know how this will work and it doesn't give us much insight.
@@ -23,32 +19,32 @@ export default function GridViewMockUpDataModel() {
                 return context;
             // Schema:
             case "schema":
-                return schema;
+                switch (contextId) {
+                    case "context1":
+                        return schema1;
+                    case "context2":
+                        return schema2;
+                    default:
+                        break;
+                }
+                break;
             // Data:
             case "data":
                 // cells that are not present here, but have a defined column in the schema should implicitly
                 // be treated as not-set cells.
                 // if a value of a cell is null, it should be treated as a not-set cell
-                return data;
-            default:
-                break;
-        }
-    };
-
-    const setMockUpData = (type, obj) => {
-        switch (type) {
-            case "context":
-                setContext(obj);
-                break;
-            case "schema":
-                setSchema(obj);
-                break;
-            case "data":
-                setData(obj);
+                switch (contextId) {
+                    case "context1":
+                        return data1;
+                    case "context2":
+                        return data2;
+                    default:
+                        break;
+                }
                 break;
             default:
                 break;
         }
     };
-    return { getMockUpData, setMockUpData };
+    return { getMockUpData };
 }

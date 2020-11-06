@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button, Select, Popover } from "antd";
 const { Option } = Select;
 
 export default function GridViewButtonToolbar(props) {
+    const [usedContext, setUsedContext] = useState(null);
+
     if (props.context)
         return (
             <div className="button-toolbar">
@@ -25,39 +27,38 @@ export default function GridViewButtonToolbar(props) {
                         <Select
                             showSearch={true}
                             defaultValue={null}
-                            onSelect={props.applyContext}
+                            onSelect={(value) => {
+                                props.applyContext(value);
+                                setUsedContext(value);
+                            }}
                             onClear={props.applyContext}
                             style={{ minWidth: "75%" }}
+                            placeholder={"Please choose context."}
                         >
-                            <Option key={"noContext"} value={null}>
-                                <Popover
-                                    title={"[No Context]"}
-                                    content={"No context."}
-                                    placement={"right"}
-                                >
-                                    [No Context]
-                                </Popover>
-                            </Option>
-                            {props.context.configuredContexts.map(
-                                (configuredContext) => (
-                                    <Option
-                                        key={configuredContext.name}
-                                        value={configuredContext.name}
-                                    >
-                                        <Popover
-                                            title={
-                                                configuredContext.speakingName
-                                            }
-                                            content={
-                                                configuredContext.description
-                                            }
-                                            placement={"right"}
-                                        >
-                                            {configuredContext.speakingName}
-                                        </Popover>
-                                    </Option>
-                                )
-                            )}
+                            {props.context.configuredContexts
+                                ? props.context.configuredContexts.map(
+                                      (configuredContext) => (
+                                          <Option
+                                              key={configuredContext.name}
+                                              value={configuredContext.name}
+                                          >
+                                              <Popover
+                                                  title={
+                                                      configuredContext.speakingName
+                                                  }
+                                                  content={
+                                                      configuredContext.description
+                                                  }
+                                                  placement={"right"}
+                                              >
+                                                  {
+                                                      configuredContext.speakingName
+                                                  }
+                                              </Popover>
+                                          </Option>
+                                      )
+                                  )
+                                : ""}
                         </Select>
                     </div>
                     <div
@@ -135,7 +136,9 @@ export default function GridViewButtonToolbar(props) {
                         <Button onClick={props.save}>Save</Button>
 
                         {/* Refresh */}
-                        <Button onClick={props.refreshData}>Refresh</Button>
+                        <Button onClick={() => props.refreshData(usedContext)}>
+                            Refresh
+                        </Button>
                     </div>
                 </div>
             </div>
