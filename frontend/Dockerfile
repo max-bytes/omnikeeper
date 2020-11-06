@@ -5,6 +5,10 @@ ARG version
 
 WORKDIR /app
 
+# HACK: we need to install git because npm dependencies include a git repository
+# TODO: move git repository depencency to proper npm repository, then remove this git installation
+RUN apk add --no-cache git
+
 # add `/app/node_modules/.bin` to $PATH
 ENV PATH /app/node_modules/.bin:$PATH
 
