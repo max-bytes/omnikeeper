@@ -8,13 +8,12 @@ import "./GridView.css";
 import GridViewDataParseModel from "./GridViewDataParseModel";
 import GridViewMockUpDataModel from "./GridViewMockUpDataModel"; // returns mockUp-data for testing // TODO: remove, when finally using API
 import _ from "lodash";
-// TODO: use aggrid_copy_cut_paste - USE THIS:
-// import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
-// const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
-//     AgGridReact, // React-AgGrid component
-//     { className: "ag-theme-balham" }, // hocProps
-//     false // logging off
-// );
+import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
+const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
+    AgGridReact, // React-AgGrid component
+    { className: "ag-theme-balham" }, // hocProps
+    false // logging off
+);
 
 const { Header, Content } = Layout;
 
@@ -73,31 +72,7 @@ export default function GridView(props) {
                 />
             </Header>
             <Content>
-
-                {/* TODO: use aggrid_copy_cut_paste */}
-                {/* REMOVE THIS: */}
-                <div
-                    className="ag-theme-balham"
-                    style={{
-                        height: "100%",
-                        width: "100%",
-                    }}
-                >
-                    <AgGridReact
-                        onGridReady={onGridReady}
-                        rowData={rowData}
-                        columnDefs={columnDefs}
-                        defaultColDef={defaultColDef}
-                        animateRows={true}
-                        rowSelection="multiple"
-                        onCellValueChanged={updateCellValue}
-                        getRowNodeId={function (data) {
-                            return data.ciid;
-                        }}
-                    />
-                </div>
-                {/* USE THIS: */}
-                {/* <AgGridCopyCutPaste
+                <AgGridCopyCutPaste
                     onGridReady={onGridReady}
                     rowData={rowData}
                     columnDefs={columnDefs}
@@ -108,8 +83,7 @@ export default function GridView(props) {
                     getRowNodeId={function (data) {
                         return data.ciid;
                     }}
-                /> */}
-
+                />
             </Content>
         </Layout>
     );
