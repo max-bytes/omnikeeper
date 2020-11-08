@@ -126,13 +126,20 @@ namespace LandscapeRegistry.GridView
         /// </summary>
         /// <param name="context"></param>
         /// <returns>An object which contains rows for grid view</returns>
-        /// <response code="200"></response>
+        /// <response code="200">If request is successful</response>
+        /// <response code="400">If trait is not found</response>
         [HttpGet("contexts/{context}/data")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetData([FromRoute] string context)
         {
-            var result = await _mediatr.Send(new GetDataQuery.Query { Context = context });
-            return Ok(result);
+            var (result, isSuccess, error) = await _mediatr.Send(new GetDataQuery.Query { Context = context });
+            
+            if (isSuccess)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(new { Error = error });
         }
 
         /// <summary>
@@ -142,7 +149,7 @@ namespace LandscapeRegistry.GridView
         /// <param name="changes"></param>
         /// <returns>A list of changes or an error</returns>
         /// <response code="200">If request is successful</response>
-        /// <response code="400">If saving changes fails</response>  
+        /// <response code="404">If saving changes fails</response>  
         [HttpPost("contexts/{context}/change")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

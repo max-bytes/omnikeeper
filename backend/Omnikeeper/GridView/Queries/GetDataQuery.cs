@@ -12,7 +12,7 @@ namespace Omnikeeper.GridView.Queries
 {
     public class GetDataQuery
     {
-        public class Query : IRequest<GetDataResponse>
+        public class Query : IRequest<(GetDataResponse, bool, string)>
         {
             public string Context { get; set; }
         }
@@ -25,7 +25,7 @@ namespace Omnikeeper.GridView.Queries
             }
         }
 
-        public class GetDataQueryHandler : IRequestHandler<Query, GetDataResponse>
+        public class GetDataQueryHandler : IRequestHandler<Query, (GetDataResponse, bool, string)>
         {
             private readonly IGridViewConfigModel gridViewConfigModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
@@ -39,7 +39,7 @@ namespace Omnikeeper.GridView.Queries
                 this.traitsProvider = traitsProvider;
             }
 
-            public async Task<GetDataResponse> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<(GetDataResponse, bool, string)> Handle(Query request, CancellationToken cancellationToken)
             {
                 var validator = new QueryValidator();
                 validator.ValidateAndThrow(request);
@@ -56,6 +56,12 @@ namespace Omnikeeper.GridView.Queries
                 // NOTE mcsuk: use effectiveTraitModel.GetMergedCIsWithTrait() instead
 
                 var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, null, TimeThreshold.BuildLatest());
+
+                if (activeTrait == null)
+                {
+                    return (new GetDataResponse(), false, $"Active trait {config.Trait} was not found!");
+                }
+
                 var res = await effectiveTraitModel.GetMergedCIsWithTrait(
                     activeTrait,
                     new LayerSet(config.ReadLayerset.ToArray()),
@@ -107,7 +113,7 @@ namespace Omnikeeper.GridView.Queries
                     }
                 }
 
-                return result;
+                return (result, true, "");
             }
         }
     }
