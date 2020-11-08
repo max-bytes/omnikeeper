@@ -3,7 +3,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Omnikeeper.Base.Entity.GridView;
 using Omnikeeper.GridView.Commands;
 using Omnikeeper.GridView.Queries;
 using Omnikeeper.GridView.Request;
@@ -61,19 +60,21 @@ namespace LandscapeRegistry.GridView
         /// Edits specific context
         /// </summary>
         /// <param name="name"></param>
-        /// <param name="configuration"></param>
+        /// <param name="editContextRequest"></param>
         /// <returns>Status indication request status</returns>
         /// <response code="200">If request is successful</response>
         /// <response code="400">If editing the context fails</response>  
         [HttpPut("context/{name}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> EditContext([FromRoute] string name, [FromBody] GridViewConfiguration configuration)
+        public async Task<IActionResult> EditContext([FromRoute] string name, [FromBody] EditContextRequest editContextRequest)
         {
             var (isSuccess, error) = await _mediatr.Send(new EditContextCommand.Command
             {
                 Name = name,
-                Configuration = configuration
+                SpeakingName = editContextRequest.SpeakingName,
+                Description = editContextRequest.Description,
+                Configuration = editContextRequest.Configuration
             });
 
             if (isSuccess)

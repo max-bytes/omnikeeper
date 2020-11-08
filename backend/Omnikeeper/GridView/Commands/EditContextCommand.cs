@@ -13,6 +13,8 @@ namespace Omnikeeper.GridView.Commands
         public class Command : IRequest<(bool, string)>
         {
             public string Name { get; set; }
+            public string SpeakingName { get; set; }
+            public string Description { get; set; }
             public GridViewConfiguration Configuration { get; set; }
         }
 
@@ -48,7 +50,7 @@ namespace Omnikeeper.GridView.Commands
                     return (false, ValidationHelper.CreateErrorMessage(validation));
                 }
 
-                var isSuccess = await gridViewConfigModel.EditContext(request.Name, request.Configuration);
+                var isSuccess = await gridViewConfigModel.EditContext(request.Name, request.SpeakingName, request.Description, request.Configuration);
 
                 if (isSuccess)
                 {

@@ -1,9 +1,6 @@
 ﻿using MediatR;
-using Npgsql;
+using Omnikeeper.Base.Model;
 using Omnikeeper.GridView.Response;
-using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,34 +15,18 @@ namespace Omnikeeper.GridView.Queries
 
         public class GetContextsQueryHandler : IRequestHandler<Query, GetContextsResponse>
         {
-            private readonly NpgsqlConnection conn;
-            public GetContextsQueryHandler(NpgsqlConnection connection)
+            private readonly IGridViewConfigModel gridViewConfigModel;
+            public GetContextsQueryHandler(IGridViewConfigModel gridViewConfigModel)
             {
-                conn = connection;
+                this.gridViewConfigModel = gridViewConfigModel;
             }
 
             async Task<GetContextsResponse> IRequestHandler<Query, GetContextsResponse>.Handle(Query request, CancellationToken cancellationToken)
             {
                 var result = new GetContextsResponse
                 {
-                    Contexts = new List<Context>()
+                    Contexts = await gridViewConfigModel.GetContexts()
                 };
-
-                using var command = new NpgsqlCommand($@"
-                    SELECT id, name 
-                    FROM gridview_config
-                ", conn, null);
-
-                using var dr = await command.ExecuteReaderAsync();
-
-                while (dr.Read())
-                {
-                    result.Contexts.Add(new Context
-                    {
-                        Id = dr.GetInt32(0),
-                        Name = dr.GetString(1)
-                    });
-                }
 
                 return result;
             }

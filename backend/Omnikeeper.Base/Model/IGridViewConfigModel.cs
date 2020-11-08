@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity.GridView;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model
@@ -6,8 +7,9 @@ namespace Omnikeeper.Base.Model
     public interface IGridViewConfigModel
     {
         Task<GridViewConfiguration> GetConfiguration(string configName);
-        Task<bool> AddContext(string name, GridViewConfiguration configuration);
-        Task<bool> EditContext(string name, GridViewConfiguration configuration);
+        Task<List<Context>> GetContexts();
+        Task<bool> AddContext(string name, string speakingName, string description, GridViewConfiguration configuration);
+        Task<bool> EditContext(string name, string speakingName, string description, GridViewConfiguration configuration);
         Task<bool> DeleteContext(string name);
     }
 }

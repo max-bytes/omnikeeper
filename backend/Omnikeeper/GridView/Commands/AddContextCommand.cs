@@ -47,7 +47,11 @@ namespace Omnikeeper.GridView.Commands
                     return (false, ValidationHelper.CreateErrorMessage(validation));
                 }
 
-                var isSuccess = await gridViewConfigModel.AddContext(request.Context.Name, request.Context.Configuration);
+                var isSuccess = await gridViewConfigModel.AddContext(
+                    request.Context.Name, 
+                    request.Context.SpeakingName, 
+                    request.Context.Description,
+                    request.Context.Configuration);
 
                 if (isSuccess)
                 {
