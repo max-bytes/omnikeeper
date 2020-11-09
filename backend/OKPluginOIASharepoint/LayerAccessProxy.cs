@@ -67,13 +67,12 @@ namespace OKPluginOIASharepoint
             {
                 var item = await client.GetListItem(externalID.listID, externalID.itemID, new string[] { columnName });
 
-                var value = item.GetOr(columnName, null) as string;
-                if (value == null)
+                if (!(item.GetOr(columnName, null) is string value) || value == null)
                     return null; // attribute is not present in list item
 
                 return BuildAttributeFromValue(name, value, ciid);
             }
-            catch (Exception e)
+            catch (Exception)
             { // TODO: handle
                 return null;
             }
@@ -111,7 +110,7 @@ namespace OKPluginOIASharepoint
                 {
                     items = await client.GetListItems(listID, listConfig.columnNames).ToListAsync();
                 }
-                catch (Exception e)
+                catch (Exception)
                 { // TODO: handle
                     continue;
                 }
@@ -161,7 +160,7 @@ namespace OKPluginOIASharepoint
                     // TODO: restrict the items to get to the ones where the guid is requested (or should we simply fetch all and discard later?)
                     items = await client.GetListItems(listID, new string[] { columnName }).ToListAsync();
                 }
-                catch (Exception e)
+                catch (Exception)
                 { // TODO: handle
                     continue;
                 }
@@ -184,7 +183,9 @@ namespace OKPluginOIASharepoint
             }
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, TimeThreshold atTime)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             //if (!atTime.IsLatest) yield break; // we don't have historic information
 
@@ -197,7 +198,9 @@ namespace OKPluginOIASharepoint
             return AsyncEnumerable.Empty<Relation>();// TODO: implement
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             return null;// TODO: implement
         }

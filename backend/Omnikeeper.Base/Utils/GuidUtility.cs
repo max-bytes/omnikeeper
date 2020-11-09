@@ -18,7 +18,9 @@ namespace Omnikeeper.Base.Utils
         /// <param name="guid">When this method returns, contains the <see cref="Guid"/> equivalent to the GUID
         /// contained in <paramref name="value"/>, if the conversion succeeded, or Guid.Empty if the conversion failed.</param>
         /// <returns><c>true</c> if a GUID was successfully parsed; <c>false</c> otherwise.</returns>
+#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
         public static bool TryParse(string? value, out Guid guid) => Guid.TryParse(value, out guid);
+#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 
         /// <summary>
         /// Converts a GUID to a lowercase string with no dashes.
