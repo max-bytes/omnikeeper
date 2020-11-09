@@ -6,7 +6,6 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Ingest.ActiveDirectoryXML;
-using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -25,11 +24,11 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly IngestDataService ingestDataService;
         private readonly ICurrentUserService currentUserService;
         private readonly ILayerModel layerModel;
-        private readonly IngestActiveDirectoryXMLService ingestActiveDirectoryXMLService;
+        private readonly ActiveDirectoryXMLIngestService ingestActiveDirectoryXMLService;
         private readonly ILayerBasedAuthorizationService authorizationService;
         private readonly ILogger<ActiveDirectoryXMLIngestController> logger;
 
-        public ActiveDirectoryXMLIngestController(IngestDataService ingestDataService, ICurrentUserService currentUserService, ILayerModel layerModel, IngestActiveDirectoryXMLService ingestActiveDirectoryXMLService,
+        public ActiveDirectoryXMLIngestController(IngestDataService ingestDataService, ICurrentUserService currentUserService, ILayerModel layerModel, ActiveDirectoryXMLIngestService ingestActiveDirectoryXMLService,
             ILayerBasedAuthorizationService authorizationService, ILogger<ActiveDirectoryXMLIngestController> logger)
         {
             this.ingestDataService = ingestDataService;

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
+using Omnikeeper.Base.Service;
 using Omnikeeper.GraphQL;
 using Omnikeeper.Service;
 using System;

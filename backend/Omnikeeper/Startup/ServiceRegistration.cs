@@ -56,6 +56,9 @@ namespace Omnikeeper.Startup
             services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.BuilderInternal>();
             services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIAOmnikeeper.OnlineInboundAdapter.Builder>();
             services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIASharepoint.OnlineInboundAdapter.Builder>();
+
+            // register ingest adapters
+            services.AddScoped<ActiveDirectoryXMLIngestService, ActiveDirectoryXMLIngestService>();
         }
 
         public static void RegisterServices(IServiceCollection services)
@@ -67,7 +70,6 @@ namespace Omnikeeper.Startup
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<MarkedForDeletionService>();
             services.AddScoped<IngestDataService>();
-            services.AddScoped<IngestActiveDirectoryXMLService, IngestActiveDirectoryXMLService>(); // TODO: move to its own plugin
 
         }
 

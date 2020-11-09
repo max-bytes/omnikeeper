@@ -1,32 +1,28 @@
 ﻿using FluentAssertions;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
-using Omnikeeper.Controllers.Ingest;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Ingest.ActiveDirectoryXML;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Omnikeeper.Ingest.ActiveDirectoryXML;
 
-namespace Tests.Ingest
+namespace OKPluginActiveDirectoryXMLIngest.Tests
 {
-    class IngestActiveDirectoryXMLTest
+    class Tests
     {
         [Test]
         public void Basic()
         {
-            var ingestService = new IngestActiveDirectoryXMLService();
-            var logger = new CountLogger<IngestActiveDirectoryXMLTest>();
-
+            var ingestService = new ActiveDirectoryXMLIngestService();
+            var logger = new CountLogger<Tests>();
             var (ciCandidates, relationCandidates) = ingestService.Files2IngestCandidates(new List<(Func<Stream>, string)>()
             {
-                (() => File.OpenRead(FileUtils.GetFilepath("ADComputers.xml", Path.Combine("Ingest", "active-directory-xml"))), "ADComputers.xml"),
-                (() => File.OpenRead(FileUtils.GetFilepath("ADUsers.xml", Path.Combine("Ingest", "active-directory-xml"))), "ADUsers.xml"),
-                (() => File.OpenRead(FileUtils.GetFilepath("ADGroups.xml", Path.Combine("Ingest", "active-directory-xml"))), "ADGroups.xml"),
+                (() => File.OpenRead(FileUtils.GetFilepath("ADComputers.xml", Path.Combine("files"))), "ADComputers.xml"),
+                (() => File.OpenRead(FileUtils.GetFilepath("ADUsers.xml", Path.Combine( "files"))), "ADUsers.xml"),
+                (() => File.OpenRead(FileUtils.GetFilepath("ADGroups.xml", Path.Combine("files"))), "ADGroups.xml"),
             }, new LayerSet(new long[] { 1, 2 }), logger);
 
             Assert.AreEqual(0, logger.GetCount(Microsoft.Extensions.Logging.LogLevel.Warning));

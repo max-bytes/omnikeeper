@@ -20,7 +20,7 @@ namespace Omnikeeper.Controllers.Ingest
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [Authorize]
-    public class AnsibleIngestController : ControllerBase
+    public class AnsibleIngestController : ControllerBase // TODO: move to its own plugin
     {
         private readonly IngestDataService ingestDataService;
         private readonly ILayerModel layerModel;

@@ -53,6 +53,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DBMigrations\DBMigrations.csproj" />
+    <ProjectReference Include="..\OKPluginActiveDirectoryXMLIngest\OKPluginActiveDirectoryXMLIngest.csproj" />
     <ProjectReference Include="..\OKPluginCLBMonitoring\OKPluginCLBMonitoring.csproj" />
     <ProjectReference Include="..\OKPluginOIAKeycloak\OKPluginOIAKeycloak.csproj" />
     <ProjectReference Include="..\OKPluginOIAOmnikeeper\OKPluginOIAOmnikeeper.csproj" />

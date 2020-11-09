@@ -24,6 +24,7 @@ using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using Npgsql.Logging;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Service;
 using Swashbuckle.AspNetCore.SwaggerGen;

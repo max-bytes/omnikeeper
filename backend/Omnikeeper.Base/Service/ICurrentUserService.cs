@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.Service
+namespace Omnikeeper.Base.Service
 {
     public interface ICurrentUserService
     {
