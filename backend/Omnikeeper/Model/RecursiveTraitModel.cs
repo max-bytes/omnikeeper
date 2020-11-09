@@ -1,10 +1,10 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Utils;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
 using System;
 using System.Threading.Tasks;
 

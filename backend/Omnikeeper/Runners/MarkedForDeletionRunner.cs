@@ -1,7 +1,7 @@
 ﻿using Hangfire.Server;
+using Microsoft.Extensions.Logging;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
-using Microsoft.Extensions.Logging;
 
 namespace Omnikeeper.Runners
 {

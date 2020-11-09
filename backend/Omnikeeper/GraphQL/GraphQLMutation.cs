@@ -1,27 +1,29 @@
 ﻿using GraphQL;
 using GraphQL.Types;
+using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
-using Omnikeeper.Service;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Entity.Config;
 
 namespace Omnikeeper.GraphQL
 {
     public class GraphQLMutation : ObjectGraphType
     {
-        public GraphQLMutation(ICIModel ciModel, IBaseAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAContextModel OIAContextModel,
+        public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAContextModel OIAContextModel,
              IODataAPIContextModel odataAPIContextModel, IChangesetModel changesetModel, IPredicateModel predicateModel, IRecursiveTraitModel traitModel,
-             IBaseConfigurationModel baseConfigurationModel, IOmnikeeperAuthorizationService authorizationService, NpgsqlConnection conn)
+             IBaseConfigurationModel baseConfigurationModel, ILayerBasedAuthorizationService layerBasedAuthorizationService,
+             ICIBasedAuthorizationService ciBasedAuthorizationService, IManagementAuthorizationService managementAuthorizationService,
+             NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
@@ -44,9 +46,18 @@ namespace Omnikeeper.GraphQL
                     var writeLayerIDs = insertAttributes.Select(a => a.LayerID)
                     .Concat(removeAttributes.Select(a => a.LayerID))
                     .Concat(insertRelations.Select(a => a.LayerID))
-                    .Concat(removeRelations.Select(a => a.LayerID));
-                    if (!authorizationService.CanUserWriteToLayers(userContext.User, writeLayerIDs))
+                    .Concat(removeRelations.Select(a => a.LayerID))
+                    .Distinct();
+                    if (!layerBasedAuthorizationService.CanUserWriteToLayers(userContext.User, writeLayerIDs))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', writeLayerIDs)}");
+
+                    var writeCIIDs = insertAttributes.Select(a => a.CI)
+                    .Concat(removeAttributes.Select(a => a.CI))
+                    .Concat(insertRelations.SelectMany(a => new Guid[] { a.FromCIID, a.ToCIID }))
+                    .Concat(removeRelations.SelectMany(a => new Guid[] { a.FromCIID, a.ToCIID }))
+                    .Distinct();
+                    if (!ciBasedAuthorizationService.CanWriteToAllCIs(writeCIIDs, out var notAllowedCI))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to CI {notAllowedCI}");
 
                     using var transaction = await conn.BeginTransactionAsync();
                     userContext.Transaction = transaction;
@@ -124,10 +135,11 @@ namespace Omnikeeper.GraphQL
 
                     var userContext = context.UserContext as OmnikeeperUserContext;
 
-                    if (!authorizationService.CanUserCreateCI(userContext.User))
+                    if (!managementAuthorizationService.CanUserCreateCI(userContext.User))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create CIs");
-                    if (!authorizationService.CanUserWriteToLayers(userContext.User, createCIs.Select(ci => ci.LayerIDForName)))
+                    if (!layerBasedAuthorizationService.CanUserWriteToLayers(userContext.User, createCIs.Select(ci => ci.LayerIDForName)))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', createCIs.Select(ci => ci.LayerIDForName))}");
+                    // NOTE: a newly created CI cannot be checked with CIBasedAuthorizationService yet. That's why we don't do a .CanWriteToCI() check here
 
                     using var transaction = await conn.BeginTransactionAsync();
                     userContext.Transaction = transaction;
@@ -158,7 +170,7 @@ namespace Omnikeeper.GraphQL
                     var createLayer = context.GetArgument<CreateLayerInput>("layer");
                     var userContext = context.UserContext as OmnikeeperUserContext;
 
-                    if (!authorizationService.CanUserCreateLayer(userContext.User))
+                    if (!managementAuthorizationService.CanUserCreateLayer(userContext.User))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create Layers");
 
                     using var transaction = await conn.BeginTransactionAsync();
@@ -192,7 +204,7 @@ namespace Omnikeeper.GraphQL
 
                   var userContext = context.UserContext as OmnikeeperUserContext;
 
-                  if (!authorizationService.CanUserUpdateLayer(userContext.User))
+                  if (!managementAuthorizationService.CanUserUpdateLayer(userContext.User))
                       throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update Layers");
 
                   using var transaction = await conn.BeginTransactionAsync();
@@ -420,7 +432,7 @@ namespace Omnikeeper.GraphQL
 
                   var userContext = context.UserContext as OmnikeeperUserContext;
 
-                  if (!authorizationService.CanUserUpsertPredicate(userContext.User))
+                  if (!managementAuthorizationService.CanUserUpsertPredicate(userContext.User))
                       throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update or insert Predicates");
 
                   using var transaction = await conn.BeginTransactionAsync();

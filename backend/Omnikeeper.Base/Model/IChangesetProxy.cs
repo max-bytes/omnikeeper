@@ -1,5 +1,5 @@
-﻿using Omnikeeper.Base.Entity;
-using Npgsql;
+﻿using Npgsql;
+using Omnikeeper.Base.Entity;
 using System;
 using System.Threading.Tasks;
 

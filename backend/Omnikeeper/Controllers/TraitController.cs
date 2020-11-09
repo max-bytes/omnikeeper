@@ -1,9 +1,10 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -19,10 +20,12 @@ namespace Omnikeeper.Controllers
     public class TraitController : ControllerBase
     {
         private readonly IEffectiveTraitModel traitModel;
+        private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
 
-        public TraitController(IEffectiveTraitModel traitModel)
+        public TraitController(IEffectiveTraitModel traitModel, ICIBasedAuthorizationService ciBasedAuthorizationService)
         {
             this.traitModel = traitModel;
+            this.ciBasedAuthorizationService = ciBasedAuthorizationService;
         }
 
         [HttpGet("getEffectiveTraitSetsForTraitName")]
@@ -30,7 +33,9 @@ namespace Omnikeeper.Controllers
         {
             var layerset = new LayerSet(layerIDs);
             var traitSets = await traitModel.CalculateEffectiveTraitsForTraitName(traitName, layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
-            return Ok(traitSets.ToDictionary(kv => kv.Key, kv => EffectiveTraitDTO.Build(kv.Value)));
+            return Ok(traitSets
+                .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key))
+                .ToDictionary(kv => kv.Key, kv => EffectiveTraitDTO.Build(kv.Value)));
         }
     }
 }

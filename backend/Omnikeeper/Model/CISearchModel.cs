@@ -1,13 +1,13 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
-using Npgsql;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Omnikeeper.Entity.AttributeValues;
 
 namespace Omnikeeper.Model
 {
@@ -51,12 +51,14 @@ namespace Omnikeeper.Model
             {
                 // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
                 var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), ls, trans, atTime);
-                var foundCIIDs = ciNamesFromNameAttributes.Where(kv => {
-                        if (kv.Value.Attribute.Value is IAttributeValueText t) {
-                            return t.FullTextSearch(finalSS, System.Globalization.CompareOptions.IgnoreCase);
-                        }
-                        return false;
-                    })
+                var foundCIIDs = ciNamesFromNameAttributes.Where(kv =>
+                {
+                    if (kv.Value.Attribute.Value is IAttributeValueText t)
+                    {
+                        return t.FullTextSearch(finalSS, System.Globalization.CompareOptions.IgnoreCase);
+                    }
+                    return false;
+                })
                     .Select(kv => kv.Key).ToHashSet();
                 if (!foundCIIDs.IsEmpty())
                     cis = await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(foundCIIDs), ls, trans, atTime);
@@ -90,13 +92,14 @@ namespace Omnikeeper.Model
                 searchAllCIsBasedOnSearchString = false;
                 // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
                 var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), layerSet, trans, atTime);
-                foundCIIDs = ciNamesFromNameAttributes.Where(kv => {
-                        if (kv.Value.Attribute.Value is IAttributeValueText t)
-                        {
-                            return t.FullTextSearch(finalSS, System.Globalization.CompareOptions.IgnoreCase);
-                        }
-                        return false;
-                    })
+                foundCIIDs = ciNamesFromNameAttributes.Where(kv =>
+                {
+                    if (kv.Value.Attribute.Value is IAttributeValueText t)
+                    {
+                        return t.FullTextSearch(finalSS, System.Globalization.CompareOptions.IgnoreCase);
+                    }
+                    return false;
+                })
                     .Select(kv => kv.Key).ToHashSet();
             }
             else

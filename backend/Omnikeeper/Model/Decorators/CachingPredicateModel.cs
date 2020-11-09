@@ -1,9 +1,9 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Service;
-using Microsoft.Extensions.Caching.Memory;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -36,7 +36,7 @@ namespace Omnikeeper.Model.Decorators
 
         public async Task<Predicate> GetPredicate(string id, TimeThreshold atTime, AnchorStateFilter stateFilter, NpgsqlTransaction trans)
         {
-            
+
             if (atTime.IsLatest)
             {
                 return await memoryCache.GetOrCreateAsync(CacheKeyService.Predicate(id), async (ce) =>
@@ -73,7 +73,7 @@ namespace Omnikeeper.Model.Decorators
                 memoryCache.CancelPredicatesChangeToken();
                 memoryCache.CancelPredicateChangeToken(id);
             }
-                
+
             return success;
         }
     }

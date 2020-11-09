@@ -1,14 +1,9 @@
 ﻿using Newtonsoft.Json;
-using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DTO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
-using System.Globalization;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
 
 namespace Omnikeeper.Entity.AttributeValues
 {

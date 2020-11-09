@@ -1,5 +1,4 @@
 ﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DTO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;

@@ -1,7 +1,7 @@
-﻿using Omnikeeper.Base.Model;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using Omnikeeper.Base.Model;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -47,10 +47,10 @@ namespace Omnikeeper.Base.Inbound
                 if (onlinePluginsBuilders.TryGetValue(config.Config.BuilderName, out var builder))
                 {
                     var idMapper = await externalIDMapper.CreateOrGetScoped(
-                        config.Config.MapperScope, 
-                        () => builder.BuildIDMapper(persister.CreateScopedPersister(config.Config.MapperScope)), 
+                        config.Config.MapperScope,
+                        () => builder.BuildIDMapper(persister.CreateScopedPersister(config.Config.MapperScope)),
                         conn, trans);
-                    
+
                     return builder.Build(config.Config, appConfig, idMapper, loggerFactory);
                 }
             }

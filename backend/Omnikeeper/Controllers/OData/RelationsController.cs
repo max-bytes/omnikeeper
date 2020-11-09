@@ -1,11 +1,11 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.Service;
-using Microsoft.AspNet.OData;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNet.OData;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -24,6 +24,7 @@ namespace Omnikeeper.Controllers.OData
         public string Predicate { get; set; }
     }
 
+    // TODO: ci based authorization
     //[Authorize]
     public class RelationsController : ODataController
     {
@@ -33,10 +34,10 @@ namespace Omnikeeper.Controllers.OData
         private readonly IODataAPIContextModel oDataAPIContextModel;
         private readonly NpgsqlConnection conn;
         private readonly ICurrentUserService currentUserService;
-        private readonly IOmnikeeperAuthorizationService authorizationService;
+        private readonly ILayerBasedAuthorizationService authorizationService;
 
         public RelationsController(IRelationModel relationModel, ICIModel ciModel, IChangesetModel changesetModel, IODataAPIContextModel oDataAPIContextModel,
-            ICurrentUserService currentUserService, IOmnikeeperAuthorizationService authorizationService, NpgsqlConnection conn)
+            ICurrentUserService currentUserService, ILayerBasedAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             this.relationModel = relationModel;
             this.ciModel = ciModel;

@@ -1,13 +1,11 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Entity.DTO;
-using System.Linq;
 
 namespace Omnikeeper.Model
 {
@@ -50,7 +48,7 @@ namespace Omnikeeper.Model
             var CIID = dr.GetGuid(1);
             var type = dr.GetFieldValue<AttributeValueType>(2);
             var valueText = dr.GetString(3);
-            var valueBinary = dr.GetFieldValue<byte[]>(4); 
+            var valueBinary = dr.GetFieldValue<byte[]>(4);
             var valueControl = dr.GetFieldValue<byte[]>(5);
             var av = Unmarshal(valueText, valueBinary, valueControl, type, fullBinary);
             var state = dr.GetFieldValue<AttributeState>(6);

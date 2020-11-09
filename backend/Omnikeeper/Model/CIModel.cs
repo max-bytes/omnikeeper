@@ -1,9 +1,8 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Utils;
-using Npgsql;
-using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -28,11 +27,6 @@ namespace Omnikeeper.Model
             var nameA = attributes.GetValueOrDefault(ICIModel.NameAttribute, null);
             return nameA?.Attribute.Value.Value2String(); // TODO: we assume we can convert the name to a string, is this correct?
         }
-        private string GetNameFromAttributes(IEnumerable<CIAttribute> attributes)
-        {
-            var nameA = attributes.FirstOrDefault(a => a.Name == ICIModel.NameAttribute);
-            return nameA?.Value.Value2String(); // TODO: we assume we can convert the name to a string, is this correct?
-        }
 
         private async Task<IDictionary<Guid, string>> GetCINames(LayerSet layerset, ICIIDSelection selection, NpgsqlTransaction trans, TimeThreshold atTime)
         {
@@ -43,32 +37,6 @@ namespace Omnikeeper.Model
                 attributes.TryGetValue(ciid, out var nameAttribute);
                 return (ciid, name: nameAttribute?.Attribute.Value.Value2String());
             }).ToDictionary(kv => kv.ciid, kv => kv.name);
-        }
-
-        public async Task<CI> GetCI(Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
-        {
-            var attributes = await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid), layerID, trans, atTime);
-            var name = GetNameFromAttributes(attributes);
-            return CI.Build(ciid, name, layerID, atTime, attributes);
-        }
-
-        public async Task<IEnumerable<CI>> GetCIs(ICIIDSelection selection, long layerID, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime)
-        {
-            var attributes = await attributeModel.GetAttributes(selection, layerID, trans, atTime);
-            var groupedAttributes = attributes.GroupBy(a => a.CIID).ToDictionary(a => a.Key, a => a.ToList());
-            if (includeEmptyCIs)
-            {
-                var allCIIds = await GetCIIDsFromSelection(selection, trans);
-                var emptyCIs = allCIIds.Except(groupedAttributes.Select(a => a.Key)).ToDictionary(a => a, a => new List<CIAttribute>());
-                groupedAttributes = groupedAttributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
-            }
-            var t = groupedAttributes.Select(ga =>
-            {
-                var att = ga.Value;
-                var name = GetNameFromAttributes(att);
-                return CI.Build(ga.Key, name, layerID, atTime, att);
-            });
-            return t;
         }
 
         private async Task<IEnumerable<Guid>> GetCIIDsFromSelection(ICIIDSelection selection, NpgsqlTransaction trans)

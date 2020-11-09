@@ -1,15 +1,13 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Microsoft.Extensions.Logging;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Service;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Xml.Linq;
-using System.Xml.Serialization;
 
 namespace Omnikeeper.Ingest.ActiveDirectoryXML
 {
@@ -32,7 +30,8 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
             if (fUsers == default)
             {
                 throw new Exception("Missing mandatory file ADUsers.xml");
-            } else
+            }
+            else
             {
                 using var fs = fUsers.stream();
                 foreach (var (ciid, cic) in ParseUsers(fs, searchLayers, logger))
@@ -51,7 +50,8 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                 relationCandidates.AddRange(relations);
             }
             var fGroups = files.FirstOrDefault(f => "ADGroups.xml".Equals(f.filename));
-            if (fGroups != default) {
+            if (fGroups != default)
+            {
                 using var fs = fGroups.stream();
                 var (groups, relations) = ParseGroupsAndRelationsToUsers(userLookupViaDN, fs, searchLayers, logger);
                 foreach (var (ciid, cic) in groups) ciCandidatesGroups.Add(ciid, cic);
@@ -177,12 +177,14 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                         {
                             var r = RelationCandidate.Build(CIIdentificationMethodByTemporaryCIID.Build(foundUser.Key), CIIdentificationMethodByTemporaryCIID.Build(groupGuid), "member_of_group");
                             relations.Add(r);
-                        } else
+                        }
+                        else
                         {
                             logger.LogWarning($"Could not find a member of group in users; userDN: \"{userDN}\"");
                         }
                     }
-                } else
+                }
+                else
                 {
                     logger.LogWarning("Could not parse members of groups element... malformed XML?");
                 }

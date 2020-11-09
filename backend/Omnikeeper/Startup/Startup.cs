@@ -1,22 +1,10 @@
-using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
-using GraphQL.Types;
 using Hangfire;
 using Hangfire.AspNetCore;
 using Hangfire.Console;
 using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
-using Omnikeeper.Base.CLB;
-using Omnikeeper.Base.Inbound;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.GraphQL;
-using Omnikeeper.Ingest.ActiveDirectoryXML;
-using Omnikeeper.Model;
-using Omnikeeper.Model.Decorators;
-using Omnikeeper.Service;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Formatter;
@@ -35,7 +23,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using Npgsql.Logging;
-using OKPluginCLBMonitoring;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Service;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
@@ -43,7 +33,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.Config;
 
 namespace Omnikeeper.Startup
 {
@@ -60,32 +49,7 @@ namespace Omnikeeper.Startup
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddScoped<IServiceProvider>(x =>
-                new FuncServiceProvider(x.GetRequiredService)
-                ); // graphql needs this
-
             services.AddApiVersioning();
-
-            // add plugins
-            //var testAssembly = Assembly.LoadFrom(@"C:\Users\Maximilian Csuk\Projects\Landscape\TestPlugin\bin\Debug\netstandard2.1\TestPlugin.dll");
-            //services.RegisterAssemblyPublicNonGenericClasses(testAssembly)
-            //    .Where(a => {
-            //        return true;// a.GetInterfaces().Contains(typeof(ILandscapePluginRegistry));
-            //        })
-            //    .AsPublicImplementedInterfaces(ServiceLifetime.Scoped);
-
-            // register compute layer brains
-            //services.AddScoped<IComputeLayerBrain, CLBMonitoring>();
-            services.AddScoped<IComputeLayerBrain, CLBNaemonMonitoring>();
-
-            // register online inbound adapters and managers
-            services.AddSingleton<IExternalIDMapper, ExternalIDMapper>();
-            services.AddSingleton<IExternalIDMapPersister, ExternalIDMapPostgresPersister>();
-            services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.Builder>();
-            services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.BuilderInternal>();
-            services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIAOmnikeeper.OnlineInboundAdapter.Builder>();
-            services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIASharepoint.OnlineInboundAdapter.Builder>();
-            services.AddScoped<IInboundAdapterManager, InboundAdapterManager>();
 
             services.AddCors(options => options.AddPolicy("DefaultCORSPolicy", builder =>
                builder.WithOrigins(Configuration.GetSection("CORS")["AllowedHosts"].Split(","))
@@ -96,72 +60,21 @@ namespace Omnikeeper.Startup
 
             services.AddOData();//.EnableApiVersioning();
 
+            services.AddHttpContextAccessor();
+
             services.AddControllers().AddNewtonsoftJson(options =>
             {
                 // enums to string conversion
                 options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
             });
 
-            services.AddSingleton<DBConnectionBuilder>();
-            services.AddScoped((sp) =>
-            {
-                var dbcb = sp.GetRequiredService<DBConnectionBuilder>();
-                return dbcb.Build(Configuration);
-            });
-
-            services.AddHttpContextAccessor();
-
-            services.AddScoped<ICISearchModel, CISearchModel>();
-            services.AddScoped<ICIModel, CIModel>();
-            services.AddScoped<IAttributeModel, AttributeModel>();
-            services.AddScoped<IBaseAttributeModel, BaseAttributeModel>();
-            services.Decorate<IBaseAttributeModel, CachingBaseAttributeModel>();
-            services.Decorate<IBaseAttributeModel, OIABaseAttributeModel>();
-            services.AddScoped<IUserInDatabaseModel, UserInDatabaseModel>();
-            services.AddScoped<ILayerModel, LayerModel>();
-            services.Decorate<ILayerModel, CachingLayerModel>();
-            services.AddScoped<ILayerStatisticsModel, LayerStatisticsModel>();
-            services.AddScoped<IRelationModel, RelationModel>();
-            services.AddScoped<IBaseRelationModel, BaseRelationModel>();
-            services.Decorate<IBaseRelationModel, CachingBaseRelationModel>();
-            services.Decorate<IBaseRelationModel, OIABaseRelationModel>();
-            services.AddScoped<IChangesetModel, ChangesetModel>();
-            services.AddScoped<ITemplateModel, TemplateModel>();
-            services.AddScoped<IPredicateModel, PredicateModel>();
-            services.Decorate<IPredicateModel, CachingPredicateModel>();
-            services.AddScoped<IMemoryCacheModel, MemoryCacheModel>();
-            services.AddScoped<IODataAPIContextModel, ODataAPIContextModel>();
-            services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
-
-            services.AddScoped<IRecursiveTraitModel, RecursiveTraitModel>();
-            services.Decorate<IRecursiveTraitModel, CachingRecursiveTraitModel>();
-            services.AddScoped<IEffectiveTraitModel, EffectiveTraitModel>();
-
-            services.AddScoped<IOIAContextModel, OIAContextModel>();
-            services.AddScoped<IBaseConfigurationModel, BaseConfigurationModel>();
-            services.Decorate<IBaseConfigurationModel, CachingBaseConfigurationModel>();
-
-            services.AddScoped<IOmnikeeperAuthorizationService, OmnikeeperAuthorizationService>();
-            services.AddScoped<ICurrentUserService, CurrentUserService>();
-            services.AddScoped<MarkedForDeletionService>();
-            services.AddScoped<IngestDataService>();
-
-            services.AddScoped<ITemplatesProvider, TemplatesProvider>();
-            services.Decorate<ITemplatesProvider, CachedTemplatesProvider>();
-
-            services.AddScoped<MergedCIType>();
-            services.AddScoped<RelationType>();
-            services.AddScoped<ISchema, GraphQLSchema>();
-
-            services.AddSingleton<NpgsqlLoggingProvider>();
-
-            services.AddScoped<ITraitsProvider, TraitsProvider>();
-
-            services.AddScoped<IOnlineAccessProxy, OnlineAccessProxy>();
-
-            services.AddScoped<IngestActiveDirectoryXMLService, IngestActiveDirectoryXMLService>();
-
-            services.AddScoped<CIMappingService, CIMappingService>();
+            ServiceRegistration.RegisterLogging(services);
+            ServiceRegistration.RegisterDB(services, Configuration);
+            ServiceRegistration.RegisterOIABase(services);
+            ServiceRegistration.RegisterOKPlugins(services);
+            ServiceRegistration.RegisterModels(services, true, true);
+            ServiceRegistration.RegisterServices(services);
+            ServiceRegistration.RegisterGraphQL(services);
 
             services.Configure<IISServerOptions>(options =>
             {
@@ -172,10 +85,7 @@ namespace Omnikeeper.Startup
             {
                 x.ExposeExceptions = CurrentEnvironment.IsDevelopment() || CurrentEnvironment.IsStaging(); //set true only in development mode. make it switchable.
             })
-            .AddGraphTypes(ServiceLifetime.Scoped);
-
-            services.AddSingleton<IDocumentExecuter, MyDocumentExecutor>(); // custom document executor that does serial queries, required by postgres
-
+            .AddGraphTypes(ServiceLifetime.Scoped); // TODO: move graphql class to singleton scope: https://graphql-dotnet.github.io/docs/getting-started/dependency-injection/#scoped-services-with-a-singleton-schema-lifetime
 
             services.AddAuthentication(options =>
             {
@@ -201,20 +111,20 @@ namespace Omnikeeper.Startup
                 {
                     OnForbidden = c =>
                     {
-                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<IOmnikeeperAuthorizationService>>();
+                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerChallengeContext>>();
                         logger.LogInformation($"Rejected user");
                         return Task.CompletedTask;
                     },
                     OnTokenValidated = c =>
                     {
-                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<IOmnikeeperAuthorizationService>>();
+                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerChallengeContext>>();
                         var userService = c.HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
                         logger.LogInformation($"Validated token for user {userService.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
                         return Task.CompletedTask;
                     },
                     OnAuthenticationFailed = c =>
                     {
-                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<IOmnikeeperAuthorizationService>>();
+                        var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerChallengeContext>>();
                         logger.LogError(c.Exception, $"Failure when trying to authenticate user");
                         return Task.CompletedTask;
                     }

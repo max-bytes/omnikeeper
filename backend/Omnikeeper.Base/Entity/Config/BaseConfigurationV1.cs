@@ -1,8 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Omnikeeper.Base.Utils;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Omnikeeper.Base.Entity.Config
 {

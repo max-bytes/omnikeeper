@@ -1,9 +1,9 @@
 ﻿using GraphQL;
 using Hangfire.Server;
+using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Utils;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

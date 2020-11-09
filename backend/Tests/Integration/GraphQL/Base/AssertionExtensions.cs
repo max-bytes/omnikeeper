@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using System.Text.Json;
 
-namespace Tests.Integration.GraphQL
+namespace Tests.Integration.GraphQL.Base
 {
     public static class AssertionExtensions
     {

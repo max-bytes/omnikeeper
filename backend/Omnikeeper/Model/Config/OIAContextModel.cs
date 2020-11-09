@@ -1,16 +1,16 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Inbound;
-using Omnikeeper.Base.Model;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Inbound;
+using Omnikeeper.Base.Model;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.Model
+namespace Omnikeeper.Model.Config
 {
     public class OIAContextModel : IOIAContextModel
     {

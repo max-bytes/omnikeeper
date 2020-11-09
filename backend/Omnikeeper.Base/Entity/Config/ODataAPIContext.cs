@@ -1,6 +1,6 @@
 ﻿
-using Omnikeeper.Base.Utils;
 using Newtonsoft.Json;
+using Omnikeeper.Base.Utils;
 
 namespace Omnikeeper.Base.Entity
 {
