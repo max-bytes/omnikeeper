@@ -2,7 +2,6 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +10,7 @@ using System.Xml.Linq;
 
 namespace Omnikeeper.Ingest.ActiveDirectoryXML
 {
-    public class IngestActiveDirectoryXMLService
+    public class ActiveDirectoryXMLIngestService
     {
         private readonly string[] IdentifiableUserAttributes = new string[] { "ad.type", "user.email" };
         private readonly string[] IdentifiableGroupAttributes = new string[] { "ad.type", "ad.distinguishedName" };
