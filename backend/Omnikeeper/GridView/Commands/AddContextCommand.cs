@@ -21,7 +21,7 @@ namespace Omnikeeper.GridView.Commands
             {
                 RuleFor(x => x.Context.Name).NotEmpty().NotNull();
                 RuleFor(x => x.Context.Configuration.ShowCIIDColumn).NotNull();
-                RuleFor(x => x.Context.Configuration.WriteLayer).GreaterThan(0).WithMessage("WriteLayer should be greater than 0");
+                RuleFor(x => x.Context.Configuration.WriteLayer).GreaterThanOrEqualTo(0).WithMessage("WriteLayer should be greater than or equal to 0");
                 RuleFor(x => x.Context.Configuration.ReadLayerset).NotEmpty().WithMessage("ReadLayerset should contain at least one item");
                 RuleFor(x => x.Context.Configuration.Columns).NotEmpty().WithMessage("Columns should contain at least one item");
                 RuleFor(x => x.Context.Configuration.Trait).NotEmpty().NotNull().WithMessage("Trait should not be empty");

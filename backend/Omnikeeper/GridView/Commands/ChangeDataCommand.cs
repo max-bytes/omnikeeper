@@ -183,7 +183,7 @@ namespace Omnikeeper.GridView.Commands
                 }
 
                 trans.Commit();
-                return (await FetchData(config), true, "");
+                return (await FetchData(config), true, ""); // NOTE mcsuk: why are we not using mergedCIs and instead fetch CIs again?
             }
 
             private async Task<ChangeDataResponse> FetchData(GridViewConfiguration config)
