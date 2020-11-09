@@ -8,7 +8,7 @@ namespace Omnikeeper.GraphQL
     {
         public GraphQLSchema(IServiceProvider provider) : base(provider)
         {
-            Query = provider.GetRequiredService<GraphQLQuery>();
+            Query = provider.GetRequiredService<GraphQLQueryRoot>();
             Mutation = provider.GetRequiredService<GraphQLMutation>();
         }
     }

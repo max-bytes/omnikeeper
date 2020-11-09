@@ -1,6 +1,6 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Utils;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;

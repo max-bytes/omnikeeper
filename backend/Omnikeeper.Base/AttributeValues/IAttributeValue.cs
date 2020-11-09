@@ -1,11 +1,8 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DTO;
+﻿using Omnikeeper.Base.Entity.DTO;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Entity.AttributeValues
 {

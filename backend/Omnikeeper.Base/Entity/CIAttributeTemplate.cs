@@ -1,6 +1,6 @@
 ﻿using JsonSubTypes;
-using Omnikeeper.Entity.AttributeValues;
 using Newtonsoft.Json;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -39,7 +39,8 @@ namespace Omnikeeper.Base.Entity
             if (value is IAttributeValueText v)
             {
                 return v.ApplyTextLengthConstraint(Minimum, Maximum);
-            } else
+            }
+            else
             {
                 return new ITemplateErrorAttribute[] { TemplateErrorAttributeWrongType.Build(new AttributeValueType[] { AttributeValueType.Text, AttributeValueType.MultilineText }, value.Type) };
             }

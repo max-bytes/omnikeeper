@@ -3,40 +3,50 @@ using GraphQL;
 using GraphQL.Conversion;
 using GraphQL.Execution;
 using GraphQL.Http;
+using GraphQL.Server;
 using GraphQL.Types;
 using GraphQL.Validation;
 using GraphQL.Validation.Complexity;
 using GraphQLParser.Exceptions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using NUnit.Framework;
+using Omnikeeper.Base.Model;
+using Omnikeeper.GraphQL;
+using Omnikeeper.Model;
+using Omnikeeper.Model.Config;
+using Omnikeeper.Service;
+using Omnikeeper.Startup;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace Tests.Integration.GraphQL
+namespace Tests.Integration.GraphQL.Base
 {
-    public class QueryTestBase<TSchema> : QueryTestBase<TSchema, GraphQLDocumentBuilder>
-        where TSchema : ISchema
-    {
-    }
-
-    public class QueryTestBase<TSchema, TDocumentBuilder>
-        where TSchema : ISchema
-        where TDocumentBuilder : IDocumentBuilder, new()
+    abstract class QueryTestBase : DIServicedTestBase
     {
         public QueryTestBase()
         {
-            Services = new SimpleContainer();
-            Executer = new DocumentExecuter(new TDocumentBuilder(), new DocumentValidator(), new ComplexityAnalyzer());
+            Executer = new DocumentExecuter(new GraphQLDocumentBuilder(), new DocumentValidator(), new ComplexityAnalyzer());
             Writer = new DocumentWriter(indent: true);
+
+            DBSetup.Setup();
         }
 
-        public ISimpleContainer Services { get; set; }
+        protected override IServiceCollection InitServices()
+        {
+            var services = base.InitServices();
 
-        public TSchema Schema => Services.Get<TSchema>();
+            services.AddGraphQL().AddGraphTypes(typeof(GraphQLSchema), ServiceLifetime.Scoped);
 
-        public IDocumentExecuter Executer { get; private set; }
-        public IDocumentWriter Writer { get; private set; }
+            return services;
+        }
+
+        protected IDocumentExecuter Executer { get; private set; }
+        protected IDocumentWriter Writer { get; private set; }
 
         public ExecutionResult AssertQuerySuccess(
             string query,
@@ -90,7 +100,7 @@ namespace Tests.Integration.GraphQL
         {
             var runResult = Executer.ExecuteAsync(options =>
             {
-                options.Schema = Schema;
+                options.Schema = ServiceProvider.GetRequiredService<ISchema>();
                 options.Query = query;
                 options.Root = root;
                 options.Inputs = inputs;
@@ -127,7 +137,7 @@ namespace Tests.Integration.GraphQL
         {
             var runResult = Executer.ExecuteAsync(options =>
             {
-                options.Schema = Schema;
+                options.Schema = ServiceProvider.GetRequiredService<ISchema>();
                 options.Query = query;
                 options.Root = root;
                 options.Inputs = inputs;
@@ -158,6 +168,12 @@ namespace Tests.Integration.GraphQL
         }
 
         public static ExecutionResult CreateQueryResult(string result, ExecutionErrors errors = null)
-            => result.ToExecutionResult(errors);
+        {
+            return new ExecutionResult
+            {
+                Data = string.IsNullOrWhiteSpace(result) ? null : result.ToDictionary(),
+                Errors = errors
+            };
+        }
     }
 }

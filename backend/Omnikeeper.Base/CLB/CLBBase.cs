@@ -1,9 +1,9 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Microsoft.Extensions.Logging;
+using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Microsoft.Extensions.Logging;
-using Npgsql;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,14 +12,14 @@ namespace Omnikeeper.Base.CLB
 {
     public abstract class CLBBase : IComputeLayerBrain
     {
-        protected readonly IBaseAttributeModel attributeModel;
+        protected readonly IAttributeModel attributeModel;
         protected readonly IUserInDatabaseModel userModel;
         protected readonly IChangesetModel changesetModel;
         protected readonly ILayerModel layerModel;
         private readonly IPredicateModel predicateModel;
         protected readonly NpgsqlConnection conn;
 
-        public CLBBase(IBaseAttributeModel attributeModel, ILayerModel layerModel, IPredicateModel predicateModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
+        public CLBBase(IAttributeModel attributeModel, ILayerModel layerModel, IPredicateModel predicateModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
         {
             this.attributeModel = attributeModel;
             this.userModel = userModel;

@@ -1,13 +1,13 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO.Ingest;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Service;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -26,10 +26,10 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly ILayerModel layerModel;
         private readonly ILogger<AnsibleIngestController> logger;
         private readonly ICurrentUserService currentUserService;
-        private readonly IOmnikeeperAuthorizationService authorizationService;
+        private readonly ILayerBasedAuthorizationService authorizationService;
 
         public AnsibleIngestController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService,
-            IOmnikeeperAuthorizationService authorizationService, ILogger<AnsibleIngestController> logger)
+            ILayerBasedAuthorizationService authorizationService, ILogger<AnsibleIngestController> logger)
         {
             this.ingestDataService = ingestDataService;
             this.layerModel = layerModel;
@@ -52,6 +52,8 @@ namespace Omnikeeper.Controllers.Ingest
                 {
                     return Forbid();
                 }
+                // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
+                // TODO: think about this!
 
                 var cis = new Dictionary<Guid, CICandidate>();
                 var relations = new List<RelationCandidate>();

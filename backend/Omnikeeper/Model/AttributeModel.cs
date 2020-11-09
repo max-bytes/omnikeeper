@@ -1,9 +1,9 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Utils;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -72,7 +72,7 @@ namespace Omnikeeper.Model
 
             var ma = mergedAttributes.FirstOrDefault();
             // if the attribute is removed, we don't return it
-            if (ma.Attribute.State == AttributeState.Removed) 
+            if (ma.Attribute.State == AttributeState.Removed)
                 return null;
             return ma;
         }
@@ -200,11 +200,6 @@ namespace Omnikeeper.Model
         public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, NpgsqlTransaction trans)
         {
             return await baseModel.BulkReplaceAttributes(data, changeset, trans);
-        }
-
-        public async Task<int> ArchiveOutdatedAttributesOlderThan(DateTimeOffset threshold, long layerID, NpgsqlTransaction trans)
-        {
-            return await baseModel.ArchiveOutdatedAttributesOlderThan(threshold, layerID, trans);
         }
     }
 }

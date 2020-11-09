@@ -1,19 +1,19 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DTO;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Utils;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Npgsql;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Omnikeeper.Entity.AttributeValues;
-using Microsoft.AspNetCore.Http;
-using System.IO;
-using Omnikeeper.Service;
-using Npgsql;
 
 namespace Omnikeeper.Controllers
 {
@@ -26,15 +26,17 @@ namespace Omnikeeper.Controllers
         private readonly IAttributeModel attributeModel;
         private readonly IChangesetModel changesetModel;
         private readonly ICurrentUserService currentUserService;
-        private readonly IOmnikeeperAuthorizationService authorizationService;
+        private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
+        private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly NpgsqlConnection conn;
 
-        public AttributeValueImageController(IAttributeModel attributeModel, ICurrentUserService currentUserService, IOmnikeeperAuthorizationService authorizationService, NpgsqlConnection conn, IChangesetModel changesetModel)
+        public AttributeValueImageController(IAttributeModel attributeModel, ICurrentUserService currentUserService, ILayerBasedAuthorizationService layerBasedAuthorizationService, NpgsqlConnection conn, IChangesetModel changesetModel, ICIBasedAuthorizationService ciBasedAuthorizationService)
         {
             this.attributeModel = attributeModel;
             this.changesetModel = changesetModel;
             this.currentUserService = currentUserService;
-            this.authorizationService = authorizationService;
+            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
+            this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.conn = conn;
         }
 
@@ -44,6 +46,10 @@ namespace Omnikeeper.Controllers
         {
             if (layerIDs.IsEmpty())
                 return BadRequest("No layer IDs specified");
+
+            var user = await currentUserService.GetCurrentUser(null);
+            if (!ciBasedAuthorizationService.CanReadCI(ciid))
+                return Forbid($"User \"{user.Username}\" does not have permission to read CI {ciid}");
 
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
@@ -60,7 +66,8 @@ namespace Omnikeeper.Controllers
                 }
                 var mimeType = scalar.Value.MimeType;
                 return File(scalar.Value.FullData, mimeType);
-            } else if (a.Attribute.Value is AttributeArrayValueImage array)
+            }
+            else if (a.Attribute.Value is AttributeArrayValueImage array)
             {
                 if (index < 0 || index >= array.Values.Length)
                 {
@@ -83,8 +90,10 @@ namespace Omnikeeper.Controllers
             if (files.Any(t => !t.ContentType.StartsWith("image/")))
                 return BadRequest("Encountered file with invalid content-type. Only images are allowed");
             var user = await currentUserService.GetCurrentUser(null);
-            if (!authorizationService.CanUserWriteToLayer(user, layerID))
+            if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, layerID))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
+            if (!ciBasedAuthorizationService.CanWriteToCI(ciid))
+                return Forbid($"User \"{user.Username}\" does not have permission to write to CI {ciid}");
 
             var fileStreams = files.Select<IFormFile, (Func<Stream> stream, string contentType, string filename)>(f => (
                    () => f.OpenReadStream(),
@@ -105,7 +114,8 @@ namespace Omnikeeper.Controllers
             if (proxies.Length > 1 || forceArray)
             {
                 av = AttributeArrayValueImage.Build(proxies);
-            } else
+            }
+            else
             {
                 av = AttributeScalarValueImage.Build(proxies[0]);
             }

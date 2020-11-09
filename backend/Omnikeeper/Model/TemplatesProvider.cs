@@ -1,7 +1,7 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Npgsql;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model

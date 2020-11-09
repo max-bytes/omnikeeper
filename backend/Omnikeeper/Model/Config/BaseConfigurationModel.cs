@@ -2,11 +2,10 @@
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
+using Omnikeeper.Base.Entity.Config;
+using Omnikeeper.Base.Model.Config;
 using System;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Entity.Config;
-using DotLiquid.Tags;
 
 namespace Omnikeeper.Model
 {

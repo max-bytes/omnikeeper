@@ -1,7 +1,7 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -26,6 +26,5 @@ namespace Omnikeeper.Base.Model
         Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans);
         Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, NpgsqlTransaction trans);
 
-        Task<int> ArchiveOutdatedAttributesOlderThan(DateTimeOffset threshold, long layerID, NpgsqlTransaction trans);
     }
 }

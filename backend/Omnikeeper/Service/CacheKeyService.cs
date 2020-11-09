@@ -1,8 +1,8 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 using System;
 using System.Threading;
 
@@ -55,7 +55,7 @@ namespace Omnikeeper.Service
 
         private static string PredicateChangeToken(string id) => $"predicate_{id}";
         public static string Predicate(string id) => $"predicate_{id}";
-        public static CancellationChangeToken GetPredicateCancellationToken(this IMemoryCache memoryCache, string id) => 
+        public static CancellationChangeToken GetPredicateCancellationToken(this IMemoryCache memoryCache, string id) =>
             new CancellationChangeToken(memoryCache.GetOrCreateThreadSafe(PredicateChangeToken(id), (ce) => new CancellationTokenSource()).Token);
         public static void CancelPredicateChangeToken(this IMemoryCache memoryCache, string id) =>
                CancelAndRemoveChangeToken(memoryCache, PredicateChangeToken(id));

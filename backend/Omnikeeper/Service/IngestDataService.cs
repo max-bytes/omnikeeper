@@ -1,9 +1,9 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Microsoft.Extensions.Logging;
+using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Microsoft.Extensions.Logging;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +32,7 @@ namespace Omnikeeper.Service
             Connection = connection;
         }
 
-
+        // TODO: add ci-based authorization
         public async Task<(int numIngestedCIs, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, AuthenticatedUser user, ILogger logger)
         {
             using var trans = Connection.BeginTransaction();
@@ -54,7 +54,8 @@ namespace Omnikeeper.Service
                 if (!foundCIIDs.IsEmpty())
                 {
                     finalCIID = foundCIIDs.First(); // TODO: how to deal with ambiguities? In other words: more than one CI fit, where to put the data?
-                } else
+                }
+                else
                 {
                     // CI is new, create it first
                     // TODO: batch process CI creation

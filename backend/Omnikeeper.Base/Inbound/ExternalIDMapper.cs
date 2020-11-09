@@ -1,5 +1,4 @@
-﻿using Omnikeeper.Base.Service;
-using Npgsql;
+﻿using Npgsql;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -28,7 +27,7 @@ namespace Omnikeeper.Base.Inbound
 
         public async Task<S> CreateOrGetScoped<S>(string scope, Func<S> scopedF, NpgsqlConnection conn, NpgsqlTransaction trans) where S : class, IScopedExternalIDMapper
         {
-            if (scopes.TryGetValue(scope, out var existingScoped)) 
+            if (scopes.TryGetValue(scope, out var existingScoped))
                 return existingScoped as S;
             var scoped = scopedF();
             await scoped.Setup(conn, trans);
@@ -78,7 +77,8 @@ namespace Omnikeeper.Base.Inbound
             {
                 int2ext.Add(ciid, externalID);
                 ext2int.Add(externalID, ciid);
-            }catch (Exception e)
+            }
+            catch (Exception e)
             {
                 throw e;
             }

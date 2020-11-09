@@ -1,12 +1,12 @@
 ﻿using GraphQL;
 using GraphQL.Types;
 using GraphQL.Validation;
-using Omnikeeper.GraphQL;
-using Omnikeeper.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
+using Omnikeeper.GraphQL;
+using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,9 +1,9 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -98,13 +98,6 @@ namespace Omnikeeper.Model.Decorators
             if (await onlineAccessProxy.IsOnlineInboundLayer(data.LayerID, trans)) throw new Exception("Cannot write to online inbound layer");
 
             return await model.BulkReplaceAttributes(data, changesetProxy, trans);
-        }
-
-        public async Task<int> ArchiveOutdatedAttributesOlderThan(DateTimeOffset threshold, long layerID, NpgsqlTransaction trans)
-        {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
-
-            return await model.ArchiveOutdatedAttributesOlderThan(threshold, layerID, trans);
         }
     }
 }

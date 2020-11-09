@@ -34,7 +34,7 @@ namespace OKPluginCLBMonitoring
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel traitModel;
 
-        public CLBNaemonMonitoring(ICIModel ciModel, IBaseAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
+        public CLBNaemonMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
             IPredicateModel predicateModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
             : base(atributeModel, layerModel, predicateModel, changesetModel, userModel, conn)
         {

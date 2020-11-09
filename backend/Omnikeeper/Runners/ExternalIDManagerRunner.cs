@@ -1,11 +1,11 @@
 ﻿using Hangfire;
 using Hangfire.Server;
+using Microsoft.Extensions.Logging;
+using Npgsql;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Utils;
-using Microsoft.Extensions.Logging;
-using Npgsql;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ namespace Omnikeeper.Runners
         // HACK: making this static sucks, find better way, but runner is instantiated anew on each run
         private static readonly IDictionary<string, DateTimeOffset> lastRuns = new ConcurrentDictionary<string, DateTimeOffset>();
 
-        public ExternalIDManagerRunner(IInboundAdapterManager pluginManager, IExternalIDMapPersister externalIDMapPersister, ICIModel ciModel, CIMappingService ciMappingService, 
+        public ExternalIDManagerRunner(IInboundAdapterManager pluginManager, IExternalIDMapPersister externalIDMapPersister, ICIModel ciModel, CIMappingService ciMappingService,
             IAttributeModel attributeModel, ILayerModel layerModel, NpgsqlConnection conn, ILogger<ExternalIDManagerRunner> logger)
         {
             this.logger = logger;

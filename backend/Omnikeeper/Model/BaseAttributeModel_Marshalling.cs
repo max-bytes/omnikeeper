@@ -1,12 +1,9 @@
-﻿using DotLiquid.Tags;
-using Omnikeeper.Base.Entity.DTO;
+﻿using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Omnikeeper.Model
 {
@@ -133,9 +130,9 @@ namespace Omnikeeper.Model
             byte version = 0x02;
             if (version == 0x01)
             { // V1
-                // HACK: first converting to DTO here is not very clean, but a DTO contains the value(s) as suitable-for-database string(s)
-                // TODO: once V1 is no longer used, remove
-                
+              // HACK: first converting to DTO here is not very clean, but a DTO contains the value(s) as suitable-for-database string(s)
+              // TODO: once V1 is no longer used, remove
+
                 var vdto = AttributeValueDTO.Build(value);
                 if (vdto.IsArray)
                 {
@@ -191,7 +188,8 @@ namespace Omnikeeper.Model
             return (marshalled, new byte[0], control);
         }
 
-        private (string valueText, byte[] valueBinary, byte[] valueControl) MarshalStringV2(string value) {
+        private (string valueText, byte[] valueBinary, byte[] valueControl) MarshalStringV2(string value)
+        {
             var controlHeader = new byte[]
             {
                 0x02, // version

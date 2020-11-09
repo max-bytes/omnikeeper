@@ -1,17 +1,15 @@
 ﻿using Hangfire;
 using Hangfire.Server;
-using Omnikeeper.Base.Inbound;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Service;
-using Omnikeeper.Utils;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using NpgsqlTypes;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Entity.Config;
+using Omnikeeper.Base.Inbound;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Service;
+using Omnikeeper.Utils;
+using System;
+using System.Threading.Tasks;
 
 namespace Omnikeeper.Runners
 {
@@ -36,7 +34,8 @@ namespace Omnikeeper.Runners
         {
             // remove outdated changesets
             // this in turn also removes outdated attributes and relations
-            using (var trans = conn.BeginTransaction()) {
+            using (var trans = conn.BeginTransaction())
+            {
                 var cfg = await baseConfigurationModel.GetConfigOrDefault(trans);
 
                 var archiveThreshold = cfg.ArchiveChangesetThreshold;

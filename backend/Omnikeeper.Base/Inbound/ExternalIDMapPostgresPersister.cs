@@ -1,9 +1,6 @@
-﻿using Omnikeeper.Base.Utils;
-using Microsoft.Extensions.Configuration;
-using Npgsql;
+﻿using Npgsql;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -110,7 +107,7 @@ namespace Omnikeeper.Base.Inbound
             var unusedScopes = allTableNames.Except(usedScopes);
 
             var numDeleted = 0;
-            foreach(var unusedScope in unusedScopes)
+            foreach (var unusedScope in unusedScopes)
             {
                 var fullTableName = $"\"{SchemaName}\".{unusedScope}";
                 using var command = new NpgsqlCommand($"DROP TABLE {fullTableName}", conn, trans);
@@ -125,7 +122,7 @@ namespace Omnikeeper.Base.Inbound
         {
             var ret = new HashSet<Guid>();
             var allTableNames = await GetAllTableNames(conn, trans);
-            foreach(var tableName in allTableNames)
+            foreach (var tableName in allTableNames)
             {
                 var fullTableName = $"\"{SchemaName}\".{tableName}";
                 using var command = new NpgsqlCommand(@$"SELECT ci_id from {fullTableName}", conn, trans);

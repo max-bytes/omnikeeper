@@ -1,10 +1,10 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Service;
-using Microsoft.Extensions.Caching.Memory;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -139,12 +139,6 @@ namespace Omnikeeper.Model.Decorators
             var inserted = await model.BulkReplaceAttributes(data, changesetProxy, trans);
             foreach (var (ciid, _, _, _) in inserted) memoryCache.CancelAttributesChangeToken(ciid, data.LayerID); // NOTE: inserted list is not distinct on ciids, but that's ok
             return inserted;
-        }
-
-        public async Task<int> ArchiveOutdatedAttributesOlderThan(DateTimeOffset threshold, long layerID, NpgsqlTransaction trans)
-        {
-            // NOTE: this method SHOULD NOT have any effect on caching, because we only cache the latest timestamp anyways
-            return await model.ArchiveOutdatedAttributesOlderThan(threshold, layerID, trans);
         }
     }
 }

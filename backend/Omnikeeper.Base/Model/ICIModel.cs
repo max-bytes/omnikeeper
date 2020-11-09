@@ -1,6 +1,6 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Utils;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -14,9 +14,6 @@ namespace Omnikeeper.Base.Model
         // TODO: should return an ISet instead
         Task<IEnumerable<Guid>> GetCIIDs(NpgsqlTransaction trans);
         Task<bool> CIIDExists(Guid id, NpgsqlTransaction trans);
-
-        Task<CI> GetCI(Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
-        Task<IEnumerable<CI>> GetCIs(ICIIDSelection selection, long layerID, bool includeEmptyCIs, NpgsqlTransaction trans, TimeThreshold atTime);
 
         // merged
         Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);

@@ -1,5 +1,5 @@
-﻿using Omnikeeper.Base.Model;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Omnikeeper.Base.Model;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
