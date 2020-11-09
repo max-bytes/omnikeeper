@@ -24,6 +24,7 @@ using FluentAssertions;
 using Omnikeeper.Base.Entity.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Omnikeeper.Base.Service;
+using Microsoft.Extensions.Configuration;
 
 namespace Tests.Integration
 {
@@ -65,6 +66,9 @@ namespace Tests.Integration
             services.AddScoped<ILogger<OIAContextModel>>((sp) => NullLogger<OIAContextModel>.Instance);
             services.AddScoped<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance);
             services.AddScoped<ILogger<RecursiveTraitModel>>((sp) => NullLogger<RecursiveTraitModel>.Instance);
+            services.AddSingleton<ILoggerFactory, NullLoggerFactory>();
+
+            services.AddSingleton<IConfiguration>((sp) => new Mock<IConfiguration>().Object);
 
             // override user service
             var currentUserService = new Mock<ICurrentUserService>();

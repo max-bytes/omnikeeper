@@ -3,12 +3,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Controllers.Ingest;
-using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
-using Omnikeeper.Model.Decorators;
-using Omnikeeper.Service;
-using Omnikeeper.Utils;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.InternalAbstractions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -22,8 +17,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Tests.Integration;
-using Tests.Integration.Model;
-using Tests.Integration.Model.Mocks;
 
 namespace Tests.Ingest
 {
@@ -36,7 +29,7 @@ namespace Tests.Ingest
             var pathItems = startupPath.Split(Path.DirectorySeparatorChar);
             var pos = pathItems.Reverse().ToList().FindIndex(x => string.Equals("bin", x));
             string projectPath = String.Join(Path.DirectorySeparatorChar.ToString(), pathItems.Take(pathItems.Length - pos - 1));
-            return Path.Combine(projectPath, "Ingest", "ansible-inventory-scan", filename);
+            return Path.Combine(projectPath, "files", filename);
         }
 
         private static string LoadFile(string filename)
@@ -87,7 +80,7 @@ namespace Tests.Ingest
             await predicateModel.InsertOrUpdate("has_network_interface", "has network interface", "is network interface of host", AnchorState.Active, PredicateModel.DefaultConstraits, null);
             await predicateModel.InsertOrUpdate("has_mounted_device", "has mounted device", "is mounted at host", AnchorState.Active, PredicateModel.DefaultConstraits, null);
 
-            var controller = new AnsibleIngestController(ingestDataService, layerModel, mockCurrentUserService.Object, mockAuthorizationService.Object, NullLogger<AnsibleIngestController>.Instance);
+            var controller = new AnsibleInventoryScanIngestController(ingestDataService, layerModel, mockCurrentUserService.Object, mockAuthorizationService.Object, NullLogger<AnsibleInventoryScanIngestController>.Instance);
 
             var response = await PerformIngest(controller, hosts, insertLayer, layerSet);
             Assert.IsTrue(response is OkResult);
@@ -110,7 +103,7 @@ namespace Tests.Ingest
             Assert.AreEqual(34, cis2.Count());
         }
 
-        private async Task<ActionResult> PerformIngest(AnsibleIngestController controller, string[] hosts, Layer insertLayer, LayerSet searchLayerSet)
+        private async Task<ActionResult> PerformIngest(AnsibleInventoryScanIngestController controller, string[] hosts, Layer insertLayer, LayerSet searchLayerSet)
         {
             var setupFacts = hosts.ToDictionary(fqdn => fqdn, fqdn =>
             {
