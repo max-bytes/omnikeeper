@@ -42,7 +42,7 @@ namespace Omnikeeper.Base.Inbound
 
         public async Task<bool> IsValidOnlinePluginInstance(string instanceName, NpgsqlTransaction trans)
         {
-            var config = await ioaConfigModel.GetConfigByName(instanceName, trans);
+            var config = await ioaConfigModel.GetContextByName(instanceName, trans);
             if (config != null)
                 return onlinePluginsBuilders.ContainsKey(config.Config.BuilderName);
             return false;

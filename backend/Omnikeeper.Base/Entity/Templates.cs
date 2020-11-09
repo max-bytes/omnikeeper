@@ -7,17 +7,17 @@ namespace Omnikeeper.Base.Entity
 {
     public class Templates
     {
-        private IImmutableDictionary<string, Template> templates { get; set; }
+        private IImmutableDictionary<string, Template> TemplateDict { get; set; }
 
-        public Template GetTemplate(string ciTypeID) => templates.GetValueOrDefault(ciTypeID, null);
+        public Template GetTemplate(string ciTypeID) => TemplateDict.GetValueOrDefault(ciTypeID, null);
 
-        public async static Task<Templates> Build()
+        public static Task<Templates> Build()
         {
             //var traits = await traitsProvider.GetTraits(trans);
             // TODO: move the actual data creation somewhere else
-            return new Templates()
+            return Task.FromResult(new Templates()
             {
-                templates = new List<Template>()
+                TemplateDict = new List<Template>()
                 {
                     //Template.Build("Application",
                     //        new List<CIAttributeTemplate>() {
@@ -46,7 +46,7 @@ namespace Omnikeeper.Base.Entity
                             new List<RecursiveTrait>() {}
                     )
                 }.ToImmutableDictionary(t => t.CITypeID)
-            };
+            });
         }
     }
 }
