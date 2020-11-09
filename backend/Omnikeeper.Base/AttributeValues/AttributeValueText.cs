@@ -1,5 +1,4 @@
 ﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DTO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -9,13 +8,20 @@ using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    public class AttributeScalarValueText : IAttributeScalarValue<string>, IEquatable<AttributeScalarValueText>
+    public interface IAttributeValueText
+    {
+        IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum);
+        IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex);
+        bool FullTextSearch(string searchString, CompareOptions compareOptions);
+    }
+
+    public class AttributeScalarValueText : IAttributeScalarValue<string>, IEquatable<AttributeScalarValueText>, IAttributeValueText
     {
         public bool Multiline { get; protected set; }
 
         public string Value { get; private set; }
         public string Value2String() => Value;
-        public AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Value, Type);
+        public string[] ToRawDTOValues() => new string[] { Value };
         public object ToGenericObject() => Value;
         public bool IsArray => false;
 
@@ -27,7 +33,7 @@ namespace Omnikeeper.Entity.AttributeValues
         public bool Equals([AllowNull] AttributeScalarValueText other) => other != null && Value == other.Value && Multiline == other.Multiline;
         public override int GetHashCode() => Value.GetHashCode();
 
-        public static AttributeScalarValueText Build(string value, bool multiline = false)
+        public static AttributeScalarValueText BuildFromString(string value, bool multiline = false)
         {
             return new AttributeScalarValueText
             {
@@ -55,16 +61,38 @@ namespace Omnikeeper.Entity.AttributeValues
     }
 
 
-    public class AttributeArrayValueText : AttributeArrayValue<AttributeScalarValueText, string>
+    public class AttributeArrayValueText : AttributeArrayValue<AttributeScalarValueText, string>, IAttributeValueText
     {
         public override AttributeValueType Type => Values.Any(v => v.Multiline) ? AttributeValueType.MultilineText : AttributeValueType.Text;
 
-        public static AttributeArrayValueText Build(string[] values, bool multiline = false)
+        public static AttributeArrayValueText BuildFromString(string[] values, bool multiline = false)
         {
             return new AttributeArrayValueText()
             {
-                Values = values.Select(v => AttributeScalarValueText.Build(v, multiline)).ToArray()
+                Values = values.Select(v => AttributeScalarValueText.BuildFromString(v, multiline)).ToArray()
             };
         }
+
+        public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
+        {
+            for (int i = 0; i < Values.Length; i++)
+            {
+                foreach (var e in Values[i].ApplyTextLengthConstraint(minimum, maximum)) yield return e;
+            }
+        }
+
+        public IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex)
+        {
+            for (int i = 0; i < Values.Length; i++)
+            {
+                foreach (var e in Values[i].MatchRegex(regex)) yield return e;
+            }
+        }
+
+        public bool FullTextSearch(string searchString, CompareOptions compareOptions)
+        {
+            return Values.Any(v => v.FullTextSearch(searchString, compareOptions));
+        }
+
     }
 }

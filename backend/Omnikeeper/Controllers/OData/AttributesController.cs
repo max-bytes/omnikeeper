@@ -1,12 +1,12 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Microsoft.AspNet.OData;
+using Microsoft.AspNetCore.Mvc;
+using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Service;
-using Microsoft.AspNet.OData;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -34,6 +34,7 @@ namespace Omnikeeper.Controllers.OData
         public string Value { get; set; }
     }
 
+    // TODO: ci based authorization
     //[Authorize]
     //[ApiVersion("1.0")]
     public class AttributesController : ODataController
@@ -45,10 +46,10 @@ namespace Omnikeeper.Controllers.OData
         private readonly IODataAPIContextModel oDataAPIContextModel;
         private readonly NpgsqlConnection conn;
         private readonly ICurrentUserService currentUserService;
-        private readonly IRegistryAuthorizationService authorizationService;
+        private readonly ILayerBasedAuthorizationService authorizationService;
 
         public AttributesController(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, ICISearchModel ciSearchModel, IODataAPIContextModel oDataAPIContextModel,
-            ICurrentUserService currentUserService, IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
+            ICurrentUserService currentUserService, ILayerBasedAuthorizationService authorizationService, NpgsqlConnection conn)
         {
             this.attributeModel = attributeModel;
             this.ciModel = ciModel;
@@ -114,7 +115,7 @@ namespace Omnikeeper.Controllers.OData
             var @newDTO = oldDTO;
             using var trans = conn.BeginTransaction();
             var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, AttributeScalarValueText.Build(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, trans);
+            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, AttributeScalarValueText.BuildFromString(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, trans);
 
             var newMerged = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, readLayerset, trans, TimeThreshold.BuildLatest());
             trans.Commit();
@@ -184,7 +185,7 @@ namespace Omnikeeper.Controllers.OData
                 }
             }
 
-            var created = await attributeModel.InsertAttribute(attribute.AttributeName, AttributeScalarValueText.Build(attribute.Value), finalCIID, writeLayerID, changesetProxy, trans);
+            var created = await attributeModel.InsertAttribute(attribute.AttributeName, AttributeScalarValueText.BuildFromString(attribute.Value), finalCIID, writeLayerID, changesetProxy, trans);
 
             var nameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, finalCIID, readLayerset, trans, timeThreshold);
             var createdMerged = await attributeModel.GetMergedAttribute(attribute.AttributeName, finalCIID, readLayerset, trans, TimeThreshold.BuildLatest());

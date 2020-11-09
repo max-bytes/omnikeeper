@@ -1,14 +1,14 @@
 ﻿using Hangfire;
 using Hangfire.Server;
-using Omnikeeper.Base.Inbound;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Service;
-using Omnikeeper.Utils;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using NpgsqlTypes;
+using Omnikeeper.Base.Entity.Config;
+using Omnikeeper.Base.Inbound;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Service;
+using Omnikeeper.Utils;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Runners
@@ -18,25 +18,34 @@ namespace Omnikeeper.Runners
         private readonly ILogger<ArchiveOldDataRunner> logger;
         private readonly IExternalIDMapPersister externalIDMapPersister;
         private readonly IChangesetModel changesetModel;
-        private readonly ICIModel ciModel;
+        private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly NpgsqlConnection conn;
 
-        public ArchiveOldDataRunner(ILogger<ArchiveOldDataRunner> logger, IExternalIDMapPersister externalIDMapPersister, IChangesetModel changesetModel, ICIModel ciModel, NpgsqlConnection conn)
+        public ArchiveOldDataRunner(ILogger<ArchiveOldDataRunner> logger, IExternalIDMapPersister externalIDMapPersister, IChangesetModel changesetModel, IBaseConfigurationModel baseConfigurationModel, NpgsqlConnection conn)
         {
             this.logger = logger;
             this.externalIDMapPersister = externalIDMapPersister;
             this.changesetModel = changesetModel;
-            this.ciModel = ciModel;
+            this.baseConfigurationModel = baseConfigurationModel;
             this.conn = conn;
         }
 
         public async Task RunAsync()
         {
             // remove outdated changesets
-            using (var trans = conn.BeginTransaction()) {
+            // this in turn also removes outdated attributes and relations
+            using (var trans = conn.BeginTransaction())
+            {
+                var cfg = await baseConfigurationModel.GetConfigOrDefault(trans);
 
-                // TODO: make configurable
-                var threshold = DateTimeOffset.Now.AddMonths(-3);
+                var archiveThreshold = cfg.ArchiveChangesetThreshold;
+
+                if (archiveThreshold == BaseConfigurationV1.InfiniteArchiveChangesetThreshold)
+                {
+                    return;
+                }
+
+                var threshold = DateTimeOffset.Now.Add(archiveThreshold.Negate());
 
                 var numArchivedChangesets = await changesetModel.ArchiveUnusedChangesetsOlderThan(threshold, trans);
 

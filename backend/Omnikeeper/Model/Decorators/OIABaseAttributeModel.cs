@@ -1,9 +1,9 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,6 +52,16 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetAttribute(name, ciid, layerID, trans, atTime);
         }
 
+        public async Task<CIAttribute> GetFullBinaryAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
+            {
+                return await onlineAccessProxy.GetFullBinaryAttribute(name, layerID, ciid, trans, atTime);
+            }
+
+            return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
+        }
+
         public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
@@ -88,13 +98,6 @@ namespace Omnikeeper.Model.Decorators
             if (await onlineAccessProxy.IsOnlineInboundLayer(data.LayerID, trans)) throw new Exception("Cannot write to online inbound layer");
 
             return await model.BulkReplaceAttributes(data, changesetProxy, trans);
-        }
-
-        public async Task<int> ArchiveOutdatedAttributesOlderThan(DateTimeOffset threshold, long layerID, NpgsqlTransaction trans)
-        {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
-
-            return await model.ArchiveOutdatedAttributesOlderThan(threshold, layerID, trans);
         }
     }
 }

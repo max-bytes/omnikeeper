@@ -1,13 +1,15 @@
 ﻿using GraphQL;
 using GraphQL.Types;
+using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
-using Omnikeeper.Service;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -17,9 +19,11 @@ namespace Omnikeeper.GraphQL
 {
     public class GraphQLMutation : ObjectGraphType
     {
-        public GraphQLMutation(ICIModel ciModel, IBaseAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAConfigModel OIAConfigModel,
+        public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAContextModel OIAContextModel,
              IODataAPIContextModel odataAPIContextModel, IChangesetModel changesetModel, IPredicateModel predicateModel, IRecursiveTraitModel traitModel,
-             IRegistryAuthorizationService authorizationService, NpgsqlConnection conn)
+             IBaseConfigurationModel baseConfigurationModel, ILayerBasedAuthorizationService layerBasedAuthorizationService,
+             ICIBasedAuthorizationService ciBasedAuthorizationService, IManagementAuthorizationService managementAuthorizationService,
+             NpgsqlConnection conn)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
@@ -37,14 +41,23 @@ namespace Omnikeeper.GraphQL
                     var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>());
                     var removeRelations = context.GetArgument("RemoveRelations", new List<RemoveRelationInput>());
 
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
                     var writeLayerIDs = insertAttributes.Select(a => a.LayerID)
                     .Concat(removeAttributes.Select(a => a.LayerID))
                     .Concat(insertRelations.Select(a => a.LayerID))
-                    .Concat(removeRelations.Select(a => a.LayerID));
-                    if (!authorizationService.CanUserWriteToLayers(userContext.User, writeLayerIDs))
+                    .Concat(removeRelations.Select(a => a.LayerID))
+                    .Distinct();
+                    if (!layerBasedAuthorizationService.CanUserWriteToLayers(userContext.User, writeLayerIDs))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', writeLayerIDs)}");
+
+                    var writeCIIDs = insertAttributes.Select(a => a.CI)
+                    .Concat(removeAttributes.Select(a => a.CI))
+                    .Concat(insertRelations.SelectMany(a => new Guid[] { a.FromCIID, a.ToCIID }))
+                    .Concat(removeRelations.SelectMany(a => new Guid[] { a.FromCIID, a.ToCIID }))
+                    .Distinct();
+                    if (!ciBasedAuthorizationService.CanWriteToAllCIs(writeCIIDs, out var notAllowedCI))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to CI {notAllowedCI}");
 
                     using var transaction = await conn.BeginTransactionAsync();
                     userContext.Transaction = transaction;
@@ -61,7 +74,7 @@ namespace Omnikeeper.GraphQL
                         var ciIdentity = attributeGroup.Key;
                         foreach (var attribute in attributeGroup)
                         {
-                            var nonGenericAttributeValue = AttributeValueBuilder.Build(attribute.Value);
+                            var nonGenericAttributeValue = AttributeValueBuilder.BuildFromDTO(attribute.Value);
 
                             var (a, changed) = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, attribute.LayerID, changeset, transaction);
                             insertedAttributes.Add(a);
@@ -120,12 +133,13 @@ namespace Omnikeeper.GraphQL
                 {
                     var createCIs = context.GetArgument("cis", new List<CreateCIInput>());
 
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
-                    if (!authorizationService.CanUserCreateCI(userContext.User))
+                    if (!managementAuthorizationService.CanUserCreateCI(userContext.User))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create CIs");
-                    if (!authorizationService.CanUserWriteToLayers(userContext.User, createCIs.Select(ci => ci.LayerIDForName)))
+                    if (!layerBasedAuthorizationService.CanUserWriteToLayers(userContext.User, createCIs.Select(ci => ci.LayerIDForName)))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', createCIs.Select(ci => ci.LayerIDForName))}");
+                    // NOTE: a newly created CI cannot be checked with CIBasedAuthorizationService yet. That's why we don't do a .CanWriteToCI() check here
 
                     using var transaction = await conn.BeginTransactionAsync();
                     userContext.Transaction = transaction;
@@ -154,9 +168,9 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var createLayer = context.GetArgument<CreateLayerInput>("layer");
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
-                    if (!authorizationService.CanUserCreateLayer(userContext.User))
+                    if (!managementAuthorizationService.CanUserCreateLayer(userContext.User))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create Layers");
 
                     using var transaction = await conn.BeginTransactionAsync();
@@ -188,9 +202,9 @@ namespace Omnikeeper.GraphQL
               {
                   var layer = context.GetArgument<UpdateLayerInput>("layer");
 
-                  var userContext = context.UserContext as RegistryUserContext;
+                  var userContext = context.UserContext as OmnikeeperUserContext;
 
-                  if (!authorizationService.CanUserUpdateLayer(userContext.User))
+                  if (!managementAuthorizationService.CanUserUpdateLayer(userContext.User))
                       throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update Layers");
 
                   using var transaction = await conn.BeginTransactionAsync();
@@ -205,14 +219,14 @@ namespace Omnikeeper.GraphQL
               });
 
 
-            FieldAsync<OIAConfigType>("createOIAConfig",
+            FieldAsync<OIAContextType>("createOIAContext",
                 arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<CreateOIAConfigInputType>> { Name = "oiaConfig" }
+                new QueryArgument<NonNullGraphType<CreateOIAContextInputType>> { Name = "oiaContext" }
                 ),
                 resolve: async context =>
                 {
-                    var configInput = context.GetArgument<CreateOIAConfigInput>("oiaConfig");
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var configInput = context.GetArgument<CreateOIAContextInput>("oiaContext");
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
                     // TODO: auth
                     //if (!authorizationService.CanUserCreateLayer(userContext.User))
@@ -225,26 +239,26 @@ namespace Omnikeeper.GraphQL
                     {
                         var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configInput.Config);
 
-                        var createdOIAConfig = await OIAConfigModel.Create(configInput.Name, config, transaction);
+                        var createdOIAContext = await OIAContextModel.Create(configInput.Name, config, transaction);
 
                         await transaction.CommitAsync();
 
-                        return createdOIAConfig;
+                        return createdOIAContext;
                     }
                     catch (Exception e)
                     {
                         throw new ExecutionError($"Could not parse configuration", e);
                     }
                 });
-            FieldAsync<OIAConfigType>("updateOIAConfig",
+            FieldAsync<OIAContextType>("updateOIAContext",
               arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<UpdateOIAConfigInputType>> { Name = "oiaConfig" }
+                new QueryArgument<NonNullGraphType<UpdateOIAContextInputType>> { Name = "oiaContext" }
               ),
               resolve: async context =>
               {
-                  var configInput = context.GetArgument<UpdateOIAConfigInput>("oiaConfig");
+                  var configInput = context.GetArgument<UpdateOIAContextInput>("oiaContext");
 
-                  var userContext = context.UserContext as RegistryUserContext;
+                  var userContext = context.UserContext as OmnikeeperUserContext;
 
                   // TODO: auth
                   //if (!authorizationService.CanUserUpdateLayer(userContext.User))
@@ -256,17 +270,17 @@ namespace Omnikeeper.GraphQL
                   try
                   {
                       var config = IOnlineInboundAdapter.IConfig.Serializer.Deserialize(configInput.Config);
-                      var oiaConfig = await OIAConfigModel.Update(configInput.ID, configInput.Name, config, transaction);
+                      var oiaContext = await OIAContextModel.Update(configInput.ID, configInput.Name, config, transaction);
                       await transaction.CommitAsync();
 
-                      return oiaConfig;
+                      return oiaContext;
                   }
                   catch (Exception e)
                   {
                       throw new ExecutionError($"Could not parse configuration", e);
                   }
               });
-            FieldAsync<BooleanGraphType>("deleteOIAConfig",
+            FieldAsync<BooleanGraphType>("deleteOIAContext",
               arguments: new QueryArguments(
                 new QueryArgument<NonNullGraphType<LongGraphType>> { Name = "oiaID" }
               ),
@@ -274,7 +288,7 @@ namespace Omnikeeper.GraphQL
               {
                   var id = context.GetArgument<long>("oiaID");
 
-                  var userContext = context.UserContext as RegistryUserContext;
+                  var userContext = context.UserContext as OmnikeeperUserContext;
 
                   // TODO: auth
                   //if (!authorizationService.CanUserUpdateLayer(userContext.User))
@@ -283,7 +297,7 @@ namespace Omnikeeper.GraphQL
                   using var transaction = await conn.BeginTransactionAsync();
                   userContext.Transaction = transaction;
 
-                  var deleted = await OIAConfigModel.Delete(id, transaction);
+                  var deleted = await OIAContextModel.Delete(id, transaction);
                   await transaction.CommitAsync();
                   return deleted != null;
               });
@@ -296,7 +310,7 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var contextInput = context.GetArgument<UpsertODataAPIContextInput>("odataAPIContext");
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
                     // TODO: auth
                     //if (!authorizationService.CanUserCreateLayer(userContext.User))
@@ -329,7 +343,7 @@ namespace Omnikeeper.GraphQL
               {
                   var id = context.GetArgument<string>("id");
 
-                  var userContext = context.UserContext as RegistryUserContext;
+                  var userContext = context.UserContext as OmnikeeperUserContext;
 
                   // TODO: auth
                   //if (!authorizationService.CanUserUpdateLayer(userContext.User))
@@ -351,7 +365,7 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var traitSetInput = context.GetArgument<string>("traitSet");
-                    var userContext = context.UserContext as RegistryUserContext;
+                    var userContext = context.UserContext as OmnikeeperUserContext;
 
                     // TODO: auth
                     //if (!authorizationService.CanUserCreateLayer(userContext.User))
@@ -377,6 +391,37 @@ namespace Omnikeeper.GraphQL
                 });
 
 
+            FieldAsync<StringGraphType>("setBaseConfiguration",
+                arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "baseConfiguration" }
+                ),
+                resolve: async context =>
+                {
+                    var configStr = context.GetArgument<string>("baseConfiguration");
+                    var userContext = context.UserContext as OmnikeeperUserContext;
+
+                    // TODO: auth
+                    //if (!authorizationService.CanUserCreateLayer(userContext.User))
+                    //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create Layers");
+
+                    using var transaction = await conn.BeginTransactionAsync();
+                    userContext.Transaction = transaction;
+
+                    try
+                    {
+                        var config = BaseConfigurationV1.Serializer.Deserialize(configStr);
+                        var created = await baseConfigurationModel.SetConfig(config, transaction);
+
+                        await transaction.CommitAsync();
+
+                        return BaseConfigurationV1.Serializer.SerializeToString(created);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ExecutionError($"Could not save base configuration", e);
+                    }
+                });
+
             FieldAsync<PredicateType>("upsertPredicate",
               arguments: new QueryArguments(
                 new QueryArgument<NonNullGraphType<UpsertPredicateInputType>> { Name = "predicate" }
@@ -385,9 +430,9 @@ namespace Omnikeeper.GraphQL
               {
                   var predicate = context.GetArgument<UpsertPredicateInput>("predicate");
 
-                  var userContext = context.UserContext as RegistryUserContext;
+                  var userContext = context.UserContext as OmnikeeperUserContext;
 
-                  if (!authorizationService.CanUserUpsertPredicate(userContext.User))
+                  if (!managementAuthorizationService.CanUserUpsertPredicate(userContext.User))
                       throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update or insert Predicates");
 
                   using var transaction = await conn.BeginTransactionAsync();
@@ -396,7 +441,7 @@ namespace Omnikeeper.GraphQL
                   var newPredicate = await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, predicate.State, predicate.Constraints, transaction);
                   await transaction.CommitAsync();
 
-                  return newPredicate;
+                  return newPredicate.predicate;
               });
         }
     }

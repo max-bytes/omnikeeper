@@ -34,7 +34,7 @@ namespace OKPluginCLBMonitoring
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel traitModel;
 
-        public CLBNaemonMonitoring(ICIModel ciModel, IBaseAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
+        public CLBNaemonMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
             IPredicateModel predicateModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
             : base(atributeModel, layerModel, predicateModel, changesetModel, userModel, conn)
         {
@@ -182,7 +182,7 @@ namespace OKPluginCLBMonitoring
                     var values = tt.Select(ttt => ttt.templateSegment).ToArray();
                     try
                     {
-                        var attributeValue = AttributeArrayValueJSON.Build(values);
+                        var attributeValue = AttributeArrayValueJSON.BuildFromString(values);
                         return (ciid: tt.Key, attributeValue,
                             hostTemplates: fragments.Select(t => t as NaemonHostTemplate).Where(t => t != null),
                             serviceTemplates: fragments.Select(t => t as NaemonServiceTemplate).Where(t => t != null));
@@ -259,7 +259,7 @@ namespace OKPluginCLBMonitoring
                         return naemonHost;
                     }).ToList();
 
-                monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeArrayValueJSON.Build(
+                monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeArrayValueJSON.BuildFromString(
                     naemonHosts.Select(t => JsonConvert.SerializeObject(t, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() })).ToArray()), naemonInstance));
 
                 //var finalConfigYamlNode = new YamlMappingNode(

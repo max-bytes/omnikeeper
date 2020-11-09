@@ -1,12 +1,12 @@
 ﻿using GraphQL;
 using GraphQL.Types;
 using GraphQL.Validation;
-using Omnikeeper.GraphQL;
-using Omnikeeper.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
+using Omnikeeper.GraphQL;
+using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,7 +66,7 @@ namespace Omnikeeper.Controllers
                 options.Schema = _schema;
                 options.Query = query.Query;
                 options.Inputs = inputs;
-                options.UserContext = new RegistryUserContext(user);
+                options.UserContext = new OmnikeeperUserContext(user);
                 options.ValidationRules = DocumentValidator.CoreRules.Concat(_validationRules).ToList();
                 options.ExposeExceptions = _env.IsDevelopment();
             });

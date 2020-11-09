@@ -49,6 +49,7 @@ namespace Tasks.Tools
             var json = IOnlineInboundAdapter.IConfig.Serializer.SerializeToString(config);
 
             Console.WriteLine(json);
+            // {"$type":"OKPluginOIASharepoint.Config, OKPluginOIASharepoint","tenantID":"98061435-3c72-44d1-b37a-057e21f42801","siteDomain":"mhxconsulting.sharepoint.com","site":"play2","clientID":"3d6e9642-5430-438c-b435-34d35b323b3a","clientSecret":"/w5tskeWck6EV2sx6Mue1tkL+dSw42VdMHlPS5plohw=","useCurrentForHistoric":true,"preferredIDMapUpdateRate":"00:01:00","listConfigs":[{"$type":"OKPluginOIASharepoint.Config+ListConfig, OKPluginOIASharepoint","listID":"37800a8f-0107-445b-b70b-c783ba5a5ce3","columnConfigs":[{"$type":"OKPluginOIASharepoint.Config+ListColumnConfig, OKPluginOIASharepoint","sourceColumn":"MobilePhone","targetAttributeName":"user.mobile_phone"},{"$type":"OKPluginOIASharepoint.Config+ListColumnConfig, OKPluginOIASharepoint","sourceColumn":"Company","targetAttributeName":"user.company"},{"$type":"OKPluginOIASharepoint.Config+ListColumnConfig, OKPluginOIASharepoint","sourceColumn":"GivenName","targetAttributeName":"user.first_name"},{"$type":"OKPluginOIASharepoint.Config+ListColumnConfig, OKPluginOIASharepoint","sourceColumn":"Surname","targetAttributeName":"user.last_name"}],"identifiableAttributes":["user.first_name","user.last_name"],"searchableLayerIDs":[1,2]}],"MapperScope":"sharepoint"}
         }
     }
 }

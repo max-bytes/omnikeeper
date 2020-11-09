@@ -1,9 +1,9 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Service;
-using Microsoft.Extensions.Caching.Memory;
-using Npgsql;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model.Decorators

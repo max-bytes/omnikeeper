@@ -1,9 +1,10 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using Npgsql;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace Omnikeeper.Service
     public class CurrentUserService : ICurrentUserService
     {
         public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel,
-            ILayerModel layerModel, IRegistryAuthorizationService authorizationService, IConfiguration configuration)
+            ILayerModel layerModel, ILayerBasedAuthorizationService authorizationService, IConfiguration configuration)
         {
             HttpContextAccessor = httpContextAccessor;
             UserModel = userModel;
@@ -25,7 +26,7 @@ namespace Omnikeeper.Service
         }
 
         private IConfiguration Configuration { get; }
-        private IRegistryAuthorizationService AuthorizationService { get; }
+        private ILayerBasedAuthorizationService AuthorizationService { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
         private IUserInDatabaseModel UserModel { get; }
         private ILayerModel LayerModel { get; }
@@ -61,23 +62,14 @@ namespace Omnikeeper.Service
                 var guidString = claims.FirstOrDefault(c => c.Type == "id")?.Value;
                 //var groups = claims.Where(c => c.Type == "groups").Select(c => c.Value).ToArray();
 
+                // cached list of writable layers
+                var writableLayers = await AuthorizationService.GetWritableLayersForUser(claims, LayerModel, trans);
+
                 // extract client roles
                 var resourceAccessStr = claims.Where(c => c.Type == "resource_access").FirstOrDefault()?.Value;
                 var resourceAccess = JObject.Parse(resourceAccessStr);
                 var resourceName = Configuration.GetSection("Authentication")["Audience"];
                 var clientRoles = resourceAccess?[resourceName]?["roles"]?.Select(tt => tt.Value<string>()).ToArray() ?? new string[] { };
-
-                var writableLayers = new List<Layer>();
-                foreach (var role in clientRoles)
-                {
-                    var layerName = AuthorizationService.ParseLayerNameFromWriteAccessRoleName(role);
-                    if (layerName != null)
-                    {
-                        var layer = await LayerModel.GetLayer(layerName, trans);
-                        if (layer != null)
-                            writableLayers.Add(layer);
-                    }
-                }
 
                 var usertype = UserType.Unknown;
                 if (clientRoles.Contains("human"))

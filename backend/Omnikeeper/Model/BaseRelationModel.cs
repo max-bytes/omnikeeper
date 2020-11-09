@@ -1,8 +1,8 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Npgsql;
+using NpgsqlTypes;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
-using Npgsql;
-using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;

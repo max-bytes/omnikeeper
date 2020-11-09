@@ -46,17 +46,17 @@ namespace OKPluginOIAKeycloak
                 return CIAttribute.Build(id, name, ciid, value, AttributeState.New, changesetID);
             }
 
-            yield return BuildAttribute(ICIModel.NameAttribute, ciid, AttributeScalarValueText.Build($"User {CIName}"), changesetID);
-            yield return BuildAttribute("user.email", ciid, AttributeScalarValueText.Build(user.Email), changesetID);
-            yield return BuildAttribute("user.username", ciid, AttributeScalarValueText.Build(user.UserName), changesetID);
-            yield return BuildAttribute("user.first_name", ciid, AttributeScalarValueText.Build(user.FirstName), changesetID);
-            yield return BuildAttribute("user.last_name", ciid, AttributeScalarValueText.Build(user.LastName), changesetID);
-            yield return BuildAttribute("keycloak.id", ciid, AttributeScalarValueText.Build(user.Id), changesetID);
+            yield return BuildAttribute(ICIModel.NameAttribute, ciid, AttributeScalarValueText.BuildFromString($"User {CIName}"), changesetID);
+            yield return BuildAttribute("user.email", ciid, AttributeScalarValueText.BuildFromString(user.Email), changesetID);
+            yield return BuildAttribute("user.username", ciid, AttributeScalarValueText.BuildFromString(user.UserName), changesetID);
+            yield return BuildAttribute("user.first_name", ciid, AttributeScalarValueText.BuildFromString(user.FirstName), changesetID);
+            yield return BuildAttribute("user.last_name", ciid, AttributeScalarValueText.BuildFromString(user.LastName), changesetID);
+            yield return BuildAttribute("keycloak.id", ciid, AttributeScalarValueText.BuildFromString(user.Id), changesetID);
 
             // roles
             if (roleMappings != null)
             {
-                yield return BuildAttribute("keycloak.client_mappings", ciid, AttributeScalarValueJSON.Build(JsonConvert.SerializeObject(roleMappings.ClientMappings)), changesetID);
+                yield return BuildAttribute("keycloak.client_mappings", ciid, AttributeScalarValueJSON.BuildFromString(JsonConvert.SerializeObject(roleMappings.ClientMappings)), changesetID);
             }
 
         }
@@ -74,6 +74,11 @@ namespace OKPluginOIAKeycloak
 
             var attributes = BuildAttributesFromUser(user, ciid, roleMappings);
             return attributes.FirstOrDefault(a => a.Name.Equals(name));
+        }
+
+        public Task<CIAttribute> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime)
+        {
+            return Task.FromResult<CIAttribute>(null); // TODO: not implemented
         }
 
         public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime)
@@ -166,9 +171,9 @@ namespace OKPluginOIAKeycloak
             return AsyncEnumerable.Empty<Relation>();// TODO: implement
         }
 
-        public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
+        public Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
         {
-            return null;// TODO: implement
+            return Task.FromResult<Relation>(null);// TODO: implement
         }
     }
 }

@@ -1,14 +1,8 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DTO;
-using Omnikeeper.Base.Utils;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
@@ -20,7 +14,7 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public JToken Value { get; private set; }
         public string Value2String() => Value.ToString();
-        public AttributeValueDTO ToDTO() => AttributeValueDTO.Build(Value.ToString(), Type);
+        public string[] ToRawDTOValues() => new string[] { Value.ToString() };
         public object ToGenericObject() => Value;
         public bool IsArray => false;
 
@@ -30,22 +24,7 @@ namespace Omnikeeper.Entity.AttributeValues
         public bool Equals([AllowNull] AttributeScalarValueJSON other) => other != null && JToken.DeepEquals(Value, other.Value);
         public override int GetHashCode() => Value.GetHashCode();
 
-        public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
-        { // does not make sense for JSON
-            yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, Type);
-        }
-
-        public IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex)
-        { // does not make sense for JSON
-            yield return TemplateErrorAttributeWrongType.Build(AttributeValueType.Text, Type);
-        }
-
-        public bool FullTextSearch(string searchString, CompareOptions compareOptions)
-        {
-            return Value.FullTextSearch(searchString, compareOptions);
-        }
-
-        public static AttributeScalarValueJSON Build(string value)
+        public static AttributeScalarValueJSON BuildFromString(string value)
         {
             try
             {
@@ -73,7 +52,7 @@ namespace Omnikeeper.Entity.AttributeValues
     {
         public override AttributeValueType Type => AttributeValueType.JSON;
 
-        public static AttributeArrayValueJSON Build(string[] values)
+        public static AttributeArrayValueJSON BuildFromString(string[] values)
         {
             var jsonValues = values.Select(value =>
             {

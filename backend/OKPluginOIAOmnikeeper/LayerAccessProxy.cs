@@ -15,7 +15,7 @@ namespace OKPluginOIAOmnikeeper
     public class LayerAccessProxy : ILayerAccessProxy
     {
         private readonly string[] remoteLayerNames;
-        private readonly ILandscapeRegistryRESTAPIClient client;
+        private readonly ILandscapeomnikeeperRESTAPIClient client;
         private readonly ScopedExternalIDMapper mapper;
         private readonly Layer layer;
 
@@ -24,7 +24,7 @@ namespace OKPluginOIAOmnikeeper
         // TODO: changeset
         private static readonly Guid staticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "omnikeeper");
 
-        public LayerAccessProxy(string[] remoteLayerNames, ILandscapeRegistryRESTAPIClient client, ScopedExternalIDMapper mapper, Layer layer)
+        public LayerAccessProxy(string[] remoteLayerNames, ILandscapeomnikeeperRESTAPIClient client, ScopedExternalIDMapper mapper, Layer layer)
         {
             this.remoteLayerNames = remoteLayerNames;
             this.client = client;
@@ -47,7 +47,7 @@ namespace OKPluginOIAOmnikeeper
 
             if (ciid.HasValue)
             {
-                return CIAttribute.Build(dto.ID, dto.Name, ciid.Value, AttributeValueBuilder.Build(dto.Value), AttributeState.New, staticChangesetID);
+                return CIAttribute.Build(dto.ID, dto.Name, ciid.Value, AttributeValueBuilder.BuildFromDTO(dto.Value), AttributeState.New, staticChangesetID);
             }
             else return null;
         }
@@ -120,6 +120,11 @@ namespace OKPluginOIAOmnikeeper
             if (attributeDTO == null) return null;
 
             return AttributeDTO2Regular(attributeDTO);
+        }
+
+        public Task<CIAttribute> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime)
+        {
+            return Task.FromResult<CIAttribute>(null); // TODO: not implemented
         }
 
         public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, TimeThreshold atTime)

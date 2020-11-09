@@ -1,8 +1,8 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,11 +16,11 @@ namespace Omnikeeper.Base.CLB
         private readonly string clbName;
         private readonly long clbLayerID;
         private readonly IChangesetProxy changeset;
-        private readonly IBaseAttributeModel attributeModel;
+        private readonly IAttributeModel attributeModel;
 
         private readonly IList<CIAttribute> writtenErrors = new List<CIAttribute>();
 
-        public CLBErrorHandler(NpgsqlTransaction trans, string clbName, long clbLayerID, IChangesetProxy changeset, IBaseAttributeModel attributeModel)
+        public CLBErrorHandler(NpgsqlTransaction trans, string clbName, long clbLayerID, IChangesetProxy changeset, IAttributeModel attributeModel)
         {
             this.trans = trans;
             this.clbName = clbName;
@@ -50,7 +50,7 @@ namespace Omnikeeper.Base.CLB
 
         public async Task LogError(Guid ciid, string name, string message)
         {
-            var a = await attributeModel.InsertAttribute($"{AttributeNamePrefix}.{name}", AttributeScalarValueText.Build(message, true), ciid, clbLayerID, changeset, trans);
+            var a = await attributeModel.InsertAttribute($"{AttributeNamePrefix}.{name}", AttributeScalarValueText.BuildFromString(message, true), ciid, clbLayerID, changeset, trans);
             writtenErrors.Add(a.attribute);
         }
     }

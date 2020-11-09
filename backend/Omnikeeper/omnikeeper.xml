@@ -1,0 +1,235 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Omnikeeper</name>
+    </assembly>
+    <members>
+        <member name="M:Omnikeeper.Controllers.AttributeController.GetMergedAttributesWithName(System.String,System.Int64[],System.Nullable{System.DateTimeOffset})">
+            <summary>
+            
+            </summary>
+            <param name="name"></param>
+            <param name="layerIDs"></param>
+            <param name="atTime"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.AttributeController.GetMergedAttributes(System.Collections.Generic.IEnumerable{System.Guid},System.Int64[],System.Nullable{System.DateTimeOffset})">
+            <summary>
+            
+            </summary>
+            <param name="ciids"></param>
+            <param name="layerIDs"></param>
+            <param name="atTime"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.AttributeController.GetMergedAttribute(System.Guid,System.String,System.Int64[],System.Nullable{System.DateTimeOffset})">
+            <summary>
+            
+            </summary>
+            <param name="ciid"></param>
+            <param name="name"></param>
+            <param name="layerIDs"></param>
+            <param name="atTime"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.AttributeController.FindMergedAttributesByName(System.String,System.Collections.Generic.IEnumerable{System.Guid},System.Int64[],System.Nullable{System.DateTimeOffset})">
+            <summary>
+            
+            </summary>
+            <param name="regex"></param>
+            <param name="ciids"></param>
+            <param name="layerIDs"></param>
+            <param name="atTime"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.AttributeController.BulkReplaceAttributesInLayer(Omnikeeper.Base.Entity.DTO.BulkCIAttributeLayerScopeDTO)">
+            <summary>
+            bulk replace all attributes in specified layer
+            </summary>
+            <param name="dto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.CIController.GetAllCIIDs">
+            <summary>
+            list of all CI-IDs
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.CIController.GetCIByID(System.Int64[],System.Guid,System.Nullable{System.DateTimeOffset})">
+            <summary>
+            single CI by CI-ID
+            </summary>
+            <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
+            <param name="CIID"></param>
+            <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.CIController.GetCIsByID(System.Int64[],System.Guid[],System.Nullable{System.DateTimeOffset})">
+            <summary>
+            multiple CIs by CI-ID
+            !Watch out for the query URL getting too long because of a lot of CIIDs!
+            TODO: consider using POST
+            </summary>
+            <param name="layerIDs">Specifies which layers contribute to the result, and in which order</param>
+            <param name="CIIDs"></param>
+            <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.CIController.GetCIIDsOfNonEmptyCIs(System.Int64[],System.Nullable{System.DateTimeOffset})">
+            <summary>
+            
+            </summary>
+            <param name="layerIDs"></param>
+            <param name="atTime"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.LayerController.GetAllLayers">
+            <summary>
+            list of all layers
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.LayerController.GetLayerByName(System.String)">
+            <summary>
+            get a layer by name
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.LayerController.GetLayersByName(System.String[])">
+            <summary>
+            get layers by name
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.RelationController.GetMergedRelation(System.Guid,System.Guid,System.String,System.Int64[],System.Nullable{System.DateTimeOffset})">
+            <summary>
+            
+            </summary>
+            <param name="fromCIID"></param>
+            <param name="toCIID"></param>
+            <param name="predicateID"></param>
+            <param name="layerIDs"></param>
+            <param name="atTime"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.RelationController.GetMergedRelationsWithPredicate(System.String,System.Int64[],System.Nullable{System.DateTimeOffset})">
+            <summary>
+            
+            </summary>
+            <param name="predicateID"></param>
+            <param name="layerIDs"></param>
+            <param name="atTime"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.RelationController.GetAllMergedRelations(System.Int64[],System.Nullable{System.DateTimeOffset})">
+            <summary>
+            
+            </summary>
+            <param name="layerIDs"></param>
+            <param name="atTime"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.RelationController.GetMergedRelationsOutgoingFromCI(System.Guid,System.Int64[],System.Nullable{System.DateTimeOffset})">
+            <summary>
+            
+            </summary>
+            <param name="fromCIID"></param>
+            <param name="layerIDs"></param>
+            <param name="atTime"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Controllers.RelationController.GetMergedRelationsFromOrToCI(System.Guid,System.Int64[],System.Nullable{System.DateTimeOffset})">
+            <summary>
+            
+            </summary>
+            <param name="ciid"></param>
+            <param name="layerIDs"></param>
+            <param name="atTime"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Model.ChangesetModel.ArchiveUnusedChangesetsOlderThan(System.DateTimeOffset,Npgsql.NpgsqlTransaction)">
+            <summary>
+            approach: only archive a changeset when ALL of its changes can be archived... which means that ALL of its changes to attribute and relations can be archived
+            this is the case when the timestamp of the attribute/relation is older than the threshold AND the attribute/relation is NOT part of the latest/current data
+            we rely on foreign key constraints and cascading deletes to delete the corresponding attributes and relations
+            </summary>
+            <param name="threshold"></param>
+            <param name="trans"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Omnikeeper.Service.CacheKeyService.GetOrCreateThreadSafe``1(Microsoft.Extensions.Caching.Memory.IMemoryCache,System.Object,System.Func{Microsoft.Extensions.Caching.Memory.ICacheEntry,``0})">
+            <summary>
+            despite some conflicting information on the web, IMemoryCache.GetOrCreate() is NOT(!) properly thread safe. That means that parallel invocations of it can lead to different values getting returned
+            this function fixes the issue by using a lock
+            see https://github.com/aspnet/Caching/issues/359 and https://github.com/dotnet/runtime/issues/36499 for the issue
+            see https://tpodolak.com/blog/2017/12/13/asp-net-core-memorycache-getorcreate-calls-factory-method-multiple-times/ for the base solution
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="memoryCache"></param>
+            <param name="key"></param>
+            <param name="factory"></param>
+            <returns></returns>
+        </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.GetContexts">
+            <summary>
+            Returns a list of contexts for grid view.
+            </summary>
+            <returns>200</returns>
+        </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.AddContext(Omnikeeper.GridView.Request.AddContextRequest)">
+            <summary>
+            Adds new context
+            </summary>
+            <param name="context"></param>
+            <returns>Created context</returns>
+            <response code="201">Returns the newly created context</response>
+            <response code="400">If creating context fails</response>  
+        </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.EditContext(System.String,Omnikeeper.GridView.Request.EditContextRequest)">
+            <summary>
+            Edits specific context
+            </summary>
+            <param name="name"></param>
+            <param name="editContextRequest"></param>
+            <returns>Status indication request status</returns>
+            <response code="200">If request is successful</response>
+            <response code="400">If editing the context fails</response>  
+        </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.DeleteContext(System.String)">
+            <summary>
+            Deletes specific context
+            </summary>
+            <param name="name"></param>
+            <returns>Status indication request status</returns>
+            <response code="200">If request is successful</response>
+            <response code="400">If editing the context fails</response>  
+        </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.GetSchema(System.String)">
+            <summary>
+            Returns grid view schema for specific context
+            </summary>
+            <param name="context"></param>
+            <returns>Returns schema object for specififc context</returns>
+            <response code="200"></response>
+        </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.GetData(System.String)">
+            <summary>
+            Returns grid view data for specific context
+            </summary>
+            <param name="context"></param>
+            <returns>An object which contains rows for grid view</returns>
+            <response code="200">If request is successful</response>
+            <response code="400">If trait is not found</response>
+        </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.ChangeData(System.String,Omnikeeper.GridView.Request.ChangeDataRequest)">
+            <summary>
+            Saves grid view row changes and returns change results
+            </summary>
+            <param name="context"></param>
+            <param name="changes"></param>
+            <returns>A list of changes or an error</returns>
+            <response code="200">If request is successful</response>
+            <response code="404">If saving changes fails</response>  
+        </member>
+    </members>
+</doc>

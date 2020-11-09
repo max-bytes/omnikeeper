@@ -1,10 +1,10 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Service;
-using Microsoft.Extensions.Caching.Memory;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,6 +50,12 @@ namespace Omnikeeper.Model.Decorators
                 attributes.FirstOrDefault(p => p.Name.Equals(name));
             }
             return await model.GetAttribute(name, ciid, layerID, trans, atTime);
+        }
+
+        public async Task<CIAttribute> GetFullBinaryAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            // no caching for binary attributes
+            return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
         public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
@@ -133,12 +139,6 @@ namespace Omnikeeper.Model.Decorators
             var inserted = await model.BulkReplaceAttributes(data, changesetProxy, trans);
             foreach (var (ciid, _, _, _) in inserted) memoryCache.CancelAttributesChangeToken(ciid, data.LayerID); // NOTE: inserted list is not distinct on ciids, but that's ok
             return inserted;
-        }
-
-        public async Task<int> ArchiveOutdatedAttributesOlderThan(DateTimeOffset threshold, long layerID, NpgsqlTransaction trans)
-        {
-            // NOTE: this method SHOULD NOT have any effect on caching, because we only cache the latest timestamp anyways
-            return await model.ArchiveOutdatedAttributesOlderThan(threshold, layerID, trans);
         }
     }
 }

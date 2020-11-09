@@ -84,9 +84,9 @@ export const queries = {
         }
         ${Fragments.fullLayer}
     `,
-    OIAConfigs: gql`
-        query oiaconfigs {
-            oiaconfigs {
+    OIAContexts: gql`
+        query oiacontexts {
+            oiacontexts {
                 id
                 name
                 config
@@ -155,6 +155,11 @@ export const queries = {
     TraitSet: gql`
     query traitSet {
         traitSet
+      }
+    `,
+    BaseConfiguration: gql`
+    query baseConfiguration {
+        baseConfiguration
       }
     `,
     CacheKeys: gql`

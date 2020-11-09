@@ -1,9 +1,10 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -19,12 +20,12 @@ namespace Omnikeeper.Controllers
     public class TraitController : ControllerBase
     {
         private readonly IEffectiveTraitModel traitModel;
-        private readonly ITraitsProvider traitsProvider;
+        private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
 
-        public TraitController(IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider)
+        public TraitController(IEffectiveTraitModel traitModel, ICIBasedAuthorizationService ciBasedAuthorizationService)
         {
             this.traitModel = traitModel;
-            this.traitsProvider = traitsProvider;
+            this.ciBasedAuthorizationService = ciBasedAuthorizationService;
         }
 
         [HttpGet("getEffectiveTraitsForTraitName")]
@@ -32,11 +33,10 @@ namespace Omnikeeper.Controllers
         {
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
-            var trait = await traitsProvider.GetActiveTrait(traitName, null, timeThreshold);
-            if (trait == null)
-                return BadRequest($"Trait with name \"{traitName}\" not found");
-            var traitSets = await traitModel.CalculateEffectiveTraitsForTrait(trait, layerset, null, timeThreshold);
-            return Ok(traitSets.ToDictionary(kv => kv.Key, kv => EffectiveTraitDTO.Build(kv.Value.et)));
+            var traitSets = await traitModel.CalculateEffectiveTraitsForTraitName(traitName, layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
+            return Ok(traitSets
+                .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key))
+                .ToDictionary(kv => kv.Key, kv => EffectiveTraitDTO.Build(kv.Value.et)));
         }
     }
 }

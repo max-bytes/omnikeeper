@@ -1,8 +1,8 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 using System;
 using System.Threading;
 
@@ -16,6 +16,13 @@ namespace Omnikeeper.Service
             new CancellationChangeToken(memoryCache.GetOrCreateThreadSafe(AttributesChangeToken(ciid, layerID), (ce) => new CancellationTokenSource()).Token);
         public static void CancelAttributesChangeToken(this IMemoryCache memoryCache, Guid ciid, long layerID) =>
             CancelAndRemoveChangeToken(memoryCache, AttributesChangeToken(ciid, layerID));
+
+        public static object BaseConfiguration() => $"baseConfiguration";
+        private static string BaseConfigurationChangeToken() => $"ct_baseConfiguration";
+        public static CancellationChangeToken GetBaseConfigurationCancellationChangeToken(this IMemoryCache memoryCache) =>
+            new CancellationChangeToken(memoryCache.GetOrCreateThreadSafe(BaseConfigurationChangeToken(), (ce) => new CancellationTokenSource()).Token);
+        public static void CancelBaseConfigurationChangeToken(this IMemoryCache memoryCache) =>
+            CancelAndRemoveChangeToken(memoryCache, BaseConfigurationChangeToken());
 
         public static string Relations(IRelationSelection rs, long layerID) => $"relations_{rs.ToHashKey()}_{layerID}";
         private static string RelationsChangeToken(IRelationSelection rs, long layerID) => $"ct_rel_{rs.ToHashKey()}_{layerID}";
@@ -48,7 +55,7 @@ namespace Omnikeeper.Service
 
         private static string PredicateChangeToken(string id) => $"predicate_{id}";
         public static string Predicate(string id) => $"predicate_{id}";
-        public static CancellationChangeToken GetPredicateCancellationToken(this IMemoryCache memoryCache, string id) => 
+        public static CancellationChangeToken GetPredicateCancellationToken(this IMemoryCache memoryCache, string id) =>
             new CancellationChangeToken(memoryCache.GetOrCreateThreadSafe(PredicateChangeToken(id), (ce) => new CancellationTokenSource()).Token);
         public static void CancelPredicateChangeToken(this IMemoryCache memoryCache, string id) =>
                CancelAndRemoveChangeToken(memoryCache, PredicateChangeToken(id));

@@ -11,11 +11,11 @@ namespace Omnikeeper.Base.Entity
         public long NumLayerChangesetsHistory { get; private set; }
 
         public static LayerStatistics Build(
-            Layer layer, 
-            long numActiveAttributes, 
+            Layer layer,
+            long numActiveAttributes,
             long numAttributeChangesHistory,
             long numActiveRelations,
-            long numRelationChangesHistory, 
+            long numRelationChangesHistory,
             long numLayerChangesetsHistory)
         {
             return new LayerStatistics

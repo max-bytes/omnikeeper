@@ -123,27 +123,27 @@ CREATE_CI: gql`
   ${Fragments.fullLayer}
   `,
 
-  CREATE_OIACONFIG: gql`
-    mutation CreateOIAConfig($oiaConfig: CreateOIAConfigInputType!) {
-      createOIAConfig(oiaConfig: $oiaConfig) {
+  CREATE_OIACONTEXT: gql`
+    mutation CreateOIAContext($oiaContext: CreateOIAContextInputType!) {
+      createOIAContext(oiaContext: $oiaContext) {
         id
         name
         config
       }
     }
   `,
-  UPDATE_OIACONFIG: gql`
-  mutation UpdateOIAConfig($oiaConfig: UpdateOIAConfigInputType!) {
-    updateOIAConfig(oiaConfig: $oiaConfig) {
+  UPDATE_OIACONTEXT: gql`
+  mutation UpdateOIAContext($oiaContext: UpdateOIAContextInputType!) {
+    updateOIAContext(oiaContext: $oiaContext) {
       id
       name
       config
     }
   }
   `,
-  DELETE_OIACONFIG: gql`
-  mutation DeleteOIAConfig($oiaID: Long!) {
-    deleteOIAConfig(oiaID: $oiaID)
+  DELETE_OIACONTEXT: gql`
+  mutation DeleteOIAContext($oiaID: Long!) {
+    deleteOIAContext(oiaID: $oiaID)
   }
   `,
 
@@ -161,6 +161,12 @@ CREATE_CI: gql`
   }
   `,
   
+  SET_BASECONFIGURATION: gql`
+  mutation SetBaseConfiguration($baseConfiguration: String!) {
+    setBaseConfiguration(baseConfiguration: $baseConfiguration)
+  }
+  `,
+
   SET_TRAITSET: gql`
   mutation SetTraitSet($traitSet: String!) {
     setTraitSet(traitSet: $traitSet)

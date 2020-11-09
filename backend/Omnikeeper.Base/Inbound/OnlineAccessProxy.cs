@@ -1,8 +1,8 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Microsoft.Extensions.Logging;
+using Npgsql;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
-using Microsoft.Extensions.Logging;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,13 +14,11 @@ namespace Omnikeeper.Base.Inbound
     {
         private readonly ILayerModel layerModel;
         private readonly IInboundAdapterManager pluginManager;
-        private readonly ILogger<OnlineAccessProxy> logger;
 
-        public OnlineAccessProxy(ILayerModel layerModel, IInboundAdapterManager pluginManager, ILogger<OnlineAccessProxy> logger)
+        public OnlineAccessProxy(ILayerModel layerModel, IInboundAdapterManager pluginManager)
         {
             this.layerModel = layerModel;
             this.pluginManager = pluginManager;
-            this.logger = logger;
         }
 
         public async Task<bool> IsOnlineInboundLayer(long layerID, NpgsqlTransaction trans)
@@ -95,6 +93,12 @@ namespace Omnikeeper.Base.Inbound
             var layer = await layerModel.GetLayer(layerID, trans);
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
             return await plugin.CreateLayerAccessProxy(layer).GetAttribute(name, ciid, atTime);
+        }
+        public async Task<CIAttribute> GetFullBinaryAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime)
+        {
+            var layer = await layerModel.GetLayer(layerID, trans);
+            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
+            return await plugin.CreateLayerAccessProxy(layer).GetFullBinaryAttribute(name, ciid, atTime);
         }
     }
 }

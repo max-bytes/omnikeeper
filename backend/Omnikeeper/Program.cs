@@ -1,9 +1,10 @@
-using Omnikeeper.Utils;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System;
 using Omnikeeper.Service;
+using Omnikeeper.Utils;
+using System;
 
 namespace Omnikeeper
 {
@@ -27,7 +28,11 @@ namespace Omnikeeper
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>();
+                    webBuilder.UseStartup<Startup.Startup>();
+                })
+                .ConfigureServices(services =>
+                {
+                    services.AddHostedService<Startup.HangfireJobStarter>();
                 });
     }
 }

@@ -133,7 +133,7 @@ namespace Omnikeeper.GridView.Commands
                             try
                             {
 
-                                var val = AttributeValueBuilder.Build(new AttributeValueDTO
+                                var val = AttributeValueBuilder.BuildFromDTO(new AttributeValueDTO
                                 {
                                     IsArray = false,
                                     Values = new string[] { cell.Value },

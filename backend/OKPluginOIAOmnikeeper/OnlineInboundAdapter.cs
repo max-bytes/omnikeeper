@@ -59,7 +59,7 @@ namespace OKPluginOIAOmnikeeper
         }
 
         private readonly Config config;
-        private readonly ILandscapeRegistryRESTAPIClient client;
+        private readonly ILandscapeomnikeeperRESTAPIClient client;
         private readonly ExternalIDManager externalIDManager;
         private readonly ScopedExternalIDMapper scopedExternalIDMapper;
 
@@ -74,7 +74,7 @@ namespace OKPluginOIAOmnikeeper
                 BaseAddress = new Uri(config.apiURL)
             };
 
-            client = new LandscapeRegistryRESTAPIClient(config, httpClient);
+            client = new LandscapeomnikeeperRESTAPIClient(config, httpClient);
 
             externalIDManager = new ExternalIDManager(client, config, scopedExternalIDMapper);
         }

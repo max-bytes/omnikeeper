@@ -1,19 +1,18 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Ingest.ActiveDirectoryXML;
-using Omnikeeper.Service;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Ingest.ActiveDirectoryXML;
+using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 
 namespace Omnikeeper.Controllers.Ingest
 {
@@ -27,11 +26,11 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly ICurrentUserService currentUserService;
         private readonly ILayerModel layerModel;
         private readonly IngestActiveDirectoryXMLService ingestActiveDirectoryXMLService;
-        private readonly IRegistryAuthorizationService authorizationService;
+        private readonly ILayerBasedAuthorizationService authorizationService;
         private readonly ILogger<ActiveDirectoryXMLIngestController> logger;
 
         public ActiveDirectoryXMLIngestController(IngestDataService ingestDataService, ICurrentUserService currentUserService, ILayerModel layerModel, IngestActiveDirectoryXMLService ingestActiveDirectoryXMLService,
-            IRegistryAuthorizationService authorizationService, ILogger<ActiveDirectoryXMLIngestController> logger)
+            ILayerBasedAuthorizationService authorizationService, ILogger<ActiveDirectoryXMLIngestController> logger)
         {
             this.ingestDataService = ingestDataService;
             this.currentUserService = currentUserService;
@@ -53,6 +52,8 @@ namespace Omnikeeper.Controllers.Ingest
             var user = await currentUserService.GetCurrentUser(null);
             if (!authorizationService.CanUserWriteToLayer(user, writeLayer))
                 return Forbid();
+            // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
+            // TODO: think about this!
 
             var searchLayers = new LayerSet(searchLayerIDs);
 

@@ -1,8 +1,8 @@
-﻿using Omnikeeper.Base.Model;
+﻿using Microsoft.Extensions.Logging;
+using Npgsql;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Microsoft.Extensions.Logging;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,7 +53,7 @@ namespace Omnikeeper.Base.Inbound
                 if (!mapper.ExistsInternally(externalID))
                 {
                     logger.LogInformation($"CI with external ID {externalID} does not exist internally, creating new OR mapping to existing...");
-                    
+
                     var foundCIIDs = await ciMappingService.TryToMatch(externalID.SerializeToString(), idMethod, ciMappingContext, trans, logger);
 
                     Guid ciid;
