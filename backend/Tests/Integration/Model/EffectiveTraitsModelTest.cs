@@ -11,6 +11,9 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Tests.Integration.Model.Mocks;
+using Omnikeeper.Base.Inbound;
+using Moq;
+using FluentAssertions;
 
 namespace Tests.Integration.Model
 {
@@ -27,7 +30,7 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var (traitModel, layerset) = await BaseSetup(new MockedTraitsProvider(), conn);
+            var (traitModel, layerset, ciids) = await BaseSetup(new MockedTraitsProvider(), conn);
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
@@ -42,15 +45,26 @@ namespace Tests.Integration.Model
             var t3 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_3", layerset, null, timeThreshold);
             Assert.AreEqual(2, t3.Count());
             Assert.IsTrue(t3.All(t => t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
-        }
 
+            var tt0 = await traitModel.CalculateMergedCIsWithTrait("invalid_trait", layerset, null, timeThreshold);
+            Assert.AreEqual(null, tt0);
+
+
+            var tt1 = await traitModel.CalculateMergedCIsWithTrait("test_trait_1", layerset, null, timeThreshold);
+            Assert.AreEqual(3, tt1.Count());
+            tt1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
+
+            var tt2 = await traitModel.CalculateMergedCIsWithTrait("test_trait_2", layerset, null, timeThreshold);
+            Assert.AreEqual(2, tt2.Count());
+            tt2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
+        }
 
         [Test]
         public async Task TestDependentTraits()
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var (traitModel, layerset) = await BaseSetup(new MockedTraitsProvider(), conn);
+            var (traitModel, layerset, _) = await BaseSetup(new MockedTraitsProvider(), conn);
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
@@ -66,13 +80,15 @@ namespace Tests.Integration.Model
             var timeThreshold = TimeThreshold.BuildLatest();
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var (traitModel, layerset) = await BaseSetup(new MockedTraitsProviderWithLoop(), conn);
+            var (traitModel, layerset, _) = await BaseSetup(new MockedTraitsProviderWithLoop(), conn);
             var t1 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_1", layerset, null, timeThreshold);
             Assert.AreEqual(0, t1.Count());
         }
 
-        private async Task<(EffectiveTraitModel traitModel, LayerSet layerset)> BaseSetup(ITraitsProvider traitsProvider, NpgsqlConnection conn)
+        private async Task<(EffectiveTraitModel traitModel, LayerSet layerset, Guid[])> BaseSetup(ITraitsProvider traitsProvider, NpgsqlConnection conn)
         {
+            var oap = new Mock<IOnlineAccessProxy>();
+            oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<long>(), It.IsAny<NpgsqlTransaction>())).ReturnsAsync(false);
             var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
             var ciModel = new CIModel(attributeModel, conn);
             var userModel = new UserInDatabaseModel(conn);
@@ -80,7 +96,7 @@ namespace Tests.Integration.Model
             var predicateModel = new PredicateModel(conn);
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
             var layerModel = new LayerModel(conn);
-            var traitModel = new EffectiveTraitModel(ciModel, relationModel, traitsProvider, NullLogger<EffectiveTraitModel>.Instance, conn);
+            var traitModel = new EffectiveTraitModel(ciModel, relationModel, traitsProvider, oap.Object, NullLogger<EffectiveTraitModel>.Instance, conn);
             var user = await DBSetup.SetupUser(userModel);
             var ciid1 = await ciModel.CreateCI(null);
             var ciid2 = await ciModel.CreateCI(null);
@@ -106,7 +122,7 @@ namespace Tests.Integration.Model
             }
 
             var layerset = await layerModel.BuildLayerSet(new string[] { "l1" }, null);
-            return (traitModel, layerset);
+            return (traitModel, layerset, new Guid[] { ciid1, ciid2, ciid3 });
         }
     }
 }

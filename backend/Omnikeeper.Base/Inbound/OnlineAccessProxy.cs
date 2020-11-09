@@ -27,8 +27,7 @@ namespace Omnikeeper.Base.Inbound
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             if (layer == null) return false;
-            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-            return plugin != null;
+            return await pluginManager.IsValidOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
         }
 
         private async IAsyncEnumerable<(ILayerAccessProxy proxy, Layer layer)> GetAccessProxies(LayerSet layerset, NpgsqlTransaction trans)

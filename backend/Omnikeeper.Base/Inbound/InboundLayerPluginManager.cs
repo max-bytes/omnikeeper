@@ -10,6 +10,7 @@ namespace Omnikeeper.Base.Inbound
 {
     public interface IInboundAdapterManager
     {
+        Task<bool> IsValidOnlinePluginInstance(string instanceName, NpgsqlTransaction trans);
         Task<IOnlineInboundAdapter> GetOnlinePluginInstance(string instanceName, NpgsqlTransaction trans);
     }
 
@@ -37,6 +38,14 @@ namespace Omnikeeper.Base.Inbound
             this.conn = conn;
             this.persister = persister;
             this.appConfig = appConfig;
+        }
+
+        public async Task<bool> IsValidOnlinePluginInstance(string instanceName, NpgsqlTransaction trans)
+        {
+            var config = await ioaConfigModel.GetConfigByName(instanceName, trans);
+            if (config != null)
+                return onlinePluginsBuilders.ContainsKey(config.Config.BuilderName);
+            return false;
         }
 
         public async Task<IOnlineInboundAdapter> GetOnlinePluginInstance(string instanceName, NpgsqlTransaction trans)

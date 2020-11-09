@@ -49,7 +49,7 @@ namespace Omnikeeper.Model.Config
                     var id = s.GetString(0);
                     var configJO = s.GetFieldValue<JObject>(1);
                     var context = Deserialize(id, configJO);
-                    if (context != null)
+                    if (context != null) // TODO: we actually need a fallback config to show, so users can at least attempt to fix any serialization issues
                         ret.Add(context);
                 }
             }
