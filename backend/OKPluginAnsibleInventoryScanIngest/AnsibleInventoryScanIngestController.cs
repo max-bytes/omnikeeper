@@ -7,7 +7,6 @@ using Omnikeeper.Base.Entity.DTO.Ingest;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -18,18 +17,18 @@ namespace Omnikeeper.Controllers.Ingest
 {
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
+    [Route("api/v{version:apiVersion}/Ingest/AnsibleInventoryScan")]
     [Authorize]
-    public class AnsibleIngestController : ControllerBase // TODO: move to its own plugin
+    public class AnsibleInventoryScanIngestController : ControllerBase
     {
         private readonly IngestDataService ingestDataService;
         private readonly ILayerModel layerModel;
-        private readonly ILogger<AnsibleIngestController> logger;
+        private readonly ILogger<AnsibleInventoryScanIngestController> logger;
         private readonly ICurrentUserService currentUserService;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
-        public AnsibleIngestController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService,
-            ILayerBasedAuthorizationService authorizationService, ILogger<AnsibleIngestController> logger)
+        public AnsibleInventoryScanIngestController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService,
+            ILayerBasedAuthorizationService authorizationService, ILogger<AnsibleInventoryScanIngestController> logger)
         {
             this.ingestDataService = ingestDataService;
             this.layerModel = layerModel;
@@ -38,7 +37,7 @@ namespace Omnikeeper.Controllers.Ingest
             this.authorizationService = authorizationService;
         }
 
-        [HttpPost("IngestAnsibleInventoryScan")]
+        [HttpPost("")]
         public async Task<ActionResult> IngestAnsibleInventoryScan([FromQuery, Required] long writeLayerID, [FromQuery, Required] long[] searchLayerIDs, [FromBody, Required] AnsibleInventoryScanDTO data)
         {
             try

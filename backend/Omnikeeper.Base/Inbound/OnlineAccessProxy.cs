@@ -14,13 +14,11 @@ namespace Omnikeeper.Base.Inbound
     {
         private readonly ILayerModel layerModel;
         private readonly IInboundAdapterManager pluginManager;
-        private readonly ILogger<OnlineAccessProxy> logger;
 
-        public OnlineAccessProxy(ILayerModel layerModel, IInboundAdapterManager pluginManager, ILogger<OnlineAccessProxy> logger)
+        public OnlineAccessProxy(ILayerModel layerModel, IInboundAdapterManager pluginManager)
         {
             this.layerModel = layerModel;
             this.pluginManager = pluginManager;
-            this.logger = logger;
         }
 
         public async Task<bool> IsOnlineInboundLayer(long layerID, NpgsqlTransaction trans)

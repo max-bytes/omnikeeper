@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration
 {
-    class DBSetup
+    public class DBSetup
     {
         public static readonly string dbName = "tmp";
 
