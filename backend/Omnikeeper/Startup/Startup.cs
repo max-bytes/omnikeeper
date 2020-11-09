@@ -80,8 +80,6 @@ namespace Omnikeeper.Startup
             ServiceRegistration.RegisterServices(services);
             ServiceRegistration.RegisterGraphQL(services);
 
-            services.AddScoped<IGridViewConfigModel, GridViewConfigModel>(); // TODO: move inside ServiceRegistration
-
             services.Configure<IISServerOptions>(options =>
             {
                 options.AllowSynchronousIO = true;

@@ -96,6 +96,7 @@ namespace Omnikeeper.Startup
             services.AddScoped<IEffectiveTraitModel, EffectiveTraitModel>();
             services.AddScoped<IBaseConfigurationModel, BaseConfigurationModel>();
             services.AddScoped<IOIAContextModel, OIAContextModel>();
+            services.AddScoped<IGridViewConfigModel, GridViewConfigModel>();
 
             // these aren't real models, but we keep them here because they are closely related to models
             services.AddScoped<ITraitsProvider, TraitsProvider>();
