@@ -61,12 +61,15 @@ namespace Omnikeeper.Base.Inbound
             if (!loaded)
             {
                 var data = await persister.Load(conn, trans);
-                if (data != null)
+                if (data == null)
                 {
-                    // TODO: ensure that int2ext and ext2int both only contain unique keys AND are "equal"
-                    int2ext = data.ToDictionary(kv => kv.Key, kv => string2ExtIDF(kv.Value));
-                    ext2int = int2ext.GroupBy(x => x.Value).ToDictionary(x => x.Key, x => x.First().Key);
+                    throw new Exception($"Failed to load persisted external IDs for scope {persister.Scope}");
                 }
+
+                // TODO: ensure that int2ext and ext2int both only contain unique keys AND are "equal"
+                int2ext = data.ToDictionary(kv => kv.Key, kv => string2ExtIDF(kv.Value));
+                ext2int = int2ext.GroupBy(x => x.Value).ToDictionary(x => x.Key, x => x.First().Key);
+
                 loaded = true;
             }
         }
