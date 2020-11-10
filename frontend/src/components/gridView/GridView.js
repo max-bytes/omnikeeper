@@ -322,7 +322,7 @@ export default function GridView(props) {
     }
 
     // CREATE / UPDATE / DELETE on pressing 'save'
-    async function save() {
+    async function save(contextName) {
         let rowDataDiffs = [];
         let rowDataDiffsFullRow = []; // TODO: remove, when finally using API
 
@@ -346,7 +346,7 @@ export default function GridView(props) {
         });
 
         const changes = gridViewDataParseModel.createChanges(rowDataDiffs); // Create changes from rowData (delta)
-        console.log(changes);
+        console.log("changes to " + contextName + ": ", changes);
 
         // fake changeResults data here
         // TODO: pass 'changes' to API and get 'changeResults' back, when implemented

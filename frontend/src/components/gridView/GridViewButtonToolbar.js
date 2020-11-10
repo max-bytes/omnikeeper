@@ -134,7 +134,9 @@ export default function GridViewButtonToolbar(props) {
                         </Button>
 
                         {/* Save */}
-                        <Button onClick={props.save}>Save</Button>
+                        <Button onClick={() => props.save(usedContext)}>
+                            Save
+                        </Button>
 
                         {/* Refresh */}
                         <Button onClick={() => props.refreshData(usedContext)}>
