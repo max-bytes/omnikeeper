@@ -6,9 +6,8 @@ import { Layout } from "antd";
 import GridViewButtonToolbar from "./GridViewButtonToolbar";
 import "./GridView.css";
 import GridViewDataParseModel from "./GridViewDataParseModel";
-import GridViewMockUpDataModel from "./GridViewMockUpDataModel"; // returns mockUp-data for testing // TODO: remove, when finally using API
 import _ from "lodash";
-// import SwaggerClient from "swagger-client";
+import SwaggerClient from "swagger-client";
 // TODO: use aggrid_copy_cut_paste - USE THIS:
 // import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
 // const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
@@ -17,9 +16,9 @@ import _ from "lodash";
 //     false // logging off
 // );
 
-// const swaggerDefUrl =
-//     "https://acme.omnikeeper-dev.bymhx.at/backend/swagger/v1/swagger.json";
-// const apiVersion = 1;
+const swaggerDefUrl =
+    "https://acme.omnikeeper-dev.bymhx.at/backend/swagger/v1/swagger.json";
+const apiVersion = 1;
 
 const { Header, Content } = Layout;
 
@@ -44,7 +43,6 @@ export default function GridView(props) {
     };
 
     const gridViewDataParseModel = new GridViewDataParseModel(rowStatus);
-    const gridViewMockUpDataModel = new GridViewMockUpDataModel();
 
     return (
         <Layout
@@ -378,44 +376,33 @@ export default function GridView(props) {
 
         // if called without a contextName -> fetch only context
         if (!contextName) {
-            const context = gridViewMockUpDataModel.getMockUpData("context"); // get mockUp data
-            // TODO: use API
-            // const context = await new SwaggerClient(swaggerDefUrl)
-            //     .then((client) =>
-            //         client.apis.GridView.GetContexts({ version: apiVersion })
-            //     )
-            //     .then((result) => result.body);
+            const context = await new SwaggerClient(swaggerDefUrl)
+                .then((client) =>
+                    client.apis.GridView.GetContexts({ version: apiVersion })
+                )
+                .then((result) => result.body);
 
             setContext(context); // set context
         }
 
         // if called with a contextName -> fetch schema & data
         else {
-            const schema = gridViewMockUpDataModel.getMockUpData(
-                "schema",
-                contextName
-            ); // get mockUp schema
-            const data = gridViewMockUpDataModel.getMockUpData(
-                "data",
-                contextName
-            ); // get mockUp data
-            // TODO: use API
-            // const schema = await new SwaggerClient(swaggerDefUrl)
-            //     .then((client) =>
-            //         client.apis.GridView.GetSchema({
-            //             version: apiVersion,
-            //             context: contextName,
-            //         })
-            //     )
-            //     .then((result) => result.body);
-            // const data = await new SwaggerClient(swaggerDefUrl)
-            //     .then((client) =>
-            //         client.apis.GridView.GetData({
-            //             version: apiVersion,
-            //             context: contextName,
-            //         })
-            //     )
-            //     .then((result) => result.body);
+            const schema = await new SwaggerClient(swaggerDefUrl)
+                .then((client) =>
+                    client.apis.GridView.GetSchema({
+                        version: apiVersion,
+                        context: contextName,
+                    })
+                )
+                .then((result) => result.body);
+            const data = await new SwaggerClient(swaggerDefUrl)
+                .then((client) =>
+                    client.apis.GridView.GetData({
+                        version: apiVersion,
+                        context: contextName,
+                    })
+                )
+                .then((result) => result.body);
 
             const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
                 schema,

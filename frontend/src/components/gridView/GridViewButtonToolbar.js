@@ -35,8 +35,9 @@ export default function GridViewButtonToolbar(props) {
                             style={{ minWidth: "75%" }}
                             placeholder={"Please choose context."}
                         >
-                            {props.context.configuredContexts
-                                ? props.context.configuredContexts.map(
+                            {/* TODO: change 'contexts' to 'configuredContexts', when changed in BE */}
+                            {props.context.contexts
+                                ? props.context.contexts.map(
                                       (configuredContext) => (
                                           <Option
                                               key={configuredContext.name}
