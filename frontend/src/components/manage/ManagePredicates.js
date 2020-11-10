@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link  } from 'react-router-dom'
 import { Icon } from 'semantic-ui-react';
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery, useMutation, useApolloClient } from '@apollo/client';
 import { queries } from '../../graphql/queries'
 import { mutations } from '../../graphql/mutations'
 import 'ag-grid-community/dist/styles/ag-grid.css';
@@ -30,6 +30,7 @@ export default function ManagePredicates(props) {
     }
   });
   const [upsert] = useMutation(mutations.UPSERT_PREDICATE);
+  const apolloClient = useApolloClient();
 
   const columnDefs = [
     { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
@@ -58,6 +59,7 @@ export default function ManagePredicates(props) {
         const predicate = { id: row.id, wordingFrom: row.wordingFrom, wordingTo: row.wordingTo, state: row.state, constraints: constraints };
         return upsert({ variables: { predicate: predicate } })
           .then(r => ({result: removeTypename(r.data.upsertPredicate), id: row.id}))
+          .then(r => apolloClient.resetStore())
           .catch(e => ({result: e, id: row.id }));
       }} />
   </div>;

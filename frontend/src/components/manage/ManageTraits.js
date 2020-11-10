@@ -5,7 +5,7 @@ import Form from 'react-bootstrap/Form';
 import { queries } from 'graphql/queries'
 import { mutations } from 'graphql/mutations'
 import 'ace-builds';
-import { useQuery, useMutation } from '@apollo/react-hooks';
+import { useQuery, useMutation, useApolloClient } from '@apollo/react-hooks';
 import 'ace-builds/webpack-resolver';
 import AceEditor from "react-ace";
 import { ErrorPopupButton } from "../ErrorPopupButton";
@@ -16,6 +16,7 @@ export default function ManageCITypes() {
 
   const { data, loading } = useQuery(queries.TraitSet, {fetchPolicy: 'network-only'});
   const [setTraitSet, { loading: setTraitSetLoading, error: setTraitSetError }] = useMutation(mutations.SET_TRAITSET);
+  const apolloClient = useApolloClient();
   var [hasErrors, setHasErrors] = useState(false);
   const [config, setConfig] = useState("Loading");
   useEffect(() => {
@@ -30,10 +31,12 @@ export default function ManageCITypes() {
     <div><Link to="/manage"><Icon name="angle left" fitted /> Back</Link></div>
     <Form style={{margin:'10px 0px'}} onSubmit={e => {
             e.preventDefault();
-            setTraitSet({ variables: { traitSet: config } }).then(d => {
+            setTraitSet({ variables: { traitSet: config } })
+            .then(d => {
               var prettyStr = JSON.stringify(JSON.parse(d.data.setTraitSet),null,2);  
               setConfig(prettyStr);
-            });
+            })
+            .then(r => apolloClient.resetStore());
           }}>
       <AceEditor
               value={config}
