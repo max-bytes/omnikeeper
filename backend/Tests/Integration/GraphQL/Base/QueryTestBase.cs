@@ -2,7 +2,7 @@
 using GraphQL;
 using GraphQL.Conversion;
 using GraphQL.Execution;
-using GraphQL.Http;
+using GraphQL.NewtonsoftJson;
 using GraphQL.Server;
 using GraphQL.Types;
 using GraphQL.Validation;
@@ -40,7 +40,7 @@ namespace Tests.Integration.GraphQL.Base
         {
             var services = base.InitServices();
 
-            services.AddGraphQL().AddGraphTypes(typeof(GraphQLSchema), ServiceLifetime.Scoped);
+            services.AddGraphQL().AddGraphTypes(typeof(GraphQLSchema));
 
             return services;
         }
@@ -56,7 +56,7 @@ namespace Tests.Integration.GraphQL.Base
             IDictionary<string, object> userContext = null,
             CancellationToken cancellationToken = default,
             IEnumerable<IValidationRule> rules = null,
-            IFieldNameConverter fieldNameConverter = null,
+            INameConverter fieldNameConverter = null,
             IDocumentWriter writer = null)
         {
             var queryResult = CreateQueryResult(expected);
@@ -132,7 +132,7 @@ namespace Tests.Integration.GraphQL.Base
             CancellationToken cancellationToken = default,
             IEnumerable<IValidationRule> rules = null,
             Action<UnhandledExceptionContext> unhandledExceptionDelegate = null,
-            IFieldNameConverter fieldNameConverter = null,
+            INameConverter nameConverter = null,
             IDocumentWriter writer = null)
         {
             var runResult = Executer.ExecuteAsync(options =>
@@ -145,7 +145,8 @@ namespace Tests.Integration.GraphQL.Base
                 options.CancellationToken = cancellationToken;
                 options.ValidationRules = rules;
                 options.UnhandledExceptionDelegate = unhandledExceptionDelegate ?? (ctx => { });
-                options.FieldNameConverter = fieldNameConverter ?? CamelCaseFieldNameConverter.Instance;
+                options.NameConverter = nameConverter ?? CamelCaseNameConverter.Instance;
+                options.RequestServices = ServiceProvider;
             }).GetAwaiter().GetResult();
 
             writer ??= Writer;

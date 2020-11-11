@@ -1,4 +1,5 @@
 ﻿using GraphQL;
+using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -125,8 +126,9 @@ namespace Omnikeeper.Startup
 
         public static void RegisterGraphQL(IServiceCollection services)
         {
-            services.AddScoped<ISchema, GraphQLSchema>();
+            services.AddSingleton<ISchema, GraphQLSchema>();
             services.AddSingleton<IDocumentExecuter, MyDocumentExecutor>(); // custom document executor that does serial queries, required by postgres
+            services.AddSingleton<IDocumentWriter, DocumentWriter>();
         }
     }
 }

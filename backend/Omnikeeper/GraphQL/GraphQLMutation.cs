@@ -1,5 +1,6 @@
 ﻿using GraphQL;
 using GraphQL.Types;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
@@ -19,11 +20,7 @@ namespace Omnikeeper.GraphQL
 {
     public class GraphQLMutation : ObjectGraphType
     {
-        public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, ILayerModel layerModel, IRelationModel relationModel, IOIAContextModel OIAContextModel,
-             IODataAPIContextModel odataAPIContextModel, IChangesetModel changesetModel, IPredicateModel predicateModel, IRecursiveTraitModel traitModel,
-             IBaseConfigurationModel baseConfigurationModel, ILayerBasedAuthorizationService layerBasedAuthorizationService,
-             ICIBasedAuthorizationService ciBasedAuthorizationService, IManagementAuthorizationService managementAuthorizationService,
-             NpgsqlConnection conn)
+        public GraphQLMutation()
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
@@ -35,6 +32,15 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                    var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
+                    var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+                    var attributeModel = context.RequestServices.GetRequiredService<IAttributeModel>();
+                    var relationModel = context.RequestServices.GetRequiredService<IRelationModel>();
+                    var conn = context.RequestServices.GetRequiredService<NpgsqlConnection>();
+                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+                    var layerBasedAuthorizationService = context.RequestServices.GetRequiredService<ILayerBasedAuthorizationService>();
+
                     var layers = context.GetArgument<string[]>("layers", null);
                     var insertAttributes = context.GetArgument("InsertAttributes", new List<InsertCIAttributeInput>());
                     var removeAttributes = context.GetArgument("RemoveAttributes", new List<RemoveCIAttributeInput>());
@@ -131,6 +137,15 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                    var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
+                    var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+                    var attributeModel = context.RequestServices.GetRequiredService<IAttributeModel>();
+                    var relationModel = context.RequestServices.GetRequiredService<IRelationModel>();
+                    var conn = context.RequestServices.GetRequiredService<NpgsqlConnection>();
+                    var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
+                    var layerBasedAuthorizationService = context.RequestServices.GetRequiredService<ILayerBasedAuthorizationService>();
+
                     var createCIs = context.GetArgument("cis", new List<CreateCIInput>());
 
                     var userContext = context.UserContext as OmnikeeperUserContext;
@@ -167,6 +182,10 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                    var conn = context.RequestServices.GetRequiredService<NpgsqlConnection>();
+                    var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
+                    
                     var createLayer = context.GetArgument<CreateLayerInput>("layer");
                     var userContext = context.UserContext as OmnikeeperUserContext;
 
@@ -200,6 +219,10 @@ namespace Omnikeeper.GraphQL
               ),
               resolve: async context =>
               {
+                  var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                  var conn = context.RequestServices.GetRequiredService<NpgsqlConnection>();
+                  var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
+
                   var layer = context.GetArgument<UpdateLayerInput>("layer");
 
                   var userContext = context.UserContext as OmnikeeperUserContext;
@@ -225,6 +248,9 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
+                    var OIAContextModel = context.RequestServices.GetRequiredService<IOIAContextModel>();
+                    var conn = context.RequestServices.GetRequiredService<NpgsqlConnection>();
+                    
                     var configInput = context.GetArgument<CreateOIAContextInput>("oiaContext");
                     var userContext = context.UserContext as OmnikeeperUserContext;
 
@@ -256,6 +282,9 @@ namespace Omnikeeper.GraphQL
               ),
               resolve: async context =>
               {
+                  var OIAContextModel = context.RequestServices.GetRequiredService<IOIAContextModel>();
+                  var conn = context.RequestServices.GetRequiredService<NpgsqlConnection>();
+                  
                   var configInput = context.GetArgument<UpdateOIAContextInput>("oiaContext");
 
                   var userContext = context.UserContext as OmnikeeperUserContext;
@@ -286,6 +315,9 @@ namespace Omnikeeper.GraphQL
               ),
               resolve: async context =>
               {
+                  var OIAContextModel = context.RequestServices.GetRequiredService<IOIAContextModel>();
+                  var conn = context.RequestServices.GetRequiredService<NpgsqlConnection>();
+                  
                   var id = context.GetArgument<long>("oiaID");
 
                   var userContext = context.UserContext as OmnikeeperUserContext;
@@ -309,6 +341,9 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
+                    var odataAPIContextModel = context.RequestServices.GetRequiredService<IODataAPIContextModel>();
+                    var conn = context.RequestServices.GetRequiredService<NpgsqlConnection>();
+                    
                     var contextInput = context.GetArgument<UpsertODataAPIContextInput>("odataAPIContext");
                     var userContext = context.UserContext as OmnikeeperUserContext;
 
@@ -341,6 +376,9 @@ namespace Omnikeeper.GraphQL
               ),
               resolve: async context =>
               {
+                  var odataAPIContextModel = context.RequestServices.GetRequiredService<IODataAPIContextModel>();
+                  var conn = context.RequestServices.GetRequiredService<NpgsqlConnection>();
+
                   var id = context.GetArgument<string>("id");
 
                   var userContext = context.UserContext as OmnikeeperUserContext;
@@ -364,6 +402,9 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
+                    var traitModel = context.RequestServices.GetRequiredService<IRecursiveTraitModel>();
+                    var conn = context.RequestServices.GetRequiredService<NpgsqlConnection>();
+
                     var traitSetInput = context.GetArgument<string>("traitSet");
                     var userContext = context.UserContext as OmnikeeperUserContext;
 
@@ -397,6 +438,9 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
+                    var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
+                    var conn = context.RequestServices.GetRequiredService<NpgsqlConnection>();
+
                     var configStr = context.GetArgument<string>("baseConfiguration");
                     var userContext = context.UserContext as OmnikeeperUserContext;
 
@@ -428,6 +472,10 @@ namespace Omnikeeper.GraphQL
               ),
               resolve: async context =>
               {
+                  var predicateModel = context.RequestServices.GetRequiredService<IPredicateModel>();
+                  var conn = context.RequestServices.GetRequiredService<NpgsqlConnection>();
+                  var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
+
                   var predicate = context.GetArgument<UpsertPredicateInput>("predicate");
 
                   var userContext = context.UserContext as OmnikeeperUserContext;

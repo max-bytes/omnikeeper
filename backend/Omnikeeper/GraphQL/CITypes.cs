@@ -1,4 +1,6 @@
-﻿using GraphQL.Types;
+﻿using GraphQL;
+using GraphQL.Types;
+using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
@@ -15,7 +17,7 @@ namespace Omnikeeper.GraphQL
 
     public class MergedCIType : ObjectGraphType<MergedCI>
     {
-        public MergedCIType(IRelationModel relationModel, ITemplateModel templateModel, IEffectiveTraitModel traitModel, ICIModel ciModel)
+        public MergedCIType()
         {
             Field("id", x => x.ID);
             Field("name", x => x.Name, nullable: true);
@@ -30,6 +32,9 @@ namespace Omnikeeper.GraphQL
             }),
             resolve: async (context) =>
             {
+                var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
+                var relationModel = context.RequestServices.GetRequiredService<IRelationModel>();
+
                 var userContext = context.UserContext as OmnikeeperUserContext;
                 var layerset = userContext.LayerSet;
                 if (layerset == null)
@@ -61,6 +66,8 @@ namespace Omnikeeper.GraphQL
             FieldAsync<TemplateErrorsCIType>("templateErrors",
             resolve: async (context) =>
             {
+                var templateModel = context.RequestServices.GetRequiredService<ITemplateModel>();
+
                 var userContext = context.UserContext as OmnikeeperUserContext;
                 return await templateModel.CalculateTemplateErrors(context.Source, userContext.Transaction, userContext.TimeThreshold);
             });
@@ -68,6 +75,8 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<EffectiveTraitType>>("effectiveTraits",
             resolve: async (context) =>
             {
+                var traitModel = context.RequestServices.GetRequiredService<IEffectiveTraitModel>();
+
                 var userContext = context.UserContext as OmnikeeperUserContext;
 
                 var et = await traitModel.CalculateEffectiveTraitSetForCI(context.Source, userContext.Transaction, userContext.TimeThreshold);
@@ -90,7 +99,7 @@ namespace Omnikeeper.GraphQL
 
     public class MergedCIAttributeType : ObjectGraphType<MergedCIAttribute>
     {
-        public MergedCIAttributeType(ILayerModel layerModel)
+        public MergedCIAttributeType()
         {
             Field(x => x.LayerStackIDs);
             Field(x => x.Attribute, type: typeof(CIAttributeType));
@@ -98,6 +107,8 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<LayerType>>("layerStack",
             resolve: async (context) =>
             {
+                var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+
                 var userContext = context.UserContext as OmnikeeperUserContext;
                 var layerstackIDs = context.Source.LayerStackIDs;
                 return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
