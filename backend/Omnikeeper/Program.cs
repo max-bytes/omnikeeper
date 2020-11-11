@@ -30,6 +30,10 @@ namespace Omnikeeper
                 {
                     webBuilder.UseStartup<Startup.Startup>();
                 })
+                .UseDefaultServiceProvider((context, options) =>
+                {
+                    options.ValidateScopes = true;
+                })
                 .ConfigureServices(services =>
                 {
                     services.AddHostedService<Startup.HangfireJobStarter>();

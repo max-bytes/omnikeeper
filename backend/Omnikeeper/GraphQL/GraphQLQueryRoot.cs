@@ -1,5 +1,6 @@
 ﻿using GraphQL;
 using GraphQL.Types;
+using GraphQL.Utilities;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Model;
@@ -16,11 +17,7 @@ namespace Omnikeeper.GraphQL
 {
     public class GraphQLQueryRoot : ObjectGraphType
     {
-        public GraphQLQueryRoot(ICIModel ciModel, ILayerModel layerModel, IPredicateModel predicateModel, IMemoryCacheModel memoryCacheModel,
-            IChangesetModel changesetModel, ICISearchModel ciSearchModel, IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel,
-            ILayerStatisticsModel layerStatisticsModel, IBaseConfigurationModel baseConfigurationModel, ILayerBasedAuthorizationService layerBasedAuthorizationService,
-            ICIBasedAuthorizationService ciBasedAuthorizationService,
-            IEffectiveTraitModel effectiveTraitModel, IRecursiveTraitModel traitModel, ITraitsProvider traitsProvider, ICurrentUserService currentUserService)
+        public GraphQLQueryRoot()
         {
             FieldAsync<MergedCIType>("ci",
                 arguments: new QueryArguments(
@@ -29,6 +26,10 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
                 resolve: async context =>
                 {
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                    var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
+                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+
                     var userContext = context.UserContext as OmnikeeperUserContext;
                     var ciid = context.GetArgument<Guid>("ciid");
                     var layerStrings = context.GetArgument<string[]>("layers");
@@ -51,6 +52,10 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
                 resolve: async context =>
                 {
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                    var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
+                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+
                     var userContext = context.UserContext as OmnikeeperUserContext;
 
                     var ciids = context.GetArgument<Guid[]>("ciids", null);
@@ -82,6 +87,9 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<StringGraphType>>("ciids",
                 resolve: async context =>
                 {
+                    var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
+                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+
                     var ciids = await ciModel.GetCIIDs(null);
                     // reduce CIs to those that are allowed
                     ciids = ciids.Where(ciid => ciBasedAuthorizationService.CanReadCI(ciid));
@@ -94,6 +102,10 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
                 resolve: async context =>
                 {
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                    var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
+                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+
                     var userContext = context.UserContext as OmnikeeperUserContext;
                     var layerStrings = context.GetArgument<string[]>("layers");
                     var ls = await layerModel.BuildLayerSet(layerStrings, null);
@@ -112,6 +124,9 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "searchString" }),
                 resolve: async context =>
                 {
+                    var ciSearchModel = context.RequestServices.GetRequiredService<ICISearchModel>();
+                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+
                     var userContext = context.UserContext as OmnikeeperUserContext;
 
                     var searchString = context.GetArgument<string>("searchString");
@@ -131,6 +146,10 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
                 resolve: async context =>
                 {
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                    var ciSearchModel = context.RequestServices.GetRequiredService<ICISearchModel>();
+                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+
                     var userContext = context.UserContext as OmnikeeperUserContext;
 
                     var searchString = context.GetArgument<string>("searchString");
@@ -154,6 +173,12 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<BooleanGraphType>> { Name = "forward" }),
                 resolve: async context =>
                 {
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                    var predicateModel = context.RequestServices.GetRequiredService<IPredicateModel>();
+                    var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
+                    var effectiveTraitModel = context.RequestServices.GetRequiredService<IEffectiveTraitModel>();
+                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+
                     var userContext = context.UserContext as OmnikeeperUserContext;
                     var predicateID = context.GetArgument<string>("predicateID");
                     var forward = context.GetArgument<bool>("forward");
@@ -198,6 +223,12 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layersForEffectiveTraits" }),
                 resolve: async context =>
                 {
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                    var predicateModel = context.RequestServices.GetRequiredService<IPredicateModel>();
+                    var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
+                    var effectiveTraitModel = context.RequestServices.GetRequiredService<IEffectiveTraitModel>();
+                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+
                     var userContext = context.UserContext as OmnikeeperUserContext;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
                     var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
@@ -232,6 +263,8 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<AnchorStateFilterType>> { Name = "stateFilter" }),
                 resolve: async context =>
                 {
+                    var predicateModel = context.RequestServices.GetRequiredService<IPredicateModel>();
+
                     var userContext = context.UserContext as OmnikeeperUserContext;
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
                     var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
@@ -244,6 +277,8 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<LayerType>>("layers",
                 resolve: async context =>
                 {
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+
                     var layers = await layerModel.GetLayers(null);
 
                     return layers;
@@ -254,6 +289,9 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<LongGraphType>> { Name = "layerID" }),
                 resolve: async context =>
                 {
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                    var layerStatisticsModel = context.RequestServices.GetRequiredService<ILayerStatisticsModel>();
+
                     var layerID = context.GetArgument<long>("layerID");
 
                     var layer = await layerModel.GetLayer(layerID, null);
@@ -283,6 +321,8 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<OIAContextType>>("oiacontexts",
                 resolve: async context =>
                 {
+                    var oiaContextModel = context.RequestServices.GetRequiredService<IOIAContextModel>();
+
                     var configs = await oiaContextModel.GetContexts(true, null);
 
                     return configs;
@@ -291,6 +331,8 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<ODataAPIContextType>>("odataapicontexts",
                 resolve: async context =>
                 {
+                    var odataAPIContextModel = context.RequestServices.GetRequiredService<IODataAPIContextModel>();
+
                     var configs = await odataAPIContextModel.GetContexts(null);
 
                     return configs;
@@ -299,6 +341,8 @@ namespace Omnikeeper.GraphQL
             FieldAsync<StringGraphType>("baseConfiguration",
                 resolve: async context =>
                 {
+                    var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
+
                     var cfg = await baseConfigurationModel.GetConfigOrDefault(null);
                     return BaseConfigurationV1.Serializer.SerializeToString(cfg);
                 });
@@ -308,6 +352,8 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "id" }),
                 resolve: async context =>
                 {
+                    var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+
                     var id = context.GetArgument<Guid>("id");
                     var changeset = await changesetModel.GetChangeset(id, null);
                     return changeset;
@@ -322,6 +368,9 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<IntGraphType> { Name = "limit" }),
                 resolve: async context =>
                 {
+                    var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+
                     var userContext = context.UserContext as OmnikeeperUserContext;
                     var layerStrings = context.GetArgument<string[]>("layers");
                     userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, null);
@@ -344,6 +393,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<StringGraphType>("traitSet",
                 resolve: async context =>
                 {
+                    var traitModel = context.RequestServices.GetRequiredService<IRecursiveTraitModel>();
                     // TODO: implement better, showing string as-is for now
                     // TODO: should we not deliver non-DB traits (f.e. from CLBs) here?
                     var traitSet = await traitModel.GetRecursiveTraitSet(null, TimeThreshold.BuildLatest());
@@ -357,6 +407,11 @@ namespace Omnikeeper.GraphQL
                 arguments: new QueryArguments(new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
                 resolve: async context =>
                 {
+                    var traitsProvider = context.RequestServices.GetRequiredService<ITraitsProvider>();
+                    var effectiveTraitModel = context.RequestServices.GetRequiredService<IEffectiveTraitModel>();
+                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+
                     var userContext = context.UserContext as OmnikeeperUserContext;
                     var layerStrings = context.GetArgument<string[]>("layers");
                     userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, null);
@@ -377,6 +432,7 @@ namespace Omnikeeper.GraphQL
             Field<ListGraphType<StringGraphType>>("cacheKeys",
                 resolve: context =>
                 {
+                    var memoryCacheModel = context.RequestServices.GetRequiredService<IMemoryCacheModel>();
                     var keys = memoryCacheModel.GetKeys();
                     return keys;
                 });
@@ -384,6 +440,7 @@ namespace Omnikeeper.GraphQL
             Field<ListGraphType<StringGraphType>>("debugCurrentUserClaims",
                 resolve: context =>
                 {
+                    var currentUserService = context.RequestServices.GetRequiredService<ICurrentUserService>();
                     var claims = currentUserService.DebugGetAllClaims();
                     return claims.Select(kv => $"{kv.type}: {kv.value}");
                 });

@@ -53,23 +53,4 @@ namespace Omnikeeper.GraphQL
             Field("ciids", x => x.CIIDs, type: typeof(ListGraphType<GuidGraphType>));
         }
     }
-
-    //public class MutatePredicatesReturn
-    //{
-    //    public IEnumerable<Predicate> MutatedPredicates { get; private set; }
-    //    public static MutatePredicatesReturn Build(IEnumerable<Predicate> mutatedPredicates)
-    //    {
-    //        return new MutatePredicatesReturn()
-    //        {
-    //            MutatedPredicates = mutatedPredicates
-    //        };
-    //    }
-    //}
-    //public class MutatePredicatesReturnType : ObjectGraphType<MutatePredicatesReturn>
-    //{
-    //    public MutatePredicatesReturnType()
-    //    {
-    //        Field(x => x.MutatedPredicates, type: typeof(ListGraphType<PredicateType>));
-    //    }
-    //}
 }
