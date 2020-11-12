@@ -197,13 +197,13 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
         }
 
 
-        CICandidateAttributeData.Fragment ParseFragmentFromProps(IEnumerable<XElement> props, string propertyValue, string attributeName, string prefixValue = "")
+        CICandidateAttributeData.Fragment? ParseFragmentFromProps(IEnumerable<XElement> props, string propertyValue, string attributeName, string prefixValue = "")
         {
             var dn = props.FirstOrDefault(d => d.Attribute("N") != null && d.Attribute("N").Value.Equals(propertyValue))?.Value;
             if (dn == null) return null;
             return new CICandidateAttributeData.Fragment(attributeName, new AttributeScalarValueText(prefixValue + dn));
         }
-        void AddFragmentIfNotNull(List<CICandidateAttributeData.Fragment> fragments, CICandidateAttributeData.Fragment f)
+        void AddFragmentIfNotNull(List<CICandidateAttributeData.Fragment> fragments, CICandidateAttributeData.Fragment? f)
         {
             if (f != null) fragments.Add(f);
         }

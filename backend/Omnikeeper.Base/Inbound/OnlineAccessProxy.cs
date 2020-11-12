@@ -83,7 +83,7 @@ namespace Omnikeeper.Base.Inbound
                 yield return a;
         }
 
-        public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
@@ -104,7 +104,7 @@ namespace Omnikeeper.Base.Inbound
                 yield return relation;
         }
 
-        public async Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, IModelContext trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetAttribute(string name, long layerID, Guid ciid, IModelContext trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
@@ -113,7 +113,7 @@ namespace Omnikeeper.Base.Inbound
                 throw new Exception($"Could not load plugin instance {layer.OnlineInboundAdapterLink.AdapterName}");
             return await plugin.CreateLayerAccessProxy(layer).GetAttribute(name, ciid, atTime);
         }
-        public async Task<CIAttribute> GetFullBinaryAttribute(string name, long layerID, Guid ciid, IModelContext trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, long layerID, Guid ciid, IModelContext trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);

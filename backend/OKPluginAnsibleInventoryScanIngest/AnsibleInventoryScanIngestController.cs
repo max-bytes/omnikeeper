@@ -6,6 +6,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO.Ingest;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
@@ -46,9 +47,10 @@ namespace Omnikeeper.Controllers.Ingest
         {
             try
             {
+                using var mc = modelContextBuilder.BuildImmediate();
                 var searchLayers = new LayerSet(searchLayerIDs);
-                var writeLayer = await layerModel.GetLayer(writeLayerID, null);
-                var user = await currentUserService.GetCurrentUser(null);
+                var writeLayer = await layerModel.GetLayer(writeLayerID, mc);
+                var user = await currentUserService.GetCurrentUser(mc);
 
                 // authorization
                 if (!authorizationService.CanUserWriteToLayer(user, writeLayer))
@@ -68,11 +70,21 @@ namespace Omnikeeper.Controllers.Ingest
                     var host = kv.Key; // TODO: use?
                     var facts = kv.Value["ansible_facts"];
 
+                    if (facts == null)
+                    {
+                        throw new Exception("Could not find ansible_facts element");
+                    }
+
                     var tempCIID = Guid.NewGuid();
-                    var fqdn = facts["ansible_fqdn"].Value<string>();
+                    var fqdn = facts["ansible_fqdn"]?.Value<string>();
+                    if (fqdn == null)
+                    {
+                        throw new Exception("Could not find ansible_fqdn element or invalid value");
+                    }
+
                     var ciName = fqdn;
 
-                    var attributeFragments = new List<CICandidateAttributeData.Fragment>()
+                    var attributeFragments = new List<CICandidateAttributeData.Fragment?>()
                     {
                         JValue2TextAttribute(facts, "ansible_architecture", "cpu_architecture"),
                         JValue2JSONAttribute(facts, "ansible_cmdline", "ansible.inventory.cmdline"),
@@ -94,7 +106,7 @@ namespace Omnikeeper.Controllers.Ingest
                         JValue2JSONAttribute(facts, "ansible_dns", "dns"),
                         String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
-                    };
+                    }.WhereNotNull();
                     var attributes = new CICandidateAttributeData(attributeFragments);
                     var ciCandidate = new CICandidate(CIIdentificationMethodByData.BuildFromAttributes(new string[] { "fqdn" }, attributes, searchLayers), attributes);
                     cis.Add(tempCIID, ciCandidate);
@@ -102,67 +114,71 @@ namespace Omnikeeper.Controllers.Ingest
                     baseCIs.Add(fqdn, (tempCIID, ciCandidate));
 
                     // ansible mounts
-                    foreach (var mount in facts["ansible_mounts"])
-                    {
-                        var tempMountCIID = Guid.NewGuid();
-                        var mountValue = mount["mount"].Value<string>();
-                        var ciNameMount = $"{fqdn}:{mountValue}";
-                        var attributeFragmentsMount = new List<CICandidateAttributeData.Fragment>
-                    {
-                        JValue2IntegerAttribute(mount, "block_available"),
-                        JValue2IntegerAttribute(mount, "block_size"),
-                        JValue2IntegerAttribute(mount, "block_total"),
-                        JValue2IntegerAttribute(mount, "block_used"),
-                        JValue2TextAttribute(mount, "device"),
-                        JValue2TextAttribute(mount, "fstype"),
-                        JValue2IntegerAttribute(mount, "inode_available"),
-                        JValue2IntegerAttribute(mount, "inode_total"),
-                        JValue2IntegerAttribute(mount, "inode_used"),
-                        String2Attribute("mount", mountValue),
-                        JValue2TextAttribute(mount, "options"),
-                        JValue2IntegerAttribute(mount, "size_available"),
-                        JValue2IntegerAttribute(mount, "size_total"),
-                        JValue2TextAttribute(mount, "uuid"),
-                        String2Attribute(ICIModel.NameAttribute, ciNameMount)
-                    };
-                        var attributeData = new CICandidateAttributeData(attributeFragmentsMount);
-                        cis.Add(tempMountCIID, new CICandidate(
-                            // TODO: ansible mounts have an uuid, find out what that is and if they can be used for identification
-                            CIIdentificationMethodByData.BuildFromAttributes(new string[] { "device", "mount", ICIModel.NameAttribute }, attributeData, searchLayers), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
-                            attributeData));
+                    var ansibleMounts = facts["ansible_mounts"];
+                    if (ansibleMounts != null)
+                        foreach (var mount in ansibleMounts)
+                        {
+                            var tempMountCIID = Guid.NewGuid();
+                            var mountValue = mount["mount"]?.Value<string>() ?? "";
+                            var ciNameMount = $"{fqdn}:{mountValue}";
+                            var attributeFragmentsMount = new List<CICandidateAttributeData.Fragment?>
+                            {
+                                JValue2IntegerAttribute(mount, "block_available"),
+                                JValue2IntegerAttribute(mount, "block_size"),
+                                JValue2IntegerAttribute(mount, "block_total"),
+                                JValue2IntegerAttribute(mount, "block_used"),
+                                JValue2TextAttribute(mount, "device"),
+                                JValue2TextAttribute(mount, "fstype"),
+                                JValue2IntegerAttribute(mount, "inode_available"),
+                                JValue2IntegerAttribute(mount, "inode_total"),
+                                JValue2IntegerAttribute(mount, "inode_used"),
+                                String2Attribute("mount", mountValue),
+                                JValue2TextAttribute(mount, "options"),
+                                JValue2IntegerAttribute(mount, "size_available"),
+                                JValue2IntegerAttribute(mount, "size_total"),
+                                JValue2TextAttribute(mount, "uuid"),
+                                String2Attribute(ICIModel.NameAttribute, ciNameMount)
+                            }.WhereNotNull();
+                            var attributeData = new CICandidateAttributeData(attributeFragmentsMount);
+                            cis.Add(tempMountCIID, new CICandidate(
+                                // TODO: ansible mounts have an uuid, find out what that is and if they can be used for identification
+                                CIIdentificationMethodByData.BuildFromAttributes(new string[] { "device", "mount", ICIModel.NameAttribute }, attributeData, searchLayers), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
+                                attributeData));
 
-                        relations.Add(new RelationCandidate(
-                            CIIdentificationMethodByTemporaryCIID.Build(tempCIID),
-                            CIIdentificationMethodByTemporaryCIID.Build(tempMountCIID),
-                            "has_mounted_device"));
-                    }
+                            relations.Add(new RelationCandidate(
+                                CIIdentificationMethodByTemporaryCIID.Build(tempCIID),
+                                CIIdentificationMethodByTemporaryCIID.Build(tempMountCIID),
+                                "has_mounted_device"));
+                        }
 
                     // ansible interfaces
-                    foreach (var interfaceName in facts["ansible_interfaces"].Values<string>())
-                    {
-                        var jsonTokenName = $"ansible_{interfaceName.Replace('-', '_')}"; // TODO: ansible seems to convert - to _ for some reason... find out what else!
-                        var @interface = facts[jsonTokenName];
-                        var tempCIIDInterface = Guid.NewGuid();
-                        var ciNameInterface = $"Network Interface {interfaceName}@{fqdn}";
-                        var attributeFragmentsInterface = new List<CICandidateAttributeData.Fragment>
+                    var ansibleInterfaces = facts["ansible_interfaces"];
+                    if (ansibleInterfaces != null)
+                        foreach (var interfaceName in ansibleInterfaces.Values<string>())
                         {
-                            JValue2TextAttribute(@interface, "device"),
-                            JValue2TextAttribute(@interface, "active"),
-                            JValue2TextAttribute(@interface, "type"),
-                            Try2(() => JValue2TextAttribute(@interface, "macaddress")),
-                            // TODO
-                            String2Attribute(ICIModel.NameAttribute, ciNameInterface)
-                        }.Where(item => item != null);
-                        var attributeData = new CICandidateAttributeData(attributeFragmentsInterface);
-                        cis.Add(tempCIIDInterface, new CICandidate(
-                            CIIdentificationMethodByData.BuildFromAttributes(new string[] { ICIModel.NameAttribute }, attributeData, searchLayers), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
-                            attributeData));
+                            var jsonTokenName = $"ansible_{interfaceName.Replace('-', '_')}"; // TODO: ansible seems to convert - to _ for some reason... find out what else!
+                            var @interface = facts[jsonTokenName] ?? "";
+                            var tempCIIDInterface = Guid.NewGuid();
+                            var ciNameInterface = $"Network Interface {interfaceName}@{fqdn}";
+                            var attributeFragmentsInterface = new List<CICandidateAttributeData.Fragment?>
+                            {
+                                JValue2TextAttribute(@interface, "device"),
+                                JValue2TextAttribute(@interface, "active"),
+                                JValue2TextAttribute(@interface, "type"),
+                                Try2(() => JValue2TextAttribute(@interface, "macaddress")),
+                                // TODO
+                                String2Attribute(ICIModel.NameAttribute, ciNameInterface)
+                            }.WhereNotNull();
+                            var attributeData = new CICandidateAttributeData(attributeFragmentsInterface);
+                            cis.Add(tempCIIDInterface, new CICandidate(
+                                CIIdentificationMethodByData.BuildFromAttributes(new string[] { ICIModel.NameAttribute }, attributeData, searchLayers), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
+                                attributeData));
 
-                        relations.Add(new RelationCandidate(
-                            CIIdentificationMethodByTemporaryCIID.Build(tempCIID),
-                            CIIdentificationMethodByTemporaryCIID.Build(tempCIIDInterface),
-                            "has_network_interface"));
-                    }
+                            relations.Add(new RelationCandidate(
+                                CIIdentificationMethodByTemporaryCIID.Build(tempCIID),
+                                CIIdentificationMethodByTemporaryCIID.Build(tempCIIDInterface),
+                                "has_network_interface"));
+                        }
                 }
 
                 // yum related data
@@ -172,12 +188,12 @@ namespace Omnikeeper.Controllers.Ingest
                     var fqdn = hostID; // TODO: check if using the HostID as fqdn is ok
                     var ciName = hostID;
 
-                    var attributeFragments = new List<CICandidateAttributeData.Fragment>()
+                    var attributeFragments = new List<CICandidateAttributeData.Fragment?>()
                     {
                         JToken2JSONAttribute(kvInstalled.Value["results"], "yum.installed"),
                         String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
-                    };
+                    }.WhereNotNull();
                     var attributes = new CICandidateAttributeData(attributeFragments);
 
                     if (baseCIs.TryGetValue(fqdn, out var @base))
@@ -195,12 +211,12 @@ namespace Omnikeeper.Controllers.Ingest
                     var fqdn = hostID; // TODO: check if using the HostID as fqdn is ok
                     var ciName = hostID;
 
-                    var attributeFragments = new List<CICandidateAttributeData.Fragment>()
+                    var attributeFragments = new List<CICandidateAttributeData.Fragment?>()
                     {
                         JToken2JSONAttribute(kvRepos.Value["results"], "yum.repos"),
                         String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
-                    };
+                    }.WhereNotNull();
                     var attributes = new CICandidateAttributeData(attributeFragments);
 
                     if (baseCIs.TryGetValue(fqdn, out var @base))
@@ -218,12 +234,12 @@ namespace Omnikeeper.Controllers.Ingest
                     var fqdn = hostID; // TODO: check if using the HostID as fqdn is ok
                     var ciName = hostID;
 
-                    var attributeFragments = new List<CICandidateAttributeData.Fragment>()
+                    var attributeFragments = new List<CICandidateAttributeData.Fragment?>()
                     {
                         JToken2JSONAttribute(kvUpdates.Value["results"], "yum.updates"),
                         String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
-                    };
+                    }.WhereNotNull();
                     var attributes = new CICandidateAttributeData(attributeFragments);
 
                     if (baseCIs.TryGetValue(fqdn, out var @base))
@@ -250,7 +266,7 @@ namespace Omnikeeper.Controllers.Ingest
             }
         }
 
-        private CICandidateAttributeData.Fragment Try2(Func<CICandidateAttributeData.Fragment> f)
+        private CICandidateAttributeData.Fragment? Try2(Func<CICandidateAttributeData.Fragment?> f)
         {
             try
             {
@@ -267,27 +283,43 @@ namespace Omnikeeper.Controllers.Ingest
         private CICandidateAttributeData.Fragment String2IntegerAttribute(string name, long value) =>
             new CICandidateAttributeData.Fragment(name, new AttributeScalarValueInteger(value));
 
-        private CICandidateAttributeData.Fragment JValue2TextAttribute(JToken o, string jsonName, string attributeName = null) =>
-            new CICandidateAttributeData.Fragment(attributeName ?? jsonName, new AttributeScalarValueText(o[jsonName].Value<string>()));
-        private CICandidateAttributeData.Fragment JValue2IntegerAttribute(JToken o, string name, string attributeName = null) =>
-            new CICandidateAttributeData.Fragment(attributeName ?? name, new AttributeScalarValueInteger(o[name].Value<long>()));
-        private CICandidateAttributeData.Fragment JValue2JSONAttribute(JToken o, string jsonName, string attributeName = null) =>
-            new CICandidateAttributeData.Fragment(attributeName ?? jsonName, new AttributeScalarValueJSON(o[jsonName]));
-        private CICandidateAttributeData.Fragment JValuePath2TextAttribute(JToken o, string jsonPath, string attributeName)
+        private CICandidateAttributeData.Fragment? JValue2TextAttribute(JToken o, string jsonName, string? attributeName = null)
         {
-            var jo = o.SelectToken(jsonPath);
-            return new CICandidateAttributeData.Fragment(attributeName, new AttributeScalarValueText(jo.Value<string>()));
+            var v = o[jsonName]?.Value<string>();
+            if (v == null) return null;
+            return new CICandidateAttributeData.Fragment(attributeName ?? jsonName, new AttributeScalarValueText(v));
         }
-        private CICandidateAttributeData.Fragment JValue2TextArrayAttribute(JToken o, string jsonName, string attributeName = null)
+        private CICandidateAttributeData.Fragment? JValue2IntegerAttribute(JToken o, string name, string? attributeName = null)
         {
-            return new CICandidateAttributeData.Fragment(attributeName ?? jsonName, AttributeArrayValueText.BuildFromString(o[jsonName].Values<string>().ToArray()));
+            var v = o[name]?.Value<long>();
+            if (!v.HasValue) return null;
+            return new CICandidateAttributeData.Fragment(attributeName ?? name, new AttributeScalarValueInteger(v.Value));
+        }
+        private CICandidateAttributeData.Fragment? JValue2JSONAttribute(JToken o, string jsonName, string? attributeName = null)
+        {
+            var v = o[jsonName];
+            if (v == null) return null;
+            return new CICandidateAttributeData.Fragment(attributeName ?? jsonName, new AttributeScalarValueJSON(v));
+        }
+        private CICandidateAttributeData.Fragment? JValuePath2TextAttribute(JToken o, string jsonPath, string attributeName)
+        {
+            var v = o.SelectToken(jsonPath)?.Value<string>();
+            if (v == null) return null;
+            return new CICandidateAttributeData.Fragment(attributeName, new AttributeScalarValueText(v));
+        }
+        private CICandidateAttributeData.Fragment? JValue2TextArrayAttribute(JToken o, string jsonName, string? attributeName = null)
+        {
+            var v = o[jsonName]?.Values<string>().ToArray();
+            if (v == null) return null;
+            return new CICandidateAttributeData.Fragment(attributeName ?? jsonName, AttributeArrayValueText.BuildFromString(v));
         }
         private CICandidateAttributeData.Fragment JArray2JSONArrayAttribute(JArray array, string attributeName)
         {
             return new CICandidateAttributeData.Fragment(attributeName, AttributeArrayValueJSON.Build(array.ToArray()));
         }
-        private CICandidateAttributeData.Fragment JToken2JSONAttribute(JToken o, string attributeName)
+        private CICandidateAttributeData.Fragment? JToken2JSONAttribute(JToken? o, string attributeName)
         {
+            if (o == null) return null;
             return new CICandidateAttributeData.Fragment(attributeName, new AttributeScalarValueJSON(o));
         }
     }

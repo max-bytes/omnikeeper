@@ -18,4 +18,8 @@
     <ProjectReference Include="..\OKPluginOIASharepoint\OKPluginOIASharepoint.csproj" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
 </Project>

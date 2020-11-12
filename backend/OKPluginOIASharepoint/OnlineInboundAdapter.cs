@@ -29,8 +29,8 @@ namespace OKPluginOIASharepoint
 
             public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IScopedExternalIDMapper scopedExternalIDMapper, ILoggerFactory loggerFactory)
             {
-                var cconfig = config as Config;
-                return new OnlineInboundAdapter(cconfig, scopedExternalIDMapper as ScopedExternalIDMapper, loggerFactory.CreateLogger<OnlineInboundAdapter>());
+                var cconfig = (config as Config)!;
+                return new OnlineInboundAdapter(cconfig, (scopedExternalIDMapper as ScopedExternalIDMapper)!, loggerFactory.CreateLogger<OnlineInboundAdapter>());
             }
         }
 

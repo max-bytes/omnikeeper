@@ -104,10 +104,10 @@ namespace Omnikeeper.Base.Inbound
         IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime);
         IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, TimeThreshold atTime);
         IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, TimeThreshold atTime);
-        Task<CIAttribute> GetAttribute(string name, Guid ciid, TimeThreshold atTime);
-        Task<CIAttribute> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime);
+        Task<CIAttribute?> GetAttribute(string name, Guid ciid, TimeThreshold atTime);
+        Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime);
         IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime);
-        Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime);
+        Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime);
     }
 
     public interface IOnlineAccessProxy
@@ -119,12 +119,12 @@ namespace Omnikeeper.Base.Inbound
         //IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributesWithName(string name, LayerSet layers, ITransaction trans, TimeThreshold atTime);
         IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime);
         IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime);
-        Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, IModelContext trans, TimeThreshold atTime);
-        Task<CIAttribute> GetFullBinaryAttribute(string name, long layerID, Guid ciid, IModelContext trans, TimeThreshold atTime);
+        Task<CIAttribute?> GetAttribute(string name, long layerID, Guid ciid, IModelContext trans, TimeThreshold atTime);
+        Task<CIAttribute?> GetFullBinaryAttribute(string name, long layerID, Guid ciid, IModelContext trans, TimeThreshold atTime);
 
         //IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(IRelationSelection rl, LayerSet layerset, ITransaction trans, TimeThreshold atTime);
         IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, long layerID, IModelContext trans, TimeThreshold atTime);
-        Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans, TimeThreshold atTime);
+        Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans, TimeThreshold atTime);
     }
 
     public interface IOnlineInboundAdapterBuilder

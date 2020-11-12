@@ -43,9 +43,12 @@ namespace OKPluginOIASharepoint
             return $"{itemID}@{listID}";
         }
 
-        public override bool Equals([AllowNull] object other)
+        public override bool Equals(object? other)
         {
-            try { return Equals((SharepointExternalListItemID)other); } catch (InvalidCastException) { return false; };
+            var tmp = (SharepointExternalListItemID?)other;
+            if (tmp != null)
+                return Equals((SharepointExternalListItemID)tmp);
+            return false;
         }
         public bool Equals(SharepointExternalListItemID other) => other.listID.Equals(listID) && other.itemID.Equals(itemID);
         public override int GetHashCode() => HashCode.Combine(listID, itemID);

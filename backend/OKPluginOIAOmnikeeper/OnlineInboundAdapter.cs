@@ -26,8 +26,8 @@ namespace OKPluginOIAOmnikeeper
             }
             public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IScopedExternalIDMapper scopedExternalIDMapper, ILoggerFactory loggerFactory)
             {
-                var cconfig = config as Config;
-                return new OnlineInboundAdapter(cconfig, scopedExternalIDMapper as ScopedExternalIDMapper);
+                var cconfig = (config as Config)!;
+                return new OnlineInboundAdapter(cconfig, (scopedExternalIDMapper as ScopedExternalIDMapper)!);
             }
         }
 

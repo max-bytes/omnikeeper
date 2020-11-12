@@ -46,12 +46,14 @@ namespace Omnikeeper.Controllers.Ingest
         [HttpPost("")]
         public async Task<ActionResult> Ingest([FromForm, Required] long writeLayerID, [FromForm, Required] long[] searchLayerIDs, [FromForm, Required] IEnumerable<IFormFile> files)
         {
-            var writeLayer = await layerModel.GetLayer(writeLayerID, null);
+            var mc = modelContextBuilder.BuildImmediate();
+
+            var writeLayer = await layerModel.GetLayer(writeLayerID, mc);
             if (writeLayer == null)
                 return BadRequest("Invalid write layer ID configured");
 
             // authorization
-            var user = await currentUserService.GetCurrentUser(null);
+            var user = await currentUserService.GetCurrentUser(mc);
             if (!authorizationService.CanUserWriteToLayer(user, writeLayer))
                 return Forbid();
             // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs

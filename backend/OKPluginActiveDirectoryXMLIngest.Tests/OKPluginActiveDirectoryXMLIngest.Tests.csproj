@@ -17,4 +17,8 @@
     <ProjectReference Include="..\OKPluginActiveDirectoryXMLIngest\OKPluginActiveDirectoryXMLIngest.csproj" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
 </Project>
