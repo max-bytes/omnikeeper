@@ -40,7 +40,7 @@ namespace Omnikeeper.Base.Utils
             return applicationLogger.IsEnabled(msLevel) || otherLogger.IsEnabled(msLevel);
         }
 
-        public override void Log(NpgsqlLogLevel level, int connectorId, string msg, Exception exception = null)
+        public override void Log(NpgsqlLogLevel level, int connectorId, string msg, Exception? exception = null)
         {
             if (dBConnectionBuilder.HasConnectorID(connectorId))
                 applicationLogger.Log(ToMSLogLevel(level), exception, msg);

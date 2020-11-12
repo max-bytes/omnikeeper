@@ -10,11 +10,11 @@ namespace Omnikeeper.Service
         public static (MergedCIAttribute foundAttribute, TemplateErrorsAttribute errors) CalculateTemplateErrorsAttribute(MergedCI ci, CIAttributeTemplate at)
         {
             var foundAttribute = ci.MergedAttributes.FirstOrDefault(a => a.Key == at.Name).Value;
-            return (foundAttribute, TemplateErrorsAttribute.Build(at.Name, PerAttributeTemplateChecks(foundAttribute, at)));
+            return (foundAttribute, new TemplateErrorsAttribute(at.Name, PerAttributeTemplateChecks(foundAttribute, at)));
         }
         public static TemplateErrorsRelation CalculateTemplateErrorsRelation(IEnumerable<MergedRelatedCI> relations, RelationTemplate rt)
         {
-            return TemplateErrorsRelation.Build(rt.PredicateID, PerRelationTemplateChecks(relations, rt));
+            return new TemplateErrorsRelation(rt.PredicateID, PerRelationTemplateChecks(relations, rt));
         }
 
         private static IEnumerable<ITemplateErrorAttribute> PerAttributeTemplateChecks(MergedCIAttribute foundAttribute, CIAttributeTemplate at)
@@ -22,13 +22,13 @@ namespace Omnikeeper.Service
             // check required attributes
             if (foundAttribute == null)
             {
-                yield return TemplateErrorAttributeMissing.Build(at.Name, at.Type);
+                yield return new TemplateErrorAttributeMissing(at.Name, at.Type);
             }
             else
             {
                 if (at.Type != null && (!foundAttribute.Attribute.Value.Type.Equals(at.Type.Value)))
                 {
-                    yield return TemplateErrorAttributeWrongType.Build(at.Type.Value, foundAttribute.Attribute.Value.Type);
+                    yield return TemplateErrorAttributeWrongType.BuildFromSingle(at.Type.Value, foundAttribute.Attribute.Value.Type);
                 }
                 var isFoundAttributeArray = foundAttribute.Attribute.Value is IAttributeArrayValue;
                 if (at.IsArray.HasValue && isFoundAttributeArray != at.IsArray.Value)
@@ -49,9 +49,9 @@ namespace Omnikeeper.Service
         private static IEnumerable<ITemplateErrorRelation> PerRelationTemplateChecks(IEnumerable<MergedRelatedCI> foundRelations, RelationTemplate rt)
         {
             if (rt.MaxCardinality.HasValue && foundRelations.Count() > rt.MaxCardinality.Value)
-                yield return TemplateErrorRelationGeneric.Build($"At most {rt.MaxCardinality.Value} relations with predicate {rt.PredicateID} allowed, found {foundRelations.Count()}!");
+                yield return new TemplateErrorRelationGeneric($"At most {rt.MaxCardinality.Value} relations with predicate {rt.PredicateID} allowed, found {foundRelations.Count()}!");
             if (rt.MinCardinality.HasValue && foundRelations.Count() < rt.MinCardinality.Value)
-                yield return TemplateErrorRelationGeneric.Build($"At least {rt.MinCardinality.Value} relations with predicate {rt.PredicateID} required, found {foundRelations.Count()}!");
+                yield return new TemplateErrorRelationGeneric($"At least {rt.MinCardinality.Value} relations with predicate {rt.PredicateID} required, found {foundRelations.Count()}!");
             // TODO: other checks
         }
     }

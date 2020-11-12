@@ -5,6 +5,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,13 @@ namespace Omnikeeper.Controllers.OData
 {
     public class RelationDTO
     {
+        public RelationDTO(Guid fromCIID, Guid toCIID, string predicate)
+        {
+            FromCIID = fromCIID;
+            ToCIID = toCIID;
+            Predicate = predicate;
+        }
+
         [Key]
         public Guid FromCIID { get; set; }
         [Key]
@@ -32,12 +40,12 @@ namespace Omnikeeper.Controllers.OData
         private readonly ICIModel ciModel;
         private readonly IChangesetModel changesetModel;
         private readonly IODataAPIContextModel oDataAPIContextModel;
-        private readonly NpgsqlConnection conn;
+        private readonly IModelContextBuilder modelContextBuilder;
         private readonly ICurrentUserService currentUserService;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
         public RelationsController(IRelationModel relationModel, ICIModel ciModel, IChangesetModel changesetModel, IODataAPIContextModel oDataAPIContextModel,
-            ICurrentUserService currentUserService, ILayerBasedAuthorizationService authorizationService, NpgsqlConnection conn)
+            ICurrentUserService currentUserService, ILayerBasedAuthorizationService authorizationService, IModelContextBuilder modelContextBuilder)
         {
             this.relationModel = relationModel;
             this.ciModel = ciModel;
@@ -45,29 +53,33 @@ namespace Omnikeeper.Controllers.OData
             this.oDataAPIContextModel = oDataAPIContextModel;
             this.currentUserService = currentUserService;
             this.authorizationService = authorizationService;
-            this.conn = conn;
+            this.modelContextBuilder = modelContextBuilder;
         }
 
         private RelationDTO Model2DTO(MergedRelation r)
         {
-            return new RelationDTO() { FromCIID = r.Relation.FromCIID, ToCIID = r.Relation.ToCIID, Predicate = r.Relation.PredicateID };
+            return new RelationDTO(r.Relation.FromCIID, r.Relation.ToCIID, r.Relation.PredicateID);
         }
 
 
         [EnableQuery]
         public async Task<RelationDTO> GetRelationDTO([FromODataUri, Required] Guid keyFromCIID, [FromODataUri, Required] Guid keyToCIID, [FromODataUri, Required] string keyPredicate, [FromRoute] string context)
         {
+            var trans = modelContextBuilder.BuildImmediate();
             var timeThreshold = TimeThreshold.BuildLatest();
-            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
-            var r = await relationModel.GetMergedRelation(keyFromCIID, keyToCIID, keyPredicate, layerset, null, timeThreshold);
+            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
+            var r = await relationModel.GetMergedRelation(keyFromCIID, keyToCIID, keyPredicate, layerset, trans, timeThreshold);
+            if (r == null)
+                throw new Exception("Could not get relation");
             return Model2DTO(r);
         }
 
         [EnableQuery]
         public async Task<IEnumerable<RelationDTO>> GetRelations([FromRoute] string context)
         {
-            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
-            var relations = await relationModel.GetMergedRelations(new RelationSelectionAll(), layerset, null, TimeThreshold.BuildLatest());
+            var trans = modelContextBuilder.BuildImmediate();
+            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
+            var relations = await relationModel.GetMergedRelations(new RelationSelectionAll(), layerset, trans, TimeThreshold.BuildLatest());
 
             return relations.Select(r => Model2DTO(r));
         }
@@ -84,27 +96,29 @@ namespace Omnikeeper.Controllers.OData
             if (relation.Predicate == null || relation.Predicate == "")
                 return BadRequest($"Relation Predicate must be set");
 
-            var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, null);
-            var readLayerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
+            using var trans = modelContextBuilder.BuildDeferred();
+            var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, trans);
+            var readLayerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
 
-            var user = await currentUserService.GetCurrentUser(null);
+            var user = await currentUserService.GetCurrentUser(trans);
             if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
-            if (!(await ciModel.CIIDExists(relation.FromCIID, null)))
+            if (!(await ciModel.CIIDExists(relation.FromCIID, trans)))
                 return BadRequest($"CI with ID \"{relation.FromCIID}\" does not exist");
-            if (!(await ciModel.CIIDExists(relation.ToCIID, null)))
+            if (!(await ciModel.CIIDExists(relation.ToCIID, trans)))
                 return BadRequest($"CI with ID \"{relation.ToCIID}\" does not exist");
 
-            using var trans = conn.BeginTransaction();
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var changesetProxy = ChangesetProxy.Build(user.InDatabase, timeThreshold.Time, changesetModel);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold.Time, changesetModel);
 
             var (created, changed) = await relationModel.InsertRelation(relation.FromCIID, relation.ToCIID, relation.Predicate, writeLayerID, changesetProxy, trans);
 
             // we fetch the just created relation again, but merged
             var r = await relationModel.GetMergedRelation(created.FromCIID, created.ToCIID, created.PredicateID, readLayerset, trans, timeThreshold);
+            if (r == null)
+                return BadRequest("Could not find relation");
 
             trans.Commit();
 
@@ -114,15 +128,15 @@ namespace Omnikeeper.Controllers.OData
         [EnableQuery]
         public async Task<IActionResult> Delete([FromODataUri] Guid keyFromCIID, [FromODataUri] Guid keyToCIID, [FromODataUri] string keyPredicate, [FromRoute] string context)
         {
-            var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, null);
-            var user = await currentUserService.GetCurrentUser(null);
-            if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
-                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
-
             try
             {
-                using var trans = conn.BeginTransaction();
-                var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
+                using var trans = modelContextBuilder.BuildDeferred();
+                var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, trans);
+                var user = await currentUserService.GetCurrentUser(trans);
+                if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
+                    return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
+
+                var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
                 var (removed, changed) = await relationModel.RemoveRelation(keyFromCIID, keyToCIID, keyPredicate, writeLayerID, changesetProxy, trans);
                 trans.Commit();
             }

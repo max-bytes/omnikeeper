@@ -42,7 +42,7 @@ namespace Omnikeeper.Base.Entity
             }
             else
             {
-                return new ITemplateErrorAttribute[] { TemplateErrorAttributeWrongType.Build(new AttributeValueType[] { AttributeValueType.Text, AttributeValueType.MultilineText }, value.Type) };
+                return new ITemplateErrorAttribute[] { new TemplateErrorAttributeWrongType(new AttributeValueType[] { AttributeValueType.Text, AttributeValueType.MultilineText }, value.Type) };
             }
         }
     }
@@ -53,12 +53,9 @@ namespace Omnikeeper.Base.Entity
 
         public string type => "textRegex";
 
-        public static CIAttributeValueConstraintTextRegex Build(Regex regex)
+        public CIAttributeValueConstraintTextRegex(Regex regex)
         {
-            return new CIAttributeValueConstraintTextRegex()
-            {
-                Regex = regex
-            };
+            Regex = regex;
         }
 
         public IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value)
@@ -70,7 +67,7 @@ namespace Omnikeeper.Base.Entity
             }
             else
             {
-                return new ITemplateErrorAttribute[] { TemplateErrorAttributeWrongType.Build(new AttributeValueType[] { AttributeValueType.Text, AttributeValueType.MultilineText }, value.Type) };
+                return new ITemplateErrorAttribute[] { new TemplateErrorAttributeWrongType(new AttributeValueType[] { AttributeValueType.Text, AttributeValueType.MultilineText }, value.Type) };
             }
         }
     }
@@ -87,18 +84,15 @@ namespace Omnikeeper.Base.Entity
 
         public static CIAttributeTemplate BuildFromParams(string name, AttributeValueType? type, bool? isArray, params ICIAttributeValueConstraint[] valueConstraints)
         {
-            return Build(name, type, isArray, valueConstraints);
+            return new CIAttributeTemplate(name, type, isArray, valueConstraints);
         }
 
-        public static CIAttributeTemplate Build(string name, AttributeValueType? type, bool? isArray, IEnumerable<ICIAttributeValueConstraint> valueConstraints)
+        public CIAttributeTemplate(string name, AttributeValueType? type, bool? isArray, IEnumerable<ICIAttributeValueConstraint> valueConstraints)
         {
-            return new CIAttributeTemplate()
-            {
-                Name = name,
-                Type = type,
-                IsArray = isArray,
-                ValueConstraints = valueConstraints
-            };
+            Name = name;
+            Type = type;
+            IsArray = isArray;
+            ValueConstraints = valueConstraints;
         }
     }
 }

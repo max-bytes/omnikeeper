@@ -29,26 +29,26 @@ namespace Omnikeeper.Entity.AttributeValues
         public bool Equals([AllowNull] AttributeScalarValueImage other) => other != null && Value.Equals(other.Value);
         public override int GetHashCode() => Value.GetHashCode();
 
-        public static AttributeScalarValueImage Build(BinaryScalarAttributeValueProxy proxy)
+        public AttributeScalarValueImage(BinaryScalarAttributeValueProxy proxy)
         {
-            return new AttributeScalarValueImage
-            {
-                Value = proxy
-            };
+            Value = proxy;
         }
     }
 
 
     public class AttributeArrayValueImage : AttributeArrayValue<AttributeScalarValueImage, BinaryScalarAttributeValueProxy>
     {
+        protected AttributeArrayValueImage(AttributeScalarValueImage[] values) : base(values)
+        {
+        }
+
         public override AttributeValueType Type => AttributeValueType.Image;
 
         public static AttributeArrayValueImage Build(IEnumerable<BinaryScalarAttributeValueProxy> proxies)
         {
-            return new AttributeArrayValueImage()
-            {
-                Values = proxies.Select(p => AttributeScalarValueImage.Build(p)).ToArray()
-            };
+            return new AttributeArrayValueImage(
+                proxies.Select(p => new AttributeScalarValueImage(p)).ToArray()
+            );
         }
     }
 }

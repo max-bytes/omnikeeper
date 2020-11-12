@@ -43,15 +43,15 @@ namespace OKPluginOIAKeycloak
             {
                 // create a deterministic, dependent guid from the ciid + attribute name + value
                 var id = GuidUtility.Create(ciid, name + layer.ID.ToString());// TODO: determine if we need to factor in value or not
-                return CIAttribute.Build(id, name, ciid, value, AttributeState.New, changesetID);
+                return new CIAttribute(id, name, ciid, value, AttributeState.New, changesetID);
             }
 
-            yield return BuildAttribute(ICIModel.NameAttribute, ciid, AttributeScalarValueText.BuildFromString($"User {CIName}"), changesetID);
-            yield return BuildAttribute("user.email", ciid, AttributeScalarValueText.BuildFromString(user.Email), changesetID);
-            yield return BuildAttribute("user.username", ciid, AttributeScalarValueText.BuildFromString(user.UserName), changesetID);
-            yield return BuildAttribute("user.first_name", ciid, AttributeScalarValueText.BuildFromString(user.FirstName), changesetID);
-            yield return BuildAttribute("user.last_name", ciid, AttributeScalarValueText.BuildFromString(user.LastName), changesetID);
-            yield return BuildAttribute("keycloak.id", ciid, AttributeScalarValueText.BuildFromString(user.Id), changesetID);
+            yield return BuildAttribute(ICIModel.NameAttribute, ciid, new AttributeScalarValueText($"User {CIName}"), changesetID);
+            yield return BuildAttribute("user.email", ciid, new AttributeScalarValueText(user.Email), changesetID);
+            yield return BuildAttribute("user.username", ciid, new AttributeScalarValueText(user.UserName), changesetID);
+            yield return BuildAttribute("user.first_name", ciid, new AttributeScalarValueText(user.FirstName), changesetID);
+            yield return BuildAttribute("user.last_name", ciid, new AttributeScalarValueText(user.LastName), changesetID);
+            yield return BuildAttribute("keycloak.id", ciid, new AttributeScalarValueText(user.Id), changesetID);
 
             // roles
             if (roleMappings != null)

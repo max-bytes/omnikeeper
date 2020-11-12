@@ -25,6 +25,7 @@ using DotLiquid.Util;
 using System.Reflection;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.CLB;
+using Omnikeeper.Base.Utils.ModelContext;
 
 namespace OKPluginCLBMonitoring
 {
@@ -35,8 +36,8 @@ namespace OKPluginCLBMonitoring
         private readonly IEffectiveTraitModel traitModel;
 
         public CLBNaemonMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
-            IPredicateModel predicateModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
-            : base(atributeModel, layerModel, predicateModel, changesetModel, userModel, conn)
+            IPredicateModel predicateModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel)
+            : base(atributeModel, layerModel, predicateModel, changesetModel, userModel)
         {
             this.ciModel = ciModel;
             this.relationModel = relationModel;
@@ -53,38 +54,38 @@ namespace OKPluginCLBMonitoring
             belongsToNaemonContactgroup
         };
 
-        private readonly RecursiveTrait moduleRecursiveTrait = RecursiveTrait.Build("naemon_service_module", new List<TraitAttribute>() {
-            TraitAttribute.Build("template",
+        private readonly RecursiveTrait moduleRecursiveTrait = new RecursiveTrait("naemon_service_module", new List<TraitAttribute>() {
+            new TraitAttribute("template",
                 CIAttributeTemplate.BuildFromParams("naemon.config_template", AttributeValueType.MultilineText, null, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
-        private readonly RecursiveTrait naemonInstanceRecursiveTrait = RecursiveTrait.Build("naemon_instance", new List<TraitAttribute>() {
-            TraitAttribute.Build("name",
+        private readonly RecursiveTrait naemonInstanceRecursiveTrait = new RecursiveTrait("naemon_instance", new List<TraitAttribute>() {
+            new TraitAttribute("name",
                 CIAttributeTemplate.BuildFromParams("naemon.instance_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         }, optionalAttributes: new List<TraitAttribute>()
         {
-            TraitAttribute.Build("config",
+            new TraitAttribute("config",
                 CIAttributeTemplate.BuildFromParams("naemon.config", AttributeValueType.JSON, true)
             ),
-            TraitAttribute.Build("requirements", 
+            new TraitAttribute("requirements", 
                 CIAttributeTemplate.BuildFromParams("naemon.requirements", AttributeValueType.Text, true, CIAttributeValueConstraintTextLength.Build(1, null))
             ),
-            TraitAttribute.Build("capabilities",
+            new TraitAttribute("capabilities",
                 CIAttributeTemplate.BuildFromParams("naemon.capabilities", AttributeValueType.Text, true, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
-        private readonly RecursiveTrait contactgroupRecursiveTrait = RecursiveTrait.Build("naemon_contactgroup", new List<TraitAttribute>() {
-            TraitAttribute.Build("name",
+        private readonly RecursiveTrait contactgroupRecursiveTrait = new RecursiveTrait("naemon_contactgroup", new List<TraitAttribute>() {
+            new TraitAttribute("name",
                 CIAttributeTemplate.BuildFromParams("naemon.contactgroup_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
         public override RecursiveTraitSet DefinedTraits => RecursiveTraitSet.Build(moduleRecursiveTrait, naemonInstanceRecursiveTrait, contactgroupRecursiveTrait);
 
-        public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger)
+        public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start clbMonitoring");
 
@@ -203,8 +204,8 @@ namespace OKPluginCLBMonitoring
                 }
             }
             
-            var fragments = renderedTemplatesPerCI.Select(t => BulkCIAttributeDataLayerScope.Fragment.Build("", t.attributeValue, t.ciid));
-            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("naemon.intermediate_config", targetLayer.ID, fragments), changesetProxy, trans);
+            var fragments = renderedTemplatesPerCI.Select(t => new BulkCIAttributeDataLayerScope.Fragment("", t.attributeValue, t.ciid));
+            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.intermediate_config", targetLayer.ID, fragments), changesetProxy, trans);
 
             logger.LogDebug("Updated executed commands per monitored CI");
 
@@ -214,8 +215,8 @@ namespace OKPluginCLBMonitoring
             foreach (var naemonInstanceTS in naemonInstancesTS)
                 foreach (var monitoredCI in monitoredCIs.Values)
                     if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value))
-                        monitoredByCIIDFragments.Add(BulkRelationDataPredicateScope.Fragment.Build(monitoredCI.ID, naemonInstanceTS.Key));
-            await relationModel.BulkReplaceRelations(BulkRelationDataPredicateScope.Build(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, trans);
+                        monitoredByCIIDFragments.Add(new BulkRelationDataPredicateScope.Fragment(monitoredCI.ID, naemonInstanceTS.Key));
+            await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, trans);
             logger.LogDebug("Assigned CIs to naemon instances");
 
 
@@ -259,7 +260,7 @@ namespace OKPluginCLBMonitoring
                         return naemonHost;
                     }).ToList();
 
-                monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeArrayValueJSON.BuildFromString(
+                monitoringConfigs.Add(new BulkCIAttributeDataLayerScope.Fragment("", AttributeArrayValueJSON.BuildFromString(
                     naemonHosts.Select(t => JsonConvert.SerializeObject(t, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() })).ToArray()), naemonInstance));
 
                 //var finalConfigYamlNode = new YamlMappingNode(
@@ -270,10 +271,10 @@ namespace OKPluginCLBMonitoring
                 //);
                 //var finalConfig = new YamlDocument(finalConfigYamlNode);
 
-                //monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeValueYAMLArray.Build(
+                //monitoringConfigs.Add(new BulkCIAttributeDataLayerScope.Fragment("", AttributeValueYAMLArray.Build(
                 //    templates.Select(t => t.yamlValue.Value).ToArray(), templates.Select(t => t.yamlValueStr).ToArray()), naemonInstance));
             }
-            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("naemon.config", targetLayer.ID, monitoringConfigs), changesetProxy, trans);
+            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.config", targetLayer.ID, monitoringConfigs), changesetProxy, trans);
 
             logger.LogDebug("End clbMonitoring");
             return true;
@@ -318,7 +319,7 @@ namespace OKPluginCLBMonitoring
                 this.errorHandler = errorHandler;
             }
 
-            public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, Trait contactgroupTrait, NpgsqlTransaction trans, TimeThreshold timeThreshold)
+            public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, Trait contactgroupTrait, IModelContext trans, TimeThreshold timeThreshold)
             {
                 var contactGroupRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(belongsToNaemonContactgroup), layerSetAll, trans, timeThreshold);
                 if (contactGroupRelations.IsEmpty())

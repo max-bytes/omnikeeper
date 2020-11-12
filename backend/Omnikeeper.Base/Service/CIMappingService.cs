@@ -3,6 +3,7 @@ using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace Omnikeeper.Base.Service
 {
     public class CIMappingService
     {
-        public async Task<IEnumerable<Guid>> TryToMatch(string ciCandidateID, ICIIdentificationMethod method, CIMappingContext ciMappingContext, NpgsqlTransaction trans, ILogger logger)
+        public async Task<IEnumerable<Guid>> TryToMatch(string ciCandidateID, ICIIdentificationMethod method, CIMappingContext ciMappingContext, IModelContext trans, ILogger logger)
         {
             switch (method)
             {
@@ -65,7 +66,7 @@ namespace Omnikeeper.Base.Service
                 this.atTime = atTime;
             }
 
-            internal async Task<IDictionary<Guid, MergedCIAttribute>> GetMergedAttributesByAttributeNameAndValue(string name, IAttributeValue value, LayerSet searchableLayers, NpgsqlTransaction trans)
+            internal async Task<IDictionary<Guid, MergedCIAttribute>> GetMergedAttributesByAttributeNameAndValue(string name, IAttributeValue value, LayerSet searchableLayers, IModelContext trans)
             {
                 if (!attributeCache.ContainsKey(name))
                 {
@@ -95,29 +96,23 @@ namespace Omnikeeper.Base.Service
             public string Name { get; private set; }
             public IAttributeValue Value { get; private set; }
 
-            public static Fragment Build(string name, IAttributeValue value)
+            public Fragment(string name, IAttributeValue value)
             {
-                return new Fragment()
-                {
-                    Name = name,
-                    Value = value
-                };
+                Name = name;
+                Value = value;
             }
         }
 
         public Fragment[] Fragments { get; private set; }
 
-        public static CICandidateAttributeData Build(IEnumerable<Fragment> fragments)
+        public CICandidateAttributeData(IEnumerable<Fragment> fragments)
         {
-            return new CICandidateAttributeData()
-            {
-                Fragments = fragments.ToArray()
-            };
+            Fragments = fragments.ToArray();
         }
 
         public CICandidateAttributeData Concat(CICandidateAttributeData attributes)
         {
-            return Build(Fragments.Concat(attributes.Fragments));
+            return new CICandidateAttributeData(Fragments.Concat(attributes.Fragments));
         }
     }
 
@@ -128,6 +123,12 @@ namespace Omnikeeper.Base.Service
 
     public class CIIdentificationMethodByData : ICIIdentificationMethod
     {
+        private CIIdentificationMethodByData(CICandidateAttributeData.Fragment[] identifiableFragments, LayerSet searchableLayers)
+        {
+            IdentifiableFragments = identifiableFragments;
+            SearchableLayers = searchableLayers;
+        }
+
         public CICandidateAttributeData.Fragment[] IdentifiableFragments { get; private set; }
         public LayerSet SearchableLayers { get; private set; }
 
@@ -143,12 +144,12 @@ namespace Omnikeeper.Base.Service
                 return identifiableFragment;
             }).Where(f => f != null).ToList();
 
-            return new CIIdentificationMethodByData() { IdentifiableFragments = identifiableFragments.ToArray(), SearchableLayers = searchableLayers };
+            return new CIIdentificationMethodByData(identifiableFragments.ToArray(), searchableLayers);
         }
 
         public static CIIdentificationMethodByData BuildFromFragments(IEnumerable<CICandidateAttributeData.Fragment> fragments, LayerSet searchableLayers)
         {
-            return new CIIdentificationMethodByData() { IdentifiableFragments = fragments.ToArray(), SearchableLayers = searchableLayers };
+            return new CIIdentificationMethodByData(fragments.ToArray(), searchableLayers);
         }
     }
     public class CIIdentificationMethodByTemporaryCIID : ICIIdentificationMethod

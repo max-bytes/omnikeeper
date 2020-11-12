@@ -10,23 +10,18 @@ namespace Omnikeeper.Base.Entity.DTO
         [Required] public Guid ID { get; set; }
         [Required] public IDictionary<string, CIAttributeDTO> Attributes { get; set; }
 
-        public static CIDTO Build(Guid ciid, IEnumerable<CIAttributeDTO> attributes)
+        public CIDTO (Guid ciid, IEnumerable<CIAttributeDTO> attributes)
         {
-            return new CIDTO
-            {
-                ID = ciid,
-                Attributes = attributes.ToDictionary(a => a.Name)
-            };
+            ID = ciid;
+            Attributes = attributes.ToDictionary(a => a.Name);
         }
 
-        public static CIDTO Build(MergedCI ci)
+        public static CIDTO BuildFromMergedCI(MergedCI ci)
         {
-            return new CIDTO
-            {
-                ID = ci.ID,
-                Attributes = ci.MergedAttributes.Values.Select(ma => CIAttributeDTO.Build(ma)
-                ).ToDictionary(a => a.Name)
-            };
+            return new CIDTO(
+                ci.ID,
+                ci.MergedAttributes.Values.Select(ma => CIAttributeDTO.Build(ma))
+            );
         }
     }
 

@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace Omnikeeper.Base.CLB
 {
     public class CLBErrorHandler
     {
-        private readonly NpgsqlTransaction trans;
+        private readonly IModelContext trans;
         private readonly string clbName;
         private readonly long clbLayerID;
         private readonly IChangesetProxy changeset;
@@ -20,7 +21,7 @@ namespace Omnikeeper.Base.CLB
 
         private readonly IList<CIAttribute> writtenErrors = new List<CIAttribute>();
 
-        public CLBErrorHandler(NpgsqlTransaction trans, string clbName, long clbLayerID, IChangesetProxy changeset, IAttributeModel attributeModel)
+        public CLBErrorHandler(IModelContext trans, string clbName, long clbLayerID, IChangesetProxy changeset, IAttributeModel attributeModel)
         {
             this.trans = trans;
             this.clbName = clbName;
@@ -50,7 +51,7 @@ namespace Omnikeeper.Base.CLB
 
         public async Task LogError(Guid ciid, string name, string message)
         {
-            var a = await attributeModel.InsertAttribute($"{AttributeNamePrefix}.{name}", AttributeScalarValueText.BuildFromString(message, true), ciid, clbLayerID, changeset, trans);
+            var a = await attributeModel.InsertAttribute($"{AttributeNamePrefix}.{name}", new AttributeScalarValueText(message, true), ciid, clbLayerID, changeset, trans);
             writtenErrors.Add(a.attribute);
         }
     }

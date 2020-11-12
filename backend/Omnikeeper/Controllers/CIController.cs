@@ -5,6 +5,7 @@ using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
@@ -23,12 +24,14 @@ namespace Omnikeeper.Controllers
         private readonly ICIModel ciModel;
         private readonly ICurrentUserService currentUserService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
+        private readonly IModelContextBuilder modelContextBuilder;
 
-        public CIController(ICIModel ciModel, ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserService currentUserService)
+        public CIController(ICIModel ciModel, ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserService currentUserService, IModelContextBuilder modelContextBuilder)
         {
             this.ciModel = ciModel;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.currentUserService = currentUserService;
+            this.modelContextBuilder = modelContextBuilder;
         }
 
         /// <summary>
@@ -38,7 +41,8 @@ namespace Omnikeeper.Controllers
         [HttpGet("getAllCIIDs")]
         public async Task<ActionResult<IEnumerable<string>>> GetAllCIIDs()
         {
-            var ciids = await ciModel.GetCIIDs(null);
+            var trans = modelContextBuilder.BuildImmediate();
+            var ciids = await ciModel.GetCIIDs(trans);
             ciids = ciids.Where(ciid => ciBasedAuthorizationService.CanReadCI(ciid));
             return Ok(ciids);
         }
@@ -53,16 +57,17 @@ namespace Omnikeeper.Controllers
         [HttpGet("getCIByID")]
         public async Task<ActionResult<CIDTO>> GetCIByID([FromQuery, Required] long[] layerIDs, [FromQuery, Required] Guid CIID, [FromQuery] DateTimeOffset? atTime = null)
         {
+            var trans = modelContextBuilder.BuildImmediate();
             if (!ciBasedAuthorizationService.CanReadCI(CIID))
             {
-                var user = await currentUserService.GetCurrentUser(null);
+                var user = await currentUserService.GetCurrentUser(trans);
                 return Forbid($"User \"{user.Username}\" does not have permission to write to CI {CIID}");
             }
 
             var layerset = new LayerSet(layerIDs);
-            var ci = await ciModel.GetMergedCI(CIID, layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
+            var ci = await ciModel.GetMergedCI(CIID, layerset, trans, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
             if (ci == null) return NotFound();
-            return Ok(CIDTO.Build(ci));
+            return Ok(CIDTO.BuildFromMergedCI(ci));
         }
 
         /// <summary>
@@ -79,15 +84,16 @@ namespace Omnikeeper.Controllers
         {
             if (CIIDs.IsEmpty())
                 return BadRequest("Empty CIID list");
+            var trans = modelContextBuilder.BuildImmediate();
             if (!ciBasedAuthorizationService.CanReadAllCIs(CIIDs, out var notAllowedCI))
             {
-                var user = await currentUserService.GetCurrentUser(null);
+                var user = await currentUserService.GetCurrentUser(trans);
                 return Forbid($"User \"{user.Username}\" does not have permission to read from CI {notAllowedCI}");
             }
 
             var layerset = new LayerSet(layerIDs);
-            var cis = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(CIIDs), layerset, true, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
-            return Ok(cis.Select(ci => CIDTO.Build(ci)));
+            var cis = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(CIIDs), layerset, true, trans, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
+            return Ok(cis.Select(ci => CIDTO.BuildFromMergedCI(ci)));
         }
 
         /// <summary>
@@ -99,8 +105,9 @@ namespace Omnikeeper.Controllers
         [HttpGet("getCIIDsOfNonEmptyCIs")]
         public async Task<ActionResult<IEnumerable<Guid>>> GetCIIDsOfNonEmptyCIs([FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
+            var trans = modelContextBuilder.BuildImmediate();
             var layerset = new LayerSet(layerIDs);
-            var ciids = await ciModel.GetCIIDsOfNonEmptyCIs(layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
+            var ciids = await ciModel.GetCIIDsOfNonEmptyCIs(layerset, trans, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
 
             ciids = ciids.Where(ciid => ciBasedAuthorizationService.CanReadCI(ciid));
 

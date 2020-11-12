@@ -1,4 +1,6 @@
-﻿using GraphQL.Types;
+﻿#nullable disable // TODO
+
+using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
 using System;
@@ -151,7 +153,7 @@ namespace Omnikeeper.GraphQL
     public class UpsertPredicateInput
     {
         public string ID { get; private set; }
-        public string WordingFrom { get; private set; }
+        public string WordingFrom { get; private set; } = "";
         public string WordingTo { get; private set; }
         public AnchorState State { get; private set; }
         public PredicateConstraints Constraints { get; private set; }

@@ -22,4 +22,8 @@
     <PackageReference Include="YamlDotNet" Version="8.1.1" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  
 </Project>

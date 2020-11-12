@@ -14,25 +14,19 @@ namespace Omnikeeper.Base.Entity
 
         public string ErrorMessage => $"attribute \"{AttributeName}\" {((Type.HasValue) ? $" of type \"{Type.Value}\" " : "")}is missing!";
 
-        public static TemplateErrorAttributeMissing Build(string attributeName, AttributeValueType? type)
+        public TemplateErrorAttributeMissing(string attributeName, AttributeValueType? type)
         {
-            return new TemplateErrorAttributeMissing()
-            {
-                AttributeName = attributeName,
-                Type = type
-            };
+            AttributeName = attributeName;
+            Type = type;
         }
     }
     public class TemplateErrorAttributeGeneric : ITemplateErrorAttribute
     {
         public string ErrorMessage { get; private set; }
 
-        public static TemplateErrorAttributeGeneric Build(string message)
+        public TemplateErrorAttributeGeneric(string message)
         {
-            return new TemplateErrorAttributeGeneric()
-            {
-                ErrorMessage = message
-            };
+            ErrorMessage = message;
         }
     }
     public class TemplateErrorAttributeWrongType : ITemplateErrorAttribute
@@ -41,17 +35,14 @@ namespace Omnikeeper.Base.Entity
         public AttributeValueType[] CorrectTypes { get; private set; }
         public AttributeValueType CurrentType { get; private set; }
 
-        public static TemplateErrorAttributeWrongType Build(AttributeValueType correctType, AttributeValueType currentType)
+        public static TemplateErrorAttributeWrongType BuildFromSingle(AttributeValueType correctType, AttributeValueType currentType)
         {
-            return Build(new AttributeValueType[] { correctType }, currentType);
+            return new TemplateErrorAttributeWrongType(new AttributeValueType[] { correctType }, currentType);
         }
-        public static TemplateErrorAttributeWrongType Build(AttributeValueType[] correctTypes, AttributeValueType currentType)
+        public TemplateErrorAttributeWrongType(AttributeValueType[] correctTypes, AttributeValueType currentType)
         {
-            return new TemplateErrorAttributeWrongType()
-            {
-                CorrectTypes = correctTypes,
-                CurrentType = currentType
-            };
+            CorrectTypes = correctTypes;
+            CurrentType = currentType;
         }
     }
     public class TemplateErrorAttributeWrongMultiplicity : ITemplateErrorAttribute
@@ -72,13 +63,10 @@ namespace Omnikeeper.Base.Entity
     {
         public string AttributeName { get; private set; }
         public IEnumerable<ITemplateErrorAttribute> Errors { get; private set; }
-        public static TemplateErrorsAttribute Build(string name, IEnumerable<ITemplateErrorAttribute> errors)
+        public TemplateErrorsAttribute(string name, IEnumerable<ITemplateErrorAttribute> errors)
         {
-            return new TemplateErrorsAttribute()
-            {
-                AttributeName = name,
-                Errors = errors
-            };
+            AttributeName = name;
+            Errors = errors;
         }
     }
 
@@ -92,25 +80,19 @@ namespace Omnikeeper.Base.Entity
     {
         public string ErrorMessage { get; private set; }
 
-        public static TemplateErrorRelationGeneric Build(string message)
+        public TemplateErrorRelationGeneric (string message)
         {
-            return new TemplateErrorRelationGeneric()
-            {
-                ErrorMessage = message
-            };
+            ErrorMessage = message;
         }
     }
     public class TemplateErrorsRelation
     {
         public string PredicateID { get; private set; }
         public IEnumerable<ITemplateErrorRelation> Errors { get; private set; }
-        public static TemplateErrorsRelation Build(string predicateID, IEnumerable<ITemplateErrorRelation> errors)
+        public TemplateErrorsRelation(string predicateID, IEnumerable<ITemplateErrorRelation> errors)
         {
-            return new TemplateErrorsRelation()
-            {
-                PredicateID = predicateID,
-                Errors = errors
-            };
+            PredicateID = predicateID;
+            Errors = errors;
         }
     }
 
@@ -119,13 +101,10 @@ namespace Omnikeeper.Base.Entity
         public IDictionary<string, TemplateErrorsAttribute> AttributeErrors { get; private set; }
         public IDictionary<string, TemplateErrorsRelation> RelationErrors { get; private set; }
 
-        public static TemplateErrorsCI Build(IDictionary<string, TemplateErrorsAttribute> attributeErrors, IDictionary<string, TemplateErrorsRelation> relationErrors)
+        public TemplateErrorsCI(IDictionary<string, TemplateErrorsAttribute> attributeErrors, IDictionary<string, TemplateErrorsRelation> relationErrors)
         {
-            return new TemplateErrorsCI()
-            {
-                AttributeErrors = attributeErrors,
-                RelationErrors = relationErrors
-            };
+            AttributeErrors = attributeErrors;
+            RelationErrors = relationErrors;
         }
     }
 }

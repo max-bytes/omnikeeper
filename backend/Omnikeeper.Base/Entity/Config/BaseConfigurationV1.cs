@@ -11,13 +11,13 @@ namespace Omnikeeper.Base.Entity.Config
         [JsonProperty(Required = Required.Always)]
         public TimeSpan ArchiveChangesetThreshold { get; set; }
         [JsonProperty(Required = Required.Always)]
-        public string CLBRunnerInterval { get; set; }
+        public string CLBRunnerInterval { get; set; } = "";
         [JsonProperty(Required = Required.Always)]
-        public string MarkedForDeletionRunnerInterval { get; set; }
+        public string MarkedForDeletionRunnerInterval { get; set; } = "";
         [JsonProperty(Required = Required.Always)]
-        public string ExternalIDManagerRunnerInterval { get; set; }
+        public string ExternalIDManagerRunnerInterval { get; set; } = "";
         [JsonProperty(Required = Required.Always)]
-        public string ArchiveOldDataRunnerInterval { get; set; }
+        public string ArchiveOldDataRunnerInterval { get; set; } = "";
 
         public static MyJSONSerializer<BaseConfigurationV1> Serializer = new MyJSONSerializer<BaseConfigurationV1>(new JsonSerializerSettings()
         {

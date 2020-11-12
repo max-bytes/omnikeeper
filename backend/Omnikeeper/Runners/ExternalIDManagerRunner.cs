@@ -5,6 +5,7 @@ using Npgsql;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Utils;
 using System;
 using System.Collections.Concurrent;
@@ -24,13 +25,13 @@ namespace Omnikeeper.Runners
         private readonly CIMappingService ciMappingService;
         private readonly IAttributeModel attributeModel;
         private readonly ILayerModel layerModel;
-        private readonly NpgsqlConnection conn;
+        private readonly IModelContextBuilder modelContextBuilder;
 
         // HACK: making this static sucks, find better way, but runner is instantiated anew on each run
         private static readonly IDictionary<string, DateTimeOffset> lastRuns = new ConcurrentDictionary<string, DateTimeOffset>();
 
         public ExternalIDManagerRunner(IInboundAdapterManager pluginManager, IExternalIDMapPersister externalIDMapPersister, ICIModel ciModel, CIMappingService ciMappingService,
-            IAttributeModel attributeModel, ILayerModel layerModel, NpgsqlConnection conn, ILogger<ExternalIDManagerRunner> logger)
+            IAttributeModel attributeModel, ILayerModel layerModel, IModelContextBuilder modelContextBuilder, ILogger<ExternalIDManagerRunner> logger)
         {
             this.logger = logger;
             this.pluginManager = pluginManager;
@@ -39,12 +40,12 @@ namespace Omnikeeper.Runners
             this.ciMappingService = ciMappingService;
             this.attributeModel = attributeModel;
             this.layerModel = layerModel;
-            this.conn = conn;
+            this.modelContextBuilder = modelContextBuilder;
         }
 
         [DisableConcurrentExecution(timeoutInSeconds: 60)]
         [AutomaticRetry(Attempts = 0)]
-        public void Run(PerformContext context)
+        public void Run(PerformContext? context)
         {
             using (HangfireConsoleLogger.InContext(context))
             {
@@ -56,7 +57,8 @@ namespace Omnikeeper.Runners
         {
             logger.LogInformation("Start");
 
-            var activeLayers = await layerModel.GetLayers(Omnikeeper.Base.Entity.AnchorStateFilter.ActiveAndDeprecated, null);
+            var trans = modelContextBuilder.BuildImmediate();
+            var activeLayers = await layerModel.GetLayers(Omnikeeper.Base.Entity.AnchorStateFilter.ActiveAndDeprecated, trans);
             var layersWithOILPs = activeLayers.Where(l => l.OnlineInboundAdapterLink.AdapterName != ""); // TODO: better check for set oilp than name != ""
 
             var adapters = layersWithOILPs.Select(l => l.OnlineInboundAdapterLink.AdapterName)
@@ -69,7 +71,7 @@ namespace Omnikeeper.Runners
                 lastRuns.TryGetValue(adapterName, out var lastRun);
 
                 // find oilp for layer
-                var plugin = await pluginManager.GetOnlinePluginInstance(adapterName, null);
+                var plugin = await pluginManager.GetOnlinePluginInstance(adapterName, trans);
                 if (plugin == null)
                 {
                     logger.LogError($"Could not find online inbound layer plugin with name {adapterName}");
@@ -88,17 +90,19 @@ namespace Omnikeeper.Runners
                         stopWatch.Start();
                         try
                         {
-                            using var trans = conn.BeginTransaction();
+                            using var transD = modelContextBuilder.BuildDeferred();
 
-                            var changes = await EIDManager.Update(ciModel, attributeModel, ciMappingService, conn, trans, logger);
+                            var (changes, successful) = await EIDManager.Update(ciModel, attributeModel, ciMappingService, transD, logger);
+
+                            if (!successful)
+                            {
+                                transD.Rollback();
+                                throw new Exception("Error updating External ID manager");
+                            }
 
                             if (changes)
                             {
-                                trans.Commit();
-                            }
-                            else
-                            {
-                                trans.Rollback();
+                                transD.Commit();
                             }
                         }
                         catch (Exception e)
@@ -120,9 +124,9 @@ namespace Omnikeeper.Runners
 
             try
             {
-                using var trans = conn.BeginTransaction();
-                await externalIDMapPersister.DeleteUnusedScopes(usedPersisterScopes, conn, trans);
-                trans.Commit();
+                using var transD = modelContextBuilder.BuildDeferred();
+                await externalIDMapPersister.DeleteUnusedScopes(usedPersisterScopes, transD);
+                transD.Commit();
             }
             catch (Exception e)
             {

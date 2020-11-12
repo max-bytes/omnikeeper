@@ -16,57 +16,57 @@ namespace Tests.Integration.Model
         public void TestTraitSerialization()
         {
             var traitset = RecursiveTraitSet.Build(
-                RecursiveTrait.Build("host", new List<TraitAttribute>() {
-                    TraitAttribute.Build("hostname",
+                new RecursiveTrait("host", new List<TraitAttribute>() {
+                    new TraitAttribute("hostname",
                         CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     )
                 }),
-                RecursiveTrait.Build("windows_host", new List<TraitAttribute>() {
-                    TraitAttribute.Build("os_family",
+                new RecursiveTrait("windows_host", new List<TraitAttribute>() {
+                    new TraitAttribute("os_family",
                         CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
-                            CIAttributeValueConstraintTextRegex.Build(new Regex(@"Windows", RegexOptions.IgnoreCase)))
+                            new CIAttributeValueConstraintTextRegex(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                     )
                 }, requiredTraits: new string[] { "host" }),
 
-                RecursiveTrait.Build("linux_host", new List<TraitAttribute>() {
-                    TraitAttribute.Build("os_family",
+                new RecursiveTrait("linux_host", new List<TraitAttribute>() {
+                    new TraitAttribute("os_family",
                         CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
-                            CIAttributeValueConstraintTextRegex.Build(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
+                            new CIAttributeValueConstraintTextRegex(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
                     )
                 }, requiredTraits: new string[] { "host" }),
-                RecursiveTrait.Build("linux_block_device", new List<TraitAttribute>() {
-                    TraitAttribute.Build("device",
+                new RecursiveTrait("linux_block_device", new List<TraitAttribute>() {
+                    new TraitAttribute("device",
                         CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     ),
-                    TraitAttribute.Build("mount",
+                    new TraitAttribute("mount",
                         CIAttributeTemplate.BuildFromParams("mount", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     )
                 }),
-                RecursiveTrait.Build("linux_network_interface", new List<TraitAttribute>() {
-                    TraitAttribute.Build("device",
+                new RecursiveTrait("linux_network_interface", new List<TraitAttribute>() {
+                    new TraitAttribute("device",
                         CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     ),
-                    TraitAttribute.Build("type",
+                    new TraitAttribute("type",
                         CIAttributeTemplate.BuildFromParams("type", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     ),
-                    TraitAttribute.Build("active",
+                    new TraitAttribute("active",
                         CIAttributeTemplate.BuildFromParams("active", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     )
                 }),
-                RecursiveTrait.Build("ansible_can_deploy_to_it",
+                new RecursiveTrait("ansible_can_deploy_to_it",
                     new List<TraitAttribute>() {
-                        TraitAttribute.Build("hostname",
+                        new TraitAttribute("hostname",
                             CIAttributeTemplate.BuildFromParams("ipAddress", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     },
                     new List<TraitAttribute>() {
-                        TraitAttribute.Build("variables",
+                        new TraitAttribute("variables",
                             CIAttributeTemplate.BuildFromParams("automation.ansible_variables", AttributeValueType.JSON, false)
                         )
                     },
                     new List<TraitRelation>() {
-                        TraitRelation.Build("ansible_groups",
-                            RelationTemplate.Build("has_ansible_group", 1, null)
+                        new TraitRelation("ansible_groups",
+                            new RelationTemplate("has_ansible_group", 1, null)
                         )
                     }
                 )

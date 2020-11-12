@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Ingest.ActiveDirectoryXML;
 using System;
 using System.Collections.Generic;
@@ -25,16 +26,18 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly ICurrentUserService currentUserService;
         private readonly ILayerModel layerModel;
         private readonly ActiveDirectoryXMLIngestService ingestActiveDirectoryXMLService;
+        private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerBasedAuthorizationService authorizationService;
         private readonly ILogger<ActiveDirectoryXMLIngestController> logger;
 
         public ActiveDirectoryXMLIngestController(IngestDataService ingestDataService, ICurrentUserService currentUserService, ILayerModel layerModel, ActiveDirectoryXMLIngestService ingestActiveDirectoryXMLService,
-            ILayerBasedAuthorizationService authorizationService, ILogger<ActiveDirectoryXMLIngestController> logger)
+            IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService authorizationService, ILogger<ActiveDirectoryXMLIngestController> logger)
         {
             this.ingestDataService = ingestDataService;
             this.currentUserService = currentUserService;
             this.layerModel = layerModel;
             this.ingestActiveDirectoryXMLService = ingestActiveDirectoryXMLService;
+            this.modelContextBuilder = modelContextBuilder;
             this.authorizationService = authorizationService;
             this.logger = logger;
         }
@@ -63,8 +66,8 @@ namespace Omnikeeper.Controllers.Ingest
                    Path.GetFileName(f.FileName) // stripping path for security reasons: https://docs.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads?view=aspnetcore-3.1#upload-small-files-with-buffered-model-binding-to-physical-storage-1
                ));
                 var (ciCandidates, relationCandidates) = ingestActiveDirectoryXMLService.Files2IngestCandidates(fileStreams, searchLayers, logger);
-                var ingestData = IngestData.Build(ciCandidates, relationCandidates);
-                var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user, logger);
+                var ingestData = new IngestData(ciCandidates, relationCandidates);
+                var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user, modelContextBuilder, logger);
                 logger.LogInformation($"Active Directory XML Ingest successful; ingested {numIngestedCIs} CIs, {numIngestedRelations} relations");
 
                 return Ok();

@@ -35,7 +35,7 @@ namespace Omnikeeper.GraphQL
                 var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
                 var relationModel = context.RequestServices.GetRequiredService<IRelationModel>();
 
-                var userContext = context.UserContext as OmnikeeperUserContext;
+                var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerset = userContext.LayerSet;
                 if (layerset == null)
                     throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!");
@@ -68,7 +68,7 @@ namespace Omnikeeper.GraphQL
             {
                 var templateModel = context.RequestServices.GetRequiredService<ITemplateModel>();
 
-                var userContext = context.UserContext as OmnikeeperUserContext;
+                var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 return await templateModel.CalculateTemplateErrors(context.Source, userContext.Transaction, userContext.TimeThreshold);
             });
 
@@ -77,7 +77,7 @@ namespace Omnikeeper.GraphQL
             {
                 var traitModel = context.RequestServices.GetRequiredService<IEffectiveTraitModel>();
 
-                var userContext = context.UserContext as OmnikeeperUserContext;
+                var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
                 var et = await traitModel.CalculateEffectiveTraitSetForCI(context.Source, userContext.Transaction, userContext.TimeThreshold);
                 return et.EffectiveTraits.Values;
@@ -109,7 +109,7 @@ namespace Omnikeeper.GraphQL
             {
                 var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
 
-                var userContext = context.UserContext as OmnikeeperUserContext;
+                var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerstackIDs = context.Source.LayerStackIDs;
                 return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
             });

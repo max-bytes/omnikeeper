@@ -72,7 +72,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                     continue;
                 }
                 var fragments = new List<CICandidateAttributeData.Fragment>();
-                fragments.Add(CICandidateAttributeData.Fragment.Build("ad.type", AttributeScalarValueText.BuildFromString("user")));
+                fragments.Add(new CICandidateAttributeData.Fragment("ad.type", new AttributeScalarValueText("user")));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", "__name", "AD user: "));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", "ad.name"));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "EmailAddress", "user.email"));
@@ -83,8 +83,8 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "GivenName", "user.first_name"));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Surname", "user.last_name"));
 
-                var ad = CICandidateAttributeData.Build(fragments);
-                var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.BuildFromAttributes(IdentifiableUserAttributes, ad, searchLayers), ad);
+                var ad = new CICandidateAttributeData(fragments);
+                var ciCandidate = new CICandidate(CIIdentificationMethodByData.BuildFromAttributes(IdentifiableUserAttributes, ad, searchLayers), ad);
                 yield return (Guid.NewGuid(), ciCandidate);
             }
         }
@@ -108,7 +108,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                 var computerGuid = Guid.NewGuid();
 
                 var fragments = new List<CICandidateAttributeData.Fragment>();
-                fragments.Add(CICandidateAttributeData.Fragment.Build("ad.type", AttributeScalarValueText.BuildFromString("computer")));
+                fragments.Add(new CICandidateAttributeData.Fragment("ad.type", new AttributeScalarValueText("computer")));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", "__name", "AD computer: "));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", "ad.name"));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "CanonicalName", "ad.canonicalName"));
@@ -120,7 +120,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                 {
                     if (userLookupViaDN.TryGetValue(managedByUserDN, out var foundUser))
                     {
-                        var r = RelationCandidate.Build(CIIdentificationMethodByTemporaryCIID.Build(computerGuid), CIIdentificationMethodByTemporaryCIID.Build(foundUser.Key), "managed_by");
+                        var r = new RelationCandidate(CIIdentificationMethodByTemporaryCIID.Build(computerGuid), CIIdentificationMethodByTemporaryCIID.Build(foundUser.Key), "managed_by");
                         relations.Add(r);
                     }
                     else
@@ -133,8 +133,8 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                     logger.LogWarning("Could not parse ManagedBy property of computer... malformed XML?");
                 }
 
-                var ad = CICandidateAttributeData.Build(fragments);
-                var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.BuildFromAttributes(IdentifiableComputerAttributes, ad, searchLayers), ad);
+                var ad = new CICandidateAttributeData(fragments);
+                var ciCandidate = new CICandidate(CIIdentificationMethodByData.BuildFromAttributes(IdentifiableComputerAttributes, ad, searchLayers), ad);
                 computers.Add((computerGuid, ciCandidate));
             }
 
@@ -160,7 +160,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                 var groupGuid = Guid.NewGuid();
 
                 var fragments = new List<CICandidateAttributeData.Fragment>();
-                fragments.Add(CICandidateAttributeData.Fragment.Build("ad.type", AttributeScalarValueText.BuildFromString("group")));
+                fragments.Add(new CICandidateAttributeData.Fragment("ad.type", new AttributeScalarValueText("group")));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", "__name", "AD group: "));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", "ad.name"));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "CanonicalName", "ad.canonicalName"));
@@ -174,7 +174,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                     { // find user CICandidate by distinguished name
                         if (userLookupViaDN.TryGetValue(userDN, out var foundUser))
                         {
-                            var r = RelationCandidate.Build(CIIdentificationMethodByTemporaryCIID.Build(foundUser.Key), CIIdentificationMethodByTemporaryCIID.Build(groupGuid), "member_of_group");
+                            var r = new RelationCandidate(CIIdentificationMethodByTemporaryCIID.Build(foundUser.Key), CIIdentificationMethodByTemporaryCIID.Build(groupGuid), "member_of_group");
                             relations.Add(r);
                         }
                         else
@@ -188,8 +188,8 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                     logger.LogWarning("Could not parse members of groups element... malformed XML?");
                 }
 
-                var ad = CICandidateAttributeData.Build(fragments);
-                var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.BuildFromAttributes(IdentifiableGroupAttributes, ad, searchLayers), ad);
+                var ad = new CICandidateAttributeData(fragments);
+                var ciCandidate = new CICandidate(CIIdentificationMethodByData.BuildFromAttributes(IdentifiableGroupAttributes, ad, searchLayers), ad);
                 groups.Add((groupGuid, ciCandidate));
             }
 
@@ -201,7 +201,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
         {
             var dn = props.FirstOrDefault(d => d.Attribute("N") != null && d.Attribute("N").Value.Equals(propertyValue))?.Value;
             if (dn == null) return null;
-            return CICandidateAttributeData.Fragment.Build(attributeName, AttributeScalarValueText.BuildFromString(prefixValue + dn));
+            return new CICandidateAttributeData.Fragment(attributeName, new AttributeScalarValueText(prefixValue + dn));
         }
         void AddFragmentIfNotNull(List<CICandidateAttributeData.Fragment> fragments, CICandidateAttributeData.Fragment f)
         {

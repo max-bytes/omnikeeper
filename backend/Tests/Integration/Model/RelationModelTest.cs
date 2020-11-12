@@ -13,38 +13,31 @@ using System.Linq;
 using System.Threading.Tasks;
 using Tests.Integration.Model.Mocks;
 using static Omnikeeper.Base.Model.IRelationModel;
+using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tests.Integration.Model
 {
-    class RelationModelTest
+    class RelationModelTest : DBBackedTestBase
     {
-        [SetUp]
-        public void Setup()
-        {
-            DBSetup.Setup();
-        }
-
         [Test]
         public async Task TestBasics()
         {
-            var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var userModel = new UserInDatabaseModel(conn);
-            var changesetModel = new ChangesetModel(userModel, conn);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
-            var ciModel = new CIModel(attributeModel, conn);
-            var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
-            var layerModel = new LayerModel(conn);
-            var user = await DBSetup.SetupUser(userModel);
+            var userModel = new UserInDatabaseModel();
+            var changesetModel = new ChangesetModel(userModel);
+            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var ciModel = new CIModel(attributeModel);
+            var predicateModel = new CachingPredicateModel(new PredicateModel());
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var layerModel = new LayerModel();
+            var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
 
             Guid ciid1;
             Guid ciid3;
             long layerID1;
             ChangesetProxy changeset;
-            using (var trans = conn.BeginTransaction())
+            using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
 
                 ciid1 = await ciModel.CreateCI(trans);
                 var ciid2 = await ciModel.CreateCI(trans);
@@ -91,28 +84,26 @@ namespace Tests.Integration.Model
                 Assert.AreEqual((await changeset.GetChangeset(trans)).ID, rr2.Relation.ChangesetID);
             }
 
-            using (var trans2 = conn.BeginTransaction())
+            using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                Assert.ThrowsAsync<KeyNotFoundException>(async () => await relationModel.InsertRelation(ciid1, ciid3, "unknown predicate ID", layerID1, changeset, trans2));
+                Assert.ThrowsAsync<KeyNotFoundException>(async () => await relationModel.InsertRelation(ciid1, ciid3, "unknown predicate ID", layerID1, changeset, trans));
             }
         }
 
         [Test]
         public async Task TestMerging()
         {
-            var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            using var trans = conn.BeginTransaction();
-            var userModel = new UserInDatabaseModel(conn);
-            var changesetModel = new ChangesetModel(userModel, conn);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
-            var ciModel = new CIModel(attributeModel, conn);
-            var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
-            var layerModel = new LayerModel(conn);
-            var user = await DBSetup.SetupUser(userModel);
+            using var trans = ModelContextBuilder.BuildDeferred();
+            var userModel = new UserInDatabaseModel();
+            var changesetModel = new ChangesetModel(userModel);
+            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var ciModel = new CIModel(attributeModel);
+            var predicateModel = new CachingPredicateModel(new PredicateModel());
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var layerModel = new LayerModel();
+            var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
 
-            var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+            var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
 
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
@@ -138,19 +129,17 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestGetRelationsByPredicate()
         {
-            var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            using var trans = conn.BeginTransaction();
-            var userModel = new UserInDatabaseModel(conn);
-            var changesetModel = new ChangesetModel(userModel, conn);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
-            var ciModel = new CIModel(attributeModel, conn);
-            var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
-            var layerModel = new LayerModel(conn);
-            var user = await DBSetup.SetupUser(userModel);
+            using var trans = ModelContextBuilder.BuildDeferred();
+            var userModel = new UserInDatabaseModel();
+            var changesetModel = new ChangesetModel(userModel);
+            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var ciModel = new CIModel(attributeModel);
+            var predicateModel = new CachingPredicateModel(new PredicateModel());
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var layerModel = new LayerModel();
+            var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
 
-            var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+            var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
 
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
@@ -177,28 +166,26 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestRemoveShowsLayerBelow()
         {
-            var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var ciModel = new CIModel(attributeModel);
+            var predicateModel = new CachingPredicateModel(new PredicateModel());
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var userModel = new UserInDatabaseModel();
+            var changesetModel = new ChangesetModel(userModel);
+            var layerModel = new LayerModel();
+            var transI = ModelContextBuilder.BuildImmediate();
+            var user = await DBSetup.SetupUser(userModel, transI);
 
-            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
-            var ciModel = new CIModel(attributeModel, conn);
-            var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
-            var userModel = new UserInDatabaseModel(conn);
-            var changesetModel = new ChangesetModel(userModel, conn);
-            var layerModel = new LayerModel(conn);
-            var user = await DBSetup.SetupUser(userModel);
-
-            var layer1 = await layerModel.CreateLayer("l1", null);
-            var layer2 = await layerModel.CreateLayer("l2", null);
+            var layer1 = await layerModel.CreateLayer("l1", transI);
+            var layer2 = await layerModel.CreateLayer("l2", transI);
             var layerset = new LayerSet(new long[] { layer2.ID, layer1.ID });
-            var ciid1 = await ciModel.CreateCI(null);
-            var ciid2 = await ciModel.CreateCI(null);
-            var (predicate1, changedP1) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, null);
+            var ciid1 = await ciModel.CreateCI(transI);
+            var ciid2 = await ciModel.CreateCI(transI);
+            var (predicate1, changedP1) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, transI);
 
-            using (var trans = conn.BeginTransaction())
+            using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                 var (i1,c1) = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset, trans);
                 var (i2,c2) = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer2.ID, changeset, trans);
                 Assert.AreEqual(predicate1.ID, i1.PredicateID);
@@ -206,9 +193,9 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
 
-            using (var trans = conn.BeginTransaction())
+            using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                 var removedRelation = await relationModel.RemoveRelation(ciid1, ciid2, predicate1.ID, layer2.ID, changeset, trans);
                 Assert.IsNotNull(removedRelation);
                 var r1 = await relationModel.GetMergedRelations(new RelationSelectionFrom(ciid1), layerset, trans, TimeThreshold.BuildLatest());
@@ -219,9 +206,9 @@ namespace Tests.Integration.Model
             }
 
             // add relation again
-            using (var trans = conn.BeginTransaction())
+            using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                 await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer2.ID, changeset, trans);
                 var r2 = await relationModel.GetMergedRelations(new RelationSelectionFrom(ciid1), layerset, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, r2.Count());
@@ -235,19 +222,17 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestBulkReplace()
         {
-            var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var userModel = new UserInDatabaseModel(conn);
-            var changesetModel = new ChangesetModel(userModel, conn);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
-            var ciModel = new CIModel(attributeModel, conn);
-            var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
-            var layerModel = new LayerModel(conn);
-            var user = await DBSetup.SetupUser(userModel);
+            var userModel = new UserInDatabaseModel();
+            var changesetModel = new ChangesetModel(userModel);
+            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var ciModel = new CIModel(attributeModel);
+            var predicateModel = new CachingPredicateModel(new PredicateModel());
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var layerModel = new LayerModel();
+            using var trans = ModelContextBuilder.BuildDeferred();
+            var user = await DBSetup.SetupUser(userModel, trans);
 
-            using var trans = conn.BeginTransaction();
-            var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+            var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
 
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
@@ -263,13 +248,13 @@ namespace Tests.Integration.Model
             trans.Commit();
 
             // test bulk replace
-            using var trans2 = conn.BeginTransaction();
-            var changeset2 = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
-            await relationModel.BulkReplaceRelations(BulkRelationDataPredicateScope.Build(predicateID1.ID, layer1.ID, new BulkRelationDataPredicateScope.Fragment[] {
-                    BulkRelationDataPredicateScope.Fragment.Build(ciid1, ciid2),
-                    BulkRelationDataPredicateScope.Fragment.Build(ciid2, ciid1),
-                    BulkRelationDataPredicateScope.Fragment.Build(ciid3, ciid2),
-                    BulkRelationDataPredicateScope.Fragment.Build(ciid3, ciid1)
+            using var trans2 = ModelContextBuilder.BuildDeferred();
+            var changeset2 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+            await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope(predicateID1.ID, layer1.ID, new BulkRelationDataPredicateScope.Fragment[] {
+                    new BulkRelationDataPredicateScope.Fragment(ciid1, ciid2),
+                    new BulkRelationDataPredicateScope.Fragment(ciid2, ciid1),
+                    new BulkRelationDataPredicateScope.Fragment(ciid3, ciid2),
+                    new BulkRelationDataPredicateScope.Fragment(ciid3, ciid1)
                 }), changeset2, trans2);
 
             var r1 = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(predicateID1.ID), layerset, trans2, TimeThreshold.BuildLatest());

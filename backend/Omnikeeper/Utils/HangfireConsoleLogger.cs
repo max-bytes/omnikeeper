@@ -11,15 +11,15 @@ namespace Omnikeeper.Utils
     {
         private class AsyncLocalScope : IDisposable
         {
-            public AsyncLocalScope(PerformContext context) => PerformContext.Value = context;
+            public AsyncLocalScope(PerformContext? context) => PerformContext.Value = context;
             public void Dispose() => PerformContext.Value = null;
         }
 
-        private static readonly AsyncLocal<PerformContext> PerformContext = new AsyncLocal<PerformContext>();
+        private static readonly AsyncLocal<PerformContext?> PerformContext = new AsyncLocal<PerformContext?>();
 
-        public static IDisposable InContext(PerformContext context) => new AsyncLocalScope(context);
+        public static IDisposable InContext(PerformContext? context) => new AsyncLocalScope(context);
 
-        public IDisposable BeginScope<TState>(TState state) => null;
+        public IDisposable? BeginScope<TState>(TState state) => null;
 
         public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Debug;
 

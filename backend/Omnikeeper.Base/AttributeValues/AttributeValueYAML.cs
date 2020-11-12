@@ -9,6 +9,12 @@ namespace Omnikeeper.Entity.AttributeValues
 {
     public class AttributeScalarValueYAML : IAttributeScalarValue<YamlDocument>, IEquatable<AttributeScalarValueYAML>
     {
+        private AttributeScalarValueYAML(YamlDocument value, string valueStr)
+        {
+            Value = value;
+            ValueStr = valueStr;
+        }
+
         public YamlDocument Value { get; private set; }
         private string ValueStr { get; set; }
 
@@ -31,11 +37,7 @@ namespace Omnikeeper.Entity.AttributeValues
             stream.Load(new StringReader(value));
             var document = stream.Documents.FirstOrDefault();
             if (document == null) throw new Exception("Could not parse YAML");
-            return new AttributeScalarValueYAML
-            {
-                Value = document,
-                ValueStr = value
-            };
+            return new AttributeScalarValueYAML(document, value);
         }
 
         public static AttributeScalarValueYAML Build(YamlDocument document)
@@ -44,25 +46,21 @@ namespace Omnikeeper.Entity.AttributeValues
             var buffer = new StringBuilder();
             using var writer = new StringWriter(buffer);
             yamlStream.Save(writer, false);
-            return new AttributeScalarValueYAML
-            {
-                Value = document,
-                ValueStr = writer.ToString()
-            };
+            return new AttributeScalarValueYAML(document, writer.ToString());
         }
         public static AttributeScalarValueYAML Build(YamlDocument document, string str)
         {
-            return new AttributeScalarValueYAML
-            {
-                Value = document,
-                ValueStr = str
-            };
+            return new AttributeScalarValueYAML(document, str);
         }
     }
 
 
     public class AttributeArrayValueYAML : AttributeArrayValue<AttributeScalarValueYAML, YamlDocument>
     {
+        public AttributeArrayValueYAML(AttributeScalarValueYAML[] values) : base(values)
+        {
+        }
+
         public override AttributeValueType Type => AttributeValueType.YAML;
 
         public static AttributeArrayValueYAML BuildFromString(string[] values)
@@ -81,10 +79,9 @@ namespace Omnikeeper.Entity.AttributeValues
         public static AttributeArrayValueYAML Build(YamlDocument[] values, string[] valuesStr)
         {
             if (values.Length != valuesStr.Length) throw new Exception("Values and valuesStr must be equal length");
-            var n = new AttributeArrayValueYAML
-            {
-                Values = values.Select((v, index) => AttributeScalarValueYAML.Build(v, valuesStr[index])).ToArray()
-            };
+            var n = new AttributeArrayValueYAML(
+                values.Select((v, index) => AttributeScalarValueYAML.Build(v, valuesStr[index])).ToArray()
+            );
             return n;
         }
     }

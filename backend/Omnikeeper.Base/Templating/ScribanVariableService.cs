@@ -3,6 +3,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Scriban;
 using Scriban.Parsing;
@@ -71,7 +72,7 @@ namespace Omnikeeper.Base.Templating
                         else
                         {
                             // TODO: how to handle this case? already present value is not a string (an array perhaps?)
-                            var vnNew = new VariableNode(subO.ToString()); // HACK: transform to string, for now
+                            var vnNew = new VariableNode(subO.ToString()!); // HACK: transform to string, for now
                             dict[keyPre] = vnNew;
                             AddNested(vnNew, keySuffix, value);
                         }
@@ -82,7 +83,7 @@ namespace Omnikeeper.Base.Templating
 
         public class ScriptObjectContext
         {
-            public ScriptObjectContext(LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime, ICIModel ciModel, IRelationModel relationModel)
+            public ScriptObjectContext(LayerSet layerset, IModelContext trans, TimeThreshold atTime, ICIModel ciModel, IRelationModel relationModel)
             {
                 Layerset = layerset;
                 Transaction = trans;
@@ -92,7 +93,7 @@ namespace Omnikeeper.Base.Templating
             }
 
             public LayerSet Layerset { get; }
-            public NpgsqlTransaction Transaction { get; }
+            public IModelContext Transaction { get; }
             public TimeThreshold AtTime { get; }
             public ICIModel CIModel { get; }
             public IRelationModel RelationModel { get; }
@@ -140,12 +141,14 @@ namespace Omnikeeper.Base.Templating
             }
         }
 
-        public static TemplateContext CreateCIBasedTemplateContext(MergedCI ci, LayerSet layerSet, TimeThreshold atTime, NpgsqlTransaction trans, ICIModel ciModel, IRelationModel relationModel)
+        public static TemplateContext CreateCIBasedTemplateContext(MergedCI ci, LayerSet layerSet, TimeThreshold atTime, IModelContext trans, ICIModel ciModel, IRelationModel relationModel)
         {
             var so = new ScriptObjectCI(ci, new ScriptObjectContext(layerSet, trans, atTime, ciModel, relationModel));
-            var context = new TemplateContext();
-            //context.StrictVariables = true;
-            context.EnableRelaxedMemberAccess = true;
+            var context = new TemplateContext
+            {
+                //context.StrictVariables = true;
+                EnableRelaxedMemberAccess = true
+            };
             context.PushGlobal(new ScriptObject() { { "target", so } });
             return context;
         }

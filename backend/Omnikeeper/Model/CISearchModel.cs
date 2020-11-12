@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ namespace Omnikeeper.Model
             this.layerModel = layerModel;
         }
 
-        public async Task<IEnumerable<CompactCI>> FindCIsWithName(string CIName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold timeThreshold)
+        public async Task<IEnumerable<CompactCI>> FindCIsWithName(string CIName, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
             var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), layerSet, trans, timeThreshold);
@@ -36,7 +37,7 @@ namespace Omnikeeper.Model
             return cis;
         }
 
-        public async Task<IEnumerable<CompactCI>> SimpleSearch(string searchString, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CompactCI>> SimpleSearch(string searchString, IModelContext trans, TimeThreshold atTime)
         {
             var finalSS = searchString.Trim();
 
@@ -73,7 +74,7 @@ namespace Omnikeeper.Model
             return cis.OrderBy(t => t.Name ?? "ZZZZZZZZZZZ").Take(1500); // TODO: remove hard limit, customize
         }
 
-        public async Task<IEnumerable<CompactCI>> AdvancedSearch(string searchString, string[] withEffectiveTraits, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CompactCI>> AdvancedSearch(string searchString, string[] withEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             var finalSS = searchString.Trim();
             var foundCIIDs = new HashSet<Guid>();
@@ -110,7 +111,7 @@ namespace Omnikeeper.Model
             var resultIsReducedByETs = false;
             foreach (var etName in withEffectiveTraits)
             {
-                var ciFilter = (searchAllCIsBasedOnSearchString && !resultIsReducedByETs) ? (Func<Guid, bool>)null : (ciid) => foundCIIDs.Contains(ciid);
+                var ciFilter = (searchAllCIsBasedOnSearchString && !resultIsReducedByETs) ? (Func<Guid, bool>?)null : (ciid) => foundCIIDs.Contains(ciid);
                 // TODO: replace with something less performance intensive, that only fetches the CIIDs (and also cached)
                 var ets = await traitModel.CalculateEffectiveTraitsForTraitName(etName, layerSet, trans, atTime, ciFilter);
                 if (ets == null)

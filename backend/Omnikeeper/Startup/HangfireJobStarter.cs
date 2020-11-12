@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Runners;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,8 +20,9 @@ namespace Omnikeeper.Startup
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var baseConfigurationModel = scope.ServiceProvider.GetRequiredService<IBaseConfigurationModel>();
-
-            var config = await baseConfigurationModel.GetConfigOrDefault(null);
+            var modelContextBuilder = scope.ServiceProvider.GetRequiredService<IModelContextBuilder>();
+            var trans = modelContextBuilder.BuildImmediate();
+            var config = await baseConfigurationModel.GetConfigOrDefault(trans);
 
             RecurringJob.AddOrUpdate<CLBRunner>(s => s.Run(null), config.CLBRunnerInterval);
             RecurringJob.AddOrUpdate<MarkedForDeletionRunner>(s => s.Run(null), config.MarkedForDeletionRunnerInterval);

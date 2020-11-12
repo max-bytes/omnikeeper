@@ -4,6 +4,7 @@ using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +31,7 @@ namespace Omnikeeper.Service
             return $"{ROLE_NAME_LAYER_WRITE_ACCESS_PREFIX}{layerName}"; // TODO: define allowed characters
         }
 
-        private string ParseLayerNameFromWriteAccessRoleName(string roleName)
+        private string? ParseLayerNameFromWriteAccessRoleName(string roleName)
         {
             var match = Regex.Match(roleName, "^layer_writeaccess_(.*)");
             if (!match.Success) return null;
@@ -54,10 +55,10 @@ namespace Omnikeeper.Service
             return debugAllowAll || !writeLayerIDs.Except(user.WritableLayers.Select(l => l.ID)).Any();
         }
 
-        public async Task<IEnumerable<Layer>> GetWritableLayersForUser(IEnumerable<Claim> claims, ILayerModel layerModel, NpgsqlTransaction trans)
+        public async Task<IEnumerable<Layer>> GetWritableLayersForUser(IEnumerable<Claim> claims, ILayerModel layerModel, IModelContext trans)
         {
             var resourceAccessStr = claims.Where(c => c.Type == "resource_access").FirstOrDefault()?.Value;
-            var resourceAccess = JObject.Parse(resourceAccessStr);
+            var resourceAccess = resourceAccessStr != null ? JObject.Parse(resourceAccessStr) : null;
             var resourceName = audience;
             var clientRoles = resourceAccess?[resourceName]?["roles"]?.Select(tt => tt.Value<string>()).ToArray() ?? new string[] { };
 

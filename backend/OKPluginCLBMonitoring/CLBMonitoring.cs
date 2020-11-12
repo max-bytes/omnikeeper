@@ -33,7 +33,7 @@
 
 //        public override TraitSet DefinedTraits => TraitSet.Build(new Trait[] { }); // TODO
 
-//        public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger)
+//        public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, ITransaction trans, ILogger logger)
 //        {
 //            logger.LogDebug("Start clbMonitoring");
 //            var layerSetMonitoringDefinitionsOnly = await layerModel.BuildLayerSet(new[] { "Monitoring Definitions" }, trans);
@@ -103,8 +103,8 @@
 //            }
 
 //            var monitoringCommandFragments = renderedCommands.GroupBy(t => t.ciid)
-//                .Select(tt => BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeArrayValueText.Build(tt.Select(ttt => ttt.command).ToArray()), tt.Key));
-//            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.executing_commands", targetLayer.ID, monitoringCommandFragments), changesetProxy, trans);
+//                .Select(tt => new BulkCIAttributeDataLayerScope.Fragment("", AttributeArrayValueText.Build(tt.Select(ttt => ttt.command).ToArray()), tt.Key));
+//            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("monitoring.executing_commands", targetLayer.ID, monitoringCommandFragments), changesetProxy, trans);
 
 //            logger.LogDebug("Updated executed commands per monitored CI");
 
@@ -113,8 +113,8 @@
 //            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTraitName("naemon_instance", layerSetAll, trans, timeThreshold);
 //            foreach (var naemonInstance in naemonInstancesTS)
 //                foreach (var monitoredCI in monitoredCIs)
-//                    monitoredByCIIDFragments.Add(BulkRelationDataPredicateScope.Fragment.Build(monitoredCI.Value.ID, naemonInstance.Key));
-//            await relationModel.BulkReplaceRelations(BulkRelationDataPredicateScope.Build("is_monitored_by", targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, trans);
+//                    monitoredByCIIDFragments.Add(new BulkRelationDataPredicateScope.Fragment(monitoredCI.Value.ID, naemonInstance.Key));
+//            await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope("is_monitored_by", targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, trans);
 
 //            logger.LogDebug("Assigned CIs to naemon instances");
 
@@ -130,9 +130,9 @@
 //                var cis = kv.Value;
 //                var commands = monitoringCommandFragments.Where(f => cis.Contains(f.CIID)).Select(f => string.Join("\n", (f.Value as AttributeArrayValueText).Values.Select(v => v.Value)));
 //                var finalConfig = string.Join("\n", commands);
-//                monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeScalarValueText.Build(finalConfig, true), naemonInstance));
+//                monitoringConfigs.Add(new BulkCIAttributeDataLayerScope.Fragment("", AttributeScalarValueText.Build(finalConfig, true), naemonInstance));
 //            }
-//            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("monitoring.naemonConfig", targetLayer.ID, monitoringConfigs), changesetProxy, trans);
+//            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("monitoring.naemonConfig", targetLayer.ID, monitoringConfigs), changesetProxy, trans);
 
 //            logger.LogDebug("End clbMonitoring");
 //            return true;

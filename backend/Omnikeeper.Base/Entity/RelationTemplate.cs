@@ -13,15 +13,12 @@
         // TODO: status: required(default, other statii: optional, not allowed)
         // TODO: required layer (optional)
 
-        public static RelationTemplate Build(string predicateID, int? minCardinality, int? maxCardinality)
+        public RelationTemplate(string predicateID, int? minCardinality, int? maxCardinality)
         {
-            return new RelationTemplate()
-            {
-                PredicateID = predicateID,
-                //FromCITypes = fromCITypes,
-                MinCardinality = minCardinality,
-                MaxCardinality = maxCardinality
-            };
+            PredicateID = predicateID;
+            //FromCITypes = fromCITypes,
+            MinCardinality = minCardinality;
+            MaxCardinality = maxCardinality;
         }
     }
 }

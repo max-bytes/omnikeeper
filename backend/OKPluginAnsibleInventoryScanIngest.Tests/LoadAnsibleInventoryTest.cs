@@ -17,6 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Tests.Integration;
+using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tests.Ingest
 {
@@ -55,20 +56,21 @@ namespace Tests.Ingest
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             //using var conn = dbcb.Build("landscape_prototype", false, true);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
-            var layerModel = new LayerModel(conn);
-            var userModel = new UserInDatabaseModel(conn);
-            var ciModel = new CIModel(attributeModel, conn);
-            var predicateModel = new PredicateModel(conn);
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
-            var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel, conn), relationModel, new CIMappingService(), conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var layerModel = new LayerModel();
+            var userModel = new UserInDatabaseModel();
+            var ciModel = new CIModel(attributeModel);
+            var predicateModel = new PredicateModel();
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance);
+            var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel), relationModel, new CIMappingService());
 
             Layer layer1 = await layerModel.CreateLayer("Inventory Scan", null);
             
             // mock the current user service
             var mockCurrentUserService = new Mock<ICurrentUserService>();
-            var user = AuthenticatedUser.Build(await userModel.UpsertUser(username, displayName, userGUID, UserType.Robot, null), new List<Layer>() { layer1 });
-            mockCurrentUserService.Setup(_ => _.GetCurrentUser(It.IsAny<NpgsqlTransaction>())).ReturnsAsync(user);
+            var user = new AuthenticatedUser(await userModel.UpsertUser(username, displayName, userGUID, UserType.Robot, null), new List<Layer>() { layer1 });
+            mockCurrentUserService.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 
             var mockAuthorizationService = new Mock<ILayerBasedAuthorizationService>();
             mockAuthorizationService.Setup(_ => _.CanUserWriteToLayer(user, layer1)).Returns(true);
@@ -80,7 +82,7 @@ namespace Tests.Ingest
             await predicateModel.InsertOrUpdate("has_network_interface", "has network interface", "is network interface of host", AnchorState.Active, PredicateModel.DefaultConstraits, null);
             await predicateModel.InsertOrUpdate("has_mounted_device", "has mounted device", "is mounted at host", AnchorState.Active, PredicateModel.DefaultConstraits, null);
 
-            var controller = new AnsibleInventoryScanIngestController(ingestDataService, layerModel, mockCurrentUserService.Object, mockAuthorizationService.Object, NullLogger<AnsibleInventoryScanIngestController>.Instance);
+            var controller = new AnsibleInventoryScanIngestController(ingestDataService, layerModel, mockCurrentUserService.Object, modelContextBuilder, mockAuthorizationService.Object, NullLogger<AnsibleInventoryScanIngestController>.Instance);
 
             var response = await PerformIngest(controller, hosts, insertLayer, layerSet);
             Assert.IsTrue(response is OkResult);
@@ -112,13 +114,12 @@ namespace Tests.Ingest
                 return jo;
             });
 
-            var response = await controller.IngestAnsibleInventoryScan(insertLayer.ID, searchLayerSet.LayerIDs, new Omnikeeper.Base.Entity.DTO.Ingest.AnsibleInventoryScanDTO()
-            {
-                SetupFacts = setupFacts,
-                YumInstalled = new Dictionary<string, JObject>() { },
-                YumRepos = new Dictionary<string, JObject>() { },
-                YumUpdates = new Dictionary<string, JObject>() { },
-            });
+            var response = await controller.IngestAnsibleInventoryScan(insertLayer.ID, searchLayerSet.LayerIDs, new Omnikeeper.Base.Entity.DTO.Ingest.AnsibleInventoryScanDTO(
+                setupFacts,
+                new Dictionary<string, JObject>() { },
+                new Dictionary<string, JObject>() { },
+                new Dictionary<string, JObject>() { }
+            ));
             return response;
         }
     }

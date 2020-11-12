@@ -62,6 +62,10 @@
     <ProjectReference Include="..\OKPluginOIASharepoint\OKPluginOIASharepoint.csproj" />
     <ProjectReference Include="..\Omnikeeper.Base\Omnikeeper.Base.csproj" />
   </ItemGroup>
+  
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
 
   <ItemGroup>
     <None Update="entrypoint.sh">

@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tests.OIA
 {
@@ -54,7 +55,10 @@ namespace Tests.OIA
         public async Task TestBasics()
         {
             var persisterMock = new Mock<IScopedExternalIDMapPersister>();
+            persisterMock.Setup(x => x.Load(It.IsAny<IModelContext>())).ReturnsAsync(() => new Dictionary<Guid, string>());
+            persisterMock.Setup(x => x.Persist(It.IsAny<IDictionary<Guid, string>>(), It.IsAny<IModelContext>())).ReturnsAsync(() => true);
             var scopedExternalIDMapper = new TestedScopedExternalIDMapper(persisterMock.Object);
+
             var eidManager = new TestedExternalIDManager(scopedExternalIDMapper);
             eidManager.Add("eid0").Add("eid1").Add("eid2");
 
@@ -66,16 +70,21 @@ namespace Tests.OIA
             newCIIDs.Enqueue(Guid.Parse("116DA01F-9ABD-4D9D-80C7-02AF85C822A8"));
             newCIIDs.Enqueue(Guid.Parse("226DA01F-9ABD-4D9D-80C7-02AF85C822A8"));
 
-            ciModelMock.Setup(x => x.CIIDExists(It.IsAny<Guid>(), null)).ReturnsAsync((Guid ciid, NpgsqlTransaction trans) => existingCIs.Contains(ciid));
-            ciModelMock.Setup(x => x.CreateCI(It.IsAny<Guid>(), null))
-                .Callback((Guid ciid, NpgsqlTransaction trans) => existingCIs.Add(ciid))
-                .ReturnsAsync((Guid ciid, NpgsqlTransaction trans) => ciid);
-            ciModelMock.Setup(x => x.CreateCI(null))
-                .ReturnsAsync((NpgsqlTransaction trans) => { var n = newCIIDs.Dequeue(); existingCIs.Add(n); return n; });
-            ciModelMock.Setup(x => x.GetCIIDs(null)).ReturnsAsync(() => existingCIs);
+            var trans = new Mock<IModelContext>().Object;
+
+            ciModelMock.Setup(x => x.CIIDExists(It.IsAny<Guid>(), It.IsAny<IModelContext>())).ReturnsAsync((Guid ciid, IModelContext trans) => existingCIs.Contains(ciid));
+            ciModelMock.Setup(x => x.CreateCI(It.IsAny<Guid>(), It.IsAny<IModelContext>()))
+                .Callback((Guid ciid, IModelContext trans) => existingCIs.Add(ciid))
+                .ReturnsAsync((Guid ciid, IModelContext trans) => ciid);
+            ciModelMock.Setup(x => x.CreateCI(It.IsAny<IModelContext>()))
+                .ReturnsAsync((IModelContext trans) => { var n = newCIIDs.Dequeue(); existingCIs.Add(n); return n; });
+            ciModelMock.Setup(x => x.GetCIIDs(It.IsAny<IModelContext>())).ReturnsAsync(() => existingCIs);
+
+            await scopedExternalIDMapper.Setup(trans);
 
             // initial run, creating 3 mapped cis
-            var changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
+            var (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
+            Assert.IsTrue(successful);
             Assert.IsTrue(changed);
             Assert.IsEmpty(newCIIDs); // all ciids from the queue have been used
             Assert.AreEqual(3, existingCIs.Count); // new cis have been created
@@ -87,12 +96,14 @@ namespace Tests.OIA
             });
 
             // nothing must have changed if called again
-            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
+            (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
+            Assert.IsTrue(successful);
             Assert.IsFalse(changed);
 
             // remove one ci from the external source
             eidManager.RemoveAt(1);
-            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
+            (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
+            Assert.IsTrue(successful);
             Assert.IsTrue(changed);
             Assert.AreEqual(3, existingCIs.Count); // there should still be all three cis present in the model
             CollectionAssert.AreEquivalent(scopedExternalIDMapper.GetIDPairs(existingCIs.ToHashSet()), new List<(Guid, ExternalIDString)>()
@@ -104,7 +115,8 @@ namespace Tests.OIA
             // add a new ci in external source
             newCIIDs.Enqueue(Guid.Parse("336DA01F-9ABD-4D9D-80C7-02AF85C822A8"));
             eidManager.Add("eid3");
-            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
+            (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
+            Assert.IsTrue(successful);
             Assert.IsTrue(changed);
             Assert.AreEqual(4, existingCIs.Count);
             CollectionAssert.AreEquivalent(scopedExternalIDMapper.GetIDPairs(existingCIs.ToHashSet()), new List<(Guid, ExternalIDString)>()
@@ -117,7 +129,8 @@ namespace Tests.OIA
             // delete cis from model, should be recreated on update, if mapped
             existingCIs.RemoveAt(2); // this ci (22xxx...) is still mapped and must be re-created
             existingCIs.RemoveAt(1); // this ci (11xxx...) is not mapped anymore, should stay removed
-            changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
+            (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
+            Assert.IsTrue(successful);
             Assert.IsTrue(changed);
             Assert.AreEqual(3, existingCIs.Count);
             CollectionAssert.AreEquivalent(scopedExternalIDMapper.GetIDPairs(existingCIs.ToHashSet()), new List<(Guid, ExternalIDString)>()
@@ -165,6 +178,8 @@ namespace Tests.OIA
         public async Task TestExternalGuidsAsCIIDs()
         {
             var persisterMock = new Mock<IScopedExternalIDMapPersister>();
+            persisterMock.Setup(x => x.Load(It.IsAny<IModelContext>())).ReturnsAsync(() => new Dictionary<Guid, string>());
+            persisterMock.Setup(x => x.Persist(It.IsAny<IDictionary<Guid, string>>(), It.IsAny<IModelContext>())).ReturnsAsync(() => true);
             var scopedExternalIDMapper = new TestedScopedExternalIDMapper2(persisterMock.Object);
             var eidManager = new TestedExternalIDManager2(scopedExternalIDMapper);
             eidManager.Add(Guid.Parse("006DA01F-9ABD-4D9D-80C7-02AF85C822A8")).Add(Guid.Parse("116DA01F-9ABD-4D9D-80C7-02AF85C822A8")).Add(Guid.Parse("226DA01F-9ABD-4D9D-80C7-02AF85C822A8"));
@@ -172,18 +187,22 @@ namespace Tests.OIA
             var ciModelMock = new Mock<ICIModel>();
             var attributeModelMock = new Mock<IAttributeModel>();
             var existingCIs = new List<Guid>();
+            var trans = new Mock<IModelContext>().Object;
 
-            ciModelMock.Setup(x => x.CIIDExists(It.IsAny<Guid>(), null)).ReturnsAsync((Guid ciid, NpgsqlTransaction trans) => existingCIs.Contains(ciid));
-            ciModelMock.Setup(x => x.CreateCI(It.IsAny<Guid>(), null))
-                .Callback((Guid ciid, NpgsqlTransaction trans) => existingCIs.Add(ciid))
-                .ReturnsAsync((Guid ciid, NpgsqlTransaction trans) => ciid);
-            ciModelMock.Setup(x => x.GetCIIDs(null)).ReturnsAsync(() => existingCIs);
+            ciModelMock.Setup(x => x.CIIDExists(It.IsAny<Guid>(), It.IsAny<IModelContext>())).ReturnsAsync((Guid ciid, IModelContext trans) => existingCIs.Contains(ciid));
+            ciModelMock.Setup(x => x.CreateCI(It.IsAny<Guid>(), It.IsAny<IModelContext>()))
+                .Callback((Guid ciid, IModelContext trans) => existingCIs.Add(ciid))
+                .ReturnsAsync((Guid ciid, IModelContext trans) => ciid);
+            ciModelMock.Setup(x => x.GetCIIDs(It.IsAny<IModelContext>())).ReturnsAsync(() => existingCIs);
+
+            await scopedExternalIDMapper.Setup(trans);
 
             // initial run, creating 3 mapped cis
-            var changed = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), null, null, NullLogger.Instance);
+            var (changed, successful) = await eidManager.Update(ciModelMock.Object, attributeModelMock.Object, new CIMappingService(), trans, NullLogger.Instance);
+            Assert.IsTrue(successful);
             Assert.IsTrue(changed);
             Assert.AreEqual(3, existingCIs.Count); // new cis have been created
-            ciModelMock.Verify(x => x.CreateCI(null), Times.Never); // cis are never created with a new ciid, the external ones are used
+            ciModelMock.Verify(x => x.CreateCI(It.IsAny<IModelContext>()), Times.Never); // cis are never created with a new ciid, the external ones are used
             CollectionAssert.AreEquivalent(scopedExternalIDMapper.GetIDPairs(existingCIs.ToHashSet()), new List<(Guid, ExternalIDGuid)>()
             {
                 (existingCIs[0], new ExternalIDGuid(Guid.Parse("006DA01F-9ABD-4D9D-80C7-02AF85C822A8"))),

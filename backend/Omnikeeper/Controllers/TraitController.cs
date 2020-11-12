@@ -5,6 +5,7 @@ using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -21,18 +22,22 @@ namespace Omnikeeper.Controllers
     {
         private readonly IEffectiveTraitModel traitModel;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
+        private readonly IModelContextBuilder modelContextBuilder;
 
-        public TraitController(IEffectiveTraitModel traitModel, ICIBasedAuthorizationService ciBasedAuthorizationService)
+        public TraitController(IEffectiveTraitModel traitModel, ICIBasedAuthorizationService ciBasedAuthorizationService, 
+            IModelContextBuilder modelContextBuilder)
         {
             this.traitModel = traitModel;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
+            this.modelContextBuilder = modelContextBuilder;
         }
 
         [HttpGet("getEffectiveTraitSetsForTraitName")]
         public async Task<ActionResult<IDictionary<Guid, EffectiveTraitDTO>>> GetEffectiveTraitsForTraitName([FromQuery, Required] long[] layerIDs, [FromQuery, Required] string traitName, [FromQuery] DateTimeOffset? atTime = null)
         {
             var layerset = new LayerSet(layerIDs);
-            var traitSets = await traitModel.CalculateEffectiveTraitsForTraitName(traitName, layerset, null, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
+            var trans = modelContextBuilder.BuildImmediate();
+            var traitSets = await traitModel.CalculateEffectiveTraitsForTraitName(traitName, layerset, trans, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
             return Ok(traitSets
                 .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key))
                 .ToDictionary(kv => kv.Key, kv => EffectiveTraitDTO.Build(kv.Value)));
