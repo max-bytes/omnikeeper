@@ -4,6 +4,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,25 +18,23 @@ namespace Omnikeeper.Base.Service
 
         private IAttributeModel AttributeModel { get; }
         private ICIModel CIModel { get; }
-        private NpgsqlConnection Connection { get; }
         private IChangesetModel ChangesetModel { get; }
         private IRelationModel RelationModel { get; }
 
-        public IngestDataService(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, IRelationModel relationModel, CIMappingService ciMappingService, NpgsqlConnection connection)
+        public IngestDataService(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, IRelationModel relationModel, CIMappingService ciMappingService)
         {
             AttributeModel = attributeModel;
             CIModel = ciModel;
             ChangesetModel = changesetModel;
             RelationModel = relationModel;
             this.ciMappingService = ciMappingService;
-            Connection = connection;
         }
 
         // TODO: add ci-based authorization
-        public async Task<(int numIngestedCIs, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, AuthenticatedUser user, ILogger logger)
+        public async Task<(int numIngestedCIs, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, AuthenticatedUser user, IModelContextBuilder modelContextBuilder, ILogger logger)
         {
-            using var trans = Connection.BeginTransaction();
-            var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, ChangesetModel);
+            using var trans = modelContextBuilder.BuildDeferred();
+            var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, ChangesetModel);
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
@@ -70,8 +69,8 @@ namespace Omnikeeper.Base.Service
                     attributeData.Add(finalCIID, attributes);
             }
 
-            var bulkAttributeData = BulkCIAttributeDataLayerScope.Build("", writeLayer.ID, attributeData.SelectMany(ad =>
-                ad.Value.Fragments.Select(f => BulkCIAttributeDataLayerScope.Fragment.Build(f.Name, f.Value, ad.Key))
+            var bulkAttributeData = new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeData.SelectMany(ad =>
+                ad.Value.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, ad.Key))
             ));
             await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, trans);
 
@@ -87,9 +86,9 @@ namespace Omnikeeper.Base.Service
                 var tempToCIID = cic.IdentificationMethodToCI.CIID;
                 if (!ciMappingContext.TryGetMappedTemp2FinalCIID(tempToCIID, out Guid toCIID))
                     throw new Exception($"Could not find temporary CIID {tempToCIID}, tried using it as the \"to\" of a relation");
-                relationFragments.Add(BulkRelationDataLayerScope.Fragment.Build(fromCIID, toCIID, cic.PredicateID));
+                relationFragments.Add(new BulkRelationDataLayerScope.Fragment(fromCIID, toCIID, cic.PredicateID));
             }
-            var bulkRelationData = BulkRelationDataLayerScope.Build(writeLayer.ID, relationFragments.ToArray());
+            var bulkRelationData = new BulkRelationDataLayerScope(writeLayer.ID, relationFragments.ToArray());
             await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, trans);
 
             trans.Commit();
@@ -103,22 +102,15 @@ namespace Omnikeeper.Base.Service
         public ICIIdentificationMethod IdentificationMethod { get; private set; }
         public CICandidateAttributeData Attributes { get; private set; }
 
-        public static CICandidate Build(ICIIdentificationMethod identificationMethod, CICandidateAttributeData attributes)
+        public CICandidate(ICIIdentificationMethod identificationMethod, CICandidateAttributeData attributes)
         {
-            return new CICandidate()
-            {
-                IdentificationMethod = identificationMethod,
-                Attributes = attributes
-            };
+            IdentificationMethod = identificationMethod;
+            Attributes = attributes;
         }
 
         public static CICandidate BuildWithAdditionalAttributes(CICandidate @base, CICandidateAttributeData additionalAttributes)
         {
-            return new CICandidate()
-            {
-                IdentificationMethod = @base.IdentificationMethod,
-                Attributes = @base.Attributes.Concat(additionalAttributes)
-            };
+            return new CICandidate(@base.IdentificationMethod, @base.Attributes.Concat(additionalAttributes));
         }
     }
 
@@ -128,14 +120,11 @@ namespace Omnikeeper.Base.Service
         public CIIdentificationMethodByTemporaryCIID IdentificationMethodToCI { get; private set; }
         public string PredicateID { get; private set; }
 
-        public static RelationCandidate Build(CIIdentificationMethodByTemporaryCIID identificationMethodFromCI, CIIdentificationMethodByTemporaryCIID identificationMethodToCI, string predicateID)
+        public RelationCandidate(CIIdentificationMethodByTemporaryCIID identificationMethodFromCI, CIIdentificationMethodByTemporaryCIID identificationMethodToCI, string predicateID)
         {
-            return new RelationCandidate()
-            {
-                IdentificationMethodFromCI = identificationMethodFromCI,
-                IdentificationMethodToCI = identificationMethodToCI,
-                PredicateID = predicateID
-            };
+            IdentificationMethodFromCI = identificationMethodFromCI;
+            IdentificationMethodToCI = identificationMethodToCI;
+            PredicateID = predicateID;
         }
     }
 
@@ -144,13 +133,10 @@ namespace Omnikeeper.Base.Service
         public IDictionary<Guid, CICandidate> CICandidates { get; private set; }
         public IEnumerable<RelationCandidate> RelationCandidates { get; private set; }
 
-        public static IngestData Build(IDictionary<Guid, CICandidate> cis, IEnumerable<RelationCandidate> relationCandidates)
+        public IngestData(IDictionary<Guid, CICandidate> cis, IEnumerable<RelationCandidate> relationCandidates)
         {
-            return new IngestData()
-            {
-                CICandidates = cis,
-                RelationCandidates = relationCandidates
-            };
+            CICandidates = cis;
+            RelationCandidates = relationCandidates;
         }
     }
 }

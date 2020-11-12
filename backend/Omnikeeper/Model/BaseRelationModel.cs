@@ -3,6 +3,7 @@ using NpgsqlTypes;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,16 +13,14 @@ namespace Omnikeeper.Model
 {
     public class BaseRelationModel : IBaseRelationModel
     {
-        private readonly NpgsqlConnection conn;
         private readonly IPredicateModel predicateModel;
 
-        public BaseRelationModel(IPredicateModel predicateModel, NpgsqlConnection connection)
+        public BaseRelationModel(IPredicateModel predicateModel)
         {
-            conn = connection;
             this.predicateModel = predicateModel;
         }
 
-        private NpgsqlCommand CreateRelationCommand(IRelationSelection rl, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        private NpgsqlCommand CreateRelationCommand(IRelationSelection rl, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             var innerWhereClauses = new List<string>();
             var parameters = new List<NpgsqlParameter>();
@@ -51,7 +50,7 @@ namespace Omnikeeper.Model
                     relation where timestamp <= @time_threshold and ({innerWhereClause}) and layer_id = @layer_id order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC
             "; // TODO: remove order by layer_id, but consider not breaking indices first
 
-            var command = new NpgsqlCommand(query, conn, trans);
+            var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
             foreach (var p in parameters)
                 command.Parameters.Add(p);
             command.Parameters.AddWithValue("time_threshold", atTime.Time);
@@ -60,12 +59,15 @@ namespace Omnikeeper.Model
         }
 
 
-        public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans, TimeThreshold atTime)
         {
+            var predicate = await predicateModel.GetPredicate(predicateID, atTime, AnchorStateFilter.All, trans);
+            if (predicate == null)
+                return null;
 
             using var command = new NpgsqlCommand(@"select id, state, changeset_id from relation where 
                 timestamp <= @time_threshold AND from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id and layer_id = @layer_id and predicate_id = @predicate_id order by timestamp DESC 
-                LIMIT 1", conn, trans);
+                LIMIT 1", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("from_ci_id", fromCIID);
             command.Parameters.AddWithValue("to_ci_id", toCIID);
             command.Parameters.AddWithValue("predicate_id", predicateID);
@@ -79,12 +81,10 @@ namespace Omnikeeper.Model
             var state = dr.GetFieldValue<RelationState>(1);
             var changesetID = dr.GetGuid(2);
 
-            var predicate = await predicateModel.GetPredicate(predicateID, atTime, AnchorStateFilter.All, trans);
-
-            return Relation.Build(id, fromCIID, toCIID, predicate, state, changesetID);
+            return new Relation(id, fromCIID, toCIID, predicate, state, changesetID);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
 
@@ -104,7 +104,7 @@ namespace Omnikeeper.Model
 
                     var predicate = predicates[predicateID];
 
-                    var relation = Relation.Build(id, fromCIID, toCIID, predicate, state, changesetID);
+                    var relation = new Relation(id, fromCIID, toCIID, predicate, state, changesetID);
 
                     if (state != RelationState.Removed)
                         relations.Add(relation);
@@ -114,7 +114,7 @@ namespace Omnikeeper.Model
             return relations;
         }
 
-        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, timeThreshold);
@@ -130,8 +130,15 @@ namespace Omnikeeper.Model
                 return (currentRelation, false);
             }
 
+            var predicate = await predicateModel.GetPredicate(predicateID, timeThreshold, AnchorStateFilter.All, trans);
+            if (predicate == null)
+            {
+                // predicate does not exist
+                throw new Exception("Trying to remove relation with a predicate that does not exist");
+            }
+
             using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
-                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp)", conn, trans);
+                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp)", trans.DBConnection, trans.DBTransaction);
 
             var changeset = await changesetProxy.GetChangeset(trans);
 
@@ -145,13 +152,12 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("changeset_id", changeset.ID);
             command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
 
-            var predicate = await predicateModel.GetPredicate(predicateID, timeThreshold, AnchorStateFilter.All, trans);
 
             await command.ExecuteNonQueryAsync();
-            return (Relation.Build(id, fromCIID, toCIID, predicate, RelationState.Removed, changeset.ID), true);
+            return (new Relation(id, fromCIID, toCIID, predicate, RelationState.Removed, changeset.ID), true);
         }
 
-        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, timeThreshold);
@@ -177,7 +183,7 @@ namespace Omnikeeper.Model
                 throw new KeyNotFoundException($"Predicate ID {predicateID} does not exist");
 
             using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
-                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp)", conn, trans);
+                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp)", trans.DBConnection, trans.DBTransaction);
 
             var changeset = await changesetProxy.GetChangeset(trans);
 
@@ -194,11 +200,11 @@ namespace Omnikeeper.Model
 
 
             await command.ExecuteNonQueryAsync();
-            return (Relation.Build(id, fromCIID, toCIID, predicate, state, changeset.ID), true);
+            return (new Relation(id, fromCIID, toCIID, predicate, state, changeset.ID), true);
         }
 
 
-        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var outdatedRelations = (data switch
@@ -242,7 +248,7 @@ namespace Omnikeeper.Model
                 Changeset changeset = await changesetProxy.GetChangeset(trans);
 
                 // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
-                using var writer = conn.BeginBinaryImport(@"COPY relation (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, state, ""timestamp"") FROM STDIN (FORMAT BINARY)");
+                using var writer = trans.DBConnection.BeginBinaryImport(@"COPY relation (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, state, ""timestamp"") FROM STDIN (FORMAT BINARY)");
                 foreach (var (fromCIID, toCIID, predicateID, state) in actualInserts)
                 {
                     writer.StartRow();

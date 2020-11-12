@@ -6,6 +6,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO.Ingest;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
@@ -25,15 +26,18 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly ILayerModel layerModel;
         private readonly ILogger<AnsibleInventoryScanIngestController> logger;
         private readonly ICurrentUserService currentUserService;
+        private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
         public AnsibleInventoryScanIngestController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService,
+            IModelContextBuilder modelContextBuilder,
             ILayerBasedAuthorizationService authorizationService, ILogger<AnsibleInventoryScanIngestController> logger)
         {
             this.ingestDataService = ingestDataService;
             this.layerModel = layerModel;
             this.logger = logger;
             this.currentUserService = currentUserService;
+            this.modelContextBuilder = modelContextBuilder;
             this.authorizationService = authorizationService;
         }
 
@@ -91,8 +95,8 @@ namespace Omnikeeper.Controllers.Ingest
                         String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
                     };
-                    var attributes = CICandidateAttributeData.Build(attributeFragments);
-                    var ciCandidate = CICandidate.Build(CIIdentificationMethodByData.BuildFromAttributes(new string[] { "fqdn" }, attributes, searchLayers), attributes);
+                    var attributes = new CICandidateAttributeData(attributeFragments);
+                    var ciCandidate = new CICandidate(CIIdentificationMethodByData.BuildFromAttributes(new string[] { "fqdn" }, attributes, searchLayers), attributes);
                     cis.Add(tempCIID, ciCandidate);
 
                     baseCIs.Add(fqdn, (tempCIID, ciCandidate));
@@ -121,13 +125,13 @@ namespace Omnikeeper.Controllers.Ingest
                         JValue2TextAttribute(mount, "uuid"),
                         String2Attribute(ICIModel.NameAttribute, ciNameMount)
                     };
-                        var attributeData = CICandidateAttributeData.Build(attributeFragmentsMount);
-                        cis.Add(tempMountCIID, CICandidate.Build(
+                        var attributeData = new CICandidateAttributeData(attributeFragmentsMount);
+                        cis.Add(tempMountCIID, new CICandidate(
                             // TODO: ansible mounts have an uuid, find out what that is and if they can be used for identification
                             CIIdentificationMethodByData.BuildFromAttributes(new string[] { "device", "mount", ICIModel.NameAttribute }, attributeData, searchLayers), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
                             attributeData));
 
-                        relations.Add(RelationCandidate.Build(
+                        relations.Add(new RelationCandidate(
                             CIIdentificationMethodByTemporaryCIID.Build(tempCIID),
                             CIIdentificationMethodByTemporaryCIID.Build(tempMountCIID),
                             "has_mounted_device"));
@@ -149,12 +153,12 @@ namespace Omnikeeper.Controllers.Ingest
                             // TODO
                             String2Attribute(ICIModel.NameAttribute, ciNameInterface)
                         }.Where(item => item != null);
-                        var attributeData = CICandidateAttributeData.Build(attributeFragmentsInterface);
-                        cis.Add(tempCIIDInterface, CICandidate.Build(
+                        var attributeData = new CICandidateAttributeData(attributeFragmentsInterface);
+                        cis.Add(tempCIIDInterface, new CICandidate(
                             CIIdentificationMethodByData.BuildFromAttributes(new string[] { ICIModel.NameAttribute }, attributeData, searchLayers), // TODO: do not use CIModel.NameAttribute, rather maybe use its relation to the host for identification
                             attributeData));
 
-                        relations.Add(RelationCandidate.Build(
+                        relations.Add(new RelationCandidate(
                             CIIdentificationMethodByTemporaryCIID.Build(tempCIID),
                             CIIdentificationMethodByTemporaryCIID.Build(tempCIIDInterface),
                             "has_network_interface"));
@@ -174,7 +178,7 @@ namespace Omnikeeper.Controllers.Ingest
                         String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
                     };
-                    var attributes = CICandidateAttributeData.Build(attributeFragments);
+                    var attributes = new CICandidateAttributeData(attributeFragments);
 
                     if (baseCIs.TryGetValue(fqdn, out var @base))
                     { // attach to base CI
@@ -182,7 +186,7 @@ namespace Omnikeeper.Controllers.Ingest
                     }
                     else
                     { // treat as new CI
-                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.BuildFromAttributes(new string[] { "fqdn" }, attributes, searchLayers), attributes));
+                        cis.Add(Guid.NewGuid(), new CICandidate(CIIdentificationMethodByData.BuildFromAttributes(new string[] { "fqdn" }, attributes, searchLayers), attributes));
                     }
                 }
                 foreach (var kvRepos in data.YumRepos)
@@ -197,7 +201,7 @@ namespace Omnikeeper.Controllers.Ingest
                         String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
                     };
-                    var attributes = CICandidateAttributeData.Build(attributeFragments);
+                    var attributes = new CICandidateAttributeData(attributeFragments);
 
                     if (baseCIs.TryGetValue(fqdn, out var @base))
                     { // attach to base CI
@@ -205,7 +209,7 @@ namespace Omnikeeper.Controllers.Ingest
                     }
                     else
                     { // treat as new CI
-                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.BuildFromAttributes(new string[] { "fqdn" }, attributes, searchLayers), attributes));
+                        cis.Add(Guid.NewGuid(), new CICandidate(CIIdentificationMethodByData.BuildFromAttributes(new string[] { "fqdn" }, attributes, searchLayers), attributes));
                     }
                 }
                 foreach (var kvUpdates in data.YumUpdates)
@@ -220,7 +224,7 @@ namespace Omnikeeper.Controllers.Ingest
                         String2Attribute(ICIModel.NameAttribute, ciName),
                         String2Attribute("fqdn", fqdn)
                     };
-                    var attributes = CICandidateAttributeData.Build(attributeFragments);
+                    var attributes = new CICandidateAttributeData(attributeFragments);
 
                     if (baseCIs.TryGetValue(fqdn, out var @base))
                     { // attach to base CI
@@ -228,12 +232,12 @@ namespace Omnikeeper.Controllers.Ingest
                     }
                     else
                     { // treat as new CI
-                        cis.Add(Guid.NewGuid(), CICandidate.Build(CIIdentificationMethodByData.BuildFromAttributes(new string[] { "fqdn" }, attributes, searchLayers), attributes));
+                        cis.Add(Guid.NewGuid(), new CICandidate(CIIdentificationMethodByData.BuildFromAttributes(new string[] { "fqdn" }, attributes, searchLayers), attributes));
                     }
                 }
 
-                var ingestData = IngestData.Build(cis, relations);
-                var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user, logger);
+                var ingestData = new IngestData(cis, relations);
+                var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user, modelContextBuilder, logger);
 
                 logger.LogInformation($"Ansible Ingest successful; ingested {numIngestedCIs} CIs, {numIngestedRelations} relations");
 
@@ -259,32 +263,32 @@ namespace Omnikeeper.Controllers.Ingest
         }
 
         private CICandidateAttributeData.Fragment String2Attribute(string name, string value) =>
-            CICandidateAttributeData.Fragment.Build(name, AttributeScalarValueText.BuildFromString(value));
+            new CICandidateAttributeData.Fragment(name, new AttributeScalarValueText(value));
         private CICandidateAttributeData.Fragment String2IntegerAttribute(string name, long value) =>
-            CICandidateAttributeData.Fragment.Build(name, AttributeScalarValueInteger.Build(value));
+            new CICandidateAttributeData.Fragment(name, new AttributeScalarValueInteger(value));
 
         private CICandidateAttributeData.Fragment JValue2TextAttribute(JToken o, string jsonName, string attributeName = null) =>
-            CICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeScalarValueText.BuildFromString(o[jsonName].Value<string>()));
+            new CICandidateAttributeData.Fragment(attributeName ?? jsonName, new AttributeScalarValueText(o[jsonName].Value<string>()));
         private CICandidateAttributeData.Fragment JValue2IntegerAttribute(JToken o, string name, string attributeName = null) =>
-            CICandidateAttributeData.Fragment.Build(attributeName ?? name, AttributeScalarValueInteger.Build(o[name].Value<long>()));
+            new CICandidateAttributeData.Fragment(attributeName ?? name, new AttributeScalarValueInteger(o[name].Value<long>()));
         private CICandidateAttributeData.Fragment JValue2JSONAttribute(JToken o, string jsonName, string attributeName = null) =>
-            CICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeScalarValueJSON.Build(o[jsonName]));
+            new CICandidateAttributeData.Fragment(attributeName ?? jsonName, new AttributeScalarValueJSON(o[jsonName]));
         private CICandidateAttributeData.Fragment JValuePath2TextAttribute(JToken o, string jsonPath, string attributeName)
         {
             var jo = o.SelectToken(jsonPath);
-            return CICandidateAttributeData.Fragment.Build(attributeName, AttributeScalarValueText.BuildFromString(jo.Value<string>()));
+            return new CICandidateAttributeData.Fragment(attributeName, new AttributeScalarValueText(jo.Value<string>()));
         }
         private CICandidateAttributeData.Fragment JValue2TextArrayAttribute(JToken o, string jsonName, string attributeName = null)
         {
-            return CICandidateAttributeData.Fragment.Build(attributeName ?? jsonName, AttributeArrayValueText.BuildFromString(o[jsonName].Values<string>().ToArray()));
+            return new CICandidateAttributeData.Fragment(attributeName ?? jsonName, AttributeArrayValueText.BuildFromString(o[jsonName].Values<string>().ToArray()));
         }
         private CICandidateAttributeData.Fragment JArray2JSONArrayAttribute(JArray array, string attributeName)
         {
-            return CICandidateAttributeData.Fragment.Build(attributeName, AttributeArrayValueJSON.Build(array.ToArray()));
+            return new CICandidateAttributeData.Fragment(attributeName, AttributeArrayValueJSON.Build(array.ToArray()));
         }
         private CICandidateAttributeData.Fragment JToken2JSONAttribute(JToken o, string attributeName)
         {
-            return CICandidateAttributeData.Fragment.Build(attributeName, AttributeScalarValueJSON.Build(o));
+            return new CICandidateAttributeData.Fragment(attributeName, new AttributeScalarValueJSON(o));
         }
     }
 }

@@ -47,7 +47,7 @@ namespace OKPluginOIAOmnikeeper
 
             if (ciid.HasValue)
             {
-                return CIAttribute.Build(dto.ID, dto.Name, ciid.Value, AttributeValueBuilder.BuildFromDTO(dto.Value), AttributeState.New, staticChangesetID);
+                return new CIAttribute(dto.ID, dto.Name, ciid.Value, AttributeValueBuilder.BuildFromDTO(dto.Value), AttributeState.New, staticChangesetID);
             }
             else return null;
         }
@@ -68,10 +68,10 @@ namespace OKPluginOIAOmnikeeper
 
             if (fromCIID.HasValue && toCIID.HasValue)
             {
-                return Relation.Build(dto.ID, fromCIID.Value, toCIID.Value,
+                return new Relation(dto.ID, fromCIID.Value, toCIID.Value,
                     // TODO: can we just create a predicate on the fly?!? ignoring what predicates are actually present in the omnikeeper instance?
                     // apparently we can, because it seems to work, but does that work in all edge-cases?
-                    Predicate.Build(dto.Predicate.ID, dto.Predicate.WordingFrom, dto.Predicate.WordingTo, AnchorState.Active, PredicateConstraints.Default),
+                    new Predicate(dto.Predicate.ID, dto.Predicate.WordingFrom, dto.Predicate.WordingTo, AnchorState.Active, PredicateConstraints.Default),
                     RelationState.New, staticChangesetID);
             }
             else return null;

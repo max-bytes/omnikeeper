@@ -8,76 +8,62 @@ namespace Omnikeeper.Base.Entity
     public class MergedCI
     {
         public Guid ID { get; private set; }
-        public string Name { get; private set; }
+        public string? Name { get; private set; }
         public IImmutableDictionary<string, MergedCIAttribute> MergedAttributes { get; private set; }
         public LayerSet Layers { get; private set; }
         public TimeThreshold AtTime { get; private set; }
 
-        public static MergedCI Build(Guid id, string name, LayerSet layers, TimeThreshold atTime, IEnumerable<MergedCIAttribute> attributes)
+        public MergedCI(Guid id, string? name, LayerSet layers, TimeThreshold atTime, IEnumerable<MergedCIAttribute> attributes)
+            : this(id, name, layers, atTime, attributes.ToImmutableDictionary(a => a.Attribute.Name))
         {
-            return Build(id, name, layers, atTime, attributes.ToImmutableDictionary(a => a.Attribute.Name));
         }
 
-        public static MergedCI Build(Guid id, string name, LayerSet layers, TimeThreshold atTime, IImmutableDictionary<string, MergedCIAttribute> attributes)
+        public MergedCI(Guid id, string? name, LayerSet layers, TimeThreshold atTime, IImmutableDictionary<string, MergedCIAttribute> attributes)
         {
-            return new MergedCI
-            {
-                Name = name,
-                Layers = layers,
-                AtTime = atTime,
-                ID = id,
-                MergedAttributes = attributes
-            };
+            Name = name;
+            Layers = layers;
+            AtTime = atTime;
+            ID = id;
+            MergedAttributes = attributes;
         }
     }
 
-    public class CI
-    {
-        public Guid ID { get; private set; }
-        public string Name { get; private set; }
-        public IImmutableDictionary<string, CIAttribute> Attributes { get; private set; }
-        public long LayerID { get; private set; }
-        public TimeThreshold AtTime { get; private set; }
+    //public class CI
+    //{
+    //    public Guid ID { get; private set; }
+    //    public string Name { get; private set; }
+    //    public IImmutableDictionary<string, CIAttribute> Attributes { get; private set; }
+    //    public long LayerID { get; private set; }
+    //    public TimeThreshold AtTime { get; private set; }
 
-        public static CI Build(Guid id, string name, long layerID, TimeThreshold atTime, IEnumerable<CIAttribute> attributes)
-        {
-            return new CI
-            {
-                Name = name,
-                LayerID = layerID,
-                AtTime = atTime,
-                ID = id,
-                Attributes = attributes.ToImmutableDictionary(a => a.Name)
-            };
-        }
-    }
+    //    public CI(Guid id, string name, long layerID, TimeThreshold atTime, IEnumerable<CIAttribute> attributes)
+    //    {
+    //        Name = name;
+    //        LayerID = layerID;
+    //        AtTime = atTime;
+    //        ID = id;
+    //        Attributes = attributes.ToImmutableDictionary(a => a.Name);
+    //    }
+    //}
 
     public class CompactCI
     {
         public Guid ID { get; private set; }
-        public string Name { get; private set; }
+        public string? Name { get; private set; }
         public TimeThreshold AtTime { get; private set; }
         public long LayerHash { get; private set; }
 
-        public static CompactCI Build(Guid id, string name, long layerHash, TimeThreshold atTime)
+        public CompactCI(Guid id, string? name, long layerHash, TimeThreshold atTime)
         {
-            return new CompactCI
-            {
-                Name = name,
-                AtTime = atTime,
-                ID = id,
-                LayerHash = layerHash
-            };
+            Name = name;
+            AtTime = atTime;
+            ID = id;
+            LayerHash = layerHash;
         }
 
-        public static CompactCI Build(MergedCI mergedCI)
+        public static CompactCI BuildFromMergedCI(MergedCI mergedCI)
         {
-            return new CompactCI
-            {
-                Name = mergedCI.Name,
-                AtTime = mergedCI.AtTime,
-                ID = mergedCI.ID
-            };
+            return new CompactCI(mergedCI.ID, mergedCI.Name, mergedCI.Layers.LayerHash, mergedCI.AtTime);
         }
     }
 }

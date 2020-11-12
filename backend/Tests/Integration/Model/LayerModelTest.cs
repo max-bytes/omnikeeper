@@ -13,21 +13,13 @@ using Tests.Integration.Model.Mocks;
 
 namespace Tests.Integration.Model
 {
-    class LayerModelTest
+    class LayerModelTest : DBBackedTestBase
     {
-        [SetUp]
-        public void Setup()
-        {
-            DBSetup.Setup();
-        }
-
         [Test]
         public async Task TestBasics()
         {
-            var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            using var trans = conn.BeginTransaction();
-            var layerModel = new LayerModel(conn);
+            using var trans = ModelContextBuilder.BuildDeferred();
+            var layerModel = new LayerModel();
 
             var layerNames = Enumerable.Range(0, 100).Select(i => $"l{i}");
             foreach (var ln in layerNames)
@@ -52,28 +44,27 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestDeletion()
         {
-            var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var layerModel = new LayerModel(conn);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
-            var ciModel = new CIModel(attributeModel, conn);
-            var userModel = new UserInDatabaseModel(conn);
-            var changesetModel = new ChangesetModel(userModel, conn);
+            var layerModel = new LayerModel();
+            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var ciModel = new CIModel(attributeModel);
+            var userModel = new UserInDatabaseModel();
+            var changesetModel = new ChangesetModel(userModel);
+            using var trans = ModelContextBuilder.BuildImmediate();
 
-            var layerA = await layerModel.CreateLayer("a", null);
-            var layerB = await layerModel.CreateLayer("b", ColorTranslator.FromHtml("#FF0000"), AnchorState.Deprecated, ComputeLayerBrainLink.Build("clbB"), OnlineInboundAdapterLink.Build("oilpX"), null);
-            var layerC = await layerModel.CreateLayer("c", ColorTranslator.FromHtml("#00FF00"), AnchorState.Deprecated, ComputeLayerBrainLink.Build("clbC"), OnlineInboundAdapterLink.Build("oilpY"), null);
+            var layerA = await layerModel.CreateLayer("a", trans);
+            var layerB = await layerModel.CreateLayer("b", ColorTranslator.FromHtml("#FF0000"), AnchorState.Deprecated, ComputeLayerBrainLink.Build("clbB"), OnlineInboundAdapterLink.Build("oilpX"), trans);
+            var layerC = await layerModel.CreateLayer("c", ColorTranslator.FromHtml("#00FF00"), AnchorState.Deprecated, ComputeLayerBrainLink.Build("clbC"), OnlineInboundAdapterLink.Build("oilpY"), trans);
 
-            var user = await userModel.UpsertUser("testuser", "testuser", Guid.NewGuid(), UserType.Human, null);
+            var user = await userModel.UpsertUser("testuser", "testuser", Guid.NewGuid(), UserType.Human, trans);
 
-            var ciid = await ciModel.CreateCI(null);
-            var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+            var ciid = await ciModel.CreateCI(trans);
+            var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
 
-            await attributeModel.InsertAttribute("attribute", AttributeScalarValueText.BuildFromString("foo"), ciid, layerC.ID, changeset, null);
+            await attributeModel.InsertAttribute("attribute", new AttributeScalarValueText("foo"), ciid, layerC.ID, changeset, trans);
 
-            Assert.AreEqual(true, await layerModel.TryToDelete(layerA.ID, null));
-            Assert.AreEqual(true, await layerModel.TryToDelete(layerB.ID, null));
-            Assert.AreEqual(false, await layerModel.TryToDelete(layerC.ID, null));
+            Assert.AreEqual(true, await layerModel.TryToDelete(layerA.ID, trans));
+            Assert.AreEqual(true, await layerModel.TryToDelete(layerB.ID, trans));
+            Assert.AreEqual(false, await layerModel.TryToDelete(layerC.ID, trans));
         }
     }
 }

@@ -3,6 +3,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -23,13 +24,13 @@ namespace Omnikeeper.Model
             CIModel = ciModel;
         }
 
-        //public async Task<TemplateErrorsCI> CalculateTemplateErrors(Guid ciid, LayerSet layerset, ICIModel ciModel, NpgsqlTransaction trans, TimeThreshold atTime)
+        //public async Task<TemplateErrorsCI> CalculateTemplateErrors(Guid ciid, LayerSet layerset, ICIModel ciModel, ITransaction trans, TimeThreshold atTime)
         //{
         //    var ci = await ciModel.GetMergedCI(ciid, layerset, trans, atTime);
         //    return await CalculateTemplateErrors(ci, trans, atTime);
         //}
 
-        public async Task<TemplateErrorsCI> CalculateTemplateErrors(MergedCI ci, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<TemplateErrorsCI> CalculateTemplateErrors(MergedCI ci, IModelContext trans, TimeThreshold atTime)
         {
             // TODO: does this even make sense still? we don't have ci-types anymore
 
@@ -38,8 +39,8 @@ namespace Omnikeeper.Model
             //var attributesTemplates = template?.AttributeTemplates;
             //var relationTemplates = template?.RelationTemplates;
 
-            IImmutableDictionary<string, CIAttributeTemplate> attributesTemplates = null;
-            IImmutableDictionary<string, RelationTemplate> relationTemplates = null;
+            IImmutableDictionary<string, CIAttributeTemplate>? attributesTemplates = null;
+            IImmutableDictionary<string, RelationTemplate>? relationTemplates = null;
 
             var relationsAndToCIs = (await RelationService.GetMergedRelatedCIs(ci.ID, ci.Layers, CIModel, RelationModel, trans, atTime));
 
@@ -56,7 +57,7 @@ namespace Omnikeeper.Model
                 .Where(t => !t.errors.Errors.IsEmpty())
                 .ToDictionary(t => t.PredicateID, t => t.errors);
 
-            return TemplateErrorsCI.Build(errorsAttribute, errorsRelation);
+            return new TemplateErrorsCI(errorsAttribute, errorsRelation);
         }
     }
 }

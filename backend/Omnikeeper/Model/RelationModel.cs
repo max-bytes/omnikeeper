@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -19,17 +20,15 @@ namespace Omnikeeper.Model
             this.baseModel = baseModel;
         }
 
-        public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await baseModel.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await baseModel.GetRelations(rs, layerID, trans, atTime);
         }
-
-
 
         private IEnumerable<MergedRelation> MergeRelations(IEnumerable<(Relation relation, long layerID)> relations, LayerSet layers)
         {
@@ -45,9 +44,9 @@ namespace Omnikeeper.Model
                 );
             }
 
-            return compound.Select(t => MergedRelation.Build(t.Value.First().Value.relation, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).Reverse().ToArray()));
+            return compound.Select(t => new MergedRelation(t.Value.First().Value.relation, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).Reverse().ToArray()));
         }
-        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, LayerSet layerset, IModelContext trans, TimeThreshold atTime)
         {
             if (layerset.IsEmpty)
                 return ImmutableList<MergedRelation>.Empty; // return empty, an empty layer list can never produce any relations
@@ -64,7 +63,7 @@ namespace Omnikeeper.Model
             return MergeRelations(relations, layerset);
         }
 
-        public async Task<MergedRelation> GetMergedRelation(Guid fromCIID, Guid toCIID, string predicateID, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<MergedRelation?> GetMergedRelation(Guid fromCIID, Guid toCIID, string predicateID, LayerSet layerset, IModelContext trans, TimeThreshold atTime)
         {
             if (layerset.IsEmpty)
                 return null; // return empty, an empty layer list can never produce any relations
@@ -74,7 +73,8 @@ namespace Omnikeeper.Model
             foreach (var layerID in layerset)
             {
                 var r = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
-                relations.Add((r, layerID));
+                if (r != null)
+                    relations.Add((r, layerID));
             }
 
             var mergedRelations = MergeRelations(relations, layerset);
@@ -86,17 +86,17 @@ namespace Omnikeeper.Model
         }
 
 
-        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             return await baseModel.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
         }
 
-        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             return await baseModel.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
         }
 
-        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, IModelContext trans)
         {
             return await baseModel.BulkReplaceRelations(data, changesetProxy, trans);
         }

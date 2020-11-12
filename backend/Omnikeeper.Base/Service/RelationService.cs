@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,17 +13,17 @@ namespace Omnikeeper.Base.Service
     public class RelationService
     {
         public static async Task<ILookup<string, MergedRelatedCI>> GetMergedRelatedCIs(
-            Guid ciid, LayerSet layers, ICIModel ciModel, IRelationModel relationModel, NpgsqlTransaction trans, TimeThreshold atTime)
+            Guid ciid, LayerSet layers, ICIModel ciModel, IRelationModel relationModel, IModelContext trans, TimeThreshold atTime)
         {
             var relations = await relationModel.GetMergedRelations(new RelationSelectionEitherFromOrTo(ciid), layers, trans, atTime);
             var relationsOtherCIIDs = relations.Select(r => (r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID).Distinct();
             if (relationsOtherCIIDs.IsEmpty()) return new List<MergedRelatedCI>().ToLookup(x => "");
             var relationsOtherCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(relationsOtherCIIDs), layers, true, trans, atTime)).ToDictionary(ci => ci.ID);
-            var relationsAndToCIs = relations.Select(r => MergedRelatedCI.Build(r.Relation, ciid, relationsOtherCIs[(r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID]));
+            var relationsAndToCIs = relations.Select(r => new MergedRelatedCI(r.Relation, ciid, relationsOtherCIs[(r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID]));
             return relationsAndToCIs.ToLookup(r => r.PredicateID);
         }
 
-        public static async Task<IEnumerable<CompactRelatedCI>> GetCompactRelatedCIs(Guid ciid, LayerSet layerset, ICIModel ciModel, IRelationModel relationModel, int? perPredicateLimit, NpgsqlTransaction trans, TimeThreshold atTime)
+        public static async Task<IEnumerable<CompactRelatedCI>> GetCompactRelatedCIs(Guid ciid, LayerSet layerset, ICIModel ciModel, IRelationModel relationModel, int? perPredicateLimit, IModelContext trans, TimeThreshold atTime)
         {
             var relations = await relationModel.GetMergedRelations(new RelationSelectionEitherFromOrTo(ciid), layerset, trans, atTime);
 
@@ -63,8 +64,8 @@ namespace Omnikeeper.Base.Service
                     var predicateID = relation.Relation.PredicateID;
                     var predicateWording = (isForwardRelation) ? relation.Relation.Predicate.WordingFrom : relation.Relation.Predicate.WordingTo;
                     var changesetID = relation.Relation.ChangesetID;
-                    relatedCompactCIs.TryGetValue(relatedCIID, out var ci); // TODO: performance improvements
-                    relatedCIs.Add(CompactRelatedCI.Build(ci, relation.Relation.ID, relation.Relation.FromCIID, relation.Relation.ToCIID, changesetID, predicateID, isForwardRelation, predicateWording, relation.LayerStackIDs));
+                    if (relatedCompactCIs.TryGetValue(relatedCIID, out var ci)) // TODO: performance improvements
+                        relatedCIs.Add(new CompactRelatedCI(ci, relation.Relation.ID, relation.Relation.FromCIID, relation.Relation.ToCIID, changesetID, predicateID, isForwardRelation, predicateWording, relation.LayerStackIDs));
                 }
             }
 

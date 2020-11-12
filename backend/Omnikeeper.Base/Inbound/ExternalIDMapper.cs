@@ -1,4 +1,5 @@
 ﻿using Npgsql;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -9,11 +10,11 @@ namespace Omnikeeper.Base.Inbound
 {
     public interface IExternalIDMapper
     {
-        Task<S> CreateOrGetScoped<S>(string scope, Func<S> scopedF, NpgsqlConnection conn, NpgsqlTransaction trans) where S : class, IScopedExternalIDMapper;
+        Task<S> CreateOrGetScoped<S>(string scope, Func<S> scopedF, IModelContext trans) where S : class, IScopedExternalIDMapper;
     }
     public interface IScopedExternalIDMapper
     {
-        Task Setup(NpgsqlConnection conn, NpgsqlTransaction trans);
+        Task Setup(IModelContext trans);
 
         string PersisterScope { get; }
     }
@@ -25,12 +26,17 @@ namespace Omnikeeper.Base.Inbound
     {
         private readonly IDictionary<string, IScopedExternalIDMapper> scopes = new ConcurrentDictionary<string, IScopedExternalIDMapper>();
 
-        public async Task<S> CreateOrGetScoped<S>(string scope, Func<S> scopedF, NpgsqlConnection conn, NpgsqlTransaction trans) where S : class, IScopedExternalIDMapper
+        public async Task<S> CreateOrGetScoped<S>(string scope, Func<S> scopedF, IModelContext trans) where S : class, IScopedExternalIDMapper
         {
             if (scopes.TryGetValue(scope, out var existingScoped))
-                return existingScoped as S;
+            {
+                var ss = existingScoped as S;
+                if (ss == null)
+                    throw new Exception();
+                return ss;
+            }
             var scoped = scopedF();
-            await scoped.Setup(conn, trans);
+            await scoped.Setup(trans);
             scopes.Add(scope, scoped);
             return scoped;
         }
@@ -56,11 +62,11 @@ namespace Omnikeeper.Base.Inbound
             this.persister = persister;
         }
 
-        public async Task Setup(NpgsqlConnection conn, NpgsqlTransaction trans)
+        public async Task Setup(IModelContext trans)
         {
             if (!loaded)
             {
-                var data = await persister.Load(conn, trans);
+                var data = await persister.Load(trans);
                 if (data == null)
                 {
                     throw new Exception($"Failed to load persisted external IDs for scope {persister.Scope}");
@@ -132,9 +138,12 @@ namespace Omnikeeper.Base.Inbound
             return externalID.Equals(default(EID)) ? null : new EID?(externalID); // NOTE: EID is a value type, which is why we need to check for default and return null if so
         }
 
-        public async Task Persist(NpgsqlConnection conn, NpgsqlTransaction trans)
+        public async Task<bool> Persist(IModelContext trans)
         {
-            await persister.Persist(int2ext.ToDictionary(kv => kv.Key, kv => kv.Value.SerializeToString()), conn, trans);
+            if (loaded)
+                return await persister.Persist(int2ext.ToDictionary(kv => kv.Key, kv => kv.Value.SerializeToString()), trans);
+            else
+                return false;
         }
     }
 }

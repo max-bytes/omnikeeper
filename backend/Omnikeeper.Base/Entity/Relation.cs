@@ -7,20 +7,16 @@ namespace Omnikeeper.Base.Entity
         New, Removed, Renewed
     }
 
-
     public class MergedRelation
     {
         public Relation Relation { get; private set; }
         public long[] LayerStackIDs { get; private set; }
         public long LayerID { get => LayerStackIDs[^1]; }
 
-        public static MergedRelation Build(Relation relation, long[] layerStackIDs)
+        public MergedRelation(Relation relation, long[] layerStackIDs)
         {
-            return new MergedRelation
-            {
-                Relation = relation,
-                LayerStackIDs = layerStackIDs
-            };
+            Relation = relation;
+            LayerStackIDs = layerStackIDs;
         }
     }
 
@@ -38,17 +34,14 @@ namespace Omnikeeper.Base.Entity
         public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);
         public static string CreateInformationHash(Guid fromCIID, Guid toCIID, string predicateID) => fromCIID + "_" + toCIID + "_" + predicateID;
 
-        public static Relation Build(Guid id, Guid fromCIID, Guid toCIID, Predicate predicate, RelationState state, Guid changesetID)
+        public Relation(Guid id, Guid fromCIID, Guid toCIID, Predicate predicate, RelationState state, Guid changesetID)
         {
-            return new Relation
-            {
-                ID = id,
-                FromCIID = fromCIID,
-                ToCIID = toCIID,
-                Predicate = predicate,
-                State = state,
-                ChangesetID = changesetID
-            };
+            ID = id;
+            FromCIID = fromCIID;
+            ToCIID = toCIID;
+            Predicate = predicate;
+            State = state;
+            ChangesetID = changesetID;
         }
     }
 
@@ -69,13 +62,10 @@ namespace Omnikeeper.Base.Entity
             public Guid From { get; private set; }
             public Guid To { get; private set; }
 
-            public static Fragment Build(Guid from, Guid to)
+            public Fragment(Guid from, Guid to)
             {
-                return new Fragment()
-                {
-                    From = from,
-                    To = to
-                };
+                From = from;
+                To = to;
             }
         }
 
@@ -86,14 +76,11 @@ namespace Omnikeeper.Base.Entity
         public Guid GetFromCIID(Fragment fragment) => fragment.From;
         public Guid GetToCIID(Fragment fragment) => fragment.To;
 
-        public static BulkRelationDataPredicateScope Build(string predicateID, long layerID, Fragment[] fragments)
+        public BulkRelationDataPredicateScope(string predicateID, long layerID, Fragment[] fragments)
         {
-            return new BulkRelationDataPredicateScope()
-            {
-                PredicateID = predicateID,
-                LayerID = layerID,
-                Fragments = fragments
-            };
+            PredicateID = predicateID;
+            LayerID = layerID;
+            Fragments = fragments;
         }
     }
 
@@ -105,14 +92,11 @@ namespace Omnikeeper.Base.Entity
             public Guid To { get; private set; }
             public string PredicateID { get; private set; }
 
-            public static Fragment Build(Guid from, Guid to, string predicateID)
+            public Fragment(Guid from, Guid to, string predicateID)
             {
-                return new Fragment()
-                {
-                    From = from,
-                    To = to,
-                    PredicateID = predicateID
-                };
+                From = from;
+                To = to;
+                PredicateID = predicateID;
             }
         }
 
@@ -122,13 +106,10 @@ namespace Omnikeeper.Base.Entity
         public Guid GetFromCIID(Fragment fragment) => fragment.From;
         public Guid GetToCIID(Fragment fragment) => fragment.To;
 
-        public static BulkRelationDataLayerScope Build(long layerID, Fragment[] fragments)
+        public BulkRelationDataLayerScope(long layerID, Fragment[] fragments)
         {
-            return new BulkRelationDataLayerScope()
-            {
-                LayerID = layerID,
-                Fragments = fragments
-            };
+            LayerID = layerID;
+            Fragments = fragments;
         }
     }
 }

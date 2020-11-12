@@ -33,8 +33,8 @@ namespace Omnikeeper.Model
                 {
                     return type switch
                     {
-                        AttributeValueType.Text => AttributeScalarValueText.BuildFromString(finalValue, false),
-                        AttributeValueType.MultilineText => AttributeScalarValueText.BuildFromString(finalValue, true),
+                        AttributeValueType.Text => new AttributeScalarValueText(finalValue, false),
+                        AttributeValueType.MultilineText => new AttributeScalarValueText(finalValue, true),
                         AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(finalValue),
                         AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(finalValue),
                         AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(finalValue),
@@ -75,7 +75,7 @@ namespace Omnikeeper.Model
                             if (isArray)
                                 return AttributeArrayValueText.BuildFromString(UnmarshalStringArrayV2(valueText, valueControl), multiline);
                             else
-                                return AttributeScalarValueText.BuildFromString(UnmarshalStringV2(valueText, valueControl), multiline);
+                                return new AttributeScalarValueText(UnmarshalStringV2(valueText, valueControl), multiline);
                         }
                     case AttributeValueType.Integer:
                         {
@@ -105,14 +105,14 @@ namespace Omnikeeper.Model
                                 if (isArray)
                                     return AttributeArrayValueImage.Build(UnmarshalFullBinaryArrayV2(valueBinary, valueControl));
                                 else
-                                    return AttributeScalarValueImage.Build(UnmarshalFullBinaryV2(valueBinary, valueControl));
+                                    return new AttributeScalarValueImage(UnmarshalFullBinaryV2(valueBinary, valueControl));
                             }
                             else
                             {
                                 if (isArray)
                                     return AttributeArrayValueImage.Build(UnmarshalProxyBinaryArrayV2(valueControl));
                                 else
-                                    return AttributeScalarValueImage.Build(UnmarshalProxyBinaryV2(valueControl));
+                                    return new AttributeScalarValueImage(UnmarshalProxyBinaryV2(valueControl));
                             }
                         }
                     default:
@@ -164,8 +164,8 @@ namespace Omnikeeper.Model
                 AttributeArrayValueInteger a => MarshalStringArrayV2(a.Values.Select(v => v.Value.ToString())),
                 AttributeScalarValueJSON a => MarshalStringV2(a.Value.ToString()),
                 AttributeArrayValueJSON a => MarshalStringArrayV2(a.Values.Select(v => v.Value.ToString())),
-                AttributeScalarValueYAML a => MarshalStringV2(a.Value.ToString()),
-                AttributeArrayValueYAML a => MarshalStringArrayV2(a.Values.Select(v => v.Value.ToString())),
+                AttributeScalarValueYAML a => MarshalStringV2((a.Value.ToString())!),
+                AttributeArrayValueYAML a => MarshalStringArrayV2(a.Values.Select(v => (v.Value.ToString())!)),
                 AttributeScalarValueImage a => MarshalBinaryV2(a.Value),
                 AttributeArrayValueImage a => MarshalBinaryArrayV2(a.Values.Select(v => v.Value)),
 
@@ -225,7 +225,7 @@ namespace Omnikeeper.Model
 
         private (string valueText, byte[] valueBinary, byte[] valueControl) MarshalBinaryV2(BinaryScalarAttributeValueProxy value)
         {
-            if (!value.HasFullData())
+            if (value.FullData == null)
                 throw new Exception("Cannot marshal binary attribute value that does not contain the full data");
             var hash = value.Sha256Hash;
             if (hash.Length != 32)

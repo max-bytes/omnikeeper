@@ -12,16 +12,13 @@ namespace Omnikeeper.GraphQL
         public IEnumerable<Relation> InsertedRelations { get; private set; }
 
         public IEnumerable<MergedCI> AffectedCIs { get; private set; }
-        public static MutateReturn Build(IEnumerable<CIAttribute> insertedAttributes,
+        public MutateReturn(IEnumerable<CIAttribute> insertedAttributes,
             IEnumerable<CIAttribute> removedAttributes, IEnumerable<Relation> insertedRelations, IEnumerable<MergedCI> affectedCIs)
         {
-            return new MutateReturn()
-            {
-                InsertedAttributes = insertedAttributes,
-                RemovedAttributes = removedAttributes,
-                InsertedRelations = insertedRelations,
-                AffectedCIs = affectedCIs
-            };
+            InsertedAttributes = insertedAttributes;
+            RemovedAttributes = removedAttributes;
+            InsertedRelations = insertedRelations;
+            AffectedCIs = affectedCIs;
         }
     }
     public class MutateReturnType : ObjectGraphType<MutateReturn>
@@ -38,12 +35,9 @@ namespace Omnikeeper.GraphQL
     public class CreateCIsReturn
     {
         public IEnumerable<Guid> CIIDs { get; private set; }
-        public static CreateCIsReturn Build(IEnumerable<Guid> ciids)
+        public CreateCIsReturn(IEnumerable<Guid> ciids)
         {
-            return new CreateCIsReturn()
-            {
-                CIIDs = ciids
-            };
+            CIIDs = ciids;
         }
     }
     public class CreateCIsReturnType : ObjectGraphType<CreateCIsReturn>

@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Omnikeeper.Base.Service;
 using Moq;
+using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tests.Integration.Controller
 {
@@ -42,13 +43,12 @@ namespace Tests.Integration.Controller
         public async Task TestBasics()
         {
             using var scope = ServiceProvider.CreateScope();
-            var conn = ServiceProvider.GetRequiredService<NpgsqlConnection>();
             var changesetModel = ServiceProvider.GetRequiredService<IChangesetModel>();
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
             var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
             var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
             var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
-            var user = await DBSetup.SetupUser(userModel);
+            var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
             var attributeController = ServiceProvider.GetRequiredService<AttributeController>();
 
             Guid ciid1;
@@ -58,7 +58,7 @@ namespace Tests.Integration.Controller
             Guid attribute1ID;
             Guid attribute2ID;
             Guid changesetID;
-            using (var trans = conn.BeginTransaction())
+            using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 ciid1 = await ciModel.CreateCI(trans);
                 ciid2 = await ciModel.CreateCI(trans);
@@ -66,11 +66,11 @@ namespace Tests.Integration.Controller
                 var layer2 = await layerModel.CreateLayer("l2", trans);
                 layerID1 = layer1.ID;
                 layerID2 = layer2.ID;
-                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
-                var (attribute1, _) = await attributeModel.InsertAttribute("a1", AttributeScalarValueText.BuildFromString("text1"), ciid1, layerID1, changeset, trans);
+                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                var (attribute1, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, trans);
                 attribute1ID = attribute1.ID;
                 changesetID = attribute1.ChangesetID;
-                var (attribute2, _) = await attributeModel.InsertAttribute("a2", AttributeScalarValueText.BuildFromString("text2"), ciid2, layerID1, changeset, trans);
+                var (attribute2, _) = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid2, layerID1, changeset, trans);
                 attribute2ID = attribute2.ID;
                 trans.Commit();
             }
@@ -78,26 +78,26 @@ namespace Tests.Integration.Controller
             var ma1 = await attributeController.GetMergedAttribute(ciid1, "a1", new long[] { layerID1 });
 
             var expectedAttribute1 = CIAttributeDTO.Build(
-                MergedCIAttribute.Build(
-                    CIAttribute.Build(attribute1ID, "a1", ciid1, AttributeScalarValueText.BuildFromString("text1"), AttributeState.New, changesetID),
+                new MergedCIAttribute(
+                    new CIAttribute(attribute1ID, "a1", ciid1, new AttributeScalarValueText("text1"), AttributeState.New, changesetID),
                     new long[] { layerID1 }
                 ));
-            (ma1.Result as OkObjectResult).Value.Should().BeEquivalentTo(expectedAttribute1);
+            (ma1.Result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedAttribute1);
 
 
             var ma2 = await attributeController.GetMergedAttributes(new Guid[] { ciid1, ciid2 }, new long[] { layerID1 });
 
             var expectedAttribute2 = CIAttributeDTO.Build(
-                MergedCIAttribute.Build(
-                    CIAttribute.Build(attribute2ID, "a2", ciid2, AttributeScalarValueText.BuildFromString("text2"), AttributeState.New, changesetID),
+                new MergedCIAttribute(
+                    new CIAttribute(attribute2ID, "a2", ciid2, new AttributeScalarValueText("text2"), AttributeState.New, changesetID),
                     new long[] { layerID1 }
                 ));
-            var r = (ma2.Result as OkObjectResult).Value;
+            var r = (ma2.Result as OkObjectResult)!.Value;
             r.Should().BeEquivalentTo(new CIAttributeDTO[] { expectedAttribute1, expectedAttribute2 });
 
 
             var ma3 = await attributeController.GetMergedAttributesWithName("a2", new long[] { layerID1 });
-            (ma3.Result as OkObjectResult).Value.Should().BeEquivalentTo(new CIAttributeDTO[] { expectedAttribute2 });
+            (ma3.Result as OkObjectResult)!.Value.Should().BeEquivalentTo(new CIAttributeDTO[] { expectedAttribute2 });
 
 
         }

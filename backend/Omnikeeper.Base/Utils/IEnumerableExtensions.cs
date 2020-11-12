@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Omnikeeper.Base.Utils
@@ -13,9 +14,14 @@ namespace Omnikeeper.Base.Utils
             return !list.Any();
         }
 
+        public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> o) where T : class
+        {
+            return o.Where(x => x != null)!;
+        }
+
         public static HashSet<T> ToHashSet<T>(
             this IEnumerable<T> source,
-            IEqualityComparer<T> comparer = null)
+            IEqualityComparer<T>? comparer = null)
         {
             return new HashSet<T>(source, comparer);
         }
@@ -49,6 +55,7 @@ namespace Omnikeeper.Base.Utils
             return first.Concat(new List<TSource>() { second });
         }
 
+        [return: MaybeNull]
         public static T GetRandom<T>(this IEnumerable<T> enumerable, Random random)
         {
             var count = enumerable.Count();

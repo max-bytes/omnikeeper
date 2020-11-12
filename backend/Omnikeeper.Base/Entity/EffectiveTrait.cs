@@ -8,18 +8,15 @@ namespace Omnikeeper.Base.Entity
         public MergedCI UnderlyingCI { get; private set; }
         public IImmutableDictionary<string, EffectiveTrait> EffectiveTraits { get; private set; }
 
-        public static EffectiveTraitSet Build(MergedCI underlyingCI, EffectiveTrait effectiveTrait)
+        public static EffectiveTraitSet BuildFromSingleET(MergedCI underlyingCI, EffectiveTrait effectiveTrait)
         {
-            return Build(underlyingCI, new EffectiveTrait[] { effectiveTrait });
+            return new EffectiveTraitSet(underlyingCI, new EffectiveTrait[] { effectiveTrait });
         }
 
-        public static EffectiveTraitSet Build(MergedCI underlyingCI, IEnumerable<EffectiveTrait> effectiveTraits)
+        public EffectiveTraitSet(MergedCI underlyingCI, IEnumerable<EffectiveTrait> effectiveTraits)
         {
-            return new EffectiveTraitSet
-            {
-                UnderlyingCI = underlyingCI,
-                EffectiveTraits = effectiveTraits.ToImmutableDictionary(et => et.UnderlyingTrait.Name)
-            };
+            UnderlyingCI = underlyingCI;
+            EffectiveTraits = effectiveTraits.ToImmutableDictionary(et => et.UnderlyingTrait.Name);
         }
     }
     public class EffectiveTrait
@@ -28,16 +25,13 @@ namespace Omnikeeper.Base.Entity
         public IImmutableDictionary<string, MergedCIAttribute> TraitAttributes { get; private set; }
         public IImmutableDictionary<string, IEnumerable<MergedRelatedCI>> TraitRelations { get; private set; }
 
-        public static EffectiveTrait Build(Trait underlyingTrait,
+        public EffectiveTrait(Trait underlyingTrait,
             IDictionary<string, MergedCIAttribute> traitAttributes,
             IDictionary<string, IEnumerable<MergedRelatedCI>> traitRelations)
         {
-            return new EffectiveTrait
-            {
-                UnderlyingTrait = underlyingTrait,
-                TraitAttributes = traitAttributes.ToImmutableDictionary(),
-                TraitRelations = traitRelations.ToImmutableDictionary()
-            };
+            UnderlyingTrait = underlyingTrait;
+            TraitAttributes = traitAttributes.ToImmutableDictionary();
+            TraitRelations = traitRelations.ToImmutableDictionary();
         }
     }
 }

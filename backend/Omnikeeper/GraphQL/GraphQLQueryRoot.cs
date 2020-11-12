@@ -7,6 +7,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Model;
 using Omnikeeper.Service;
 using System;
@@ -29,11 +30,13 @@ namespace Omnikeeper.GraphQL
                     var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
                     var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
                     var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var userContext = context.UserContext as OmnikeeperUserContext;
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
                     var ciid = context.GetArgument<Guid>("ciid");
                     var layerStrings = context.GetArgument<string[]>("layers");
-                    var ls = await layerModel.BuildLayerSet(layerStrings, null);
+                    var ls = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
                     userContext.LayerSet = ls;
                     var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
                     userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
@@ -41,7 +44,7 @@ namespace Omnikeeper.GraphQL
                     if (!ciBasedAuthorizationService.CanReadCI(ciid))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read CI {ciid}");
 
-                    var ci = await ciModel.GetMergedCI(ciid, userContext.LayerSet, null, userContext.TimeThreshold);
+                    var ci = await ciModel.GetMergedCI(ciid, userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
 
                     return ci;
                 });
@@ -55,12 +58,14 @@ namespace Omnikeeper.GraphQL
                     var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
                     var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
                     var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var userContext = context.UserContext as OmnikeeperUserContext;
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
 
-                    var ciids = context.GetArgument<Guid[]>("ciids", null);
+                    var ciids = context.GetArgument<Guid[]?>("ciids", null);
                     var layerStrings = context.GetArgument<string[]>("layers");
-                    var ls = await layerModel.BuildLayerSet(layerStrings, null);
+                    var ls = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
                     userContext.LayerSet = ls;
                     var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
                     userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
@@ -73,7 +78,7 @@ namespace Omnikeeper.GraphQL
                         ciidSelection = SpecificCIIDsSelection.Build(ciids);
                     }
 
-                    var cis = await ciModel.GetMergedCIs(ciidSelection, userContext.LayerSet, false, null, userContext.TimeThreshold);
+                    var cis = await ciModel.GetMergedCIs(ciidSelection, userContext.LayerSet, false, userContext.Transaction, userContext.TimeThreshold);
 
                     if (ciidSelection is AllCIIDsSelection)
                     {
@@ -89,8 +94,12 @@ namespace Omnikeeper.GraphQL
                 {
                     var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
                     var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var ciids = await ciModel.GetCIIDs(null);
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
+
+                    var ciids = await ciModel.GetCIIDs(userContext.Transaction);
                     // reduce CIs to those that are allowed
                     ciids = ciids.Where(ciid => ciBasedAuthorizationService.CanReadCI(ciid));
                     return ciids;
@@ -105,15 +114,18 @@ namespace Omnikeeper.GraphQL
                     var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
                     var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
                     var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var userContext = context.UserContext as OmnikeeperUserContext;
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
+
                     var layerStrings = context.GetArgument<string[]>("layers");
-                    var ls = await layerModel.BuildLayerSet(layerStrings, null);
+                    var ls = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
                     userContext.LayerSet = ls;
                     var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
                     userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
 
-                    var cis = await ciModel.GetCompactCIs(new AllCIIDsSelection(), userContext.LayerSet, null, userContext.TimeThreshold);
+                    var cis = await ciModel.GetCompactCIs(new AllCIIDsSelection(), userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
                     // reduce CIs to those that are allowed
                     cis = cis.Where(ci => ciBasedAuthorizationService.CanReadCI(ci.ID));
                     return cis;
@@ -126,14 +138,15 @@ namespace Omnikeeper.GraphQL
                 {
                     var ciSearchModel = context.RequestServices.GetRequiredService<ICISearchModel>();
                     var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var userContext = context.UserContext as OmnikeeperUserContext;
-
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
                     var searchString = context.GetArgument<string>("searchString");
                     var ciid = context.GetArgument<Guid>("identity");
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var cis = await ciSearchModel.SimpleSearch(searchString, null, userContext.TimeThreshold);
+                    var cis = await ciSearchModel.SimpleSearch(searchString, userContext.Transaction, userContext.TimeThreshold);
                     // reduce CIs to those that are allowed
                     cis = cis.Where(ci => ciBasedAuthorizationService.CanReadCI(ci.ID));
                     return cis;
@@ -149,18 +162,19 @@ namespace Omnikeeper.GraphQL
                     var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
                     var ciSearchModel = context.RequestServices.GetRequiredService<ICISearchModel>();
                     var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var userContext = context.UserContext as OmnikeeperUserContext;
-
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
                     var searchString = context.GetArgument<string>("searchString");
                     var withEffectiveTraits = context.GetArgument<string[]>("withEffectiveTraits");
                     var ciid = context.GetArgument<Guid>("identity");
                     var layerStrings = context.GetArgument<string[]>("layers");
-                    var ls = await layerModel.BuildLayerSet(layerStrings, null);
+                    var ls = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
                     userContext.LayerSet = ls;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var cis = await ciSearchModel.AdvancedSearch(searchString, withEffectiveTraits, ls, null, userContext.TimeThreshold);
+                    var cis = await ciSearchModel.AdvancedSearch(searchString, withEffectiveTraits, ls, userContext.Transaction, userContext.TimeThreshold);
                     // reduce CIs to those that are allowed
                     cis = cis.Where(ci => ciBasedAuthorizationService.CanReadCI(ci.ID));
                     return cis;
@@ -178,22 +192,25 @@ namespace Omnikeeper.GraphQL
                     var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
                     var effectiveTraitModel = context.RequestServices.GetRequiredService<IEffectiveTraitModel>();
                     var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var userContext = context.UserContext as OmnikeeperUserContext;
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
                     var predicateID = context.GetArgument<string>("predicateID");
                     var forward = context.GetArgument<bool>("forward");
                     var layerStrings = context.GetArgument<string[]>("layers");
-                    var ls = await layerModel.BuildLayerSet(layerStrings, null);
+                    var ls = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
                     userContext.LayerSet = ls;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var predicate = await predicateModel.GetPredicate(predicateID, userContext.TimeThreshold, AnchorStateFilter.ActiveOnly, null);
+                    var predicate = await predicateModel.GetPredicate(predicateID, userContext.TimeThreshold, AnchorStateFilter.ActiveOnly, userContext.Transaction);
+                    if (predicate == null)
+                        throw new ExecutionError($"Could not find predicate with ID {predicateID}");
 
                     IEnumerable<CompactCI> cis;
-
                     // predicate has no target constraints -> makes it easy, return ALL CIs
                     if ((forward && !predicate.Constraints.HasPreferredTraitsTo) || (!forward && !predicate.Constraints.HasPreferredTraitsFrom))
-                        cis = await ciModel.GetCompactCIs(new AllCIIDsSelection(), userContext.LayerSet, null, userContext.TimeThreshold);
+                        cis = await ciModel.GetCompactCIs(new AllCIIDsSelection(), userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
                     else
                     {
                         var preferredTraits = (forward) ? predicate.Constraints.PreferredTraitsTo : predicate.Constraints.PreferredTraitsFrom;
@@ -201,14 +218,14 @@ namespace Omnikeeper.GraphQL
                         // TODO: this has abysmal performance! We fully query ALL CIs and then calculate the effective traits for each of them... :(
                         // we definitely have to look into caching traits as best as we can and provide a better way to query cis with a (array of) effective trait(s) as input
                         // we might alternatively need to rework this: limit the number of items this works on (with a limit parameter) and provide a search parameter
-                        var allCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), userContext.LayerSet, true, null, userContext.TimeThreshold);
-                        var effectiveTraitSets = await effectiveTraitModel.CalculateEffectiveTraitSetForCIs(allCIs, preferredTraits, null, userContext.TimeThreshold);
+                        var allCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), userContext.LayerSet, true, userContext.Transaction, userContext.TimeThreshold);
+                        var effectiveTraitSets = await effectiveTraitModel.CalculateEffectiveTraitSetForCIs(allCIs, preferredTraits, userContext.Transaction, userContext.TimeThreshold);
 
                         cis = effectiveTraitSets.Where(et =>
                         {
                             // if CI has ANY of the preferred traits, keep it
                             return preferredTraits.Any(pt => et.EffectiveTraits.ContainsKey(pt));
-                        }).Select(et => CompactCI.Build(et.UnderlyingCI));
+                        }).Select(et => CompactCI.BuildFromMergedCI(et.UnderlyingCI));
                     }
 
                     // reduce CIs to those that are allowed
@@ -228,8 +245,10 @@ namespace Omnikeeper.GraphQL
                     var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
                     var effectiveTraitModel = context.RequestServices.GetRequiredService<IEffectiveTraitModel>();
                     var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var userContext = context.UserContext as OmnikeeperUserContext;
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
                     var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
                     var preferredForCI = context.GetArgument<Guid>("preferredForCI");
@@ -238,20 +257,20 @@ namespace Omnikeeper.GraphQL
                     if (!ciBasedAuthorizationService.CanReadCI(preferredForCI))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read CI {preferredForCI}");
 
-                    var predicates = (await predicateModel.GetPredicates(null, userContext.TimeThreshold, AnchorStateFilter.ActiveOnly)).Values;
+                    var predicates = (await predicateModel.GetPredicates(userContext.Transaction, userContext.TimeThreshold, AnchorStateFilter.ActiveOnly)).Values;
 
                     // filter predicates by constraints
-                    var layers = await layerModel.BuildLayerSet(layersForEffectiveTraits, null);
-                    var ci = await ciModel.GetMergedCI(preferredForCI, layers, null, userContext.TimeThreshold);
-                    var effectiveTraitSet = await effectiveTraitModel.CalculateEffectiveTraitSetForCI(ci, null, userContext.TimeThreshold);
+                    var layers = await layerModel.BuildLayerSet(layersForEffectiveTraits, userContext.Transaction);
+                    var ci = await ciModel.GetMergedCI(preferredForCI, layers, userContext.Transaction, userContext.TimeThreshold);
+                    var effectiveTraitSet = await effectiveTraitModel.CalculateEffectiveTraitSetForCI(ci, userContext.Transaction, userContext.TimeThreshold);
                     var effectiveTraitNames = effectiveTraitSet.EffectiveTraits.Keys;
                     var directedPredicates = predicates.SelectMany(predicate =>
                     {
                         var ret = new List<DirectedPredicate>();
                         if (!predicate.Constraints.HasPreferredTraitsFrom || predicate.Constraints.PreferredTraitsFrom.Any(pt => effectiveTraitNames.Contains(pt)))
-                            ret.Add(DirectedPredicate.Build(predicate.ID, predicate.WordingFrom, predicate.State, true));
+                            ret.Add(new DirectedPredicate(predicate.ID, predicate.State, predicate.WordingFrom, true));
                         if (!predicate.Constraints.HasPreferredTraitsTo || predicate.Constraints.PreferredTraitsTo.Any(pt => effectiveTraitNames.Contains(pt)))
-                            ret.Add(DirectedPredicate.Build(predicate.ID, predicate.WordingTo, predicate.State, false)); // TODO: switch wording
+                            ret.Add(new DirectedPredicate(predicate.ID, predicate.State, predicate.WordingTo, false)); // TODO: switch wording
                         return ret;
                     });
 
@@ -264,12 +283,14 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var predicateModel = context.RequestServices.GetRequiredService<IPredicateModel>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var userContext = context.UserContext as OmnikeeperUserContext;
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
                     var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
 
-                    var predicates = (await predicateModel.GetPredicates(null, userContext.TimeThreshold, stateFilter)).Values;
+                    var predicates = (await predicateModel.GetPredicates(userContext.Transaction, userContext.TimeThreshold, stateFilter)).Values;
 
                     return predicates;
                 });
@@ -277,9 +298,13 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<LayerType>>("layers",
                 resolve: async context =>
                 {
-                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>(); 
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var layers = await layerModel.GetLayers(null);
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
+
+                    var layers = await layerModel.GetLayers(userContext.Transaction);
 
                     return layers;
                 });
@@ -291,25 +316,28 @@ namespace Omnikeeper.GraphQL
                 {
                     var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
                     var layerStatisticsModel = context.RequestServices.GetRequiredService<ILayerStatisticsModel>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
                     var layerID = context.GetArgument<long>("layerID");
 
-                    var layer = await layerModel.GetLayer(layerID, null);
+                    var layer = await layerModel.GetLayer(layerID, userContext.Transaction);
                     if (layer == null)
                         throw new Exception($"Could not get layer with ID {layerID}");
 
 
-                    var numActiveAttributes = await layerStatisticsModel.GetActiveAttributes(layer, null);
+                    var numActiveAttributes = await layerStatisticsModel.GetActiveAttributes(layer, userContext.Transaction);
 
-                    var numAttributeChangesHistory = await layerStatisticsModel.GetAttributeChangesHistory(layer, null);
+                    var numAttributeChangesHistory = await layerStatisticsModel.GetAttributeChangesHistory(layer, userContext.Transaction);
 
-                    var numActiveRelations = await layerStatisticsModel.GetActiveRelations(layer, null);
+                    var numActiveRelations = await layerStatisticsModel.GetActiveRelations(layer, userContext.Transaction);
 
-                    var numRelationChangesHistory = await layerStatisticsModel.GetRelationChangesHistory(layer, null);
+                    var numRelationChangesHistory = await layerStatisticsModel.GetRelationChangesHistory(layer, userContext.Transaction);
 
-                    var numLayerChangesetsHistory = await layerStatisticsModel.GetLayerChangesetsHistory(layer, null);
+                    var numLayerChangesetsHistory = await layerStatisticsModel.GetLayerChangesetsHistory(layer, userContext.Transaction);
 
-                    return LayerStatistics.Build(
+                    return new LayerStatistics(
                         layer,
                         numActiveAttributes,
                         numAttributeChangesHistory,
@@ -322,8 +350,11 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var oiaContextModel = context.RequestServices.GetRequiredService<IOIAContextModel>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var configs = await oiaContextModel.GetContexts(true, null);
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
+                    var configs = await oiaContextModel.GetContexts(true, userContext.Transaction);
 
                     return configs;
                 });
@@ -332,8 +363,11 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var odataAPIContextModel = context.RequestServices.GetRequiredService<IODataAPIContextModel>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var configs = await odataAPIContextModel.GetContexts(null);
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
+                    var configs = await odataAPIContextModel.GetContexts(userContext.Transaction);
 
                     return configs;
                 });
@@ -342,8 +376,11 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var cfg = await baseConfigurationModel.GetConfigOrDefault(null);
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
+                    var cfg = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     return BaseConfigurationV1.Serializer.SerializeToString(cfg);
                 });
 
@@ -353,9 +390,12 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
                     var id = context.GetArgument<Guid>("id");
-                    var changeset = await changesetModel.GetChangeset(id, null);
+                    var changeset = await changesetModel.GetChangeset(id, userContext.Transaction);
                     return changeset;
                 });
 
@@ -370,15 +410,17 @@ namespace Omnikeeper.GraphQL
                 {
                     var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
                     var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var userContext = context.UserContext as OmnikeeperUserContext;
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
                     var layerStrings = context.GetArgument<string[]>("layers");
-                    userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, null);
+                    userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
                     var from = context.GetArgument<DateTimeOffset>("from");
                     var to = context.GetArgument<DateTimeOffset>("to");
-                    var ciids = context.GetArgument<Guid[]>("ciids", null);
+                    var ciids = context.GetArgument<Guid[]?>("ciids", null);
                     var limit = context.GetArgument<int?>("limit", null);
                     IChangesetSelection selection = new ChangesetSelectionAllCIs();
                     if (ciids != null)
@@ -386,7 +428,7 @@ namespace Omnikeeper.GraphQL
 
                     // NOTE: we can't filter the changesets using CIBasedAuthorizationService because changesets are not bound to CIs
 
-                    return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, selection, null, limit);
+                    return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, selection, userContext.Transaction, limit);
                 });
 
 
@@ -394,9 +436,13 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var traitModel = context.RequestServices.GetRequiredService<IRecursiveTraitModel>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
                     // TODO: implement better, showing string as-is for now
                     // TODO: should we not deliver non-DB traits (f.e. from CLBs) here?
-                    var traitSet = await traitModel.GetRecursiveTraitSet(null, TimeThreshold.BuildLatest());
+                    var traitSet = await traitModel.GetRecursiveTraitSet(userContext.Transaction, TimeThreshold.BuildLatest());
                     var str = TraitsProvider.TraitSetSerializer.SerializeToString(traitSet);
                     return str;
                 });
@@ -411,18 +457,20 @@ namespace Omnikeeper.GraphQL
                     var effectiveTraitModel = context.RequestServices.GetRequiredService<IEffectiveTraitModel>();
                     var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
                     var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var userContext = context.UserContext as OmnikeeperUserContext;
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
                     var layerStrings = context.GetArgument<string[]>("layers");
-                    userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, null);
+                    userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
                     // TODO: HORRIBLE performance!, consider aggressive caching
-                    var traits = (await traitsProvider.GetActiveTraitSet(null, userContext.TimeThreshold)).Traits;
+                    var traits = (await traitsProvider.GetActiveTraitSet(userContext.Transaction, userContext.TimeThreshold)).Traits;
                     var ret = new List<(string name, int count)>();
                     foreach (var trait in traits.Values)
                     {
-                        var ets = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(trait, userContext.LayerSet, null, userContext.TimeThreshold);
+                        var ets = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(trait, userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
                         var readableETs = ets.Count(et => ciBasedAuthorizationService.CanReadCI(et.Key)); // CI based filtering
                         ret.Add((name: trait.Name, count: readableETs));
                     }
@@ -433,6 +481,7 @@ namespace Omnikeeper.GraphQL
                 resolve: context =>
                 {
                     var memoryCacheModel = context.RequestServices.GetRequiredService<IMemoryCacheModel>();
+
                     var keys = memoryCacheModel.GetKeys();
                     return keys;
                 });

@@ -60,7 +60,7 @@ namespace Omnikeeper.GraphQL
             resolve: async (context) =>
             {
                 var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
-                var userContext = context.UserContext as OmnikeeperUserContext;
+                var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerstackIDs = context.Source.LayerStackIDs;
                 return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
             });

@@ -56,7 +56,7 @@ namespace OKPluginOIASharepoint.Tests
             Assert.AreEqual(fakeCIID1, a.CIID);
             Assert.AreEqual("title_attribute", a.Name);
             Assert.AreEqual(LayerAccessProxy.StaticChangesetID, a.ChangesetID);
-            Assert.AreEqual(AttributeScalarValueText.BuildFromString("3"), a.Value);
+            Assert.AreEqual(new AttributeScalarValueText("3"), a.Value);
 
             // test GetAttributes()
             var aa = await lap.GetAttributes(new List<(Guid, SharepointExternalListItemID)>()
@@ -140,7 +140,7 @@ namespace OKPluginOIASharepoint.Tests
             var eIDs = await m.ExposeGetExternalIDs();
 
             var expected = listItems.Select(li => (new SharepointExternalListItemID(ExternalSharepointListID, li.itemGuid),
-                    CIIdentificationMethodByData.BuildFromFragments(new CICandidateAttributeData.Fragment[] { CICandidateAttributeData.Fragment.Build("last_name", AttributeScalarValueText.BuildFromString(li.data.Title as string)) }, new LayerSet(0))
+                    CIIdentificationMethodByData.BuildFromFragments(new CICandidateAttributeData.Fragment[] { new CICandidateAttributeData.Fragment("last_name", new AttributeScalarValueText(li.data.Title as string)) }, new LayerSet(0))
                 )
             );
 

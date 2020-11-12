@@ -15,21 +15,17 @@ namespace Omnikeeper.Base.Entity
         public long[] LayerStackIDs { get; private set; }
         public bool IsForwardRelation { get; private set; }
 
-        public static CompactRelatedCI Build(CompactCI ci, Guid relationID, Guid fromCIID, Guid toCIID, Guid changesetID, string predicateID, bool isForwardRelation, string predicateWording, long[] layerStackIDs)
+        public CompactRelatedCI(CompactCI ci, Guid relationID, Guid fromCIID, Guid toCIID, Guid changesetID, string predicateID, bool isForwardRelation, string predicateWording, long[] layerStackIDs)
         {
-            var r = new CompactRelatedCI
-            {
-                RelationID = relationID,
-                CI = ci,
-                FromCIID = fromCIID,
-                ToCIID = toCIID,
-                ChangesetID = changesetID,
-                PredicateID = predicateID,
-                PredicateWording = predicateWording,
-                LayerStackIDs = layerStackIDs,
-                IsForwardRelation = isForwardRelation
-            };
-            return r;
+            RelationID = relationID;
+            CI = ci;
+            FromCIID = fromCIID;
+            ToCIID = toCIID;
+            ChangesetID = changesetID;
+            PredicateID = predicateID;
+            PredicateWording = predicateWording;
+            LayerStackIDs = layerStackIDs;
+            IsForwardRelation = isForwardRelation;
         }
     }
 
@@ -42,16 +38,13 @@ namespace Omnikeeper.Base.Entity
         public string PredicateID { get; private set; }
         public RelationState RelationState { get; private set; }
 
-        public static MergedRelatedCI Build(Relation r, Guid fromCIID, MergedCI ci)
+        public MergedRelatedCI(Relation r, Guid fromCIID, MergedCI ci)
         {
-            return new MergedRelatedCI
-            {
-                CI = ci,
-                FromCIID = fromCIID,
-                ToCIID = ci.ID,
-                PredicateID = r.PredicateID,
-                RelationState = r.State
-            };
+            CI = ci;
+            FromCIID = fromCIID;
+            ToCIID = ci.ID;
+            PredicateID = r.PredicateID;
+            RelationState = r.State;
         }
     }
 }

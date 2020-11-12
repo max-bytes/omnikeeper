@@ -1,11 +1,12 @@
 ﻿using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System.Collections.Generic;
 
 namespace Omnikeeper.GraphQL
 {
-    public class OmnikeeperUserContext : Dictionary<string, object>
+    public class OmnikeeperUserContext : Dictionary<string, object?>
     {
         public AuthenticatedUser User { get; private set; }
 
@@ -28,21 +29,21 @@ namespace Omnikeeper.GraphQL
             }
         }
 
-        public NpgsqlTransaction Transaction
+        public IModelContext Transaction
         {
             get
             {
                 TryGetValue("Transaction", out var t);
-                if (t == null) return default;
-                return (NpgsqlTransaction)t;
+                if (t == null) throw new System.Exception("Expected transaction to be set");
+                return (IModelContext)t;
             }
             set
             {
-                Add("Transaction", value);
+                this.AddOrUpdate("Transaction", value);
             }
         }
 
-        public LayerSet LayerSet
+        public LayerSet? LayerSet
         {
             get
             {

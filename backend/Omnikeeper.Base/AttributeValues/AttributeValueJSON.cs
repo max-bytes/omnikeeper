@@ -29,27 +29,27 @@ namespace Omnikeeper.Entity.AttributeValues
             try
             {
                 var v = JToken.Parse(value);
-                return Build(v);
+                return new AttributeScalarValueJSON(v);
             }
             catch (JsonReaderException e)
             {
-                return Build(ErrorValue(e.Message));
+                return new AttributeScalarValueJSON(ErrorValue(e.Message));
             }
         }
 
-        public static AttributeScalarValueJSON Build(JToken value)
+        public AttributeScalarValueJSON(JToken value)
         {
-            var n = new AttributeScalarValueJSON
-            {
-                Value = value
-            };
-            return n;
+            Value = value;
         }
     }
 
 
     public class AttributeArrayValueJSON : AttributeArrayValue<AttributeScalarValueJSON, JToken>
     {
+        protected AttributeArrayValueJSON(AttributeScalarValueJSON[] values) : base(values)
+        {
+        }
+
         public override AttributeValueType Type => AttributeValueType.JSON;
 
         public static AttributeArrayValueJSON BuildFromString(string[] values)
@@ -70,10 +70,9 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public static AttributeArrayValueJSON Build(JToken[] values)
         {
-            var n = new AttributeArrayValueJSON
-            {
-                Values = values.Select(v => AttributeScalarValueJSON.Build(v)).ToArray()
-            };
+            var n = new AttributeArrayValueJSON(
+                values.Select(v => new AttributeScalarValueJSON(v)).ToArray()
+            );
             return n;
         }
     }

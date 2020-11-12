@@ -6,13 +6,13 @@ namespace Omnikeeper.Entity.AttributeValues
     public class BinaryScalarAttributeValueProxy
     {
         public bool HasFullData() => FullData != null;
-        public byte[] FullData { get; }
+        public byte[]? FullData { get; }
         public int FullSize { get; }
         public byte[] Sha256Hash { get; }
         public string MimeType { get; }
         private readonly string hashString;
 
-        private BinaryScalarAttributeValueProxy(byte[] sha256Hash, string mimeType, int fullSize, byte[] fullData)
+        private BinaryScalarAttributeValueProxy(byte[] sha256Hash, string mimeType, int fullSize, byte[]? fullData)
         {
             Sha256Hash = sha256Hash;
             FullSize = fullSize;
@@ -30,7 +30,7 @@ namespace Omnikeeper.Entity.AttributeValues
             return true;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is BinaryScalarAttributeValueProxy proxy &&
                    AreEqual(Sha256Hash, proxy.Sha256Hash) &&

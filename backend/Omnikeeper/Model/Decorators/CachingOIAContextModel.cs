@@ -3,7 +3,8 @@ using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Service;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils.ModelContext;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -11,49 +12,44 @@ namespace Omnikeeper.Model.Decorators
 {
     public class CachingOIAContextModel : IOIAContextModel
     {
-        private readonly IMemoryCache memoryCache;
-
         private IOIAContextModel Model { get; }
 
-        public CachingOIAContextModel(IOIAContextModel model, IMemoryCache memoryCache)
+        public CachingOIAContextModel(IOIAContextModel model)
         {
             Model = model;
-            this.memoryCache = memoryCache;
         }
 
-        public async Task<IEnumerable<OIAContext>> GetContexts(bool useFallbackConfig, NpgsqlTransaction trans)
+        public async Task<IEnumerable<OIAContext>> GetContexts(bool useFallbackConfig, IModelContext trans)
         {
             // TODO: caching
             return await Model.GetContexts(useFallbackConfig, trans);
         }
 
-        public async Task<OIAContext> GetContextByName(string name, NpgsqlTransaction trans)
+        public async Task<OIAContext?> GetContextByName(string name, IModelContext trans)
         {
-            return await memoryCache.GetOrCreateAsync(CacheKeyService.OIAConfig(name), async (ce) =>
+            return await trans.GetOrCreateCachedValueAsync(CacheKeyService.OIAConfig(name), async () =>
             {
-                var changeToken = memoryCache.GetOIAConfigCancellationChangeToken(name);
-                ce.AddExpirationToken(changeToken);
                 return await Model.GetContextByName(name, trans);
-            });
+            }, CacheKeyService.OIAConfigChangeToken(name));
         }
 
-        public async Task<OIAContext> Create(string name, IOnlineInboundAdapter.IConfig config, NpgsqlTransaction trans)
+        public async Task<OIAContext> Create(string name, IOnlineInboundAdapter.IConfig config, IModelContext trans)
         {
-            memoryCache.CancelOIAConfigChangeToken(name);
+            trans.CancelToken(CacheKeyService.OIAConfigChangeToken(name));
             return await Model.Create(name, config, trans);
         }
 
-        public async Task<OIAContext> Update(long id, string name, IOnlineInboundAdapter.IConfig config, NpgsqlTransaction trans)
+        public async Task<OIAContext> Update(long id, string name, IOnlineInboundAdapter.IConfig config, IModelContext trans)
         {
-            memoryCache.CancelOIAConfigChangeToken(name);
+            trans.CancelToken(CacheKeyService.OIAConfigChangeToken(name));
             return await Model.Update(id, name, config, trans);
         }
 
-        public async Task<OIAContext> Delete(long iD, NpgsqlTransaction transaction)
+        public async Task<OIAContext?> Delete(long iD, IModelContext trans)
         {
-            var c = await Model.Delete(iD, transaction);
+            var c = await Model.Delete(iD, trans);
             if (c != null)
-                memoryCache.CancelOIAConfigChangeToken(c.Name);
+                trans.CancelToken(CacheKeyService.OIAConfigChangeToken(c.Name));
             return c;
         }
     }

@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
@@ -11,29 +12,22 @@ namespace Omnikeeper.Model
 {
     public partial class BaseAttributeModel : IBaseAttributeModel
     {
-        private readonly NpgsqlConnection conn;
-
-        public BaseAttributeModel(NpgsqlConnection connection)
-        {
-            conn = connection;
-        }
-
-        public async Task<CIAttribute> GetAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await _GetAttribute(name, ciid, layerID, trans, atTime, false);
         }
-        public async Task<CIAttribute> GetFullBinaryAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await _GetAttribute(name, ciid, layerID, trans, atTime, true);
         }
 
-        private async Task<CIAttribute> _GetAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime, bool fullBinary)
+        private async Task<CIAttribute?> _GetAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime, bool fullBinary)
         {
             using var command = new NpgsqlCommand(@"
             select id, ci_id, type, value_text, value_binary, value_control, state, changeset_id FROM attribute 
             where timestamp <= @time_threshold and ci_id = @ci_id and layer_id = @layer_id and name = @name
             order by timestamp DESC LIMIT 1
-            ", conn, trans);
+            ", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("ci_id", ciid);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("name", name);
@@ -53,7 +47,7 @@ namespace Omnikeeper.Model
             var av = Unmarshal(valueText, valueBinary, valueControl, type, fullBinary);
             var state = dr.GetFieldValue<AttributeState>(6);
             var changesetID = dr.GetGuid(7);
-            var att = CIAttribute.Build(id, name, CIID, av, state, changesetID);
+            var att = new CIAttribute(id, name, CIID, av, state, changesetID);
             return att;
         }
 
@@ -79,7 +73,7 @@ namespace Omnikeeper.Model
             };
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             var ret = new List<CIAttribute>();
 
@@ -87,7 +81,7 @@ namespace Omnikeeper.Model
             select distinct on(ci_id, name) id, name, ci_id, type, value_text, value_binary, value_control, state, changeset_id FROM attribute 
             where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and layer_id = @layer_id
             order by ci_id, name, timestamp DESC
-            ", conn, trans);
+            ", trans.DBConnection, trans.DBTransaction);
             AddQueryParametersFromCIIDSelection(selection, command.Parameters);
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("time_threshold", atTime.Time);
@@ -107,7 +101,7 @@ namespace Omnikeeper.Model
                 var state = dr.GetFieldValue<AttributeState>(7);
                 var changesetID = dr.GetGuid(8);
 
-                var att = CIAttribute.Build(id, name, CIID, av, state, changesetID);
+                var att = new CIAttribute(id, name, CIID, av, state, changesetID);
                 if (state != AttributeState.Removed)
                 {
                     ret.Add(att);
@@ -116,14 +110,14 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             var ret = new List<CIAttribute>();
 
             using var command = new NpgsqlCommand($@"
             select distinct on(ci_id, name, layer_id) id, name, ci_id, type, value_text, value_binary, value_control, state, changeset_id from
                 attribute where timestamp <= @time_threshold and layer_id = @layer_id and name ~ @regex and ({CIIDSelection2WhereClause(selection)}) order by ci_id, name, layer_id, timestamp DESC
-            ", conn, trans); // TODO: remove order by layer_id, but consider not breaking indices first
+            ", trans.DBConnection, trans.DBTransaction); // TODO: remove order by layer_id, but consider not breaking indices first
 
             command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("regex", regex);
@@ -146,21 +140,21 @@ namespace Omnikeeper.Model
 
                 if (state != AttributeState.Removed)
                 {
-                    var att = CIAttribute.Build(id, name, CIID, av, state, changesetID);
+                    var att = new CIAttribute(id, name, CIID, av, state, changesetID);
                     ret.Add(att);
                 }
             }
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             var ret = new List<CIAttribute>();
 
             using (var command = new NpgsqlCommand(@$"
                 select distinct on (ci_id, name) id, ci_id, type, value_text, value_binary, value_control, state, changeset_id from
                     attribute where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id order by ci_id, name, layer_id, timestamp DESC
-            ", conn, trans))// TODO: remove order by layer_id, but consider not breaking indices first
+            ", trans.DBConnection, trans.DBTransaction))// TODO: remove order by layer_id, but consider not breaking indices first
             {
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("name", name);
@@ -181,7 +175,7 @@ namespace Omnikeeper.Model
                     var changesetID = dr.GetGuid(7);
 
                     if (state != AttributeState.Removed)
-                        ret.Add(CIAttribute.Build(id, name, CIID, av, state, changesetID));
+                        ret.Add(new CIAttribute(id, name, CIID, av, state, changesetID));
                 }
             }
 

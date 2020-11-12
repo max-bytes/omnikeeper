@@ -17,6 +17,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tasks.DBInit
 {
@@ -32,14 +33,15 @@ namespace Tasks.DBInit
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build("landscape_prototype", false, true);
 
-            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
-            var ciModel = new CIModel(attributeModel, conn);
-            var userModel = new UserInDatabaseModel(conn);
-            var changesetModel = new ChangesetModel(userModel, conn);
-            var layerModel = new LayerModel(conn);
-            var predicateModel = new CachingPredicateModel(new PredicateModel(conn), new MemoryCache(Options.Create(new MemoryCacheOptions())));
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
-            var traitModel = new RecursiveTraitModel(NullLogger<RecursiveTraitModel>.Instance, conn);
+            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var ciModel = new CIModel(attributeModel);
+            var userModel = new UserInDatabaseModel();
+            var changesetModel = new ChangesetModel(userModel);
+            var layerModel = new LayerModel();
+            var predicateModel = new CachingPredicateModel(new PredicateModel());
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var traitModel = new RecursiveTraitModel(NullLogger<RecursiveTraitModel>.Instance);
+            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance);
 
             var random = new Random(3);
 
@@ -53,22 +55,22 @@ namespace Tasks.DBInit
             int numAttributesPerCIFrom = 20;
             int numAttributesPerCITo = 40;
             //var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
-            var predicateRunsOn = Predicate.Build("runs_on", "runs on", "is running", AnchorState.Active, PredicateModel.DefaultConstraits);
+            var predicateRunsOn = new Predicate("runs_on", "runs on", "is running", AnchorState.Active, PredicateModel.DefaultConstraits);
             
             //var regularPredicates = new[] {
-            //Predicate.Build("is_part_of", "is part of", "has part", AnchorState.Active),
-            //Predicate.Build("is_attached_to", "is attached to", "has attachment", AnchorState.Active),
+            //new Predicate("is_part_of", "is part of", "has part", AnchorState.Active),
+            //new Predicate("is_attached_to", "is attached to", "has attachment", AnchorState.Active),
             //};
             var regularAttributeNames = new[] { "att_1", "att_2", "att_3", "att_4", "att_5", "att_6", "att_7", "att_8", "att_9" };
             var regularAttributeValues = Enumerable.Range(0, 10).Select<int, IAttributeValue>(i =>
             {
                 var r = random.Next(6);
                 if (r == 0)
-                    return AttributeScalarValueInteger.Build(random.Next(1000));
+                    return new AttributeScalarValueInteger(random.Next(1000));
                 else if (r == 1)
                     return AttributeArrayValueText.BuildFromString(Enumerable.Range(0, random.Next(1, 5)).Select(i => $"value_{i}").ToArray());
                 else
-                    return AttributeScalarValueText.BuildFromString($"attribute value {i + 1}");
+                    return new AttributeScalarValueText($"attribute value {i + 1}");
             }).ToArray();
 
             var applicationCIIDs = Enumerable.Range(0, numApplicationCIs).Select(i =>
@@ -81,21 +83,21 @@ namespace Tasks.DBInit
             }).ToList();
 
             var monitoringPredicates = new[] {
-                Predicate.Build("has_monitoring_module", "has monitoring module", "is assigned to", AnchorState.Active, PredicateModel.DefaultConstraits),
-                Predicate.Build("is_monitored_by", "is monitored by", "monitors", AnchorState.Active, PredicateModel.DefaultConstraits),
-                Predicate.Build("belongs_to_naemon_contactgroup", "belongs to naemon contactgroup", "has member", AnchorState.Active, PredicateModel.DefaultConstraits)
+                new Predicate("has_monitoring_module", "has monitoring module", "is assigned to", AnchorState.Active, PredicateModel.DefaultConstraits),
+                new Predicate("is_monitored_by", "is monitored by", "monitors", AnchorState.Active, PredicateModel.DefaultConstraits),
+                new Predicate("belongs_to_naemon_contactgroup", "belongs to naemon contactgroup", "has member", AnchorState.Active, PredicateModel.DefaultConstraits)
             };
 
             var baseDataPredicates = new[] {
-                Predicate.Build("member_of_group", "is member of group", "has member", AnchorState.Active, PredicateModel.DefaultConstraits),
-                Predicate.Build("managed_by", "is managed by", "manages", AnchorState.Active, PredicateModel.DefaultConstraits)
+                new Predicate("member_of_group", "is member of group", "has member", AnchorState.Active, PredicateModel.DefaultConstraits),
+                new Predicate("managed_by", "is managed by", "manages", AnchorState.Active, PredicateModel.DefaultConstraits)
             };
 
             // create layers
             long cmdbLayerID;
             long monitoringDefinitionsLayerID;
             long activeDirectoryLayerID;
-            using (var trans = conn.BeginTransaction())
+            using (var trans = modelContextBuilder.BuildDeferred())
             {
                 var cmdbLayer = await layerModel.CreateLayer("CMDB", Color.Blue, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
                 cmdbLayerID = cmdbLayer.ID;
@@ -111,15 +113,15 @@ namespace Tasks.DBInit
             // create regular CIs
             var windowsHostCIIds = new List<Guid>();
             var linuxHostCIIds = new List<Guid>();
-            using (var trans = conn.BeginTransaction())
+            using (var trans = modelContextBuilder.BuildDeferred())
             {
                 var index = 0;
-                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                 foreach (var ciid in applicationCIIDs)
                 {
                     await ciModel.CreateCI(ciid, trans);
                     await attributeModel.InsertCINameAttribute($"Application_{index}", ciid, cmdbLayerID, changeset, trans); 
-                    await attributeModel.InsertAttribute("application_name", AttributeScalarValueText.BuildFromString($"Application_{index}"), ciid, cmdbLayerID, changeset, trans);
+                    await attributeModel.InsertAttribute("application_name", new AttributeScalarValueText($"Application_{index}"), ciid, cmdbLayerID, changeset, trans);
                     index++;
                 }
                 index = 0;
@@ -132,8 +134,8 @@ namespace Tasks.DBInit
                     else
                         windowsHostCIIds.Add(hostCIID);
                     await attributeModel.InsertCINameAttribute($"{ciType}_{index}", ciid, cmdbLayerID, changeset, trans);
-                    await attributeModel.InsertAttribute("hostname", AttributeScalarValueText.BuildFromString($"hostname_{index}.domain"), ciid, cmdbLayerID, changeset, trans);
-                    await attributeModel.InsertAttribute("system", AttributeScalarValueText.BuildFromString($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), ciid, cmdbLayerID, changeset, trans);
+                    await attributeModel.InsertAttribute("hostname", new AttributeScalarValueText($"hostname_{index}.domain"), ciid, cmdbLayerID, changeset, trans);
+                    await attributeModel.InsertAttribute("system", new AttributeScalarValueText($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), ciid, cmdbLayerID, changeset, trans);
                     index++;
                 }
 
@@ -141,7 +143,7 @@ namespace Tasks.DBInit
             }
 
             // create predicates
-            using (var trans = conn.BeginTransaction())
+            using (var trans = modelContextBuilder.BuildDeferred())
             {
                 foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates).Concat(baseDataPredicates))
                     await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, AnchorState.Active, PredicateModel.DefaultConstraits, trans);
@@ -155,8 +157,8 @@ namespace Tasks.DBInit
                 var numAttributeChanges = random.Next(numAttributesPerCIFrom, numAttributesPerCITo);
                 for (int i = 0; i < numAttributeChanges; i++)
                 {
-                    using var trans = conn.BeginTransaction();
-                    var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                    using var trans = modelContextBuilder.BuildDeferred();
+                    var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                     var name = regularAttributeNames.GetRandom(random);
                     var value = regularAttributeValues.GetRandom(random);
                     await attributeModel.InsertAttribute(name, value, ciid, cmdbLayerID, changeset, trans);
@@ -168,8 +170,8 @@ namespace Tasks.DBInit
             // create runs on predicates
             for (var i = 0; i < numRunsOnRelations; i++)
             {
-                using var trans = conn.BeginTransaction();
-                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                using var trans = modelContextBuilder.BuildDeferred();
+                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                 var ciid1 = applicationCIIDs.GetRandom(random);
                 var ciid2 = hostCIIDs.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
                 await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, cmdbLayerID, changeset, trans);
@@ -182,15 +184,15 @@ namespace Tasks.DBInit
             Guid ciMonModuleHostLinux;
             Guid ciNaemon01;
             Guid ciNaemon02;
-            using (var trans = conn.BeginTransaction())
+            using (var trans = modelContextBuilder.BuildDeferred())
             {
-                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                 ciNaemon01 = await ciModel.CreateCI(null);
                 ciNaemon02 = await ciModel.CreateCI(null);
                 await attributeModel.InsertCINameAttribute("Naemon Instance 01", ciNaemon01, cmdbLayerID, changeset, trans);
                 await attributeModel.InsertCINameAttribute("Naemon Instance 02", ciNaemon02, cmdbLayerID, changeset, trans);
-                await attributeModel.InsertAttribute("naemon.instance_name", AttributeScalarValueText.BuildFromString("Naemon Instance 01"), ciNaemon01, monitoringDefinitionsLayerID, changeset, trans);
-                await attributeModel.InsertAttribute("naemon.instance_name", AttributeScalarValueText.BuildFromString("Naemon Instance 02"), ciNaemon02, monitoringDefinitionsLayerID, changeset, trans);
+                await attributeModel.InsertAttribute("naemon.instance_name", new AttributeScalarValueText("Naemon Instance 01"), ciNaemon01, monitoringDefinitionsLayerID, changeset, trans);
+                await attributeModel.InsertAttribute("naemon.instance_name", new AttributeScalarValueText("Naemon Instance 02"), ciNaemon02, monitoringDefinitionsLayerID, changeset, trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("1.2.3.4"), cmdbLayerID, ciNaemon01, changeset.ID, trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("4.5.6.7"), cmdbLayerID, ciNaemon02, changeset.ID, trans);
 
@@ -201,7 +203,7 @@ namespace Tasks.DBInit
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", ciMonModuleHostWindows, monitoringDefinitionsLayerID, changeset, trans);
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", ciMonModuleHostLinux, monitoringDefinitionsLayerID, changeset, trans);
                 await attributeModel.InsertAttribute("naemon.config_template",
-                    AttributeScalarValueText.BuildFromString(@"[{
+                    new AttributeScalarValueText(@"[{
   ""type"": ""host"",
   ""contactgroupSource"": ""{{ target.id }}"",
   ""command"": {
@@ -210,7 +212,7 @@ namespace Tasks.DBInit
   }
             }]", true), ciMonModuleHost, monitoringDefinitionsLayerID, changeset, trans);
                 await attributeModel.InsertAttribute("naemon.config_template",
-                    AttributeScalarValueText.BuildFromString(
+                    new AttributeScalarValueText(
 @"{{~ for related_ci in target.relations.back.runs_on ~}}
 [{
   ""type"": ""service"",
@@ -225,7 +227,7 @@ namespace Tasks.DBInit
 "
                     , true), ciMonModuleHostWindows, monitoringDefinitionsLayerID, changeset, trans);
                 await attributeModel.InsertAttribute("naemon.config_template",
-                    AttributeScalarValueText.BuildFromString(
+                    new AttributeScalarValueText(
 @"{{~ for related_ci in target.relations.back.runs_on ~}}
 [{
   ""type"": ""service"",
@@ -248,8 +250,8 @@ namespace Tasks.DBInit
                 var windowsHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(windowsHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, null), true, null, TimeThreshold.BuildLatest());
                 foreach (var ci in windowsHosts)
                 {
-                    using var trans = conn.BeginTransaction();
-                    var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                    using var trans = modelContextBuilder.BuildDeferred();
+                    var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                     trans.Commit();
@@ -260,8 +262,8 @@ namespace Tasks.DBInit
                 var linuxHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(linuxHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, null), true, null, TimeThreshold.BuildLatest());
                 foreach (var ci in linuxHosts)
                 {
-                    using var trans = conn.BeginTransaction();
-                    var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                    using var trans = modelContextBuilder.BuildDeferred();
+                    var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                     trans.Commit();
@@ -271,7 +273,7 @@ namespace Tasks.DBInit
             // create ansible groups
             //Guid ciAutomationAnsibleHostGroupTest;
             //Guid ciAutomationAnsibleHostGroupTest2;
-            //using (var trans = conn.BeginTransaction())
+            //using (var trans = modelContextBuilder.BuildDeferred())
             //{
             //    var changeset = await changesetModel.CreateChangeset(user.ID, trans);
             //    ciAutomationAnsibleHostGroupTest = await ciModel.CreateCIWithType("Ansible Host Group", null);
@@ -284,7 +286,7 @@ namespace Tasks.DBInit
             //}
 
             //// assign ansible groups
-            //using (var trans = conn.BeginTransaction())
+            //using (var trans = modelContextBuilder.BuildDeferred())
             //{
             //    var changeset = await changesetModel.CreateChangeset(user.ID, trans);
             //    await relationModel.InsertRelation(ciNaemon01, ciAutomationAnsibleHostGroupTest, "has_ansible_group", automationLayerID, changeset.ID, trans);
@@ -301,70 +303,70 @@ namespace Tasks.DBInit
         {
             return RecursiveTraitSet.Build(
                     // hosts
-                    RecursiveTrait.Build("host", new List<TraitAttribute>() {
-                        TraitAttribute.Build("hostname",
+                    new RecursiveTrait("host", new List<TraitAttribute>() {
+                        new TraitAttribute("hostname",
                             CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
-                    RecursiveTrait.Build("windows_host", new List<TraitAttribute>() {
-                        TraitAttribute.Build("os_family",
+                    new RecursiveTrait("windows_host", new List<TraitAttribute>() {
+                        new TraitAttribute("os_family",
                             CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
-                                CIAttributeValueConstraintTextRegex.Build(new Regex(@"Windows", RegexOptions.IgnoreCase)))
+                                new CIAttributeValueConstraintTextRegex(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                         )
                     }, requiredTraits: new string[] { "host" }),
 
-                    RecursiveTrait.Build("linux_host", new List<TraitAttribute>() {
-                        TraitAttribute.Build("os_family",
+                    new RecursiveTrait("linux_host", new List<TraitAttribute>() {
+                        new TraitAttribute("os_family",
                             CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
-                                CIAttributeValueConstraintTextRegex.Build(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
+                                new CIAttributeValueConstraintTextRegex(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
                         )
                     }, requiredTraits: new string[] { "host" }),
 
                     // linux disk devices
-                    RecursiveTrait.Build("linux_block_device", new List<TraitAttribute>() {
-                        TraitAttribute.Build("device",
+                    new RecursiveTrait("linux_block_device", new List<TraitAttribute>() {
+                        new TraitAttribute("device",
                             CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         ),
-                        TraitAttribute.Build("mount",
+                        new TraitAttribute("mount",
                             CIAttributeTemplate.BuildFromParams("mount", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
 
                     // linux network_interface
-                    RecursiveTrait.Build("linux_network_interface", new List<TraitAttribute>() {
-                        TraitAttribute.Build("device",
+                    new RecursiveTrait("linux_network_interface", new List<TraitAttribute>() {
+                        new TraitAttribute("device",
                             CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         ),
-                        TraitAttribute.Build("type",
+                        new TraitAttribute("type",
                             CIAttributeTemplate.BuildFromParams("type", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         ),
-                        TraitAttribute.Build("active",
+                        new TraitAttribute("active",
                             CIAttributeTemplate.BuildFromParams("active", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
 
                     // applications
-                    RecursiveTrait.Build("application", new List<TraitAttribute>() {
-                        TraitAttribute.Build("name",
+                    new RecursiveTrait("application", new List<TraitAttribute>() {
+                        new TraitAttribute("name",
                             CIAttributeTemplate.BuildFromParams("application_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
 
                     // automation / ansible
-                    RecursiveTrait.Build("ansible_can_deploy_to_it",
+                    new RecursiveTrait("ansible_can_deploy_to_it",
                         new List<TraitAttribute>() {
-                            TraitAttribute.Build("hostname", // TODO: make this an anyOf[CIAttributeTemplate], or use dependent trait host
+                            new TraitAttribute("hostname", // TODO: make this an anyOf[CIAttributeTemplate], or use dependent trait host
                                 CIAttributeTemplate.BuildFromParams("ipAddress",    AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                             )
                         },
                         new List<TraitAttribute>() {
-                            TraitAttribute.Build("variables",
+                            new TraitAttribute("variables",
                                 CIAttributeTemplate.BuildFromParams("automation.ansible_variables", AttributeValueType.JSON, false)
                             )
                         },
                         new List<TraitRelation>() {
-                            TraitRelation.Build("ansible_groups",
-                                RelationTemplate.Build("has_ansible_group", 1, null)
+                            new TraitRelation("ansible_groups",
+                                new RelationTemplate("has_ansible_group", 1, null)
                             )
                         }
                     )

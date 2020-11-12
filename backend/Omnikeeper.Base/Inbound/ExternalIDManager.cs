@@ -3,6 +3,7 @@ using Npgsql;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +31,7 @@ namespace Omnikeeper.Base.Inbound
 
         protected abstract Task<IEnumerable<(EID externalID, ICIIdentificationMethod idMethod)>> GetExternalIDs();
 
-        public async Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, NpgsqlConnection conn, NpgsqlTransaction trans, ILogger logger)
+        public async Task<(bool updated, bool successful)> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, IModelContext trans, ILogger logger)
         {
             var externalIDs = await GetExternalIDs();
 
@@ -108,10 +109,11 @@ namespace Omnikeeper.Base.Inbound
                 changes = true;
             }
 
+            var successful = true;
             if (changes)
-                await mapper.Persist(conn, trans); // TODO: handle case when persisting fails... keep trying? or revert whole ID finding process?
+                successful = await mapper.Persist(trans);
 
-            return changes;
+            return (changes, successful);
         }
     }
 

@@ -25,27 +25,35 @@ using Omnikeeper.Base.Entity.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Omnikeeper.Base.Service;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Caching.Memory;
+using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tests.Integration
 {
-    abstract class DIServicedTestBase
+    abstract class DIServicedTestBase : DBBackedTestBase
     {
+        private ServiceProvider? serviceProvider;
+
         [SetUp]
-        public void Setup()
+        public override void Setup()
         {
+            base.Setup();
+
             var services = InitServices();
-            ServiceProvider = services.BuildServiceProvider();
-            DBSetup.Setup();
+            serviceProvider = services.BuildServiceProvider();
         }
 
 
         [TearDown]
-        public void TearDown()
+        public override void TearDown()
         {
-            ServiceProvider.Dispose();
+            base.TearDown();
+
+            if (serviceProvider != null)
+                serviceProvider.Dispose();
         }
 
-        protected ServiceProvider ServiceProvider { get; private set; }
+        protected ServiceProvider ServiceProvider => serviceProvider!;
 
         protected virtual IServiceCollection InitServices()
         {
@@ -58,7 +66,7 @@ namespace Tests.Integration
             ServiceRegistration.RegisterServices(services);
             ServiceRegistration.RegisterGraphQL(services);
 
-            services.AddScoped<IMemoryCacheModel>((sp) => null);
+            services.AddScoped<IMemoryCache>((sp) => new Mock<IMemoryCache>().Object);
 
             // TODO: add generic?
             services.AddScoped<ILogger<EffectiveTraitModel>>((sp) => NullLogger<EffectiveTraitModel>.Instance);
@@ -66,6 +74,7 @@ namespace Tests.Integration
             services.AddScoped<ILogger<OIAContextModel>>((sp) => NullLogger<OIAContextModel>.Instance);
             services.AddScoped<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance);
             services.AddScoped<ILogger<RecursiveTraitModel>>((sp) => NullLogger<RecursiveTraitModel>.Instance);
+            services.AddScoped<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance);
             services.AddSingleton<ILoggerFactory, NullLoggerFactory>();
 
             services.AddSingleton<IConfiguration>((sp) => new Mock<IConfiguration>().Object);

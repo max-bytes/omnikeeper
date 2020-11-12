@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Tests.Integration.Model
 {
-    class RandomString
+    class RandomString // TODO: move
     {
         public static string Generate(int length, Random random, string allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
         {

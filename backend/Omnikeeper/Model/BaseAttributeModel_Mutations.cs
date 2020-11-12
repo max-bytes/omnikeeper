@@ -3,6 +3,7 @@ using NpgsqlTypes;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ namespace Omnikeeper.Model
 {
     public partial class BaseAttributeModel
     {
-        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var readTS = TimeThreshold.BuildLatest();
             var currentAttribute = await GetAttribute(name, ciid, layerID, trans, readTS);
@@ -32,7 +33,7 @@ namespace Omnikeeper.Model
             var changeset = await changesetProxy.GetChangeset(trans);
 
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id) 
-                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id)", conn, trans);
+                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id)", trans.DBConnection, trans.DBTransaction);
 
             var (valueText, valueBinary, valueControl) = Marshal(currentAttribute.Value);
 
@@ -50,15 +51,15 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("changeset_id", changeset.ID);
 
             await command.ExecuteNonQueryAsync();
-            var ret = CIAttribute.Build(id, name, ciid, currentAttribute.Value, AttributeState.Removed, changeset.ID);
+            var ret = new CIAttribute(id, name, ciid, currentAttribute.Value, AttributeState.Removed, changeset.ID);
 
             return (ret, true);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
-            => await InsertAttribute(ICIModel.NameAttribute, AttributeScalarValueText.BuildFromString(nameValue), ciid, layerID, changesetProxy, trans);
+        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
+            => await InsertAttribute(ICIModel.NameAttribute, new AttributeScalarValueText(nameValue), ciid, layerID, changesetProxy, trans);
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var readTS = TimeThreshold.BuildLatest();
             var currentAttribute = await GetAttribute(name, ciid, layerID, trans, readTS);
@@ -80,7 +81,7 @@ namespace Omnikeeper.Model
             var changeset = await changesetProxy.GetChangeset(trans);
 
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id) 
-                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id)", conn, trans);
+                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id)", trans.DBConnection, trans.DBTransaction);
 
             var (valueText, valueBinary, valueControl) = Marshal(value);
 
@@ -98,10 +99,10 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("changeset_id", changeset.ID);
 
             await command.ExecuteNonQueryAsync();
-            return (CIAttribute.Build(id, name, ciid, value, state, changeset.ID), true);
+            return (new CIAttribute(id, name, ciid, value, state, changeset.ID), true);
         }
 
-        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, NpgsqlTransaction trans)
+        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var readTS = TimeThreshold.BuildLatest();
 
@@ -145,7 +146,7 @@ namespace Omnikeeper.Model
                 Changeset changeset = await changesetProxy.GetChangeset(trans);
 
                 // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
-                using var writer = conn.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)");
+                using var writer = trans.DBConnection.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)");
                 foreach (var (ciid, fullName, value, state) in actualInserts)
                 {
                     var (valueText, valueBinary, valueControl) = Marshal(value);

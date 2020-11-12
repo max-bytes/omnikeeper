@@ -2,8 +2,9 @@
 using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Service;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,66 +13,58 @@ namespace Omnikeeper.Model.Decorators
 {
     public class CachingPredicateModel : IPredicateModel
     {
-        private readonly IMemoryCache memoryCache;
-
         private IPredicateModel Model { get; }
 
-        public CachingPredicateModel(IPredicateModel model, IMemoryCache memoryCache)
+        public CachingPredicateModel(IPredicateModel model)
         {
             Model = model;
-            this.memoryCache = memoryCache;
         }
 
-        public async Task<IDictionary<string, Predicate>> GetPredicates(NpgsqlTransaction trans, TimeThreshold atTime, AnchorStateFilter stateFilter)
+        public async Task<IDictionary<string, Predicate>> GetPredicates(IModelContext trans, TimeThreshold atTime, AnchorStateFilter stateFilter)
         {
             if (atTime.IsLatest)
-                return await memoryCache.GetOrCreateAsync(CacheKeyService.Predicates(stateFilter), async (ce) =>
+                return await trans.GetOrCreateCachedValueAsync(CacheKeyService.Predicates(stateFilter), async () =>
                 {
-                    var changeToken = memoryCache.GetPredicatesCancellationChangeToken();
-                    ce.AddExpirationToken(changeToken);
                     return await Model.GetPredicates(trans, atTime, stateFilter);
-                });
+                }, CacheKeyService.PredicatesChangeToken());
             else return await Model.GetPredicates(trans, atTime, stateFilter);
         }
 
-        public async Task<Predicate> GetPredicate(string id, TimeThreshold atTime, AnchorStateFilter stateFilter, NpgsqlTransaction trans)
+        public async Task<Predicate?> GetPredicate(string id, TimeThreshold atTime, AnchorStateFilter stateFilter, IModelContext trans)
         {
 
             if (atTime.IsLatest)
             {
-                return await memoryCache.GetOrCreateAsync(CacheKeyService.Predicate(id), async (ce) =>
+                return await trans.GetOrCreateCachedValueAsync(CacheKeyService.Predicate(id), async () =>
                 {
-                    var changeToken = memoryCache.GetPredicateCancellationToken(id);
-                    ce.AddExpirationToken(changeToken);
-
                     return await Model.GetPredicate(id, atTime, stateFilter, trans);
-                });
+                }, CacheKeyService.PredicatesChangeToken());
             }
 
             return await Model.GetPredicate(id, atTime, stateFilter, trans);
         }
 
-        public async Task<(Predicate predicate, bool changed)> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints, NpgsqlTransaction trans, DateTimeOffset? timestamp = null)
+        public async Task<(Predicate predicate, bool changed)> InsertOrUpdate(string id, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints, IModelContext trans, DateTimeOffset? timestamp = null)
         {
             var (predicate, changed) = await Model.InsertOrUpdate(id, wordingFrom, wordingTo, state, constraints, trans, timestamp);
 
             if (changed)
             {
-                memoryCache.CancelPredicatesChangeToken();
-                memoryCache.CancelPredicateChangeToken(id);
+                trans.CancelToken(CacheKeyService.PredicatesChangeToken());
+                trans.CancelToken(CacheKeyService.PredicateChangeToken(id));
             }
 
             return (predicate, changed);
         }
 
-        public async Task<bool> TryToDelete(string id, NpgsqlTransaction trans)
+        public async Task<bool> TryToDelete(string id, IModelContext trans)
         {
             var success = await Model.TryToDelete(id, trans);
 
             if (success)
             {
-                memoryCache.CancelPredicatesChangeToken();
-                memoryCache.CancelPredicateChangeToken(id);
+                trans.CancelToken(CacheKeyService.PredicatesChangeToken());
+                trans.CancelToken(CacheKeyService.PredicateChangeToken(id));
             }
 
             return success;
