@@ -4,7 +4,6 @@ import CI from './CI';
 import PropTypes from 'prop-types'
 import { queries } from '../graphql/queries'
 import LoadingOverlay from 'react-loading-overlay'
-import { Container } from 'react-bootstrap';
 import { ErrorView } from './ErrorView';
 import { useExplorerLayers } from '../utils/layers';
 import { useSelectedTime } from '../utils/useSelectedTime';
@@ -31,9 +30,9 @@ function LoadingCI(props) {
   React.useEffect(() => { if (selectedTime.refreshNonceCI) refetchCI({fetchPolicy: 'network-only'}); }, [selectedTime, refetchCI]);
 
   if (dataCI) return (<LoadingOverlay active={loadingCI} spinner>
-      <Container fluid>
+      <div style={{ width: "100%", padding: "0 15px" }}>
         <CI timeThreshold={timeThreshold} ci={dataCI.ci} isEditable={isEditable} ></CI>
-      </Container>
+      </div>
     </LoadingOverlay>);
   else if (loadingCI) return <p>Loading...</p>;
   else if (errorCI) return <ErrorView error={errorCI}/>;

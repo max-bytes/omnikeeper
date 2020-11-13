@@ -1,8 +1,6 @@
 import React, {useState, forwardRef, useImperativeHandle, useRef} from "react";
 import { Dropdown } from 'semantic-ui-react'
-import Form from 'react-bootstrap/Form';
-import Col from 'react-bootstrap/Col';
-import Row from 'react-bootstrap/Row';
+import { Form, Row, Col } from "antd"
 import { useQuery } from '@apollo/client';
 import { queries } from '../../graphql/queries';
 import _ from 'lodash';
@@ -49,29 +47,33 @@ export default forwardRef((props, ref) => {
         }));
 
     return <div style={{display: 'flex'}}>
-        <Form onSubmit={e => { e.preventDefault(); }} style={{minWidth: '600px', margin: '10px'}}>
-          <Form.Group as={Row} controlId="from">
-            <Form.Label column>From Traits:</Form.Label>
-            <Col sm={9}>
-                <Dropdown placeholder='from' ref={inputRefFrom} fluid multiple search selection value={preferredTraitsFrom}
-                    onChange={(e, data) => {
-                        setPreferredTraitsFrom(data.value);
-                    }}
-                    options={optionsFrom}
-                />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row} controlId="to">
-            <Form.Label column>To Traits:</Form.Label>
-            <Col sm={9}>
-            <Dropdown placeholder='to' ref={inputRefTo} fluid multiple search selection value={preferredTraitsTo}
-                onChange={(e, data) => {
-                    setPreferredTraitsTo(data.value);
-                }}
-                options={optionsTo}
-              />
-            </Col>
-          </Form.Group>
+        <Form style={{minWidth: '600px', margin: '10px'}}>
+            <Row>
+                <Col span={4}>
+                    <Form.Item style={{float: "right", paddingRight: "8px"}}>From Traits:</Form.Item>
+                </Col>
+                <Col span={20}>
+                    <Dropdown placeholder='from' ref={inputRefFrom} fluid multiple search selection value={preferredTraitsFrom}
+                        onChange={(e, data) => {
+                            setPreferredTraitsFrom(data.value);
+                        }}
+                        options={optionsFrom}
+                    />
+                </Col>
+            </Row>
+            <Row>
+                <Col span={4}>
+                    <Form.Item style={{float: "right", paddingRight: "8px", marginBottom: 0}}>To Traits:</Form.Item>
+                </Col>
+                <Col span={20}>
+                    <Dropdown placeholder='to' ref={inputRefTo} fluid multiple search selection value={preferredTraitsTo}
+                        onChange={(e, data) => {
+                            setPreferredTraitsTo(data.value);
+                        }}
+                        options={optionsTo}
+                    />
+                </Col>
+            </Row>
         </Form>
     </div>;
 })

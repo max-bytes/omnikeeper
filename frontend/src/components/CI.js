@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types'
-import {Row, Col} from 'react-bootstrap';
+import { Row, Col } from "antd";
 import AddNewAttribute from './AddNewAttribute';
 import ExplorerAttributeList from './ExplorerAttributeList';
 import TemplateErrors from './TemplateErrors';
@@ -19,12 +19,12 @@ function CI(props) {
   const panes = [
     { menuItem: 'Attributes', render: () => <Tab.Pane>
       <Row>
-        <Col>
+        <Col span={24}>
           <AddNewAttribute prefilled={createNewAttribute} isEditable={props.isEditable} ciIdentity={props.ci.id}></AddNewAttribute>
         </Col>
       </Row>
       <Row>
-        <Col>
+        <Col span={24}>
           <ExplorerAttributeList mergedAttributes={props.ci.mergedAttributes} isEditable={props.isEditable} 
             ciIdentity={props.ci.id} visibleAndWritableLayers={visibleAndWritableLayers} visibleLayers={visibleLayers} />
         </Col>
