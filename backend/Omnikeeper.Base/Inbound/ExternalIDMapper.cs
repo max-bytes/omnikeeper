@@ -93,7 +93,7 @@ namespace Omnikeeper.Base.Inbound
             }
         }
 
-        public void RemoveViaExternalID(EID externalID)
+        private void RemoveViaExternalID(EID externalID)
         {
             if (ext2int.TryGetValue(externalID, out var ciid))
             {
