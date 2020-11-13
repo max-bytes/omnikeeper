@@ -1,10 +1,9 @@
 import React from "react";
 import { withApollo } from 'react-apollo';
-import { Button } from 'react-bootstrap';
 import { mutations } from '../graphql/mutations';
 import { useMutation } from '@apollo/react-hooks';
 import LayerStackIcons from "./LayerStackIcons";
-import Form from 'react-bootstrap/Form';
+import { Form, Button } from 'antd';
 import { Link  } from 'react-router-dom'
 import ChangesetPopup from "./ChangesetPopup";
 import { useExplorerLayers } from '../utils/layers';
@@ -27,7 +26,7 @@ function RelatedCI(props) {
   });
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
-  // const otherCIButton = <Button variant="link" onClick={() => setSelectedCI({variables: { newSelectedCI: props.related.ci.identity }})}>{props.related.ci.identity}</Button>;
+  // const otherCIButton = <Button type="link" onClick={() => setSelectedCI({variables: { newSelectedCI: props.related.ci.identity }})}>{props.related.ci.identity}</Button>;
   const otherCIButton = <Link to={"/explorer/" + props.related.ci.id}>{props.related.ci.name ?? "[UNNAMED]"}</Link>;
 
   const written = <span>{`This CI "${props.related.predicateWording}" `}{otherCIButton}</span>;
@@ -35,8 +34,7 @@ function RelatedCI(props) {
   // move remove functionality into on-prop
   let removeButton;
   if (props.isEditable) {
-    removeButton = <Button variant="danger" size="sm" onClick={e => {
-      e.preventDefault();
+    removeButton = <Button type="danger" size="small" onClick={e => {
       removeRelation({ variables: { fromCIID: props.related.fromCIID, toCIID: props.related.toCIID, includeRelated: props.perPredicateLimit,
         predicateID: props.related.predicateID, layerID: props.related.layerID, layers: visibleLayers.map(l => l.name) } })
       .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
@@ -44,14 +42,12 @@ function RelatedCI(props) {
   }
 
   return (
-    <div style={{margin: "5px"}}>
-      <Form inline style={{flexFlow: 'nowrap'}} onSubmit={e => e.preventDefault()}>
+    <div style={{margin: "5px", float: props.alignRight ? "right" : "unset" }}>
+      <Form layout="inline" style={{flexFlow: 'nowrap', alignItems: 'center'}} id={`value:${props.related.predicateID}`}>
         <LayerStackIcons layerStack={props.related.layerStack}></LayerStackIcons>
         <ChangesetPopup changesetID={props.related.changesetID} />
-        <Form.Group controlId={`value:${props.related.predicateID}`} style={{flexGrow: 1, minHeight: "27px"}}>
-          <Form.Label className={"pr-1"} style={{flexBasis: '600px', justifyContent: 'flex-start'}}>{written}</Form.Label>
-          {removeButton}
-        </Form.Group>
+        <Form.Item style={{flexBasis: '600px', justifyContent: 'flex-start', paddingRight: "0.25rem"}}>{written}</Form.Item>
+        {removeButton}
       </Form>
     </div>
   );

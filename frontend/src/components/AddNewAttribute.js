@@ -2,14 +2,12 @@ import React, { useState } from "react";
 import PropTypes from 'prop-types'
 import { useMutation } from '@apollo/react-hooks';
 import { withApollo } from 'react-apollo';
-//import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import Col from 'react-bootstrap/Col';
 import { mutations } from '../graphql/mutations'
 import { AttributeTypes } from '../utils/attributeTypes'
-import { Row } from "react-bootstrap";
 import EditableAttributeValue from "./EditableAttributeValue";
-import { Dropdown, Segment, Button, Icon } from 'semantic-ui-react'
+import { Row, Col, Form, Input, Select, Checkbox, Button, Card } from "antd";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import LayerDropdown from "./LayerDropdown";
 import { ErrorPopupButton } from "./ErrorPopupButton";
 import { useExplorerLayers } from '../utils/layers';
@@ -38,16 +36,15 @@ function AddNewAttribute(props) {
   const [insertCIAttribute] = useMutation(mutations.INSERT_CI_ATTRIBUTE);
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
-  let addButton = <Button disabled={!canBeEdited} onClick={() => setOpen(!isOpen)} icon primary labelPosition='left'>
-      <Icon name='plus' />Add Attribute
-    </Button>;
+  const addButton = <Button disabled={!canBeEdited} onClick={() => setOpen(!isOpen)} icon={<FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>} type="primary">
+    Add Attribute
+  </Button>
 
   let addAttribute = <></>;
   if (isOpen) {
     addAttribute = 
-      <Segment raised>
-        <Form onSubmit={e => {
-            e.preventDefault();
+      <Card style={{ "boxShadow": "0px 0px 5px 0px rgba(0,0,0,0.25)" }}>
+        <Form labelCol={{ span: "4" }} onFinish={e => {
             setInsertError(undefined);
             insertCIAttribute({ variables: { layers: visibleLayers.map(l => l.name), ciIdentity: props.ciIdentity, name: newAttribute.name, layerID: selectedLayer.id, value: {
               type: newAttribute.type,
@@ -62,52 +59,57 @@ function AddNewAttribute(props) {
             });
           }}>
 
-          <Form.Group as={Row} controlId="layer">
-            <Form.Label column>Layer</Form.Label>
-            <Col sm={10}>
-              <LayerDropdown layers={visibleAndWritableLayers} selectedLayer={selectedLayer} onSetSelectedLayer={l => setSelectedLayer(l)} />
+          <Row>
+            <Col span={18}>
+                <Form.Item name="layer" label="Layer">
+                    <LayerDropdown layers={visibleAndWritableLayers} selectedLayer={selectedLayer} onSetSelectedLayer={l => setSelectedLayer(l)} />
+                </Form.Item>
             </Col>
-          </Form.Group>
+          </Row>
 
-          <Form.Group as={Row} controlId="type">
-            <Form.Label column>Type</Form.Label>
-            <Col sm={8}>
-              <Dropdown placeholder='Select attribute type' fluid search selection value={newAttribute.type}
-                onChange={(e, data) => {
-                  // we'll clear the value, to be safe, TODO: better value migration between types
-                  setNewAttribute({...newAttribute, type: data.value, value: ''});
-                }}
-                options={AttributeTypes.map(at => { return {key: at.id, value: at.id, text: at.name }; })}
-              />
+          <Row>
+              <Col span={18}>
+                <Form.Item label="Type" name="type">
+                    <Select style={{ width: "100%" }} placeholder='Select attribute type' showSearch value={newAttribute.type}
+                        onChange={(e, data) => {
+                        // we'll clear the value, to be safe, TODO: better value migration between types
+                        setNewAttribute({...newAttribute, type: data.value, value: ''});
+                        }}
+                        options={AttributeTypes.map(at => { return {key: at.id, value: at.id, label: at.name }; })}
+                    />
+                </Form.Item>
+              </Col>
+              <Col span={4} style={{ paddingLeft: "15px"}}>
+                <Form.Item name="isArray" valuePropName="checked">
+                    <Checkbox checked={newAttribute.isArray} onChange={e => setNewAttribute({...newAttribute, values: [''], isArray: e.target.checked })}>Is Array</Checkbox>
+                </Form.Item>
+              </Col>
+          </Row>
+
+          <Row>
+            <Col span={18}>
+                <Form.Item name="name" label="Name">
+                    <Input type="text" placeholder="Enter name" value={newAttribute.name} onChange={e => setNewAttribute({...newAttribute, name: e.target.value})} />
+                </Form.Item>
             </Col>
-            <Col sm={2}>
-              <Form.Group style={{height: '100%'}} controlId="isArray">
-                <Form.Check style={{height: '100%'}} inline type="checkbox" label="Is Array" checked={newAttribute.isArray} onChange={e => setNewAttribute({...newAttribute, values: [''], isArray: e.target.checked })} />
-              </Form.Group>
+          </Row>
+
+          <Row>
+            <Col span={18}>
+                <Form.Item name="value" label={((newAttribute.isArray) ? 'Values' : 'Value')}>
+                    <EditableAttributeValue hideNameLabel setHasErrors={setHasErrors} name={'newAttribute'} autoFocus={valueAutofocussed} values={newAttribute.values} setValues={vs => setNewAttribute({...newAttribute, values: vs})} type={newAttribute.type} isArray={newAttribute.isArray} />
+                </Form.Item>
             </Col>
-          </Form.Group>
-          <Form.Group as={Row} controlId="name">
-            <Form.Label column>Name</Form.Label>
-            <Col sm={10}>
-              <Form.Control type="text" placeholder="Enter name" value={newAttribute.name} onChange={e => setNewAttribute({...newAttribute, name: e.target.value})} />
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row} controlId="value">
-            <Form.Label column>{((newAttribute.isArray) ? 'Values' : 'Value')}</Form.Label>
-            <Col sm={10}>
-              <EditableAttributeValue setHasErrors={setHasErrors} name={'newAttribute'} autoFocus={valueAutofocussed} 
-                values={newAttribute.values} setValues={vs => setNewAttribute({...newAttribute, values: vs})} 
-                type={newAttribute.type} isArray={newAttribute.isArray} ciid={props.ciIdentity} />
-            </Col>
-          </Form.Group>
-          <Button secondary className="mr-2" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button primary type="submit" disabled={hasErrors || !newAttribute.name}>Insert</Button>
+          </Row>
+
+          <Button type="secondary" onClick={() => setOpen(false)} style={{ marginRight: "0.5rem" }}>Cancel</Button>
+          <Button type="primary" htmlType="submit" disabled={hasErrors || !newAttribute.name}>Insert</Button>
           <ErrorPopupButton error={insertError} />
         </Form>
-      </Segment>;
+      </Card>;
   }
 
-  return <div className={"mb-4"}>
+  return <div style={{ marginBottom: "1.5rem" }}>
     {!isOpen && addButton}
     {addAttribute}
     </div>;

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Container, Row, Col} from 'react-bootstrap';
+import { Row, Col} from 'antd';
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import _ from 'lodash';
 import { onAppear, onExit } from 'utils/animation';
@@ -18,36 +18,31 @@ function DiffEffectiveTraitsList(props) {
 
   return (<>
   <Row>
-    <Col>
-      <Flipper flipKey={_.map(props.effectiveTraits, r => r.key).join(' ')}>
-        {_.map(props.effectiveTraits, r => {
-          var state = r.compareResult.state;
-          return (
-            <Flipped key={r.key} flipId={r.key} onAppear={onAppear} onExit={onExit}>
-              <Container fluid>
-                <Row style={{backgroundColor: stateBasedBackgroundColor(state)}}>
-                  <Col xs={'auto'}>
-                    <div style={{width: '220px', minHeight: '38px'}}>
-                      &nbsp;
-                    </div>
-                  </Col>
-                  <Col>
+      <Col span={24}>
+    <Flipper flipKey={_.map(props.effectiveTraits, r => r.key).join(' ')}>
+    {_.map(props.effectiveTraits, r => {
+        var state = r.compareResult.state;
+        return (
+        <Flipped key={r.key} flipId={r.key} onAppear={onAppear} onExit={onExit}>
+            <div style={{ width: "100%" }}>
+            <Row style={{backgroundColor: stateBasedBackgroundColor(state)}} wrapperCol = {{ offset: "4" }}>
+                <Col span={10}>
                     {r.left && <EffectiveTrait effectiveTrait={r.left} />}
                     {!r.left && <MissingLabel /> }
-                  </Col>
-                  <Col xs={1}>
+                </Col>
+                <Col span={4}>
                     <CompareLabel state={state} />
-                  </Col>
-                  <Col>
+                </Col>
+                <Col span={10}>
                     {r.right && <EffectiveTrait effectiveTrait={r.left} />}
                     {!r.right && <MissingLabel /> }
-                  </Col>
-                </Row>
-              </Container>
-            </Flipped>
-          );
-        })}
-      </Flipper>
+                </Col>
+            </Row>
+            </div>
+        </Flipped>
+        );
+    })}
+    </Flipper>
     </Col>
   </Row>
   </>);

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Container, Row, Col} from 'react-bootstrap';
+import { Row, Col} from 'antd';
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import RelatedCI from 'components/RelatedCI';
 import _ from 'lodash';
@@ -13,32 +13,27 @@ function DiffRelationList(props) {
 
   return (<>
   <Row>
-    <Col>
+    <Col span={24}>
       <Flipper flipKey={_.map(props.relations, r => r.key).join(' ')}>
         {_.map(props.relations, r => {
           var state = r.compareResult.state;
           return (
             <Flipped key={r.key} flipId={r.key} onAppear={onAppear} onExit={onExit}>
-              <Container fluid>
+              <div style={{ width: "100%" }}>
                 <Row style={{backgroundColor: stateBasedBackgroundColor(state)}}>
-                  <Col xs={'auto'}>
-                    <div style={{width: '220px', minHeight: '38px'}}>
-                      &nbsp;
-                    </div>
-                  </Col>
-                  <Col>
-                    {r.left && <RelatedCI related={r.left} isEditable={false}></RelatedCI>}
+                <Col span={10}>
+                    {r.left && <RelatedCI related={r.left} isEditable={false} alignRight></RelatedCI>}
                     {!r.left && <MissingLabel /> }
-                  </Col>
-                  <Col xs={1}>
+                </Col>
+                <Col span={4}>
                     <CompareLabel state={state} />
-                  </Col>
-                  <Col>
+                </Col>
+                <Col span={10}>
                     {r.right && <RelatedCI related={r.right} isEditable={false}></RelatedCI>}
                     {!r.right && <MissingLabel /> }
-                  </Col>
+                </Col>
                 </Row>
-              </Container>
+              </div>
             </Flipped>
           );
         })}

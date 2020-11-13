@@ -5,7 +5,7 @@ import { queries } from 'graphql/queries'
 import { useLocation } from 'react-router-dom'
 import { Segment, Divider } from 'semantic-ui-react'
 import { useQuery, useLazyQuery } from '@apollo/react-hooks';
-import { Button, Container, Row, Col, Form } from 'react-bootstrap';
+import { Form, Row, Col, Button, Checkbox } from "antd";
 import LoadingOverlay from 'react-loading-overlay';
 import queryString from 'query-string';
 import { withRouter } from 'react-router-dom'
@@ -129,77 +129,66 @@ function Diffing(props) {
   if (layerData) {
 
     return (<div style={{marginTop: '10px', marginBottom: '20px'}}>
-      <Container fluid>
+      <div style={{ width: "100%", padding: "0 15px" }}>
         <Segment>
           <Row>
-            <Col xs={'auto'} style={{display: 'flex'}}>
+            <Col span={4} style={{display: 'flex'}}>
               <LeftLabel>Layers:</LeftLabel>
             </Col>
-            <Col>
+            <Col span={8}>
               <DiffLayerSettings alignment='right' layerData={layerData.layers} layerSettings={leftLayerSettings} setLayerSettings={setLeftLayerSettings} onLayersChange={setLeftLayers} />
-            </Col><Col>
+            </Col><Col span={8}>
               <DiffLayerSettings alignment='left' layerData={layerData.layers} layerSettings={rightLayerSettings} setLayerSettings={setRightLayerSettings} onLayersChange={setRightLayers} />
             </Col>
           </Row>
           <Divider />
           <Row>
-            <Col xs={'auto'} style={{display: 'flex'}}>
+            <Col span={4} style={{display: 'flex'}}>
               <LeftLabel>CIs:</LeftLabel>
             </Col>
-            <Col>
+            <Col span={8}>
               {visibleLeftLayerNames.length > 0 && 
                 <DiffCISettings alignment='right' layers={visibleLeftLayerNames} selectedCIIDs={leftCIIDs} setSelectedCIIDs={setLeftCIIDs} />}
-            </Col><Col>
+            </Col><Col span={8}>
               {visibleRightLayerNames.length > 0 && 
                 <DiffCISettings alignment='left' layers={visibleRightLayerNames} selectedCIIDs={rightCIIDs} setSelectedCIIDs={setRightCIIDs} />}
             </Col>
           </Row>
           <Divider />
           <Row>
-            <Col xs={'auto'} style={{display: 'flex'}}>
+            <Col span={4} style={{display: 'flex'}}>
               <LeftLabel>Time:</LeftLabel>
             </Col>
-            <Col>
+            <Col span={8}>
               {visibleLeftLayerNames.length > 0 && 
                 <DiffTimeSettings alignment='right' layers={visibleLeftLayerNames} ciids={leftCIIDs} timeSettings={leftTimeSettings} setTimeSettings={setLeftTimeSettings} />}
-            </Col><Col>
+            </Col><Col span={8}>
               {visibleRightLayerNames.length > 0 && 
                 <DiffTimeSettings alignment='left' layers={visibleRightLayerNames} ciids={rightCIIDs} timeSettings={rightTimeSettings} setTimeSettings={setRightTimeSettings} />}
             </Col>
           </Row>
           <Divider />
           <Row>
-          <Col xs={'auto'}>
-            <LeftLabel>&nbsp;</LeftLabel>
-          </Col>
-          <Col>
+          <Col span={24}>
             <div style={{display: 'flex', justifyContent: 'center'}}>
-              <Form inline>
-                <Form.Group controlId="compare">
-                  <Form.Check
-                    custom
-                    inline
-                    label="Show Equal"
-                    type={'checkbox'}
-                    checked={showEqual}
-                    id={`checkbox-show-equal`}
-                    onChange={d => setShowEqual(d.target.checked) }
-                  />
-                  <Button size='lg' onClick={() => compare()} disabled={(leftCIIDs && leftCIIDs.length === 0) || (rightCIIDs && rightCIIDs.length === 0)}>Compare</Button>
-                </Form.Group>
+              <Form initialValues={{ checkboxShowEqual: true }}>
+                <Form.Item name="checkboxShowEqual" valuePropName="checked" style={{ display: "inline-block", verticalAlign: "baseline", marginBottom: 0 }}>
+                  <Checkbox checked={showEqual} onChange={d => setShowEqual(d.target.checked)}>Show Equal</Checkbox>
+                </Form.Item>
+                <Button style={{ display: "inline-block", marginLeft: "8px" }} type="primary" size="large" onClick={() => compare()} disabled={(leftCIIDs && leftCIIDs.length === 0) || (rightCIIDs && rightCIIDs.length === 0)}>Compare</Button>
               </Form>
             </div>
           </Col>
         </Row>
         </Segment>
         <Row>
-          <Col>
+          <Col span={24}>
             <LoadingOverlay fadeSpeed={100} active={loadingLeftCI || loadingRightCI} spinner>
               <DiffArea showEqual={showEqual} leftCIs={dataLeftCI?.cis} rightCIs={dataRightCI?.cis} />
             </LoadingOverlay>
           </Col>
         </Row>
-      </Container>
+      </div>
     </div>)
   } else return 'Loading';
 }

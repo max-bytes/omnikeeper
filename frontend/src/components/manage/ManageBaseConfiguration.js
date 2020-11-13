@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link  } from 'react-router-dom'
 import { Icon, Button } from 'semantic-ui-react';
-import Form from 'react-bootstrap/Form';
+import { Form } from 'antd';
 import { queries } from 'graphql/queries'
 import { mutations } from 'graphql/mutations'
 import 'ace-builds';
@@ -29,7 +29,6 @@ export default function ManageBaseConfiguration() {
     <h2>Base Configuration</h2>
     <div><Link to="/manage"><Icon name="angle left" fitted /> Back</Link></div>
     <Form style={{margin:'10px 0px'}} onSubmit={e => {
-            e.preventDefault();
             setBaseConfiguration({ variables: { baseConfiguration: config } }).then(d => {
               var prettyStr = JSON.stringify(JSON.parse(d.data.setBaseConfiguration),null,2);  
               setConfig(prettyStr);
