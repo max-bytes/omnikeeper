@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import Form from 'react-bootstrap/Form';
-import { Button } from 'semantic-ui-react'
-import { Icon } from 'semantic-ui-react'
+import { Button, Row, Col } from "antd";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faTimes, faPlus, faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import { InputControl } from '../utils/attributeTypes'
 
 function EditableAttributeValue(props) {
-  var {values, setValues, type, isArray, autoFocus, isEditable, setHasErrors, name, controlIdSuffix, ciid} = props;
+  var {values, setValues, type, isArray, autoFocus, isEditable, setHasErrors, name, controlIdSuffix /*, ciid*/} = props;
   
   isEditable = isEditable ?? true;
 
@@ -17,53 +17,48 @@ function EditableAttributeValue(props) {
 
     return <div style={{ display: 'flex', flexDirection: 'column', flexGrow: '1', alignSelf: 'center' }}>
         {values.map((v, index) => {
-          return <Form.Group controlId={`value:${name}:${index}:${controlIdSuffix}`} key={index} style={{display: 'flex', flexGrow: 1, alignItems: 'center'}}>
-            <InputControl arrayIndex={index} setHasErrors={e => {
-              setErrorsInArray(oldErrorsInArray => { let newErrorsInArray = [...oldErrorsInArray]; newErrorsInArray[index] = e; return newErrorsInArray;});
-            }} key={index} type={type} isArray={isArray} value={v} ciid={ciid} attributeName={name} disabled={!isEditable} autoFocus={autoFocus && index === 0}
-              onChange={value => {
+          return <Row key={index} id={`value:${name}:${index}:${controlIdSuffix}`} gutter={4}>
+            <Col span={19}>
+                <InputControl hideNameLabel={props.hideNameLabel} name={name + "_" + index} setHasErrors={e => {
+                setErrorsInArray(oldErrorsInArray => { let newErrorsInArray = [...oldErrorsInArray]; newErrorsInArray[index] = e; return newErrorsInArray;});
+                }} key={index} type={type} isArray={isArray} value={v} disabled={!isEditable} autoFocus={autoFocus && index === 0}
+                onChange={value => {
+                    let newValues = values.slice();
+                    newValues[index] = value;
+                    props.setValues(newValues);
+                }} />
+            </Col>
+            <Col span={1}>
+                {isEditable && <Button icon={<FontAwesomeIcon icon={faTimes} />} style={{ marginLeft: "0.25rem" }} disabled={!canRemoveItem || !isEditable} onClick={e => {
+                e.preventDefault();
                 let newValues = values.slice();
-                newValues[index] = value;
+                newValues.splice(index, 1);
                 props.setValues(newValues);
-              }} />
-              
-            {isEditable && <Button className={'ml-1'} disabled={!canRemoveItem || !isEditable}  size='mini' compact onClick={e => {
-              e.preventDefault();
-              let newValues = values.slice();
-              newValues.splice(index, 1);
-              props.setValues(newValues);
-            }}>
-              <Icon fitted name={'remove'} size="large" />
-            </Button>}
-            {isEditable && <Button className={'ml-1'} disabled={!isEditable} size='mini' compact onClick={e => {
-              e.preventDefault();
-              let newValues = values.slice();
-              newValues.splice(index, 0, '');
-              props.setValues(newValues);
-            }}>
-              <Icon.Group size="large">
-                <Icon fitted name={'add'} />
-                <Icon corner={'top right'} name='caret up' />
-              </Icon.Group>
-            </Button>}
-            {isEditable && <Button className={'ml-1'}  disabled={!isEditable} size='mini' compact onClick={e => {
-              e.preventDefault();
-              let newValues = values.slice();
-              newValues.splice(index + 1, 0, '');
-              props.setValues(newValues);
-            }}>
-              <Icon.Group size="large">
-                <Icon fitted name={'add'} />
-                <Icon corner name='caret down' />
-              </Icon.Group>
-            </Button>}
-          </Form.Group>;
+                }}/>}
+            </Col>
+            <Col span={2}>
+                {isEditable && <Button icon={<FontAwesomeIcon icon={faPlus} style={{marginRight: "10px", marginLeft: "0.25rem"}}/>} disabled={!isEditable} onClick={e => {
+                e.preventDefault();
+                let newValues = values.slice();
+                newValues.splice(index, 0, '');
+                props.setValues(newValues);
+                }}><FontAwesomeIcon icon={faChevronUp} /></Button>}
+            </Col>
+            <Col span={2}>
+                {isEditable && <Button icon={<FontAwesomeIcon icon={faPlus} style={{marginRight: "10px", marginLeft: "0.25rem"}}/>} disabled={!isEditable}  onClick={e => {
+                e.preventDefault();
+                let newValues = values.slice();
+                newValues.splice(index + 1, 0, '');
+                props.setValues(newValues);
+                }}><FontAwesomeIcon icon={faChevronDown} /></Button>}
+            </Col>
+          </Row>
           })
         }
     </div>;
   } else {
-    return <InputControl setHasErrors={setHasErrors} isArray={false} arrayIndex={0} type={type} value={values[0]} 
-    ciid={ciid} attributeName={name} disabled={!isEditable} autoFocus={autoFocus} onChange={value => setValues([value])} />
+    return <InputControl hideNameLabel={props.hideNameLabel} name={name} setHasErrors={setHasErrors} isArray={isArray} type={type} value={values[0]} 
+      disabled={!isEditable} autoFocus={autoFocus} onChange={value => setValues([value])} />
   }
 }
 

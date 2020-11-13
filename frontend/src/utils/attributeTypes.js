@@ -1,5 +1,5 @@
 import React from "react";
-import Form from 'react-bootstrap/Form';
+import { Form, Input } from 'antd';
 import 'ace-builds';
 import 'ace-builds/webpack-resolver';
 import AceEditor from "react-ace";
@@ -95,8 +95,19 @@ export function InputControl(props) {
         />;
     } else {
         // simple type, simple handling
-        return <Form.Control autoFocus={props.autoFocus} disabled={props.disabled} style={{flexGrow: 1, alignSelf: 'center'}} 
-            {...attributeType2InputProps(props.type)} placeholder={(props.disabled) ? "[Empty]" : "Enter value"} value={props.value ?? ""} 
-            onChange={e => props.onChange(e.target.value)} />
+        return (
+            <Form.Item style={{ marginBottom: 0 }} labelCol={props.hideNameLabel ? {} : { span: "4" }} name={props.name} label={props.hideNameLabel ? "" : props.name} initialValue={props.value ?? ""}>
+                <Input
+                    style={{ flexGrow: 1, alignSelf: "center" }}
+                    {...attributeType2InputProps(props.type)}
+                    type="text"
+                    autoFocus={props.autoFocus}
+                    disabled={props.disabled}
+                    placeholder={props.disabled ? "[Empty]" : "Enter value"}
+                    value={props.value ?? ""}
+                    onChange={(e) => props.onChange(e.target.value)}
+                />
+            </Form.Item>
+        );
     }
   }
