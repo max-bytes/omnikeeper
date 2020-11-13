@@ -1,7 +1,9 @@
 import { useQuery } from '@apollo/client';
 import React, { useState } from 'react';
 import { queries } from '../graphql/queries'
-import { Input } from 'semantic-ui-react'
+import { Input } from 'antd'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSearch, faSync } from '@fortawesome/free-solid-svg-icons'
 import { withRouter, Link } from 'react-router-dom'
 
 function SearchCI(props) {
@@ -12,7 +14,8 @@ function SearchCI(props) {
   });
   const [state, setState] = useState(initialState);
 
-  const handleSearchChange = (e, { value }) => {
+  const handleSearchChange = (e) => {
+    const value = e.target.value
     setState({...state, searchString: value});
     // TODO: cancel previous searches -> see: https://evilmartians.com/chronicles/aborting-queries-and-mutations-in-react-apollo
     search({searchString: value });
@@ -20,8 +23,8 @@ function SearchCI(props) {
 
   return (
     <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
-      <div style={{display: 'flex', justifyContent: 'center', marginTop: '50px'}}>
-        <Input icon='search' placeholder='Search...' loading={loading} value={state.searchString} onChange={handleSearchChange} />
+      <div style={{display: 'flex', justifyContent: 'center', marginTop: '50px', width: "205px", margin: "50px auto 0"}}>
+        <Input suffix={<FontAwesomeIcon icon={loading ? faSync : faSearch} color="grey" spin={loading} />}  placeholder='Search...'  onChange={handleSearchChange} />
       </div>
       <div style={{flexGrow: 1, overflowY: 'auto', margin: '20px auto', minWidth: '50%'}}>
         {dataCIs &&
