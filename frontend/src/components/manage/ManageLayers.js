@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link  } from 'react-router-dom'
 import { Icon } from 'semantic-ui-react';
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery, useMutation, useApolloClient } from '@apollo/client';
 import { queries } from '../../graphql/queries'
 import { mutations } from '../../graphql/mutations'
 import 'ag-grid-community/dist/styles/ag-grid.css';
@@ -22,6 +22,7 @@ export default function ManageLayers(props) {
   });
   const [createLayer] = useMutation(mutations.CREATE_LAYER);
   const [updateLayer] = useMutation(mutations.UPDATE_LAYER);
+  const apolloClient = useApolloClient();
 
   const columnDefs = [
     { headerName: "ID", field: "id", editable: false },
@@ -47,10 +48,12 @@ export default function ManageLayers(props) {
         if (row.id === undefined && row.frontend_id !== undefined) {
           return createLayer({variables: { layer: { name: row.name, state: row.state, brainName: row.brainName, onlineInboundAdapterName: row.onlineInboundAdapterName, color: row.color }}})
             .then(r => ({result: r.data.createLayer, frontend_id: row.frontend_id}))
+            .then(r => apolloClient.resetStore())
             .catch(e => ({result: e, frontend_id: row.frontend_id }));
         } else {
           return updateLayer({variables: { layer: { id: row.id, state: row.state, brainName: row.brainName, onlineInboundAdapterName: row.onlineInboundAdapterName, color: row.color }}})
             .then(r => ({result: r.data.updateLayer, id: row.id}))
+            .then(r => apolloClient.resetStore())
             .catch(e => ({result: e, id: row.id }));
         }
       }} />

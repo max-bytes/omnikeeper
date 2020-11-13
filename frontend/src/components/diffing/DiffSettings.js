@@ -5,7 +5,7 @@ import { useQuery } from '@apollo/react-hooks';
 import Layers from 'components/Layers';
 import { format2ShortGuid } from 'utils/shortGuid';
 import { mergeSettingsAndSortLayers } from 'utils/layers'; 
-import Form from 'react-bootstrap/Form'
+import { Radio } from "antd";
 
 function ChangesetDropdown(props) {
   const { ciids, layers, timeSettings, setTimeSettings } = props;
@@ -46,28 +46,11 @@ export function DiffTimeSettings(props) {
 
   return (
     <div style={alignmentStyle(props.alignment)}>
-        <div style={{display: 'flex'}}>
-          <Form.Check style={{alignItems: 'center'}}
-            checked={type===0}
-            custom
-            inline
-            label="Now / Latest"
-            type={'radio'}
-            value={0}
-            id={`time-range-select-latest-${alignment}`}
-            onChange={() => setTimeSettings(ts => ({...ts, type: 0, timeThreshold: undefined}))}
-          />
-          <Form.Check style={{alignItems: 'center'}}
-            checked={type===1}
-            disabled={ciids && ciids.length === 0}
-            custom
-            inline
-            label="Changeset"
-            type={'radio'}
-            value={1}
-            id={`time-range-select-changeset-${alignment}`}
-            onChange={() => setTimeSettings(ts => ({...ts, type: 1}))}
-          />
+      <div style={{display: 'flex', alignItems: 'center'}}>
+        <Radio.Group onChange={(e) => setTimeSettings((ts) => e.target.value === 0 ? { ...ts, type: 0, timeThreshold: undefined } : { ...ts, type: 1 })} defaultValue={0}>
+          <Radio id={`time-range-select-latest-${alignment}`} value={0} checked={type === 0}>Now / Latest</Radio>
+          <Radio id={`time-range-select-changeset-${alignment}`} value={1} checked={type === 1} disabled={ciids && ciids.length === 0}>Changeset</Radio>
+        </Radio.Group>
       </div>
       {type === 1 && 
         <div style={{display: 'flex', flexBasis: '300px'}}>
@@ -112,27 +95,11 @@ export function DiffCISettings(props) {
   const type = (selectedCIIDs === null) ? 0 : 1;
 
   return <div style={alignmentStyle(alignment)}>
-    <div style={{display: 'flex'}}>
-      <Form.Check style={{alignItems: 'center'}}
-        checked={type===0}
-        custom
-        inline
-        label="All"
-        type={'radio'}
-        value={0}
-        id={`ci-select-all-${alignment}`}
-        onChange={() => setSelectedCIIDs(ts => null)}
-      />
-      <Form.Check style={{alignItems: 'center'}}
-        checked={type===1}
-        custom
-        inline
-        label="Specific"
-        type={'radio'}
-        value={1}
-        id={`ci-select-specific-${alignment}`}
-        onChange={() => setSelectedCIIDs(ts => [])}
-      />
+    <div style={{display: 'flex', alignItems: 'center'}}>
+      <Radio.Group onChange={(e) => setSelectedCIIDs((ts) => e.target.value === 0 ? null : [])} defaultValue={1}>
+        <Radio id={`ci-select-all-${alignment}`} value={0} checked={type === 0}>All</Radio>
+        <Radio id={`ci-select-specific-${alignment}`} value={1} checked={type === 1}>Specific</Radio>
+      </Radio.Group>
     </div>
     {type === 1 && 
       <div style={{display: 'flex', flexBasis: '300px'}}>

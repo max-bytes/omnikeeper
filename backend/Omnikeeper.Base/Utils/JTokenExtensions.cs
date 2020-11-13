@@ -10,8 +10,8 @@ namespace Omnikeeper.Base.Utils
         {
             if (jToken is JContainer container)
             {
-                return container.Descendants().Where(d => d is JProperty && !(d as JProperty).HasValues).Any(d
-                => CultureInfo.InvariantCulture.CompareInfo.IndexOf((d as JProperty).Value.ToString(), searchString, compareOptions) >= 0); // TODO: correct?
+                return container.Descendants().Where(d => d is JProperty jd && !jd.HasValues).Any(d
+                => CultureInfo.InvariantCulture.CompareInfo.IndexOf((d as JProperty)!.Value.ToString(), searchString, compareOptions) >= 0); // TODO: correct?
             }
             else
             {

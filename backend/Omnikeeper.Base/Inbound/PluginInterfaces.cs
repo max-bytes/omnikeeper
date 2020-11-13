@@ -6,6 +6,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -15,17 +16,17 @@ namespace Omnikeeper.Base.Inbound
 {
     public interface IExternalIDMapPersister
     {
-        public Task Persist(string scope, IDictionary<Guid, string> int2ext, NpgsqlConnection conn, NpgsqlTransaction trans);
-        public Task<IDictionary<Guid, string>> Load(string scope, NpgsqlConnection conn, NpgsqlTransaction trans);
+        public Task<bool> Persist(string scope, IDictionary<Guid, string> int2ext, IModelContext trans);
+        public Task<IDictionary<Guid, string>?> Load(string scope, IModelContext trans);
         public IScopedExternalIDMapPersister CreateScopedPersister(string scope);
-        public Task<int> DeleteUnusedScopes(ISet<string> usedScopes, NpgsqlConnection conn, NpgsqlTransaction trans);
-        public Task<ISet<Guid>> GetAllMappedCIIDs(NpgsqlConnection conn, NpgsqlTransaction trans);
+        public Task<int> DeleteUnusedScopes(ISet<string> usedScopes, IModelContext trans);
+        public Task<ISet<Guid>> GetAllMappedCIIDs(IModelContext trans);
     }
 
     public interface IScopedExternalIDMapPersister // TODO: needed? or can be merged into IExternalIDMapPersister?
     {
-        public Task Persist(IDictionary<Guid, string> int2ext, NpgsqlConnection conn, NpgsqlTransaction trans);
-        public Task<IDictionary<Guid, string>> Load(NpgsqlConnection conn, NpgsqlTransaction trans);
+        public Task<bool> Persist(IDictionary<Guid, string> int2ext, IModelContext trans);
+        public Task<IDictionary<Guid, string>?> Load(IModelContext trans);
         public string Scope { get; }
     }
 
@@ -49,11 +50,14 @@ namespace Omnikeeper.Base.Inbound
             return ID;
         }
 
-        public override bool Equals([AllowNull] object other)
+        public override bool Equals(object? other)
         {
-            try { return Equals((ExternalIDString)other); } catch (InvalidCastException) { return false; };
+            var tmp = (ExternalIDString?)other;
+            if (tmp != null)
+                return Equals((ExternalIDString)tmp);
+            return false;
         }
-        public bool Equals([AllowNull] ExternalIDString other) => ID == other.ID;
+        public bool Equals(ExternalIDString other) => ID == other.ID;
         public override int GetHashCode() => ID.GetHashCode();
     }
 
@@ -72,11 +76,14 @@ namespace Omnikeeper.Base.Inbound
             return ID.ToString();
         }
 
-        public override bool Equals([AllowNull] object other)
+        public override bool Equals(object? other)
         {
-            try { return Equals((ExternalIDGuid)other); } catch (InvalidCastException) { return false; };
+            var tmp = (ExternalIDGuid?)other;
+            if (tmp != null)
+                return Equals((ExternalIDGuid)tmp);
+            return false;
         }
-        public bool Equals([AllowNull] ExternalIDGuid other) => ID == other.ID;
+        public bool Equals(ExternalIDGuid other) => ID == other.ID;
         public override int GetHashCode() => ID.GetHashCode();
     }
 
@@ -87,7 +94,7 @@ namespace Omnikeeper.Base.Inbound
 
     public interface IExternalIDManager
     {
-        Task<bool> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, NpgsqlConnection conn, NpgsqlTransaction trans, ILogger logger);
+        Task<(bool updated, bool successful)> Update(ICIModel ciModel, IAttributeModel attributeModel, CIMappingService ciMappingService, IModelContext trans, ILogger logger);
         TimeSpan PreferredUpdateRate { get; }
         string PersisterScope { get; }
     }
@@ -97,27 +104,27 @@ namespace Omnikeeper.Base.Inbound
         IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime);
         IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, TimeThreshold atTime);
         IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, TimeThreshold atTime);
-        Task<CIAttribute> GetAttribute(string name, Guid ciid, TimeThreshold atTime);
-        Task<CIAttribute> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime);
+        Task<CIAttribute?> GetAttribute(string name, Guid ciid, TimeThreshold atTime);
+        Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime);
         IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime);
-        Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime);
+        Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime);
     }
 
     public interface IOnlineAccessProxy
     {
-        Task<bool> IsOnlineInboundLayer(long layerID, NpgsqlTransaction trans);
+        Task<bool> IsOnlineInboundLayer(long layerID, IModelContext trans);
 
-        IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributes(ICIIDSelection selection, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
-        IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
-        //IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributesWithName(string name, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime);
-        IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
-        IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
-        Task<CIAttribute> GetAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime);
-        Task<CIAttribute> GetFullBinaryAttribute(string name, long layerID, Guid ciid, NpgsqlTransaction trans, TimeThreshold atTime);
+        IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributes(ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime);
+        IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime);
+        //IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributesWithName(string name, LayerSet layers, ITransaction trans, TimeThreshold atTime);
+        IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime);
+        IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime);
+        Task<CIAttribute?> GetAttribute(string name, long layerID, Guid ciid, IModelContext trans, TimeThreshold atTime);
+        Task<CIAttribute?> GetFullBinaryAttribute(string name, long layerID, Guid ciid, IModelContext trans, TimeThreshold atTime);
 
-        //IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(IRelationSelection rl, LayerSet layerset, NpgsqlTransaction trans, TimeThreshold atTime);
-        IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
-        Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, NpgsqlTransaction trans, TimeThreshold atTime);
+        //IAsyncEnumerable<(Relation relation, long layerID)> GetRelations(IRelationSelection rl, LayerSet layerset, ITransaction trans, TimeThreshold atTime);
+        IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, long layerID, IModelContext trans, TimeThreshold atTime);
+        Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans, TimeThreshold atTime);
     }
 
     public interface IOnlineInboundAdapterBuilder

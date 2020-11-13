@@ -9,15 +9,23 @@ namespace Omnikeeper.Base.Entity
     {
         private IImmutableDictionary<string, Template> TemplateDict { get; set; }
 
-        public Template GetTemplate(string ciTypeID) => TemplateDict.GetValueOrDefault(ciTypeID, null);
+        public Templates(IImmutableDictionary<string, Template> templateDict)
+        {
+            TemplateDict = templateDict;
+        }
+
+        public Template? GetTemplate(string ciTypeID)
+        {
+            if (TemplateDict.TryGetValue(ciTypeID, out var f))
+                return f;
+            return null;
+        }
 
         public static Task<Templates> Build()
         {
             //var traits = await traitsProvider.GetTraits(trans);
             // TODO: move the actual data creation somewhere else
-            return Task.FromResult(new Templates()
-            {
-                TemplateDict = new List<Template>()
+            return Task.FromResult(new Templates(new List<Template>()
                 {
                     //Template.Build("Application",
                     //        new List<CIAttributeTemplate>() {
@@ -38,7 +46,7 @@ namespace Omnikeeper.Base.Entity
                     //            traits.traits["ansible_can_deploy_to_it"]
                     //        }
                     //),
-                    Template.Build("Ansible Host Group",
+                    new Template("Ansible Host Group",
                             new List<CIAttributeTemplate>() {
                                 CIAttributeTemplate.BuildFromParams("automation.ansible_group_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                             },
@@ -46,7 +54,7 @@ namespace Omnikeeper.Base.Entity
                             new List<RecursiveTrait>() {}
                     )
                 }.ToImmutableDictionary(t => t.CITypeID)
-            });
+            ));
         }
     }
 }

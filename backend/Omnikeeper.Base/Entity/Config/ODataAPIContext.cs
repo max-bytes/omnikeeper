@@ -11,6 +11,12 @@ namespace Omnikeeper.Base.Entity
 
         public class ConfigV3 : IConfig
         {
+            public ConfigV3(long writeLayerID, long[] readLayerset)
+            {
+                WriteLayerID = writeLayerID;
+                ReadLayerset = readLayerset;
+            }
+
             public long WriteLayerID { get; set; }
             public long[] ReadLayerset { get; set; }
         }
@@ -22,6 +28,12 @@ namespace Omnikeeper.Base.Entity
         {
             TypeNameHandling = TypeNameHandling.Objects
         });
+
+        public ODataAPIContext(string iD, IConfig cConfig)
+        {
+            ID = iD;
+            CConfig = cConfig;
+        }
     }
 
 }

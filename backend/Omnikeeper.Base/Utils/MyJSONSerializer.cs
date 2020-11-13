@@ -1,10 +1,11 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Omnikeeper.Base.Utils
 {
-    public class MyJSONSerializer<T>
+    public class MyJSONSerializer<T> where T : class
     {
         public MyJSONSerializer(Func<JsonSerializerSettings> serializerSettingsF) : this(serializerSettingsF())
         {
@@ -19,11 +20,17 @@ namespace Omnikeeper.Base.Utils
 
         public T Deserialize(JObject jo)
         {
-            return Serializer.Deserialize<T>(new JTokenReader(jo));
+            var r = Serializer.Deserialize<T>(new JTokenReader(jo));
+            if (r == null)
+                throw new Exception("Could not deserialize JObject");
+            return r;
         }
         public T Deserialize(string str)
         {
-            return JsonConvert.DeserializeObject<T>(str, SerializerSettings);
+            var r = JsonConvert.DeserializeObject<T>(str, SerializerSettings);
+            if (r == null)
+                throw new Exception("Could not deserialize string");
+            return r;
         }
 
         public JObject SerializeToJObject(T config)

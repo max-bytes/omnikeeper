@@ -2,7 +2,6 @@ import React from 'react';
 import './App.css';
 import Explorer from './components/Explorer';
 import Diffing from './components/diffing/Diffing';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import 'semantic-ui-css/semantic.min.css'
 import 'antd/dist/antd.css';
 import Keycloak from 'keycloak-js'

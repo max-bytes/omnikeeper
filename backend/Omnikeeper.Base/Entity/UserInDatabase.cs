@@ -17,18 +17,14 @@ namespace Omnikeeper.Base.Entity
         public DateTimeOffset Timestamp { get; private set; }
         public UserType UserType { get; private set; }
 
-        public static UserInDatabase Build(long id, Guid uuid, string username, string displayName, UserType userType, DateTimeOffset timestamp)
+        public UserInDatabase(long id, Guid uuid, string username, string displayName, UserType userType, DateTimeOffset timestamp)
         {
-            var user = new UserInDatabase
-            {
-                ID = id,
-                UUID = uuid,
-                UserType = userType,
-                Username = username,
-                DisplayName = displayName,
-                Timestamp = timestamp
-            };
-            return user;
+            ID = id;
+            UUID = uuid;
+            UserType = userType;
+            Username = username;
+            DisplayName = displayName;
+            Timestamp = timestamp;
         }
     }
 }

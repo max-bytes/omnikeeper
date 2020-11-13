@@ -1,6 +1,7 @@
 ﻿using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Threading.Tasks;
 
@@ -8,16 +9,14 @@ namespace Omnikeeper.Model
 {
     public class LayerStatisticsModel : ILayerStatisticsModel
     {
-        private readonly NpgsqlConnection conn;
         private readonly ILayerModel layerModel;
 
-        public LayerStatisticsModel(NpgsqlConnection connection, ILayerModel layerModel)
+        public LayerStatisticsModel(ILayerModel layerModel)
         {
-            conn = connection;
             this.layerModel = layerModel;
         }
 
-        public async Task<long> GetActiveAttributes(Layer layer, NpgsqlTransaction trans)
+        public async Task<long> GetActiveAttributes(Layer layer, IModelContext trans)
         {
             // return number of all active attributes
             using var commandActiveLayers = new NpgsqlCommand($@"
@@ -30,7 +29,7 @@ namespace Omnikeeper.Model
                     ORDER BY ATTR.ci_id, ATTR.name, ATTR.timestamp DESC
                 ) R
                 WHERE R.state != 'removed'
-            ", conn, trans);
+            ", trans.DBConnection, trans.DBTransaction);
 
             commandActiveLayers.Parameters.AddWithValue("layer_id", layer.ID);
             commandActiveLayers.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
@@ -39,7 +38,7 @@ namespace Omnikeeper.Model
         }
 
 
-        public async Task<long> GetAttributeChangesHistory(Layer layer, NpgsqlTransaction trans)
+        public async Task<long> GetAttributeChangesHistory(Layer layer, IModelContext trans)
         {
             // return number of all historic attribute changes
             using var command = new NpgsqlCommand($@"
@@ -47,14 +46,14 @@ namespace Omnikeeper.Model
                 FROM attribute ATT 
                 WHERE ATT.timestamp <= @time_threshold AND ATT.layer_id = @layer_id
 
-            ", conn, trans);
+            ", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("layer_id", layer.ID);
             command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
 
             return (long)await command.ExecuteScalarAsync();
         }
-        public async Task<long> GetActiveRelations(Layer layer, NpgsqlTransaction trans)
+        public async Task<long> GetActiveRelations(Layer layer, IModelContext trans)
         {
             // return number of all active relations
 
@@ -67,7 +66,7 @@ namespace Omnikeeper.Model
                     ORDER BY R.from_ci_id, R.to_ci_id, R.predicate_id, R.layer_id, R.timestamp DESC
                 ) RES
                 WHERE RES.STATE != 'removed'
-            ", conn, trans);
+            ", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("layer_id", layer.ID);
             command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
@@ -75,7 +74,7 @@ namespace Omnikeeper.Model
             return (long)await command.ExecuteScalarAsync();
         }
 
-        public async Task<long> GetRelationChangesHistory(Layer layer, NpgsqlTransaction trans)
+        public async Task<long> GetRelationChangesHistory(Layer layer, IModelContext trans)
         {
             // return number of all historic relation changes
 
@@ -83,7 +82,7 @@ namespace Omnikeeper.Model
                 SELECT COUNT(*)
                 FROM relation R
                 WHERE R.timestamp <= @time_threshold AND R.layer_id = @layer_id
-            ", conn, trans);
+            ", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("layer_id", layer.ID);
             command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);
@@ -91,7 +90,7 @@ namespace Omnikeeper.Model
             return (long)await command.ExecuteScalarAsync();
         }
 
-        public async Task<long> GetLayerChangesetsHistory(Layer layer, NpgsqlTransaction trans)
+        public async Task<long> GetLayerChangesetsHistory(Layer layer, IModelContext trans)
         {
             // return number of all historic changesets that affect this layer
 
@@ -111,7 +110,7 @@ namespace Omnikeeper.Model
                 	    WHERE ATT.layer_id = @layer_id AND ATT.timestamp <= @time_threshold
                     ) AA
                 ) TT
-            ", conn, trans);
+            ", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("layer_id", layer.ID);
             command.Parameters.AddWithValue("time_threshold", DateTimeOffset.Now);

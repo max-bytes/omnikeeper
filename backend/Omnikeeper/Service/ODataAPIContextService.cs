@@ -1,6 +1,7 @@
 ﻿using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Threading.Tasks;
 
@@ -8,7 +9,7 @@ namespace Omnikeeper.Service
 {
     public static class ODataAPIContextService
     {
-        public static async Task<LayerSet> GetReadLayersetFromContext(IODataAPIContextModel model, string contextID, NpgsqlTransaction trans)
+        public static async Task<LayerSet> GetReadLayersetFromContext(IODataAPIContextModel model, string contextID, IModelContext trans)
         {
             var context = await model.GetContextByID(contextID, trans);
             if (context == null) throw new Exception($"Invalid context ID \"{contextID}\"");
@@ -18,7 +19,7 @@ namespace Omnikeeper.Service
                 _ => throw new Exception("Invalid OData API context config"),
             };
         }
-        public static async Task<long> GetWriteLayerIDFromContext(IODataAPIContextModel model, string contextID, NpgsqlTransaction trans)
+        public static async Task<long> GetWriteLayerIDFromContext(IODataAPIContextModel model, string contextID, IModelContext trans)
         {
             var context = await model.GetContextByID(contextID, trans);
             if (context == null) throw new Exception($"Invalid context ID \"{contextID}\"");

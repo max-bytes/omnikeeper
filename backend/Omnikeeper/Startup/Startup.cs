@@ -24,6 +24,7 @@ using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using Npgsql.Logging;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Service;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -85,11 +86,9 @@ namespace Omnikeeper.Startup
                 options.AllowSynchronousIO = true;
             });
 
-            services.AddGraphQL(x =>
-            {
-                x.ExposeExceptions = CurrentEnvironment.IsDevelopment() || CurrentEnvironment.IsStaging(); //set true only in development mode. make it switchable.
-            })
-            .AddGraphTypes(ServiceLifetime.Scoped); // TODO: move graphql class to singleton scope: https://graphql-dotnet.github.io/docs/getting-started/dependency-injection/#scoped-services-with-a-singleton-schema-lifetime
+            services.AddGraphQL(x => { })
+                .AddErrorInfoProvider(opt => opt.ExposeExceptionStackTrace = CurrentEnvironment.IsDevelopment() || CurrentEnvironment.IsStaging())
+                .AddGraphTypes();
 
             services.AddAuthentication(options =>
             {

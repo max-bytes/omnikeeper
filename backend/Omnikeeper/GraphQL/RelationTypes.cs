@@ -1,6 +1,8 @@
 ﻿using GraphQL.Types;
+using GraphQL.Utilities;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using System;
 
 namespace Omnikeeper.GraphQL
 {
@@ -42,7 +44,7 @@ namespace Omnikeeper.GraphQL
 
     public class CompactRelatedCIType : ObjectGraphType<CompactRelatedCI>
     {
-        public CompactRelatedCIType(ILayerModel layerModel)
+        public CompactRelatedCIType()
         {
             Field(x => x.RelationID);
             Field("ci", x => x.CI, type: typeof(CompactCIType));
@@ -57,7 +59,8 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<LayerType>>("layerStack",
             resolve: async (context) =>
             {
-                var userContext = context.UserContext as OmnikeeperUserContext;
+                var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerstackIDs = context.Source.LayerStackIDs;
                 return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
             });

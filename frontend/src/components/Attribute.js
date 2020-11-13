@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import PropTypes from 'prop-types'
 import { useMutation } from '@apollo/react-hooks';
 import { withApollo } from 'react-apollo';
-import Form from 'react-bootstrap/Form';
+import { Button, Form, Row, Col } from "antd";
 import { mutations } from '../graphql/mutations'
-import Button from 'react-bootstrap/Button';
 import LayerStackIcons from "./LayerStackIcons";
 import ChangesetPopup from "./ChangesetPopup";
 import EditableAttributeValue from "./EditableAttributeValue";
@@ -39,15 +38,9 @@ function Attribute(props) {
 
   const layerID = props.attribute.layerStackIDs[props.attribute.layerStackIDs.length - 1];
 
-  let valueInput = <>
-    <EditableAttributeValue name={attribute.attribute.name} controlIdSuffix={controlIdSuffix} 
-      setHasErrors={setHasErrors} isEditable={isEditable} values={values} setValues={setValues} 
-      type={attribute.attribute.value.type} isArray={isArray} ciid={props.ciIdentity} />
-  </>;
-
-  const leftPart = (hideNameLabel) ? '' : <div style={{display: 'flex', flexBasis: '220px', minHeight: '38px', alignItems: 'center'}}>
-    <Form.Label className={"pr-1"} style={{whiteSpace: 'nowrap', flexGrow: 1, justifyContent: 'flex-end'}}>{attribute.attribute.name}</Form.Label>
-  </div>;
+  let valueInput = 
+    <EditableAttributeValue hideNameLabel={hideNameLabel} name={attribute.attribute.name} controlIdSuffix={controlIdSuffix} setHasErrors={setHasErrors} isEditable={isEditable} values={values} setValues={setValues} type={attribute.attribute.value.type} isArray={isArray} />
+;
 
   const rightPart = <div style={{minHeight: '38px', display: 'flex', alignItems: 'center'}}>
     <LayerStackIcons layerStack={attribute.layerStack} />
@@ -56,39 +49,51 @@ function Attribute(props) {
 
   if (isEditable) {
     const removeButton = (
-      <Button variant="danger" onClick={e => {
+      <Button type="primary" danger onClick={e => {
         e.preventDefault();
         removeCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, layers: visibleLayers.map(l => l.name) } })
         .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
-      }}>Remove</Button>
+      }} style={{ marginLeft: "0.5rem" }}>Remove</Button>
     );
 
     input = (
-      <Form inline style={{alignItems: 'flex-start', flexFlow: 'row'}} onSubmit={e => {
-          e.preventDefault();
+      <Form onFinish={e => {
           insertCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, layers: visibleLayers.map(l => l.name), value: {
             type: attribute.attribute.value.type,
             values: values,
             isArray: isArray
           } } })
           .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
-        }}>
-          <Form.Group controlId={`value:${attribute.attribute.name}:${controlIdSuffix}`} style={{flexGrow: 1, alignItems: 'flex-start'}}>
-            {leftPart}
-            {valueInput}
-            {rightPart}
-            <Button type="submit" className={'mx-1'} disabled={attribute.attribute.value.values === values || hasErrors}>Update</Button>
-            {removeButton}
-          </Form.Group>
+        }}
+        id={`value:${attribute.attribute.name}:${controlIdSuffix}`}
+        >
+          <Row>
+            <Col
+                span={18}
+                style={{ paddingLeft: isArray ? "43px" : "0px" }} // paddingLeft is a workaround to fix wrong col-spacing // TODO: find a better way
+            >
+                {valueInput}
+            </Col>
+            <Col span={2}>
+                {rightPart}
+                </Col>
+            <Col span={4}>
+                <Button htmlType="submit" type="primary" className={'mx-1'} disabled={attribute.attribute.value.values === values || hasErrors}>Update</Button>
+                {removeButton}
+            </Col> 
+          </Row>
       </Form>
     );
   } else {
-    input = (<Form inline style={{alignItems: 'flex-start'}} >
-      <Form.Group controlId={`value:${attribute.attribute.name}:${controlIdSuffix}`} style={{flexGrow: 1, alignItems: 'flex-start'}}>
-        {leftPart}
-        {valueInput}
-        {rightPart}
-      </Form.Group>
+    input = (<Form id={`value:${attribute.attribute.name}:${controlIdSuffix}`}>
+      <Row>
+        <Col span={18}>
+            {valueInput}
+        </Col>
+        <Col span={2}>
+            {rightPart}
+        </Col>
+      </Row>
     </Form>);
   }
 

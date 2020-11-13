@@ -4,6 +4,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,26 +18,25 @@ namespace Omnikeeper.Base.CLB
         protected readonly IChangesetModel changesetModel;
         protected readonly ILayerModel layerModel;
         private readonly IPredicateModel predicateModel;
-        protected readonly NpgsqlConnection conn;
 
-        public CLBBase(IAttributeModel attributeModel, ILayerModel layerModel, IPredicateModel predicateModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
+        public CLBBase(IAttributeModel attributeModel, ILayerModel layerModel, IPredicateModel predicateModel,
+            IChangesetModel changesetModel, IUserInDatabaseModel userModel)
         {
             this.attributeModel = attributeModel;
             this.userModel = userModel;
             this.changesetModel = changesetModel;
-            this.conn = conn;
             this.layerModel = layerModel;
             this.predicateModel = predicateModel;
         }
 
-        protected CLBSettings Settings { get; private set; }
+        protected CLBSettings? Settings { get; private set; }
 
-        public string Name => GetType().FullName;
+        public string Name => GetType().FullName!;
 
         public abstract string[] RequiredPredicates { get; }
         public abstract RecursiveTraitSet DefinedTraits { get; }
 
-        private TraitSet cachedTraitSet = null;
+        private TraitSet? cachedTraitSet = null;
         protected TraitSet TraitSet
         {
             get
@@ -47,16 +47,15 @@ namespace Omnikeeper.Base.CLB
             }
         }
 
-        public async Task<bool> Run(CLBSettings settings, ILogger logger)
+        public async Task<bool> Run(CLBSettings settings, IModelContextBuilder modelContextBuilder, ILogger logger)
         {
             try
             {
                 Settings = settings;
 
-                using var trans = await conn.BeginTransactionAsync();
+                using var trans = modelContextBuilder.BuildDeferred();
 
                 var atTime = DateTimeOffset.Now;
-
 
                 var username = Name; // make username the same as CLB name
                 var displayName = username;
@@ -64,7 +63,7 @@ namespace Omnikeeper.Base.CLB
                 var clbUserGuidNamespace = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1");
                 var guid = GuidUtility.Create(clbUserGuidNamespace, Name);
                 var user = await userModel.UpsertUser(username, displayName, guid, UserType.Robot, trans);
-                var changesetProxy = ChangesetProxy.Build(user, atTime, changesetModel);
+                var changesetProxy = new ChangesetProxy(user, atTime, changesetModel);
 
                 // prerequisits
                 var predicates = await predicateModel.GetPredicates(trans, TimeThreshold.BuildLatestAtTime(atTime), AnchorStateFilter.ActiveOnly);
@@ -98,7 +97,7 @@ namespace Omnikeeper.Base.CLB
             }
         }
 
-        public abstract Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger);
+        public abstract Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger);
 
     }
 }

@@ -1,4 +1,5 @@
 ﻿using GraphQL;
+using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +9,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL;
 using Omnikeeper.Ingest.ActiveDirectoryXML;
 using Omnikeeper.Model;
@@ -27,6 +29,7 @@ namespace Omnikeeper.Startup
                 var dbcb = sp.GetRequiredService<DBConnectionBuilder>();
                 return dbcb.Build(configuration);
             });
+            services.AddScoped<IModelContextBuilder, ModelContextBuilder>();
         }
         public static void RegisterDB(IServiceCollection services, string dbName, bool pooling, bool reloadTypes)
         {
@@ -36,38 +39,43 @@ namespace Omnikeeper.Startup
                 var dbcb = sp.GetRequiredService<DBConnectionBuilder>();
                 return dbcb.Build(dbName, pooling, reloadTypes);
             });
+            services.AddScoped<IModelContextBuilder, ModelContextBuilder>();
         }
 
         public static void RegisterOIABase(IServiceCollection services)
         {
-            services.AddScoped<IOnlineAccessProxy, OnlineAccessProxy>();
+            services.AddSingleton<IOnlineAccessProxy, OnlineAccessProxy>();
             services.AddSingleton<IExternalIDMapper, ExternalIDMapper>();
             services.AddSingleton<IExternalIDMapPersister, ExternalIDMapPostgresPersister>();
-            services.AddScoped<IInboundAdapterManager, InboundAdapterManager>();
+            services.AddSingleton<IInboundAdapterManager, InboundAdapterManager>();
         }
 
         public static void RegisterOKPlugins(IServiceCollection services)
         {
             // register compute layer brains
-            services.AddScoped<IComputeLayerBrain, OKPluginCLBMonitoring.CLBNaemonMonitoring>();
+            services.AddSingleton<IComputeLayerBrain, OKPluginCLBMonitoring.CLBNaemonMonitoring>();
 
             // register online inbound adapters
-            services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.Builder>();
-            services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.BuilderInternal>();
-            services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIAOmnikeeper.OnlineInboundAdapter.Builder>();
-            services.AddScoped<IOnlineInboundAdapterBuilder, OKPluginOIASharepoint.OnlineInboundAdapter.Builder>();
+            services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.Builder>();
+            services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.BuilderInternal>();
+            services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIAOmnikeeper.OnlineInboundAdapter.Builder>();
+            services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIASharepoint.OnlineInboundAdapter.Builder>();
+
+            // register ingest adapters
+            services.AddSingleton<ActiveDirectoryXMLIngestService, ActiveDirectoryXMLIngestService>();
         }
 
         public static void RegisterServices(IServiceCollection services)
         {
-            services.AddScoped<CIMappingService, CIMappingService>();
-            services.AddScoped<IManagementAuthorizationService, ManagementAuthorizationService>();
-            services.AddScoped<ILayerBasedAuthorizationService, LayerBasedAuthorizationService>();
-            services.AddScoped<ICIBasedAuthorizationService, CIBasedAuthorizationService>();
-            services.AddScoped<ICurrentUserService, CurrentUserService>();
-            services.AddScoped<MarkedForDeletionService>();
+            // TODO: make singleton
+            services.AddSingleton<CIMappingService, CIMappingService>();
+            services.AddSingleton<IManagementAuthorizationService, ManagementAuthorizationService>();
+            services.AddSingleton<ILayerBasedAuthorizationService, LayerBasedAuthorizationService>();
+            services.AddSingleton<ICIBasedAuthorizationService, CIBasedAuthorizationService>();
+            services.AddSingleton<MarkedForDeletionService>();
             services.AddScoped<IngestDataService>();
-            services.AddScoped<IngestActiveDirectoryXMLService, IngestActiveDirectoryXMLService>(); // TODO: move to its own plugin
+
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         }
 
@@ -78,29 +86,29 @@ namespace Omnikeeper.Startup
 
         public static void RegisterModels(IServiceCollection services, bool enableModelCaching, bool enableOIA)
         {
-            services.AddScoped<ICISearchModel, CISearchModel>();
-            services.AddScoped<ICIModel, CIModel>();
-            services.AddScoped<IAttributeModel, AttributeModel>();
-            services.AddScoped<IBaseAttributeModel, BaseAttributeModel>();
-            services.AddScoped<IUserInDatabaseModel, UserInDatabaseModel>();
-            services.AddScoped<ILayerModel, LayerModel>();
-            services.AddScoped<ILayerStatisticsModel, LayerStatisticsModel>();
-            services.AddScoped<IRelationModel, RelationModel>();
-            services.AddScoped<IBaseRelationModel, BaseRelationModel>();
-            services.AddScoped<IChangesetModel, ChangesetModel>();
-            services.AddScoped<ITemplateModel, TemplateModel>();
-            services.AddScoped<IPredicateModel, PredicateModel>();
-            services.AddScoped<IMemoryCacheModel, MemoryCacheModel>();
-            services.AddScoped<IODataAPIContextModel, ODataAPIContextModel>();
-            services.AddScoped<IRecursiveTraitModel, RecursiveTraitModel>();
-            services.AddScoped<IEffectiveTraitModel, EffectiveTraitModel>();
-            services.AddScoped<IBaseConfigurationModel, BaseConfigurationModel>();
-            services.AddScoped<IOIAContextModel, OIAContextModel>();
-            services.AddScoped<IGridViewConfigModel, GridViewConfigModel>();
+            services.AddSingleton<ICISearchModel, CISearchModel>();
+            services.AddSingleton<ICIModel, CIModel>();
+            services.AddSingleton<IAttributeModel, AttributeModel>();
+            services.AddSingleton<IBaseAttributeModel, BaseAttributeModel>();
+            services.AddSingleton<IUserInDatabaseModel, UserInDatabaseModel>();
+            services.AddSingleton<ILayerModel, LayerModel>();
+            services.AddSingleton<ILayerStatisticsModel, LayerStatisticsModel>();
+            services.AddSingleton<IRelationModel, RelationModel>();
+            services.AddSingleton<IBaseRelationModel, BaseRelationModel>();
+            services.AddSingleton<IChangesetModel, ChangesetModel>();
+            services.AddSingleton<ITemplateModel, TemplateModel>();
+            services.AddSingleton<IPredicateModel, PredicateModel>();
+            services.AddSingleton<IMemoryCacheModel, MemoryCacheModel>();
+            services.AddSingleton<IODataAPIContextModel, ODataAPIContextModel>();
+            services.AddSingleton<IRecursiveTraitModel, RecursiveTraitModel>();
+            services.AddSingleton<IEffectiveTraitModel, EffectiveTraitModel>();
+            services.AddSingleton<IBaseConfigurationModel, BaseConfigurationModel>();
+            services.AddSingleton<IOIAContextModel, OIAContextModel>();
+            services.AddSingleton<IGridViewConfigModel, GridViewConfigModel>();
 
             // these aren't real models, but we keep them here because they are closely related to models
-            services.AddScoped<ITraitsProvider, TraitsProvider>();
-            services.AddScoped<ITemplatesProvider, TemplatesProvider>();
+            services.AddSingleton<ITraitsProvider, TraitsProvider>();
+            services.AddSingleton<ITemplatesProvider, TemplatesProvider>();
 
             if (enableModelCaching)
             {
@@ -124,8 +132,9 @@ namespace Omnikeeper.Startup
 
         public static void RegisterGraphQL(IServiceCollection services)
         {
-            services.AddScoped<ISchema, GraphQLSchema>();
+            services.AddSingleton<ISchema, GraphQLSchema>();
             services.AddSingleton<IDocumentExecuter, MyDocumentExecutor>(); // custom document executor that does serial queries, required by postgres
+            services.AddSingleton<IDocumentWriter, DocumentWriter>();
         }
     }
 }

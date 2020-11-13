@@ -41,14 +41,19 @@ namespace Omnikeeper.Entity.AttributeValues
     {
         public S[] Values { get; protected set; }
 
+        protected AttributeArrayValue(S[] values)
+        {
+            Values = values;
+        }
+
         public abstract AttributeValueType Type { get; }
 
         public bool IsArray => true;
 
         public override string ToString() => $"AV-Array: {Value2String()}";
 
-        public bool Equals(IAttributeValue other) => Equals(other as AttributeArrayValue<S, T>);
-        public bool Equals(AttributeArrayValue<S, T> other) => other != null && Values.SequenceEqual(other.Values); // does this work?, or do we have to use zip()?
+        public bool Equals(IAttributeValue? other) => Equals(other as AttributeArrayValue<S, T>);
+        public bool Equals(AttributeArrayValue<S, T>? other) => other != null && Values.SequenceEqual(other.Values); // does this work?, or do we have to use zip()?
         public override int GetHashCode() => Values.GetHashCode();
 
         public string[] ToRawDTOValues() => Values.Select(v => v.ToRawDTOValues()[0]).ToArray();
@@ -114,8 +119,8 @@ namespace Omnikeeper.Entity.AttributeValues
             else
                 return generic.Type switch
                 {
-                    AttributeValueType.Text => AttributeScalarValueText.BuildFromString(generic.Values[0], false),
-                    AttributeValueType.MultilineText => AttributeScalarValueText.BuildFromString(generic.Values[0], true),
+                    AttributeValueType.Text => new AttributeScalarValueText(generic.Values[0], false),
+                    AttributeValueType.MultilineText => new AttributeScalarValueText(generic.Values[0], true),
                     AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(generic.Values[0]),
                     AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(generic.Values[0]),
                     AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(generic.Values[0]),

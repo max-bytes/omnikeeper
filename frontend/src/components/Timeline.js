@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types'
 import { queries } from 'graphql/queries'
 import LoadingOverlay from 'react-loading-overlay'
-import { Form, Button } from 'react-bootstrap';
+import { Form, Button } from "antd";
 import { Button as SemanticButton, Icon } from 'semantic-ui-react'
 import { mutations } from 'graphql/mutations';
 import { useMutation } from '@apollo/react-hooks';
@@ -91,7 +91,7 @@ function LoadingTimeline(props) {
       <div>
         <div className={"d-flex align-items-center"}>
           <h5 className={"flex-grow-1 my-0"}>Timeline</h5>
-          <Form inline onSubmit={e => e.preventDefault()}>
+          <Form layout="inline">
             {refreshButton}
           </Form>
         </div>
@@ -101,14 +101,12 @@ function LoadingTimeline(props) {
             const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.displayName}</span> : '';
             const label = <span style={((activeChangeset === cs) ? {fontWeight: 'bold'} : {})}>{formatTimestamp(cs.timestamp)} - {userLabel}</span>;
             if (activeChangeset === cs) {
-              return (<div style={lineStyle} key={cs.id}>
-                <Button style={buttonStyle} variant="link" size="sm" disabled key={cs.id}>{label}</Button>
-                </div>);
+              return (<Button style={buttonStyle} type="link" size="small" disabled key={cs.id}>{label}</Button>);
             }
             const isLatest = latestChangeset === cs;
             const diffQuery = buildDiffingURLQueryBetweenChangesets(layerSettingsData.layerSettings, ciid, (latestChangeset === activeChangeset) ? null : activeChangeset.timestamp, (isLatest) ? null : cs.timestamp);
             return (<div style={lineStyle} key={cs.id}>
-                <Button style={buttonStyle} variant="link" size="sm" 
+                <Button style={buttonStyle} type="link" size="small" 
                 onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: (isLatest) ? null : cs.timestamp, isLatest: isLatest }})}>
                   {label}
                 </Button>
@@ -116,7 +114,7 @@ function LoadingTimeline(props) {
                   to={`/diffing?${diffQuery}`}><Icon name="exchange" /></Link>
               </div>);
           })}
-          <Form inline onSubmit={e => e.preventDefault()} style={{justifyContent: "center"}}>
+          <Form layout="inline" style={{justifyContent: "center"}}>
             <SemanticButton basic size='mini' compact onClick={() => {
               setLimit(l => l + 10);
             }}><Icon loading={loadingChangesets} fitted name={'arrow alternate circle down outline'} /></SemanticButton>

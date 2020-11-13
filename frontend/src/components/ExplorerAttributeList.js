@@ -55,7 +55,7 @@ function ExplorerAttributeList(props) {
 
   return (
     <>
-       <div className={"d-flex align-items-end flex-column mb-2"} >
+       <div className={"d-flex align-items-end flex-column"} style={{ marginBottom: "0.5rem", position: "absolute", right: 0, top: "-38px" }}>
             <Button
                 size={"tiny"}
                 onClick={() => toggleExpandCollapseAll()}

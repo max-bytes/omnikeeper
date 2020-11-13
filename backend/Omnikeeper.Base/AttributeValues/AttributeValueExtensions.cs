@@ -7,14 +7,14 @@ namespace Omnikeeper.Base.AttributeValues
 {
     public static class AttributeValueExtensions
     {
-        public static IEnumerable<string> TryReadValueTextArray(this MergedCIAttribute attribute)
+        public static IEnumerable<string>? TryReadValueTextArray(this MergedCIAttribute attribute)
         {
             if (attribute?.Attribute.Value is AttributeArrayValueText v)
             {
                 return v.Values.Select(vv => vv.Value);
             }
 
-            return default;
+            return null;
         }
     }
 }

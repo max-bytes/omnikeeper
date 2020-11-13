@@ -29,31 +29,28 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public AttributeValueType Type => (Multiline) ? AttributeValueType.MultilineText : AttributeValueType.Text;
 
-        public bool Equals([AllowNull] IAttributeValue other) => Equals(other as AttributeScalarValueText);
-        public bool Equals([AllowNull] AttributeScalarValueText other) => other != null && Value == other.Value && Multiline == other.Multiline;
+        public bool Equals(IAttributeValue? other) => Equals(other as AttributeScalarValueText);
+        public bool Equals(AttributeScalarValueText? other) => other != null && Value == other.Value && Multiline == other.Multiline;
         public override int GetHashCode() => Value.GetHashCode();
 
-        public static AttributeScalarValueText BuildFromString(string value, bool multiline = false)
+        public AttributeScalarValueText(string value, bool multiline = false)
         {
-            return new AttributeScalarValueText
-            {
-                Value = value,
-                Multiline = multiline
-            };
+            Value = value;
+            Multiline = multiline;
         }
 
         public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
         {
             if (maximum.HasValue && Value.Length > maximum)
-                yield return TemplateErrorAttributeGeneric.Build("Text too long!");
+                yield return new TemplateErrorAttributeGeneric("Text too long!");
             else if (minimum.HasValue && Value.Length < minimum)
-                yield return TemplateErrorAttributeGeneric.Build("Text too short!");
+                yield return new TemplateErrorAttributeGeneric("Text too short!");
         }
         public IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex)
         {
             var match = regex.Match(Value);
             if (!match.Success)
-                yield return TemplateErrorAttributeGeneric.Build($"Regex {regex} did not match text {Value}");
+                yield return new TemplateErrorAttributeGeneric($"Regex {regex} did not match text {Value}");
         }
 
         public bool FullTextSearch(string searchString, CompareOptions compareOptions)
@@ -63,14 +60,18 @@ namespace Omnikeeper.Entity.AttributeValues
 
     public class AttributeArrayValueText : AttributeArrayValue<AttributeScalarValueText, string>, IAttributeValueText
     {
+        protected AttributeArrayValueText(AttributeScalarValueText[] values) : base(values)
+        {
+        }
+
         public override AttributeValueType Type => Values.Any(v => v.Multiline) ? AttributeValueType.MultilineText : AttributeValueType.Text;
 
         public static AttributeArrayValueText BuildFromString(string[] values, bool multiline = false)
         {
-            return new AttributeArrayValueText()
-            {
-                Values = values.Select(v => AttributeScalarValueText.BuildFromString(v, multiline)).ToArray()
-            };
+            return new AttributeArrayValueText
+            (
+                values.Select(v => new AttributeScalarValueText(v, multiline)).ToArray()
+            );
         }
 
         public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)

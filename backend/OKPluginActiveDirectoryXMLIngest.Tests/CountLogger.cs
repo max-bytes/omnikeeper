@@ -1,11 +1,10 @@
-﻿using Castle.Core.Logging;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using Omnikeeper.Base.Utils;
 
-namespace Tests
+namespace OKPluginActiveDirectoryXMLIngest.Tests
 {
     class CountLogger<T> : ILogger<T>
     {

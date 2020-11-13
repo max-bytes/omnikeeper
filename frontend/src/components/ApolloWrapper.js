@@ -96,6 +96,35 @@ function ApolloWrapper({ component: Component, ...rest }) {
       credentials: 'include'
     });
 
+    function setInitialState() {
+        var initialState = {
+            selectedTimeThreshold: {
+            time: null,
+            isLatest: true
+            },
+            layerSettings: null
+        };
+        // console.log("Writing initial state")
+        cache.writeQuery({
+            query: gql`
+            query InitialState {
+                selectedTimeThreshold {
+                    time
+                    isLatest
+                }
+                layerSettings {
+                    LayerSettings {
+                        layerID
+                        sortOffset
+                        visible
+                    }
+                }
+            }
+            `,
+            data: initialState
+        })
+    }
+
     const client = new ApolloClient({
       cache,
       link: authLink.concat(httpLink),
@@ -108,32 +137,8 @@ function ApolloWrapper({ component: Component, ...rest }) {
     //   },
     });
 
-    var initialState = {
-        selectedTimeThreshold: {
-          time: null,
-          isLatest: true
-        },
-        layerSettings: null
-    };
-    // console.log("Writing initial state")
-    cache.writeQuery({
-        query: gql`
-        query InitialState {
-            selectedTimeThreshold {
-                time
-                isLatest
-            }
-            layerSettings {
-                LayerSettings {
-                    layerID
-                    sortOffset
-                    visible
-                }
-            }
-        }
-        `,
-        data: initialState
-    })
+    setInitialState();
+    client.onResetStore(setInitialState);
 
     return (
         <ApolloProvider client={client}>

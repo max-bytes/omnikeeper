@@ -22,10 +22,11 @@
 
   <ItemGroup>
     <PackageReference Include="FluentValidation.AspNetCore" Version="9.2.0" />
-    <PackageReference Include="GraphQL" Version="3.0.0-preview-1352" />
-    <PackageReference Include="GraphQL.Authorization" Version="3.0.39-preview-39" />
-    <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="3.5.0-alpha0027" />
-    <PackageReference Include="GraphQL.Server.Ui.Playground" Version="3.4.0" />
+    <PackageReference Include="GraphQL" Version="3.1.3" />
+    <PackageReference Include="GraphQL.Authorization" Version="3.1.0" />
+    <PackageReference Include="GraphQL.NewtonsoftJson" Version="3.1.3" />
+    <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="4.3.0" />
+    <PackageReference Include="GraphQL.Server.Ui.Playground" Version="4.3.0" />
     <PackageReference Include="Hangfire.AspNetCore" Version="1.7.9" />
     <PackageReference Include="Hangfire.Console" Version="1.4.2" />
     <PackageReference Include="Hangfire.Core" Version="1.7.9" />
@@ -56,12 +57,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DBMigrations\DBMigrations.csproj" />
+    <ProjectReference Include="..\OKPluginActiveDirectoryXMLIngest\OKPluginActiveDirectoryXMLIngest.csproj" />
+    <ProjectReference Include="..\OKPluginAnsibleInventoryScanIngest\OKPluginAnsibleInventoryScanIngest.csproj" />
     <ProjectReference Include="..\OKPluginCLBMonitoring\OKPluginCLBMonitoring.csproj" />
     <ProjectReference Include="..\OKPluginOIAKeycloak\OKPluginOIAKeycloak.csproj" />
     <ProjectReference Include="..\OKPluginOIAOmnikeeper\OKPluginOIAOmnikeeper.csproj" />
     <ProjectReference Include="..\OKPluginOIASharepoint\OKPluginOIASharepoint.csproj" />
     <ProjectReference Include="..\Omnikeeper.Base\Omnikeeper.Base.csproj" />
   </ItemGroup>
+  
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
 
   <ItemGroup>
     <None Update="entrypoint.sh">

@@ -20,18 +20,15 @@ namespace Omnikeeper.Entity.AttributeValues
         public bool Equals([AllowNull] AttributeScalarValueInteger other) => other != null && Value == other.Value;
         public override int GetHashCode() => Value.GetHashCode();
 
-        public static AttributeScalarValueInteger Build(long value)
+        public AttributeScalarValueInteger(long value)
         {
-            return new AttributeScalarValueInteger
-            {
-                Value = value
-            };
+            Value = value;
         }
 
         public static AttributeScalarValueInteger BuildFromString(string value)
         {
             long.TryParse(value, out var v);
-            return Build(v);
+            return new AttributeScalarValueInteger(v);
         }
 
     }
@@ -39,14 +36,17 @@ namespace Omnikeeper.Entity.AttributeValues
 
     public class AttributeArrayValueInteger : AttributeArrayValue<AttributeScalarValueInteger, long>
     {
+        public AttributeArrayValueInteger(AttributeScalarValueInteger[] values) : base(values)
+        {
+        }
+
         public override AttributeValueType Type => AttributeValueType.Integer;
 
         public static AttributeArrayValueInteger Build(long[] values)
         {
-            return new AttributeArrayValueInteger()
-            {
-                Values = values.Select(v => AttributeScalarValueInteger.Build(v)).ToArray()
-            };
+            return new AttributeArrayValueInteger(
+                values.Select(v => new AttributeScalarValueInteger(v)).ToArray()
+            );
         }
 
         public static AttributeArrayValueInteger BuildFromString(string[] values)

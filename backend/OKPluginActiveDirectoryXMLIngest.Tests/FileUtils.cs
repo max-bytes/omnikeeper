@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Linq;
 
-namespace Tests
+namespace OKPluginActiveDirectoryXMLIngest.Tests
 {
     class FileUtils
     {

@@ -49,13 +49,13 @@ namespace Tests.Integration.GraphQL
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
             var changesetModel = ServiceProvider.GetRequiredService<IChangesetModel>();
             var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
-            using var trans = ServiceProvider.GetRequiredService<NpgsqlConnection>().BeginTransaction();
+            using var trans = ModelContextBuilder.BuildDeferred();
             var ciid1 = await ciModel.CreateCI(trans);
             var layer1 = await layerModel.CreateLayer("layer_1", trans);
             var layerID2 = await layerModel.CreateLayer("layer_2", trans);
-            var user = AuthenticatedUser.Build(await userModel.UpsertUser(username, username, userGUID, UserType.Robot, trans), new List<Layer>());
-            var changeset = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a1", AttributeScalarValueInteger.Build(3), ciid1, layer1.ID, changeset, trans);
+            var user = new AuthenticatedUser(await userModel.UpsertUser(username, username, userGUID, UserType.Robot, trans), new List<Layer>());
+            var changeset = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
+            await attributeModel.InsertAttribute("a1", new AttributeScalarValueInteger(3), ciid1, layer1.ID, changeset, trans);
             trans.Commit();
 
             string query = @"

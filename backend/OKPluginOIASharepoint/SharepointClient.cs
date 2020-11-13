@@ -57,15 +57,18 @@ namespace OKPluginOIASharepoint
 
             var itemList = itemXml.SelectNodes("//atom:entry/atom:content/m:properties", xmlnspm);
 
-            foreach (XmlNode item in itemList)
+            foreach (XmlNode? item in itemList)
             {
-                // always add GUID for the item:
-                // the GUID of line items stays constant when the item is changed
-                var guid = item.SelectSingleNode("d:GUID", xmlnspm);
+                if (item != null)
+                {
+                    // always add GUID for the item:
+                    // the GUID of line items stays constant when the item is changed
+                    var guid = item.SelectSingleNode("d:GUID", xmlnspm);
 
-                var r = ParseXMLItemNode(item, columns, xmlnspm);
+                    var r = ParseXMLItemNode(item, columns, xmlnspm);
 
-                yield return (new Guid(guid.InnerText), r);
+                    yield return (new Guid(guid.InnerText), r);
+                }
             }
         }
 
@@ -102,7 +105,7 @@ namespace OKPluginOIASharepoint
             if (itemList.Count == 0)
             {
                 // did not find item in list
-                return null;
+                return new ExpandoObject();
             } else if (itemList.Count > 1)
             {
                 // ??? possible? TODO: handle this case

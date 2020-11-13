@@ -4,6 +4,7 @@ using Npgsql;
 using NpgsqlTypes;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Threading.Tasks;
 
@@ -11,20 +12,18 @@ namespace Omnikeeper.Model
 {
     public class BaseConfigurationModel : IBaseConfigurationModel
     {
-        private readonly NpgsqlConnection conn;
         private readonly ILogger<BaseConfigurationModel> logger;
 
-        public BaseConfigurationModel(ILogger<BaseConfigurationModel> logger, NpgsqlConnection connection)
+        public BaseConfigurationModel(ILogger<BaseConfigurationModel> logger)
         {
-            conn = connection;
             this.logger = logger;
         }
 
-        public async Task<BaseConfigurationV1> GetConfig(NpgsqlTransaction trans)
+        public async Task<BaseConfigurationV1?> GetConfig(IModelContext trans)
         {
             using var command = new NpgsqlCommand(@"
                 SELECT config FROM config.general WHERE key = 'base' LIMIT 1
-            ", conn, trans);
+            ", trans.DBConnection, trans.DBTransaction);
             using var s = await command.ExecuteReaderAsync();
 
             if (!await s.ReadAsync())
@@ -44,7 +43,7 @@ namespace Omnikeeper.Model
             }
         }
 
-        public async Task<BaseConfigurationV1> GetConfigOrDefault(NpgsqlTransaction trans)
+        public async Task<BaseConfigurationV1> GetConfigOrDefault(IModelContext trans)
         {
             var fromDB = await GetConfig(trans);
             if (fromDB == null)
@@ -62,12 +61,12 @@ namespace Omnikeeper.Model
             return fromDB;
         }
 
-        public async Task<BaseConfigurationV1> SetConfig(BaseConfigurationV1 config, NpgsqlTransaction trans)
+        public async Task<BaseConfigurationV1> SetConfig(BaseConfigurationV1 config, IModelContext trans)
         {
             var configJO = BaseConfigurationV1.Serializer.SerializeToJObject(config);
             using var command = new NpgsqlCommand(@"
             INSERT INTO config.general (key, config) VALUES ('base', @config) ON CONFLICT (key) DO UPDATE SET config = EXCLUDED.config
-        ", conn, trans);
+        ", trans.DBConnection, trans.DBTransaction);
             command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJO });
             await command.ExecuteScalarAsync();
 

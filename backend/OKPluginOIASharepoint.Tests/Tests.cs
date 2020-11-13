@@ -47,16 +47,16 @@ namespace OKPluginOIASharepoint.Tests
             // TODO: mock instead?
             var layer = Layer.Build("testlayer", 0, Color.White, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""));
 
-            var lap = oia.CreateLayerAccessProxy(layer) as LayerAccessProxy;
+            var lap = (oia.CreateLayerAccessProxy(layer) as LayerAccessProxy)!;
 
             // test single GetAttribute()
             var fakeCIID1 = Guid.NewGuid();
             var fakeCIID2 = Guid.NewGuid();
-            var a = await lap.GetAttribute("title_attribute", fakeCIID1, new SharepointExternalListItemID(ExternalSharepointListID, new Guid("5c52717c-bcee-4c30-9070-45d85a37dce8")));
+            var a = (await lap.GetAttribute("title_attribute", fakeCIID1, new SharepointExternalListItemID(ExternalSharepointListID, new Guid("5c52717c-bcee-4c30-9070-45d85a37dce8"))))!;
             Assert.AreEqual(fakeCIID1, a.CIID);
             Assert.AreEqual("title_attribute", a.Name);
             Assert.AreEqual(LayerAccessProxy.StaticChangesetID, a.ChangesetID);
-            Assert.AreEqual(AttributeScalarValueText.BuildFromString("3"), a.Value);
+            Assert.AreEqual(new AttributeScalarValueText("3"), a.Value);
 
             // test GetAttributes()
             var aa = await lap.GetAttributes(new List<(Guid, SharepointExternalListItemID)>()
@@ -140,7 +140,7 @@ namespace OKPluginOIASharepoint.Tests
             var eIDs = await m.ExposeGetExternalIDs();
 
             var expected = listItems.Select(li => (new SharepointExternalListItemID(ExternalSharepointListID, li.itemGuid),
-                    CIIdentificationMethodByData.BuildFromFragments(new CICandidateAttributeData.Fragment[] { CICandidateAttributeData.Fragment.Build("last_name", AttributeScalarValueText.BuildFromString(li.data.Title as string)) }, new LayerSet(0))
+                    CIIdentificationMethodByData.BuildFromFragments(new CICandidateAttributeData.Fragment[] { new CICandidateAttributeData.Fragment("last_name", new AttributeScalarValueText((li.data.Title as string)!)) }, new LayerSet(0))
                 )
             );
 
@@ -186,10 +186,13 @@ namespace OKPluginOIASharepoint.Tests
         public Dictionary<string, object> Dyn2Dict(dynamic dynObj)
         {
             var dictionary = new Dictionary<string, object>();
-            foreach (PropertyDescriptor propertyDescriptor in TypeDescriptor.GetProperties(dynObj))
+            foreach (PropertyDescriptor? propertyDescriptor in TypeDescriptor.GetProperties(dynObj))
             {
-                object obj = propertyDescriptor.GetValue(dynObj);
-                dictionary.Add(propertyDescriptor.Name, obj);
+                if (propertyDescriptor != null)
+                {
+                    object obj = propertyDescriptor.GetValue(dynObj);
+                    dictionary.Add(propertyDescriptor.Name, obj);
+                }
             }
             return dictionary;
         }

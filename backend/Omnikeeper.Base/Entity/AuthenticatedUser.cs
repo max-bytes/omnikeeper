@@ -9,14 +9,10 @@ namespace Omnikeeper.Base.Entity
 
         public string Username => InDatabase.Username;
 
-        public static AuthenticatedUser Build(UserInDatabase inDatabase, IEnumerable<Layer> writableLayers)
+        public AuthenticatedUser(UserInDatabase inDatabase, IEnumerable<Layer> writableLayers)
         {
-            var user = new AuthenticatedUser
-            {
-                InDatabase = inDatabase,
-                WritableLayers = writableLayers
-            };
-            return user;
+            InDatabase = inDatabase;
+            WritableLayers = writableLayers;
         }
     }
 }

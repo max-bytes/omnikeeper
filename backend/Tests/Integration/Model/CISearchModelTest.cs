@@ -17,50 +17,32 @@ using System.Threading.Tasks;
 using Tests.Integration.Model.Mocks;
 using Omnikeeper.Base.Inbound;
 using Moq;
+using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tests.Integration.Model
 {
-    class CISearchModelTest
+    class CISearchModelTest : DBBackedTestBase
     {
-        private NpgsqlConnection conn;
-
-        [SetUp]
-        public void Setup()
-        {
-            DBSetup.Setup();
-
-            var dbcb = new DBConnectionBuilder();
-            conn = dbcb.Build(DBSetup.dbName, false, true);
-
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            conn.Close();
-        }
-
-
         [Test]
         public async Task TestBasics()
         {
             var oap = new Mock<IOnlineAccessProxy>();
-            oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<long>(), It.IsAny<NpgsqlTransaction>())).ReturnsAsync(false);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(conn));
-            var ciModel = new CIModel(attributeModel, conn);
-            var predicateModel = new PredicateModel(conn);
+            oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<long>(), It.IsAny<IModelContext>())).ReturnsAsync(false);
+            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var ciModel = new CIModel(attributeModel);
+            var predicateModel = new PredicateModel();
             var traitsProvider = new MockedTraitsProvider();
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, conn));
-            var userModel = new UserInDatabaseModel(conn);
-            var changesetModel = new ChangesetModel(userModel, conn);
-            var layerModel = new LayerModel(conn);
-            var traitModel = new EffectiveTraitModel(ciModel, relationModel, traitsProvider, oap.Object, NullLogger<EffectiveTraitModel>.Instance, conn);
-            var searchModel = new CISearchModel(attributeModel, ciModel, traitModel, layerModel, traitsProvider);
-            var user = await DBSetup.SetupUser(userModel);
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var userModel = new UserInDatabaseModel();
+            var changesetModel = new ChangesetModel(userModel);
+            var layerModel = new LayerModel();
+            var traitModel = new EffectiveTraitModel(ciModel, relationModel, traitsProvider, oap.Object, NullLogger<EffectiveTraitModel>.Instance);
+            var searchModel = new CISearchModel(attributeModel, ciModel, traitModel, layerModel);
+            var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
             Guid ciid1;
             Guid ciid2;
             Guid ciid3;
-            using (var trans = conn.BeginTransaction())
+            using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changesetID = await changesetModel.CreateChangeset(user.ID, trans);
                 ciid1 = await ciModel.CreateCI(trans);
@@ -71,7 +53,7 @@ namespace Tests.Integration.Model
 
             long layerID1;
             long layerID2;
-            using (var trans = conn.BeginTransaction())
+            using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var layer1 = await layerModel.CreateLayer("l1", trans);
                 var layer2 = await layerModel.CreateLayer("l2", trans);
@@ -80,32 +62,34 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
 
-            using (var trans = conn.BeginTransaction())
+            using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset = ChangesetProxy.Build(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                 await attributeModel.InsertCINameAttribute("ci1", ciid1, layerID1, changeset, trans);
                 await attributeModel.InsertCINameAttribute("ci2", ciid2, layerID1, changeset, trans);
                 await attributeModel.InsertCINameAttribute("ci3", ciid3, layerID2, changeset, trans); // name on different layer
-                var i1 = await attributeModel.InsertAttribute("a1", AttributeScalarValueText.BuildFromString("text1"), ciid1, layerID1, changeset, trans);
-                var i2 = await attributeModel.InsertAttribute("a2", AttributeScalarValueText.BuildFromString("text1"), ciid2, layerID1, changeset, trans);
-                var i3 = await attributeModel.InsertAttribute("a3", AttributeScalarValueText.BuildFromString("text1"), ciid1, layerID2, changeset, trans);
+                var i1 = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, trans);
+                var i2 = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text1"), ciid2, layerID1, changeset, trans);
+                var i3 = await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text1"), ciid1, layerID2, changeset, trans);
 
                 trans.Commit();
             }
 
             var tt = TimeThreshold.BuildLatest();
 
-            var all = await ciModel.GetCompactCIs(new AllCIIDsSelection(), new LayerSet(layerID1, layerID2), null, tt);
+            var transI = ModelContextBuilder.BuildImmediate();
 
-            (await searchModel.SimpleSearch("ci", null, tt)).Should().BeEquivalentTo(all);
-            (await searchModel.SimpleSearch("i", null, tt)).Should().BeEquivalentTo(all);
-            (await searchModel.SimpleSearch("ci2", null, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci2"));
-            (await searchModel.SimpleSearch("i3", null, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci3"));
+            var all = await ciModel.GetCompactCIs(new AllCIIDsSelection(), new LayerSet(layerID1, layerID2), transI, tt);
 
-            (await searchModel.AdvancedSearch("", new string[] { }, new LayerSet(layerID1, layerID2), null, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty);
-            (await searchModel.AdvancedSearch("", new string[] { "test_trait_3" }, new LayerSet(layerID1, layerID2), null, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci1"));
-            (await searchModel.AdvancedSearch("", new string[] { "test_trait_3" }, new LayerSet(layerID2), null, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty);
-            (await searchModel.AdvancedSearch("", new string[] { "test_trait_4" }, new LayerSet(layerID1, layerID2), null, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty);
+            (await searchModel.SimpleSearch("ci", transI, tt)).Should().BeEquivalentTo(all);
+            (await searchModel.SimpleSearch("i", transI, tt)).Should().BeEquivalentTo(all);
+            (await searchModel.SimpleSearch("ci2", transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci2"));
+            (await searchModel.SimpleSearch("i3", transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci3"));
+
+            (await searchModel.AdvancedSearch("", new string[] { }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty);
+            (await searchModel.AdvancedSearch("", new string[] { "test_trait_3" }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci1"));
+            (await searchModel.AdvancedSearch("", new string[] { "test_trait_3" }, new LayerSet(layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty);
+            (await searchModel.AdvancedSearch("", new string[] { "test_trait_4" }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty);
 
         }
     }

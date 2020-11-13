@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Utils;
 using System;
@@ -35,19 +36,19 @@ namespace Omnikeeper.Model
                 );
             }
 
-            return compound.Select(t => MergedCIAttribute.Build(t.Value.First().Value.attribute, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).Reverse().ToArray()));
+            return compound.Select(t => new MergedCIAttribute(t.Value.First().Value.attribute, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).Reverse().ToArray()));
         }
 
-        public async Task<MergedCIAttribute> GetMergedAttribute(string name, Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<MergedCIAttribute?> GetMergedAttribute(string name, Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             return await _GetMergedAttribute(name, ciid, layers, trans, atTime, false);
         }
-        public async Task<MergedCIAttribute> GetFullBinaryMergedAttribute(string name, Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<MergedCIAttribute?> GetFullBinaryMergedAttribute(string name, Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             return await _GetMergedAttribute(name, ciid, layers, trans, atTime, true);
         }
 
-        public async Task<MergedCIAttribute> _GetMergedAttribute(string name, Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime, bool fullBinary)
+        public async Task<MergedCIAttribute?> _GetMergedAttribute(string name, Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime, bool fullBinary)
         {
             if (layers.IsEmpty)
                 return null; // return empty, an empty layer list can never produce any attributes
@@ -56,7 +57,7 @@ namespace Omnikeeper.Model
 
             foreach (var layerID in layers)
             {
-                CIAttribute a;
+                CIAttribute? a;
                 if (fullBinary)
                     a = await baseModel.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
                 else
@@ -77,13 +78,13 @@ namespace Omnikeeper.Model
             return ma;
         }
 
-        public async Task<IImmutableDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IImmutableDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             var d = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), layers, trans, atTime);
             return d.GetValueOrDefault(ciid, ImmutableDictionary<string, MergedCIAttribute>.Empty);
         }
 
-        public async Task<IImmutableDictionary<Guid, IImmutableDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IImmutableDictionary<Guid, IImmutableDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             var ret = new Dictionary<Guid, IImmutableDictionary<string, MergedCIAttribute>>();
 
@@ -112,7 +113,7 @@ namespace Omnikeeper.Model
             return ret.ToImmutableDictionary();
         }
 
-        public async Task<IEnumerable<MergedCIAttribute>> FindMergedAttributesByName(string regex, ICIIDSelection selection, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedCIAttribute>> FindMergedAttributesByName(string regex, ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             if (layers.IsEmpty)
                 return ImmutableList<MergedCIAttribute>.Empty; // return empty, an empty layer list can never produce any attributes
@@ -131,7 +132,7 @@ namespace Omnikeeper.Model
             return mergedAttributes;
         }
 
-        public async Task<IImmutableDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, LayerSet layers, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IImmutableDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             var ret = new Dictionary<Guid, MergedCIAttribute>();
 
@@ -158,46 +159,46 @@ namespace Omnikeeper.Model
             return ret.ToImmutableDictionary();
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await baseModel.GetAttributes(selection, layerID, trans, atTime);
         }
 
-        public async Task<CIAttribute> GetAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await baseModel.GetAttribute(name, ciid, layerID, trans, atTime);
         }
-        public async Task<CIAttribute> GetFullBinaryAttribute(string name, Guid ciid, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await baseModel.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await baseModel.FindAttributesByName(regex, selection, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await baseModel.FindAttributesByFullName(name, selection, layerID, trans, atTime);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changeset, IModelContext trans)
         {
             return await baseModel.InsertAttribute(name, value, ciid, layerID, changeset, trans);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans)
+        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changeset, IModelContext trans)
         {
             return await baseModel.RemoveAttribute(name, ciid, layerID, changeset, trans);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changeset, NpgsqlTransaction trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changeset, IModelContext trans)
         {
             return await baseModel.InsertCINameAttribute(nameValue, ciid, layerID, changeset, trans);
         }
 
-        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, NpgsqlTransaction trans)
+        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, IModelContext trans)
         {
             return await baseModel.BulkReplaceAttributes(data, changeset, trans);
         }

@@ -40,14 +40,14 @@ namespace OKPluginOIAOmnikeeper
                 if (r != null) yield return r;
             }
         }
-        private CIAttribute AttributeDTO2Regular(CIAttributeDTO dto)
+        private CIAttribute? AttributeDTO2Regular(CIAttributeDTO dto)
         {
             // we force a mapping to ensure only attributes of properly mapped cis are used
             var ciid = mapper.GetCIID(new ExternalIDGuid(dto.CIID));
 
             if (ciid.HasValue)
             {
-                return CIAttribute.Build(dto.ID, dto.Name, ciid.Value, AttributeValueBuilder.BuildFromDTO(dto.Value), AttributeState.New, staticChangesetID);
+                return new CIAttribute(dto.ID, dto.Name, ciid.Value, AttributeValueBuilder.BuildFromDTO(dto.Value), AttributeState.New, staticChangesetID);
             }
             else return null;
         }
@@ -60,7 +60,7 @@ namespace OKPluginOIAOmnikeeper
                 if (r != null) yield return r;
             }
         }
-        private Relation RelationDTO2Regular(RelationDTO dto)
+        private Relation? RelationDTO2Regular(RelationDTO dto)
         {
             // we need to reduce the relations to those whose related CIs are actually present in the mapper, to ensure that only relations of mapped cis are fetched
             var fromCIID = mapper.GetCIID(new ExternalIDGuid(dto.FromCIID));
@@ -68,10 +68,10 @@ namespace OKPluginOIAOmnikeeper
 
             if (fromCIID.HasValue && toCIID.HasValue)
             {
-                return Relation.Build(dto.ID, fromCIID.Value, toCIID.Value,
+                return new Relation(dto.ID, fromCIID.Value, toCIID.Value,
                     // TODO: can we just create a predicate on the fly?!? ignoring what predicates are actually present in the omnikeeper instance?
                     // apparently we can, because it seems to work, but does that work in all edge-cases?
-                    Predicate.Build(dto.Predicate.ID, dto.Predicate.WordingFrom, dto.Predicate.WordingTo, AnchorState.Active, PredicateConstraints.Default),
+                    new Predicate(dto.Predicate.ID, dto.Predicate.WordingFrom, dto.Predicate.WordingTo, AnchorState.Active, PredicateConstraints.Default),
                     RelationState.New, staticChangesetID);
             }
             else return null;
@@ -87,7 +87,7 @@ namespace OKPluginOIAOmnikeeper
                 {
                     AllCIIDsSelection _ => mapper.GetAllCIIDs(),
                     SpecificCIIDsSelection multiple => multiple.CIIDs,
-                    _ => null,// must not be
+                    _ => throw new NotImplementedException()
                 };
             }
             var ciids = GetCIIDs(selection).ToHashSet();
@@ -106,7 +106,7 @@ namespace OKPluginOIAOmnikeeper
                 yield return a;
         }
 
-        public async Task<CIAttribute> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
         {
             if (!atTime.IsLatest) return null; // TODO: implement historic information
 
@@ -122,9 +122,9 @@ namespace OKPluginOIAOmnikeeper
             return AttributeDTO2Regular(attributeDTO);
         }
 
-        public Task<CIAttribute> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime)
+        public Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime)
         {
-            return Task.FromResult<CIAttribute>(null); // TODO: not implemented
+            return Task.FromResult<CIAttribute?>(null); // TODO: not implemented
         }
 
         public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, TimeThreshold atTime)
@@ -184,7 +184,7 @@ namespace OKPluginOIAOmnikeeper
                 yield return r;
         }
 
-        public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
+        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
         {
             if (!atTime.IsLatest) return null; // TODO: implement historic information
 

@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using static Omnikeeper.Base.Templating.ScribanVariableService;
+using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tests.Templating
 {
@@ -25,35 +26,35 @@ namespace Tests.Templating
         public void Test()
         {
             {
-                var testPredicateA = Predicate.Build("p_a", "p_a_forward", "p_a_backwards", AnchorState.Active, PredicateModel.DefaultConstraits);
+                var testPredicateA = new Predicate("p_a", "p_a_forward", "p_a_backwards", AnchorState.Active, PredicateModel.DefaultConstraits);
                 var atTime = TimeThreshold.BuildLatest();
 
                 var staticChangesetID = Guid.NewGuid();
-                var testCIA = MergedCI.Build(Guid.NewGuid(), "test-ci-a", new LayerSet(), atTime, new List<MergedCIAttribute>()
+                var testCIA = new MergedCI(Guid.NewGuid(), "test-ci-a", new LayerSet(), atTime, new List<MergedCIAttribute>()
                 {
-                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a", Guid.NewGuid(), AttributeScalarValueText.BuildFromString("a-value"), AttributeState.New, staticChangesetID), new long[0]),
-                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.b", Guid.NewGuid(), AttributeScalarValueText.BuildFromString("b-value"), AttributeState.New, staticChangesetID), new long[0]),
-                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.c", Guid.NewGuid(), AttributeArrayValueText.BuildFromString(new string[] { "c-value0", "c-value1" }), AttributeState.New, staticChangesetID), new long[0]),
-                    MergedCIAttribute.Build(CIAttribute.Build(Guid.NewGuid(), "a.json", Guid.NewGuid(), AttributeArrayValueJSON.BuildFromString(
+                    new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a", Guid.NewGuid(), new AttributeScalarValueText("a-value"), AttributeState.New, staticChangesetID), new long[0]),
+                    new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a.b", Guid.NewGuid(), new AttributeScalarValueText("b-value"), AttributeState.New, staticChangesetID), new long[0]),
+                    new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a.c", Guid.NewGuid(), AttributeArrayValueText.BuildFromString(new string[] { "c-value0", "c-value1" }), AttributeState.New, staticChangesetID), new long[0]),
+                    new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a.json", Guid.NewGuid(), AttributeArrayValueJSON.BuildFromString(
                         new string[] { @"{ ""foo"": ""bar""}", @"{ ""second"": { ""yes"": true } }" }), AttributeState.New, staticChangesetID), new long[0])
-                    //MergedCIAttribute.Build(CIAttribute.Build(0, "a.json", Guid.NewGuid(), AttributeValueJSONScalar.Build(
+                    //new MergedCIAttribute(new CIAttribute(0, "a.json", Guid.NewGuid(), AttributeValueJSONScalar.Build(
                     //    JObject.Parse(@"{ ""foo"": ""bar""}")), AttributeState.New, 0), new long[0])
                 });
-                var testCIB = MergedCI.Build(Guid.NewGuid(), "test-ci-b", new LayerSet(), atTime, new List<MergedCIAttribute>() {});
+                var testCIB = new MergedCI(Guid.NewGuid(), "test-ci-b", new LayerSet(), atTime, new List<MergedCIAttribute>() {});
 
                 var relationModel = new Mock<IRelationModel>();
-                relationModel.Setup(x => x.GetMergedRelations(It.IsAny<IRelationSelection>(), It.IsAny<LayerSet>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()))
+                relationModel.Setup(x => x.GetMergedRelations(It.IsAny<IRelationSelection>(), It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
                     .ReturnsAsync(() => new MergedRelation[] {
-                        MergedRelation.Build(Relation.Build(Guid.NewGuid(), testCIA.ID, testCIB.ID, testPredicateA, RelationState.New, staticChangesetID), new long[0])
+                        new MergedRelation(new Relation(Guid.NewGuid(), testCIA.ID, testCIB.ID, testPredicateA, RelationState.New, staticChangesetID), new long[0])
                     });
 
                 var ciModel = new Mock<ICIModel>();
-                ciModel.Setup(x => x.GetCompactCIs(It.IsAny<ICIIDSelection>(), It.IsAny<LayerSet>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<TimeThreshold>()))
-                    .ReturnsAsync(new CompactCI[] { CompactCI.Build(testCIB.ID, testCIB.Name, testCIB.Layers.LayerHash, testCIB.AtTime) });
-                ciModel.Setup(x => x.GetMergedCI(testCIB.ID, It.IsAny<LayerSet>(), It.IsAny<NpgsqlTransaction>(), atTime))
+                ciModel.Setup(x => x.GetCompactCIs(It.IsAny<ICIIDSelection>(), It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
+                    .ReturnsAsync(new CompactCI[] { new CompactCI(testCIB.ID, testCIB.Name, testCIB.Layers.LayerHash, testCIB.AtTime) });
+                ciModel.Setup(x => x.GetMergedCI(testCIB.ID, It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), atTime))
                     .ReturnsAsync(() => testCIB);
 
-                var context = ScribanVariableService.CreateCIBasedTemplateContext(testCIA, new LayerSet(), atTime, null, ciModel.Object, relationModel.Object);
+                var context = ScribanVariableService.CreateCIBasedTemplateContext(testCIA, new LayerSet(), atTime, new Mock<IModelContext>().Object, ciModel.Object, relationModel.Object);
 
                 // scriban cannot deal with JTokens out of the box, TODO
                 //var t = @"name: {{target.name}}
@@ -92,8 +93,10 @@ namespace Tests.Templating
         public void TestNestedStuff()
         {
             //var so = new ScriptObjectCI(ci, new ScriptObjectContext(layerSet, trans, atTime, ciModel, relationModel));
-            var context = new TemplateContext();
-            context.StrictVariables = true;
+            var context = new TemplateContext
+            {
+                StrictVariables = true
+            };
             context.PushGlobal(new ScriptObject() { { "a", new object[] { new { name = "value-a" }, new { name = "value-b" } } } });
 
 

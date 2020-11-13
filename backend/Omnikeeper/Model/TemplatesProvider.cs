@@ -2,13 +2,14 @@
 using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils.ModelContext;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model
 {
     public class TemplatesProvider : ITemplatesProvider
     {
-        public async Task<Templates> GetTemplates(NpgsqlTransaction trans)
+        public async Task<Templates> GetTemplates(IModelContext trans)
         {
             return await Templates.Build();
         }
@@ -17,15 +18,13 @@ namespace Omnikeeper.Model
     public class CachedTemplatesProvider : ITemplatesProvider
     {
         private readonly ITemplatesProvider TP;
-        private readonly IMemoryCache memoryCache;
-        public CachedTemplatesProvider(ITemplatesProvider tp, IMemoryCache memoryCache)
+        public CachedTemplatesProvider(ITemplatesProvider tp)
         {
             TP = tp;
-            this.memoryCache = memoryCache;
         }
-        public async Task<Templates> GetTemplates(NpgsqlTransaction trans)
+        public async Task<Templates> GetTemplates(IModelContext trans)
         {
-            return await memoryCache.GetOrCreateAsync("templates", async (ce) =>
+            return await trans.GetOrCreateCachedValueAsync("templates", async () =>
             {
                 return await TP.GetTemplates(trans);
             });

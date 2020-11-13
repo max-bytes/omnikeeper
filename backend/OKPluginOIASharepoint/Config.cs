@@ -61,7 +61,7 @@ namespace OKPluginOIASharepoint
                 // TODO: make validation checks, such as that the identifiable attributes MUST be a subset of the defined columns
             }
 
-            internal string AttributeName2ColumnName(string attributeName)
+            internal string? AttributeName2ColumnName(string attributeName)
             {
                 if (!attributeName2ColumnNameMap.TryGetValue(attributeName, out var columnNames))
                     return null;

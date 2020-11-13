@@ -26,7 +26,7 @@ namespace OKPluginOIAKeycloak
 
             public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IScopedExternalIDMapper scopedExternalIDMapper, ILoggerFactory loggerFactory)
             {
-                return new OnlineInboundAdapter(config as Config, scopedExternalIDMapper as KeycloakScopedExternalIDMapper);
+                return new OnlineInboundAdapter((config as Config)!, (scopedExternalIDMapper as KeycloakScopedExternalIDMapper)!);
             }
         }
 
@@ -64,7 +64,7 @@ namespace OKPluginOIAKeycloak
 
             public IOnlineInboundAdapter Build(IOnlineInboundAdapter.IConfig config, IConfiguration appConfig, IScopedExternalIDMapper scopedExternalIDMapper, ILoggerFactory loggerFactory)
             {
-                var configInternal = config as ConfigInternal;
+                var configInternal = (config as ConfigInternal)!;
 
                 var keycloakConfig = appConfig.GetSection("Keycloak");
                 var authURL = keycloakConfig["URL"];
@@ -73,7 +73,7 @@ namespace OKPluginOIAKeycloak
                 var clientSecret = keycloakConfig["ClientSecret"];
                 var cconfig = new Config(authURL, realm, clientID, clientSecret, configInternal.preferredIDMapUpdateRate, configInternal.MapperScope);
 
-                return new OnlineInboundAdapter(cconfig, scopedExternalIDMapper as KeycloakScopedExternalIDMapper);
+                return new OnlineInboundAdapter(cconfig, (scopedExternalIDMapper as KeycloakScopedExternalIDMapper)!);
             }
         }
 

@@ -41,10 +41,10 @@ namespace OKPluginOIASharepoint
         {
             // create a deterministic, dependent guid from the ciid + attribute name + value
             var id = GuidUtility.Create(ciid, name + layer.ID.ToString());// TODO: determine if we need to factor in value or not
-            return CIAttribute.Build(id, name, ciid, AttributeScalarValueText.BuildFromString(value), AttributeState.New, StaticChangesetID);
+            return new CIAttribute(id, name, ciid, new AttributeScalarValueText(value), AttributeState.New, StaticChangesetID);
         }
 
-        public async Task<CIAttribute> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
         {
             if (!atTime.IsLatest && !useCurrentForHistoric) return null; // we don't have historic information
 
@@ -54,7 +54,7 @@ namespace OKPluginOIASharepoint
 
             return await GetAttribute(name, ciid, externalID.Value);
         }
-        public async Task<CIAttribute> GetAttribute(string name, Guid ciid, SharepointExternalListItemID externalID)
+        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, SharepointExternalListItemID externalID)
         {
             if (!cachedListConfigs.TryGetValue(externalID.listID, out var listConfig))
                 return null; // list is not configured (anymore)
@@ -78,9 +78,9 @@ namespace OKPluginOIASharepoint
             }
         }
 
-        public Task<CIAttribute> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime)
+        public Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime)
         {
-            return Task.FromResult<CIAttribute>(null); // TODO: not implemented
+            return Task.FromResult<CIAttribute?>(null); // TODO: not implemented
         }
 
         public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime)
@@ -123,8 +123,9 @@ namespace OKPluginOIASharepoint
                     foreach (var column in itemColumns) {
                         var columnName = column.Key;
                         var columnValue = column.Value;
-                        var attributeValue = columnValue as string;
+                        var attributeValue = (columnValue as string);
                         if (columnValue == null) continue; // TODO: handle
+                        if (attributeValue == null) continue; // TODO: handle
                         var attributeNames = listConfig.ColumnName2AttributeNames(columnName);
                         foreach(var attributeName in attributeNames)
                             yield return BuildAttributeFromValue(attributeName, attributeValue, ciid);
@@ -178,6 +179,7 @@ namespace OKPluginOIASharepoint
 
                     var attributeValue = columnValue as string;
                     if (columnValue == null) continue; // TODO: handle
+                    if (attributeValue == null) continue; // TODO: handle
                     yield return BuildAttributeFromValue(attributeName, attributeValue, ciid);
                 }
             }
@@ -198,11 +200,9 @@ namespace OKPluginOIASharepoint
             return AsyncEnumerable.Empty<Relation>();// TODO: implement
         }
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        public async Task<Relation> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+        public Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
         {
-            return null;// TODO: implement
+            return Task.FromResult<Relation?>(null);// TODO: implement
         }
 
 
@@ -212,7 +212,7 @@ namespace OKPluginOIASharepoint
             {
                 AllCIIDsSelection _ => mapper.GetAllCIIDs(),
                 SpecificCIIDsSelection multiple => multiple.CIIDs,
-                _ => null,// must not be
+                _ => throw new NotImplementedException()
             };
         }
     }

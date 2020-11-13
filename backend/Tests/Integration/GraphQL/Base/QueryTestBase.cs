@@ -2,7 +2,7 @@
 using GraphQL;
 using GraphQL.Conversion;
 using GraphQL.Execution;
-using GraphQL.Http;
+using GraphQL.NewtonsoftJson;
 using GraphQL.Server;
 using GraphQL.Types;
 using GraphQL.Validation;
@@ -40,7 +40,7 @@ namespace Tests.Integration.GraphQL.Base
         {
             var services = base.InitServices();
 
-            services.AddGraphQL().AddGraphTypes(typeof(GraphQLSchema), ServiceLifetime.Scoped);
+            services.AddGraphQL().AddGraphTypes(typeof(GraphQLSchema));
 
             return services;
         }
@@ -51,13 +51,13 @@ namespace Tests.Integration.GraphQL.Base
         public ExecutionResult AssertQuerySuccess(
             string query,
             string expected,
-            Inputs inputs = null,
-            object root = null,
-            IDictionary<string, object> userContext = null,
+            Inputs? inputs = null,
+            object? root = null,
+            IDictionary<string, object?>? userContext = null,
             CancellationToken cancellationToken = default,
-            IEnumerable<IValidationRule> rules = null,
-            IFieldNameConverter fieldNameConverter = null,
-            IDocumentWriter writer = null)
+            IEnumerable<IValidationRule>? rules = null,
+            INameConverter? fieldNameConverter = null,
+            IDocumentWriter? writer = null)
         {
             var queryResult = CreateQueryResult(expected);
             return AssertQuery(query, queryResult, inputs, root, userContext, cancellationToken, rules, null, fieldNameConverter, writer);
@@ -66,13 +66,13 @@ namespace Tests.Integration.GraphQL.Base
         public ExecutionResult AssertQueryWithErrors(
             string query,
             string expected,
-            Inputs inputs = null,
-            object root = null,
-            IDictionary<string, object> userContext = null,
+            Inputs? inputs = null,
+            object? root = null,
+            IDictionary<string, object>? userContext = null,
             CancellationToken cancellationToken = default,
             int expectedErrorCount = 0,
             bool renderErrors = false,
-            Action<UnhandledExceptionContext> unhandledExceptionDelegate = null)
+            Action<UnhandledExceptionContext>? unhandledExceptionDelegate = null)
         {
             var queryResult = CreateQueryResult(expected);
             return AssertQueryIgnoreErrors(
@@ -90,13 +90,13 @@ namespace Tests.Integration.GraphQL.Base
         public ExecutionResult AssertQueryIgnoreErrors(
             string query,
             ExecutionResult expectedExecutionResult,
-            Inputs inputs = null,
-            object root = null,
-            IDictionary<string, object> userContext = null,
+            Inputs? inputs = null,
+            object? root = null,
+            IDictionary<string, object>? userContext = null,
             CancellationToken cancellationToken = default,
             int expectedErrorCount = 0,
             bool renderErrors = false,
-            Action<UnhandledExceptionContext> unhandledExceptionDelegate = null)
+            Action<UnhandledExceptionContext>? unhandledExceptionDelegate = null)
         {
             var runResult = Executer.ExecuteAsync(options =>
             {
@@ -126,14 +126,14 @@ namespace Tests.Integration.GraphQL.Base
         public ExecutionResult AssertQuery(
             string query,
             ExecutionResult expectedExecutionResult,
-            Inputs inputs,
-            object root,
-            IDictionary<string, object> userContext = null,
+            Inputs? inputs,
+            object? root,
+            IDictionary<string, object?>? userContext = null,
             CancellationToken cancellationToken = default,
-            IEnumerable<IValidationRule> rules = null,
-            Action<UnhandledExceptionContext> unhandledExceptionDelegate = null,
-            IFieldNameConverter fieldNameConverter = null,
-            IDocumentWriter writer = null)
+            IEnumerable<IValidationRule>? rules = null,
+            Action<UnhandledExceptionContext>? unhandledExceptionDelegate = null,
+            INameConverter? nameConverter = null,
+            IDocumentWriter? writer = null)
         {
             var runResult = Executer.ExecuteAsync(options =>
             {
@@ -145,7 +145,8 @@ namespace Tests.Integration.GraphQL.Base
                 options.CancellationToken = cancellationToken;
                 options.ValidationRules = rules;
                 options.UnhandledExceptionDelegate = unhandledExceptionDelegate ?? (ctx => { });
-                options.FieldNameConverter = fieldNameConverter ?? CamelCaseFieldNameConverter.Instance;
+                options.NameConverter = nameConverter ?? CamelCaseNameConverter.Instance;
+                options.RequestServices = ServiceProvider;
             }).GetAwaiter().GetResult();
 
             writer ??= Writer;
@@ -153,13 +154,13 @@ namespace Tests.Integration.GraphQL.Base
             var writtenResult = Writer.WriteToStringAsync(runResult).GetAwaiter().GetResult();
             var expectedResult = Writer.WriteToStringAsync(expectedExecutionResult).GetAwaiter().GetResult();
 
-            string additionalInfo = null;
+            string? additionalInfo = null;
 
             if (runResult.Errors?.Any() == true)
             {
                 additionalInfo = string.Join(Environment.NewLine, runResult.Errors
                     .Where(x => x.InnerException is GraphQLSyntaxErrorException)
-                    .Select(x => x.InnerException.Message));
+                    .Select(x => x?.InnerException?.Message));
             }
 
             writtenResult.ShouldBeCrossPlat(expectedResult, additionalInfo);
@@ -167,7 +168,7 @@ namespace Tests.Integration.GraphQL.Base
             return runResult;
         }
 
-        public static ExecutionResult CreateQueryResult(string result, ExecutionErrors errors = null)
+        public static ExecutionResult CreateQueryResult(string result, ExecutionErrors? errors = null)
         {
             return new ExecutionResult
             {

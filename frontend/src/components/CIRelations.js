@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client';
 import React from 'react';
 import RelatedCI from './RelatedCI';
-import {Row, Col} from 'react-bootstrap';
+import {Row, Col} from 'antd';
 import AddNewRelation from './AddNewRelation';
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import { onAppear, onExit } from '../utils/animation';
@@ -44,12 +44,12 @@ function CIRelations(props) {
 
     return (<>
     <Row>
-      <Col>
+      <Col span={24}>
         <AddNewRelation isEditable={props.isEditable} perPredicateLimit={perPredicateLimit} visibleLayers={visibleLayers.map(l => l.name)} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ciIdentity}></AddNewRelation>
       </Col>
     </Row>
     <Row>
-      <Col>
+      <Col span={24}>
         <Flipper flipKey={sortedRelatedCIs.map(r => r.layerStackIDs).join(' ')}>
           {sortedRelatedCIs.map(r => {
             var isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.layerID);

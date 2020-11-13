@@ -5,6 +5,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Service;
 using System;
@@ -17,6 +18,14 @@ namespace Omnikeeper.Controllers.OData
 {
     public class AttributeDTO
     {
+        public AttributeDTO(Guid cIID, string cIName, string attributeName, string value)
+        {
+            CIID = cIID;
+            CIName = cIName;
+            AttributeName = attributeName;
+            Value = value;
+        }
+
         [Key]
         public Guid CIID { get; set; }
         [Key]
@@ -28,6 +37,14 @@ namespace Omnikeeper.Controllers.OData
 
     public class InsertAttribute
     {
+        public InsertAttribute(string cIID, string cIName, string attributeName, string value)
+        {
+            CIID = cIID;
+            CIName = cIName;
+            AttributeName = attributeName;
+            Value = value;
+        }
+
         public string CIID { get; set; }
         public string CIName { get; set; }
         public string AttributeName { get; set; }
@@ -44,12 +61,12 @@ namespace Omnikeeper.Controllers.OData
         private readonly IChangesetModel changesetModel;
         private readonly ICISearchModel ciSearchModel;
         private readonly IODataAPIContextModel oDataAPIContextModel;
-        private readonly NpgsqlConnection conn;
+        private readonly IModelContextBuilder modelContextBuilder;
         private readonly ICurrentUserService currentUserService;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
         public AttributesController(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, ICISearchModel ciSearchModel, IODataAPIContextModel oDataAPIContextModel,
-            ICurrentUserService currentUserService, ILayerBasedAuthorizationService authorizationService, NpgsqlConnection conn)
+            ICurrentUserService currentUserService, ILayerBasedAuthorizationService authorizationService, IModelContextBuilder modelContextBuilder)
         {
             this.attributeModel = attributeModel;
             this.ciModel = ciModel;
@@ -58,12 +75,12 @@ namespace Omnikeeper.Controllers.OData
             this.oDataAPIContextModel = oDataAPIContextModel;
             this.currentUserService = currentUserService;
             this.authorizationService = authorizationService;
-            this.conn = conn;
+            this.modelContextBuilder = modelContextBuilder;
         }
 
-        private AttributeDTO Model2DTO(MergedCIAttribute a, string ciName)
+        private AttributeDTO Model2DTO(MergedCIAttribute a, string? ciName)
         {
-            return new AttributeDTO() { CIID = a.Attribute.CIID, CIName = ciName ?? "[Unnamed]", AttributeName = a.Attribute.Name, Value = a.Attribute.Value.Value2String() };
+            return new AttributeDTO(a.Attribute.CIID, ciName ?? "[Unnamed]", a.Attribute.Name, a.Attribute.Value.Value2String());
         }
 
         [EnableQuery]
@@ -72,18 +89,22 @@ namespace Omnikeeper.Controllers.OData
             if (keyAttributeName.Equals(ICIModel.NameAttribute))
                 throw new Exception("Cannot get name attribute directly");
 
-            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
+            var trans = modelContextBuilder.BuildImmediate();
+            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
             var timeThreshold = TimeThreshold.BuildLatest();
-            var a = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, layerset, null, timeThreshold);
-            var nameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, keyCIID, layerset, null, timeThreshold);
+            var a = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, layerset, trans, timeThreshold);
+            if (a == null)
+                throw new Exception("Could not get attribute");
+            var nameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, keyCIID, layerset, trans, timeThreshold);
             return Model2DTO(a, nameAttribute?.Attribute?.Value.Value2String());
         }
 
         [EnableQuery]
         public async Task<IEnumerable<AttributeDTO>> GetAttributes([FromRoute] string context)
         {
-            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
-            var attributesDict = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), layerset, null, TimeThreshold.BuildLatest());
+            var trans = modelContextBuilder.BuildImmediate();
+            var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
+            var attributesDict = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), layerset, trans, TimeThreshold.BuildLatest());
 
             var attributes = attributesDict.SelectMany(a => a.Value.Values);
 
@@ -100,24 +121,25 @@ namespace Omnikeeper.Controllers.OData
 
         public async Task<IActionResult> Patch([FromODataUri] Guid keyCIID, [FromODataUri] string keyCIName, [FromODataUri] string keyAttributeName, [FromBody] Delta<AttributeDTO> test, [FromRoute] string context)
         {
-            var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, null);
-            var readLayerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
+            using var trans = modelContextBuilder.BuildDeferred();
+            var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, trans);
+            var readLayerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
 
-            var user = await currentUserService.GetCurrentUser(null);
+            var user = await currentUserService.GetCurrentUser(trans);
             if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
-            var old = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, readLayerset, null, TimeThreshold.BuildLatest());
+            var old = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, readLayerset, trans, TimeThreshold.BuildLatest());
             if (old == null) return BadRequest();
             var oldDTO = Model2DTO(old, keyCIName);
 
             test.CopyChangedValues(oldDTO);
             var @newDTO = oldDTO;
-            using var trans = conn.BeginTransaction();
-            var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, AttributeScalarValueText.BuildFromString(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, trans);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
+            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, new AttributeScalarValueText(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, trans);
 
             var newMerged = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, readLayerset, trans, TimeThreshold.BuildLatest());
+            if (newMerged == null) return BadRequest();
             trans.Commit();
 
             @newDTO = Model2DTO(newMerged, keyCIName);
@@ -134,14 +156,14 @@ namespace Omnikeeper.Controllers.OData
             if (attribute.Value == null)
                 return BadRequest($"Attribute Value must be set");
 
-            var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, null);
-            var readLayerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, null);
+            using var trans = modelContextBuilder.BuildDeferred();
+            var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, trans);
+            var readLayerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
 
-            var user = await currentUserService.GetCurrentUser(null);
+            var user = await currentUserService.GetCurrentUser(trans);
             if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
-            using var trans = conn.BeginTransaction();
             var timeThreshold = TimeThreshold.BuildLatest();
 
             var finalCIID = Guid.NewGuid();
@@ -166,7 +188,7 @@ namespace Omnikeeper.Controllers.OData
                 }
             }
 
-            var changesetProxy = ChangesetProxy.Build(user.InDatabase, timeThreshold.Time, changesetModel);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold.Time, changesetModel);
 
             // check if the ciid exists, create if not
             if (!(await ciModel.CIIDExists(finalCIID, trans)))
@@ -179,17 +201,17 @@ namespace Omnikeeper.Controllers.OData
             { // ci exists already, make sure either name is not set or it matches already present name
                 if (attribute.CIName != null && attribute.CIName != "")
                 {
-                    var currentNameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, finalCIID, readLayerset, null, timeThreshold);
+                    var currentNameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, finalCIID, readLayerset, trans, timeThreshold);
                     if (currentNameAttribute == null || !attribute.CIName.Equals(currentNameAttribute.Attribute.Value.Value2String()))
                         return BadRequest($"Cannot set new CI-Name on insert");
                 }
             }
 
-            var created = await attributeModel.InsertAttribute(attribute.AttributeName, AttributeScalarValueText.BuildFromString(attribute.Value), finalCIID, writeLayerID, changesetProxy, trans);
+            var created = await attributeModel.InsertAttribute(attribute.AttributeName, new AttributeScalarValueText(attribute.Value), finalCIID, writeLayerID, changesetProxy, trans);
 
             var nameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, finalCIID, readLayerset, trans, timeThreshold);
             var createdMerged = await attributeModel.GetMergedAttribute(attribute.AttributeName, finalCIID, readLayerset, trans, TimeThreshold.BuildLatest());
-
+            if (createdMerged == null) return BadRequest();
             trans.Commit();
 
             return Created(Model2DTO(createdMerged, nameAttribute?.Attribute.Value.Value2String()));
@@ -198,16 +220,16 @@ namespace Omnikeeper.Controllers.OData
         [EnableQuery]
         public async Task<IActionResult> Delete([FromODataUri] Guid keyCIID, [FromODataUri] string keyAttributeName, [FromRoute] string context)
         {
-            var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, null);
-
-            var user = await currentUserService.GetCurrentUser(null);
-            if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
-                return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
-
             try
             {
-                using var trans = conn.BeginTransaction();
-                var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
+                using var trans = modelContextBuilder.BuildDeferred();
+                var writeLayerID = await ODataAPIContextService.GetWriteLayerIDFromContext(oDataAPIContextModel, context, trans);
+
+                var user = await currentUserService.GetCurrentUser(trans);
+                if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
+                    return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
+
+                var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
                 await attributeModel.RemoveAttribute(keyAttributeName, keyCIID, writeLayerID, changesetProxy, trans);
                 trans.Commit();
             }

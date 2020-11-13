@@ -19,13 +19,13 @@ namespace Omnikeeper.Model
         {
             // have to get items by reflection
             var field = typeof(MemoryCache).GetProperty("EntriesCollection", BindingFlags.NonPublic | BindingFlags.Instance);
-            var value = field.GetValue(cache);
+            var value = field!.GetValue(cache);
 
-            var keys = (value as IDictionary).Keys;
+            var keys = (value as IDictionary)!.Keys;
 
             var r = new List<string>();
             foreach (var key in keys)
-                r.Add(key.ToString());
+                r.Add(key!.ToString()!);
 
             return r;
         }

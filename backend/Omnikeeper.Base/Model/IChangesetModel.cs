@@ -1,6 +1,7 @@
 ﻿using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,10 +43,10 @@ namespace Omnikeeper.Base.Model
 
         }
 
-        Task<Changeset> CreateChangeset(long userID, NpgsqlTransaction trans, DateTimeOffset? timestamp = null);
-        Task<Changeset> GetChangeset(Guid id, NpgsqlTransaction trans);
-        Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, NpgsqlTransaction trans, int? limit = null);
+        Task<Changeset> CreateChangeset(long userID, IModelContext trans, DateTimeOffset? timestamp = null);
+        Task<Changeset?> GetChangeset(Guid id, IModelContext trans);
+        Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, IModelContext trans, int? limit = null);
 
-        Task<int> ArchiveUnusedChangesetsOlderThan(DateTimeOffset threshold, NpgsqlTransaction trans);
+        Task<int> ArchiveUnusedChangesetsOlderThan(DateTimeOffset threshold, IModelContext trans);
     }
 }

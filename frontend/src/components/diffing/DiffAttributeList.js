@@ -4,7 +4,7 @@ import { Flipper, Flipped } from 'react-flip-toolkit'
 import _ from 'lodash';
 import { Accordion, Icon } from 'semantic-ui-react'
 import { onAppear, onExit } from 'utils/animation';
-import { Container, Row, Col } from 'react-bootstrap';
+import { Row, Col } from "antd";
 import { MissingLabel, CompareLabel, EmptyLabel, stateBasedBackgroundColor } from './DiffUtilComponents';
 import {useAttributeSegmentsToggler} from 'utils/useAttributeSegmentsToggler'
 
@@ -18,7 +18,7 @@ function DiffAttributeList(props) {
     else return splits.slice(0, -1).join(".");
   });
 
-  const [toggleSegment, isSegmentActive, toggleExpandCollapseAll] = useAttributeSegmentsToggler(_.keys(nestedAttributes));
+  const [toggleSegment, isSegmentActive /*, toggleExpandCollapseAll*/] = useAttributeSegmentsToggler(_.keys(nestedAttributes));
 
   if (_.size(props.attributes) === 0)
     return EmptyLabel();
@@ -44,26 +44,26 @@ function DiffAttributeList(props) {
             return (<Flipped key={a.name} flipId={a.name} onAppear={onAppear} onExit={onExit}>
               <div style={{padding: '5px 0px', backgroundColor: ((index % 2 === 1) ? '#00000009' : '#00000000')}}>
               
-                <Container fluid>
+              <div style={{ width: "100%" }}>
                   <Row style={{backgroundColor: stateBasedBackgroundColor(state)}}>
-                    <Col xs={'auto'}>
+                    <Col span={3}>
                       <div style={{display: 'flex', width: '220px', minHeight: '38px', alignItems: 'center', justifyContent: 'flex-end'}}>
-                        <span className={"pr-1"} style={{whiteSpace: 'nowrap'}}>{a.name}</span>
+                        <span style={{whiteSpace: 'nowrap', paddingRight: "0.25rem"}}>{a.name}</span>
                       </div>
                     </Col>
-                    <Col>
+                    <Col span={9}>
                       {a.leftRight.left && <Attribute controlIdSuffix={'left'} attribute={a.leftRight.left} hideNameLabel={true} isEditable={false} />}
                       {!a.leftRight.left && <MissingLabel /> }
                     </Col>
-                    <Col xs={1}>
+                    <Col span={3}>
                       <CompareLabel state={state} />
                     </Col>
-                    <Col>
+                    <Col span={9}>
                       {a.leftRight.right && <Attribute controlIdSuffix={'right'} attribute={a.leftRight.right} hideNameLabel={true} isEditable={false} />}
                       {!a.leftRight.right && <MissingLabel /> }
                     </Col>
                   </Row>
-                </Container>
+                </div>
               </div>
             </Flipped>);
           })}
@@ -82,7 +82,7 @@ function DiffAttributeList(props) {
 
   return (
     <>
-       {/* <div className={"d-flex align-items-end flex-column mb-2"} >
+       {/* <div className={"d-flex align-items-end flex-column"} style={{ marginBottom: "0.5rem", position: "absolute", right: 0, top: "-38px" }}>
             <Button
                 size={"tiny"}
                 onClick={() => toggleExpandCollapseAll()}

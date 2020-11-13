@@ -38,7 +38,7 @@ namespace Tests.Templating
 
         public override string ToString()
         {
-            return base.ToString();
+            return base.ToString() ?? "";
         }
 
         public override object BeforeMethod(string method)

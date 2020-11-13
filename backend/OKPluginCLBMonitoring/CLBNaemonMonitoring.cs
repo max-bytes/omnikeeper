@@ -25,6 +25,7 @@ using DotLiquid.Util;
 using System.Reflection;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.CLB;
+using Omnikeeper.Base.Utils.ModelContext;
 
 namespace OKPluginCLBMonitoring
 {
@@ -35,8 +36,8 @@ namespace OKPluginCLBMonitoring
         private readonly IEffectiveTraitModel traitModel;
 
         public CLBNaemonMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
-            IPredicateModel predicateModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel, NpgsqlConnection conn)
-            : base(atributeModel, layerModel, predicateModel, changesetModel, userModel, conn)
+            IPredicateModel predicateModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel)
+            : base(atributeModel, layerModel, predicateModel, changesetModel, userModel)
         {
             this.ciModel = ciModel;
             this.relationModel = relationModel;
@@ -53,38 +54,38 @@ namespace OKPluginCLBMonitoring
             belongsToNaemonContactgroup
         };
 
-        private readonly RecursiveTrait moduleRecursiveTrait = RecursiveTrait.Build("naemon_service_module", new List<TraitAttribute>() {
-            TraitAttribute.Build("template",
+        private readonly RecursiveTrait moduleRecursiveTrait = new RecursiveTrait("naemon_service_module", new List<TraitAttribute>() {
+            new TraitAttribute("template",
                 CIAttributeTemplate.BuildFromParams("naemon.config_template", AttributeValueType.MultilineText, null, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
-        private readonly RecursiveTrait naemonInstanceRecursiveTrait = RecursiveTrait.Build("naemon_instance", new List<TraitAttribute>() {
-            TraitAttribute.Build("name",
+        private readonly RecursiveTrait naemonInstanceRecursiveTrait = new RecursiveTrait("naemon_instance", new List<TraitAttribute>() {
+            new TraitAttribute("name",
                 CIAttributeTemplate.BuildFromParams("naemon.instance_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         }, optionalAttributes: new List<TraitAttribute>()
         {
-            TraitAttribute.Build("config",
+            new TraitAttribute("config",
                 CIAttributeTemplate.BuildFromParams("naemon.config", AttributeValueType.JSON, true)
             ),
-            TraitAttribute.Build("requirements", 
+            new TraitAttribute("requirements", 
                 CIAttributeTemplate.BuildFromParams("naemon.requirements", AttributeValueType.Text, true, CIAttributeValueConstraintTextLength.Build(1, null))
             ),
-            TraitAttribute.Build("capabilities",
+            new TraitAttribute("capabilities",
                 CIAttributeTemplate.BuildFromParams("naemon.capabilities", AttributeValueType.Text, true, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
-        private readonly RecursiveTrait contactgroupRecursiveTrait = RecursiveTrait.Build("naemon_contactgroup", new List<TraitAttribute>() {
-            TraitAttribute.Build("name",
+        private readonly RecursiveTrait contactgroupRecursiveTrait = new RecursiveTrait("naemon_contactgroup", new List<TraitAttribute>() {
+            new TraitAttribute("name",
                 CIAttributeTemplate.BuildFromParams("naemon.contactgroup_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
         public override RecursiveTraitSet DefinedTraits => RecursiveTraitSet.Build(moduleRecursiveTrait, naemonInstanceRecursiveTrait, contactgroupRecursiveTrait);
 
-        public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, NpgsqlTransaction trans, ILogger logger)
+        public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start clbMonitoring");
 
@@ -121,7 +122,7 @@ namespace OKPluginCLBMonitoring
             logger.LogDebug("Prep");
 
             // find and parse commands, insert into monitored CIs
-            var renderedTemplateSegments = new List<(Guid ciid, string moduleName, string templateSegment)>();
+            var renderedTemplateSegments = new List<(Guid ciid, string? moduleName, string templateSegment)>();
             foreach (var p in allHasMonitoringModuleRelations)
             {
                 logger.LogDebug("Process mm relation...");
@@ -136,10 +137,10 @@ namespace OKPluginCLBMonitoring
                     continue;
                 }
                 logger.LogDebug("  Fetched effective traits");
-                var templateStr = (monitoringModuleET.TraitAttributes["template"].Attribute.Value as AttributeScalarValueText).Value;
+                var templateStr = (monitoringModuleET.TraitAttributes["template"].Attribute.Value as AttributeScalarValueText)?.Value;
 
                 // create template context based on monitored CI, so that the templates can access all the related variables
-                var context = ScribanVariableService.CreateCIBasedTemplateContext(monitoredCIs[p.Relation.FromCIID], layerSetAll, timeThreshold, null, ciModel, relationModel);
+                var context = ScribanVariableService.CreateCIBasedTemplateContext(monitoredCIs[p.Relation.FromCIID], layerSetAll, timeThreshold, trans, ciModel, relationModel);
 
                 logger.LogDebug("  Parse/Render config segments");
                 // template parsing and rendering
@@ -160,8 +161,8 @@ namespace OKPluginCLBMonitoring
                 logger.LogDebug("  Processed mm relation");
             }
 
-            var parseErrors = new List<(Guid ciid, string template, string error)>();
-            var renderedTemplatesPerCI = renderedTemplateSegments.GroupBy(t => t.ciid)
+            var parseErrors = new List<(Guid ciid, string? template, string? error)>();
+            IEnumerable<(Guid ciid, AttributeArrayValueJSON attributeValue, IEnumerable<NaemonHostTemplate> hostTemplates, IEnumerable<NaemonServiceTemplate> serviceTemplates)>? renderedTemplatesPerCI = renderedTemplateSegments.GroupBy(t => t.ciid)
                 .Select(tt =>
                 {
                     var fragments = tt.SelectMany(ttt =>
@@ -184,13 +185,13 @@ namespace OKPluginCLBMonitoring
                     {
                         var attributeValue = AttributeArrayValueJSON.BuildFromString(values);
                         return (ciid: tt.Key, attributeValue,
-                            hostTemplates: fragments.Select(t => t as NaemonHostTemplate).Where(t => t != null),
-                            serviceTemplates: fragments.Select(t => t as NaemonServiceTemplate).Where(t => t != null));
+                            hostTemplates: fragments.Select(t => t as NaemonHostTemplate).WhereNotNull(),
+                            serviceTemplates: fragments.Select(t => t as NaemonServiceTemplate).WhereNotNull());
                     }
                     catch (Exception e)
                     {
                         parseErrors.Add((ciid: tt.Key, string.Join(',', values), error: e.Message));
-                        return (ciid: tt.Key, null, hostTemplates: null, serviceTemplates: null);
+                        return default;
                     }
                 }).Where(tt => tt.attributeValue != null).ToList();
 
@@ -203,8 +204,8 @@ namespace OKPluginCLBMonitoring
                 }
             }
             
-            var fragments = renderedTemplatesPerCI.Select(t => BulkCIAttributeDataLayerScope.Fragment.Build("", t.attributeValue, t.ciid));
-            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("naemon.intermediate_config", targetLayer.ID, fragments), changesetProxy, trans);
+            var fragments = renderedTemplatesPerCI.Select(t => new BulkCIAttributeDataLayerScope.Fragment("", t.attributeValue, t.ciid));
+            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.intermediate_config", targetLayer.ID, fragments), changesetProxy, trans);
 
             logger.LogDebug("Updated executed commands per monitored CI");
 
@@ -213,9 +214,9 @@ namespace OKPluginCLBMonitoring
             var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTrait(naemonInstanceTrait, layerSetAll, trans, timeThreshold);
             foreach (var naemonInstanceTS in naemonInstancesTS)
                 foreach (var monitoredCI in monitoredCIs.Values)
-                    if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value.et))
-                        monitoredByCIIDFragments.Add(BulkRelationDataPredicateScope.Fragment.Build(monitoredCI.ID, naemonInstanceTS.Key));
-            await relationModel.BulkReplaceRelations(BulkRelationDataPredicateScope.Build(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, trans);
+                    if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value))
+                        monitoredByCIIDFragments.Add(new BulkRelationDataPredicateScope.Fragment(monitoredCI.ID, naemonInstanceTS.Key));
+            await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, trans);
             logger.LogDebug("Assigned CIs to naemon instances");
 
 
@@ -240,26 +241,23 @@ namespace OKPluginCLBMonitoring
                         string[] hostContactgroups = new string[0];
                         if (hostTemplate != null)
                             hostContactgroups = cgr.CalculateContactgroupsOfCI(hostTemplate.ContactgroupSource).ToArray();
-                        var naemonHost = new NaemonHost()
-                        {
-                            Name = monitoredCIs[t.Key].Name,
-                            ID = t.Key,
-                            Contactgroups = hostContactgroups,
+                        var naemonHost = new NaemonHost(monitoredCIs[t.Key].Name ?? "", hostContactgroups,
+                            t.Key,
                             // we pick the first host command we can find
-                            Command = hostTemplate?.Command.ToFullCommandString() ?? "",
+                            hostTemplate?.Command.ToFullCommandString() ?? "",
                             // TODO, HACK: handle duplicates in description
-                            Services = t.SelectMany(t => t.serviceTemplates).ToDictionary(t => t.Description, t =>
+                            t.SelectMany(t => t.serviceTemplates).ToDictionary(t => t.Description, t =>
                             {
-                                return new NaemonService() { 
-                                    Command = t.Command.ToFullCommandString(),
-                                    Contactgroups = cgr.CalculateContactgroupsOfCI(t.ContactgroupSource).ToArray()
-                                };
+                                return new NaemonService(
+                                    t.Command.ToFullCommandString(),
+                                    cgr.CalculateContactgroupsOfCI(t.ContactgroupSource).ToArray()
+                                );
                             })
-                        };
+                        );
                         return naemonHost;
                     }).ToList();
 
-                monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeArrayValueJSON.BuildFromString(
+                monitoringConfigs.Add(new BulkCIAttributeDataLayerScope.Fragment("", AttributeArrayValueJSON.BuildFromString(
                     naemonHosts.Select(t => JsonConvert.SerializeObject(t, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() })).ToArray()), naemonInstance));
 
                 //var finalConfigYamlNode = new YamlMappingNode(
@@ -270,10 +268,10 @@ namespace OKPluginCLBMonitoring
                 //);
                 //var finalConfig = new YamlDocument(finalConfigYamlNode);
 
-                //monitoringConfigs.Add(BulkCIAttributeDataLayerScope.Fragment.Build("", AttributeValueYAMLArray.Build(
+                //monitoringConfigs.Add(new BulkCIAttributeDataLayerScope.Fragment("", AttributeValueYAMLArray.Build(
                 //    templates.Select(t => t.yamlValue.Value).ToArray(), templates.Select(t => t.yamlValueStr).ToArray()), naemonInstance));
             }
-            await attributeModel.BulkReplaceAttributes(BulkCIAttributeDataLayerScope.Build("naemon.config", targetLayer.ID, monitoringConfigs), changesetProxy, trans);
+            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.config", targetLayer.ID, monitoringConfigs), changesetProxy, trans);
 
             logger.LogDebug("End clbMonitoring");
             return true;
@@ -306,7 +304,7 @@ namespace OKPluginCLBMonitoring
             private readonly IEffectiveTraitModel traitModel;
             private readonly ILogger logger;
             private readonly CLBErrorHandler errorHandler;
-            private Dictionary<Guid, IEnumerable<MergedCI>> contactGroupsMap;
+            private Dictionary<Guid, IEnumerable<MergedCI>> contactGroupsMap = new Dictionary<Guid, IEnumerable<MergedCI>>();
             private readonly Dictionary<Guid, string> contactGroupNames = new Dictionary<Guid, string>();
 
             public ContactgroupResolver(IRelationModel relationModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILogger logger, CLBErrorHandler errorHandler)
@@ -318,7 +316,7 @@ namespace OKPluginCLBMonitoring
                 this.errorHandler = errorHandler;
             }
 
-            public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, Trait contactgroupTrait, NpgsqlTransaction trans, TimeThreshold timeThreshold)
+            public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, Trait contactgroupTrait, IModelContext trans, TimeThreshold timeThreshold)
             {
                 var contactGroupRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(belongsToNaemonContactgroup), layerSetAll, trans, timeThreshold);
                 if (contactGroupRelations.IsEmpty())
@@ -334,8 +332,12 @@ namespace OKPluginCLBMonitoring
                         var et = await traitModel.CalculateEffectiveTraitForCI(ci, contactgroupTrait, trans, timeThreshold);
                         if (et != null)
                         {
-                            var name = (et.TraitAttributes["name"].Attribute.Value as AttributeScalarValueText).Value;
-                            contactGroupNames.Add(ci.ID, name);
+                            var name = (et.TraitAttributes["name"].Attribute.Value as AttributeScalarValueText)?.Value;
+                            if (name != null)
+                                contactGroupNames.Add(ci.ID, name);
+                            else
+                                logger.LogError($"Expected CI {ci.ID} with trait to have proper contactgroup name");
+
                         }
                         else
                         {
@@ -372,6 +374,13 @@ namespace OKPluginCLBMonitoring
 
     internal class NaemonServiceTemplate : INaemonFragmentTemplate
     {
+        public NaemonServiceTemplate(Guid contactgroupSource, string description, NaemonCommandTemplate command)
+        {
+            ContactgroupSource = contactgroupSource;
+            Description = description;
+            Command = command;
+        }
+
         [JsonProperty(Required = Required.Always)]
         public Guid ContactgroupSource { get; set; }
         [JsonProperty(Required = Required.Always)]
@@ -382,6 +391,11 @@ namespace OKPluginCLBMonitoring
     }
     internal class NaemonHostTemplate : INaemonFragmentTemplate
     {
+        public NaemonHostTemplate(Guid contactgroupSource, NaemonCommandTemplate command)
+        {
+            ContactgroupSource = contactgroupSource;
+            Command = command;
+        }
         [JsonProperty(Required = Required.Always)]
         public Guid ContactgroupSource { get; set; }
         [JsonProperty(Required = Required.Always)]
@@ -391,6 +405,11 @@ namespace OKPluginCLBMonitoring
 
     internal class NaemonCommandTemplate
     {
+        public NaemonCommandTemplate(string executable, string parameters)
+        {
+            Executable = executable;
+            Parameters = parameters;
+        }
         [JsonProperty(Required = Required.Always)]
         public string Executable { get; set; }
         public string Parameters { get; set; }
@@ -403,6 +422,14 @@ namespace OKPluginCLBMonitoring
 
     internal class NaemonHost
     {
+        public NaemonHost(string name, string[] contactgroups, Guid iD, string command, IDictionary<string, NaemonService> services)
+        {
+            Name = name;
+            Contactgroups = contactgroups;
+            ID = iD;
+            Command = command;
+            Services = services;
+        }
         public string Name { get; set; }
         public string[] Contactgroups { get; set; }
         public Guid ID { get; set; }
@@ -412,6 +439,12 @@ namespace OKPluginCLBMonitoring
 
     internal class NaemonService
     {
+        public NaemonService(string command, string[] contactgroups)
+        {
+            Command = command;
+            Contactgroups = contactgroups;
+        }
+
         public string Command { get; set; }
         public string[] Contactgroups { get; set; }
     }

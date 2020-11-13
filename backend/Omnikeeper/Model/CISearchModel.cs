@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
@@ -17,18 +18,16 @@ namespace Omnikeeper.Model
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel traitModel;
         private readonly ILayerModel layerModel;
-        private readonly ITraitsProvider traitsProvider;
 
-        public CISearchModel(IAttributeModel attributeModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILayerModel layerModel, ITraitsProvider traitsProvider)
+        public CISearchModel(IAttributeModel attributeModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILayerModel layerModel)
         {
             this.attributeModel = attributeModel;
             this.ciModel = ciModel;
             this.traitModel = traitModel;
             this.layerModel = layerModel;
-            this.traitsProvider = traitsProvider;
         }
 
-        public async Task<IEnumerable<CompactCI>> FindCIsWithName(string CIName, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold timeThreshold)
+        public async Task<IEnumerable<CompactCI>> FindCIsWithName(string CIName, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             // TODO: performance improvements, TODO: use ciModel.getCINames() instead?
             var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), layerSet, trans, timeThreshold);
@@ -38,7 +37,7 @@ namespace Omnikeeper.Model
             return cis;
         }
 
-        public async Task<IEnumerable<CompactCI>> SimpleSearch(string searchString, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CompactCI>> SimpleSearch(string searchString, IModelContext trans, TimeThreshold atTime)
         {
             var finalSS = searchString.Trim();
 
@@ -75,12 +74,12 @@ namespace Omnikeeper.Model
             return cis.OrderBy(t => t.Name ?? "ZZZZZZZZZZZ").Take(1500); // TODO: remove hard limit, customize
         }
 
-        public async Task<IEnumerable<CompactCI>> AdvancedSearch(string searchString, string[] withTraits, LayerSet layerSet, NpgsqlTransaction trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CompactCI>> AdvancedSearch(string searchString, string[] withEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             var finalSS = searchString.Trim();
             var foundCIIDs = new HashSet<Guid>();
 
-            if (withTraits.Length <= 0) // if no traits are specified, there cannot be any results -> return early
+            if (withEffectiveTraits.Length <= 0) // if no traits are specified, there cannot be any results -> return early
                 return ImmutableArray<CompactCI>.Empty;
 
             var searchAllCIsBasedOnSearchString = true;
@@ -118,11 +117,16 @@ namespace Omnikeeper.Model
             }
             
             var resultIsReducedByETs = false;
-            foreach (var et in selectedTraits)
+            foreach (var etName in withEffectiveTraits)
             {
-                var ciFilter = (searchAllCIsBasedOnSearchString && !resultIsReducedByETs) ? (Func<Guid, bool>)null : (ciid) => foundCIIDs.Contains(ciid);
+                var ciFilter = (searchAllCIsBasedOnSearchString && !resultIsReducedByETs) ? (Func<Guid, bool>?)null : (ciid) => foundCIIDs.Contains(ciid);
                 // TODO: replace with something less performance intensive, that only fetches the CIIDs (and also cached)
-                var ets = await traitModel.CalculateEffectiveTraitsForTrait(et, layerSet, trans, atTime, ciFilter);
+                var ets = await traitModel.CalculateEffectiveTraitsForTraitName(etName, layerSet, trans, atTime, ciFilter);
+                if (ets == null)
+                { // searching for a non-existing trait -> make result empty and bail
+                    foundCIIDs = new HashSet<Guid>();
+                    break;
+                }
                 var cisFulfillingTraitRequirement = ets.Select(et => et.Key);
                 foundCIIDs = cisFulfillingTraitRequirement.ToHashSet(); // reduce the number of cis to the ones that fulfill this trait requirement
                 resultIsReducedByETs = true;

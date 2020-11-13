@@ -6,6 +6,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Service;
 using System;
@@ -28,16 +29,17 @@ namespace Omnikeeper.Controllers
         private readonly ICurrentUserService currentUserService;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
-        private readonly NpgsqlConnection conn;
+        private readonly IModelContextBuilder modelContextBuilder;
 
-        public AttributeValueImageController(IAttributeModel attributeModel, ICurrentUserService currentUserService, ILayerBasedAuthorizationService layerBasedAuthorizationService, NpgsqlConnection conn, IChangesetModel changesetModel, ICIBasedAuthorizationService ciBasedAuthorizationService)
+        public AttributeValueImageController(IAttributeModel attributeModel, ICurrentUserService currentUserService, ILayerBasedAuthorizationService layerBasedAuthorizationService, 
+            IModelContextBuilder modelContextBuilder, IChangesetModel changesetModel, ICIBasedAuthorizationService ciBasedAuthorizationService)
         {
             this.attributeModel = attributeModel;
             this.changesetModel = changesetModel;
             this.currentUserService = currentUserService;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
-            this.conn = conn;
+            this.modelContextBuilder = modelContextBuilder;
         }
 
         [HttpGet("")]
@@ -47,13 +49,14 @@ namespace Omnikeeper.Controllers
             if (layerIDs.IsEmpty())
                 return BadRequest("No layer IDs specified");
 
-            var user = await currentUserService.GetCurrentUser(null);
+            using var trans = modelContextBuilder.BuildImmediate();
+            var user = await currentUserService.GetCurrentUser(trans);
             if (!ciBasedAuthorizationService.CanReadCI(ciid))
                 return Forbid($"User \"{user.Username}\" does not have permission to read CI {ciid}");
 
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
-            var a = await attributeModel.GetFullBinaryMergedAttribute(attributeName, ciid, layerset, null, timeThreshold);
+            var a = await attributeModel.GetFullBinaryMergedAttribute(attributeName, ciid, layerset, trans, timeThreshold);
             if (a == null)
                 return NotFound($"Could not find attribute \"{attributeName}\" in CI {ciid}");
             if (a.Attribute.Value.Type != AttributeValueType.Image)
@@ -89,7 +92,8 @@ namespace Omnikeeper.Controllers
                 return BadRequest("At least one image is required");
             if (files.Any(t => !t.ContentType.StartsWith("image/")))
                 return BadRequest("Encountered file with invalid content-type. Only images are allowed");
-            var user = await currentUserService.GetCurrentUser(null);
+            using var trans = modelContextBuilder.BuildDeferred();
+            var user = await currentUserService.GetCurrentUser(trans);
             if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, layerID))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {layerID}");
             if (!ciBasedAuthorizationService.CanWriteToCI(ciid))
@@ -117,11 +121,10 @@ namespace Omnikeeper.Controllers
             }
             else
             {
-                av = AttributeScalarValueImage.Build(proxies[0]);
+                av = new AttributeScalarValueImage(proxies[0]);
             }
 
-            using var trans = conn.BeginTransaction();
-            var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
             var inserted = await attributeModel.InsertAttribute(attributeName, av, ciid, layerID, changesetProxy, trans);
             trans.Commit();
             return Ok();

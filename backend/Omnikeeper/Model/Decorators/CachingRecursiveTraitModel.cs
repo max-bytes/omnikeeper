@@ -2,8 +2,9 @@
 using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Service;
+using Omnikeeper.Base.Utils.ModelContext;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model.Decorators
@@ -11,29 +12,25 @@ namespace Omnikeeper.Model.Decorators
     public class CachingRecursiveTraitModel : IRecursiveTraitModel
     {
         private readonly IRecursiveTraitModel model;
-        private readonly IMemoryCache memoryCache;
 
-        public CachingRecursiveTraitModel(IRecursiveTraitModel model, IMemoryCache memoryCache)
+        public CachingRecursiveTraitModel(IRecursiveTraitModel model)
         {
             this.model = model;
-            this.memoryCache = memoryCache;
         }
 
-        public async Task<RecursiveTraitSet> GetRecursiveTraitSet(NpgsqlTransaction trans, TimeThreshold timeThreshold)
+        public async Task<RecursiveTraitSet> GetRecursiveTraitSet(IModelContext trans, TimeThreshold timeThreshold)
         {
             if (timeThreshold.IsLatest)
-                return await memoryCache.GetOrCreateAsync(CacheKeyService.Traits(), async (ce) =>
+                return await trans.GetOrCreateCachedValueAsync(CacheKeyService.Traits(), async () =>
                 {
-                    var changeToken = memoryCache.GetTraitsCancellationChangeToken();
-                    ce.AddExpirationToken(changeToken);
                     return await model.GetRecursiveTraitSet(trans, timeThreshold);
-                });
+                }, CacheKeyService.TraitsChangeToken());
             else return await model.GetRecursiveTraitSet(trans, timeThreshold);
         }
 
-        public async Task<RecursiveTraitSet> SetRecursiveTraitSet(RecursiveTraitSet traitSet, NpgsqlTransaction trans)
+        public async Task<RecursiveTraitSet> SetRecursiveTraitSet(RecursiveTraitSet traitSet, IModelContext trans)
         {
-            memoryCache.CancelTraitsChangeToken(); // TODO: only evict cache when insert changes
+            trans.CancelToken(CacheKeyService.TraitsChangeToken()); // TODO: only evict cache when insert changes
             return await model.SetRecursiveTraitSet(traitSet, trans);
         }
     }

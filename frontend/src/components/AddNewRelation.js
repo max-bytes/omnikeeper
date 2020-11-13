@@ -3,11 +3,11 @@ import { useQuery, useLazyQuery } from '@apollo/client';
 import PropTypes from 'prop-types'
 import { useMutation } from '@apollo/react-hooks';
 import { withApollo } from 'react-apollo';
-import Form from 'react-bootstrap/Form';
-import Col from 'react-bootstrap/Col';
 import { mutations } from '../graphql/mutations'
 import { queries } from '../graphql/queries'
-import { Dropdown, Button, Icon, Segment } from 'semantic-ui-react';
+import { Form, Select, Button, Card } from "antd";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import LayerDropdown from "./LayerDropdown";
 import { ErrorPopupButton } from "./ErrorPopupButton";
 
@@ -43,8 +43,8 @@ function AddNewRelation(props) {
   const [insertRelation] = useMutation(mutations.INSERT_RELATION);
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
-  const addButton = <Button disabled={!canBeEdited} onClick={() => setOpen(!isOpen)} icon primary labelPosition='left'>
-    <Icon name='plus' />Add Relation
+  const addButton = <Button disabled={!canBeEdited} onClick={() => setOpen(!isOpen)} icon={<FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>} type="primary">
+    Add Relation
   </Button>
   
   let addRelation = <></>;
@@ -52,22 +52,21 @@ function AddNewRelation(props) {
     var ciList = [];
     if (dataCIs)
       ciList = dataCIs.validRelationTargetCIs.map(d => {
-        return { key: d.id, value: d.id, text: d.name };
+        return { key: d.id, value: d.id, label: d.name };
       });
     const sortedPredicates = [...directedPredicates.directedPredicates]
     sortedPredicates.sort((a,b) => a.predicateID.localeCompare(b.predicateID));
     var predicateList = sortedPredicates.map(d => {
       const isDisabled = d.predicateState !== "ACTIVE";
       const forwardStr = (d.forward) ? 'forward' : 'back';
-      return { key: `${d.predicateID}$$$$${forwardStr}`, value: `${d.predicateID}$$$$${forwardStr}`, disabled: isDisabled, text: `${d.wording}...`,
-          content: (<><b>{d.wording}</b>... <span className="text-muted"><br />({d.predicateID})</span></>) };
+      return { key: `${d.predicateID}$$$$${forwardStr}`, value: `${d.predicateID}$$$$${forwardStr}`, disabled: isDisabled,
+          label: (<><b>{d.wording}</b>... <span className="text-muted"><br />({d.predicateID})</span></>) };
     });
 
     // move add functionality into on-prop
     addRelation = 
-      <Segment raised>
-        <Form onSubmit={e => {
-            e.preventDefault();
+      <Card style={{ "boxShadow": "0px 0px 5px 0px rgba(0,0,0,0.25)" }}>
+        <Form onFinish={e => {
             setInsertError(undefined);
 
             const fromTo = (newRelation.forward) 
@@ -85,55 +84,51 @@ function AddNewRelation(props) {
               });
           }}>
 
-          <Form.Row>
-            <Form.Label column xs={1}>
-              This CI...
-            </Form.Label>
-            <Form.Group as={Col} xs={4} controlId="name">
+          <Form.Item label="This CI..." style={{ marginBottom: 0 }}>
+            <Form.Item name="predicate" style={{ display: 'inline-block', width: 'calc(33% - 8px)' }}>
                 {/* TODO: create own PredicateDropdown, it might be needed more often (similar to LayerDropdown) */}
-              <Dropdown
+              <Select
                 value={((newRelation.predicateID) ? `${newRelation.predicateID}$$$$${((newRelation.forward) ? 'forward' : 'back')}` : undefined)}
                 placeholder='Select Predicate'
+                style={{ width: "100%" }}
                 onChange={(_, data) => { 
                   const [predicateID, forwardStr] = data.value.split('$$$$');
                   setNewRelation({...newRelation, predicateID: predicateID, forward: forwardStr === 'forward'});
                 }}
-                fluid
-                search
-                selection
+                showSearch
                 options={predicateList}
               />
-            </Form.Group>
+            </Form.Item>
 
-            <Form.Group as={Col} xs={4} controlId="name">
+            <Form.Item name="targetCI" style={{ display: 'inline-block', width: 'calc(33% - 8px)', marginLeft: '8px' }}>
                 {/* TODO: create own RelatedTargetCIDropdown (similar to LayerDropdown) */}
-                <Dropdown loading={loadingCIs}
+                <Select
+                  loading={loadingCIs}
                   disabled={loadingCIs}
                   value={newRelation.targetCIID}
                   placeholder='Target CI'
+                  style={{ width: "100%" }}
                   onChange={(_, data) => {
                     setNewRelation({...newRelation, targetCIID: data.value})
                   }}
-                  fluid
-                  search
-                  selection
+                  showSearch
                   options={ciList}
                 />
-            </Form.Group>
+            </Form.Item>
 
-            <Form.Group as={Col} xs={3} controlId="layer">
+            <Form.Item name="layer" style={{ display: 'inline-block', width: 'calc(33% - 8px)', marginLeft: '8px' }}>
               <LayerDropdown layers={props.visibleAndWritableLayers} selectedLayer={newRelation.layer} onSetSelectedLayer={l => setNewRelation({...newRelation, layer: l})} />
-            </Form.Group>
+            </Form.Item>
 
-          </Form.Row>
-          <Button secondary className="mr-2" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button primary type="submit">Insert</Button>
+          </Form.Item>
+          <Button type="secondary" onClick={() => setOpen(false)} style={{ marginRight: "0.5rem" }}>Cancel</Button>
+          <Button type="primary" htmlType="submit">Insert</Button>
           <ErrorPopupButton error={insertError} />
         </Form>
-      </Segment>;
+      </Card>;
   }
 
-  return <div className={"mb-4"}>
+  return <div style={{ marginBottom: "1.5rem" }}>
     {!isOpen && addButton}
     {addRelation}
     </div>;

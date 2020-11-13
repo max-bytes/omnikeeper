@@ -1,10 +1,13 @@
 ﻿using GraphQL;
+using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL;
 using Omnikeeper.Service;
 using System;
@@ -21,17 +24,22 @@ namespace Omnikeeper.Controllers
     {
         private readonly ISchema _schema;
         private readonly IDocumentExecuter _documentExecuter;
+        private readonly IDocumentWriter _documentWriter;
+        private readonly IModelContextBuilder _modelContextBuilder;
         private readonly IEnumerable<IValidationRule> _validationRules;
         private readonly IWebHostEnvironment _env;
         private readonly ICurrentUserService _currentUserService;
 
         public GraphQLController(ISchema schema, ICurrentUserService currentUserService,
-            IDocumentExecuter documentExecuter,
+            IDocumentExecuter documentExecuter, IDocumentWriter documentWriter,
+            IModelContextBuilder modelContextBuilder,
             IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env)
         {
             _currentUserService = currentUserService;
             _schema = schema;
             _documentExecuter = documentExecuter;
+            _documentWriter = documentWriter;
+            _modelContextBuilder = modelContextBuilder;
             _validationRules = validationRules;
             _env = env;
         }
@@ -58,7 +66,8 @@ namespace Omnikeeper.Controllers
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            var user = await _currentUserService.GetCurrentUser(null);
+            var trans = _modelContextBuilder.BuildImmediate();
+            var user = await _currentUserService.GetCurrentUser(trans);
 
             var inputs = query.Variables?.ToInputs();
             var result = await _documentExecuter.ExecuteAsync(options =>
@@ -66,17 +75,20 @@ namespace Omnikeeper.Controllers
                 options.Schema = _schema;
                 options.Query = query.Query;
                 options.Inputs = inputs;
+                options.EnableMetrics = false;
                 options.UserContext = new OmnikeeperUserContext(user);
                 options.ValidationRules = DocumentValidator.CoreRules.Concat(_validationRules).ToList();
-                options.ExposeExceptions = _env.IsDevelopment();
+                options.RequestServices = HttpContext.RequestServices;
             });
+
+            var json = await _documentWriter.WriteToStringAsync(result);
 
             if (result.Errors?.Count > 0)
             {
-                return BadRequest(result);
+                return BadRequest(json);
             }
 
-            return Ok(result);
+            return Ok(json);
         }
     }
 }

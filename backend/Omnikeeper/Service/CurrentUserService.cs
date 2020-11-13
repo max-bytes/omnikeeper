@@ -5,6 +5,7 @@ using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,7 +32,7 @@ namespace Omnikeeper.Service
         private IUserInDatabaseModel UserModel { get; }
         private ILayerModel LayerModel { get; }
 
-        public async Task<AuthenticatedUser> GetCurrentUser(NpgsqlTransaction trans)
+        public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
             // TODO: caching
             return await CreateUserFromClaims(HttpContextAccessor.HttpContext.User.Claims, trans);
@@ -42,20 +43,20 @@ namespace Omnikeeper.Service
             return HttpContextAccessor.HttpContext.User.Claims.Select(c => (c.Type, c.Value));
         }
 
-        public string GetUsernameFromClaims(IEnumerable<Claim> claims)
+        public string? GetUsernameFromClaims(IEnumerable<Claim> claims)
         {
             return claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
         }
 
-        private async Task<AuthenticatedUser> CreateUserFromClaims(IEnumerable<Claim> claims, NpgsqlTransaction trans)
+        private async Task<AuthenticatedUser> CreateUserFromClaims(IEnumerable<Claim> claims, IModelContext trans)
         {
             var username = GetUsernameFromClaims(claims);
 
             if (username == null)
             {
                 var anonymousGuid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef2"); // TODO: ?
-                var userInDatabase = await UserModel.UpsertUser("anonymous", "anonymous", anonymousGuid, UserType.Unknown, null);
-                return AuthenticatedUser.Build(userInDatabase, new List<Layer>());
+                var userInDatabase = await UserModel.UpsertUser("anonymous", "anonymous", anonymousGuid, UserType.Unknown, trans);
+                return new AuthenticatedUser(userInDatabase, new List<Layer>());
             }
             else
             {
@@ -67,7 +68,7 @@ namespace Omnikeeper.Service
 
                 // extract client roles
                 var resourceAccessStr = claims.Where(c => c.Type == "resource_access").FirstOrDefault()?.Value;
-                var resourceAccess = JObject.Parse(resourceAccessStr);
+                var resourceAccess = resourceAccessStr != null ? JObject.Parse(resourceAccessStr) : null;
                 var resourceName = Configuration.GetSection("Authentication")["Audience"];
                 var clientRoles = resourceAccess?[resourceName]?["roles"]?.Select(tt => tt.Value<string>()).ToArray() ?? new string[] { };
 
@@ -85,10 +86,10 @@ namespace Omnikeeper.Service
                     _ => throw new Exception("Unknown UserType encountered")
                 };
 
-                var guid = new Guid(guidString); // TODO: check for null, handle case
-                var userInDatabase = await UserModel.UpsertUser(username, displayName, guid, usertype, null);
+                var guid = new Guid(guidString!); // TODO: check for null, handle case
+                var userInDatabase = await UserModel.UpsertUser(username, displayName, guid, usertype, trans);
 
-                return AuthenticatedUser.Build(userInDatabase, writableLayers);
+                return new AuthenticatedUser(userInDatabase, writableLayers);
             }
         }
     }

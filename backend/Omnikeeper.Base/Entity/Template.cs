@@ -11,15 +11,12 @@ namespace Omnikeeper.Base.Entity
 
         public IImmutableDictionary<string, RecursiveTrait> Traits { get; private set; } // TODO: actually check if the traits are fulfilled
 
-        public static Template Build(string ciTypeID, IEnumerable<CIAttributeTemplate> attributes, IEnumerable<RelationTemplate> relations, IEnumerable<RecursiveTrait> traits)
+        public Template(string ciTypeID, IEnumerable<CIAttributeTemplate> attributes, IEnumerable<RelationTemplate> relations, IEnumerable<RecursiveTrait> traits)
         {
-            return new Template()
-            {
-                CITypeID = ciTypeID,
-                AttributeTemplates = attributes.ToImmutableDictionary(t => t.Name),
-                RelationTemplates = relations.ToImmutableDictionary(t => t.PredicateID),
-                Traits = traits.ToImmutableDictionary(t => t.Name)
-            };
+            CITypeID = ciTypeID;
+            AttributeTemplates = attributes.ToImmutableDictionary(t => t.Name);
+            RelationTemplates = relations.ToImmutableDictionary(t => t.PredicateID);
+            Traits = traits.ToImmutableDictionary(t => t.Name);
         }
     }
 }

@@ -6,6 +6,7 @@ using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using System;
@@ -19,22 +20,23 @@ namespace Omnikeeper.Runners
         private readonly IExternalIDMapPersister externalIDMapPersister;
         private readonly IChangesetModel changesetModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
-        private readonly NpgsqlConnection conn;
+        private readonly IModelContextBuilder modelContextBuilder;
 
-        public ArchiveOldDataRunner(ILogger<ArchiveOldDataRunner> logger, IExternalIDMapPersister externalIDMapPersister, IChangesetModel changesetModel, IBaseConfigurationModel baseConfigurationModel, NpgsqlConnection conn)
+        public ArchiveOldDataRunner(ILogger<ArchiveOldDataRunner> logger, IExternalIDMapPersister externalIDMapPersister, 
+            IChangesetModel changesetModel, IBaseConfigurationModel baseConfigurationModel, IModelContextBuilder modelContextBuilder)
         {
             this.logger = logger;
             this.externalIDMapPersister = externalIDMapPersister;
             this.changesetModel = changesetModel;
             this.baseConfigurationModel = baseConfigurationModel;
-            this.conn = conn;
+            this.modelContextBuilder = modelContextBuilder;
         }
 
         public async Task RunAsync()
         {
             // remove outdated changesets
             // this in turn also removes outdated attributes and relations
-            using (var trans = conn.BeginTransaction())
+            using (var trans = modelContextBuilder.BuildDeferred())
             {
                 var cfg = await baseConfigurationModel.GetConfigOrDefault(trans);
 
@@ -58,7 +60,7 @@ namespace Omnikeeper.Runners
             // remove unused CIs
             // approach: unused CIs are CIs that are completely empty (no attributes for relations relate to it) AND
             // are not used in any OIA external ID mappings
-            var numArchivedCIs = await ArchiveUnusedCIsService.ArchiveUnusedCIs(externalIDMapPersister, conn, logger);
+            var numArchivedCIs = await ArchiveUnusedCIsService.ArchiveUnusedCIs(externalIDMapPersister, modelContextBuilder, logger);
 
             if (numArchivedCIs > 0)
                 logger.LogInformation($"Archived {numArchivedCIs} CIs because they are unused");
@@ -67,7 +69,7 @@ namespace Omnikeeper.Runners
 
         [DisableConcurrentExecution(timeoutInSeconds: 60)]
         [AutomaticRetry(Attempts = 0)]
-        public void Run(PerformContext context)
+        public void Run(PerformContext? context)
         {
             using (HangfireConsoleLogger.InContext(context))
             {
