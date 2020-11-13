@@ -23,35 +23,38 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestTraitAttributes()
         {
-            var (traitModel, layerset, ciids) = await BaseSetup(new MockedTraitsProvider());
+            var traitsProvider = new MockedTraitsProvider();
+            var (traitModel, layerset, ciids) = await BaseSetup(traitsProvider);
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
             var trans = ModelContextBuilder.BuildImmediate();
 
-            var t0 = await traitModel.CalculateEffectiveTraitsForTraitName("invalid_trait", layerset, trans, timeThreshold);
-            Assert.AreEqual(null, t0);
+            // TODO: move test for TraitsProvider to its own test-class
+            var invalidTrait = await traitsProvider.GetActiveTrait("invalid_trait", trans, timeThreshold);
+            Assert.AreEqual(null, invalidTrait);
 
-            var t1 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_1", layerset, trans, timeThreshold);
-            Assert.AreEqual(3, t1.Count());
-            var t2 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_2", layerset, trans, timeThreshold);
-            Assert.AreEqual(2, t2.Count());
-            Assert.IsTrue(t2.All(t => t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a2") && t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a4")));
-            var t3 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_3", layerset, trans, timeThreshold);
-            Assert.AreEqual(2, t3.Count());
-            Assert.IsTrue(t3.All(t => t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
+            var testTrait1 = (await traitsProvider.GetActiveTrait("test_trait_1", trans, timeThreshold))!;
+            var testTrait2 = (await traitsProvider.GetActiveTrait("test_trait_2", trans, timeThreshold))!;
+            var testTrait3 = (await traitsProvider.GetActiveTrait("test_trait_3", trans, timeThreshold))!;
 
-            var tt0 = await traitModel.CalculateMergedCIsWithTrait("invalid_trait", layerset, trans, timeThreshold);
-            Assert.AreEqual(null, tt0);
+            var et1 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait1, layerset, trans, timeThreshold);
+            Assert.AreEqual(3, et1.Count());
+            var et2 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait2, layerset, trans, timeThreshold);
+            Assert.AreEqual(2, et2.Count());
+            Assert.IsTrue(et2.All(t => t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a2") && t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a4")));
+            var et3 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait3, layerset, trans, timeThreshold);
+            Assert.AreEqual(2, et3.Count());
+            Assert.IsTrue(et3.All(t => t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
 
+            var cis1 = await traitModel.GetMergedCIsWithTrait(testTrait1, layerset, trans, timeThreshold);
+            Assert.AreEqual(3, cis1.Count());
+            cis1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
 
-            var tt1 = await traitModel.CalculateMergedCIsWithTrait("test_trait_1", layerset, trans, timeThreshold);
-            Assert.AreEqual(3, tt1.Count());
-            tt1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
+            var cis2 = await traitModel.GetMergedCIsWithTrait(testTrait2, layerset, trans, timeThreshold);
+            Assert.AreEqual(2, cis2.Count());
+            cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
 
-            var tt2 = await traitModel.CalculateMergedCIsWithTrait("test_trait_2", layerset, trans, timeThreshold);
-            Assert.AreEqual(2, tt2.Count());
-            tt2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
         }
 
         [Test]

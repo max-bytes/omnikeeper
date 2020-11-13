@@ -18,13 +18,15 @@ namespace Omnikeeper.Model
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel traitModel;
         private readonly ILayerModel layerModel;
+        private readonly ITraitsProvider traitsProvider;
 
-        public CISearchModel(IAttributeModel attributeModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILayerModel layerModel)
+        public CISearchModel(IAttributeModel attributeModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILayerModel layerModel, ITraitsProvider traitsProvider)
         {
             this.attributeModel = attributeModel;
             this.ciModel = ciModel;
             this.traitModel = traitModel;
             this.layerModel = layerModel;
+            this.traitsProvider = traitsProvider;
         }
 
         public async Task<IEnumerable<CompactCI>> FindCIsWithName(string CIName, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
@@ -109,24 +111,19 @@ namespace Omnikeeper.Model
             }
 
             var activeTraitSet = await traitsProvider.GetActiveTraitSet(trans, atTime);
-            var selectedTraits = activeTraitSet.Traits.Values.Where(t => withTraits.Contains(t.Name));
-            if (selectedTraits.Count() < withTraits.Length)
+            var selectedTraits = activeTraitSet.Traits.Values.Where(t => withEffectiveTraits.Contains(t.Name));
+            if (selectedTraits.Count() < withEffectiveTraits.Length)
             {
                 // we could not find all traits
                 return ImmutableArray<CompactCI>.Empty;
             }
             
             var resultIsReducedByETs = false;
-            foreach (var etName in withEffectiveTraits)
+            foreach (var et in selectedTraits)
             {
                 var ciFilter = (searchAllCIsBasedOnSearchString && !resultIsReducedByETs) ? (Func<Guid, bool>?)null : (ciid) => foundCIIDs.Contains(ciid);
                 // TODO: replace with something less performance intensive, that only fetches the CIIDs (and also cached)
-                var ets = await traitModel.CalculateEffectiveTraitsForTraitName(etName, layerSet, trans, atTime, ciFilter);
-                if (ets == null)
-                { // searching for a non-existing trait -> make result empty and bail
-                    foundCIIDs = new HashSet<Guid>();
-                    break;
-                }
+                var ets = await traitModel.CalculateEffectiveTraitsForTrait(et, layerSet, trans, atTime, ciFilter);
                 var cisFulfillingTraitRequirement = ets.Select(et => et.Key);
                 foundCIIDs = cisFulfillingTraitRequirement.ToHashSet(); // reduce the number of cis to the ones that fulfill this trait requirement
                 resultIsReducedByETs = true;

@@ -5,7 +5,9 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Entity.GridView;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GridView.Helper;
 using Omnikeeper.GridView.Request;
@@ -37,7 +39,6 @@ namespace Omnikeeper.GridView.Commands
 
         public class ChangeDataCommandHandler : IRequestHandler<Command, (ChangeDataResponse, bool, string)>
         {
-            private readonly NpgsqlConnection conn;
             private readonly ICIModel ciModel;
             private readonly IAttributeModel attributeModel;
             private readonly IChangesetModel changesetModel;
@@ -45,11 +46,12 @@ namespace Omnikeeper.GridView.Commands
             private readonly IGridViewConfigModel gridViewConfigModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
             private readonly ITraitsProvider traitsProvider;
-            public ChangeDataCommandHandler(NpgsqlConnection connection, ICIModel ciModel, IAttributeModel attributeModel,
+            private readonly IModelContextBuilder modelContextBuilder;
+
+            public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel,
                 IChangesetModel changesetModel, ICurrentUserService currentUserService, IGridViewConfigModel gridViewConfigModel,
-                IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider)
+                IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder)
             {
-                conn = connection;
                 this.ciModel = ciModel;
                 this.attributeModel = attributeModel;
                 this.changesetModel = changesetModel;
@@ -57,6 +59,7 @@ namespace Omnikeeper.GridView.Commands
                 this.gridViewConfigModel = gridViewConfigModel;
                 this.effectiveTraitModel = effectiveTraitModel;
                 this.traitsProvider = traitsProvider;
+                this.modelContextBuilder = modelContextBuilder;
             }
             public async Task<(ChangeDataResponse, bool, string)> Handle(Command request, CancellationToken cancellationToken)
             {
@@ -69,8 +72,10 @@ namespace Omnikeeper.GridView.Commands
                     return (new ChangeDataResponse(), false, ValidationHelper.CreateErrorMessage(validation));
                 }
 
-                var user = await currentUserService.GetCurrentUser(null);
-                var changesetProxy = ChangesetProxy.Build(user.InDatabase, DateTimeOffset.Now, changesetModel);
+                using var trans = modelContextBuilder.BuildDeferred();
+
+                var user = await currentUserService.GetCurrentUser(trans);
+                var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
 
                 // TO DO:
                 // The consistency validation per CI consists 
@@ -92,12 +97,11 @@ namespace Omnikeeper.GridView.Commands
                  */
 
 
-                var config = await gridViewConfigModel.GetConfiguration(request.Context);
+                var config = await gridViewConfigModel.GetConfiguration(request.Context, trans);
 
-                using var trans = conn.BeginTransaction();
                 foreach (var row in request.Changes.SparseRows)
                 {
-                    var ciExists = await ciModel.CIIDExists(row.Ciid, null);
+                    var ciExists = await ciModel.CIIDExists(row.Ciid, trans);
 
                     if (!ciExists)
                     {
@@ -161,19 +165,19 @@ namespace Omnikeeper.GridView.Commands
                 }
 
                 var cisList = SpecificCIIDsSelection.Build(request.Changes.SparseRows.Select(i => i.Ciid));
-                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, null, TimeThreshold.BuildLatest());
+                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, TimeThreshold.BuildLatest());
 
                 var mergedCIs = await ciModel.GetMergedCIs(
                     cisList,
                     new LayerSet(config.ReadLayerset.ToArray()),
                     true,
-                    null,
+                    trans,
                     TimeThreshold.BuildLatest()
                     );
 
                 foreach (var mergedCI in mergedCIs)
                 {
-                    var hasTrait = await effectiveTraitModel.DoesCIHaveTrait(mergedCI, activeTrait, null, TimeThreshold.BuildLatest());
+                    var hasTrait = await effectiveTraitModel.DoesCIHaveTrait(mergedCI, activeTrait, trans, TimeThreshold.BuildLatest());
 
                     if (!hasTrait)
                     {
@@ -188,16 +192,18 @@ namespace Omnikeeper.GridView.Commands
 
             private async Task<ChangeDataResponse> FetchData(GridViewConfiguration config)
             {
+                using var trans = modelContextBuilder.BuildImmediate();
+
                 var result = new ChangeDataResponse
                 {
                     Rows = new List<ChangeDataRow>()
                 };
 
-                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, null, TimeThreshold.BuildLatest());
+                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, TimeThreshold.BuildLatest());
                 var res = await effectiveTraitModel.GetMergedCIsWithTrait(
                     activeTrait,
                     new LayerSet(config.ReadLayerset.ToArray()),
-                    null,
+                    trans,
                     TimeThreshold.BuildLatest()
                     );
 

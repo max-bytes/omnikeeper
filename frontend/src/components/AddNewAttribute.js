@@ -97,7 +97,7 @@ function AddNewAttribute(props) {
           <Row>
             <Col span={18}>
                 <Form.Item name="value" label={((newAttribute.isArray) ? 'Values' : 'Value')}>
-                    <EditableAttributeValue hideNameLabel setHasErrors={setHasErrors} name={'newAttribute'} autoFocus={valueAutofocussed} values={newAttribute.values} setValues={vs => setNewAttribute({...newAttribute, values: vs})} type={newAttribute.type} isArray={newAttribute.isArray} />
+                    <EditableAttributeValue hideNameLabel setHasErrors={setHasErrors} name={'newAttribute'} autoFocus={valueAutofocussed} values={newAttribute.values} setValues={vs => setNewAttribute({...newAttribute, values: vs})} type={newAttribute.type} isArray={newAttribute.isArray} ciid={props.ciIdentity} />
                 </Form.Item>
             </Col>
           </Row>

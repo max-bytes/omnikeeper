@@ -53,7 +53,7 @@ namespace Omnikeeper.Model
             return TraitSet.Build(flattened);
         }
 
-        public async Task<Trait> GetActiveTrait(string traitName, NpgsqlTransaction trans, TimeThreshold timeThreshold)
+        public async Task<Trait?> GetActiveTrait(string traitName, IModelContext trans, TimeThreshold timeThreshold)
         {
             // TODO: can be done more efficiently? here we get ALL traits, just to select a single one... but the flattening is necessary
             var ts = await GetActiveTraitSet(trans, timeThreshold);

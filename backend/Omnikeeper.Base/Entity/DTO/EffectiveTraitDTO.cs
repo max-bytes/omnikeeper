@@ -5,25 +5,6 @@ using System.Linq;
 
 namespace Omnikeeper.Base.Entity.DTO
 {
-    public class EffectiveTraitSetDTO
-    {
-        [Required] public CIDTO UnderlyingCI { get; set; }
-        [Required] public IImmutableDictionary<string, EffectiveTraitDTO> EffectiveTraits { get; set; }
-
-        private EffectiveTraitSetDTO(CIDTO underlyingCI, IImmutableDictionary<string, EffectiveTraitDTO> effectiveTraits)
-        {
-            UnderlyingCI = underlyingCI;
-            EffectiveTraits = effectiveTraits;
-        }
-
-        public static EffectiveTraitSetDTO BuildFromETS(EffectiveTraitSet traitSet)
-        {
-            return new EffectiveTraitSetDTO(CIDTO.BuildFromMergedCI(traitSet.UnderlyingCI),
-                traitSet.EffectiveTraits.Select(kv => (kv.Key, EffectiveTraitDTO.Build(kv.Value))).ToImmutableDictionary(kv => kv.Key, kv => kv.Item2)
-            );
-        }
-    }
-
     public class EffectiveTraitDTO
     {
         private EffectiveTraitDTO(IImmutableDictionary<string, CIAttributeDTO> traitAttributes, IImmutableDictionary<string, IEnumerable<RelatedCIDTO>> traitRelations)

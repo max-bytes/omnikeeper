@@ -2,6 +2,7 @@
 using MediatR;
 using Omnikeeper.Base.Entity.GridView;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GridView.Helper;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,9 +35,11 @@ namespace Omnikeeper.GridView.Commands
         public class EditContextCommandHandler : IRequestHandler<Command, (bool, string)>
         {
             private readonly IGridViewConfigModel gridViewConfigModel;
-            public EditContextCommandHandler(IGridViewConfigModel gridViewConfigModel)
+            private readonly IModelContextBuilder modelContextBuilder;
+            public EditContextCommandHandler(IGridViewConfigModel gridViewConfigModel, IModelContextBuilder modelContextBuilder)
             {
                 this.gridViewConfigModel = gridViewConfigModel;
+                this.modelContextBuilder = modelContextBuilder;
             }
 
             public async Task<(bool, string)> Handle(Command request, CancellationToken cancellationToken)
@@ -50,13 +53,19 @@ namespace Omnikeeper.GridView.Commands
                     return (false, ValidationHelper.CreateErrorMessage(validation));
                 }
 
-                var isSuccess = await gridViewConfigModel.EditContext(request.Name, request.SpeakingName, request.Description, request.Configuration);
+                using var trans = modelContextBuilder.BuildDeferred();
+
+                var isSuccess = await gridViewConfigModel.EditContext(request.Name, request.SpeakingName, request.Description, request.Configuration, trans);
 
                 if (isSuccess)
                 {
+                    trans.Commit();
                     return (isSuccess, "");
                 }
-                return (isSuccess, $"An error ocurred trying to edit {request.Name} context!");
+                else
+                {
+                    return (isSuccess, $"An error ocurred trying to edit {request.Name} context!");
+                }
             }
         }
     }

@@ -8,6 +8,7 @@ import "./GridView.css";
 import GridViewDataParseModel from "./GridViewDataParseModel";
 import _ from "lodash";
 import SwaggerClient from "swagger-client";
+import env from "@beam-australia/react-env";
 // TODO: use aggrid_copy_cut_paste - USE THIS:
 // import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
 // const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
@@ -16,8 +17,7 @@ import SwaggerClient from "swagger-client";
 //     false // logging off
 // );
 
-const swaggerDefUrl =
-    "https://acme.omnikeeper-dev.bymhx.at/backend/swagger/v1/swagger.json";
+const swaggerDefUrl = `${env('BACKEND_URL')}/../swagger/v1/swagger.json`; // TODO, HACK: BACKEND_URL contains /graphql suffix, remove!
 const apiVersion = 1;
 
 const { Header, Content } = Layout;

@@ -39,7 +39,7 @@ function Attribute(props) {
   const layerID = props.attribute.layerStackIDs[props.attribute.layerStackIDs.length - 1];
 
   let valueInput = 
-    <EditableAttributeValue hideNameLabel={hideNameLabel} name={attribute.attribute.name} controlIdSuffix={controlIdSuffix} setHasErrors={setHasErrors} isEditable={isEditable} values={values} setValues={setValues} type={attribute.attribute.value.type} isArray={isArray} />
+    <EditableAttributeValue hideNameLabel={hideNameLabel} name={attribute.attribute.name} controlIdSuffix={controlIdSuffix} setHasErrors={setHasErrors} isEditable={isEditable} values={values} setValues={setValues} type={attribute.attribute.value.type} isArray={isArray} ciid={ciIdentity} />
 ;
 
   const rightPart = <div style={{minHeight: '38px', display: 'flex', alignItems: 'center'}}>

@@ -3,6 +3,7 @@ using MediatR;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GridView.Response;
 using System.Collections.Generic;
 using System.Threading;
@@ -30,21 +31,25 @@ namespace Omnikeeper.GridView.Queries
             private readonly IGridViewConfigModel gridViewConfigModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
             private readonly ITraitsProvider traitsProvider;
+            private readonly IModelContextBuilder modelContextBuilder;
 
             public GetDataQueryHandler(IGridViewConfigModel gridViewConfigModel, IEffectiveTraitModel effectiveTraitModel,
-                ITraitsProvider traitsProvider)
+                ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder)
             {
                 this.gridViewConfigModel = gridViewConfigModel;
                 this.effectiveTraitModel = effectiveTraitModel;
                 this.traitsProvider = traitsProvider;
+                this.modelContextBuilder = modelContextBuilder;
             }
 
             public async Task<(GetDataResponse, bool, string)> Handle(Query request, CancellationToken cancellationToken)
             {
                 var validator = new QueryValidator();
                 validator.ValidateAndThrow(request);
- 
-                var config = await gridViewConfigModel.GetConfiguration(request.Context);
+
+                var trans = modelContextBuilder.BuildImmediate();
+
+                var config = await gridViewConfigModel.GetConfiguration(request.Context, trans);
                 
                 var result = new GetDataResponse
                 {
@@ -55,7 +60,7 @@ namespace Omnikeeper.GridView.Queries
 
                 // NOTE mcsuk: use effectiveTraitModel.GetMergedCIsWithTrait() instead
 
-                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, null, TimeThreshold.BuildLatest());
+                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, TimeThreshold.BuildLatest());
 
                 if (activeTrait == null)
                 {
@@ -65,7 +70,7 @@ namespace Omnikeeper.GridView.Queries
                 var res = await effectiveTraitModel.GetMergedCIsWithTrait(
                     activeTrait,
                     new LayerSet(config.ReadLayerset.ToArray()),
-                    null,
+                    trans,
                     TimeThreshold.BuildLatest()
                     );
 

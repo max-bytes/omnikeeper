@@ -157,19 +157,6 @@
             <param name="trans"></param>
             <returns></returns>
         </member>
-        <member name="M:Omnikeeper.Service.CacheKeyService.GetOrCreateThreadSafe``1(Microsoft.Extensions.Caching.Memory.IMemoryCache,System.Object,System.Func{Microsoft.Extensions.Caching.Memory.ICacheEntry,``0})">
-            <summary>
-            despite some conflicting information on the web, IMemoryCache.GetOrCreate() is NOT(!) properly thread safe. That means that parallel invocations of it can lead to different values getting returned
-            this function fixes the issue by using a lock
-            see https://github.com/aspnet/Caching/issues/359 and https://github.com/dotnet/runtime/issues/36499 for the issue
-            see https://tpodolak.com/blog/2017/12/13/asp-net-core-memorycache-getorcreate-calls-factory-method-multiple-times/ for the base solution
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="memoryCache"></param>
-            <param name="key"></param>
-            <param name="factory"></param>
-            <returns></returns>
-        </member>
         <member name="M:LandscapeRegistry.GridView.GridViewController.GetContexts">
             <summary>
             Returns a list of contexts for grid view.

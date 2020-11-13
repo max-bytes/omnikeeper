@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils.ModelContext;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,16 +16,25 @@ namespace Omnikeeper.GridView.Commands
         public class DeleteContextCommandHandler : IRequestHandler<Command, bool>
         {
             private readonly IGridViewConfigModel gridViewConfigModel;
-            public DeleteContextCommandHandler(IGridViewConfigModel gridViewConfigModel)
+            private readonly IModelContextBuilder modelContextBuilder;
+            public DeleteContextCommandHandler(IGridViewConfigModel gridViewConfigModel, IModelContextBuilder modelContextBuilder)
             {
                 this.gridViewConfigModel = gridViewConfigModel;
+                this.modelContextBuilder = modelContextBuilder;
             }
 
             public async Task<bool> Handle(Command request, CancellationToken cancellationToken)
             {
-                var isSuccess = await gridViewConfigModel.DeleteContext(request.Name);
+                using var trans = modelContextBuilder.BuildDeferred();
 
-                return isSuccess;
+                var isSuccess = await gridViewConfigModel.DeleteContext(request.Name, trans);
+
+                if (isSuccess)
+                {
+                    trans.Commit();
+                    return true;
+                }
+                return false;
             }
         }
     }

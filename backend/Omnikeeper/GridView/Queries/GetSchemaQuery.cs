@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using MediatR;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GridView.Response;
 using System.Collections.Generic;
 using System.Threading;
@@ -26,16 +27,20 @@ namespace Omnikeeper.GridView.Queries
         public class GetSchemaQueryHandler : IRequestHandler<Query, GetSchemaResponse>
         {
             private readonly IGridViewConfigModel gridViewConfigModel;
-            public GetSchemaQueryHandler(IGridViewConfigModel gridViewConfigModel)
+            private readonly IModelContextBuilder modelContextBuilder;
+            public GetSchemaQueryHandler(IGridViewConfigModel gridViewConfigModel, IModelContextBuilder modelContextBuilder)
             {
                 this.gridViewConfigModel = gridViewConfigModel;
+                this.modelContextBuilder = modelContextBuilder;
             }
             public async Task<GetSchemaResponse> Handle(Query request, CancellationToken cancellationToken)
             {
                 var validator = new QueryValidator();
                 validator.ValidateAndThrow(request);
 
-                var config = await gridViewConfigModel.GetConfiguration(request.Context);
+                var trans = modelContextBuilder.BuildImmediate();
+
+                var config = await gridViewConfigModel.GetConfiguration(request.Context, trans);
 
                 var result = new GetSchemaResponse 
                 {

@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using MediatR;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GridView.Helper;
 using Omnikeeper.GridView.Request;
 using System.Threading;
@@ -31,9 +32,11 @@ namespace Omnikeeper.GridView.Commands
         public class AddContextHandler : IRequestHandler<Command, (bool, string)>
         {
             private readonly IGridViewConfigModel gridViewConfigModel;
-            public AddContextHandler(IGridViewConfigModel gridViewConfigModel)
+            private readonly IModelContextBuilder modelContextBuilder;
+            public AddContextHandler(IGridViewConfigModel gridViewConfigModel, IModelContextBuilder modelContextBuilder)
             {
                 this.gridViewConfigModel = gridViewConfigModel;
+                this.modelContextBuilder = modelContextBuilder;
             }
 
             public async Task<(bool, string)> Handle(Command request, CancellationToken cancellationToken)
@@ -46,15 +49,18 @@ namespace Omnikeeper.GridView.Commands
                 {
                     return (false, ValidationHelper.CreateErrorMessage(validation));
                 }
+                var trans = modelContextBuilder.BuildDeferred();
 
                 var isSuccess = await gridViewConfigModel.AddContext(
                     request.Context.Name, 
                     request.Context.SpeakingName, 
                     request.Context.Description,
-                    request.Context.Configuration);
+                    request.Context.Configuration,
+                    trans);
 
                 if (isSuccess)
                 {
+                    trans.Commit();
                     return (isSuccess, "");
                 }
 

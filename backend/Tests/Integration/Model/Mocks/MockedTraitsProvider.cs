@@ -15,6 +15,15 @@ namespace Tests.Integration.Model.Mocks
 {
     public class MockedTraitsProvider : ITraitsProvider
     {
+        public async Task<Trait?> GetActiveTrait(string traitName, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            var ts = await GetActiveTraitSet(trans, timeThreshold);
+
+            if (ts.Traits.TryGetValue(traitName, out var trait))
+                return trait;
+            return null;
+        }
+
         public Task<TraitSet> GetActiveTraitSet(IModelContext trans, TimeThreshold timeThreshold)
         {
             var r = new List<RecursiveTrait>() {

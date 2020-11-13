@@ -3,6 +3,7 @@ using Npgsql;
 using Omnikeeper.Base.Entity.GridView;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,18 +13,13 @@ namespace Omnikeeper.Model
 {
     public class GridViewConfigModel : IGridViewConfigModel
     {
-        private readonly NpgsqlConnection conn;
-        public GridViewConfigModel(NpgsqlConnection connection)
-        {
-            conn = connection;
-        }
-        public async Task<GridViewConfiguration> GetConfiguration(string configName)
+        public async Task<GridViewConfiguration> GetConfiguration(string configName, IModelContext trans)
         {
             using var command = new NpgsqlCommand($@"
                     SELECT *
                     FROM gridview_config gvc
                     WHERE gvc.name=@configName
-                ", conn, null);
+                ", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("configName", configName);
 
@@ -42,14 +38,14 @@ namespace Omnikeeper.Model
             return config;
         }
 
-        public async Task<List<Context>> GetContexts()
+        public async Task<List<Context>> GetContexts(IModelContext trans)
         {
             var contexts = new List<Context>();
 
             using var command = new NpgsqlCommand($@"
                     SELECT id, name, speaking_name, description
                     FROM gridview_config
-                ", conn, null);
+                ", trans.DBConnection, trans.DBTransaction);
 
             using var dr = await command.ExecuteReaderAsync();
 
@@ -67,14 +63,14 @@ namespace Omnikeeper.Model
             return contexts;
         }
 
-        public async Task<bool> AddContext(string name, string speakingName, string description, GridViewConfiguration configuration)
+        public async Task<bool> AddContext(string name, string speakingName, string description, GridViewConfiguration configuration, IModelContext trans)
         {
             using var command = new NpgsqlCommand($@"
                     INSERT INTO gridview_config
                     (config, name, timestamp, speaking_name, description)
                     VALUES
                     (CAST(@config AS json), @name, @timestamp, @speaking_name, @description)
-                ", conn, null);
+                ", trans.DBConnection, trans.DBTransaction);
 
             var config = JsonConvert.SerializeObject(configuration);
 
@@ -89,7 +85,7 @@ namespace Omnikeeper.Model
             return result > 0;
         }
 
-        public async Task<bool> EditContext(string name, string speakingName, string description, GridViewConfiguration configuration)
+        public async Task<bool> EditContext(string name, string speakingName, string description, GridViewConfiguration configuration, IModelContext trans)
         {
             using var command = new NpgsqlCommand($@"
                     UPDATE gridview_config
@@ -99,7 +95,7 @@ namespace Omnikeeper.Model
                         description = @description,
                         config = CAST(@config AS json)
                     WHERE name = @name
-                ", conn, null);
+                ", trans.DBConnection, trans.DBTransaction);
 
             var config = JsonConvert.SerializeObject(configuration);
 
@@ -113,12 +109,12 @@ namespace Omnikeeper.Model
             return result > 0;
         }
 
-        public async Task<bool> DeleteContext(string name)
+        public async Task<bool> DeleteContext(string name, IModelContext trans)
         {
             using var command = new NpgsqlCommand($@"
                     DELETE FROM gridview_config
                     WHERE name = @name
-                ", conn, null);
+                ", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("name", name);
 
