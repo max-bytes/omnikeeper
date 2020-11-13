@@ -1,13 +1,12 @@
 import React from 'react';
 import LayerIcon from './LayerIcon';
-import { Icon } from 'semantic-ui-react'
-import { Button } from 'semantic-ui-react'
+import { Button, Radio } from 'antd'
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import { queries } from 'graphql/queries'
 import { useQuery } from '@apollo/react-hooks';
 import { mergeSettingsAndSortLayers } from 'utils/layers'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCogs, faPlug, faBan, faEdit } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faEyeSlash, faArrowAltCircleUp, faArrowAltCircleDown, faCogs, faPlug, faBan, faEdit } from '@fortawesome/free-solid-svg-icons'
 import _ from 'lodash';
 
 function Layers(props) {
@@ -90,17 +89,17 @@ function Layers(props) {
                     {layer.onlineInboundAdapterName !== "" && (<FontAwesomeIcon icon={faPlug} />)}
                   </span>
                   &nbsp;&nbsp;
-                    <Button basic size='mini' compact onClick={() => toggleLayerVisibility(layer.id, data.layers)}>
-                      <Icon fitted name={((layer.visible) ? 'eye' : 'eye slash')} />
+                    <Button size='small' onClick={() => toggleLayerVisibility(layer.id, data.layers)} style={{ marginRight: "0.5rem" }}>
+                      <FontAwesomeIcon icon={((layer.visible) ? faEye : faEyeSlash)} color={"grey"} style={{ padding: "2px"}} />
                     </Button>
-                  <Button.Group basic size='mini'>
-                    <Button compact disabled={!previousLayer} onClick={() => changeLayerSortOrder(layer.id, previousLayer.id, 1, data.layers)}>
-                      <Icon fitted name='arrow alternate circle up' />
-                    </Button>
-                    <Button compact disabled={!nextLayer} onClick={() => changeLayerSortOrder(layer.id, nextLayer.id, -1, data.layers)}>
-                      <Icon fitted name='arrow alternate circle down' />
-                    </Button>
-                  </Button.Group>
+                  <Radio.Group size='small'>
+                    <Radio.Button disabled={!previousLayer} onClick={() => changeLayerSortOrder(layer.id, previousLayer.id, 1, data.layers)}>
+                      <FontAwesomeIcon icon={faArrowAltCircleUp} color={"grey"} style={{ padding: "2px"}} />
+                    </Radio.Button>
+                    <Radio.Button disabled={!nextLayer} onClick={() => changeLayerSortOrder(layer.id, nextLayer.id, -1, data.layers)}>
+                      <FontAwesomeIcon icon={faArrowAltCircleDown} color={"grey"} style={{ padding: "2px"}} />
+                    </Radio.Button>
+                  </Radio.Group>
               </li>
             </Flipped>)
           })}
