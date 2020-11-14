@@ -1,4 +1,5 @@
 ﻿using FluentValidation.Results;
+using System;
 
 namespace Omnikeeper.GridView.Helper
 {
@@ -13,6 +14,11 @@ namespace Omnikeeper.GridView.Helper
             }
 
             return error;
+        }
+
+        public static Exception CreateException(ValidationResult validationResult)
+        {
+            return new Exception(CreateErrorMessage(validationResult));
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,12 +9,12 @@ namespace Omnikeeper.GridView.Commands
 {
     public class DeleteContextCommand
     {
-        public class Command : IRequest<bool>
+        public class Command : IRequest<Exception?>
         {
             public string Name { get; set; }
         }
 
-        public class DeleteContextCommandHandler : IRequestHandler<Command, bool>
+        public class DeleteContextCommandHandler : IRequestHandler<Command, Exception?>
         {
             private readonly IGridViewConfigModel gridViewConfigModel;
             private readonly IModelContextBuilder modelContextBuilder;
@@ -23,7 +24,7 @@ namespace Omnikeeper.GridView.Commands
                 this.modelContextBuilder = modelContextBuilder;
             }
 
-            public async Task<bool> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Exception?> Handle(Command request, CancellationToken cancellationToken)
             {
                 using var trans = modelContextBuilder.BuildDeferred();
 
@@ -32,9 +33,9 @@ namespace Omnikeeper.GridView.Commands
                 if (isSuccess)
                 {
                     trans.Commit();
-                    return true;
+                    return null;
                 }
-                return false;
+                return new Exception("An error occured deleting context");
             }
         }
     }

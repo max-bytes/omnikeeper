@@ -4,6 +4,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GridView.Helper;
 using Omnikeeper.GridView.Request;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ namespace Omnikeeper.GridView.Commands
 {
     public class AddContextCommand
     {
-        public class Command : IRequest<(bool, string)>
+        public class Command : IRequest<Exception?>
         {
             public AddContextRequest Context { get; set; }
         }
@@ -29,7 +30,7 @@ namespace Omnikeeper.GridView.Commands
             }
         }
 
-        public class AddContextHandler : IRequestHandler<Command, (bool, string)>
+        public class AddContextHandler : IRequestHandler<Command, Exception?>
         {
             private readonly IGridViewConfigModel gridViewConfigModel;
             private readonly IModelContextBuilder modelContextBuilder;
@@ -39,7 +40,7 @@ namespace Omnikeeper.GridView.Commands
                 this.modelContextBuilder = modelContextBuilder;
             }
 
-            public async Task<(bool, string)> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Exception?> Handle(Command request, CancellationToken cancellationToken)
             {
                 var validator = new CommandValidator();
 
@@ -47,7 +48,7 @@ namespace Omnikeeper.GridView.Commands
 
                 if (!validation.IsValid)
                 {
-                    return (false, ValidationHelper.CreateErrorMessage(validation));
+                    return ValidationHelper.CreateException(validation);
                 }
                 var trans = modelContextBuilder.BuildDeferred();
 
@@ -61,10 +62,10 @@ namespace Omnikeeper.GridView.Commands
                 if (isSuccess)
                 {
                     trans.Commit();
-                    return (isSuccess, "");
+                    return null;
                 }
 
-                return (isSuccess, $"An error ocurred trying to add {request.Context.Name} context!");
+                return new Exception($"An error ocurred trying to add {request.Context.Name} context!");
             }
         }
     }

@@ -2,7 +2,9 @@
 using MediatR;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.GridView.Helper;
 using Omnikeeper.GridView.Response;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +13,7 @@ namespace Omnikeeper.GridView.Queries
 {
     public class GetSchemaQuery
     {
-        public class Query : IRequest<GetSchemaResponse>
+        public class Query : IRequest<(GetSchemaResponse, Exception?)>
         {
             public string Context { get; set; }
         }
@@ -24,7 +26,7 @@ namespace Omnikeeper.GridView.Queries
             }
         }
 
-        public class GetSchemaQueryHandler : IRequestHandler<Query, GetSchemaResponse>
+        public class GetSchemaQueryHandler : IRequestHandler<Query, (GetSchemaResponse, Exception?)>
         {
             private readonly IGridViewConfigModel gridViewConfigModel;
             private readonly IModelContextBuilder modelContextBuilder;
@@ -33,10 +35,15 @@ namespace Omnikeeper.GridView.Queries
                 this.gridViewConfigModel = gridViewConfigModel;
                 this.modelContextBuilder = modelContextBuilder;
             }
-            public async Task<GetSchemaResponse> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<(GetSchemaResponse, Exception?)> Handle(Query request, CancellationToken cancellationToken)
             {
                 var validator = new QueryValidator();
-                validator.ValidateAndThrow(request);
+
+                var validation = validator.Validate(request);
+                if (!validation.IsValid)
+                {
+                    return (new GetSchemaResponse(), ValidationHelper.CreateException(validation));
+                }
 
                 var trans = modelContextBuilder.BuildImmediate();
 
@@ -54,7 +61,7 @@ namespace Omnikeeper.GridView.Queries
                     Description = el.ColumnDescription
                 }));
 
-                return result;
+                return (result, null);
             }
         }
     }

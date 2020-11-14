@@ -5,6 +5,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GridView.Response;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +14,7 @@ namespace Omnikeeper.GridView.Queries
 {
     public class GetDataQuery
     {
-        public class Query : IRequest<(GetDataResponse, bool, string)>
+        public class Query : IRequest<(GetDataResponse, Exception?)>
         {
             public string Context { get; set; }
         }
@@ -26,7 +27,7 @@ namespace Omnikeeper.GridView.Queries
             }
         }
 
-        public class GetDataQueryHandler : IRequestHandler<Query, (GetDataResponse, bool, string)>
+        public class GetDataQueryHandler : IRequestHandler<Query, (GetDataResponse, Exception?)>
         {
             private readonly IGridViewConfigModel gridViewConfigModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
@@ -42,7 +43,7 @@ namespace Omnikeeper.GridView.Queries
                 this.modelContextBuilder = modelContextBuilder;
             }
 
-            public async Task<(GetDataResponse, bool, string)> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<(GetDataResponse, Exception?)> Handle(Query request, CancellationToken cancellationToken)
             {
                 var validator = new QueryValidator();
                 validator.ValidateAndThrow(request);
@@ -64,7 +65,7 @@ namespace Omnikeeper.GridView.Queries
 
                 if (activeTrait == null)
                 {
-                    return (new GetDataResponse(), false, $"Active trait {config.Trait} was not found!");
+                    return (new GetDataResponse(), new Exception($"Active trait {config.Trait} was not found!"));
                 }
 
                 var res = await effectiveTraitModel.GetMergedCIsWithTrait(
@@ -118,7 +119,7 @@ namespace Omnikeeper.GridView.Queries
                     }
                 }
 
-                return (result, true, "");
+                return (result, null);
             }
         }
     }

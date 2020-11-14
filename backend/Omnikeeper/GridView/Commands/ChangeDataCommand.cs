@@ -12,7 +12,6 @@ using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GridView.Helper;
 using Omnikeeper.GridView.Request;
 using Omnikeeper.GridView.Response;
-using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +22,7 @@ namespace Omnikeeper.GridView.Commands
 {
     public class ChangeDataCommand
     {
-        public class Command : IRequest<(ChangeDataResponse, bool, string)>
+        public class Command : IRequest<(ChangeDataResponse, Exception?)>
         {
             public ChangeDataRequest Changes { get; set; }
             public string Context { get; set; }
@@ -37,7 +36,7 @@ namespace Omnikeeper.GridView.Commands
             }
         }
 
-        public class ChangeDataCommandHandler : IRequestHandler<Command, (ChangeDataResponse, bool, string)>
+        public class ChangeDataCommandHandler : IRequestHandler<Command, (ChangeDataResponse, Exception?)>
         {
             private readonly ICIModel ciModel;
             private readonly IAttributeModel attributeModel;
@@ -61,7 +60,7 @@ namespace Omnikeeper.GridView.Commands
                 this.traitsProvider = traitsProvider;
                 this.modelContextBuilder = modelContextBuilder;
             }
-            public async Task<(ChangeDataResponse, bool, string)> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<(ChangeDataResponse, Exception?)> Handle(Command request, CancellationToken cancellationToken)
             {
                 var validator = new CommandValidator();
 
@@ -69,7 +68,7 @@ namespace Omnikeeper.GridView.Commands
 
                 if (!validation.IsValid)
                 {
-                    return (new ChangeDataResponse(), false, ValidationHelper.CreateErrorMessage(validation));
+                    return (new ChangeDataResponse(), ValidationHelper.CreateException(validation));
                 }
 
                 using var trans = modelContextBuilder.BuildDeferred();
@@ -96,7 +95,6 @@ namespace Omnikeeper.GridView.Commands
                  * return changed CIs/rows, re-using fetched CIs from above as data basis
                  */
 
-
                 var config = await gridViewConfigModel.GetConfiguration(request.Context, trans);
 
                 // perform all the changes for this CI using AttributeModel methods
@@ -106,7 +104,7 @@ namespace Omnikeeper.GridView.Commands
 
                     if (!ciExists)
                     {
-                        return (new ChangeDataResponse(), false, $"The provided ci id: {row.Ciid} was not found!");
+                        return (new ChangeDataResponse(), new Exception($"The provided ci id: {row.Ciid} was not found!"));
                     }
 
                     foreach (var cell in row.Cells)
@@ -114,7 +112,7 @@ namespace Omnikeeper.GridView.Commands
                         var configItem = config.Columns.Find(item => item.SourceAttributeName == cell.Name);
                         if (configItem == null)
                         {
-                            return (new ChangeDataResponse(), false, $"Could not find the supplied column {cell.Name} in the configuration");
+                            return (new ChangeDataResponse(), new Exception($"Could not find the supplied column {cell.Name} in the configuration"));
                         }
 
                         var writeLayer = configItem.WriteLayer != null ? configItem.WriteLayer.Value : config.WriteLayer;
@@ -130,17 +128,16 @@ namespace Omnikeeper.GridView.Commands
                                     changesetProxy,
                                     trans);
                             }
-                            catch (Exception)
+                            catch (Exception e)
                             {
                                 trans.Rollback();
-                                return (new ChangeDataResponse(), false, $"Removing attribute {cell.Name} for ci with id: {row.Ciid} failed!");
+                                return (new ChangeDataResponse(), new Exception($"Removing attribute {cell.Name} for ci with id: {row.Ciid} failed!", e));
                             }
                         }
                         else
                         {
                             try
                             {
-
                                 var val = AttributeValueBuilder.BuildFromDTO(new AttributeValueDTO
                                 {
                                     IsArray = false,
@@ -156,22 +153,18 @@ namespace Omnikeeper.GridView.Commands
                                     changesetProxy,
                                     trans);
                             }
-                            catch
+                            catch (Exception e)
                             {
                                 trans.Rollback();
-                                return (new ChangeDataResponse(), false, $"Inserting attribute {cell.Name} for ci with id: {row.Ciid} failed!");
+                                return (new ChangeDataResponse(), new Exception($"Inserting attribute {cell.Name} for ci with id: {row.Ciid} failed!", e));
                             }
                         }
-
                     }
-
-
                 }
-
 
                 var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, TimeThreshold.BuildLatest());
                 if (activeTrait == null)
-                    return (new ChangeDataResponse(), false, $"Could not find trait {config.Trait}");
+                    return (new ChangeDataResponse(), new Exception($"Could not find trait {config.Trait}"));
 
                 var cisList = SpecificCIIDsSelection.Build(request.Changes.SparseRows.Select(i => i.Ciid));
                 var mergedCIs = await ciModel.GetMergedCIs(
@@ -189,15 +182,15 @@ namespace Omnikeeper.GridView.Commands
                     if (!hasTrait)
                     {
                         trans.Rollback();
-                        return (new ChangeDataResponse(), false, $"Consistency validation for CI with id={mergedCI.ID} failed. CI doesn't have the configured trait {activeTrait.Name}!");
+                        return (new ChangeDataResponse(), new Exception($"Consistency validation for CI with id={mergedCI.ID} failed. CI doesn't have the configured trait {activeTrait.Name}!"));
                     }
                 }
 
                 trans.Commit();
-                return (await FetchData(config), true, ""); // NOTE mcsuk: why are we not using mergedCIs and instead fetch CIs again?
+                return (BuildChangeResponse(mergedCIs, config), null);
             }
 
-            private async Task<ChangeDataResponse> FetchData(GridViewConfiguration config)
+            private ChangeDataResponse BuildChangeResponse(IEnumerable<MergedCI> mergedCIs, GridViewConfiguration config)
             {
                 using var trans = modelContextBuilder.BuildImmediate();
 
@@ -206,15 +199,7 @@ namespace Omnikeeper.GridView.Commands
                     Rows = new List<ChangeDataRow>()
                 };
 
-                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, TimeThreshold.BuildLatest());
-                var res = await effectiveTraitModel.GetMergedCIsWithTrait(
-                    activeTrait,
-                    new LayerSet(config.ReadLayerset.ToArray()),
-                    trans,
-                    TimeThreshold.BuildLatest()
-                    );
-
-                foreach (var item in res)
+                foreach (var item in mergedCIs)
                 {
                     var ci_id = item.ID;
 

@@ -46,14 +46,12 @@ namespace LandscapeRegistry.GridView
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> AddContext([FromBody] AddContextRequest context)
         {
-            var (isSuccess, error) = await _mediatr.Send(new AddContextCommand.Command { Context = context });
+            var exception = await _mediatr.Send(new AddContextCommand.Command { Context = context });
 
-            if (isSuccess)
-            {
-                return CreatedAtAction(nameof(AddContext), new { context.Name });
-            }
+            if (exception != null)
+                return BadRequest(exception);
 
-            return BadRequest(new { Error = error });
+            return CreatedAtAction(nameof(AddContext), new { context.Name });
         }
 
         /// <summary>
@@ -69,7 +67,7 @@ namespace LandscapeRegistry.GridView
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> EditContext([FromRoute] string name, [FromBody] EditContextRequest editContextRequest)
         {
-            var (isSuccess, error) = await _mediatr.Send(new EditContextCommand.Command
+            var exception = await _mediatr.Send(new EditContextCommand.Command
             {
                 Name = name,
                 SpeakingName = editContextRequest.SpeakingName,
@@ -77,13 +75,10 @@ namespace LandscapeRegistry.GridView
                 Configuration = editContextRequest.Configuration
             });
 
-            if (isSuccess)
-            {
-                return Ok();
-            }
+            if (exception != null)
+                return BadRequest(exception);
 
-            return BadRequest(new { Error = error });
-
+            return Ok();
         }
 
         /// <summary>
@@ -98,14 +93,12 @@ namespace LandscapeRegistry.GridView
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> DeleteContext([FromRoute] string name)
         {
-            var isSuccess = await _mediatr.Send(new DeleteContextCommand.Command { Name = name });
+            var exception = await _mediatr.Send(new DeleteContextCommand.Command { Name = name });
 
-            if (isSuccess)
-            {
-                return Ok();
-            }
+            if (exception != null)
+                return BadRequest(exception);
 
-            return BadRequest(new { Error = $"An error ocurred trying to delete context: {name}!" });
+            return Ok();
         }
 
         /// <summary>
@@ -118,7 +111,11 @@ namespace LandscapeRegistry.GridView
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetSchema([FromRoute] string context)
         {
-            var result = await _mediatr.Send(new GetSchemaQuery.Query { Context = context });
+            var (result, exception) = await _mediatr.Send(new GetSchemaQuery.Query { Context = context });
+
+            if (exception != null)
+                return BadRequest(exception);
+
             return Ok(result);
         }
 
@@ -133,14 +130,12 @@ namespace LandscapeRegistry.GridView
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetData([FromRoute] string context)
         {
-            var (result, isSuccess, error) = await _mediatr.Send(new GetDataQuery.Query { Context = context });
+            var (result, exception) = await _mediatr.Send(new GetDataQuery.Query { Context = context });
             
-            if (isSuccess)
-            {
-                return Ok(result);
-            }
+            if (exception != null)
+                return BadRequest(exception);
 
-            return BadRequest(new { Error = error });
+            return Ok(result);
         }
 
         /// <summary>
@@ -156,14 +151,14 @@ namespace LandscapeRegistry.GridView
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ChangeData([FromRoute] string context, [FromBody] ChangeDataRequest changes)
         {
-            var (result, isSuccess, error) = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes, Context = context });
+            var (result, exception) = await _mediatr.Send(new ChangeDataCommand.Command { Changes = changes, Context = context });
 
-            if (isSuccess)
+            if (exception != null)
             {
-                return Ok(result);
+                return BadRequest(exception);
             }
 
-            return NotFound(new { Error = error });
+            return Ok(result);
         }
     }
 }

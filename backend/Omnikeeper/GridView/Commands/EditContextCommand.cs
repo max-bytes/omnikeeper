@@ -4,6 +4,7 @@ using Omnikeeper.Base.Entity.GridView;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GridView.Helper;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ namespace Omnikeeper.GridView.Commands
 {
     public class EditContextCommand
     {
-        public class Command : IRequest<(bool, string)>
+        public class Command : IRequest<Exception?>
         {
             public string Name { get; set; }
             public string SpeakingName { get; set; }
@@ -32,7 +33,7 @@ namespace Omnikeeper.GridView.Commands
             }
         }
 
-        public class EditContextCommandHandler : IRequestHandler<Command, (bool, string)>
+        public class EditContextCommandHandler : IRequestHandler<Command, Exception?>
         {
             private readonly IGridViewConfigModel gridViewConfigModel;
             private readonly IModelContextBuilder modelContextBuilder;
@@ -42,7 +43,7 @@ namespace Omnikeeper.GridView.Commands
                 this.modelContextBuilder = modelContextBuilder;
             }
 
-            public async Task<(bool, string)> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Exception?> Handle(Command request, CancellationToken cancellationToken)
             {
                 var validator = new CommandValidator();
 
@@ -50,7 +51,7 @@ namespace Omnikeeper.GridView.Commands
 
                 if (!validation.IsValid)
                 {
-                    return (false, ValidationHelper.CreateErrorMessage(validation));
+                    return ValidationHelper.CreateException(validation);
                 }
 
                 using var trans = modelContextBuilder.BuildDeferred();
@@ -60,11 +61,11 @@ namespace Omnikeeper.GridView.Commands
                 if (isSuccess)
                 {
                     trans.Commit();
-                    return (isSuccess, "");
+                    return null;
                 }
                 else
                 {
-                    return (isSuccess, $"An error ocurred trying to edit {request.Name} context!");
+                    return new Exception($"An error ocurred trying to edit {request.Name} context!");
                 }
             }
         }
