@@ -74,18 +74,18 @@ function Attribute(props) {
         id={`value:${attribute.attribute.name}:${controlIdSuffix}`}
         >
           <Row>
-            <Col span={4}>{leftPart}</Col>
-            <Col
-                span={14}
-            >
-                {valueInput}
+            <Col span={4}>
+              {leftPart}
+            </Col>
+            <Col span={14}>
+              {valueInput}
             </Col>
             <Col span={2}>
-                {rightPart}
-                </Col>
+              {rightPart}
+            </Col>
             <Col span={4}>
-                <Button htmlType="submit" type="primary" className={'mx-1'} disabled={attribute.attribute.value.values === values || hasErrors}>Update</Button>
-                {removeButton}
+              <Button htmlType="submit" type="primary" className={'mx-1'} disabled={attribute.attribute.value.values === values || hasErrors}>Update</Button>
+              {removeButton}
             </Col> 
           </Row>
       </Form>
@@ -93,11 +93,14 @@ function Attribute(props) {
   } else {
     input = (<Form id={`value:${attribute.attribute.name}:${controlIdSuffix}`}>
       <Row>
+        <Col span={4}>
+          {leftPart}
+        </Col>
         <Col span={18}>
-            {valueInput}
+          {valueInput}
         </Col>
         <Col span={2}>
-            {rightPart}
+          {rightPart}
         </Col>
       </Row>
     </Form>);
