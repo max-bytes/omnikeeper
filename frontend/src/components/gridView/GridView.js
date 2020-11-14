@@ -348,12 +348,24 @@ export default function GridView(props) {
         const changes = gridViewDataParseModel.createChanges(rowDataDiffs); // Create changes from rowData (delta)
         console.log("changes to " + contextName + ": ", changes);
 
+
+        // actually do the changes
+        const changeResults = await new SwaggerClient(swaggerDefUrl)
+            .then((client) =>
+                client.apis.GridView.ChangeData({
+                    version: apiVersion,
+                    context: contextName
+                }, {
+                    requestBody: changes
+                })
+            )
+            .then((result) => result.body); // TODO: setting received data, error handling
         // fake changeResults data here
         // TODO: pass 'changes' to API and get 'changeResults' back, when implemented
-        const changeResults = {
-            rows: gridViewDataParseModel.createChanges(rowDataDiffsFullRow)
-                .sparseRows,
-        };
+        // const changeResults = {
+        //     rows: gridViewDataParseModel.createChanges(rowDataDiffsFullRow)
+        //         .sparseRows,
+        // };
 
         // Create rowData from changeResults
         const rowDataChangeResults = gridViewDataParseModel.createRowData(
