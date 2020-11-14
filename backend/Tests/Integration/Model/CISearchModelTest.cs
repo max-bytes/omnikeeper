@@ -31,11 +31,11 @@ namespace Tests.Integration.Model
             var attributeModel = new AttributeModel(new BaseAttributeModel());
             var ciModel = new CIModel(attributeModel);
             var predicateModel = new PredicateModel();
-            var traitsProvider = new MockedTraitsProvider();
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var layerModel = new LayerModel();
+            var traitsProvider = new MockedTraitsProvider();
             var traitModel = new EffectiveTraitModel(ciModel, relationModel, traitsProvider, oap.Object, NullLogger<EffectiveTraitModel>.Instance);
             var searchModel = new CISearchModel(attributeModel, ciModel, traitModel, layerModel, traitsProvider);
             var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());

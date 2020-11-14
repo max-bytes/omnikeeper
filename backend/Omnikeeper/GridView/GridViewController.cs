@@ -44,7 +44,7 @@ namespace LandscapeRegistry.GridView
         [HttpPost("context")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> AddContext([FromBody] AddContextRequest context)
+        public async Task<ActionResult> AddContext([FromBody] AddContextRequest context)
         {
             var exception = await _mediatr.Send(new AddContextCommand.Command { Context = context });
 

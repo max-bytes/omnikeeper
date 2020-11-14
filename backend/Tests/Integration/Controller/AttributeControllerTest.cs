@@ -1,7 +1,6 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Entity.AttributeValues;
-using Npgsql;
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
@@ -10,15 +9,11 @@ using Microsoft.Extensions.DependencyInjection;
 using FluentAssertions;
 using Omnikeeper.Base.Entity.DTO;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Linq;
-using Omnikeeper.Base.Service;
-using Moq;
 using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tests.Integration.Controller
 {
-    class AttributeControllerTest : DIServicedTestBase
+    class AttributeControllerTest : ControllerTestBase
     {
         protected override IServiceCollection InitServices()
         {
@@ -26,15 +21,6 @@ namespace Tests.Integration.Controller
 
             // add controller
             services.AddScoped<AttributeController>();
-
-            var lbas = new Mock<ILayerBasedAuthorizationService>();
-            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
-            services.AddScoped((sp) => lbas.Object);
-            var cbas = new Mock<ICIBasedAuthorizationService>();
-            cbas.Setup(x => x.CanReadCI(It.IsAny<Guid>())).Returns(true);
-            Guid? tmp;
-            cbas.Setup(x => x.CanReadAllCIs(It.IsAny<IEnumerable<Guid>>(), out tmp)).Returns(true);
-            services.AddScoped((sp) => cbas.Object);
 
             return services;
         }

@@ -76,10 +76,6 @@ namespace Omnikeeper.GridView.Commands
                 var user = await currentUserService.GetCurrentUser(trans);
                 var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
 
-                // TO DO:
-                // The consistency validation per CI consists 
-                // of checking whether or not the CI still fulfills/has the configured trait.
-
                 /* NOTE mcsuk: 
                  * I'd structure this in the following way, hope that works:
                  * begin transaction
