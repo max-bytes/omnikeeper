@@ -99,6 +99,7 @@ namespace Omnikeeper.GridView.Commands
 
                 var config = await gridViewConfigModel.GetConfiguration(request.Context, trans);
 
+                // perform all the changes for this CI using AttributeModel methods
                 foreach (var row in request.Changes.SparseRows)
                 {
                     var ciExists = await ciModel.CIIDExists(row.Ciid, trans);
@@ -111,6 +112,10 @@ namespace Omnikeeper.GridView.Commands
                     foreach (var cell in row.Cells)
                     {
                         var configItem = config.Columns.Find(item => item.SourceAttributeName == cell.Name);
+                        if (configItem == null)
+                        {
+                            return (new ChangeDataResponse(), false, $"Could not find the supplied column {cell.Name} in the configuration");
+                        }
 
                         var writeLayer = configItem.WriteLayer != null ? configItem.WriteLayer.Value : config.WriteLayer;
 
@@ -130,7 +135,6 @@ namespace Omnikeeper.GridView.Commands
                                 trans.Rollback();
                                 return (new ChangeDataResponse(), false, $"Removing attribute {cell.Name} for ci with id: {row.Ciid} failed!");
                             }
-
                         }
                         else
                         {
@@ -164,9 +168,12 @@ namespace Omnikeeper.GridView.Commands
 
                 }
 
-                var cisList = SpecificCIIDsSelection.Build(request.Changes.SparseRows.Select(i => i.Ciid));
-                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, TimeThreshold.BuildLatest());
 
+                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, TimeThreshold.BuildLatest());
+                if (activeTrait == null)
+                    return (new ChangeDataResponse(), false, $"Could not find trait {config.Trait}");
+
+                var cisList = SpecificCIIDsSelection.Build(request.Changes.SparseRows.Select(i => i.Ciid));
                 var mergedCIs = await ciModel.GetMergedCIs(
                     cisList,
                     new LayerSet(config.ReadLayerset.ToArray()),
@@ -182,7 +189,7 @@ namespace Omnikeeper.GridView.Commands
                     if (!hasTrait)
                     {
                         trans.Rollback();
-                        return (new ChangeDataResponse(), false, $"Consistency validation for CI with id={mergedCI.ID} failed. CI doesn't has the configured trait {activeTrait.Name}!");
+                        return (new ChangeDataResponse(), false, $"Consistency validation for CI with id={mergedCI.ID} failed. CI doesn't have the configured trait {activeTrait.Name}!");
                     }
                 }
 

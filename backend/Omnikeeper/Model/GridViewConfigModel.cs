@@ -15,6 +15,7 @@ namespace Omnikeeper.Model
     {
         public async Task<GridViewConfiguration> GetConfiguration(string configName, IModelContext trans)
         {
+            // TODO: migrate config table to config schema
             using var command = new NpgsqlCommand($@"
                     SELECT *
                     FROM gridview_config gvc
