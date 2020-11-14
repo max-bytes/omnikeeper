@@ -8,6 +8,7 @@ function EditableAttributeValue(props) {
   var {values, setValues, type, isArray, autoFocus, isEditable, setHasErrors, name, controlIdSuffix , ciid } = props;
   
   isEditable = isEditable ?? true;
+  controlIdSuffix = controlIdSuffix ?? "";
 
   var [errorsInArray, setErrorsInArray] = useState([]);
   useEffect(() => setHasErrors(errorsInArray.filter(e => e).length > 0), [errorsInArray, setHasErrors]);

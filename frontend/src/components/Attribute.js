@@ -42,6 +42,12 @@ function Attribute(props) {
     <EditableAttributeValue hideNameLabel={hideNameLabel} name={attribute.attribute.name} controlIdSuffix={controlIdSuffix} setHasErrors={setHasErrors} isEditable={isEditable} values={values} setValues={setValues} type={attribute.attribute.value.type} isArray={isArray} ciid={ciIdentity} />
 ;
 
+  const leftPart = (hideNameLabel) ? '' : <div style={{display: 'flex', minHeight: '38px', alignItems: 'center'}}>
+    {/* TODO: according to ant design label should be part of control */}
+    <div className={"pr-1"} style={{whiteSpace: 'nowrap', flexGrow: 1, textAlign: 'right', paddingRight: '10px'}}>{attribute.attribute.name}</div>
+  </div>;
+
+
   const rightPart = <div style={{minHeight: '38px', display: 'flex', alignItems: 'center'}}>
     <LayerStackIcons layerStack={attribute.layerStack} />
     <ChangesetPopup changesetID={attribute.attribute.changesetID} />
@@ -68,9 +74,9 @@ function Attribute(props) {
         id={`value:${attribute.attribute.name}:${controlIdSuffix}`}
         >
           <Row>
+            <Col span={4}>{leftPart}</Col>
             <Col
-                span={18}
-                style={{ paddingLeft: isArray ? "43px" : "0px" }} // paddingLeft is a workaround to fix wrong col-spacing // TODO: find a better way
+                span={14}
             >
                 {valueInput}
             </Col>
