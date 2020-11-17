@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "antd";
 
-export default function GridViewButtonToolbar(props) {
+export default function ContextButtonToolbar(props) {
     return (
         <div className="button-toolbar">
             <div

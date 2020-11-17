@@ -7,10 +7,10 @@ import SwaggerClient from "swagger-client";
 import env from "@beam-australia/react-env";
 import _ from "lodash";
 
-const swaggerDefUrl = `${env('BACKEND_URL')}/../swagger/v1/swagger.json`; // TODO, HACK: BACKEND_URL contains /graphql suffix, remove!
+const swaggerDefUrl = `${env('BACKEND_URL')}/../swagger/v1/swagger.json`; // TODO: HACK: BACKEND_URL contains /graphql suffix, remove!
 const apiVersion = 1;
 
-function SearchCI(props) {
+function GridViewExplorer(props) {
     const [context, setContext] = useState(null);
     const [searchString, setSearchString] = useState("");
 
@@ -28,7 +28,7 @@ function SearchCI(props) {
     }, []);
 
     return (
-        <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
+        <>
             <div style={{display: 'flex', justifyContent: 'center', marginTop: '50px', width: "205px", margin: "50px auto 0"}}>
                 <Input suffix={<FontAwesomeIcon icon={faSearch} color="grey" />}  placeholder='Search...'  onChange={(e) => setSearchString(e.target.value)} />
             </div>
@@ -41,7 +41,7 @@ function SearchCI(props) {
                         _.lowerCase(c.description.toString()).includes(_.lowerCase(searchString)))
                     .map((result, index) => {
                         return (
-                            <Link key={result.name} to={`/grid-view/${result.name}`}>
+                            <Link key={result.name} to={`/explorer/${result.name}`}>
                                 <div style={{display: 'flex', padding: '10px', backgroundColor: ((index % 2 === 0) ? '#eee' : '#fff')}}>
                                     <div style={{flexGrow: '1', flexBasis: '0'}}>{result.id}</div>
                                         <div style={{flexGrow: '2', fontWeight: 'bold', flexBasis: '0'}}>{result.speakingName ?? result.name}</div>
@@ -52,8 +52,8 @@ function SearchCI(props) {
                     : <>Loading...</>
                 }
             </div>
-        </div>
+        </>
     );
 }
 
-export default withRouter(SearchCI);
+export default withRouter(GridViewExplorer);

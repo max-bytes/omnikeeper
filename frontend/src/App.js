@@ -11,7 +11,6 @@ import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/AddNewCI'
 import SearchCI from './components/SearchCI'
-import GridViewContexts from './components/gridView/GridViewContexts'
 import GridView from './components/gridView/GridView'
 import Manage from './components/manage/Manage'
 import UserBar from './components/UserBar';
@@ -90,9 +89,6 @@ function App() {
               <PrivateRoute path="/explorer/:ciid">
                 <Explorer />
               </PrivateRoute>
-              <PrivateRoute path="/grid-view/:contextName">
-                <GridView />
-              </PrivateRoute>
               <PrivateRoute path="/diffing">
                 <Diffing />
               </PrivateRoute>
@@ -102,8 +98,11 @@ function App() {
               <PrivateRoute path="/explorer">
                 <SearchCI />
               </PrivateRoute>
+              <PrivateRoute exact path="/grid-view">
+                <Redirect to="/grid-view/explorer" />
+              </PrivateRoute>
               <PrivateRoute path="/grid-view">
-                <GridViewContexts />
+                <GridView />
               </PrivateRoute>
               
               <PrivateRoute path="/manage/baseconfiguration">
