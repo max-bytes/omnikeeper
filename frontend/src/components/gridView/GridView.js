@@ -29,7 +29,7 @@ function GridView(props) {
                         <Context />
                     </PrivateRoute>
                     <PrivateRoute path="/manage-contexts/:contextName">
-                        <Context />
+                        <ManageContexts />
                     </PrivateRoute>
                     <PrivateRoute path="/create-context">
                         <AddNewContext />
