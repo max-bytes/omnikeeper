@@ -16,20 +16,22 @@ import env from "@beam-australia/react-env";
 //     { className: "ag-theme-balham" }, // hocProps
 //     false // logging off
 // );
+import { useParams } from "react-router-dom";
 
-const swaggerDefUrl = `${env('BACKEND_URL')}/../swagger/v1/swagger.json`; // TODO, HACK: BACKEND_URL contains /graphql suffix, remove!
+const swaggerDefUrl = `${env("BACKEND_URL")}/../swagger/v1/swagger.json`; // TODO, HACK: BACKEND_URL contains /graphql suffix, remove!
 const apiVersion = 1;
 
 const { Header, Content } = Layout;
 
 export default function GridView(props) {
+    const { contextName } = useParams(); // get contextName from path
+
     const [gridApi, setGridApi] = useState(null);
     const [gridColumnApi, setGridColumnApi] = useState(null);
 
     const [columnDefs, setColumnDefs] = useState(null);
-    const [rowData, setRowData] = useState([]);
-    const [rowDataSnapshot, setRowDataSnapshot] = useState([]);
-    const [context, setContext] = useState(null);
+    const [rowData, setRowData] = useState(null);
+    const [rowDataSnapshot, setRowDataSnapshot] = useState(null);
     const [tempId, setTempId] = useState(null);
     const defaultColDef = initDefaultColDef(); // Init defaultColDef
 
@@ -63,8 +65,6 @@ export default function GridView(props) {
                 }}
             >
                 <GridViewButtonToolbar
-                    context={context}
-                    applyContext={applyContext}
                     setCellToNotSet={setCellToNotSet}
                     setCellToEmpty={setCellToEmpty}
                     newRows={newRows}
@@ -100,7 +100,7 @@ export default function GridView(props) {
                             '<span class="ag-overlay-loading-center">Loading...</span>'
                         }
                         overlayNoRowsTemplate={
-                            '<span class="ag-overlay-loading-center">Please choose context.</span>'
+                            '<span class="ag-overlay-loading-center">No data.</span>'
                         }
                     />
                 </div>
@@ -182,10 +182,6 @@ export default function GridView(props) {
                 else return params.value;
             },
         };
-    }
-
-    function applyContext(contextName) {
-        refreshData(contextName);
     }
 
     // ######################################## CELL FUNCTIONS ########################################
@@ -322,9 +318,8 @@ export default function GridView(props) {
     }
 
     // CREATE / UPDATE / DELETE on pressing 'save'
-    async function save(contextName) {
+    async function save() {
         let rowDataDiffs = [];
-        let rowDataDiffsFullRow = []; // TODO: remove, when finally using API
 
         await gridApi.forEachNode(async (node) => {
             if (
@@ -341,31 +336,25 @@ export default function GridView(props) {
                 rowDataDiff["ciid"] = node.data.ciid; // add ciid
 
                 rowDataDiffs.push(rowDataDiff); // add to rowDataDiffs
-                rowDataDiffsFullRow.push(node.data); // TODO: remove, when finally using API
             }
         });
 
         const changes = gridViewDataParseModel.createChanges(rowDataDiffs); // Create changes from rowData (delta)
-        console.log("changes to " + contextName + ": ", changes);
-
 
         // actually do the changes
         const changeResults = await new SwaggerClient(swaggerDefUrl)
             .then((client) =>
-                client.apis.GridView.ChangeData({
-                    version: apiVersion,
-                    context: contextName
-                }, {
-                    requestBody: changes
-                })
+                client.apis.GridView.ChangeData(
+                    {
+                        version: apiVersion,
+                        context: contextName,
+                    },
+                    {
+                        requestBody: changes,
+                    }
+                )
             )
             .then((result) => result.body); // TODO: setting received data, error handling
-        // fake changeResults data here
-        // TODO: pass 'changes' to API and get 'changeResults' back, when implemented
-        // const changeResults = {
-        //     rows: gridViewDataParseModel.createChanges(rowDataDiffsFullRow)
-        //         .sparseRows,
-        // };
 
         // Create rowData from changeResults
         const rowDataChangeResults = gridViewDataParseModel.createRowData(
@@ -379,61 +368,47 @@ export default function GridView(props) {
     }
 
     // READ / refresh data
-    async function refreshData(contextName) {
+    async function refreshData() {
         // Tell AgGrid to reset columnDefs and rowData // important!
         if (gridApi) {
             gridApi.setColumnDefs(null);
-            gridApi.setRowData("");
+            gridApi.setRowData(null);
+            gridApi.showLoadingOverlay(); // trigger "Loading"-state (otherwise would be in "No Rows"-state instead)
+        }
+        const schema = await new SwaggerClient(swaggerDefUrl)
+            .then((client) =>
+                client.apis.GridView.GetSchema({
+                    version: apiVersion,
+                    context: contextName,
+                })
+            )
+            .then((result) => result.body);
+        const data = await new SwaggerClient(swaggerDefUrl)
+            .then((client) =>
+                client.apis.GridView.GetData({
+                    version: apiVersion,
+                    context: contextName,
+                })
+            )
+            .then((result) => result.body);
+
+        const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
+            schema,
+            data
+        ); // Create columnDefs from schema and data
+        const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
+
+        setColumnDefs(parsedColumnDefs); // set columnDefs
+        setRowData(parsedRowData); // set rowData
+        setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
+
+        // Tell AgGrid to set columnDefs and rowData
+        if (gridApi) {
+            gridApi.setColumnDefs(parsedColumnDefs);
+            gridApi.setRowData(parsedRowData);
         }
 
-        // if called without a contextName -> fetch only context
-        if (!contextName) {
-            const context = await new SwaggerClient(swaggerDefUrl)
-                .then((client) =>
-                    client.apis.GridView.GetContexts({ version: apiVersion })
-                )
-                .then((result) => result.body);
-
-            setContext(context); // set context
-        }
-
-        // if called with a contextName -> fetch schema & data
-        else {
-            const schema = await new SwaggerClient(swaggerDefUrl)
-                .then((client) =>
-                    client.apis.GridView.GetSchema({
-                        version: apiVersion,
-                        context: contextName,
-                    })
-                )
-                .then((result) => result.body);
-            const data = await new SwaggerClient(swaggerDefUrl)
-                .then((client) =>
-                    client.apis.GridView.GetData({
-                        version: apiVersion,
-                        context: contextName,
-                    })
-                )
-                .then((result) => result.body);
-
-            const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
-                schema,
-                data
-            ); // Create columnDefs from schema and data
-            const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
-
-            setColumnDefs(parsedColumnDefs); // set columnDefs
-            setRowData(parsedRowData); // set rowData
-            setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
-
-            // Tell AgGrid to set columnDefs and rowData
-            if (gridApi) {
-                gridApi.setColumnDefs(parsedColumnDefs);
-                gridApi.setRowData(parsedRowData);
-            }
-
-            setTempId(0); // Reset tempId
-        }
+        setTempId(0); // Reset tempId
     }
 
     // ######################################## AG GRID FORMATTING ########################################
