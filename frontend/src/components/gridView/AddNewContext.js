@@ -26,10 +26,10 @@ function AddNewContext(props) {
     };
     const [context, setContext] = useState(JSON.stringify(initialNewContext, null, 2));
 
-    var [jsonHasErrors, setJsonHasErrors] = useState(false);
-    var [swaggerMsg, setSwaggerMsg] = useState("")
-    var [swaggerError, setSwaggerError] = useState(false)
-    var [loading, setLoading] = useState(false)
+    const [jsonHasErrors, setJsonHasErrors] = useState(false);
+    const [swaggerMsg, setSwaggerMsg] = useState("")
+    const [swaggerError, setSwaggerError] = useState(false)
+    const [loading, setLoading] = useState(false)
 
     return (
         <div style={{ height: "100%", width: "100%", padding: "10px" }}>
@@ -62,7 +62,8 @@ function AddNewContext(props) {
                                 .then((result) => result.body);
 
                         setSwaggerError(false);
-                        setSwaggerMsg("'" + editMode ? contextName : addContext.name + "' has been " + editMode ? "changed." : "created.");
+                        if(editMode) setSwaggerMsg("'" + contextName + "' has been changed.");
+                        else setSwaggerMsg("'" + addContext.name + "' has been created.");
                     } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
                         setSwaggerError(true);
                         setSwaggerMsg(e.toString());
