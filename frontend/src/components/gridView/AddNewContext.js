@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert } from "antd";
 import { useParams, withRouter } from "react-router-dom";
 import SwaggerClient from "swagger-client";
@@ -12,24 +12,48 @@ function AddNewContext(props) {
     const editMode = props.editMode;
     const { contextName } = useParams(); // get contextName from path
 
-    let initialNewContext = {
-        name: "",
-        speakingName: "",
-        description: "",
-        configuration: {
-            showCIIDColumn: true,
-            writeLayer: 0,
-            readLayerset: [0],
-            columns: [],
-            trait: "",
-        },
-    };
-    const [context, setContext] = useState(JSON.stringify(initialNewContext, null, 2));
-
     const [jsonHasErrors, setJsonHasErrors] = useState(false);
-    const [swaggerMsg, setSwaggerMsg] = useState("")
-    const [swaggerError, setSwaggerError] = useState(false)
-    const [loading, setLoading] = useState(false)
+    const [swaggerMsg, setSwaggerMsg] = useState("");
+    const [swaggerError, setSwaggerError] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [context, setContext] = useState("Loading...");
+    
+    // get context
+    useEffect(() => {
+        if (editMode) {
+            const fetchContext = async () => {
+                const contextJson = await new SwaggerClient(swaggerDefUrl)
+                    .then((client) =>
+                        client.apis.GridView.GetContext(
+                            {
+                                version: apiVersion,
+                                name: contextName
+                            }
+                        )
+                    )
+                    .then((result) => result.body);
+                setContext(JSON.stringify(contextJson.context, null, 2)); // set context
+                setLoading(false);
+            };
+            fetchContext();
+        } 
+        else {
+            const initialNewContext = {
+                name: "",
+                speakingName: "",
+                description: "",
+                configuration: {
+                    showCIIDColumn: true,
+                    writeLayer: 0,
+                    readLayerset: [0],
+                    columns: [],
+                    trait: "",
+                },
+            };
+            setContext(JSON.stringify(initialNewContext, null, 2)); // set context
+            setLoading(false);
+        }
+    }, [editMode, contextName]);
 
     return (
         <div style={{ height: "100%", width: "100%", padding: "10px" }}>
