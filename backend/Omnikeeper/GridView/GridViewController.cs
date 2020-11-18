@@ -9,7 +9,7 @@ using Omnikeeper.GridView.Request;
 
 namespace LandscapeRegistry.GridView
 {
-    //[Authorize]
+    //[Authorize] // TODO: re-enable authorization
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
@@ -31,6 +31,22 @@ namespace LandscapeRegistry.GridView
         public async Task<IActionResult> GetContexts()
         {
             var result = await _mediatr.Send(new GetContextsQuery.Query());
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Returns a single context in full
+        /// </summary>
+        /// <returns>200</returns>
+        /// <response code="400">If the name was not found or any other error occurred</response>  
+        [HttpGet("context/{name}")]
+        public async Task<IActionResult> GetContext([FromRoute] string name)
+        {
+            var (result, exception) = await _mediatr.Send(new GetContextQuery.Query() { ContextName = name });
+
+            if (exception != null)
+                return BadRequest(exception);
+
             return Ok(result);
         }
 

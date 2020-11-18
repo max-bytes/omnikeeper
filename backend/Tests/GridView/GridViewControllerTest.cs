@@ -19,6 +19,7 @@ using MediatR;
 using System.Reflection;
 using Omnikeeper.Startup;
 using Omnikeeper.GridView.Response;
+using Omnikeeper.Base.Entity.GridView;
 
 namespace Tests.Integration.Controller
 {
@@ -72,41 +73,56 @@ namespace Tests.Integration.Controller
                 trans.Commit();
             }
 
-            // add test gridview context
-            var r = await controller.AddContext(new Omnikeeper.GridView.Request.AddContextRequest()
+            var cfg1 = new GridViewConfiguration()
             {
-                Name = "ctx1",
-                SpeakingName = "Context 1",
-                Description = "Description",
-                Configuration = new Omnikeeper.Base.Entity.GridView.GridViewConfiguration()
-                {
-                    Trait = "test_trait_1",
-                    ReadLayerset = new List<long> { layerID1 , layerID2 },
-                    WriteLayer = layerID1,
-                    ShowCIIDColumn = true,
-                    Columns = new List<Omnikeeper.Base.Entity.GridView.GridViewColumn>()
+                Trait = "test_trait_1",
+                ReadLayerset = new List<long> { layerID1, layerID2 },
+                WriteLayer = layerID1,
+                ShowCIIDColumn = true,
+                Columns = new List<GridViewColumn>()
                     {
-                        new Omnikeeper.Base.Entity.GridView.GridViewColumn()
+                        new GridViewColumn()
                         {
                             WriteLayer = layerID1,
                             ColumnDescription = "",
                             SourceAttributeName = "a1"
                         },
-                        new Omnikeeper.Base.Entity.GridView.GridViewColumn()
+                        new GridViewColumn()
                         {
                             WriteLayer = 3, // invalid write layer
                             ColumnDescription = "",
                             SourceAttributeName = "a2"
                         }
                     }
-                }
+            };
+
+            // add test gridview context
+            var r = await controller.AddContext(new Omnikeeper.GridView.Request.AddContextRequest()
+            {
+                Name = "ctx1",
+                SpeakingName = "Context 1",
+                Description = "Description",
+                Configuration = cfg1
             });
             r.Should().BeOfType<CreatedAtActionResult>();
 
-            // test getting data
-            var r2 = await controller.GetData("ctx1");
+            // test fetching single context
+            var r2 = await controller.GetContext("ctx1");
             r2.Should().BeOfType<OkObjectResult>();
-            var data = ((r2 as OkObjectResult)!.Value as GetDataResponse);
+            var ctxData = ((r2 as OkObjectResult)!.Value as GetContextResponse);
+            ctxData.Should().NotBeNull();
+            ctxData!.Context.Should().BeEquivalentTo(new FullContext()
+            {
+                Name = "ctx1",
+                SpeakingName = "Context 1",
+                Description = "Description",
+                Configuration = cfg1
+            });
+
+            // test getting data
+            var r3 = await controller.GetData("ctx1");
+            r3.Should().BeOfType<OkObjectResult>();
+            var data = ((r3 as OkObjectResult)!.Value as GetDataResponse);
             data.Should().NotBeNull();
             data!.Rows.Should().BeEquivalentTo(new Row[]
             {
