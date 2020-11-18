@@ -12,5 +12,6 @@ namespace Omnikeeper.Base.Model
         Task<bool> AddContext(string name, string speakingName, string description, GridViewConfiguration configuration, IModelContext trans);
         Task<bool> EditContext(string name, string speakingName, string description, GridViewConfiguration configuration, IModelContext trans);
         Task<bool> DeleteContext(string name, IModelContext trans);
+        Task<FullContext> GetFullContextByName(string contextName, IModelContext trans);
     }
 }

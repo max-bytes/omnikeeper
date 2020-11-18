@@ -163,6 +163,13 @@
             </summary>
             <returns>200</returns>
         </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.GetContext(System.String)">
+            <summary>
+            Returns a single context in full
+            </summary>
+            <returns>200</returns>
+            <response code="400">If the name was not found or any other error occurred</response>  
+        </member>
         <member name="M:LandscapeRegistry.GridView.GridViewController.AddContext(Omnikeeper.GridView.Request.AddContextRequest)">
             <summary>
             Adds new context

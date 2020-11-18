@@ -20,7 +20,8 @@ namespace Omnikeeper.Model
                     SELECT *
                     FROM gridview_config gvc
                     WHERE gvc.name=@configName
-                ", trans.DBConnection, trans.DBTransaction);
+                    LIMIT 1
+                ", trans.DBConnection, trans.DBTransaction); // TODO: do not use SELECT *, explicitly specify columns
 
             command.Parameters.AddWithValue("configName", configName);
 
@@ -28,6 +29,7 @@ namespace Omnikeeper.Model
 
             string configJson = "", name;
 
+            // TODO: use if instead of while
             while (dr.Read())
             {
                 configJson = dr.GetString(1);
@@ -100,7 +102,7 @@ namespace Omnikeeper.Model
 
             var config = JsonConvert.SerializeObject(configuration);
 
-            command.Parameters.AddWithValue("config", config);
+            command.Parameters.AddWithValue("config", config); // TODO: should be added as JSON already, not casted in SQL
             command.Parameters.AddWithValue("name", name);
             command.Parameters.AddWithValue("speaking_name", speakingName);
             command.Parameters.AddWithValue("description", description);
@@ -122,6 +124,38 @@ namespace Omnikeeper.Model
             var result = await command.ExecuteNonQueryAsync();
 
             return result > 0;
+        }
+
+        public async Task<FullContext> GetFullContextByName(string contextName, IModelContext trans)
+        {
+            using var command = new NpgsqlCommand($@"
+                    SELECT id, name, speaking_name, description, config
+                    FROM gridview_config
+                    WHERE name = @name
+                    LIMIT 1
+                ", trans.DBConnection, trans.DBTransaction);
+
+            command.Parameters.AddWithValue("name", contextName);
+
+            using var dr = await command.ExecuteReaderAsync();
+
+            if (!dr.Read())
+                throw new Exception($"Could not find context named \"{contextName}\"");
+
+            var id = dr.GetInt32(0);
+            var name = dr.GetString(1);
+            var speakingName = dr.GetString(2);
+            var description = dr.GetString(3);
+            var configJson = dr.GetString(4);
+            var config = JsonConvert.DeserializeObject<GridViewConfiguration>(configJson);
+
+            return new FullContext()
+            {
+                Name = name,
+                SpeakingName = speakingName,
+                Description = description,
+                Configuration = config
+            };
         }
     }
 }
