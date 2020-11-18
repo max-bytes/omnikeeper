@@ -43,7 +43,7 @@ function AddNewAttribute(props) {
   let addAttribute = <></>;
   if (isOpen) {
     addAttribute = 
-      <Card style={{ "boxShadow": "0px 0px 5px 0px rgba(0,0,0,0.25)" }}>
+      <Card style={{ boxShadow: "0px 0px 5px 0px rgba(0,0,0,0.25)", marginBottom: "4rem" }}>
         <Form labelCol={{ span: "4" }} onFinish={e => {
             setInsertError(undefined);
             insertCIAttribute({ variables: { layers: visibleLayers.map(l => l.name), ciIdentity: props.ciIdentity, name: newAttribute.name, layerID: selectedLayer.id, value: {

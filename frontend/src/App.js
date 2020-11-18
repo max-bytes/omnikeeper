@@ -98,6 +98,9 @@ function App() {
               <PrivateRoute path="/explorer">
                 <SearchCI />
               </PrivateRoute>
+              <PrivateRoute exact path="/grid-view">
+                <Redirect to="/grid-view/explorer" />
+              </PrivateRoute>
               <PrivateRoute path="/grid-view">
                 <GridView />
               </PrivateRoute>
