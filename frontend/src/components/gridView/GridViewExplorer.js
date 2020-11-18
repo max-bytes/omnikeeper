@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Input } from "antd";
+import { Input, Button } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { withRouter, Link } from "react-router-dom";
@@ -41,13 +41,18 @@ function GridViewExplorer(props) {
                         _.lowerCase(c.description.toString()).includes(_.lowerCase(searchString)))
                     .map((result, index) => {
                         return (
-                            <Link key={result.name} to={`/explorer/${result.name}`}>
-                                <div style={{display: 'flex', padding: '10px', backgroundColor: ((index % 2 === 0) ? '#eee' : '#fff')}}>
-                                    <div style={{flexGrow: '1', flexBasis: '0'}}>{result.id}</div>
+                                <div key={result.name} style={{display: 'flex', padding: '10px', backgroundColor: ((index % 2 === 0) ? '#eee' : '#fff')}}>
+                                    <Link to={`/explorer/${result.name}`} style={{display: "flex", flexGrow: '10', flexBasis: '0'}}>
+                                        <div style={{flexGrow: '1', flexBasis: '0', marginLeft: "0.5rem"}}>{result.id}</div>
                                         <div style={{flexGrow: '2', fontWeight: 'bold', flexBasis: '0'}}>{result.speakingName ?? result.name}</div>
-                                    <div style={{flexGrow: '8', fontWeight: 'italic', flexBasis: '0'}}>{result.description ?? 'No description.'}</div>
+                                        <div style={{flexGrow: '8', fontWeight: 'italic', flexBasis: '0', marginLeft: "0.5rem"}}>{result.description ?? 'No description.'}</div>
+                                    </Link>
+                                    <div style={{flexGrow: '3', flexBasis: '0', textAlign: "center", marginLeft: "0.5rem"}}>
+                                        <Button htmlType="submit" type="primary" onClick={() => props.history.push(`/edit-context/${result.name}`)}>Edit</Button>
+                                        {/* <Button htmlType="submit" type="danger" style={{ marginLeft: "0.5rem" }} onClick={() => console.log("remove")}>Remove</Button> */}
+                                    </div>
                                 </div>
-                            </Link>);
+                            );
                         })
                     : <>Loading...</>
                 }

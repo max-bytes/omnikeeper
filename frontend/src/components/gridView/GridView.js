@@ -1,14 +1,13 @@
 import React from "react";
 import { Menu } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faSearch, faWrench } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
 import {PrivateRoute} from './../PrivateRoute'
 import { Redirect, Route, Switch, BrowserRouter, Link } from 'react-router-dom'
 import env from "@beam-australia/react-env";
 import AddNewContext from "./AddNewContext";
 import GridViewExplorer from "./GridViewExplorer";
 import Context from "./Context";
-import ManageContexts from "./ManageContexts";
 
 function GridView(props) {
 
@@ -21,24 +20,20 @@ function GridView(props) {
                     <Menu mode="horizontal" style={{display: 'flex', justifyContent: 'center', margin: "auto"}}>
                         <Menu.Item key="createNewContext" ><Link to="/create-context"><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
                         <Menu.Item key="searchContext" ><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Search Context</Link></Menu.Item>
-                        <Menu.Item key="manageContexts" ><Link to="/manage-contexts"><FontAwesomeIcon icon={faWrench} style={{marginRight: "10px"}}/>Manage Contexts</Link></Menu.Item>
                     </Menu>
                 </Route>
                 <Switch>
                     <PrivateRoute path="/explorer/:contextName">
                         <Context />
                     </PrivateRoute>
-                    <PrivateRoute path="/manage-contexts/:contextName">
-                        <ManageContexts />
+                    <PrivateRoute path="/edit-context/:contextName">
+                        <AddNewContext editMode />
                     </PrivateRoute>
                     <PrivateRoute path="/create-context">
                         <AddNewContext />
                     </PrivateRoute>
                     <PrivateRoute path="/explorer">
                         <GridViewExplorer />
-                    </PrivateRoute>
-                    <PrivateRoute path="/manage-contexts">
-                        <ManageContexts />
                     </PrivateRoute>
 
                     <PrivateRoute path="*">

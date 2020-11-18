@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { Form, Button, Alert } from "antd";
-import { withRouter } from 'react-router-dom'
+import { useParams, withRouter } from "react-router-dom";
 import SwaggerClient from "swagger-client";
 import env from "@beam-australia/react-env";
 import AceEditor from "react-ace";
-// import { useQuery } from '@apollo/client';
-// import { queries } from '../../graphql/queries';
 
 const swaggerDefUrl = `${env("BACKEND_URL")}/../swagger/v1/swagger.json`; // TODO: HACK: BACKEND_URL contains /graphql suffix, remove!
 const apiVersion = 1;
 
 function AddNewContext(props) {
+    const editMode = props.editMode;
+    const { contextName } = useParams(); // get contextName from path
+
     let initialNewContext = {
         name: "",
         speakingName: "",
@@ -36,20 +37,32 @@ function AddNewContext(props) {
                 if(!jsonHasErrors) {
                     try {
                         setLoading(true);
-                        const addContext = await new SwaggerClient(swaggerDefUrl)
-                            .then((client) =>
-                                client.apis.GridView.AddContext(
-                                    {
-                                        version: apiVersion,
-                                    },
-                                    {
-                                        requestBody: context,
-                                    }
-                                )
-                            )
-                            .then((result) => result.body);
+                            const addContext = await new SwaggerClient(swaggerDefUrl)
+                                .then((client) => {
+                                    if(editMode)
+                                        return client.apis.GridView.EditContext(
+                                            {
+                                                version: apiVersion,
+                                                name: contextName,
+                                            },
+                                            {
+                                                requestBody: context,
+                                            }
+                                        )
+                                    else
+                                        return client.apis.GridView.AddContext(
+                                            {
+                                                version: apiVersion,
+                                            },
+                                            {
+                                                requestBody: context,
+                                            }
+                                        )
+                                })
+                                .then((result) => result.body);
+
                         setSwaggerError(false);
-                        setSwaggerMsg("'" + addContext.name + "' has been created.");
+                        setSwaggerMsg("'" + editMode ? contextName : addContext.name + "' has been " + editMode ? "changed." : "created.");
                     } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
                         setSwaggerError(true);
                         setSwaggerMsg(e.toString());
@@ -57,7 +70,8 @@ function AddNewContext(props) {
                     setLoading(false)
                 }
             }}>
-                <h2>Context</h2>
+                <h2>{editMode ? "Edit" : "Add"} Context</h2>
+                {editMode && <h4>{contextName}</h4>}
                 <AceEditor
                     value={context}
                     onValidate={a => {
@@ -77,7 +91,7 @@ function AddNewContext(props) {
                     readOnly={loading}
                 />
                 <Form.Item style={{display: 'flex', justifyContent: 'center', width: "500px", margin: "auto"}}>
-                    <Button style={{ width: "100%" }} type="primary" htmlType="submit" disabled={jsonHasErrors || loading} >Create New Context</Button>
+                    <Button style={{ width: "100%" }} type="primary" htmlType="submit" disabled={jsonHasErrors || loading} >{editMode ? "Change " : "Create New "}Context</Button>
                     {swaggerMsg && <Alert message={swaggerMsg} type={swaggerError ? "error": "success"} showIcon />}
                 </Form.Item>
             </Form>
