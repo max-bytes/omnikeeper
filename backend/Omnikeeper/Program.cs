@@ -25,6 +25,7 @@ namespace Omnikeeper
                     builder.AddConfiguration(ctx.Configuration.GetSection("Logging"));
                     builder.AddFile(o => o.RootPath = ctx.HostingEnvironment.ContentRootPath);
                     builder.AddProvider(new HangfireConsoleLoggerProvider());
+                    builder.Services.AddSingleton<ILoggerProvider>(sp => new ReactiveLoggerProvider(sp.GetRequiredService<ReactiveLogReceiver>()));
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {

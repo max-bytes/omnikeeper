@@ -16,6 +16,7 @@ using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
 using Omnikeeper.Service;
+using Omnikeeper.Utils;
 
 namespace Omnikeeper.Startup
 {
@@ -77,6 +78,7 @@ namespace Omnikeeper.Startup
 
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 
+            services.AddSingleton<ReactiveLogReceiver>();
         }
 
         public static void RegisterLogging(IServiceCollection services)
