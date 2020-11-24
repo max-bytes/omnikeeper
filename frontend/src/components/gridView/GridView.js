@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Menu } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
@@ -8,8 +8,22 @@ import env from "@beam-australia/react-env";
 import AddNewContext from "./AddNewContext";
 import GridViewExplorer from "./GridViewExplorer";
 import Context from "./Context";
+import SwaggerClient from "swagger-client";
 
 function GridView(props) {
+
+    const swaggerDefUrl = `${env('BACKEND_URL')}/../swagger/v1/swagger.json`; // TODO: HACK: BACKEND_URL contains /graphql suffix, remove!
+    const apiVersion = 1;
+
+    const [swaggerJson, setSwaggerJson] = useState(null);
+    useEffect(() => {
+        const fetchSwaggerJson = async () => {
+            const swaggerJson = await new SwaggerClient(swaggerDefUrl)
+                .then((client) => client);
+            setSwaggerJson(swaggerJson);
+        }
+        fetchSwaggerJson();
+    }, [swaggerDefUrl])
 
     // TODO: menu: set defaultSelectedKeys based on selected route
 
@@ -24,16 +38,16 @@ function GridView(props) {
                 </Route>
                 <Switch>
                     <PrivateRoute path="/explorer/:contextName">
-                        <Context />
+                        <Context swaggerJson={swaggerJson} apiVersion={apiVersion} />
                     </PrivateRoute>
                     <PrivateRoute path="/edit-context/:contextName">
-                        <AddNewContext editMode />
+                        <AddNewContext swaggerJson={swaggerJson} apiVersion={apiVersion} editMode />
                     </PrivateRoute>
                     <PrivateRoute path="/create-context">
-                        <AddNewContext />
+                        <AddNewContext swaggerJson={swaggerJson} apiVersion={apiVersion} />
                     </PrivateRoute>
                     <PrivateRoute path="/explorer">
-                        <GridViewExplorer />
+                        <GridViewExplorer swaggerJson={swaggerJson} apiVersion={apiVersion} />
                     </PrivateRoute>
 
                     <PrivateRoute path="*">

@@ -3,14 +3,12 @@ import { Input, Button, Popconfirm, Alert } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { withRouter, Link } from "react-router-dom";
-import SwaggerClient from "swagger-client";
-import env from "@beam-australia/react-env";
 import _ from "lodash";
 
-const swaggerDefUrl = `${env('BACKEND_URL')}/../swagger/v1/swagger.json`; // TODO: HACK: BACKEND_URL contains /graphql suffix, remove!
-const apiVersion = 1;
-
 function GridViewExplorer(props) {
+    const swaggerJson = props.swaggerJson;
+    const apiVersion = props.apiVersion;
+
     const [context, setContext] = useState(null);
     const [searchString, setSearchString] = useState("");
 
@@ -19,16 +17,15 @@ function GridViewExplorer(props) {
 
     // get context
     useEffect(() => {
-        const fetchContext = async () => {
-            const context = await new SwaggerClient(swaggerDefUrl)
-                .then((client) =>
-                    client.apis.GridView.GetContexts({ version: apiVersion })
-                )
-                .then((result) => result.body);
-            setContext(context); // set context
-            };
-        fetchContext();
-    }, []);
+        if (swaggerJson) {
+            const fetchContext = async () => {
+                const context = await swaggerJson.apis.GridView.GetContexts({ version: apiVersion })
+                    .then((result) => result.body);
+                setContext(context); // set context
+                };
+            fetchContext();
+        }
+    }, [swaggerJson, apiVersion]);
 
     return (
         <>
@@ -55,28 +52,25 @@ function GridViewExplorer(props) {
                                             title={`Are you sure to delete ${result.speakingName}?`}
                                             onConfirm={async () => {
                                                 try {
-                                                    await new SwaggerClient(swaggerDefUrl)
-                                                        .then((client) => client.apis.GridView.DeleteContext(
-                                                                {
-                                                                    version: apiVersion,
-                                                                    name: result.name,
-                                                                }
-                                                            )
-                                                        )
-                                                        .then((result) => result.body);
+                                                    if (swaggerJson) {
+                                                        await swaggerJson.apis.GridView.DeleteContext(
+                                                                    {
+                                                                        version: apiVersion,
+                                                                        name: result.name,
+                                                                    }
+                                                                )
+                                                            .then((result) => result.body);
 
-                                                        setSwaggerError(false);
-                                                        setSwaggerMsg("'" + result.name + "' has been removed.");
+                                                            setSwaggerError(false);
+                                                            setSwaggerMsg("'" + result.name + "' has been removed.");
+                                                    }
                                                 } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
                                                     setSwaggerError(true);
                                                     setSwaggerMsg(e.toString());
                                                 }
                                                 
                                                 // reload
-                                                const context = await new SwaggerClient(swaggerDefUrl)
-                                                    .then((client) =>
-                                                        client.apis.GridView.GetContexts({ version: apiVersion })
-                                                    )
+                                                const context = await swaggerJson.apis.GridView.GetContexts({ version: apiVersion })
                                                     .then((result) => result.body);
                                                 setContext(context); // set context
                                             }}

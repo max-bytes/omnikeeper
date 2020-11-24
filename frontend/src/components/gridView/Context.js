@@ -7,8 +7,6 @@ import ContextButtonToolbar from "./ContextButtonToolbar";
 import "./Context.css";
 import GridViewDataParseModel from "./GridViewDataParseModel";
 import _ from "lodash";
-import SwaggerClient from "swagger-client";
-import env from "@beam-australia/react-env";
 // TODO: use aggrid_copy_cut_paste - USE THIS:
 // import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
 // const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
@@ -18,12 +16,12 @@ import env from "@beam-australia/react-env";
 // );
 import { useParams, withRouter } from "react-router-dom";
 
-const swaggerDefUrl = `${env("BACKEND_URL")}/../swagger/v1/swagger.json`; // TODO: HACK: BACKEND_URL contains /graphql suffix, remove!
-const apiVersion = 1;
-
 const { Header, Content } = Layout;
 
 export function Context(props) {
+    const swaggerJson = props.swaggerJson;
+    const apiVersion = props.apiVersion;
+
     const { contextName } = useParams(); // get contextName from path
 
     const [gridApi, setGridApi] = useState(null);
@@ -77,53 +75,56 @@ export function Context(props) {
                 />
             </Header>
             <Content>
-                {/* TODO: use aggrid_copy_cut_paste */}
-                {/* REMOVE THIS: */}
-                <div
-                    className="ag-theme-balham"
-                    style={{
-                        height: "100%",
-                        width: "100%",
-                    }}
-                >
-                    <AgGridReact
-                        onGridReady={onGridReady}
-                        rowData={rowData}
-                        columnDefs={columnDefs}
-                        defaultColDef={defaultColDef}
-                        animateRows={true}
-                        rowSelection="multiple"
-                        onCellValueChanged={updateCellValue}
-                        getRowNodeId={function (data) {
-                            return data.ciid;
+                { swaggerJson ? (
+                    //  TODO: use aggrid_copy_cut_paste
+                    // REMOVE THIS:
+                    <div
+                        className="ag-theme-balham"
+                        style={{
+                            height: "100%",
+                            width: "100%",
                         }}
-                        overlayLoadingTemplate={
-                            '<span class="ag-overlay-loading-center">Loading...</span>'
-                        }
-                        overlayNoRowsTemplate={
-                            '<span class="ag-overlay-loading-center">No data.</span>'
-                        }
-                    />
-                </div>
-                {/* USE THIS: */}
-                {/* <AgGridCopyCutPaste
-                    onGridReady={onGridReady}
-                    rowData={rowData}
-                    columnDefs={columnDefs}
-                    defaultColDef={defaultColDef}
-                    animateRows={true}
-                    rowSelection="multiple"
-                    onCellValueChanged={updateCellValue}
-                    getRowNodeId={function (data) {
-                        return data.ciid;
-                    }}
-                    overlayLoadingTemplate={
-                        '<span class="ag-overlay-loading-center">Loading...</span>'
-                    }
-                    overlayNoRowsTemplate={
-                        '<span class="ag-overlay-loading-center">Please choose context.</span>'
-                    }
-                /> */}
+                    >
+                        <AgGridReact
+                            onGridReady={onGridReady}
+                            rowData={rowData}
+                            columnDefs={columnDefs}
+                            defaultColDef={defaultColDef}
+                            animateRows={true}
+                            rowSelection="multiple"
+                            onCellValueChanged={updateCellValue}
+                            getRowNodeId={function (data) {
+                                return data.ciid;
+                            }}
+                            overlayLoadingTemplate={
+                                '<span class="ag-overlay-loading-center">Loading...</span>'
+                            }
+                            overlayNoRowsTemplate={
+                                '<span class="ag-overlay-loading-center">No data.</span>'
+                            }
+                        />
+                    </div>
+                    // USE THIS:
+                    // <AgGridCopyCutPaste
+                    //     onGridReady={onGridReady}
+                    //     rowData={rowData}
+                    //     columnDefs={columnDefs}
+                    //     defaultColDef={defaultColDef}
+                    //     animateRows={true}
+                    //     rowSelection="multiple"
+                    //     onCellValueChanged={updateCellValue}
+                    //     getRowNodeId={function (data) {
+                    //         return data.ciid;
+                    //     }}
+                    //     overlayLoadingTemplate={
+                    //         '<span class="ag-overlay-loading-center">Loading...</span>'
+                    //     }
+                    //     overlayNoRowsTemplate={
+                    //         '<span class="ag-overlay-loading-center">Please choose context.</span>'
+                    //     }
+                    // />
+                ) :
+                <>Loading...</> }
             </Content>
         </Layout>
     );
@@ -320,32 +321,31 @@ export function Context(props) {
 
     // CREATE / UPDATE / DELETE on pressing 'save'
     async function save() {
-        let rowDataDiffs = [];
+        if (swaggerJson) {
+            let rowDataDiffs = [];
 
-        await gridApi.forEachNode(async (node) => {
-            if (
-                node.data.status.id === rowStatus.new.id || // CREATE
-                node.data.status.id === rowStatus.edited.id || // UPDATE
-                node.data.status.id === rowStatus.deleted.id // DELETE
-            ) {
-                const rowSnapshot = _.find(rowDataSnapshot, function (
-                    rowSnapshot
+            await gridApi.forEachNode(async (node) => {
+                if (
+                    node.data.status.id === rowStatus.new.id || // CREATE
+                    node.data.status.id === rowStatus.edited.id || // UPDATE
+                    node.data.status.id === rowStatus.deleted.id // DELETE
                 ) {
-                    return rowSnapshot.ciid === node.data.ciid;
-                });
-                let rowDataDiff = getDiffBetweenObjects(node.data, rowSnapshot);
-                rowDataDiff["ciid"] = node.data.ciid; // add ciid
+                    const rowSnapshot = _.find(rowDataSnapshot, function (
+                        rowSnapshot
+                    ) {
+                        return rowSnapshot.ciid === node.data.ciid;
+                    });
+                    let rowDataDiff = getDiffBetweenObjects(node.data, rowSnapshot);
+                    rowDataDiff["ciid"] = node.data.ciid; // add ciid
 
-                rowDataDiffs.push(rowDataDiff); // add to rowDataDiffs
-            }
-        });
+                    rowDataDiffs.push(rowDataDiff); // add to rowDataDiffs
+                }
+            });
 
-        const changes = gridViewDataParseModel.createChanges(rowDataDiffs); // Create changes from rowData (delta)
+            const changes = gridViewDataParseModel.createChanges(rowDataDiffs); // Create changes from rowData (delta)
 
-        // actually do the changes
-        const changeResults = await new SwaggerClient(swaggerDefUrl)
-            .then((client) =>
-                client.apis.GridView.ChangeData(
+            // actually do the changes
+            const changeResults = await swaggerJson.apis.GridView.ChangeData(
                     {
                         version: apiVersion,
                         context: contextName,
@@ -354,62 +354,58 @@ export function Context(props) {
                         requestBody: changes,
                     }
                 )
-            )
-            .then((result) => result.body); // TODO: setting received data, error handling
+                .then((result) => result.body); // TODO: setting received data, error handling
 
-        // Create rowData from changeResults
-        const rowDataChangeResults = gridViewDataParseModel.createRowData(
-            changeResults
-        );
+            // Create rowData from changeResults
+            const rowDataChangeResults = gridViewDataParseModel.createRowData(
+                changeResults
+            );
 
-        // update rows
-        _.forEach(rowDataChangeResults, function (value) {
-            gridApi.applyTransaction({ update: [value] }); // delete from grid
-        });
+            // update rows
+            _.forEach(rowDataChangeResults, function (value) {
+                gridApi.applyTransaction({ update: [value] }); // delete from grid
+            });
+        }
     }
 
     // READ / refresh data
     async function refreshData() {
-        // Tell AgGrid to reset columnDefs and rowData // important!
-        if (gridApi) {
-            gridApi.setColumnDefs(null);
-            gridApi.setRowData(null);
-            gridApi.showLoadingOverlay(); // trigger "Loading"-state (otherwise would be in "No Rows"-state instead)
-        }
-        const schema = await new SwaggerClient(swaggerDefUrl)
-            .then((client) =>
-                client.apis.GridView.GetSchema({
+        if (swaggerJson) {
+            // Tell AgGrid to reset columnDefs and rowData // important!
+            if (gridApi) {
+                gridApi.setColumnDefs(null);
+                gridApi.setRowData(null);
+                gridApi.showLoadingOverlay(); // trigger "Loading"-state (otherwise would be in "No Rows"-state instead)
+            }
+            const schema = await swaggerJson.apis.GridView.GetSchema({
                     version: apiVersion,
                     context: contextName,
                 })
-            )
-            .then((result) => result.body);
-        const data = await new SwaggerClient(swaggerDefUrl)
-            .then((client) =>
-                client.apis.GridView.GetData({
+                .then((result) => result.body);
+            const data = await swaggerJson.apis.GridView.GetData({
                     version: apiVersion,
                     context: contextName,
                 })
-            )
-            .then((result) => result.body);
+                .then((result) => result.body);
 
-        const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
-            schema,
-            data
-        ); // Create columnDefs from schema and data
-        const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
+            const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
+                schema,
+                data
+            ); // Create columnDefs from schema and data
+            const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
 
-        setColumnDefs(parsedColumnDefs); // set columnDefs
-        setRowData(parsedRowData); // set rowData
-        setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
+            setColumnDefs(parsedColumnDefs); // set columnDefs
+            setRowData(parsedRowData); // set rowData
+            setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
 
-        // Tell AgGrid to set columnDefs and rowData
-        if (gridApi) {
-            gridApi.setColumnDefs(parsedColumnDefs);
-            gridApi.setRowData(parsedRowData);
+            // Tell AgGrid to set columnDefs and rowData
+            if (gridApi) {
+                gridApi.setColumnDefs(parsedColumnDefs);
+                gridApi.setRowData(parsedRowData);
+            }
+
+            setTempId(0); // Reset tempId
         }
-
-        setTempId(0); // Reset tempId
     }
 
     // ######################################## AG GRID FORMATTING ########################################

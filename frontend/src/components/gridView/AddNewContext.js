@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert } from "antd";
 import { useParams, withRouter } from "react-router-dom";
-import SwaggerClient from "swagger-client";
-import env from "@beam-australia/react-env";
 import AceEditor from "react-ace";
 
-const swaggerDefUrl = `${env("BACKEND_URL")}/../swagger/v1/swagger.json`; // TODO: HACK: BACKEND_URL contains /graphql suffix, remove!
-const apiVersion = 1;
-
 function AddNewContext(props) {
+    const swaggerJson = props.swaggerJson;
+    const apiVersion = props.apiVersion;
     const editMode = props.editMode;
     const { contextName } = useParams(); // get contextName from path
 
@@ -21,21 +18,20 @@ function AddNewContext(props) {
     // get context
     useEffect(() => {
         if (editMode) {
-            const fetchContext = async () => {
-                const contextJson = await new SwaggerClient(swaggerDefUrl)
-                    .then((client) =>
-                        client.apis.GridView.GetContext(
+            if (swaggerJson) {
+                const fetchContext = async () => {
+                    const contextJson = await swaggerJson.apis.GridView.GetContext(
                             {
                                 version: apiVersion,
                                 name: contextName
                             }
                         )
-                    )
-                    .then((result) => result.body);
-                setContext(JSON.stringify(contextJson.context, null, 2)); // set context
-                setLoading(false);
-            };
-            fetchContext();
+                        .then((result) => result.body);
+                    setContext(JSON.stringify(contextJson.context, null, 2)); // set context
+                    setLoading(false);
+                };
+                fetchContext();
+            }
         } 
         else {
             const initialNewContext = {
@@ -53,41 +49,38 @@ function AddNewContext(props) {
             setContext(JSON.stringify(initialNewContext, null, 2)); // set context
             setLoading(false);
         }
-    }, [editMode, contextName]);
+    }, [editMode, contextName, swaggerJson, apiVersion]);
 
     return (
         <div style={{ height: "100%", width: "100%", padding: "10px" }}>
             <Form onFinish={async (e) => {
                 if(!jsonHasErrors) {
                     try {
-                        setLoading(true);
-                            const addContext = await new SwaggerClient(swaggerDefUrl)
-                                .then((client) => {
-                                    if(editMode)
-                                        return client.apis.GridView.EditContext(
-                                            {
-                                                version: apiVersion,
-                                                name: contextName,
-                                            },
-                                            {
-                                                requestBody: context,
-                                            }
-                                        )
-                                    else
-                                        return client.apis.GridView.AddContext(
-                                            {
-                                                version: apiVersion,
-                                            },
-                                            {
-                                                requestBody: context,
-                                            }
-                                        )
-                                })
-                                .then((result) => result.body);
+                        if (swaggerJson) {
+                            setLoading(true);
+                            const addContext = editMode
+                                ? await swaggerJson.apis.GridView.EditContext(
+                                    {
+                                        version: apiVersion,
+                                        name: contextName,
+                                    },
+                                    {
+                                        requestBody: context,
+                                    }
+                                ).then((result) => result.body)
+                                : await swaggerJson.apis.GridView.AddContext(
+                                    {
+                                        version: apiVersion,
+                                    },
+                                    {
+                                        requestBody: context,
+                                    }
+                                ).then((result) => result.body);
 
-                        setSwaggerError(false);
-                        if(editMode) setSwaggerMsg("'" + contextName + "' has been changed.");
-                        else setSwaggerMsg("'" + addContext.name + "' has been created.");
+                            setSwaggerError(false);
+                            if(editMode) setSwaggerMsg("'" + contextName + "' has been changed.");
+                            else setSwaggerMsg("'" + addContext.name + "' has been created.");
+                        }
                     } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
                         setSwaggerError(true);
                         setSwaggerMsg(e.toString());
