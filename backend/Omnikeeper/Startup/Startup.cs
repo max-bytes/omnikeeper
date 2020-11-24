@@ -27,6 +27,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Service;
+using Omnikeeper.Utils;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
@@ -66,6 +67,8 @@ namespace Omnikeeper.Startup
             services.AddOData();//.EnableApiVersioning();
 
             services.AddHttpContextAccessor();
+
+            services.AddSignalR();
 
             services.AddControllers().AddNewtonsoftJson(options =>
             {
@@ -283,6 +286,7 @@ namespace Omnikeeper.Startup
                 //endpoints.MapODataRoute("odata", "api/v{version:apiVersion}/odata/{context}", edmModel);
                 endpoints.MapODataRoute("odata", "api/odata/{context}", edmModel);
 
+                endpoints.MapHub<SignalRHubLogging>("/api/signalr/logging");
             });
 
             app.UseSwagger(c =>
