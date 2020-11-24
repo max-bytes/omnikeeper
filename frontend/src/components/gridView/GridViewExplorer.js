@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Input, Button, Popconfirm, Alert } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import { faSearch, faSync } from "@fortawesome/free-solid-svg-icons";
 import { withRouter, Link } from "react-router-dom";
 import _ from "lodash";
 
@@ -9,32 +9,45 @@ function GridViewExplorer(props) {
     const swaggerJson = props.swaggerJson;
     const apiVersion = props.apiVersion;
 
+    const [loading, setLoading] = useState(true);
     const [context, setContext] = useState(null);
     const [searchString, setSearchString] = useState("");
 
-    const [swaggerMsg, setSwaggerMsg] = useState("")
-    const [swaggerError, setSwaggerError] = useState(false)
-
-    // get context
-    useEffect(() => {
+    const [swaggerMsg, setSwaggerMsg] = useState("");
+    const [swaggerError, setSwaggerError] = useState(false);
+  
+    // get contexts
+    const refresh = useCallback(async () => {
         if (swaggerJson) {
-            const fetchContext = async () => {
+            try {
+                setLoading(true);
+                // reload
                 const context = await swaggerJson.apis.GridView.GetContexts({ version: apiVersion })
                     .then((result) => result.body);
                 setContext(context); // set context
-                };
-            fetchContext();
+
+                // INFO: don't show message on basic load
+            } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
+                setSwaggerError(true);
+                setSwaggerMsg(e.toString());
+            }
+            setLoading(false);
         }
-    }, [swaggerJson, apiVersion]);
+    }, [swaggerJson, apiVersion])
+
+    useEffect(() => {refresh();}, [refresh]);
+
+    const refreshButton = (<Button onClick={refresh}><FontAwesomeIcon icon={faSync} spin={loading} color={"grey"} style={{ padding: "2px"}} /></Button>)
 
     return (
         <>
             <div style={{display: 'flex', justifyContent: 'center', marginTop: '50px', width: "205px", margin: "50px auto 0"}}>
                 <Input suffix={<FontAwesomeIcon icon={faSearch} color="grey" />}  placeholder='Search...'  onChange={(e) => setSearchString(e.target.value)} />
+                {refreshButton}
             </div>
             <div style={{flexGrow: 1, overflowY: 'auto', margin: '20px auto', minWidth: '50%'}}>
                 {swaggerMsg && <Alert message={swaggerMsg} type={swaggerError ? "error": "success"} showIcon banner/>}
-                {(context && context.contexts) ?
+                {(context && context.contexts && !loading) ?
                     _.filter(context.contexts, c => 
                         _.lowerCase(c.speakingName.toString()).includes(_.lowerCase(searchString)) || 
                         _.lowerCase(c.name.toString()).includes(_.lowerCase(searchString)) || 
@@ -52,28 +65,24 @@ function GridViewExplorer(props) {
                                         <Popconfirm
                                             title={`Are you sure to delete ${result.speakingName}?`}
                                             onConfirm={async () => {
-                                                try {
-                                                    if (swaggerJson) {
+                                                if (swaggerJson) {
+                                                    try {
                                                         await swaggerJson.apis.GridView.DeleteContext(
-                                                                    {
-                                                                        version: apiVersion,
-                                                                        name: result.name,
-                                                                    }
-                                                                )
+                                                                {
+                                                                    version: apiVersion,
+                                                                    name: result.name,
+                                                                }
+                                                            )
                                                             .then((result) => result.body);
 
-                                                            setSwaggerError(false);
-                                                            setSwaggerMsg("'" + result.name + "' has been removed.");
+                                                        setSwaggerError(false);
+                                                        setSwaggerMsg("'" + result.name + "' has been removed.");
+                                                        refresh(); // reload
+                                                    } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
+                                                        setSwaggerError(true);
+                                                        setSwaggerMsg(e.toString());
                                                     }
-                                                } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
-                                                    setSwaggerError(true);
-                                                    setSwaggerMsg(e.toString());
                                                 }
-                                                
-                                                // reload
-                                                const context = await swaggerJson.apis.GridView.GetContexts({ version: apiVersion })
-                                                    .then((result) => result.body);
-                                                setContext(context); // set context
                                             }}
                                             okText="Yes"
                                             okButtonProps={{type: "danger"}}

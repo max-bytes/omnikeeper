@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-balham.css";
-import { Layout } from "antd";
+import { Layout, Alert } from "antd";
 import ContextButtonToolbar from "./ContextButtonToolbar";
 import "./Context.css";
 import GridViewDataParseModel from "./GridViewDataParseModel";
@@ -32,6 +32,9 @@ export function Context(props) {
     const [rowDataSnapshot, setRowDataSnapshot] = useState(null);
     const [tempId, setTempId] = useState(null);
     const defaultColDef = initDefaultColDef(); // Init defaultColDef
+
+    const [swaggerMsg, setSwaggerMsg] = useState("");
+    const [swaggerError, setSwaggerError] = useState(false);
 
     // status objects
     const rowStatus = {
@@ -63,6 +66,7 @@ export function Context(props) {
                     padding: "unset",
                 }}
             >
+                {swaggerMsg && <Alert message={swaggerMsg} type={swaggerError ? "error": "success"} showIcon banner/>}
                 <ContextButtonToolbar
                     setCellToNotSet={setCellToNotSet}
                     setCellToEmpty={setCellToEmpty}
@@ -344,27 +348,35 @@ export function Context(props) {
 
             const changes = gridViewDataParseModel.createChanges(rowDataDiffs); // Create changes from rowData (delta)
 
-            // actually do the changes
-            const changeResults = await swaggerJson.apis.GridView.ChangeData(
-                    {
-                        version: apiVersion,
-                        context: contextName,
-                    },
-                    {
-                        requestBody: changes,
-                    }
-                )
-                .then((result) => result.body); // TODO: setting received data, error handling
+            try {
+                // actually do the changes
+                const changeResults = await swaggerJson.apis.GridView.ChangeData(
+                        {
+                            version: apiVersion,
+                            context: contextName,
+                        },
+                        {
+                            requestBody: changes,
+                        }
+                    )
+                    .then((result) => result.body);
 
-            // Create rowData from changeResults
-            const rowDataChangeResults = gridViewDataParseModel.createRowData(
-                changeResults
-            );
+                // Create rowData from changeResults
+                const rowDataChangeResults = gridViewDataParseModel.createRowData(
+                    changeResults
+                );
 
-            // update rows
-            _.forEach(rowDataChangeResults, function (value) {
-                gridApi.applyTransaction({ update: [value] }); // delete from grid
-            });
+                // update rows
+                _.forEach(rowDataChangeResults, function (value) {
+                    gridApi.applyTransaction({ update: [value] }); // delete from grid
+                });
+
+                setSwaggerError(false);
+                setSwaggerMsg("Saved.");
+            } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
+                setSwaggerError(true);
+                setSwaggerMsg(e.toString());
+            }
         }
     }
 
@@ -377,34 +389,41 @@ export function Context(props) {
                 gridApi.setRowData(null);
                 gridApi.showLoadingOverlay(); // trigger "Loading"-state (otherwise would be in "No Rows"-state instead)
             }
-            const schema = await swaggerJson.apis.GridView.GetSchema({
-                    version: apiVersion,
-                    context: contextName,
-                })
-                .then((result) => result.body);
-            const data = await swaggerJson.apis.GridView.GetData({
-                    version: apiVersion,
-                    context: contextName,
-                })
-                .then((result) => result.body);
+            try {
+                const schema = await swaggerJson.apis.GridView.GetSchema({
+                        version: apiVersion,
+                        context: contextName,
+                    })
+                    .then((result) => result.body);
+                const data = await swaggerJson.apis.GridView.GetData({
+                        version: apiVersion,
+                        context: contextName,
+                    })
+                    .then((result) => result.body);
 
-            const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
-                schema,
-                data
-            ); // Create columnDefs from schema and data
-            const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
+                const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
+                    schema,
+                    data
+                ); // Create columnDefs from schema and data
+                const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
+    
+                setColumnDefs(parsedColumnDefs); // set columnDefs
+                setRowData(parsedRowData); // set rowData
+                setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
+    
+                // Tell AgGrid to set columnDefs and rowData
+                if (gridApi) {
+                    gridApi.setColumnDefs(parsedColumnDefs);
+                    gridApi.setRowData(parsedRowData);
+                }
+    
+                setTempId(0); // Reset tempId
 
-            setColumnDefs(parsedColumnDefs); // set columnDefs
-            setRowData(parsedRowData); // set rowData
-            setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
-
-            // Tell AgGrid to set columnDefs and rowData
-            if (gridApi) {
-                gridApi.setColumnDefs(parsedColumnDefs);
-                gridApi.setRowData(parsedRowData);
+                // INFO: don't show message on basic load
+            } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
+                setSwaggerError(true);
+                setSwaggerMsg(e.toString());
             }
-
-            setTempId(0); // Reset tempId
         }
     }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Button, Alert } from "antd";
 import { useParams, withRouter } from "react-router-dom";
 import AceEditor from "react-ace";
@@ -16,10 +16,11 @@ function AddNewContext(props) {
     const [context, setContext] = useState("Loading...");
     
     // get context
-    useEffect(() => {
-        if (editMode) {
-            if (swaggerJson) {
-                const fetchContext = async () => {
+    const refresh = useCallback(async () => {
+        try {
+            setLoading(true);
+            if (editMode) {
+                if (swaggerJson) {
                     const contextJson = await swaggerJson.apis.GridView.GetContext(
                             {
                                 version: apiVersion,
@@ -28,28 +29,32 @@ function AddNewContext(props) {
                         )
                         .then((result) => result.body);
                     setContext(JSON.stringify(contextJson.context, null, 2)); // set context
-                    setLoading(false);
+                }
+            } 
+            else {
+                const initialNewContext = {
+                    name: "",
+                    speakingName: "",
+                    description: "",
+                    configuration: {
+                        showCIIDColumn: true,
+                        writeLayer: 0,
+                        readLayerset: [0],
+                        columns: [],
+                        trait: "",
+                    },
                 };
-                fetchContext();
+                setContext(JSON.stringify(initialNewContext, null, 2)); // set context
             }
-        } 
-        else {
-            const initialNewContext = {
-                name: "",
-                speakingName: "",
-                description: "",
-                configuration: {
-                    showCIIDColumn: true,
-                    writeLayer: 0,
-                    readLayerset: [0],
-                    columns: [],
-                    trait: "",
-                },
-            };
-            setContext(JSON.stringify(initialNewContext, null, 2)); // set context
-            setLoading(false);
+            // INFO: don't show message on basic load
+        } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
+            setSwaggerError(true);
+            setSwaggerMsg(e.toString());
         }
-    }, [editMode, contextName, swaggerJson, apiVersion]);
+        setLoading(false);
+    }, [swaggerJson, apiVersion, contextName, editMode])
+
+    useEffect(() => {refresh();}, [refresh]);
 
     return (
         <div style={{ height: "100%", width: "100%", padding: "10px" }}>
@@ -88,6 +93,7 @@ function AddNewContext(props) {
                     setLoading(false)
                 }
             }}>
+                {swaggerMsg && <Alert message={swaggerMsg} type={swaggerError ? "error": "success"} showIcon banner />}
                 <h2>{editMode ? "Edit" : "Add"} Context</h2>
                 {editMode && <h4>{contextName}</h4>}
                 <AceEditor
@@ -110,7 +116,6 @@ function AddNewContext(props) {
                 />
                 <Form.Item style={{display: 'flex', justifyContent: 'center', width: "500px", margin: "auto"}}>
                     <Button style={{ width: "100%" }} type="primary" htmlType="submit" disabled={jsonHasErrors || loading} >{editMode ? "Change " : "Create New "}Context</Button>
-                    {swaggerMsg && <Alert message={swaggerMsg} type={swaggerError ? "error": "success"} showIcon />}
                 </Form.Item>
             </Form>
         </div>
