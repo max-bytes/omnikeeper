@@ -22,16 +22,15 @@ function GridView(props) {
     // get swagger JSON
     const getSwaggerJson = useCallback(async () => {
         try {
-            const swaggerJson = await new SwaggerClient(swaggerDefUrl)
-                .then((client) => client);
+            const swaggerJson = await new SwaggerClient(swaggerDefUrl);
             setSwaggerJson(swaggerJson);
-        } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
+        } catch(e) {
             setSwaggerError(true);
-            setSwaggerMsg(e.toString());
+            setSwaggerMsg(e.statusCode + ": " + e.response.statusText + " " + e.response.url);
         }
     }, [swaggerDefUrl])
 
-    useEffect(() => {getSwaggerJson();}, [getSwaggerJson])
+    useEffect(() => {getSwaggerJson();}, [getSwaggerJson]);
 
     // TODO: menu: set defaultSelectedKeys based on selected route
 
