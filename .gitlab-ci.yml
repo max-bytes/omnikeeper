@@ -13,6 +13,11 @@ variables:
   # do not forget to adapt runners config.toml
   DOCKER_TLS_CERTDIR: "/certs"
 
+  NEXUS_USER: "svc_mhx_buildchain"
+  #NEXUS_PASSWORD: "yoursecretsShouldNotBePlacedHere"
+  NEXUS_BASEURL: "https://repo.mhx.at"
+
+
 
 build-backend:
   image: docker:stable
@@ -32,6 +37,38 @@ build-backend:
     - echo "Building backend version $VERSION"
     - "docker build -t $CI_REGISTRY/landscape/omnikeeper/backend:$VERSION -t $CI_REGISTRY/landscape/omnikeeper/backend:latest -f ./Omnikeeper/Dockerfile --build-arg version=$VERSION ."
     - "docker push $CI_REGISTRY/landscape/omnikeeper/backend"
+
+build-nuget-core-package:
+  image: mcr.microsoft.com/dotnet/core/sdk:3.1-buster
+  stage: build
+  when: on_success
+  tags:
+    - dockerbuild
+  services:
+    - docker:19.03.1-dind
+  only: 
+    - tags
+  script:
+    - "VERSION=$CI_COMMIT_TAG"
+    - echo "Building nuget package for core version $VERSION"
+    - "dotnet pack backend/Omnikeeper.Base/Omnikeeper.Base.csproj /p:Version=${VERSION} -c Release"
+    - "mv Omnikeeper.Base/bin/Release/Omnikeeper.Base.${VERSION}.nupkg Omnikeeper.Base.nupkg"
+  artifacts:
+    paths:
+      - Omnikeeper.Base.nupkg
+    expire_in: 2 days
+
+deploy-nuget-core-package:
+  image: curlimages/curl:latest
+  stage: deploy
+  dependencies:
+    - build-nuget-core-package
+  script:
+    - sh cicd/upload-nexus.sh Omnikeeper.Base.nupkg
+  only: 
+    - tags
+
+
 
 build-frontend:
   image: docker:stable
