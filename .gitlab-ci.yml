@@ -61,6 +61,7 @@ build-nuget-core-package:
 deploy-nuget-core-package:
   image: curlimages/curl:latest
   stage: deploy
+  when: manual # TODO
   dependencies:
     - build-nuget-core-package
   script:
