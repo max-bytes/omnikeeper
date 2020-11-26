@@ -18,26 +18,6 @@ variables:
   NEXUS_BASEURL: "https://repo.mhx.at"
 
 
-
-build-backend:
-  image: docker:stable
-  stage: build
-  when: on_success
-  tags:
-    - dockerbuild
-  services:
-    - docker:19.03.1-dind
-  only: 
-    - tags
-  before_script:
-    - "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
-  script:
-    - "cd backend"
-    - "VERSION=$CI_COMMIT_TAG" #$(git describe --tags --abbrev=0)"
-    - echo "Building backend version $VERSION"
-    - "docker build -t $CI_REGISTRY/landscape/omnikeeper/backend:$VERSION -t $CI_REGISTRY/landscape/omnikeeper/backend:latest -f ./Omnikeeper/Dockerfile --build-arg version=$VERSION ."
-    - "docker push $CI_REGISTRY/landscape/omnikeeper/backend"
-
 build-nuget-core-package:
   image: mcr.microsoft.com/dotnet/core/sdk:3.1-buster
   stage: build
@@ -59,16 +39,35 @@ build-nuget-core-package:
     expire_in: 2 days
 
 deploy-nuget-core-package:
-  image: curlimages/curl:latest
+  image: docker-registry.mhx.at/infra-docker/container-images/push-to-nexus:latest
   stage: deploy
   when: manual # TODO
   dependencies:
     - build-nuget-core-package
   script:
-    - sh cicd/upload-nexus.sh Omnikeeper.Base.nupkg
+    - sh /upload-nexus.sh Omnikeeper.Base.nupkg
   only: 
     - tags
 
+
+build-backend:
+  image: docker:stable
+  stage: build
+  when: on_success
+  tags:
+    - dockerbuild
+  services:
+    - docker:19.03.1-dind
+  only: 
+    - tags
+  before_script:
+    - "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
+  script:
+    - "cd backend"
+    - "VERSION=$CI_COMMIT_TAG" #$(git describe --tags --abbrev=0)"
+    - echo "Building backend version $VERSION"
+    - "docker build -t $CI_REGISTRY/landscape/omnikeeper/backend:$VERSION -t $CI_REGISTRY/landscape/omnikeeper/backend:latest -f ./Omnikeeper/Dockerfile --build-arg version=$VERSION ."
+    - "docker push $CI_REGISTRY/landscape/omnikeeper/backend"
 
 
 build-frontend:
