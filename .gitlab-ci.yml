@@ -1,4 +1,6 @@
+
 stages:
+ - tmp
  - build
  - deploy
 
@@ -20,7 +22,7 @@ variables:
 
 build-nuget-core-package:
   image: mcr.microsoft.com/dotnet/core/sdk:3.1-buster
-  stage: build
+  stage: tmp
   when: on_success
   tags:
     - dockerbuild
@@ -40,7 +42,7 @@ build-nuget-core-package:
 
 deploy-nuget-core-package:
   image: docker-registry.mhx.at/infra-docker/container-images/push-to-nexus-nuget:latest
-  stage: deploy
+  stage: tmp
   when: manual # TODO
   dependencies:
     - build-nuget-core-package
