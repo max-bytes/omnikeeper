@@ -1,6 +1,7 @@
 
 stages:
  - tmp
+ - tmp2
  - build
  - deploy
 
@@ -42,7 +43,7 @@ build-nuget-core-package:
 
 deploy-nuget-core-package:
   image: docker-registry.mhx.at/infra-docker/container-images/push-to-nexus-nuget:latest
-  stage: tmp
+  stage: tmp2
   when: manual # TODO
   dependencies:
     - build-nuget-core-package
