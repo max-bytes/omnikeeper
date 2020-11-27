@@ -39,13 +39,16 @@ build-nuget-core-package:
     expire_in: 2 days
 
 deploy-nuget-core-package:
-  image: docker-registry.mhx.at/infra-docker/container-images/push-to-nexus:latest
+  image: docker-registry.mhx.at/infra-docker/container-images/push-to-nexus-nuget:latest
   stage: deploy
   when: manual # TODO
   dependencies:
     - build-nuget-core-package
+  variables:
+    NEXUS_BASEURL: "https://repo.mhx.at"
+    PACKAGE_NAME: "Omnikeeper.Base"
   script:
-    - sh /upload-nexus.sh Omnikeeper.Base.nupkg
+    - sh /upload-nuget.sh Omnikeeper.Base.nupkg
   only: 
     - tags
 
