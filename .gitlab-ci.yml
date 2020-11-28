@@ -3,7 +3,6 @@ stages:
  - build-libraries
  - publish-libraries
  - build
- - deploy
 
 variables:
   DOCKER_DRIVER: overlay2
@@ -37,7 +36,7 @@ build-nuget-base-package:
       - Omnikeeper.Base.nupkg
     expire_in: 2 days
 
-deploy-nuget-base-package:
+publish-nuget-base-package:
   image: docker-registry.mhx.at/infra-docker/container-images/push-to-nexus-nuget:latest
   stage: publish-libraries
   when: on_success
