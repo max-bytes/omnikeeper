@@ -1,8 +1,7 @@
 
 stages:
- - build-libraries
- - publish-libraries
  - build
+ - publish
 
 variables:
   DOCKER_DRIVER: overlay2
@@ -15,40 +14,6 @@ variables:
   # do not forget to adapt runners config.toml
   DOCKER_TLS_CERTDIR: "/certs"
 
-
-build-nuget-base-package:
-  image: mcr.microsoft.com/dotnet/core/sdk:3.1-buster
-  stage: build-libraries
-  when: on_success
-  tags:
-    - dockerbuild
-  services:
-    - docker:19.03.1-dind
-  only: 
-    - tags
-  script:
-    - "VERSION=$CI_COMMIT_TAG"
-    - echo "Building nuget package for omnikeeper base version $VERSION"
-    - "dotnet pack backend/Omnikeeper.Base/Omnikeeper.Base.csproj /p:Version=${VERSION} -c Release"
-    - "mv backend/Omnikeeper.Base/bin/Release/Omnikeeper.Base.${VERSION}.nupkg Omnikeeper.Base.nupkg"
-  artifacts:
-    paths:
-      - Omnikeeper.Base.nupkg
-    expire_in: 2 days
-
-publish-nuget-base-package:
-  image: docker-registry.mhx.at/infra-docker/container-images/push-to-nexus-nuget:latest
-  stage: publish-libraries
-  when: on_success
-  dependencies:
-    - build-nuget-base-package
-  variables:
-    NEXUS_BASEURL: "https://repo.mhx.at"
-    PACKAGE_NAME: "Omnikeeper.Base"
-  script:
-    - sh /upload-nuget.sh Omnikeeper.Base.nupkg
-  only: 
-    - tags
 
 
 build-backend:
@@ -91,3 +56,37 @@ build-frontend:
 # - "docker build --cache-from $CI_REGISTRY/landscape/omnikeeper/frontend:latest -t $CI_REGISTRY/landscape/omnikeeper/frontend:latest ."
     - "docker build -t $CI_REGISTRY/landscape/omnikeeper/frontend:$VERSION -t $CI_REGISTRY/landscape/omnikeeper/frontend:latest --build-arg version=$VERSION ."
     - "docker push $CI_REGISTRY/landscape/omnikeeper/frontend"
+    
+
+build-nuget-base-package:
+  image: mcr.microsoft.com/dotnet/core/sdk:3.1-buster
+  stage: build
+  when: on_success
+  tags:
+    - dockerbuild
+  services:
+    - docker:19.03.1-dind
+  only: 
+    - tags
+  script:
+    - "VERSION=$CI_COMMIT_TAG"
+    - echo "Building nuget package for omnikeeper base version $VERSION"
+    - "dotnet pack backend/Omnikeeper.Base/Omnikeeper.Base.csproj /p:Version=${VERSION} -c Release"
+    - "mv backend/Omnikeeper.Base/bin/Release/Omnikeeper.Base.${VERSION}.nupkg Omnikeeper.Base.nupkg"
+  artifacts:
+    paths:
+      - Omnikeeper.Base.nupkg
+    expire_in: 2 days
+
+publish-nuget-base-package:
+  image: docker-registry.mhx.at/infra-docker/container-images/push-to-nexus-nuget:latest
+  stage: publish
+  when: on_success
+  needs: ["build-nuget-base-package"]
+  variables:
+    NEXUS_BASEURL: "https://repo.mhx.at"
+    PACKAGE_NAME: "Omnikeeper.Base"
+  script:
+    - sh /upload-nuget.sh Omnikeeper.Base.nupkg
+  only: 
+    - tags
