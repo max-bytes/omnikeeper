@@ -39,6 +39,8 @@
     <None Remove="Scripts\00031-binary-attribute-values.psql" />
     <None Remove="Scripts\00032-attributevaluetype-image.psql" />
     <None Remove="Scripts\00033-add-speakingName-description-columns.psql" />
+    <None Remove="Scripts\00034-migrate-config-to-config-schema" />
+    <None Remove="Scripts\00034-migrate-config-to-config-schema.psql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -75,6 +77,7 @@
     <EmbeddedResource Include="Scripts\00010-computerlayerbrain-rework.psql" />
     <EmbeddedResource Include="Scripts\00028-create-table-gridviewconfig.psql" />
     <EmbeddedResource Include="Scripts\00033-add-speakingName-description-columns.psql" />
+    <EmbeddedResource Include="Scripts\00034-migrate-config-to-config-schema.psql" />
   </ItemGroup>
 
   <ItemGroup>

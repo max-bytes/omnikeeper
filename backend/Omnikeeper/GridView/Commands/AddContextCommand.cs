@@ -52,17 +52,24 @@ namespace Omnikeeper.GridView.Commands
                 }
                 var trans = modelContextBuilder.BuildDeferred();
 
-                var isSuccess = await gridViewConfigModel.AddContext(
-                    request.Context.Name, 
-                    request.Context.SpeakingName, 
-                    request.Context.Description,
-                    request.Context.Configuration,
-                    trans);
-
-                if (isSuccess)
+                try
                 {
-                    trans.Commit();
-                    return null;
+                    var isSuccess = await gridViewConfigModel.AddContext(
+                                            request.Context.Name,
+                                            request.Context.SpeakingName,
+                                            request.Context.Description,
+                                            request.Context.Configuration,
+                                            trans);
+
+                    if (isSuccess)
+                    {
+                        trans.Commit();
+                        return null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return ex;
                 }
 
                 return new Exception($"An error ocurred trying to add {request.Context.Name} context!");
