@@ -11,9 +11,9 @@ namespace Omnikeeper.Utils
 {
     public class LogLine
     {
-        public string Category { get; set; }
+        public string? Category { get; set; }
         public LogLevel LogLevel { get; set; }
-        public string Message { get; set; }
+        public string? Message { get; set; }
     }
 
     public class ReactiveLogReceiver
