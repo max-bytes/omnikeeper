@@ -48,7 +48,7 @@ build-frontend:
     - "docker push $CI_REGISTRY/landscape/omnikeeper/frontend"
     
 
-build-nuget-base-package:
+build-nuget-package-base:
   image: mcr.microsoft.com/dotnet/core/sdk:3.1-buster
   stage: build
   when: on_success
@@ -67,16 +67,47 @@ build-nuget-base-package:
     paths:
       - Omnikeeper.Base.nupkg
     expire_in: 2 days
-
-publish-nuget-base-package:
+publish-nuget-package-base:
   image: docker-registry.mhx.at/infra-docker/container-images/push-to-nexus-nuget:latest
   stage: publish
   when: on_success
-  needs: ["build-nuget-base-package"]
+  needs: ["build-nuget-package-base"]
   variables:
     NEXUS_BASEURL: "https://repo.mhx.at"
     PACKAGE_NAME: "Omnikeeper.Base"
   script:
     - sh /upload-nuget.sh Omnikeeper.Base.nupkg
+  only: 
+    - tags
+
+build-nuget-package-okplugin-active-directory-xml-ingest:
+  image: mcr.microsoft.com/dotnet/core/sdk:3.1-buster
+  stage: build
+  when: on_success
+  tags:
+    - dockerbuild
+  services:
+    - docker:19.03.1-dind
+  only: 
+    - tags
+  script:
+    - "VERSION=$CI_COMMIT_TAG"
+    - echo "Building nuget package for omnikeeper plugin ActiveDirectoryXMLIngest $VERSION"
+    - "dotnet pack backend/OKPluginActiveDirectoryXMLIngest/OKPluginActiveDirectoryXMLIngest.csproj /p:Version=${VERSION} -c Release"
+    - "mv backend/OKPluginActiveDirectoryXMLIngest/bin/Release/OKPluginActiveDirectoryXMLIngest.${VERSION}.nupkg OKPluginActiveDirectoryXMLIngest.nupkg"
+  artifacts:
+    paths:
+      - OKPluginActiveDirectoryXMLIngest.nupkg
+    expire_in: 2 days
+publish-nuget-package-okplugin-active-directory-xml-ingest:
+  image: docker-registry.mhx.at/infra-docker/container-images/push-to-nexus-nuget:latest
+  stage: publish
+  when: on_success
+  needs: ["build-nuget-package-okplugin-active-directory-xml-ingest"]
+  variables:
+    NEXUS_BASEURL: "https://repo.mhx.at"
+    PACKAGE_NAME: "OKPluginActiveDirectoryXMLIngest"
+  script:
+    - sh /upload-nuget.sh OKPluginActiveDirectoryXMLIngest.nupkg
   only: 
     - tags
