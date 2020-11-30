@@ -24,6 +24,8 @@
 
   <PropertyGroup>
     <Nullable>enable</Nullable>
+    <Copyright>MHx Innovations</Copyright>
+    <Description>Base package for Omnikeeper, required for building Omnikeeper plugins</Description>
   </PropertyGroup>
   
 </Project>
