@@ -66,19 +66,26 @@ namespace Omnikeeper.Startup
 
             services.AddSignalR();
 
-            services.AddControllers().AddNewtonsoftJson(options =>
-            {
-                // enums to string conversion
-                options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-            });
-
+            var pluginFolder = Path.Combine(Directory.GetCurrentDirectory(), "OKPlugins");
             ServiceRegistration.RegisterLogging(services);
             ServiceRegistration.RegisterDB(services, Configuration);
             ServiceRegistration.RegisterOIABase(services);
-            ServiceRegistration.RegisterOKPlugins(services);
             ServiceRegistration.RegisterModels(services, true, true);
             ServiceRegistration.RegisterServices(services);
             ServiceRegistration.RegisterGraphQL(services);
+            var assemblies = ServiceRegistration.RegisterOKPlugins(services, pluginFolder);
+
+            var mvcBuilder = services.AddControllers()
+                .AddNewtonsoftJson(options =>
+                {
+                    // enums to string conversion
+                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                });
+            // load controllers from plugins
+            foreach (var assembly in assemblies)
+            {
+                mvcBuilder.AddApplicationPart(assembly);
+            }
 
             services.Configure<IISServerOptions>(options =>
             {
