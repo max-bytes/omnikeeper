@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-balham.css";
-import { Layout, Alert } from "antd";
+import { Layout } from "antd";
 import ContextButtonToolbar from "./ContextButtonToolbar";
 import "./Context.css";
 import GridViewDataParseModel from "./GridViewDataParseModel";
@@ -15,6 +15,7 @@ import _ from "lodash";
 //     false // logging off
 // );
 import { useParams, withRouter } from "react-router-dom";
+import FeedbackMsg from "./FeedbackMsg";
 
 const { Header, Content } = Layout;
 
@@ -34,7 +35,7 @@ export function Context(props) {
     const defaultColDef = initDefaultColDef(); // Init defaultColDef
 
     const [swaggerMsg, setSwaggerMsg] = useState("");
-    const [swaggerError, setSwaggerError] = useState(false);
+    const [swaggerErrorJson, setSwaggerErrorJson] = useState(false);
 
     // status objects
     const rowStatus = {
@@ -66,7 +67,7 @@ export function Context(props) {
                     padding: "unset",
                 }}
             >
-                {swaggerMsg && <Alert message={swaggerMsg} type={swaggerError ? "error": "success"} showIcon banner/>}
+                {swaggerMsg && <FeedbackMsg alertProps={{message: swaggerMsg, type: swaggerErrorJson ? "error": "success", showIcon: true, banner: true}} swaggerErrorJson={swaggerErrorJson} />}
                 <ContextButtonToolbar
                     setCellToNotSet={setCellToNotSet}
                     setCellToEmpty={setCellToEmpty}
@@ -349,32 +350,34 @@ export function Context(props) {
             const changes = gridViewDataParseModel.createChanges(rowDataDiffs); // Create changes from rowData (delta)
 
             try {
-                // actually do the changes
-                const changeResults = await swaggerJson.apis.GridView.ChangeData(
-                        {
-                            version: apiVersion,
-                            context: contextName,
-                        },
-                        {
-                            requestBody: changes,
-                        }
-                    )
-                    .then((result) => result.body);
+                if (_.size(changes.sparseRows)) {
+                    // actually do the changes
+                    const changeResults = await swaggerJson.apis.GridView.ChangeData(
+                            {
+                                version: apiVersion,
+                                context: contextName,
+                            },
+                            {
+                                requestBody: changes,
+                            }
+                        )
+                        .then((result) => result.body);
 
-                // Create rowData from changeResults
-                const rowDataChangeResults = gridViewDataParseModel.createRowData(
-                    changeResults
-                );
+                    // Create rowData from changeResults
+                    const rowDataChangeResults = gridViewDataParseModel.createRowData(
+                        changeResults
+                    );
 
-                // update rows
-                _.forEach(rowDataChangeResults, function (value) {
-                    gridApi.applyTransaction({ update: [value] }); // delete from grid
-                });
+                    // update rows
+                    _.forEach(rowDataChangeResults, function (value) {
+                        gridApi.applyTransaction({ update: [value] }); // delete from grid
+                    });
 
-                setSwaggerError(false);
-                setSwaggerMsg("Saved.");
-            } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
-                setSwaggerError(true);
+                    setSwaggerErrorJson(false);
+                    setSwaggerMsg("Saved.");
+                }
+            } catch(e) {
+                setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
                 setSwaggerMsg(e.toString());
             }
         }
@@ -420,8 +423,8 @@ export function Context(props) {
                 setTempId(0); // Reset tempId
 
                 // INFO: don't show message on basic load
-            } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
-                setSwaggerError(true);
+            } catch(e) {
+                setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
                 setSwaggerMsg(e.toString());
             }
         }

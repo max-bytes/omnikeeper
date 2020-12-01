@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Form, Button, Alert } from "antd";
+import { Form, Button } from "antd";
 import { useParams, withRouter } from "react-router-dom";
 import AceEditor from "react-ace";
+import FeedbackMsg from "./FeedbackMsg";
 
 function AddNewContext(props) {
     const swaggerJson = props.swaggerJson;
@@ -11,7 +12,7 @@ function AddNewContext(props) {
 
     const [jsonHasErrors, setJsonHasErrors] = useState(false);
     const [swaggerMsg, setSwaggerMsg] = useState("");
-    const [swaggerError, setSwaggerError] = useState(false);
+    const [swaggerErrorJson, setSwaggerErrorJson] = useState(false);
     const [loading, setLoading] = useState(true);
     const [context, setContext] = useState("Loading...");
     
@@ -47,8 +48,8 @@ function AddNewContext(props) {
                 setContext(JSON.stringify(initialNewContext, null, 2)); // set context
             }
             // INFO: don't show message on basic load
-        } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
-            setSwaggerError(true);
+        } catch(e) {
+            setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
             setSwaggerMsg(e.toString());
         }
         setLoading(false);
@@ -82,18 +83,18 @@ function AddNewContext(props) {
                                     }
                                 ).then((result) => result.body);
 
-                            setSwaggerError(false);
+                            setSwaggerErrorJson(false);
                             if(editMode) setSwaggerMsg("'" + contextName + "' has been changed.");
                             else setSwaggerMsg("'" + addContext.name + "' has been created.");
                         }
-                    } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
-                        setSwaggerError(true);
+                    } catch(e) {
+                        setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
                         setSwaggerMsg(e.toString());
                     }
                     setLoading(false)
                 }
             }}>
-                {swaggerMsg && <Alert message={swaggerMsg} type={swaggerError ? "error": "success"} showIcon banner />}
+                {swaggerMsg && <FeedbackMsg alertProps={{message: swaggerMsg, type: swaggerErrorJson ? "error": "success", showIcon: true, banner: true}} swaggerErrorJson={swaggerErrorJson} />}
                 <h2>{editMode ? "Edit" : "Add"} Context</h2>
                 {editMode && <h4>{contextName}</h4>}
                 <AceEditor

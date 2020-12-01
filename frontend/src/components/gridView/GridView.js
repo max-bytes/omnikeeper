@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Menu, Alert } from "antd";
+import { Menu } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
 import {PrivateRoute} from './../PrivateRoute'
@@ -9,14 +9,15 @@ import AddNewContext from "./AddNewContext";
 import GridViewExplorer from "./GridViewExplorer";
 import Context from "./Context";
 import SwaggerClient from "swagger-client";
+import FeedbackMsg from "./FeedbackMsg";
 
 function GridView(props) {
 
-    const swaggerDefUrl = `${env('BACKEND_URL')}/../swagger/v1/swagger.json`; // TODO: HACK: BACKEND_URL contains /graphql suffix, remove!
+    const swaggerDefUrl = `${env('BACKEND_URL')}/../swagger/v1/swagger.json`; // HACK: BACKEND_URL contains /graphql suffix, remove!
     const apiVersion = 1;
 
     const [swaggerMsg, setSwaggerMsg] = useState("");
-    const [swaggerError, setSwaggerError] = useState(false);
+    const [swaggerErrorJson, setSwaggerErrorJson] = useState(false);
     const [swaggerJson, setSwaggerJson] = useState(null);
 
     // get swagger JSON
@@ -25,8 +26,8 @@ function GridView(props) {
             const swaggerJson = await new SwaggerClient(swaggerDefUrl);
             setSwaggerJson(swaggerJson);
         } catch(e) {
-            setSwaggerError(true);
-            setSwaggerMsg(e.statusCode + ": " + e.response.statusText + " " + e.response.url);
+            setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
+            setSwaggerMsg(e.toString());//e.statusCode + ": " + e.response.statusText + " " + e.response.url);
         }
     }, [swaggerDefUrl])
 
@@ -43,7 +44,7 @@ function GridView(props) {
                         <Menu.Item key="searchContext" ><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Search Context</Link></Menu.Item>
                     </Menu>
                 </Route>
-                { !swaggerError && swaggerJson ? (
+                { !swaggerErrorJson && swaggerJson ? (
                     <Switch>
                         <PrivateRoute path="/explorer/:contextName">
                             <Context swaggerJson={swaggerJson} apiVersion={apiVersion} />
@@ -63,7 +64,7 @@ function GridView(props) {
                         </PrivateRoute>
                     </Switch>) : 
                     <div style={{ height: "100%" }}>
-                        {swaggerMsg && <Alert message={swaggerMsg} type={swaggerError ? "error": "success"} showIcon banner/>}
+                        {swaggerMsg && <FeedbackMsg alertProps={{message: swaggerMsg, type: swaggerErrorJson ? "error": "success", showIcon: true, banner: true}} swaggerErrorJson={swaggerErrorJson} />}
                     </div>
                 }
             </div>

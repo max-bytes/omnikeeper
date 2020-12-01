@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Input, Button, Popconfirm, Alert } from "antd";
+import { Input, Button, Popconfirm } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faSync } from "@fortawesome/free-solid-svg-icons";
 import { withRouter, Link } from "react-router-dom";
 import _ from "lodash";
+import FeedbackMsg from "./FeedbackMsg";
 
 function GridViewExplorer(props) {
     const swaggerJson = props.swaggerJson;
@@ -14,7 +15,7 @@ function GridViewExplorer(props) {
     const [searchString, setSearchString] = useState("");
 
     const [swaggerMsg, setSwaggerMsg] = useState("");
-    const [swaggerError, setSwaggerError] = useState(false);
+    const [swaggerErrorJson, setSwaggerErrorJson] = useState(false);
   
     // get contexts
     const refresh = useCallback(async () => {
@@ -27,8 +28,8 @@ function GridViewExplorer(props) {
                 setContext(context); // set context
 
                 // INFO: don't show message on basic load
-            } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
-                setSwaggerError(true);
+            } catch(e) {
+                setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
                 setSwaggerMsg(e.toString());
             }
             setLoading(false);
@@ -42,11 +43,11 @@ function GridViewExplorer(props) {
     return (
         <>
             <div style={{display: 'flex', justifyContent: 'center', marginTop: '50px', width: "205px", margin: "50px auto 0"}}>
-                <Input suffix={<FontAwesomeIcon icon={faSearch} color="grey" />}  placeholder='Search...'  onChange={(e) => setSearchString(e.target.value)} />
+                <Input suffix={<FontAwesomeIcon icon={faSearch} color="grey" />} placeholder='Search...' onChange={(e) => setSearchString(e.target.value)} />
                 {refreshButton}
             </div>
             <div style={{flexGrow: 1, overflowY: 'auto', margin: '20px auto', minWidth: '50%'}}>
-                {swaggerMsg && <Alert message={swaggerMsg} type={swaggerError ? "error": "success"} showIcon banner/>}
+                {swaggerMsg && <FeedbackMsg alertProps={{message: swaggerMsg, type: swaggerErrorJson ? "error": "success", showIcon: true, banner: true}} swaggerErrorJson={swaggerErrorJson} />}
                 {(context && context.contexts && !loading) ?
                     _.filter(context.contexts, c => 
                         _.lowerCase(c.speakingName.toString()).includes(_.lowerCase(searchString)) || 
@@ -75,11 +76,11 @@ function GridViewExplorer(props) {
                                                             )
                                                             .then((result) => result.body);
 
-                                                        setSwaggerError(false);
+                                                        setSwaggerErrorJson(false);
                                                         setSwaggerMsg("'" + result.name + "' has been removed.");
                                                         refresh(); // reload
-                                                    } catch(e) { // TODO: find a way to get HTTP-Error-Code and -Msg and give better feedback!
-                                                        setSwaggerError(true);
+                                                    } catch(e) {
+                                                        setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
                                                         setSwaggerMsg(e.toString());
                                                     }
                                                 }
