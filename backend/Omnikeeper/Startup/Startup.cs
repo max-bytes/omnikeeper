@@ -303,7 +303,7 @@ namespace Omnikeeper.Startup
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint($"{Configuration["BaseURL"]}/swagger/v1/swagger.json", "Landscape omnikeeper REST API V1");
-                c.OAuthClientId("landscape-registry-api");
+                c.OAuthClientId("landscape-omnikeeper-api");
                 c.OAuthClientSecret(Configuration.GetSection("SwaggerUI")["OAuthClientSecret"]);
             });
 

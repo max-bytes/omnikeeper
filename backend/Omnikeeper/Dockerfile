@@ -12,7 +12,10 @@ COPY ["Omnikeeper/Omnikeeper.csproj", "Omnikeeper/"]
 COPY ["Omnikeeper.Base/Omnikeeper.Base.csproj", "Omnikeeper.Base/"]
 RUN dotnet restore "Omnikeeper/Omnikeeper.csproj" /p:Version="${version}"
 COPY . .
-RUN dotnet nuget remove source "MHX nuget Repository"
+# HACK: we need to explicitly remove this repo because otherwise the build does not succeed. Nuget is too stupid to ignore this repo and tries to load 
+# all kinds of dependencies from this repo first. This leads to an auth error because we are not authenticated during building the core. But nuget then 
+# bails completely instead of trying the regular nuget.org repository where it would find all the dependencies it needs
+RUN dotnet nuget remove source "MHX nuget Repository" 
 WORKDIR "/src/Omnikeeper"
 RUN dotnet build "Omnikeeper.csproj" /p:Version="${version}" -c Release -o /app/build
 
