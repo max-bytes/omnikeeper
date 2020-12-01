@@ -1,6 +1,6 @@
 ﻿using GraphQL;
 using GraphQL.Types;
-using GraphQL.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Model;
@@ -10,6 +10,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Model;
 using Omnikeeper.Service;
+using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -494,11 +495,12 @@ namespace Omnikeeper.GraphQL
                     return claims.Select(kv => $"{kv.type}: {kv.value}");
                 });
 
-            Field<StringGraphType>("version",
+            Field<VersionType>("version",
                 resolve: context =>
                 {
-                    var version = VersionService.GetVersion();
-                    return version;
+                    var loadedPlugins = context.RequestServices.GetServices<ILoadedPlugin>();
+                    var coreVersion = VersionService.GetVersion();
+                    return new VersionDTO(coreVersion, loadedPlugins);
                 });
         }
     }

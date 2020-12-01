@@ -239,7 +239,7 @@ namespace Omnikeeper.Startup
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory,
-            NpgsqlLoggingProvider npgsqlLoggingProvider, ILogger<Startup> logger, DBConnectionBuilder dBConnectionBuilder)
+            NpgsqlLoggingProvider npgsqlLoggingProvider, ILogger<Startup> logger)
         {
             var version = VersionService.GetVersion();
             logger.LogInformation($"Running version: {version}");
