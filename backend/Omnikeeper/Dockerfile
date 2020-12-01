@@ -12,6 +12,7 @@ COPY ["Omnikeeper/Omnikeeper.csproj", "Omnikeeper/"]
 COPY ["Omnikeeper.Base/Omnikeeper.Base.csproj", "Omnikeeper.Base/"]
 RUN dotnet restore "Omnikeeper/Omnikeeper.csproj" /p:Version="${version}"
 COPY . .
+RUN dotnet nuget remove source "MHX nuget Repository"
 WORKDIR "/src/Omnikeeper"
 RUN dotnet build "Omnikeeper.csproj" /p:Version="${version}" -c Release -o /app/build
 
