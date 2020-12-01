@@ -28,13 +28,21 @@ namespace Omnikeeper.GridView.Commands
             {
                 using var trans = modelContextBuilder.BuildDeferred();
 
-                var isSuccess = await gridViewConfigModel.DeleteContext(request.Name, trans);
-
-                if (isSuccess)
+                try
                 {
-                    trans.Commit();
-                    return null;
+                    var isSuccess = await gridViewConfigModel.DeleteContext(request.Name, trans);
+
+                    if (isSuccess)
+                    {
+                        trans.Commit();
+                        return null;
+                    }
                 }
+                catch (Exception ex)
+                {
+                    return ex;
+                }
+
                 return new Exception("An error occured deleting context");
             }
         }

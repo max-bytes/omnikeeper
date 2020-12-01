@@ -56,17 +56,22 @@ namespace Omnikeeper.GridView.Commands
 
                 using var trans = modelContextBuilder.BuildDeferred();
 
-                var isSuccess = await gridViewConfigModel.EditContext(request.Name, request.SpeakingName, request.Description, request.Configuration, trans);
+                try
+                {
+                    var isSuccess = await gridViewConfigModel.EditContext(request.Name, request.SpeakingName, request.Description, request.Configuration, trans);
 
-                if (isSuccess)
-                {
-                    trans.Commit();
-                    return null;
+                    if (isSuccess)
+                    {
+                        trans.Commit();
+                        return null;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    return new Exception($"An error ocurred trying to edit {request.Name} context!");
+                    return ex;
                 }
+
+                return new Exception($"An error ocurred trying to edit {request.Name} context!");
             }
         }
     }
