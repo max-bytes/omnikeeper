@@ -27,6 +27,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Service;
+using Omnikeeper.Utils;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
@@ -63,19 +64,28 @@ namespace Omnikeeper.Startup
 
             services.AddHttpContextAccessor();
 
-            services.AddControllers().AddNewtonsoftJson(options =>
-            {
-                // enums to string conversion
-                options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-            });
+            services.AddSignalR();
 
+            var pluginFolder = Path.Combine(Directory.GetCurrentDirectory(), "OKPlugins");
             ServiceRegistration.RegisterLogging(services);
             ServiceRegistration.RegisterDB(services, Configuration);
             ServiceRegistration.RegisterOIABase(services);
-            ServiceRegistration.RegisterOKPlugins(services);
             ServiceRegistration.RegisterModels(services, true, true);
             ServiceRegistration.RegisterServices(services);
             ServiceRegistration.RegisterGraphQL(services);
+            var assemblies = ServiceRegistration.RegisterOKPlugins(services, pluginFolder);
+
+            var mvcBuilder = services.AddControllers()
+                .AddNewtonsoftJson(options =>
+                {
+                    // enums to string conversion
+                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                });
+            // load controllers from plugins
+            foreach (var assembly in assemblies)
+            {
+                mvcBuilder.AddApplicationPart(assembly);
+            }
 
             services.Configure<IISServerOptions>(options =>
             {
@@ -229,7 +239,7 @@ namespace Omnikeeper.Startup
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory,
-            NpgsqlLoggingProvider npgsqlLoggingProvider, ILogger<Startup> logger, DBConnectionBuilder dBConnectionBuilder)
+            NpgsqlLoggingProvider npgsqlLoggingProvider, ILogger<Startup> logger)
         {
             var version = VersionService.GetVersion();
             logger.LogInformation($"Running version: {version}");
@@ -279,6 +289,7 @@ namespace Omnikeeper.Startup
                 //endpoints.MapODataRoute("odata", "api/v{version:apiVersion}/odata/{context}", edmModel);
                 endpoints.MapODataRoute("odata", "api/odata/{context}", edmModel);
 
+                endpoints.MapHub<SignalRHubLogging>("/api/signalr/logging");
             });
 
             app.UseSwagger(c =>

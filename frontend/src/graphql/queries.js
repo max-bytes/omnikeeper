@@ -174,7 +174,14 @@ export const queries = {
     `,
     Version: gql`
     query version {
-        version
+        version {
+            coreVersion
+            loadedPlugins {
+                name
+                version
+                informationalVersion
+            }
+        }
       }
     `
 };

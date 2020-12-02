@@ -3,6 +3,7 @@ using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NuGet.Frameworks;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
@@ -11,11 +12,18 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL;
-using Omnikeeper.Ingest.ActiveDirectoryXML;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
 using Omnikeeper.Service;
+using Omnikeeper.Utils;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Versioning;
 
 namespace Omnikeeper.Startup
 {
@@ -50,7 +58,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IInboundAdapterManager, InboundAdapterManager>();
         }
 
-        public static void RegisterOKPlugins(IServiceCollection services)
+        public static IEnumerable<Assembly> RegisterOKPlugins(IServiceCollection services, string? pluginFolder)
         {
             // register compute layer brains
             services.AddSingleton<IComputeLayerBrain, OKPluginCLBMonitoring.CLBNaemonMonitoring>();
@@ -61,8 +69,92 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIAOmnikeeper.OnlineInboundAdapter.Builder>();
             services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIASharepoint.OnlineInboundAdapter.Builder>();
 
-            // register ingest adapters
-            services.AddSingleton<ActiveDirectoryXMLIngestService, ActiveDirectoryXMLIngestService>();
+            // find current framework
+            if (pluginFolder != null)
+            {
+                return LoadPlugins(services, pluginFolder);
+            }
+            return Enumerable.Empty<Assembly>();
+        }
+
+        private static IEnumerable<Assembly> LoadPlugins(IServiceCollection services, string pluginFolder)
+        {
+            var dotNetFramework = Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
+            var frameworkNameProvider = new FrameworkNameProvider(
+                new[] { DefaultFrameworkMappings.Instance },
+                new[] { DefaultPortableFrameworkMappings.Instance });
+            var nuGetFramework = NuGetFramework.ParseFrameworkName(dotNetFramework, frameworkNameProvider);
+
+            // load plugins from directory
+            var extractedFolder = Path.Combine(pluginFolder, "extracted");
+            var di = Directory.CreateDirectory(extractedFolder);
+            foreach (FileInfo file in di.GetFiles())
+            {
+                file.Delete();
+            }
+            foreach (var file in Directory.GetFiles(pluginFolder, "*.nupkg", SearchOption.AllDirectories))
+            {
+                using var fs = File.OpenRead(file);
+                using var archive = new ZipArchive(fs);
+                var zipArchiveEntries = archive.Entries
+                    .Where(e => e.Name.EndsWith(".dll")).ToList();
+
+                var entriesWithTargetFramework = zipArchiveEntries
+                    .Select(e => new
+                    {
+                        TargetFramework = NuGetFramework.Parse(e.FullName.Split('/')[1]),
+                        Entry = e
+                    }).ToList();
+
+                var matchingEntries = entriesWithTargetFramework
+                    .Where(e => e.TargetFramework.Version.Major > 0 &&
+                                e.TargetFramework.Version <= nuGetFramework.Version).ToList();
+
+                var orderedEntries = matchingEntries
+                    .OrderBy(e => e.TargetFramework.GetShortFolderName()).ToList();
+
+                if (orderedEntries.Any())
+                {
+                    var dllEntries = orderedEntries
+                        .GroupBy(e => e.TargetFramework.GetShortFolderName())
+                        .Last()
+                        .Select(e => e.Entry)
+                        .ToArray();
+
+                    var pluginAssemblies = new List<string>();
+                    foreach (var e in dllEntries)
+                    {
+                        var finalDLLFile = Path.Combine(extractedFolder, e.Name);
+                        e.ExtractToFile(finalDLLFile, overwrite: true);
+
+                        Assembly? assembly;
+                        try
+                        {
+                            PluginLoadContext loadContext = new PluginLoadContext(finalDLLFile);
+                            assembly = loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(finalDLLFile)));
+                            services.Scan(scan => scan.FromAssemblies(assembly).AddClasses().AsSelf().WithSingletonLifetime());
+
+                            var assemblyName = assembly.GetName();
+                            if (assemblyName == null)
+                                throw new Exception("Assembly without name encountered");
+                            var informationalVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+                            var lp = new LoadedPlugin(
+                                    assemblyName.Name ?? "Unknown Plugin",
+                                    assemblyName.Version ?? new Version(0, 0, 0),
+                                    informationalVersion ?? "Unknown version");
+                            services.AddSingleton<ILoadedPlugin>(lp);
+
+                            Console.WriteLine($"Loaded OKPlugin {lp.Name}, Version {lp.Version}"); // TODO: better logging
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Could not load assembly at location {finalDLLFile}: {ex.Message}"); // TODO: better error handling
+                            continue;
+                        }
+                        yield return assembly;
+                    }
+                }
+            }
         }
 
         public static void RegisterServices(IServiceCollection services)
@@ -77,6 +169,7 @@ namespace Omnikeeper.Startup
 
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 
+            services.AddSingleton<ReactiveLogReceiver>();
         }
 
         public static void RegisterLogging(IServiceCollection services)

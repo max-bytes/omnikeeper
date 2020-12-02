@@ -15,9 +15,15 @@ export default function ShowVersion() {
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Version</h2>
     <div style={{marginBottom: '10px'}}><Link to="/manage"><Icon name="angle left" fitted /> Back</Link></div>
-    <p>
-      Omnikeeper Core: {data.version ?? 'unknown'}<br />
-      Technical Frontend: {process.env.REACT_APP_VERSION ?? 'unknown'}
-    </p>
+    <div>
+      Omnikeeper Core: {data.version.coreVersion ?? 'unknown'}<br />
+      Technical Frontend: {process.env.REACT_APP_VERSION ?? 'unknown'}<br />
+      Loaded Plugins:
+    </div>
+      <ul>
+      {data.version.loadedPlugins.map(lp => {
+        return <li key={lp.name}>{lp.name}: {lp.informationalVersion}</li>;
+      })}
+      </ul>
   </div>
 }

@@ -24,6 +24,7 @@ import ManageODataAPIContexts from './components/manage/ManageODataAPIContexts';
 import ManageTraits from './components/manage/ManageTraits';
 import ManageCache from './components/manage/ManageCache';
 import ManageCurrentUser from './components/manage/ManageCurrentUser';
+import ShowLogs from './components/manage/ShowLogs';
 import ShowVersion from './components/manage/ShowVersion';
 import { useKeycloak } from '@react-keycloak/web'
 import { useEffect } from 'react';
@@ -126,6 +127,9 @@ function App() {
               </PrivateRoute>
               <PrivateRoute path="/manage/version">
                 <ShowVersion />
+              </PrivateRoute>
+              <PrivateRoute path="/manage/logs">
+                <ShowLogs />
               </PrivateRoute>
               <PrivateRoute path="/manage">
                 <Manage />
