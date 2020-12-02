@@ -2,11 +2,13 @@ import React from 'react';
 import Attribute from 'components/Attribute';
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import _ from 'lodash';
-import { Accordion, Icon } from 'semantic-ui-react'
+import { Collapse } from "antd";
 import { onAppear, onExit } from 'utils/animation';
 import { Row, Col } from "antd";
 import { MissingLabel, CompareLabel, EmptyLabel, stateBasedBackgroundColor } from './DiffUtilComponents';
 import {useAttributeSegmentsToggler} from 'utils/useAttributeSegmentsToggler'
+
+const { Panel } = Collapse;
 
 // TODO: consider merging with ExplorerAttributeList?
 function DiffAttributeList(props) {
@@ -24,6 +26,7 @@ function DiffAttributeList(props) {
     return EmptyLabel();
 
   const attributeAccordionItems = [];
+  const defaultActiveKeys = [];
   _.forEach(nestedAttributes, (na, key) => {
 
     var sortedAttributes = [...na];
@@ -33,18 +36,15 @@ function DiffAttributeList(props) {
 
     const title = (key === "") ? "__base" : key;
 
-    const ret = (<div key={key}>
-      <Accordion.Title active={isSegmentActive(key)} onClick={(_, { index }) => toggleSegment(index)} index={key}>
-        <Icon name='dropdown' /> {title}
-      </Accordion.Title>
-      <Accordion.Content active={isSegmentActive(key)}>
-        <Flipper flipKey={sortedAttributes.map(a => a.layerStackIDs).join(' ')}>
-          {sortedAttributes.map((a, index) => {
-            const state = a.leftRight.compareResult.state;
-            return (<Flipped key={a.name} flipId={a.name} onAppear={onAppear} onExit={onExit}>
-              <div style={{padding: '5px 0px', backgroundColor: ((index % 2 === 1) ? '#00000009' : '#00000000')}}>
-              
-              <div style={{ width: "100%" }}>
+    const ret = (
+        <Panel header={<div key={key} onClick={() => toggleSegment(key)}>{title}</div>} key={key}>
+          <Flipper flipKey={sortedAttributes.map(a => a.layerStackIDs).join(' ')}>
+            {sortedAttributes.map((a, index) => {
+                const state = a.leftRight.compareResult.state;
+                return (<Flipped key={a.name} flipId={a.name} onAppear={onAppear} onExit={onExit}>
+                <div style={{padding: '5px 0px', backgroundColor: ((index % 2 === 1) ? '#00000009' : '#00000000')}}>
+                
+                <div style={{ width: "100%" }}>
                   <Row style={{backgroundColor: stateBasedBackgroundColor(state)}}>
                     <Col span={3}>
                       <div style={{display: 'flex', width: '220px', minHeight: '38px', alignItems: 'center', justifyContent: 'flex-end'}}>
@@ -66,12 +66,14 @@ function DiffAttributeList(props) {
                 </div>
               </div>
             </Flipped>);
-          })}
+         })}
         </Flipper>
-      </Accordion.Content>
-    </div>);
+      </Panel>
+    );
 
     attributeAccordionItems[key] = ret;
+    const panelKey = (key === "") ? "0" : key; // AntDesign doesn't accept an empty string as a key for 'Panel', so it sets it as "0" instead -> Set defaultActiveKeys-entry also to "0", to make the 'defaultActiveKey'-prop work.
+    if (isSegmentActive(key)) defaultActiveKeys.push(panelKey);
   });
 
   // sort associative array
@@ -90,9 +92,9 @@ function DiffAttributeList(props) {
                 Expand/Collapse All
             </Button>
         </div> */}
-        <Accordion styled exclusive={false} fluid>
+        <Collapse defaultActiveKey={defaultActiveKeys} bordered={false} >
             {_.values(attributeAccordionItemsSorted)}
-        </Accordion>
+        </Collapse>
     </>
   );
 }
