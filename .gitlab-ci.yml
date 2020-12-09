@@ -7,7 +7,7 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs"
 
 
-
+# TODO: split into build and publish
 build-backend:
   image: docker:stable
   stage: build
@@ -27,7 +27,7 @@ build-backend:
     - "docker build -t $CI_REGISTRY/landscape/omnikeeper/backend:$VERSION -t $CI_REGISTRY/landscape/omnikeeper/backend:latest -f ./Omnikeeper/Dockerfile --build-arg version=$VERSION ."
     - "docker push $CI_REGISTRY/landscape/omnikeeper/backend"
 
-
+# TODO: split into build and publish
 build-frontend:
   image: docker:stable
   stage: build

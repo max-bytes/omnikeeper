@@ -54,7 +54,7 @@ namespace OKPluginOIAKeycloak
             yield return BuildAttribute("keycloak.id", ciid, new AttributeScalarValueText(user.Id), changesetID);
 
             // roles
-            if (roleMappings != null)
+            if (roleMappings != null && roleMappings.ClientMappings != null)
             {
                 yield return BuildAttribute("keycloak.client_mappings", ciid, AttributeScalarValueJSON.BuildFromString(JsonConvert.SerializeObject(roleMappings.ClientMappings)), changesetID);
             }
