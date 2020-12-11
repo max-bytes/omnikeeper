@@ -2,6 +2,7 @@
 FROM node:13.12.0-alpine AS build
 
 ARG version
+ARG npm_repo_key
 
 WORKDIR /app
 
@@ -15,6 +16,14 @@ RUN npm ci
 # add app
 COPY . ./
 
+# add registry and auth for npm
+RUN echo -e "registry=https://repo.mhx.at/repository/npm-stable/\n_auth=${npm_repo_key}" > .npmrc
+
+#debug
+RUN cat .npmrc
+RUN echo "${npm_repo_key}"
+
+# build
 RUN PUBLIC_URL=__PUBLIC_URL_PLACEHOLDER__ REACT_APP_VERSION="$version" npm run build
 
 # Create deployable image
