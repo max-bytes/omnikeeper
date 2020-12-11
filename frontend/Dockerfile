@@ -12,12 +12,8 @@ ENV PATH /app/node_modules/.bin:$PATH
 COPY package.json ./
 COPY package-lock.json ./
 
-# add registry and auth for npm
+# add url and auth for private mhx npm repository
 RUN echo -e "registry=https://repo.mhx.at/repository/npm-stable/\n_auth=${npm_repo_key}" > .npmrc
-
-#debug
-RUN cat .npmrc
-RUN echo "${npm_repo_key}"
 
 # fetch dependencies
 RUN npm ci

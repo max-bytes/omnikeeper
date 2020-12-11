@@ -102,41 +102,23 @@ publish-nuget-package-base:
     paths:
       - $PLUGIN_NAME.nupkg
     expire_in: 2 days
+.publish-nuget-package-okplugin:
+  image: docker-registry.mhx.at/infra-docker/container-images/push-to-nexus-nuget:latest
+  stage: publish
+  when: on_success
+  variables:
+    NEXUS_BASEURL: "https://repo.mhx.at"
+  script:
+    - sh /upload-nuget.sh $PACKAGE_NAME.nupkg
+  only: 
+    - tags
 
 build-nuget-package-okplugin-active-directory-xml-ingest:
   extends: .build-nuget-package-okplugin
   variables:
     PLUGIN_NAME: "OKPluginActiveDirectoryXMLIngest"
-
-#build-nuget-package-okplugin-active-directory-xml-ingest:
-#  image: mcr.microsoft.com/dotnet/core/sdk:3.1-buster
-#  stage: build
-#  when: on_success
-#  tags:
-#    - dockerbuild
-#  services:
-#    - docker:19.03.1-dind
-#  only: 
-#    - tags
-#  script:
-#    - "VERSION=$CI_COMMIT_TAG"
-#    - echo "Building nuget package for omnikeeper plugin ActiveDirectoryXMLIngest $VERSION"
-#    - dotnet nuget update source "MHX nuget Repository" --username "${NUGET_REPO_USER}" --password "${NUGET_REPO_PASS}" --store-password-in-clear-text --configfile backend/NuGet.Config
-#    - dotnet pack backend/OKPluginActiveDirectoryXMLIngest/OKPluginActiveDirectoryXMLIngest.csproj /p:Version=${VERSION} -c Release
-#    - mv backend/OKPluginActiveDirectoryXMLIngest/bin/Release/OKPluginActiveDirectoryXMLIngest.${VERSION}.nupkg OKPluginActiveDirectoryXMLIngest.nupkg
-#  artifacts:
-#    paths:
-#      - OKPluginActiveDirectoryXMLIngest.nupkg
-#    expire_in: 2 days
 publish-nuget-package-okplugin-active-directory-xml-ingest:
-  image: docker-registry.mhx.at/infra-docker/container-images/push-to-nexus-nuget:latest
-  stage: publish
-  when: on_success
+  extends: ".publish-nuget-package-okplugin"
   needs: ["build-nuget-package-okplugin-active-directory-xml-ingest"]
   variables:
-    NEXUS_BASEURL: "https://repo.mhx.at"
     PACKAGE_NAME: "OKPluginActiveDirectoryXMLIngest"
-  script:
-    - sh /upload-nuget.sh OKPluginActiveDirectoryXMLIngest.nupkg
-  only: 
-    - tags
