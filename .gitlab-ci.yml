@@ -122,3 +122,53 @@ publish-nuget-package-okplugin-active-directory-xml-ingest:
   needs: ["build-nuget-package-okplugin-active-directory-xml-ingest"]
   variables:
     PACKAGE_NAME: "OKPluginActiveDirectoryXMLIngest"
+
+build-nuget-package-okplugin-ansible-inventory-scan-ingest:
+  extends: .build-nuget-package-okplugin
+  variables:
+    PLUGIN_NAME: "OKPluginAnsibleInventoryScanIngest"
+publish-nuget-package-okplugin-ansible-inventory-scan-ingest:
+  extends: ".publish-nuget-package-okplugin"
+  needs: ["build-nuget-package-okplugin-ansible-inventory-scan-ingest"]
+  variables:
+    PACKAGE_NAME: "OKPluginAnsibleInventoryScanIngest"
+
+build-nuget-package-okplugin-clb-monitoring:
+  extends: .build-nuget-package-okplugin
+  variables:
+    PLUGIN_NAME: "OKPluginCLBMonitoring"
+publish-nuget-package-okplugin-clb-monitoring:
+  extends: ".publish-nuget-package-okplugin"
+  needs: ["build-nuget-package-okplugin-clb-monitoring"]
+  variables:
+    PACKAGE_NAME: "OKPluginCLBMonitoring"
+
+build-nuget-package-okplugin-oia-keycloak:
+  extends: .build-nuget-package-okplugin
+  variables:
+    PLUGIN_NAME: "OKPluginOIAKeycloak"
+publish-nuget-package-okplugin-oia-keycloak:
+  extends: ".publish-nuget-package-okplugin"
+  needs: ["build-nuget-package-okplugin-oia-keycloak"]
+  variables:
+    PACKAGE_NAME: "OKPluginOIAKeycloak"
+    
+build-nuget-package-okplugin-oia-omnikeeper:
+  extends: .build-nuget-package-okplugin
+  variables:
+    PLUGIN_NAME: "OKPluginOIAOmnikeeper"
+publish-nuget-package-okplugin-oia-omnikeeper:
+  extends: ".publish-nuget-package-okplugin"
+  needs: ["build-nuget-package-okplugin-oia-omnikeeper"]
+  variables:
+    PACKAGE_NAME: "OKPluginOIAOmnikeeper"
+
+build-nuget-package-okplugin-oia-sharepoint:
+  extends: .build-nuget-package-okplugin
+  variables:
+    PLUGIN_NAME: "OKPluginOIASharepoint"
+publish-nuget-package-okplugin-oia-sharepoint:
+  extends: ".publish-nuget-package-okplugin"
+  needs: ["build-nuget-package-okplugin-oia-sharepoint"]
+  variables:
+    PACKAGE_NAME: "OKPluginOIASharepoint"
