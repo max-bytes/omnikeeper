@@ -11,10 +11,6 @@ ENV PATH /app/node_modules/.bin:$PATH
 
 COPY package.json ./
 COPY package-lock.json ./
-RUN npm ci
-
-# add app
-COPY . ./
 
 # add registry and auth for npm
 RUN echo -e "registry=https://repo.mhx.at/repository/npm-stable/\n_auth=${npm_repo_key}" > .npmrc
@@ -22,6 +18,12 @@ RUN echo -e "registry=https://repo.mhx.at/repository/npm-stable/\n_auth=${npm_re
 #debug
 RUN cat .npmrc
 RUN echo "${npm_repo_key}"
+
+# fetch dependencies
+RUN npm ci
+
+# add app
+COPY . ./
 
 # build
 RUN PUBLIC_URL=__PUBLIC_URL_PLACEHOLDER__ REACT_APP_VERSION="$version" npm run build
