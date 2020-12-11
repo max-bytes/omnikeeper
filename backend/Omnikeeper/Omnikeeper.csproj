@@ -59,11 +59,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DBMigrations\DBMigrations.csproj" />
-    <ProjectReference Include="..\OKPluginAnsibleInventoryScanIngest\OKPluginAnsibleInventoryScanIngest.csproj" />
-    <ProjectReference Include="..\OKPluginCLBMonitoring\OKPluginCLBMonitoring.csproj" />
-    <ProjectReference Include="..\OKPluginOIAKeycloak\OKPluginOIAKeycloak.csproj" />
-    <ProjectReference Include="..\OKPluginOIAOmnikeeper\OKPluginOIAOmnikeeper.csproj" />
-    <ProjectReference Include="..\OKPluginOIASharepoint\OKPluginOIASharepoint.csproj" />
     <ProjectReference Include="..\Omnikeeper.Base\Omnikeeper.Base.csproj" />
   </ItemGroup>
   
@@ -79,6 +74,7 @@
 
   <ItemGroup>
     <Folder Include="Logs\" />
+    <Folder Include="OKPlugins\extracted\" />
   </ItemGroup>
 
 

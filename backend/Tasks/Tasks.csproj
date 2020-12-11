@@ -15,6 +15,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DBMigrations\DBMigrations.csproj" />
+    <ProjectReference Include="..\OKPluginOIAOmnikeeper\OKPluginOIAOmnikeeper.csproj" />
+    <ProjectReference Include="..\OKPluginOIASharepoint\OKPluginOIASharepoint.csproj" />
     <ProjectReference Include="..\Omnikeeper\Omnikeeper.csproj" />
   </ItemGroup>
 

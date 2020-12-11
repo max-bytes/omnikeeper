@@ -59,26 +59,22 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IInboundAdapterManager, InboundAdapterManager>();
         }
 
-        public static IEnumerable<Assembly> RegisterOKPlugins(IServiceCollection services, string? pluginFolder)
-        {
+        //public static IEnumerable<Assembly> RegisterOKPlugins(IServiceCollection services, string pluginFolder)
+        //{
             // register compute layer brains
-            services.AddSingleton<IComputeLayerBrain, OKPluginCLBMonitoring.CLBNaemonMonitoring>();
+            //services.AddSingleton<IComputeLayerBrain, OKPluginCLBMonitoring.CLBNaemonMonitoring>();
 
-            // register online inbound adapters
-            services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.Builder>();
-            services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.BuilderInternal>();
-            services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIAOmnikeeper.OnlineInboundAdapter.Builder>();
-            services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIASharepoint.OnlineInboundAdapter.Builder>();
+            //// register online inbound adapters
+            //services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.Builder>();
+            //services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.BuilderInternal>();
+            //services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIAOmnikeeper.OnlineInboundAdapter.Builder>();
+            //services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIASharepoint.OnlineInboundAdapter.Builder>();
 
             // find current framework
-            if (pluginFolder != null)
-            {
-                return LoadPlugins(services, pluginFolder);
-            }
-            return Enumerable.Empty<Assembly>();
-        }
+        //    return LoadPlugins(services, pluginFolder);
+        //}
 
-        private static IEnumerable<Assembly> LoadPlugins(IServiceCollection services, string pluginFolder)
+        public static IEnumerable<Assembly> RegisterOKPlugins(IServiceCollection services, string pluginFolder)
         {
             var dotNetFramework = Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
             var frameworkNameProvider = new FrameworkNameProvider(
@@ -133,7 +129,12 @@ namespace Omnikeeper.Startup
                         {
                             PluginLoadContext loadContext = new PluginLoadContext(finalDLLFile);
                             assembly = loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(finalDLLFile)));
-                            services.Scan(scan => scan.FromAssemblies(assembly).AddClasses().AsSelf().WithSingletonLifetime());
+                            services.Scan(scan => 
+                                scan.FromAssemblies(assembly)
+                                    .AddClasses()
+                                    .AsSelfWithInterfaces() // see https://andrewlock.net/using-scrutor-to-automatically-register-your-services-with-the-asp-net-core-di-container/#registering-an-implementation-using-forwarded-services
+                                    .WithSingletonLifetime()
+                            );
 
                             var assemblyName = assembly.GetName();
                             if (assemblyName == null)
