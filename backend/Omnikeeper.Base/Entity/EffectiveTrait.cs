@@ -3,22 +3,6 @@ using System.Collections.Immutable;
 
 namespace Omnikeeper.Base.Entity
 {
-    public class EffectiveTraitSet
-    {
-        public MergedCI UnderlyingCI { get; private set; }
-        public IImmutableDictionary<string, EffectiveTrait> EffectiveTraits { get; private set; }
-
-        public static EffectiveTraitSet BuildFromSingleET(MergedCI underlyingCI, EffectiveTrait effectiveTrait)
-        {
-            return new EffectiveTraitSet(underlyingCI, new EffectiveTrait[] { effectiveTrait });
-        }
-
-        public EffectiveTraitSet(MergedCI underlyingCI, IEnumerable<EffectiveTrait> effectiveTraits)
-        {
-            UnderlyingCI = underlyingCI;
-            EffectiveTraits = effectiveTraits.ToImmutableDictionary(et => et.UnderlyingTrait.Name);
-        }
-    }
     public class EffectiveTrait
     {
         public Trait UnderlyingTrait { get; private set; }

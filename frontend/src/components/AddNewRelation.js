@@ -15,6 +15,7 @@ function AddNewRelation(props) {
   const [insertError, setInsertError] = useState(undefined);
   const canBeEdited = props.isEditable && props.visibleAndWritableLayers.length > 0;
   // use useRef to ensure reference is constant and can be properly used in dependency array
+  const visibleLayers = useRef(JSON.stringify(props.visibleLayers)); // because JS only does reference equality, we need to convert the array to a string
   const { current: initialRelation } = useRef({predicateID: null, targetCIID: null, forward: true, layer: null });
   const [isOpen, setOpen] = useState(false);
 
@@ -23,17 +24,17 @@ function AddNewRelation(props) {
   useEffect(() => { setOpen(false); setNewRelation(initialRelation); }, 
     [
       props.ciIdentity, 
-      JSON.stringify(props.visibleLayers), // because JS only does reference equality, we need to convert the array to a string
+      visibleLayers, 
       initialRelation
     ]);
 
   const [getValidTargetCIs, { data: dataCIs, loading: loadingCIs }] = useLazyQuery(queries.ValidRelationTargetCIs, { 
-    variables: {layers: props.visibleLayers}
+    variables: {layers: visibleLayers}
   });
 
 
   const { data: directedPredicates } = useQuery(queries.DirectedPredicateList, {
-    variables: { preferredForCI: props.ciIdentity, layersForEffectiveTraits: props.visibleLayers }
+    variables: { preferredForCI: props.ciIdentity, layersForEffectiveTraits: visibleLayers }
   });
   useEffect(() => {
     setNewRelation(e => ({...e, targetCIID: null }));
@@ -74,7 +75,7 @@ function AddNewRelation(props) {
               : { fromCIID: newRelation.targetCIID, toCIID: props.ciIdentity };
 
             insertRelation({ variables: { ...fromTo, predicateID: newRelation.predicateID, 
-              includeRelated: props.perPredicateLimit, layerID: newRelation.layer.id, layers: props.visibleLayers} })
+              includeRelated: props.perPredicateLimit, layerID: newRelation.layer.id, layers: visibleLayers} })
               .then(d => {
                 setOpen(false);
                 setNewRelation(initialRelation);

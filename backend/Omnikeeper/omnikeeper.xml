@@ -157,5 +157,73 @@
             <param name="trans"></param>
             <returns></returns>
         </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.GetContexts">
+            <summary>
+            Returns a list of contexts for grid view.
+            </summary>
+            <returns>200</returns>
+        </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.GetContext(System.String)">
+            <summary>
+            Returns a single context in full
+            </summary>
+            <returns>200</returns>
+            <response code="400">If the name was not found or any other error occurred</response>  
+        </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.AddContext(Omnikeeper.GridView.Request.AddContextRequest)">
+            <summary>
+            Adds new context
+            </summary>
+            <param name="context"></param>
+            <returns>Created context</returns>
+            <response code="201">Returns the newly created context</response>
+            <response code="400">If creating context fails</response>  
+        </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.EditContext(System.String,Omnikeeper.GridView.Request.EditContextRequest)">
+            <summary>
+            Edits specific context
+            </summary>
+            <param name="name"></param>
+            <param name="editContextRequest"></param>
+            <returns>Status indication request status</returns>
+            <response code="200">If request is successful</response>
+            <response code="400">If editing the context fails</response>  
+        </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.DeleteContext(System.String)">
+            <summary>
+            Deletes specific context
+            </summary>
+            <param name="name"></param>
+            <returns>Status indication request status</returns>
+            <response code="200">If request is successful</response>
+            <response code="400">If editing the context fails</response>  
+        </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.GetSchema(System.String)">
+            <summary>
+            Returns grid view schema for specific context
+            </summary>
+            <param name="context"></param>
+            <returns>Returns schema object for specififc context</returns>
+            <response code="200"></response>
+        </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.GetData(System.String)">
+            <summary>
+            Returns grid view data for specific context
+            </summary>
+            <param name="context"></param>
+            <returns>An object which contains rows for grid view</returns>
+            <response code="200">If request is successful</response>
+            <response code="400">If trait is not found</response>
+        </member>
+        <member name="M:LandscapeRegistry.GridView.GridViewController.ChangeData(System.String,Omnikeeper.GridView.Request.ChangeDataRequest)">
+            <summary>
+            Saves grid view row changes and returns change results
+            </summary>
+            <param name="context"></param>
+            <param name="changes"></param>
+            <returns>A list of changes or an error</returns>
+            <response code="200">If request is successful</response>
+            <response code="404">If saving changes fails</response>  
+        </member>
     </members>
 </doc>

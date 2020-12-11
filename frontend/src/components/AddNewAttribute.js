@@ -43,7 +43,7 @@ function AddNewAttribute(props) {
   let addAttribute = <></>;
   if (isOpen) {
     addAttribute = 
-      <Card style={{ "boxShadow": "0px 0px 5px 0px rgba(0,0,0,0.25)" }}>
+      <Card style={{ boxShadow: "0px 0px 5px 0px rgba(0,0,0,0.25)", marginBottom: "4rem" }}>
         <Form labelCol={{ span: "4" }} onFinish={e => {
             setInsertError(undefined);
             insertCIAttribute({ variables: { layers: visibleLayers.map(l => l.name), ciIdentity: props.ciIdentity, name: newAttribute.name, layerID: selectedLayer.id, value: {
@@ -97,7 +97,7 @@ function AddNewAttribute(props) {
           <Row>
             <Col span={18}>
                 <Form.Item name="value" label={((newAttribute.isArray) ? 'Values' : 'Value')}>
-                    <EditableAttributeValue hideNameLabel setHasErrors={setHasErrors} name={'newAttribute'} autoFocus={valueAutofocussed} values={newAttribute.values} setValues={vs => setNewAttribute({...newAttribute, values: vs})} type={newAttribute.type} isArray={newAttribute.isArray} />
+                    <EditableAttributeValue hideNameLabel setHasErrors={setHasErrors} name={'newAttribute'} autoFocus={valueAutofocussed} values={newAttribute.values} setValues={vs => setNewAttribute({...newAttribute, values: vs})} type={newAttribute.type} isArray={newAttribute.isArray} ciid={props.ciIdentity} />
                 </Form.Item>
             </Col>
           </Row>
