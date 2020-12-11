@@ -39,8 +39,14 @@ function Attribute(props) {
   const layerID = props.attribute.layerStackIDs[props.attribute.layerStackIDs.length - 1];
 
   let valueInput = 
-    <EditableAttributeValue hideNameLabel={hideNameLabel} name={attribute.attribute.name} controlIdSuffix={controlIdSuffix} setHasErrors={setHasErrors} isEditable={isEditable} values={values} setValues={setValues} type={attribute.attribute.value.type} isArray={isArray} />
+    <EditableAttributeValue hideNameLabel={hideNameLabel} name={attribute.attribute.name} controlIdSuffix={controlIdSuffix} setHasErrors={setHasErrors} isEditable={isEditable} values={values} setValues={setValues} type={attribute.attribute.value.type} isArray={isArray} ciid={ciIdentity} />
 ;
+
+  const leftPart = (hideNameLabel) ? '' : <div style={{display: 'flex', minHeight: '38px', alignItems: 'center'}}>
+    {/* TODO: according to ant design label should be part of control */}
+    <div className={"pr-1"} style={{whiteSpace: 'nowrap', flexGrow: 1, textAlign: 'right', paddingRight: '10px'}}>{attribute.attribute.name}</div>
+  </div>;
+
 
   const rightPart = <div style={{minHeight: '38px', display: 'flex', alignItems: 'center'}}>
     <LayerStackIcons layerStack={attribute.layerStack} />
@@ -68,18 +74,18 @@ function Attribute(props) {
         id={`value:${attribute.attribute.name}:${controlIdSuffix}`}
         >
           <Row>
-            <Col
-                span={18}
-                style={{ paddingLeft: isArray ? "43px" : "0px" }} // paddingLeft is a workaround to fix wrong col-spacing // TODO: find a better way
-            >
-                {valueInput}
+            <Col span={4}>
+              {leftPart}
+            </Col>
+            <Col span={14}>
+              {valueInput}
             </Col>
             <Col span={2}>
-                {rightPart}
-                </Col>
+              {rightPart}
+            </Col>
             <Col span={4}>
-                <Button htmlType="submit" type="primary" className={'mx-1'} disabled={attribute.attribute.value.values === values || hasErrors}>Update</Button>
-                {removeButton}
+              <Button htmlType="submit" type="primary" className={'mx-1'} disabled={attribute.attribute.value.values === values || hasErrors}>Update</Button>
+              {removeButton}
             </Col> 
           </Row>
       </Form>
@@ -87,11 +93,14 @@ function Attribute(props) {
   } else {
     input = (<Form id={`value:${attribute.attribute.name}:${controlIdSuffix}`}>
       <Row>
+        <Col span={4}>
+          {leftPart}
+        </Col>
         <Col span={18}>
-            {valueInput}
+          {valueInput}
         </Col>
         <Col span={2}>
-            {rightPart}
+          {rightPart}
         </Col>
       </Row>
     </Form>);

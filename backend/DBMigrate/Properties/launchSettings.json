@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DBMigrate": {
+      "commandName": "Project",
+      "commandLineArgs": "\"Server=localhost;User Id=postgres; Password=postgres;Database=landscape_prototype;Pooling=true\""
+    }
+  }
+}

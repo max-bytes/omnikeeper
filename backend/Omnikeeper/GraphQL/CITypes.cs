@@ -79,8 +79,8 @@ namespace Omnikeeper.GraphQL
 
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                var et = await traitModel.CalculateEffectiveTraitSetForCI(context.Source, userContext.Transaction, userContext.TimeThreshold);
-                return et.EffectiveTraits.Values;
+                var et = await traitModel.CalculateEffectiveTraitsForCI(context.Source, userContext.Transaction, userContext.TimeThreshold);
+                return et;
             });
         }
     }

@@ -12,6 +12,8 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL;
+using Omnikeeper.GridView.Model;
+using Omnikeeper.Ingest.ActiveDirectoryXML;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
@@ -197,6 +199,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IEffectiveTraitModel, EffectiveTraitModel>();
             services.AddSingleton<IBaseConfigurationModel, BaseConfigurationModel>();
             services.AddSingleton<IOIAContextModel, OIAContextModel>();
+            services.AddSingleton<IGridViewContextModel, GridViewContextModel>();
 
             // these aren't real models, but we keep them here because they are closely related to models
             services.AddSingleton<ITraitsProvider, TraitsProvider>();

@@ -415,14 +415,14 @@ namespace Omnikeeper.GraphQL
 
                     try
                     {
-                        var traitSet = TraitsProvider.TraitSetSerializer.Deserialize(traitSetInput);
+                        var traitSet = RecursiveTraitSet.Serializer.Deserialize(traitSetInput);
 
                         var created = await traitModel.SetRecursiveTraitSet(traitSet, transaction);
 
                         transaction.Commit();
                         userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
 
-                        return TraitsProvider.TraitSetSerializer.SerializeToString(created);
+                        return RecursiveTraitSet.Serializer.SerializeToString(created);
                     }
                     catch (Exception e)
                     {

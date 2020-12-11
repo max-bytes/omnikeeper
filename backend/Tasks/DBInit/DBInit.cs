@@ -45,9 +45,10 @@ namespace Tasks.DBInit
 
             var random = new Random(3);
 
-            var user = await DBSetup.SetupUser(userModel, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
+            var mc = modelContextBuilder.BuildImmediate();
+            var user = await DBSetup.SetupUser(userModel, mc, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
 
-            await traitModel.SetRecursiveTraitSet(DefaultTraits.Get(), null);
+            await traitModel.SetRecursiveTraitSet(DefaultTraits.Get(), mc);
 
             var numApplicationCIs = 1;
             var numHostCIs = 1;
@@ -56,7 +57,7 @@ namespace Tasks.DBInit
             int numAttributesPerCITo = 40;
             //var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
             var predicateRunsOn = new Predicate("runs_on", "runs on", "is running", AnchorState.Active, PredicateModel.DefaultConstraits);
-            
+
             //var regularPredicates = new[] {
             //new Predicate("is_part_of", "is part of", "has part", AnchorState.Active),
             //new Predicate("is_attached_to", "is attached to", "has attachment", AnchorState.Active),
@@ -120,7 +121,7 @@ namespace Tasks.DBInit
                 foreach (var ciid in applicationCIIDs)
                 {
                     await ciModel.CreateCI(ciid, trans);
-                    await attributeModel.InsertCINameAttribute($"Application_{index}", ciid, cmdbLayerID, changeset, trans); 
+                    await attributeModel.InsertCINameAttribute($"Application_{index}", ciid, cmdbLayerID, changeset, trans);
                     await attributeModel.InsertAttribute("application_name", new AttributeScalarValueText($"Application_{index}"), ciid, cmdbLayerID, changeset, trans);
                     index++;
                 }
@@ -187,8 +188,8 @@ namespace Tasks.DBInit
             using (var trans = modelContextBuilder.BuildDeferred())
             {
                 var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                ciNaemon01 = await ciModel.CreateCI(null);
-                ciNaemon02 = await ciModel.CreateCI(null);
+                ciNaemon01 = await ciModel.CreateCI(trans);
+                ciNaemon02 = await ciModel.CreateCI(trans);
                 await attributeModel.InsertCINameAttribute("Naemon Instance 01", ciNaemon01, cmdbLayerID, changeset, trans);
                 await attributeModel.InsertCINameAttribute("Naemon Instance 02", ciNaemon02, cmdbLayerID, changeset, trans);
                 await attributeModel.InsertAttribute("naemon.instance_name", new AttributeScalarValueText("Naemon Instance 01"), ciNaemon01, monitoringDefinitionsLayerID, changeset, trans);
@@ -196,9 +197,9 @@ namespace Tasks.DBInit
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("1.2.3.4"), cmdbLayerID, ciNaemon01, changeset.ID, trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("4.5.6.7"), cmdbLayerID, ciNaemon02, changeset.ID, trans);
 
-                ciMonModuleHost = await ciModel.CreateCI(null);
-                ciMonModuleHostWindows = await ciModel.CreateCI(null);
-                ciMonModuleHostLinux = await ciModel.CreateCI(null);
+                ciMonModuleHost = await ciModel.CreateCI(trans);
+                ciMonModuleHostWindows = await ciModel.CreateCI(trans);
+                ciMonModuleHostLinux = await ciModel.CreateCI(trans);
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host", ciMonModuleHost, monitoringDefinitionsLayerID, changeset, trans);
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", ciMonModuleHostWindows, monitoringDefinitionsLayerID, changeset, trans);
                 await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", ciMonModuleHostLinux, monitoringDefinitionsLayerID, changeset, trans);
@@ -247,10 +248,11 @@ namespace Tasks.DBInit
             // create monitoring relations
             if (!windowsHostCIIds.IsEmpty())
             {
-                var windowsHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(windowsHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, null), true, null, TimeThreshold.BuildLatest());
+                using var trans = modelContextBuilder.BuildDeferred();
+                var windowsHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(windowsHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, trans, TimeThreshold.BuildLatest());
                 foreach (var ci in windowsHosts)
                 {
-                    using var trans = modelContextBuilder.BuildDeferred();
+
                     var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
@@ -259,10 +261,10 @@ namespace Tasks.DBInit
             }
             if (!linuxHostCIIds.IsEmpty())
             {
-                var linuxHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(linuxHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, null), true, null, TimeThreshold.BuildLatest());
+                using var trans = modelContextBuilder.BuildDeferred();
+                var linuxHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(linuxHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, trans, TimeThreshold.BuildLatest());
                 foreach (var ci in linuxHosts)
                 {
-                    using var trans = modelContextBuilder.BuildDeferred();
                     var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);

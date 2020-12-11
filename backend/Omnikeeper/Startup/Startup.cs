@@ -35,6 +35,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using MediatR;
+using FluentValidation.AspNetCore;
+using Omnikeeper.Model;
 
 namespace Omnikeeper.Startup
 {
@@ -53,6 +56,7 @@ namespace Omnikeeper.Startup
         {
             services.AddApiVersioning();
 
+            services.AddMediatR(Assembly.GetExecutingAssembly());
             services.AddCors(options => options.AddPolicy("DefaultCORSPolicy", builder =>
                builder.WithOrigins(Configuration.GetSection("CORS")["AllowedHosts"].Split(","))
                .AllowCredentials()
@@ -172,8 +176,14 @@ namespace Omnikeeper.Startup
                         ClientCredentials = new OpenApiOAuthFlow
                         {
                             Scopes = new Dictionary<string, string> { },
+                            TokenUrl = new Uri(Configuration.GetSection("Authentication")["Authority"] + "/protocol/openid-connect/token", UriKind.Absolute),
+                        },
+                        AuthorizationCode = new OpenApiOAuthFlow
+                        {
+                            Scopes = new Dictionary<string, string> { },
                             AuthorizationUrl = new Uri(Configuration.GetSection("Authentication")["Authority"] + "/protocol/openid-connect/auth", UriKind.Absolute),
                             TokenUrl = new Uri(Configuration.GetSection("Authentication")["Authority"] + "/protocol/openid-connect/token", UriKind.Absolute),
+                            RefreshUrl = new Uri(Configuration.GetSection("Authentication")["Authority"] + "/protocol/openid-connect/token", UriKind.Absolute)
                         }
                     }
                 });
@@ -232,7 +242,7 @@ namespace Omnikeeper.Startup
                 {
                     inputFormatter.BaseAddressFactory = (m) => ModifyBaseAddress(m);
                 }
-            });
+            }).AddFluentValidation();
         }
 
         private IWebHostEnvironment CurrentEnvironment { get; set; }

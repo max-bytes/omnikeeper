@@ -10,7 +10,7 @@ import env from "@beam-australia/react-env";
 export default function ShowVersion() {
   const [logs, setLogs] = useState([])
   
-  const [hubConnection, setHubConnection] = useState(null);
+  const [/*hubConnection*/, setHubConnection] = useState(null);
     useEffect(() => {
         const createHubConnection = async () => {
 
