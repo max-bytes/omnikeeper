@@ -17,7 +17,7 @@ namespace Omnikeeper.GridView.Request
     public class ChangeDataCell
     {
         public string Name { get; set; }
-        public string Value { get; set; }
+        public string? Value { get; set; }
         public bool Changeable { get; set; }
     }
 }
