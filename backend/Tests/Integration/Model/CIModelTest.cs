@@ -15,6 +15,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Tests.Integration.Model.Mocks;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Model
 {
@@ -55,9 +56,9 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                var i1 = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, trans);
-                var i2 = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text1"), ciid2, layerID1, changeset, trans);
-                var i3 = await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text1"), ciid1, layerID2, changeset, trans);
+                var i1 = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var i2 = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text1"), ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var i3 = await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text1"), ciid1, layerID2, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
                 trans.Commit();
             }
@@ -103,8 +104,8 @@ namespace Tests.Integration.Model
             var layerset4 = new LayerSet(new long[] { layer2.ID, layer1.ID });
 
             var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset, trans);
-            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid1, layer2.ID, changeset, trans);
+            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid1, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
             var a1 = await attributeModel.GetMergedAttributes(ciid1, layerset1, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a1.Count());
@@ -142,10 +143,10 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset1 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset1, trans);
+                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);
 
                 var changeset2 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid1, layer2.ID, changeset2, trans);
+                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid1, layer2.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans);
 
                 trans.Commit();
             }
@@ -190,13 +191,13 @@ namespace Tests.Integration.Model
             {
 
                 var changeset1 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset1, trans);
+                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);
 
                 var changeset2 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("textL2"), ciid1, layer2.ID, changeset2, trans);
+                await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("textL2"), ciid1, layer2.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans);
 
                 var changeset3 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL3"), ciid2, layer2.ID, changeset3, trans);
+                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL3"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
 
                 trans.Commit();
             }
@@ -222,7 +223,7 @@ namespace Tests.Integration.Model
             {
                 await predicateModel.InsertOrUpdate("p1", "pw1", "pw1", AnchorState.Active, PredicateConstraints.Default, trans);
                 var changeset1 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                await relationModel.InsertRelation(ciid1, ciid2, "p1", layer3.ID, changeset1, trans);
+                await relationModel.InsertRelation(ciid1, ciid2, "p1", layer3.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);
                 trans.Commit();
             }
             (await model.GetCIIDsOfNonEmptyCIs(layerset4, transI, TimeThreshold.BuildLatest())).Should().HaveCount(2).And.BeEquivalentTo(new Guid[] { ciid1, ciid2 });

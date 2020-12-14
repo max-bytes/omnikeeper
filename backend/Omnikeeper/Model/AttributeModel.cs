@@ -1,5 +1,6 @@
 ﻿using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -183,9 +184,9 @@ namespace Omnikeeper.Model
             return await baseModel.FindAttributesByFullName(name, selection, layerID, trans, atTime);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changeset, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
-            return await baseModel.InsertAttribute(name, value, ciid, layerID, changeset, trans);
+            return await baseModel.InsertAttribute(name, value, ciid, layerID, changeset, origin, trans);
         }
 
         public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changeset, IModelContext trans)
@@ -193,14 +194,14 @@ namespace Omnikeeper.Model
             return await baseModel.RemoveAttribute(name, ciid, layerID, changeset, trans);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changeset, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
-            return await baseModel.InsertCINameAttribute(nameValue, ciid, layerID, changeset, trans);
+            return await baseModel.InsertCINameAttribute(nameValue, ciid, layerID, changeset, origin, trans);
         }
 
-        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, IModelContext trans)
+        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
-            return await baseModel.BulkReplaceAttributes(data, changeset, trans);
+            return await baseModel.BulkReplaceAttributes(data, changeset, origin, trans);
         }
     }
 }

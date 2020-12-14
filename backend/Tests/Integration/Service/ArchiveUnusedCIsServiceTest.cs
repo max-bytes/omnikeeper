@@ -13,6 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Tests.Integration.Model;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Service
 {
@@ -43,7 +44,7 @@ namespace Tests.Integration.Service
 
             var ciid2 = await model.CreateCI(trans);
             var changeset1 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("foo", new AttributeScalarValueText("bar"), ciid2, layer.ID, changeset1, trans);
+            await attributeModel.InsertAttribute("foo", new AttributeScalarValueText("bar"), ciid2, layer.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);
 
             Assert.AreEqual(0, await ArchiveUnusedCIsService.ArchiveUnusedCIs(e, ModelContextBuilder, NullLogger.Instance));
 

@@ -1,5 +1,6 @@
 ﻿using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -24,7 +25,7 @@ namespace Omnikeeper.Model
         private async Task<CIAttribute?> _GetAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime, bool fullBinary)
         {
             using var command = new NpgsqlCommand(@"
-            select id, ci_id, type, value_text, value_binary, value_control, state, changeset_id FROM attribute 
+            select id, ci_id, type, value_text, value_binary, value_control, state, changeset_id, origin_type FROM attribute 
             where timestamp <= @time_threshold and ci_id = @ci_id and layer_id = @layer_id and name = @name
             order by timestamp DESC LIMIT 1
             ", trans.DBConnection, trans.DBTransaction);
@@ -47,7 +48,9 @@ namespace Omnikeeper.Model
             var av = Unmarshal(valueText, valueBinary, valueControl, type, fullBinary);
             var state = dr.GetFieldValue<AttributeState>(6);
             var changesetID = dr.GetGuid(7);
-            var att = new CIAttribute(id, name, CIID, av, state, changesetID);
+            var dataOriginType = dr.GetFieldValue<DataOriginType>(8);
+            var origin = new DataOriginV1(dataOriginType);
+            var att = new CIAttribute(id, name, CIID, av, state, changesetID, origin);
             return att;
         }
 
@@ -78,7 +81,7 @@ namespace Omnikeeper.Model
             var ret = new List<CIAttribute>();
 
             using var command = new NpgsqlCommand($@"
-            select distinct on(ci_id, name) id, name, ci_id, type, value_text, value_binary, value_control, state, changeset_id FROM attribute 
+            select distinct on(ci_id, name) id, name, ci_id, type, value_text, value_binary, value_control, state, changeset_id, origin_type FROM attribute 
             where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and layer_id = @layer_id
             order by ci_id, name, timestamp DESC
             ", trans.DBConnection, trans.DBTransaction);
@@ -100,8 +103,10 @@ namespace Omnikeeper.Model
                 var av = Unmarshal(valueText, valueBinary, valueControl, type, false);
                 var state = dr.GetFieldValue<AttributeState>(7);
                 var changesetID = dr.GetGuid(8);
+                var dataOriginType = dr.GetFieldValue<DataOriginType>(9);
+                var origin = new DataOriginV1(dataOriginType);
 
-                var att = new CIAttribute(id, name, CIID, av, state, changesetID);
+                var att = new CIAttribute(id, name, CIID, av, state, changesetID, origin);
                 if (state != AttributeState.Removed)
                 {
                     ret.Add(att);
@@ -115,7 +120,7 @@ namespace Omnikeeper.Model
             var ret = new List<CIAttribute>();
 
             using var command = new NpgsqlCommand($@"
-            select distinct on(ci_id, name, layer_id) id, name, ci_id, type, value_text, value_binary, value_control, state, changeset_id from
+            select distinct on(ci_id, name, layer_id) id, name, ci_id, type, value_text, value_binary, value_control, state, changeset_id, origin_type from
                 attribute where timestamp <= @time_threshold and layer_id = @layer_id and name ~ @regex and ({CIIDSelection2WhereClause(selection)}) order by ci_id, name, layer_id, timestamp DESC
             ", trans.DBConnection, trans.DBTransaction); // TODO: remove order by layer_id, but consider not breaking indices first
 
@@ -137,10 +142,12 @@ namespace Omnikeeper.Model
                 var av = Unmarshal(valueText, valueBinary, valueControl, type, false);
                 var state = dr.GetFieldValue<AttributeState>(7);
                 var changesetID = dr.GetGuid(8);
+                var dataOriginType = dr.GetFieldValue<DataOriginType>(9);
+                var origin = new DataOriginV1(dataOriginType);
 
                 if (state != AttributeState.Removed)
                 {
-                    var att = new CIAttribute(id, name, CIID, av, state, changesetID);
+                    var att = new CIAttribute(id, name, CIID, av, state, changesetID, origin);
                     ret.Add(att);
                 }
             }
@@ -152,7 +159,7 @@ namespace Omnikeeper.Model
             var ret = new List<CIAttribute>();
 
             using (var command = new NpgsqlCommand(@$"
-                select distinct on (ci_id, name) id, ci_id, type, value_text, value_binary, value_control, state, changeset_id from
+                select distinct on (ci_id, name) id, ci_id, type, value_text, value_binary, value_control, state, changeset_id, origin_type from
                     attribute where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id order by ci_id, name, layer_id, timestamp DESC
             ", trans.DBConnection, trans.DBTransaction))// TODO: remove order by layer_id, but consider not breaking indices first
             {
@@ -173,9 +180,11 @@ namespace Omnikeeper.Model
                     var av = Unmarshal(valueText, valueBinary, valueControl, type, false);
                     var state = dr.GetFieldValue<AttributeState>(6);
                     var changesetID = dr.GetGuid(7);
+                    var dataOriginType = dr.GetFieldValue<DataOriginType>(8);
+                    var origin = new DataOriginV1(dataOriginType);
 
                     if (state != AttributeState.Removed)
-                        ret.Add(new CIAttribute(id, name, CIID, av, state, changesetID));
+                        ret.Add(new CIAttribute(id, name, CIID, av, state, changesetID, origin));
                 }
             }
 

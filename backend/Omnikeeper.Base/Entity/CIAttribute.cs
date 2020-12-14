@@ -1,4 +1,5 @@
 
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Entity.AttributeValues;
 using System;
@@ -32,13 +33,14 @@ namespace Omnikeeper.Base.Entity
         public IAttributeValue Value { get; private set; }
         public AttributeState State { get; private set; }
         public Guid ChangesetID { get; private set; }
+        public DataOriginV1 Origin { get; private set; }
 
         // information hash: 
         public string InformationHash => CreateInformationHash(Name, CIID);
         public static string CreateInformationHash(string name, Guid ciid) => name + "_" + ciid;
 
 
-        public CIAttribute(Guid id, string name, Guid CIID, IAttributeValue value, AttributeState state, Guid changesetID)
+        public CIAttribute(Guid id, string name, Guid CIID, IAttributeValue value, AttributeState state, Guid changesetID, DataOriginV1 origin)
         {
             ID = id;
             Name = name;
@@ -46,6 +48,7 @@ namespace Omnikeeper.Base.Entity
             Value = value;
             State = state;
             ChangesetID = changesetID;
+            Origin = origin;
         }
     }
 

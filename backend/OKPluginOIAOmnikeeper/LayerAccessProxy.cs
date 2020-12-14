@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace OKPluginOIAOmnikeeper
 {
@@ -47,7 +48,8 @@ namespace OKPluginOIAOmnikeeper
 
             if (ciid.HasValue)
             {
-                return new CIAttribute(dto.ID, dto.Name, ciid.Value, AttributeValueBuilder.BuildFromDTO(dto.Value), AttributeState.New, staticChangesetID);
+                return new CIAttribute(dto.ID, dto.Name, ciid.Value, AttributeValueBuilder.BuildFromDTO(dto.Value), 
+                    AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.InboundOnline));
             }
             else return null;
         }
@@ -72,7 +74,7 @@ namespace OKPluginOIAOmnikeeper
                     // TODO: can we just create a predicate on the fly?!? ignoring what predicates are actually present in the omnikeeper instance?
                     // apparently we can, because it seems to work, but does that work in all edge-cases?
                     new Predicate(dto.Predicate.ID, dto.Predicate.WordingFrom, dto.Predicate.WordingTo, AnchorState.Active, PredicateConstraints.Default),
-                    RelationState.New, staticChangesetID);
+                    RelationState.New, staticChangesetID, new DataOriginV1(DataOriginType.InboundOnline));
             }
             else return null;
         }

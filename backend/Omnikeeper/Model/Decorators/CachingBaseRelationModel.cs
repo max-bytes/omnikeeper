@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -20,9 +21,9 @@ namespace Omnikeeper.Model.Decorators
             this.model = model;
         }
 
-        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
-            var inserted = await model.BulkReplaceRelations(data, changesetProxy, trans);
+            var inserted = await model.BulkReplaceRelations(data, changesetProxy, origin, trans);
             foreach (var (fromCIID, toCIID, predicateID, _) in inserted)
             {
                 EvictFromCache(fromCIID, toCIID, predicateID, data.LayerID, trans);
@@ -58,9 +59,9 @@ namespace Omnikeeper.Model.Decorators
                 return await model.GetRelations(rl, layerID, trans, atTime);
         }
 
-        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
-            var t = await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
+            var t = await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, origin, trans);
             if (t.changed)
                 EvictFromCache(fromCIID, toCIID, predicateID, layerID, trans);
             return t;

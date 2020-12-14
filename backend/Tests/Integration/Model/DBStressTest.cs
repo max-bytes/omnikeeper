@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Tests.Integration.Model.Mocks;
 using Omnikeeper.Base.Utils.ModelContext;
 using Microsoft.Extensions.Logging.Abstractions;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Model
 {
@@ -80,7 +81,7 @@ namespace Tests.Integration.Model
                 var value = new AttributeScalarValueText("V" + RandomString.Generate(8, random));
                 var layer = layers.GetRandom(random);
                 var ciid = cis.GetRandom(random).Item1;
-                return attributeModel.InsertAttribute(name!, value, ciid, layer!.ID, changeset, trans).GetAwaiter().GetResult();
+                return attributeModel.InsertAttribute(name!, value, ciid, layer!.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans).GetAwaiter().GetResult();
             }).ToList();
 
             trans.Commit();

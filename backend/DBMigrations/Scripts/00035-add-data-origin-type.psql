@@ -1,0 +1,13 @@
+CREATE TYPE dataorigintype AS ENUM (
+    'manual',
+    'inbound_ingest',
+    'inbound_online',
+    'compute_layer'
+);
+ALTER TYPE dataorigintype OWNER TO postgres;
+
+ALTER TABLE public.attribute
+    ADD COLUMN origin_type dataorigintype NOT NULL DEFAULT 'manual'::dataorigintype;
+
+ALTER TABLE public.relation
+    ADD COLUMN origin_type dataorigintype NOT NULL DEFAULT 'manual'::dataorigintype;

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 
@@ -40,6 +41,7 @@ namespace Omnikeeper.Base.Utils
             conn.TypeMapper.MapEnum<AnchorState>("anchorstate");
             conn.TypeMapper.MapEnum<AttributeValueType>("attributevaluetype");
             conn.TypeMapper.MapEnum<UserType>("usertype");
+            conn.TypeMapper.MapEnum<DataOriginType>("dataorigintype");
         }
     }
 }

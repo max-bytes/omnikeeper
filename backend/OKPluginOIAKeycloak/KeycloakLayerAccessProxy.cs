@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace OKPluginOIAKeycloak
 {
@@ -43,7 +44,7 @@ namespace OKPluginOIAKeycloak
             {
                 // create a deterministic, dependent guid from the ciid + attribute name + value
                 var id = GuidUtility.Create(ciid, name + layer.ID.ToString());// TODO: determine if we need to factor in value or not
-                return new CIAttribute(id, name, ciid, value, AttributeState.New, changesetID);
+                return new CIAttribute(id, name, ciid, value, AttributeState.New, changesetID, new DataOriginV1(DataOriginType.InboundOnline));
             }
 
             yield return BuildAttribute(ICIModel.NameAttribute, ciid, new AttributeScalarValueText($"User {CIName}"), changesetID);

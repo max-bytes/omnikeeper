@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
@@ -159,7 +160,7 @@ namespace Omnikeeper.Controllers
                 return Forbid($"User \"{user.Username}\" does not have permission to write to CI {notAllowedCI}");
 
             var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var inserted = await attributeModel.BulkReplaceAttributes(data, changesetProxy, trans);
+            var inserted = await attributeModel.BulkReplaceAttributes(data, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
             trans.Commit();
             return Ok();
         }

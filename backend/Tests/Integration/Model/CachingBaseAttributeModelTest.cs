@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Omnikeeper.Base.Utils.ModelContext;
 using Castle.Core.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Model
 {
@@ -69,22 +70,22 @@ namespace Tests.Integration.Model
                 {
                     return new List<CIAttribute>()
                     {
-                        new CIAttribute(Guid.NewGuid(), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, staticChangesetID),
-                        new CIAttribute(Guid.NewGuid(), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, staticChangesetID)
+                        new CIAttribute(Guid.NewGuid(), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual)),
+                        new CIAttribute(Guid.NewGuid(), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual))
                     };
                 });
                 Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
-                        new CIAttribute(Guid.NewGuid(), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, staticChangesetID)
+                        new CIAttribute(Guid.NewGuid(), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual))
                     };
                 });
                 Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
-                        new CIAttribute(Guid.NewGuid(), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, staticChangesetID)
+                        new CIAttribute(Guid.NewGuid(), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual))
                     };
                 });
             }

@@ -10,6 +10,7 @@ using System;
 using System.Threading.Tasks;
 using Omnikeeper.Base.Utils.ModelContext;
 using Microsoft.Extensions.Logging.Abstractions;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Model
 {
@@ -48,13 +49,13 @@ namespace Tests.Integration.Model
 
             var layer = await layerModel.CreateLayer("test_layer", trans);
 
-            await relationModel.InsertRelation(ciid1, ciid2, predicate.ID, layer.ID, changeset, trans);
+            await relationModel.InsertRelation(ciid1, ciid2, predicate.ID, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
             var ch2 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
 
             await relationModel.RemoveRelation(ciid1, ciid2, predicate.ID, layer.ID, ch2, trans);
 
-            await relationModel.InsertRelation(ciid1, ciid3, predicate.ID, layer.ID, changeset, trans);
+            await relationModel.InsertRelation(ciid1, ciid3, predicate.ID, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
 
             // active relation test
@@ -95,8 +96,8 @@ namespace Tests.Integration.Model
 
             var layer = await layerModel.CreateLayer("test_layer", trans);
 
-            await relationModel.InsertRelation(ciid1, ciid2, predicate.ID, layer.ID, changeset, trans);
-            await relationModel.InsertRelation(ciid1, ciid3, predicate.ID, layer.ID, changeset, trans);
+            await relationModel.InsertRelation(ciid1, ciid2, predicate.ID, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            await relationModel.InsertRelation(ciid1, ciid3, predicate.ID, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
             var ch2 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
 

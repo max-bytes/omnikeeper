@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -72,7 +73,7 @@ namespace Omnikeeper.Base.Service
             var bulkAttributeData = new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeData.SelectMany(ad =>
                 ad.Value.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, ad.Key))
             ));
-            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, trans);
+            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans);
 
 
             var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
@@ -89,7 +90,7 @@ namespace Omnikeeper.Base.Service
                 relationFragments.Add(new BulkRelationDataLayerScope.Fragment(fromCIID, toCIID, cic.PredicateID));
             }
             var bulkRelationData = new BulkRelationDataLayerScope(writeLayer.ID, relationFragments.ToArray());
-            await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, trans);
+            await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans);
 
             trans.Commit();
 

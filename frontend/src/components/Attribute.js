@@ -5,7 +5,7 @@ import { withApollo } from 'react-apollo';
 import { Button, Form, Row, Col } from "antd";
 import { mutations } from '../graphql/mutations'
 import LayerStackIcons from "./LayerStackIcons";
-import ChangesetPopup from "./ChangesetPopup";
+import OriginPopup from "./OriginPopup";
 import EditableAttributeValue from "./EditableAttributeValue";
 
 function Attribute(props) {
@@ -50,7 +50,7 @@ function Attribute(props) {
 
   const rightPart = <div style={{minHeight: '38px', display: 'flex', alignItems: 'center'}}>
     <LayerStackIcons layerStack={attribute.layerStack} />
-    <ChangesetPopup changesetID={attribute.attribute.changesetID} />
+    <OriginPopup changesetID={attribute.attribute.changesetID} originType={attribute.attribute.origin.type} />
   </div>;
 
   if (isEditable) {

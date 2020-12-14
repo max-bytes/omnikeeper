@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -125,7 +126,7 @@ namespace Omnikeeper.Controllers
             }
 
             var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var inserted = await attributeModel.InsertAttribute(attributeName, av, ciid, layerID, changesetProxy, trans);
+            var inserted = await attributeModel.InsertAttribute(attributeName, av, ciid, layerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
             trans.Commit();
             return Ok();
         }

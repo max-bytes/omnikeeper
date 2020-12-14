@@ -10,6 +10,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using Tests.Integration.Model.Mocks;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Model
 {
@@ -60,7 +61,7 @@ namespace Tests.Integration.Model
             var ciid = await ciModel.CreateCI(trans);
             var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
 
-            await attributeModel.InsertAttribute("attribute", new AttributeScalarValueText("foo"), ciid, layerC.ID, changeset, trans);
+            await attributeModel.InsertAttribute("attribute", new AttributeScalarValueText("foo"), ciid, layerC.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
             Assert.AreEqual(true, await layerModel.TryToDelete(layerA.ID, trans));
             Assert.AreEqual(true, await layerModel.TryToDelete(layerB.ID, trans));

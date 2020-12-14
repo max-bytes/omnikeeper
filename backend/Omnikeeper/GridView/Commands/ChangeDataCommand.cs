@@ -2,6 +2,7 @@
 using MediatR;
 using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
@@ -139,6 +140,7 @@ namespace Omnikeeper.GridView.Commands
                                     row.Ciid.Value,
                                     writeLayer,
                                     changesetProxy,
+                                    new DataOriginV1(DataOriginType.Manual),
                                     trans);
                             }
                             catch (Exception e)

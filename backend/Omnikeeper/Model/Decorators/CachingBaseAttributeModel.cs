@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -106,17 +107,17 @@ namespace Omnikeeper.Model.Decorators
                 return await model.GetAttributes(selection, layerID, trans, atTime);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
-            var t = await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, trans);
+            var t = await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, origin, trans);
             if (t.changed)
                 trans.CancelToken(CacheKeyService.AttributesChangeToken(ciid, layerID));
             return t;
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
-            var t = await model.InsertCINameAttribute(nameValue, ciid, layerID, changesetProxy, trans);
+            var t = await model.InsertCINameAttribute(nameValue, ciid, layerID, changesetProxy, origin, trans);
             if (t.changed)
                 trans.CancelToken(CacheKeyService.AttributesChangeToken(ciid, layerID));
             return t;
@@ -130,9 +131,9 @@ namespace Omnikeeper.Model.Decorators
             return t;
         }
 
-        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
-            var inserted = await model.BulkReplaceAttributes(data, changesetProxy, trans);
+            var inserted = await model.BulkReplaceAttributes(data, changesetProxy, origin, trans);
             foreach (var (ciid, _, _, _) in inserted) trans.CancelToken(CacheKeyService.AttributesChangeToken(ciid, data.LayerID)); // NOTE: inserted list is not distinct on ciids, but that's ok
             return inserted;
         }
