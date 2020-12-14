@@ -141,6 +141,8 @@ namespace Omnikeeper.Model
             return ret;
         }
 
+        // TODO: add alternative method that only checks IF the candidate can be resolved, but does not return an EffectiveTrait
+        // this alternative method could be implemented much more performance friendly
         private async Task<EffectiveTrait?> Resolve(EffectiveTraitCandidate et, IModelContext trans, TimeThreshold atTime)
         {
             var ci = et.CI;
