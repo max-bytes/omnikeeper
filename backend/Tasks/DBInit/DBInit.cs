@@ -18,6 +18,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tasks.DBInit
 {
@@ -121,8 +122,8 @@ namespace Tasks.DBInit
                 foreach (var ciid in applicationCIIDs)
                 {
                     await ciModel.CreateCI(ciid, trans);
-                    await attributeModel.InsertCINameAttribute($"Application_{index}", ciid, cmdbLayerID, changeset, trans);
-                    await attributeModel.InsertAttribute("application_name", new AttributeScalarValueText($"Application_{index}"), ciid, cmdbLayerID, changeset, trans);
+                    await attributeModel.InsertCINameAttribute($"Application_{index}", ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    await attributeModel.InsertAttribute("application_name", new AttributeScalarValueText($"Application_{index}"), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                     index++;
                 }
                 index = 0;
@@ -134,9 +135,9 @@ namespace Tasks.DBInit
                         linuxHostCIIds.Add(hostCIID);
                     else
                         windowsHostCIIds.Add(hostCIID);
-                    await attributeModel.InsertCINameAttribute($"{ciType}_{index}", ciid, cmdbLayerID, changeset, trans);
-                    await attributeModel.InsertAttribute("hostname", new AttributeScalarValueText($"hostname_{index}.domain"), ciid, cmdbLayerID, changeset, trans);
-                    await attributeModel.InsertAttribute("system", new AttributeScalarValueText($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), ciid, cmdbLayerID, changeset, trans);
+                    await attributeModel.InsertCINameAttribute($"{ciType}_{index}", ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    await attributeModel.InsertAttribute("hostname", new AttributeScalarValueText($"hostname_{index}.domain"), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    await attributeModel.InsertAttribute("system", new AttributeScalarValueText($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                     index++;
                 }
 
@@ -162,7 +163,7 @@ namespace Tasks.DBInit
                     var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                     var name = regularAttributeNames.GetRandom(random);
                     var value = regularAttributeValues.GetRandom(random);
-                    await attributeModel.InsertAttribute(name, value, ciid, cmdbLayerID, changeset, trans);
+                    await attributeModel.InsertAttribute(name, value, ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                     // TODO: attribute removals
                     trans.Commit();
                 }
@@ -175,7 +176,7 @@ namespace Tasks.DBInit
                 var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                 var ciid1 = applicationCIIDs.GetRandom(random);
                 var ciid2 = hostCIIDs.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
-                await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, cmdbLayerID, changeset, trans);
+                await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 trans.Commit();
             }
 
@@ -190,19 +191,19 @@ namespace Tasks.DBInit
                 var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                 ciNaemon01 = await ciModel.CreateCI(trans);
                 ciNaemon02 = await ciModel.CreateCI(trans);
-                await attributeModel.InsertCINameAttribute("Naemon Instance 01", ciNaemon01, cmdbLayerID, changeset, trans);
-                await attributeModel.InsertCINameAttribute("Naemon Instance 02", ciNaemon02, cmdbLayerID, changeset, trans);
-                await attributeModel.InsertAttribute("naemon.instance_name", new AttributeScalarValueText("Naemon Instance 01"), ciNaemon01, monitoringDefinitionsLayerID, changeset, trans);
-                await attributeModel.InsertAttribute("naemon.instance_name", new AttributeScalarValueText("Naemon Instance 02"), ciNaemon02, monitoringDefinitionsLayerID, changeset, trans);
+                await attributeModel.InsertCINameAttribute("Naemon Instance 01", ciNaemon01, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertCINameAttribute("Naemon Instance 02", ciNaemon02, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertAttribute("naemon.instance_name", new AttributeScalarValueText("Naemon Instance 01"), ciNaemon01, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertAttribute("naemon.instance_name", new AttributeScalarValueText("Naemon Instance 02"), ciNaemon02, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("1.2.3.4"), cmdbLayerID, ciNaemon01, changeset.ID, trans);
                 //await attributeModel.InsertAttribute("ipAddress", AttributeValueTextScalar.Build("4.5.6.7"), cmdbLayerID, ciNaemon02, changeset.ID, trans);
 
                 ciMonModuleHost = await ciModel.CreateCI(trans);
                 ciMonModuleHostWindows = await ciModel.CreateCI(trans);
                 ciMonModuleHostLinux = await ciModel.CreateCI(trans);
-                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host", ciMonModuleHost, monitoringDefinitionsLayerID, changeset, trans);
-                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", ciMonModuleHostWindows, monitoringDefinitionsLayerID, changeset, trans);
-                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", ciMonModuleHostLinux, monitoringDefinitionsLayerID, changeset, trans);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host", ciMonModuleHost, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Windows", ciMonModuleHostWindows, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertCINameAttribute("Monitoring Check Module Host Linux", ciMonModuleHostLinux, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 await attributeModel.InsertAttribute("naemon.config_template",
                     new AttributeScalarValueText(@"[{
   ""type"": ""host"",
@@ -211,7 +212,7 @@ namespace Tasks.DBInit
                     ""executable"": ""check_ping"",
     ""parameters"": ""-H {{ target.attributes.hostname }} -w {{ target.attributes.naemon.variables.host.warning_threshold ?? ""3000.0,80 % "" }} -c 5000.0,100% -p 5""
   }
-            }]", true), ciMonModuleHost, monitoringDefinitionsLayerID, changeset, trans);
+            }]", true), ciMonModuleHost, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 await attributeModel.InsertAttribute("naemon.config_template",
                     new AttributeScalarValueText(
 @"{{~ for related_ci in target.relations.back.runs_on ~}}
@@ -226,7 +227,7 @@ namespace Tasks.DBInit
 }]
 {{~ end ~}}
 "
-                    , true), ciMonModuleHostWindows, monitoringDefinitionsLayerID, changeset, trans);
+                    , true), ciMonModuleHostWindows, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 await attributeModel.InsertAttribute("naemon.config_template",
                     new AttributeScalarValueText(
 @"{{~ for related_ci in target.relations.back.runs_on ~}}
@@ -241,7 +242,7 @@ namespace Tasks.DBInit
 }]
 {{~ end ~}}
             "
-                        , true), ciMonModuleHostLinux, monitoringDefinitionsLayerID, changeset, trans);
+                        , true), ciMonModuleHostLinux, monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 trans.Commit();
             }
 
@@ -254,8 +255,8 @@ namespace Tasks.DBInit
                 {
 
                     var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                    await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
-                    await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
+                    await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                     trans.Commit();
                 }
             }
@@ -266,8 +267,8 @@ namespace Tasks.DBInit
                 foreach (var ci in linuxHosts)
                 {
                     var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                    await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
-                    await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, trans);
+                    await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                     trans.Commit();
                 }
             }

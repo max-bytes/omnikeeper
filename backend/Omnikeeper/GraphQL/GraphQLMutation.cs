@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
@@ -82,7 +83,7 @@ namespace Omnikeeper.GraphQL
                         {
                             var nonGenericAttributeValue = AttributeValueBuilder.BuildFromDTO(attribute.Value);
 
-                            var (a, changed) = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, attribute.LayerID, changeset, transaction);
+                            var (a, changed) = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, attribute.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), transaction);
                             insertedAttributes.Add(a);
                         }
                     }
@@ -103,7 +104,7 @@ namespace Omnikeeper.GraphQL
                     var insertedRelations = new List<Relation>();
                     foreach (var insertRelation in insertRelations)
                     {
-                        var (r, changed) = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.LayerID, changeset, transaction);
+                        var (r, changed) = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), transaction);
                         insertedRelations.Add(r);
                     }
 
@@ -167,7 +168,7 @@ namespace Omnikeeper.GraphQL
                     {
                         Guid ciid = await ciModel.CreateCI(transaction);
 
-                        await attributeModel.InsertCINameAttribute(ci.Name, ciid, ci.LayerIDForName, changeset, transaction);
+                        await attributeModel.InsertCINameAttribute(ci.Name, ciid, ci.LayerIDForName, changeset, new DataOriginV1(DataOriginType.Manual), transaction);
 
                         createdCIIDs.Add(ciid);
                     }

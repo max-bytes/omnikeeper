@@ -15,6 +15,7 @@ using Omnikeeper.Base.Inbound;
 using Moq;
 using FluentAssertions;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Model
 {
@@ -104,17 +105,17 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layer1.ID, changeset, trans);
-                await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid1, layer1.ID, changeset, trans);
-                await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid1, layer1.ID, changeset, trans);
-                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text4"), ciid1, layer1.ID, changeset, trans);
+                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text4"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
-                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layer1.ID, changeset, trans);
-                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text4"), ciid2, layer1.ID, changeset, trans);
+                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text4"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
-                await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid3, layer1.ID, changeset, trans);
-                await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid3, layer1.ID, changeset, trans);
-                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text4"), ciid3, layer1.ID, changeset, trans);
+                await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text4"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
                 trans.Commit();
             }

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -136,7 +137,7 @@ namespace Omnikeeper.Controllers.OData
             test.CopyChangedValues(oldDTO);
             var @newDTO = oldDTO;
             var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, new AttributeScalarValueText(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, trans);
+            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, new AttributeScalarValueText(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
 
             var newMerged = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, readLayerset, trans, TimeThreshold.BuildLatest());
             if (newMerged == null) return BadRequest();
@@ -195,7 +196,7 @@ namespace Omnikeeper.Controllers.OData
             {
                 await ciModel.CreateCI(finalCIID, trans);
                 if (attribute.CIName != null && attribute.CIName != "")
-                    await attributeModel.InsertCINameAttribute(attribute.CIName, finalCIID, writeLayerID, changesetProxy, trans);
+                    await attributeModel.InsertCINameAttribute(attribute.CIName, finalCIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
             }
             else
             { // ci exists already, make sure either name is not set or it matches already present name
@@ -207,7 +208,7 @@ namespace Omnikeeper.Controllers.OData
                 }
             }
 
-            var created = await attributeModel.InsertAttribute(attribute.AttributeName, new AttributeScalarValueText(attribute.Value), finalCIID, writeLayerID, changesetProxy, trans);
+            var created = await attributeModel.InsertAttribute(attribute.AttributeName, new AttributeScalarValueText(attribute.Value), finalCIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
 
             var nameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, finalCIID, readLayerset, trans, timeThreshold);
             var createdMerged = await attributeModel.GetMergedAttribute(attribute.AttributeName, finalCIID, readLayerset, trans, TimeThreshold.BuildLatest());

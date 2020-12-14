@@ -13,6 +13,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static OKPluginOIASharepoint.Config;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace OKPluginOIASharepoint
 {
@@ -41,7 +42,7 @@ namespace OKPluginOIASharepoint
         {
             // create a deterministic, dependent guid from the ciid + attribute name + value
             var id = GuidUtility.Create(ciid, name + layer.ID.ToString());// TODO: determine if we need to factor in value or not
-            return new CIAttribute(id, name, ciid, new AttributeScalarValueText(value), AttributeState.New, StaticChangesetID);
+            return new CIAttribute(id, name, ciid, new AttributeScalarValueText(value), AttributeState.New, StaticChangesetID, new DataOriginV1(DataOriginType.InboundOnline));
         }
 
         public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, TimeThreshold atTime)

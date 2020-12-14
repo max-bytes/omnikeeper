@@ -16,6 +16,7 @@ using Tests.Integration.Model.Mocks;
 using static Omnikeeper.Base.Model.IChangesetModel;
 using static Omnikeeper.Base.Model.IRelationModel;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Model
 {
@@ -45,21 +46,21 @@ namespace Tests.Integration.Model
             var layer1 = await layerModel.CreateLayer("l1", trans2);
             var layerset = new LayerSet(new long[] { layer1.ID });
             var changeset1 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changeset1, trans2);
+            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
             trans2.Commit();
 
             Thread.Sleep(500);
 
             using var trans3 = ModelContextBuilder.BuildDeferred();
             var changeset2 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changeset2, trans3);
+            await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans3);
             trans3.Commit();
 
             var t2 = DateTimeOffset.Now;
 
             using var trans4 = ModelContextBuilder.BuildDeferred();
             var changeset3 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changeset3, trans4);
+            await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans4);
             trans4.Commit();
 
             var t3 = DateTimeOffset.Now;
@@ -74,7 +75,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changeset3, trans);
+                await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
                 trans.Commit();
             }
             var t4 = DateTimeOffset.Now;
@@ -114,7 +115,7 @@ namespace Tests.Integration.Model
             var layer1 = await layerModel.CreateLayer("l1", trans2);
             var layerset = new LayerSet(new long[] { layer1.ID });
             var changeset1 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-            await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset1, trans2);
+            await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
             trans2.Commit();
 
             Thread.Sleep(500);
@@ -122,7 +123,7 @@ namespace Tests.Integration.Model
 
             using var trans3 = ModelContextBuilder.BuildDeferred();
             var changeset2 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-            await relationModel.InsertRelation(ciid2, ciid1, predicate2.ID, layer1.ID, changeset2, trans3);
+            await relationModel.InsertRelation(ciid2, ciid1, predicate2.ID, layer1.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans3);
             trans3.Commit();
 
             Thread.Sleep(500);
@@ -162,7 +163,7 @@ namespace Tests.Integration.Model
             var layer1 = await layerModel.CreateLayer("l1", trans2);
             var layerset1 = new LayerSet(new long[] { layer1.ID });
             var changeset1 = new ChangesetProxy(user, DateTimeOffset.FromUnixTimeSeconds(100), changesetModel);
-            await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset1, trans2);
+            await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
             trans2.Commit();
 
             using var transI = ModelContextBuilder.BuildImmediate();
@@ -171,8 +172,8 @@ namespace Tests.Integration.Model
 
             using var trans3 = ModelContextBuilder.BuildDeferred();
             var changeset2 = new ChangesetProxy(user, DateTimeOffset.FromUnixTimeSeconds(150), changesetModel);
-            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("foo"), ciid1, layer1.ID, changeset2, trans3);
-            await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("bar"), ciid1, layer1.ID, changeset2, trans3);
+            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("foo"), ciid1, layer1.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans3);
+            await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("bar"), ciid1, layer1.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans3);
             trans3.Commit();
 
             Assert.AreEqual(0, await changesetModel.ArchiveUnusedChangesetsOlderThan(DateTimeOffset.FromUnixTimeSeconds(50), transI));
@@ -194,7 +195,7 @@ namespace Tests.Integration.Model
             // overwrite attribute a1
             using var trans5 = ModelContextBuilder.BuildDeferred();
             var changeset4 = new ChangesetProxy(user, DateTimeOffset.FromUnixTimeSeconds(200), changesetModel);
-            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("new foo"), ciid1, layer1.ID, changeset4, trans5);
+            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("new foo"), ciid1, layer1.ID, changeset4, new DataOriginV1(DataOriginType.Manual), trans5);
             trans5.Commit();
 
             // changeset2 is now old "enough", but still cannot be deleted because one of its attributes (a2) is the latest

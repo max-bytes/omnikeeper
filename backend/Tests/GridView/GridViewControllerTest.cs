@@ -20,6 +20,7 @@ using System.Reflection;
 using Omnikeeper.Startup;
 using Omnikeeper.GridView.Response;
 using Omnikeeper.GridView.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Controller
 {
@@ -65,10 +66,10 @@ namespace Tests.Integration.Controller
                 layerID1 = layer1.ID;
                 layerID2 = layer2.ID;
                 var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                var (attribute1, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, trans);
-                var (attribute2, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layerID1, changeset, trans);
-                var (attribute3, _) = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid2, layerID2, changeset, trans);
-                var (attribute4, _) = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid3, layerID1, changeset, trans);
+                var (attribute1, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var (attribute2, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var (attribute3, _) = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid2, layerID2, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var (attribute4, _) = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid3, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
                 trans.Commit();
             }

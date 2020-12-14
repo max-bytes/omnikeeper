@@ -1,3 +1,4 @@
+using Omnikeeper.Base.Entity.DataOrigin;
 using System;
 
 namespace Omnikeeper.Base.Entity
@@ -29,12 +30,13 @@ namespace Omnikeeper.Base.Entity
         public Predicate Predicate { get; private set; }
         public RelationState State { get; private set; }
         public Guid ChangesetID { get; private set; }
+        public DataOriginV1 Origin { get; private set; }
 
         // information hash: 
         public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);
         public static string CreateInformationHash(Guid fromCIID, Guid toCIID, string predicateID) => fromCIID + "_" + toCIID + "_" + predicateID;
 
-        public Relation(Guid id, Guid fromCIID, Guid toCIID, Predicate predicate, RelationState state, Guid changesetID)
+        public Relation(Guid id, Guid fromCIID, Guid toCIID, Predicate predicate, RelationState state, Guid changesetID, DataOriginV1 origin)
         {
             ID = id;
             FromCIID = fromCIID;
@@ -42,6 +44,7 @@ namespace Omnikeeper.Base.Entity
             Predicate = predicate;
             State = state;
             ChangesetID = changesetID;
+            Origin = origin;
         }
     }
 

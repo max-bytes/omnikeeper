@@ -26,6 +26,7 @@ using System.Reflection;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace OKPluginCLBMonitoring
 {
@@ -205,7 +206,8 @@ namespace OKPluginCLBMonitoring
             }
             
             var fragments = renderedTemplatesPerCI.Select(t => new BulkCIAttributeDataLayerScope.Fragment("", t.attributeValue, t.ciid));
-            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.intermediate_config", targetLayer.ID, fragments), changesetProxy, trans);
+            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.intermediate_config", targetLayer.ID, fragments), 
+                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
 
             logger.LogDebug("Updated executed commands per monitored CI");
 
@@ -216,7 +218,7 @@ namespace OKPluginCLBMonitoring
                 foreach (var monitoredCI in monitoredCIs.Values)
                     if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value.et))
                         monitoredByCIIDFragments.Add(new BulkRelationDataPredicateScope.Fragment(monitoredCI.ID, naemonInstanceTS.Key));
-            await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, trans);
+            await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
             logger.LogDebug("Assigned CIs to naemon instances");
 
 
@@ -271,7 +273,8 @@ namespace OKPluginCLBMonitoring
                 //monitoringConfigs.Add(new BulkCIAttributeDataLayerScope.Fragment("", AttributeValueYAMLArray.Build(
                 //    templates.Select(t => t.yamlValue.Value).ToArray(), templates.Select(t => t.yamlValueStr).ToArray()), naemonInstance));
             }
-            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.config", targetLayer.ID, monitoringConfigs), changesetProxy, trans);
+            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.config", targetLayer.ID, monitoringConfigs), 
+                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
 
             logger.LogDebug("End clbMonitoring");
             return true;

@@ -5,7 +5,7 @@ import { useMutation } from '@apollo/react-hooks';
 import LayerStackIcons from "./LayerStackIcons";
 import { Form, Button } from 'antd';
 import { Link  } from 'react-router-dom'
-import ChangesetPopup from "./ChangesetPopup";
+import OriginPopup from "./OriginPopup";
 import { useExplorerLayers } from '../utils/layers';
 
 function RelatedCI(props) {
@@ -45,7 +45,7 @@ function RelatedCI(props) {
     <div style={{margin: "5px", float: props.alignRight ? "right" : "unset" }}>
       <Form layout="inline" style={{flexFlow: 'nowrap', alignItems: 'center'}} id={`value:${props.related.predicateID}`}>
         <LayerStackIcons layerStack={props.related.layerStack}></LayerStackIcons>
-        <ChangesetPopup changesetID={props.related.changesetID} />
+        <OriginPopup changesetID={props.related.changesetID} originType={props.related.origin.type} />
         <Form.Item style={{flexBasis: '600px', justifyContent: 'flex-start', paddingRight: "0.25rem"}}>{written}</Form.Item>
         {removeButton}
       </Form>

@@ -18,6 +18,7 @@ using Tests.Integration.Model.Mocks;
 using Omnikeeper.Base.Inbound;
 using Moq;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Model
 {
@@ -65,12 +66,12 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                await attributeModel.InsertCINameAttribute("ci1", ciid1, layerID1, changeset, trans);
-                await attributeModel.InsertCINameAttribute("ci2", ciid2, layerID1, changeset, trans);
-                await attributeModel.InsertCINameAttribute("ci3", ciid3, layerID2, changeset, trans); // name on different layer
-                var i1 = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, trans);
-                var i2 = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text1"), ciid2, layerID1, changeset, trans);
-                var i3 = await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text1"), ciid1, layerID2, changeset, trans);
+                await attributeModel.InsertCINameAttribute("ci1", ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertCINameAttribute("ci2", ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertCINameAttribute("ci3", ciid3, layerID2, changeset, new DataOriginV1(DataOriginType.Manual), trans); // name on different layer
+                var i1 = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var i2 = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text1"), ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var i3 = await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text1"), ciid1, layerID2, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
                 trans.Commit();
             }

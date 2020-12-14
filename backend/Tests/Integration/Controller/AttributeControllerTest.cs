@@ -10,6 +10,7 @@ using FluentAssertions;
 using Omnikeeper.Base.Entity.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Controller
 {
@@ -53,10 +54,10 @@ namespace Tests.Integration.Controller
                 layerID1 = layer1.ID;
                 layerID2 = layer2.ID;
                 var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                var (attribute1, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, trans);
+                var (attribute1, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 attribute1ID = attribute1.ID;
                 changesetID = attribute1.ChangesetID;
-                var (attribute2, _) = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid2, layerID1, changeset, trans);
+                var (attribute2, _) = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 attribute2ID = attribute2.ID;
                 trans.Commit();
             }
@@ -65,7 +66,7 @@ namespace Tests.Integration.Controller
 
             var expectedAttribute1 = CIAttributeDTO.Build(
                 new MergedCIAttribute(
-                    new CIAttribute(attribute1ID, "a1", ciid1, new AttributeScalarValueText("text1"), AttributeState.New, changesetID),
+                    new CIAttribute(attribute1ID, "a1", ciid1, new AttributeScalarValueText("text1"), AttributeState.New, changesetID, new DataOriginV1(DataOriginType.Manual)),
                     new long[] { layerID1 }
                 ));
             (ma1.Result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedAttribute1);
@@ -75,7 +76,7 @@ namespace Tests.Integration.Controller
 
             var expectedAttribute2 = CIAttributeDTO.Build(
                 new MergedCIAttribute(
-                    new CIAttribute(attribute2ID, "a2", ciid2, new AttributeScalarValueText("text2"), AttributeState.New, changesetID),
+                    new CIAttribute(attribute2ID, "a2", ciid2, new AttributeScalarValueText("text2"), AttributeState.New, changesetID, new DataOriginV1(DataOriginType.Manual)),
                     new long[] { layerID1 }
                 ));
             var r = (ma2.Result as OkObjectResult)!.Value;

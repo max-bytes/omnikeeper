@@ -122,7 +122,7 @@ namespace Omnikeeper.GridView.Model
         public async Task<FullContext> GetFullContextByName(string contextName, IModelContext trans)
         {
             using var command = new NpgsqlCommand($@"
-                    SELECT id, name, speaking_name, description, config
+                    SELECT name, speaking_name, description, config
                     FROM config.gridview
                     WHERE name = @name
                     LIMIT 1
@@ -135,11 +135,10 @@ namespace Omnikeeper.GridView.Model
             if (!dr.Read())
                 throw new Exception($"Could not find context named \"{contextName}\"");
 
-            var id = dr.GetInt32(0);
-            var name = dr.GetString(1);
-            var speakingName = dr.GetString(2);
-            var description = dr.GetString(3);
-            var configJson = dr.GetString(4);
+            var name = dr.GetString(0);
+            var speakingName = dr.GetString(1);
+            var description = dr.GetString(2);
+            var configJson = dr.GetString(3);
             var config = JsonConvert.DeserializeObject<GridViewConfiguration>(configJson);
 
             return new FullContext()
