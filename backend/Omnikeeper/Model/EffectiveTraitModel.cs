@@ -65,13 +65,6 @@ namespace Omnikeeper.Model
             return ts.Select(ts => ts.Value.ci);
         }
 
-        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>?> CalculateEffectiveTraitsForTraitName(string traitName, LayerSet layerSet, IModelContext trans, TimeThreshold atTime, Func<Guid, bool>? ciFilter = null)
-        {
-            var trait = await traitsProvider.GetActiveTrait(traitName, trans, atTime);
-            if (trait == null) return null; // trait not found by name
-            return await CalculateEffectiveTraitsForTrait(trait, layerSet, trans, atTime, ciFilter);
-        }
-
         public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> CalculateEffectiveTraitsForTrait(Trait trait, LayerSet layerSet, IModelContext trans, TimeThreshold atTime, Func<Guid, bool>? ciFilter = null)
         {
             if (layerSet.IsEmpty)

@@ -18,9 +18,6 @@ namespace Omnikeeper.Base.Model
 
         Task<IEnumerable<MergedCI>> GetMergedCIsWithTrait(Trait trait, LayerSet layerSet, IModelContext trans, TimeThreshold atTime, Func<Guid, bool>? ciFilter = null);
 
-        [Obsolete("Use the variant that passes the trait (not the traitName) instead")]
-        Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>?> CalculateEffectiveTraitsForTraitName(string traitName, LayerSet layerSet, IModelContext trans, TimeThreshold atTime, Func<Guid, bool>? ciFilter = null);
         Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> CalculateEffectiveTraitsForTrait(Trait trait, LayerSet layerSet, IModelContext trans, TimeThreshold atTime, Func<Guid, bool>? ciFilter = null);
-
     }
 }

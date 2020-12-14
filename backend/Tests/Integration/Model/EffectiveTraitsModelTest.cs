@@ -61,14 +61,19 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestDependentTraits()
         {
-            var (traitModel, layerset, _) = await BaseSetup(new MockedTraitsProvider());
+            var traitsProvider = new MockedTraitsProvider();
+            var (traitModel, layerset, _) = await BaseSetup(traitsProvider);
 
             var timeThreshold = TimeThreshold.BuildLatest();
             var trans = ModelContextBuilder.BuildImmediate();
 
-            var t1 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_4", layerset, trans, timeThreshold);
+
+            var t4 = await traitsProvider.GetActiveTrait("test_trait_4", trans, timeThreshold);
+            var t5 = await traitsProvider.GetActiveTrait("test_trait_5", trans, timeThreshold);
+
+            var t1 = await traitModel.CalculateEffectiveTraitsForTrait(t4!, layerset, trans, timeThreshold);
             Assert.AreEqual(2, t1.Count());
-            var t2 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_5", layerset, trans, timeThreshold);
+            var t2 = await traitModel.CalculateEffectiveTraitsForTrait(t5!, layerset, trans, timeThreshold);
             Assert.AreEqual(1, t2.Count());
         }
 
@@ -76,9 +81,11 @@ namespace Tests.Integration.Model
         public async Task TestDependentTraitLoop()
         {
             var timeThreshold = TimeThreshold.BuildLatest();
-            var (traitModel, layerset, _) = await BaseSetup(new MockedTraitsProviderWithLoop());
+            var traitsProvider = new MockedTraitsProviderWithLoop();
+            var (traitModel, layerset, _) = await BaseSetup(traitsProvider);
             var trans = ModelContextBuilder.BuildImmediate();
-            var t1 = await traitModel.CalculateEffectiveTraitsForTraitName("test_trait_1", layerset, trans, timeThreshold);
+            var tt1 = await traitsProvider.GetActiveTrait("test_trait_1", trans, timeThreshold);
+            var t1 = await traitModel.CalculateEffectiveTraitsForTrait(tt1!, layerset, trans, timeThreshold);
             Assert.AreEqual(0, t1.Count());
         }
 
