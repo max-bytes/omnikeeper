@@ -41,7 +41,7 @@ namespace OKPluginOIASharepoint
         public CIAttribute BuildAttributeFromValue(string name, string value, Guid ciid)
         {
             // create a deterministic, dependent guid from the ciid + attribute name + value
-            var id = GuidUtility.Create(ciid, name + layer.ID.ToString());// TODO: determine if we need to factor in value or not
+            var id = GuidUtility.Create(ciid, name + layer.ID.ToString() + value); // NOTE: id must change when the value changes
             return new CIAttribute(id, name, ciid, new AttributeScalarValueText(value), AttributeState.New, StaticChangesetID, new DataOriginV1(DataOriginType.InboundOnline));
         }
 

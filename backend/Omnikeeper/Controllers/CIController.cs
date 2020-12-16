@@ -95,25 +95,5 @@ namespace Omnikeeper.Controllers
             var cis = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(CIIDs), layerset, true, trans, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
             return Ok(cis.Select(ci => CIDTO.BuildFromMergedCI(ci)));
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="layerIDs"></param>
-        /// <param name="atTime"></param>
-        /// <returns></returns>
-        [HttpGet("getCIIDsOfNonEmptyCIs")]
-        public async Task<ActionResult<IEnumerable<Guid>>> GetCIIDsOfNonEmptyCIs([FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
-        {
-            var trans = modelContextBuilder.BuildImmediate();
-            var layerset = new LayerSet(layerIDs);
-            var ciids = await ciModel.GetCIIDsOfNonEmptyCIs(layerset, trans, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
-
-            ciids = ciids.Where(ciid => ciBasedAuthorizationService.CanReadCI(ciid));
-
-            return Ok(ciids);
-        }
-
-
     }
 }

@@ -5,8 +5,9 @@ namespace Omnikeeper.Base.Entity.DataOrigin
     {
         Manual, // TODO: distinguish between actual manual and f.e. REST API based
         InboundIngest,
-        InboundOnline,
-        ComputeLayer
+        InboundOnline, // NOTE, TODO: still part of corresponding database-enum, but shouldn't be
+        ComputeLayer,
+        Generator // NOTE: not part of corresponding database-enum
     }
 
     public class DataOriginV1

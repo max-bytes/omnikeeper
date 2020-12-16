@@ -7,16 +7,14 @@ namespace Omnikeeper.Base.Entity.DTO
     public class RelatedCIDTO
     {
         [Required] public Guid FromCIID { get; set; }
-        [Required] public CIDTO ToCI { get; set; }
+        [Required] public Guid ToCIID { get; set; }
         [Required] public string PredicateID { get; set; }
-        [Required] public RelationState State { get; set; }
 
-        public RelatedCIDTO(MergedRelatedCI relatedCI)
+        public RelatedCIDTO(CompactRelatedCI relatedCI)
         {
             FromCIID = relatedCI.FromCIID;
-            ToCI = CIDTO.BuildFromMergedCI(relatedCI.CI);
+            ToCIID = relatedCI.ToCIID;
             PredicateID = relatedCI.PredicateID;
-            State = relatedCI.RelationState;
         }
     }
 

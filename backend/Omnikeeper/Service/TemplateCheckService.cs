@@ -12,7 +12,7 @@ namespace Omnikeeper.Service
             var foundAttribute = ci.MergedAttributes.FirstOrDefault(a => a.Key == at.Name).Value;
             return (foundAttribute, new TemplateErrorsAttribute(at.Name, PerAttributeTemplateChecks(foundAttribute, at)));
         }
-        public static TemplateErrorsRelation CalculateTemplateErrorsRelation(IEnumerable<MergedRelatedCI> relations, RelationTemplate rt)
+        public static TemplateErrorsRelation CalculateTemplateErrorsRelation(IEnumerable<CompactRelatedCI> relations, RelationTemplate rt)
         {
             return new TemplateErrorsRelation(rt.PredicateID, PerRelationTemplateChecks(relations, rt));
         }
@@ -46,7 +46,7 @@ namespace Omnikeeper.Service
             // TODO: other checks
         }
 
-        private static IEnumerable<ITemplateErrorRelation> PerRelationTemplateChecks(IEnumerable<MergedRelatedCI> foundRelations, RelationTemplate rt)
+        private static IEnumerable<ITemplateErrorRelation> PerRelationTemplateChecks(IEnumerable<CompactRelatedCI> foundRelations, RelationTemplate rt)
         {
             if (rt.MaxCardinality.HasValue && foundRelations.Count() > rt.MaxCardinality.Value)
                 yield return new TemplateErrorRelationGeneric($"At most {rt.MaxCardinality.Value} relations with predicate {rt.PredicateID} allowed, found {foundRelations.Count()}!");

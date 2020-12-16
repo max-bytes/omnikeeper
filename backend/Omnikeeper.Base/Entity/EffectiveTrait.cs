@@ -7,11 +7,11 @@ namespace Omnikeeper.Base.Entity
     {
         public Trait UnderlyingTrait { get; private set; }
         public IImmutableDictionary<string, MergedCIAttribute> TraitAttributes { get; private set; }
-        public IImmutableDictionary<string, IEnumerable<MergedRelatedCI>> TraitRelations { get; private set; }
+        public IImmutableDictionary<string, IEnumerable<CompactRelatedCI>> TraitRelations { get; private set; }
 
         public EffectiveTrait(Trait underlyingTrait,
             IDictionary<string, MergedCIAttribute> traitAttributes,
-            IDictionary<string, IEnumerable<MergedRelatedCI>> traitRelations)
+            IDictionary<string, IEnumerable<CompactRelatedCI>> traitRelations)
         {
             UnderlyingTrait = underlyingTrait;
             TraitAttributes = traitAttributes.ToImmutableDictionary();
