@@ -55,7 +55,7 @@ namespace Tests.Templating
                 ciModel.Setup(x => x.GetMergedCI(testCIB.ID, It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), atTime))
                     .ReturnsAsync(() => testCIB);
 
-                var context = ScribanVariableService.CreateCIBasedTemplateContext(testCIA, new LayerSet(), atTime, new Mock<IModelContext>().Object, ciModel.Object, relationModel.Object);
+                var context = ScribanVariableService.CreateComplexCIBasedTemplateContext(testCIA, new LayerSet(), atTime, new Mock<IModelContext>().Object, ciModel.Object, relationModel.Object);
 
                 // scriban cannot deal with JTokens out of the box, TODO
                 //var t = @"name: {{target.name}}

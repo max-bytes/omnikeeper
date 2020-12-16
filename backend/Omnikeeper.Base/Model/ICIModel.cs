@@ -20,8 +20,6 @@ namespace Omnikeeper.Base.Model
         Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime);
         Task<IEnumerable<MergedCI>> GetMergedCIs(ICIIDSelection selection, LayerSet layers, bool includeEmptyCIs, IModelContext trans, TimeThreshold atTime);
         Task<IEnumerable<CompactCI>> GetCompactCIs(ICIIDSelection selection, LayerSet visibleLayers, IModelContext trans, TimeThreshold atTime);
-        // TODO: should return an ISet instead
-        Task<IEnumerable<Guid>> GetCIIDsOfNonEmptyCIs(LayerSet layerset, IModelContext trans, TimeThreshold timeThreshold);
 
         Task<Guid> CreateCI(Guid id, IModelContext trans);
         Task<Guid> CreateCI(IModelContext trans);

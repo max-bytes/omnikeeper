@@ -74,7 +74,7 @@ namespace Omnikeeper.Startup
             ServiceRegistration.RegisterLogging(services);
             ServiceRegistration.RegisterDB(services, Configuration);
             ServiceRegistration.RegisterOIABase(services);
-            ServiceRegistration.RegisterModels(services, true, true);
+            ServiceRegistration.RegisterModels(services, true, true, true);
             ServiceRegistration.RegisterServices(services);
             ServiceRegistration.RegisterGraphQL(services);
             var assemblies = ServiceRegistration.RegisterOKPlugins(services, pluginFolder);

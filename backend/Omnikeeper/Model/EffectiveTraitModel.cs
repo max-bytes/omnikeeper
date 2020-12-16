@@ -154,17 +154,17 @@ namespace Omnikeeper.Model
                 var (foundAttribute, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
                 return (traitAttributeIdentifier, foundAttribute, checks);
             });
-            IEnumerable<(string traitRelationIdentifier, IEnumerable<MergedRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)> requiredEffectiveTraitRelations
-                = new List<(string traitRelationIdentifier, IEnumerable<MergedRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)>();
-            if (trait.RequiredRelations.Count > 0)
+            IEnumerable<(string traitRelationIdentifier, IEnumerable<CompactRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)> requiredEffectiveTraitRelations
+                = new List<(string traitRelationIdentifier, IEnumerable<CompactRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)>();
+            if (trait.RequiredRelations.Count > 0) // TODO: consider removing requiredRelations... they are TOUGH on performance
             {
-                var allMergedRelatedCIs = (await RelationService.GetMergedRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, trans, atTime));
+                var allCompactRelatedCIs = await RelationService.GetCompactRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, null, trans, atTime);
                 requiredEffectiveTraitRelations = trait.RequiredRelations.Select(tr =>
                 {
                     var traitRelationIdentifier = tr.Identifier;
-                    var mergedRelatedCIs = allMergedRelatedCIs[tr.RelationTemplate.PredicateID];
-                    var checks = TemplateCheckService.CalculateTemplateErrorsRelation(mergedRelatedCIs, tr.RelationTemplate);
-                    return (traitRelationIdentifier, mergedRelatedCIs, checks);
+                    var relatedCIs = allCompactRelatedCIs.Where(rci => rci.PredicateID == tr.RelationTemplate.PredicateID);
+                    var checks = TemplateCheckService.CalculateTemplateErrorsRelation(relatedCIs, tr.RelationTemplate);
+                    return (traitRelationIdentifier, relatedCIs, checks);
                 });
             }
 

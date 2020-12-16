@@ -61,7 +61,7 @@ namespace Tests.Integration
             ServiceRegistration.RegisterLogging(services);
             ServiceRegistration.RegisterDB(services, DBSetup.dbName, false, true);
             ServiceRegistration.RegisterOIABase(services);
-            ServiceRegistration.RegisterModels(services, false, false);
+            ServiceRegistration.RegisterModels(services, false, false, false);
             ServiceRegistration.RegisterServices(services);
             ServiceRegistration.RegisterGraphQL(services);
 

@@ -15,8 +15,6 @@ function InnerPopup(props) {
   if (loading) return (<Icon loading name={'sync'} />);
   if (error) return (<Icon name={'exclamation circle'} />);
   if (data) {
-    if (!data.changeset) return (<Icon name={'exclamation circle'} />);
-    const userLabel = <span style={{display: 'flex', flexWrap: 'nowrap', whiteSpace: 'nowrap'}}><UserTypeIcon style={{paddingRight: '3px'}} userType={data.changeset.user.type} /> {data.changeset.user.displayName}</span>;
     const dls = {display: 'flex', flexWrap: 'nowrap', marginBottom: '0px', whiteSpace: 'nowrap'};
     const dts = {width: '120px', textAlign: 'right', paddingRight: '10px' }
     return (<div style={{display: 'flex', flexFlow: 'column'}}>
@@ -26,15 +24,15 @@ function InnerPopup(props) {
       </dl>
       <dl style={dls}>
         <dt style={dts}>User:</dt>
-        <dd>{userLabel}</dd>
+        <dd>{data.changeset ? <span style={{display: 'flex', flexWrap: 'nowrap', whiteSpace: 'nowrap'}}><UserTypeIcon style={{paddingRight: '3px'}} userType={data.changeset.user.type} /> {data.changeset.user.displayName}</span> : 'None'}</dd>
       </dl>
       <dl style={dls}>
         <dt style={dts}>Timestamp:</dt>
-        <dd>{formatTimestamp(data.changeset.timestamp)}</dd>
+        <dd>{data.changeset ? formatTimestamp(data.changeset.timestamp) : 'None'}</dd>
       </dl>
       <dl style={dls}>
         <dt style={dts}>Changeset-ID:</dt>
-        <dd>{data.changeset.id}</dd>
+        <dd>{data.changeset ? data.changeset.id : 'None'}</dd>
       </dl>
       </div>
     );
@@ -54,6 +52,8 @@ function OriginPopup(props) {
           return 'plug';
         case 'COMPUTELAYER':
           return 'cogs';
+        case 'GENERATOR':
+          return 'calculator';
         default:
           return '';
       }

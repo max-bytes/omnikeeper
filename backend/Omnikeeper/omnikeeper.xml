@@ -75,14 +75,6 @@
             <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
             <returns></returns>
         </member>
-        <member name="M:Omnikeeper.Controllers.CIController.GetCIIDsOfNonEmptyCIs(System.Int64[],System.Nullable{System.DateTimeOffset})">
-            <summary>
-            
-            </summary>
-            <param name="layerIDs"></param>
-            <param name="atTime"></param>
-            <returns></returns>
-        </member>
         <member name="M:Omnikeeper.Controllers.LayerController.GetAllLayers">
             <summary>
             list of all layers
