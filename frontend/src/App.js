@@ -6,7 +6,6 @@ import 'semantic-ui-css/semantic.min.css'
 import 'antd/dist/antd.css';
 import Keycloak from 'keycloak-js'
 import { Menu, Icon } from 'semantic-ui-react'
-import { KeycloakProvider } from '@react-keycloak/web'
 import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/AddNewCI'
@@ -27,18 +26,9 @@ import ManageCache from './components/manage/ManageCache';
 import ManageCurrentUser from './components/manage/ManageCurrentUser';
 import ShowLogs from './components/manage/ShowLogs';
 import ShowVersion from './components/manage/ShowVersion';
-import { useKeycloak } from '@react-keycloak/web'
-import { useEffect } from 'react';
+import { ReactKeycloakProvider } from '@react-keycloak/web'
 import LayerStatistics from 'components/manage/LayerStatistics';
 
-  // TODO: move?
-function KeycloakTokenSetter() {
-  const [ keycloak ] = useKeycloak();
-  useEffect(() => {
-      localStorage.setItem('token', keycloak.token);
-  }, [keycloak.token]);
-  return null;
-}
 
 const keycloak = new Keycloak({
   "realm": env("KEYCLOAK_REALM"),
@@ -53,7 +43,7 @@ const keycloak = new Keycloak({
   "enable-cors": true
 })
 
-const keycloakProviderInitConfig = {
+const keycloakProviderInitOptions = {
   // workaround, disabling of checking iframe cookie, because its a cross-site one, and chrome stopped accepting them
   // when they don't have SameSite=None set... and keycloak doesn't send a proper cookie yet: 
   // https://issues.redhat.com/browse/KEYCLOAK-12125
@@ -152,13 +142,17 @@ function App() {
   }
   
 
+  const tokenSetter = (token) => {
+    localStorage.setItem('token', token.token);
+  }
+
   return (
-    <KeycloakProvider keycloak={keycloak} initConfig={keycloakProviderInitConfig} LoadingComponent={<>Loading...</>}>
+    <ReactKeycloakProvider authClient={keycloak} initOptions={keycloakProviderInitOptions} 
+      onTokens={tokenSetter}  LoadingComponent={<>Loading...</>}>
       <div style={{height: '100%'}}>
-        <KeycloakTokenSetter />
         <ApolloWrapper component={BR} />
       </div>
-    </KeycloakProvider>
+    </ReactKeycloakProvider>
   );
 }
 
