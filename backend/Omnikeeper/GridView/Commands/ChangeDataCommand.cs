@@ -219,9 +219,19 @@ namespace Omnikeeper.GridView.Commands
 
                         var col = config.Columns.Find(el => el.SourceAttributeName == name);
 
+                        bool changable = true;
+
                         if (col == null)
                         {
                             continue;
+                        }
+
+                        if (attr.Value.LayerStackIDs.Length > 1)
+                        {
+                            if (attr.Value.LayerStackIDs[0] != config.WriteLayer)
+                            {
+                                changable = false;
+                            }
                         }
 
                         var el = result.Rows.Find(el => el.Ciid == ci_id);
@@ -232,7 +242,7 @@ namespace Omnikeeper.GridView.Commands
                             {
                                 Name = name,
                                 Value = attr.Value.Attribute.Value.Value2String(),
-                                Changeable = col.WriteLayer != null
+                                Changeable = (col.WriteLayer != null) && changable
                             });
                         }
                         else
@@ -246,7 +256,7 @@ namespace Omnikeeper.GridView.Commands
                                         {
                                             Name = name,
                                             Value = attr.Value.Attribute.Value.Value2String(),
-                                            Changeable = col.WriteLayer != null
+                                            Changeable = (col.WriteLayer != null) && changable
                                         }
                                     }
                             });
