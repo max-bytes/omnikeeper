@@ -14,9 +14,13 @@ namespace Omnikeeper.GridView.Queries
 {
     public class GetSchemaQuery
     {
-        public class Query : IRequest<(GetSchemaResponse, Exception?)>
+        public class Query : IRequest<(GetSchemaResponse?, Exception?)>
         {
             public string Context { get; set; }
+            public Query(string Context)
+            {
+                this.Context = Context;
+            }
         }
 
         public class QueryValidator : AbstractValidator<Query>
@@ -27,7 +31,7 @@ namespace Omnikeeper.GridView.Queries
             }
         }
 
-        public class GetSchemaQueryHandler : IRequestHandler<Query, (GetSchemaResponse, Exception?)>
+        public class GetSchemaQueryHandler : IRequestHandler<Query, (GetSchemaResponse?, Exception?)>
         {
             private readonly IGridViewContextModel gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
@@ -36,31 +40,27 @@ namespace Omnikeeper.GridView.Queries
                 this.gridViewContextModel = gridViewContextModel;
                 this.modelContextBuilder = modelContextBuilder;
             }
-            public async Task<(GetSchemaResponse, Exception?)> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<(GetSchemaResponse?, Exception?)> Handle(Query request, CancellationToken cancellationToken)
             {
                 var validator = new QueryValidator();
 
                 var validation = validator.Validate(request);
                 if (!validation.IsValid)
                 {
-                    return (new GetSchemaResponse(), ValidationHelper.CreateException(validation));
+                    return (null, ValidationHelper.CreateException(validation));
                 }
 
                 var trans = modelContextBuilder.BuildImmediate();
 
                 var config = await gridViewContextModel.GetConfiguration(request.Context, trans);
 
-                var result = new GetSchemaResponse 
-                {
-                    ShowCIIDColumn = config.ShowCIIDColumn,
-                    Columns = new List<Column>()
-                };
+                var result = new GetSchemaResponse(config.ShowCIIDColumn, new List<Column>());
 
                 config.Columns.ForEach(el => result.Columns.Add(new Column
-                {
-                    Name = el.SourceAttributeName,
-                    Description = el.ColumnDescription
-                }));
+                (
+                    el.SourceAttributeName,
+                    el.ColumnDescription
+                )));
 
                 return (result, null);
             }
