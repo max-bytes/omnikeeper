@@ -17,9 +17,14 @@ namespace Omnikeeper.GridView.Queries
 {
     public class GetDataQuery
     {
-        public class Query : IRequest<(GetDataResponse, Exception?)>
+        public class Query : IRequest<(GetDataResponse?, Exception?)>
         {
             public string Context { get; set; }
+
+            public Query(string Context)
+            {
+                this.Context = Context;
+            }
         }
 
         public class QueryValidator : AbstractValidator<Query>
@@ -30,7 +35,7 @@ namespace Omnikeeper.GridView.Queries
             }
         }
 
-        public class GetDataQueryHandler : IRequestHandler<Query, (GetDataResponse, Exception?)>
+        public class GetDataQueryHandler : IRequestHandler<Query, (GetDataResponse?, Exception?)>
         {
             private readonly IGridViewContextModel gridViewContextModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
@@ -52,7 +57,7 @@ namespace Omnikeeper.GridView.Queries
                 this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             }
 
-            public async Task<(GetDataResponse, Exception?)> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<(GetDataResponse?, Exception?)> Handle(Query request, CancellationToken cancellationToken)
             {
                 var validator = new QueryValidator();
                 validator.ValidateAndThrow(request);
@@ -60,17 +65,14 @@ namespace Omnikeeper.GridView.Queries
                 var trans = modelContextBuilder.BuildImmediate();
 
                 var config = await gridViewContextModel.GetConfiguration(request.Context, trans);
-                
-                var result = new GetDataResponse
-                {
-                    Rows = new List<Row>()
-                };
+
+                var result = new GetDataResponse(new List<Row>());
 
                 var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, TimeThreshold.BuildLatest());
 
                 if (activeTrait == null)
                 {
-                    return (new GetDataResponse(), new Exception($"Active trait {config.Trait} was not found!"));
+                    return (null, new Exception($"Active trait {config.Trait} was not found!"));
                 }
 
                 var res = await effectiveTraitModel.GetMergedCIsWithTrait(
@@ -125,9 +127,9 @@ namespace Omnikeeper.GridView.Queries
                         else
                         {
                             result.Rows.Add(new Row
-                            {
-                                Ciid = ci_id,
-                                Cells = new List<Cell>
+                            (
+                                ci_id,
+                                new List<Cell>
                                     {
                                         new Cell
                                         {
@@ -136,7 +138,7 @@ namespace Omnikeeper.GridView.Queries
                                             Changeable = (col.WriteLayer != null) && changable
                                         }
                                     }
-                            });
+                            ));
                         }
                     }
                 }

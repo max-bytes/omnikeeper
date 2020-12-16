@@ -27,12 +27,9 @@ namespace Omnikeeper.GridView.Queries
 
             async Task<GetContextsResponse> IRequestHandler<Query, GetContextsResponse>.Handle(Query request, CancellationToken cancellationToken)
             {
-                var result = new GetContextsResponse
-                {
-                    Contexts = await gridViewContextModel.GetContexts(modelContextBuilder.BuildImmediate())
-                };
+                var contexts = await gridViewContextModel.GetContexts(modelContextBuilder.BuildImmediate());
 
-                return result;
+                return new GetContextsResponse(contexts);
             }
         }
     }

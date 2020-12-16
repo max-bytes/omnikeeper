@@ -13,6 +13,11 @@ namespace Omnikeeper.GridView.Commands
         public class Command : IRequest<Exception?>
         {
             public string Name { get; set; }
+
+            public Command(string Name)
+            {
+                this.Name = Name;
+            }
         }
 
         public class DeleteContextCommandHandler : IRequestHandler<Command, Exception?>

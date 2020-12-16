@@ -16,6 +16,11 @@ namespace Omnikeeper.GridView.Commands
         public class Command : IRequest<Exception?>
         {
             public AddContextRequest Context { get; set; }
+
+            public Command(AddContextRequest Context)
+            {
+                this.Context = Context;
+            }
         }
 
         public class CommandValidator : AbstractValidator<Command>

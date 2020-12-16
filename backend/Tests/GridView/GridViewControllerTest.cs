@@ -74,37 +74,20 @@ namespace Tests.Integration.Controller
                 trans.Commit();
             }
 
-            var cfg1 = new GridViewConfiguration()
-            {
-                Trait = "test_trait_1",
-                ReadLayerset = new List<long> { layerID1, layerID2 },
-                WriteLayer = layerID1,
-                ShowCIIDColumn = true,
-                Columns = new List<GridViewColumn>()
-                    {
-                        new GridViewColumn()
-                        {
-                            WriteLayer = layerID1,
-                            ColumnDescription = "",
-                            SourceAttributeName = "a1"
-                        },
-                        new GridViewColumn()
-                        {
-                            WriteLayer = 3, // invalid write layer
-                            ColumnDescription = "",
-                            SourceAttributeName = "a2"
-                        }
-                    }
-            };
+            var cfg1 = new GridViewConfiguration(
+                            true,
+                            layerID1,
+                            new List<long> { layerID1, layerID2 },
+                            new List<GridViewColumn>()
+                            {
+                                new GridViewColumn("a1", "", layerID1),
+                                new GridViewColumn("a2", "", 3) // invalid write layer
+                            },
+                            "test_trait_1"
+                        );
 
             // add test gridview context
-            var r = await controller.AddContext(new Omnikeeper.GridView.Request.AddContextRequest()
-            {
-                Name = "ctx1",
-                SpeakingName = "Context 1",
-                Description = "Description",
-                Configuration = cfg1
-            });
+            var r = await controller.AddContext(new Omnikeeper.GridView.Request.AddContextRequest("ctx1", "Context 1", "Description", cfg1));
             r.Should().BeOfType<CreatedAtActionResult>();
 
             // test fetching single context
@@ -112,13 +95,7 @@ namespace Tests.Integration.Controller
             r2.Should().BeOfType<OkObjectResult>();
             var ctxData = ((r2 as OkObjectResult)!.Value as GetContextResponse);
             ctxData.Should().NotBeNull();
-            ctxData!.Context.Should().BeEquivalentTo(new FullContext()
-            {
-                Name = "ctx1",
-                SpeakingName = "Context 1",
-                Description = "Description",
-                Configuration = cfg1
-            });
+            ctxData!.Context.Should().BeEquivalentTo(new FullContext("ctx1", "Context 1", "Description", cfg1));
 
             // test getting data
             var r3 = await controller.GetData("ctx1");
@@ -127,21 +104,21 @@ namespace Tests.Integration.Controller
             data.Should().NotBeNull();
             data!.Rows.Should().BeEquivalentTo(new Row[]
             {
-                new Row() {
-                    Ciid = ciid1,
-                    Cells = new List<Cell>()
+                new Row(
+                    ciid1,
+                    new List<Cell>()
                     {
-                        new Cell() {Name = "a1", Value = "text1", Changeable = true},
+                        new Cell("a1", "text1", true),
                     }
-                },
-                new Row() {
-                    Ciid = ciid2,
-                    Cells = new List<Cell>()
+                ),
+                new Row(
+                    ciid2,
+                    new List<Cell>()
                     {
-                        new Cell() {Name = "a1", Value = "text1", Changeable = true},
-                        new Cell() {Name = "a2", Value = "text2", Changeable = true},
+                        new Cell("a1", "text1", true),
+                        new Cell("a2", "text2", true),
                     }
-                }
+                )
             });
         }
 

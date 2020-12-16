@@ -51,12 +51,7 @@ namespace Omnikeeper.GridView.Model
 
             while (dr.Read())
             {
-                contexts.Add(new Context
-                {
-                    Name = dr.GetString(0),
-                    SpeakingName = dr.GetString(1),
-                    Description = dr.GetString(2)
-                });
+                contexts.Add(new Context(dr.GetString(0), dr.GetString(1), dr.GetString(2)));
             }
 
             return contexts;
@@ -141,13 +136,7 @@ namespace Omnikeeper.GridView.Model
             var configJson = dr.GetString(3);
             var config = JsonConvert.DeserializeObject<GridViewConfiguration>(configJson);
 
-            return new FullContext()
-            {
-                Name = name,
-                SpeakingName = speakingName,
-                Description = description,
-                Configuration = config
-            };
+            return new FullContext(name, speakingName, description, config);
         }
     }
 }

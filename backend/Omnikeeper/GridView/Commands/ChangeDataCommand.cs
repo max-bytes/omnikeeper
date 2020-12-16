@@ -24,10 +24,16 @@ namespace Omnikeeper.GridView.Commands
 {
     public class ChangeDataCommand
     {
-        public class Command : IRequest<(ChangeDataResponse, Exception?)>
+        public class Command : IRequest<(ChangeDataResponse?, Exception?)>
         {
             public ChangeDataRequest Changes { get; set; }
             public string Context { get; set; }
+
+            public Command(ChangeDataRequest Changes, string Context)
+            {
+                this.Changes = Changes;
+                this.Context = Context;
+            }
         }
 
         public class CommandValidator : AbstractValidator<Command>
@@ -38,7 +44,7 @@ namespace Omnikeeper.GridView.Commands
             }
         }
 
-        public class ChangeDataCommandHandler : IRequestHandler<Command, (ChangeDataResponse, Exception?)>
+        public class ChangeDataCommandHandler : IRequestHandler<Command, (ChangeDataResponse?, Exception?)>
         {
             private readonly ICIModel ciModel;
             private readonly IAttributeModel attributeModel;
@@ -67,7 +73,7 @@ namespace Omnikeeper.GridView.Commands
                 this.layerBasedAuthorizationService = layerBasedAuthorizationService;
                 this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             }
-            public async Task<(ChangeDataResponse, Exception?)> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<(ChangeDataResponse?, Exception?)> Handle(Command request, CancellationToken cancellationToken)
             {
                 var validator = new CommandValidator();
 
@@ -75,7 +81,7 @@ namespace Omnikeeper.GridView.Commands
 
                 if (!validation.IsValid)
                 {
-                    return (new ChangeDataResponse(), ValidationHelper.CreateException(validation));
+                    return (null, ValidationHelper.CreateException(validation));
                 }
 
                 using var trans = modelContextBuilder.BuildDeferred();
@@ -99,17 +105,16 @@ namespace Omnikeeper.GridView.Commands
 
                         if (!ciExists)
                         {
-                            return (new ChangeDataResponse(), new Exception($"The provided ci id: {row.Ciid} was not found!"));
+                            return (null, new Exception($"The provided ci id: {row.Ciid} was not found!"));
                         }
                     }
-
 
                     foreach (var cell in row.Cells)
                     {
                         var configItem = config.Columns.Find(item => item.SourceAttributeName == cell.Name);
                         if (configItem == null)
                         {
-                            return (new ChangeDataResponse(), new Exception($"Could not find the supplied column {cell.Name} in the configuration"));
+                            return (null, new Exception($"Could not find the supplied column {cell.Name} in the configuration"));
                         }
 
                         var writeLayer = configItem.WriteLayer != null ? configItem.WriteLayer.Value : config.WriteLayer;
@@ -131,7 +136,7 @@ namespace Omnikeeper.GridView.Commands
                             catch (Exception e)
                             {
                                 trans.Rollback();
-                                return (new ChangeDataResponse(), new Exception($"Removing attribute {cell.Name} for ci with id: {row.Ciid} failed!", e));
+                                return (null, new Exception($"Removing attribute {cell.Name} for ci with id: {row.Ciid} failed!", e));
                             }
                         }
                         else
@@ -157,7 +162,7 @@ namespace Omnikeeper.GridView.Commands
                             catch (Exception e)
                             {
                                 trans.Rollback();
-                                return (new ChangeDataResponse(), new Exception($"Inserting attribute {cell.Name} for ci with id: {row.Ciid} failed!", e));
+                                return (null, new Exception($"Inserting attribute {cell.Name} for ci with id: {row.Ciid} failed!", e));
                             }
                         }
                     }
@@ -165,9 +170,9 @@ namespace Omnikeeper.GridView.Commands
 
                 var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, TimeThreshold.BuildLatest());
                 if (activeTrait == null)
-                    return (new ChangeDataResponse(), new Exception($"Could not find trait {config.Trait}"));
+                    return (null, new Exception($"Could not find trait {config.Trait}"));
 
-                var cisList = SpecificCIIDsSelection.Build(request.Changes.SparseRows.Select(i => i.Ciid.Value));
+                var cisList = SpecificCIIDsSelection.Build(request.Changes.SparseRows.Select(i => i.Ciid!.Value));
                 var mergedCIs = await ciModel.GetMergedCIs(
                     cisList,
                     new LayerSet(config.ReadLayerset.ToArray()),
@@ -183,7 +188,7 @@ namespace Omnikeeper.GridView.Commands
                     if (!hasTrait)
                     {
                         trans.Rollback();
-                        return (new ChangeDataResponse(), new Exception($"Consistency validation for CI with id={mergedCI.ID} failed. CI doesn't have the configured trait {activeTrait.Name}!"));
+                        return (null, new Exception($"Consistency validation for CI with id={mergedCI.ID} failed. CI doesn't have the configured trait {activeTrait.Name}!"));
                     }
                 }
 
@@ -195,10 +200,7 @@ namespace Omnikeeper.GridView.Commands
             {
                 using var trans = modelContextBuilder.BuildImmediate();
 
-                var result = new ChangeDataResponse
-                {
-                    Rows = new List<ChangeDataRow>()
-                };
+                var result = new ChangeDataResponse(new List<ChangeDataRow>());
 
                 foreach (var item in mergedCIs)
                 {
@@ -248,9 +250,9 @@ namespace Omnikeeper.GridView.Commands
                         else
                         {
                             result.Rows.Add(new ChangeDataRow
-                            {
-                                Ciid = ci_id,
-                                Cells = new List<Response.ChangeDataCell>
+                            (
+                                ci_id,
+                                new List<Response.ChangeDataCell>
                                     {
                                         new Response.ChangeDataCell
                                         {
@@ -259,7 +261,7 @@ namespace Omnikeeper.GridView.Commands
                                             Changeable = (col.WriteLayer != null) && changable
                                         }
                                     }
-                            });
+                            ));
                         }
                     }
                 }
