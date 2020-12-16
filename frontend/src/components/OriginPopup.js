@@ -46,11 +46,11 @@ function OriginPopup(props) {
       switch(originType) {
         case 'MANUAL':
           return 'user outline';
-        case 'INBOUNDINGEST':
+        case 'INBOUND_INGEST':
           return 'archive';
-        case 'INBOUNDONLINE':
+        case 'INBOUND_ONLINE':
           return 'plug';
-        case 'COMPUTELAYER':
+        case 'COMPUTE_LAYER':
           return 'cogs';
         case 'GENERATOR':
           return 'calculator';

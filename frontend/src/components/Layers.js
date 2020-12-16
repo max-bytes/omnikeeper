@@ -85,7 +85,7 @@ function Layers(props) {
                     {!layer.writable && (<FontAwesomeIcon icon={faBan} />)}
                     {layer.writable && (<FontAwesomeIcon icon={faEdit} />)}
                     &nbsp;
-                    <span style={((layer.visible) ? {} : {color: '#ccc'})}>{layer.name} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
+                    <span style={((layer.visible) ? {} : {color: '#ccc'})}>[{layer.id}] {layer.name} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
                     {layer.brainName !== "" && (<FontAwesomeIcon icon={faCogs} />)}
                     {layer.onlineInboundAdapterName !== "" && (<FontAwesomeIcon icon={faPlug} />)}
                   </span>
