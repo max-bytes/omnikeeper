@@ -19,20 +19,21 @@ export default function LayerStatistics(props) {
       <h2>Layer Statistics</h2>
       <div style={{marginBottom: '10px'}}><Link to="/manage/layers"><Icon name="angle left" fitted /> Back</Link></div>
         <div>For layer: {data.layerStatistics.layer.name}</div>
+        <div>Note: showing statistics for stored data only, not showing data from online inbound adapters or generators</div>
         <div>
           # active attributes: {data.layerStatistics.numActiveAttributes}
         </div>
         <div>
-          # attribute changes history: {data.layerStatistics.numAttributeChangesHistory}
+          # attribute changes: {data.layerStatistics.numAttributeChangesHistory}
         </div>
         <div>
           # active relations: {data.layerStatistics.numActiveRelations}
         </div>
         <div>
-          # realtion changes history: {data.layerStatistics.numRelationChangesHistory}
+          # relation changes: {data.layerStatistics.numRelationChangesHistory}
         </div>
         <div>
-          # layer changests history: {data.layerStatistics.numLayerChangesetsHistory}
+          # layer changesets: {data.layerStatistics.numLayerChangesetsHistory}
         </div>
       </div>;
   } else if (loading) {

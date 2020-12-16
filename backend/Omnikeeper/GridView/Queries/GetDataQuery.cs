@@ -106,7 +106,7 @@ namespace Omnikeeper.GridView.Queries
 
                         if (attr.Value.LayerStackIDs.Length > 1)
                         {
-                            if (attr.Value.LayerStackIDs[0] != config.WriteLayer)
+                            if (attr.Value.LayerStackIDs[^1] != config.WriteLayer)
                             {
                                 changable = false;
                             }
@@ -117,12 +117,11 @@ namespace Omnikeeper.GridView.Queries
 
                         if (el != null)
                         {
-                            el.Cells.Add(new Cell
-                            {
-                                Name = name,
-                                Value = attr.Value.Attribute.Value.Value2String(),
-                                Changeable = (col.WriteLayer != null) && changable
-                            });
+                            el.Cells.Add(new Cell(
+                                name,
+                                attr.Value.Attribute.Value.Value2String(),
+                                (col.WriteLayer != null) && changable
+                            ));
                         }
                         else
                         {
@@ -131,12 +130,11 @@ namespace Omnikeeper.GridView.Queries
                                 ci_id,
                                 new List<Cell>
                                     {
-                                        new Cell
-                                        {
-                                            Name = name,
-                                            Value = attr.Value.Attribute.Value.Value2String(),
-                                            Changeable = (col.WriteLayer != null) && changable
-                                        }
+                                        new Cell(
+                                            name, 
+                                            attr.Value.Attribute.Value.Value2String(),
+                                            (col.WriteLayer != null) && changable
+                                        )
                                     }
                             ));
                         }

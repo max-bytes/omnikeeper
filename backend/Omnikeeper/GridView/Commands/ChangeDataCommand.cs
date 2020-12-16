@@ -92,7 +92,7 @@ namespace Omnikeeper.GridView.Commands
                 var config = await gridViewContextModel.GetConfiguration(request.Context, trans);
 
                 if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, config.WriteLayer))
-                    return (new ChangeDataResponse(), new Exception($"User \"{user.Username}\" does not have permission to write to layer ID {config.WriteLayer}"));
+                    return (null, new Exception($"User \"{user.Username}\" does not have permission to write to layer ID {config.WriteLayer}"));
 
                 foreach (var row in request.Changes.SparseRows)
                 {
@@ -120,7 +120,7 @@ namespace Omnikeeper.GridView.Commands
                         var writeLayer = configItem.WriteLayer != null ? configItem.WriteLayer.Value : config.WriteLayer;
 
                         if (!ciBasedAuthorizationService.CanWriteToCI(row.Ciid.Value))
-                            return (new ChangeDataResponse(), new Exception($"User \"{user.Username}\" does not have permission to write to CI {row.Ciid.Value}"));
+                            return (null, new Exception($"User \"{user.Username}\" does not have permission to write to CI {row.Ciid.Value}"));
 
                         if (cell.Value == null)
                         {
@@ -230,7 +230,7 @@ namespace Omnikeeper.GridView.Commands
 
                         if (attr.Value.LayerStackIDs.Length > 1)
                         {
-                            if (attr.Value.LayerStackIDs[0] != config.WriteLayer)
+                            if (attr.Value.LayerStackIDs[^1] != config.WriteLayer)
                             {
                                 changable = false;
                             }
@@ -240,12 +240,11 @@ namespace Omnikeeper.GridView.Commands
 
                         if (el != null)
                         {
-                            el.Cells.Add(new Response.ChangeDataCell
-                            {
-                                Name = name,
-                                Value = attr.Value.Attribute.Value.Value2String(),
-                                Changeable = (col.WriteLayer != null) && changable
-                            });
+                            el.Cells.Add(new Response.ChangeDataCell(
+                                name,
+                                attr.Value.Attribute.Value.Value2String(),
+                                (col.WriteLayer != null) && changable
+                            ));
                         }
                         else
                         {
@@ -254,12 +253,11 @@ namespace Omnikeeper.GridView.Commands
                                 ci_id,
                                 new List<Response.ChangeDataCell>
                                     {
-                                        new Response.ChangeDataCell
-                                        {
-                                            Name = name,
-                                            Value = attr.Value.Attribute.Value.Value2String(),
-                                            Changeable = (col.WriteLayer != null) && changable
-                                        }
+                                        new Response.ChangeDataCell(
+                                            name,
+                                            attr.Value.Attribute.Value.Value2String(),
+                                            (col.WriteLayer != null) && changable
+                                        )
                                     }
                             ));
                         }
