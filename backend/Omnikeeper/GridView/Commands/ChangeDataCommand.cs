@@ -48,10 +48,13 @@ namespace Omnikeeper.GridView.Commands
             private readonly IEffectiveTraitModel effectiveTraitModel;
             private readonly ITraitsProvider traitsProvider;
             private readonly IModelContextBuilder modelContextBuilder;
+            private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
+            private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
 
             public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel,
                 IChangesetModel changesetModel, ICurrentUserService currentUserService, IGridViewContextModel gridViewContextModel,
-                IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder)
+                IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
+                ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService)
             {
                 this.ciModel = ciModel;
                 this.attributeModel = attributeModel;
@@ -61,6 +64,8 @@ namespace Omnikeeper.GridView.Commands
                 this.effectiveTraitModel = effectiveTraitModel;
                 this.traitsProvider = traitsProvider;
                 this.modelContextBuilder = modelContextBuilder;
+                this.layerBasedAuthorizationService = layerBasedAuthorizationService;
+                this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             }
             public async Task<(ChangeDataResponse, Exception?)> Handle(Command request, CancellationToken cancellationToken)
             {
@@ -79,6 +84,9 @@ namespace Omnikeeper.GridView.Commands
                 var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
 
                 var config = await gridViewContextModel.GetConfiguration(request.Context, trans);
+
+                if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, config.WriteLayer))
+                    return (new ChangeDataResponse(), new Exception($"User \"{user.Username}\" does not have permission to write to layer ID {config.WriteLayer}"));
 
                 foreach (var row in request.Changes.SparseRows)
                 {
@@ -105,6 +113,9 @@ namespace Omnikeeper.GridView.Commands
                         }
 
                         var writeLayer = configItem.WriteLayer != null ? configItem.WriteLayer.Value : config.WriteLayer;
+
+                        if (!ciBasedAuthorizationService.CanWriteToCI(row.Ciid.Value))
+                            return (new ChangeDataResponse(), new Exception($"User \"{user.Username}\" does not have permission to write to CI {row.Ciid.Value}"));
 
                         if (cell.Value == null)
                         {
@@ -192,6 +203,14 @@ namespace Omnikeeper.GridView.Commands
                 foreach (var item in mergedCIs)
                 {
                     var ci_id = item.ID;
+
+
+                    var canRead = ciBasedAuthorizationService.CanReadCI(ci_id);
+
+                    if (!canRead)
+                    {
+                        continue;
+                    }
 
                     foreach (var attr in item.MergedAttributes)
                     {

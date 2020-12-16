@@ -2,12 +2,14 @@
 using MediatR;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Response;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -34,14 +36,20 @@ namespace Omnikeeper.GridView.Queries
             private readonly IEffectiveTraitModel effectiveTraitModel;
             private readonly ITraitsProvider traitsProvider;
             private readonly IModelContextBuilder modelContextBuilder;
+            private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
+            private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
 
             public GetDataQueryHandler(IGridViewContextModel gridViewContextModel, IEffectiveTraitModel effectiveTraitModel,
-                ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder)
+                ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
+                ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService
+                )
             {
                 this.gridViewContextModel = gridViewContextModel;
                 this.effectiveTraitModel = effectiveTraitModel;
                 this.traitsProvider = traitsProvider;
                 this.modelContextBuilder = modelContextBuilder;
+                this.layerBasedAuthorizationService = layerBasedAuthorizationService;
+                this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             }
 
             public async Task<(GetDataResponse, Exception?)> Handle(Query request, CancellationToken cancellationToken)
@@ -75,6 +83,13 @@ namespace Omnikeeper.GridView.Queries
                 foreach (var item in res)
                 {
                     var ci_id = item.ID;
+
+                    var canRead = ciBasedAuthorizationService.CanReadCI(ci_id);
+
+                    if (!canRead)
+                    {
+                        continue;
+                    }
 
                     foreach (var attr in item.MergedAttributes)
                     {
