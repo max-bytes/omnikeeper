@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Omnikeeper.Base.Entity.DTO.Ingest // TODO: move into plugin
+namespace Omnikeeper.Controllers.Ingest
 {
     public class AnsibleInventoryScanDTO
     {

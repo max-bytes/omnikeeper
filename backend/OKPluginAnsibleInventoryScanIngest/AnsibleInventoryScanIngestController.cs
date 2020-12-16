@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DTO.Ingest;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;

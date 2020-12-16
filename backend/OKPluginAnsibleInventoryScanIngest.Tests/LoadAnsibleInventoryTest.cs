@@ -116,7 +116,7 @@ namespace Tests.Ingest
                 return jo;
             });
 
-            var response = await controller.IngestAnsibleInventoryScan(insertLayer.ID, searchLayerSet.LayerIDs, new Omnikeeper.Base.Entity.DTO.Ingest.AnsibleInventoryScanDTO(
+            var response = await controller.IngestAnsibleInventoryScan(insertLayer.ID, searchLayerSet.LayerIDs, new AnsibleInventoryScanDTO(
                 setupFacts,
                 new Dictionary<string, JObject>() { },
                 new Dictionary<string, JObject>() { },
