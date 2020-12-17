@@ -30,7 +30,7 @@ using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tests.Integration
 {
-    abstract class DIServicedTestBase : DBBackedTestBase
+    public abstract class DIServicedTestBase : DBBackedTestBase
     {
         private ServiceProvider? serviceProvider;
 

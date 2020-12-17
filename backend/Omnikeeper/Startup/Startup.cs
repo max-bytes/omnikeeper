@@ -174,7 +174,7 @@ namespace Omnikeeper.Startup
                     Flows = new OpenApiOAuthFlows
                     {
                         ClientCredentials = new OpenApiOAuthFlow
-                        {
+                        {  
                             Scopes = new Dictionary<string, string> { },
                             TokenUrl = new Uri(Configuration.GetSection("Authentication")["Authority"] + "/protocol/openid-connect/token", UriKind.Absolute),
                         },
@@ -313,8 +313,11 @@ namespace Omnikeeper.Startup
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint($"{Configuration["BaseURL"]}/swagger/v1/swagger.json", "Landscape omnikeeper REST API V1");
-                c.OAuthClientId("landscape-omnikeeper-api");
-                c.OAuthClientSecret(Configuration.GetSection("SwaggerUI")["OAuthClientSecret"]);
+                if (env.IsDevelopment() || env.IsStaging())
+                {
+                    c.OAuthClientId("landscape-omnikeeper-api");
+                    c.OAuthClientSecret(Configuration.GetSection("SwaggerUI")["OAuthClientSecret"]);
+                }
             });
 
             // Configure hangfire to use the new JobActivator we defined.

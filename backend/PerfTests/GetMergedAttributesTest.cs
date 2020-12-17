@@ -13,16 +13,17 @@ using Tests.Integration.Model.Mocks;
 using Omnikeeper.Base.Utils.ModelContext;
 using Microsoft.Extensions.Logging.Abstractions;
 using Omnikeeper.Base.Entity.DataOrigin;
+using Tests.Integration;
 
-namespace Tests.Integration.Model
+namespace PerfTests
 {
-    class DBStressTest
+    class GetMergedAttributesTest : DIServicedTestBase
     {
         private List<Guid> ciNames = new List<Guid>();
         private List<string> layerNames = new List<string>();
 
         [SetUp]
-        public async Task Setup()
+        public async Task SetupData()
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -109,11 +110,11 @@ namespace Tests.Integration.Model
             {
                 var a1 = await attributeModel.GetMergedAttributes(ciName, layerset, trans, TimeThreshold.BuildLatest());
 
-                //Console.WriteLine($"{ciName} count: {a1.Count()}");
-                //foreach (var aa in a1)
-                //{
-                //    Console.WriteLine($"{aa.State} {aa.LayerID} {aa.Value} ");
-                //}
+                Console.WriteLine($"{ciName} count: {a1.Count()}");
+                foreach (var aa in a1)
+                {
+                    Console.WriteLine($"{aa.Value.Attribute.State} {aa.Value.LayerStackIDs[^1]} {aa.Value.Attribute.Value.Value2String()} ");
+                }
             }
             timer.Stop();
             Console.WriteLine($"Elapsed time: {timer.ElapsedMilliseconds / 1000f}");

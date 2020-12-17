@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Tests.Integration
 {
-    class DBBackedTestBase
+    public class DBBackedTestBase
     {
         private NpgsqlConnection? conn;
         private ModelContextBuilder? modelContextBuilder;
