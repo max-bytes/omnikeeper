@@ -4,35 +4,31 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
-using Omnikeeper.Utils;
 using Moq;
-using Npgsql;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Tests.Integration.Model.Mocks;
-using Omnikeeper.Controllers;
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Startup;
 using Microsoft.Extensions.Logging;
 using Omnikeeper.Model.Config;
 using Microsoft.Extensions.Logging.Abstractions;
-using Omnikeeper.Service;
-using FluentAssertions;
-using Omnikeeper.Base.Entity.DTO;
-using Microsoft.AspNetCore.Mvc;
 using Omnikeeper.Base.Service;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Model.Decorators;
 
 namespace Tests.Integration
 {
     public abstract class DIServicedTestBase : DBBackedTestBase
     {
         private ServiceProvider? serviceProvider;
+
+        private readonly bool enableModelCaching;
+
+        protected DIServicedTestBase(bool enableModelCaching)
+        {
+            this.enableModelCaching = enableModelCaching;
+        }
 
         [SetUp]
         public override void Setup()
@@ -42,7 +38,6 @@ namespace Tests.Integration
             var services = InitServices();
             serviceProvider = services.BuildServiceProvider();
         }
-
 
         [TearDown]
         public override void TearDown()
@@ -61,7 +56,7 @@ namespace Tests.Integration
             ServiceRegistration.RegisterLogging(services);
             ServiceRegistration.RegisterDB(services, DBSetup.dbName, false, true);
             ServiceRegistration.RegisterOIABase(services);
-            ServiceRegistration.RegisterModels(services, false, false, false);
+            ServiceRegistration.RegisterModels(services, enableModelCaching, false, false);
             ServiceRegistration.RegisterServices(services);
             ServiceRegistration.RegisterGraphQL(services);
 
@@ -74,6 +69,7 @@ namespace Tests.Integration
             services.AddScoped<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance);
             services.AddScoped<ILogger<RecursiveTraitModel>>((sp) => NullLogger<RecursiveTraitModel>.Instance);
             services.AddScoped<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance);
+            services.AddScoped<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance);
             services.AddSingleton<ILoggerFactory, NullLoggerFactory>();
 
             services.AddSingleton<IConfiguration>((sp) => new Mock<IConfiguration>().Object);

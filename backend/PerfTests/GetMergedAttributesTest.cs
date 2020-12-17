@@ -14,6 +14,8 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Microsoft.Extensions.Logging.Abstractions;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Tests.Integration;
+using Microsoft.Extensions.DependencyInjection;
+using Omnikeeper.Controllers;
 
 namespace PerfTests
 {
@@ -22,25 +24,23 @@ namespace PerfTests
         private List<Guid> ciNames = new List<Guid>();
         private List<string> layerNames = new List<string>();
 
-        [SetUp]
+        public GetMergedAttributesTest() : base(true)
+        {
+
+        }
+
         public async Task SetupData()
         {
             var timer = new Stopwatch();
             timer.Start();
 
-            DBSetup.Setup();
-            var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var userModel = new UserInDatabaseModel();
-            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance);
-
-            using var trans = modelContextBuilder.BuildDeferred();
-            var user = await DBSetup.SetupUser(userModel, trans);
-            var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
-            var model = new CIModel(attributeModel);
-            var layerModel = new LayerModel();
-
+            var changesetModel = ServiceProvider.GetRequiredService<IChangesetModel>();
+            var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
+            var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
+            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
+            var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
+            var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
+            
             var numCIs = 500;
             var numLayers = 2;
             var numAttributeInserts = 6000;
@@ -63,16 +63,16 @@ namespace PerfTests
 
             var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
 
-
             //Console.WriteLine(ciNames.Count());
+            using var mc = ModelContextBuilder.BuildDeferred();
             var cis = ciNames.Select(identity =>
             {
-                return (model.CreateCI(identity, trans).GetAwaiter().GetResult(), identity);
+                return (ciModel.CreateCI(identity, mc).GetAwaiter().GetResult(), identity);
             }).ToList();
 
             var layers = layerNames.Select(identity =>
             {
-                return layerModel.CreateLayer(identity, trans).GetAwaiter().GetResult();
+                return layerModel.CreateLayer(identity, mc).GetAwaiter().GetResult();
             }).ToList();
 
             var attributeNames = Enumerable.Range(0, numAttributeNames).Select(i => "A" + RandomString.Generate(32, random)).ToList();
@@ -82,39 +82,38 @@ namespace PerfTests
                 var value = new AttributeScalarValueText("V" + RandomString.Generate(8, random));
                 var layer = layers.GetRandom(random);
                 var ciid = cis.GetRandom(random).Item1;
-                return attributeModel.InsertAttribute(name!, value, ciid, layer!.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans).GetAwaiter().GetResult();
+                return attributeModel.InsertAttribute(name!, value, ciid, layer!.ID, changeset, new DataOriginV1(DataOriginType.Manual), mc).GetAwaiter().GetResult();
             }).ToList();
 
-            trans.Commit();
+            mc.Commit();
 
             timer.Stop();
-            Console.WriteLine($"Elapsed time: {timer.ElapsedMilliseconds / 1000f}");
+            Console.WriteLine($"Setup - Elapsed time: {timer.ElapsedMilliseconds / 1000f}");
         }
 
         [Test]
         public async Task TestSelectOnBigDatabase()
         {
-            var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance);
-            using var trans = modelContextBuilder.BuildDeferred();
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
-            var model = new CIModel(attributeModel);
-            var layerModel = new LayerModel();
+            await SetupData();
 
-            var layerset = layerModel.BuildLayerSet(layerNames.ToArray(), trans).GetAwaiter().GetResult();
+            var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
+            var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
+
+            using var mc = ModelContextBuilder.BuildDeferred();
+
+            var layerset = layerModel.BuildLayerSet(layerNames.ToArray(), mc).GetAwaiter().GetResult();
 
             var timer = new Stopwatch();
             timer.Start();
             foreach (var ciName in ciNames)
             {
-                var a1 = await attributeModel.GetMergedAttributes(ciName, layerset, trans, TimeThreshold.BuildLatest());
+                var a1 = await attributeModel.GetMergedAttributes(ciName, layerset, mc, TimeThreshold.BuildLatest());
 
                 Console.WriteLine($"{ciName} count: {a1.Count()}");
-                foreach (var aa in a1)
-                {
-                    Console.WriteLine($"{aa.Value.Attribute.State} {aa.Value.LayerStackIDs[^1]} {aa.Value.Attribute.Value.Value2String()} ");
-                }
+                //foreach (var aa in a1)
+                //{
+                //    Console.WriteLine($"{aa.Value.Attribute.State} {aa.Value.LayerStackIDs[^1]} {aa.Value.Attribute.Value.Value2String()} ");
+                //}
             }
             timer.Stop();
             Console.WriteLine($"Elapsed time: {timer.ElapsedMilliseconds / 1000f}");

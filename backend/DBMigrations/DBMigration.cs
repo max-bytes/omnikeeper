@@ -8,18 +8,25 @@ namespace DBMigrations
 {
     public class DBMigration
     {
-        public static DatabaseUpgradeResult Migrate(string connectionString)
+        public static DatabaseUpgradeResult Migrate(string connectionString, bool logOutput)
         {
             EnsureDatabase.For.PostgresqlDatabase(connectionString);
 
-            var upgrader =
-                DeployChanges.To
+            var builder = DeployChanges.To
                     .PostgresqlDatabase(connectionString)
                     .WithTransaction()
-                    .WithScriptsEmbeddedInAssembly(Assembly.GetExecutingAssembly(), s => s.EndsWith(".psql"))
-                    .LogToConsole()
-                    .LogScriptOutput()
-                    .Build();
+                    .WithScriptsEmbeddedInAssembly(Assembly.GetExecutingAssembly(), s => s.EndsWith(".psql"));
+
+            if (logOutput) {
+                    builder = builder
+                        .LogToConsole()
+                        .LogScriptOutput();
+            } else
+            {
+                builder = builder.LogToNowhere();
+            }
+
+            var upgrader = builder.Build();
 
             var result = upgrader.PerformUpgrade();
             return result;

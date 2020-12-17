@@ -9,6 +9,10 @@ namespace Tests.Integration.Controller
 {
     abstract class ControllerTestBase : DIServicedTestBase
     {
+        protected ControllerTestBase() : base(false)
+        {
+        }
+
         protected override IServiceCollection InitServices()
         {
             var services = base.InitServices();

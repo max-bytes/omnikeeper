@@ -28,7 +28,7 @@ namespace Tests.Integration
             conn.Close();
 
             // create db, setup schema and migrations
-            var migrationResult = DBMigration.Migrate($"Server=localhost;User Id=postgres; Password=postgres;Database={_dbName};Pooling=false");
+            var migrationResult = DBMigration.Migrate($"Server=localhost;User Id=postgres; Password=postgres;Database={_dbName};Pooling=false", false);
 
             if (!migrationResult.Successful)
                 throw new Exception("Database migration failed!", migrationResult.Error);

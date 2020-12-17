@@ -19,7 +19,7 @@ namespace DBMigrations
             {
                 try
                 {
-                    var result = DBMigration.Migrate(connectionString);
+                    var result = DBMigration.Migrate(connectionString, true);
 
                     if (!result.Successful)
                     {

@@ -77,9 +77,10 @@ namespace Omnikeeper.Model
                     break;
             }
 
-            var candidateCIIDs = new List<Guid>();
+            ICIIDSelection ciidSelection;
             // do a precursor filtering based on required attribute names
             // we can only do this filtering (better performance) when the trait has required attributes AND no online inbound layers are in play
+            // TODO: this is not even faster for a lot of cases, consider when to actually use this
             if (trait.RequiredAttributes.Count > 0 && !hasOnlineInboundLayers)
             {
                 var requiredAttributeNames = trait.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
@@ -108,27 +109,34 @@ namespace Omnikeeper.Model
 
                 var finalCIFilter = ciFilter ?? ((id) => true);
 
+                var candidateCIIDs = new List<Guid>();
                 while (dr.Read())
                 {
                     var CIID = dr.GetGuid(0);
                     if (finalCIFilter(CIID))
                         candidateCIIDs.Add(CIID);
                 }
+                if (candidateCIIDs.IsEmpty())
+                    return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty;
+
+                ciidSelection = SpecificCIIDsSelection.Build(candidateCIIDs);
             }
             else
             {
-                var tmp = await ciModel.GetCIIDs(trans);
                 if (ciFilter != null)
-                    candidateCIIDs.AddRange(tmp.Where(c => ciFilter(c)));
+                {
+                    var tmp = await ciModel.GetCIIDs(trans);
+                    tmp.Where(c => ciFilter(c));
+                    if (tmp.IsEmpty())
+                        return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty;
+                    ciidSelection = SpecificCIIDsSelection.Build(tmp);
+                }
                 else
-                    candidateCIIDs.AddRange(tmp);
+                    ciidSelection = new AllCIIDsSelection();
             }
 
-            if (candidateCIIDs.IsEmpty())
-                return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty;
-
             // now do a full pass to check which ci's REALLY fulfill the trait's requirements
-            var cis = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(candidateCIIDs), layerSet, false, trans, atTime);
+            var cis = await ciModel.GetMergedCIs(ciidSelection, layerSet, false, trans, atTime);
             var candidates = cis.Select(ci => new EffectiveTraitCandidate(trait, ci));
             var ret = new Dictionary<Guid, (MergedCI ci, EffectiveTrait et)>();
             foreach (var c in candidates)

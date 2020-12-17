@@ -23,7 +23,7 @@ namespace Tests.Integration.GraphQL.Base
 {
     abstract class QueryTestBase : DIServicedTestBase
     {
-        public QueryTestBase()
+        public QueryTestBase() : base(false)
         {
             Executer = new DocumentExecuter(new GraphQLDocumentBuilder(), new DocumentValidator(), new ComplexityAnalyzer());
             Writer = new DocumentWriter(indent: true);
