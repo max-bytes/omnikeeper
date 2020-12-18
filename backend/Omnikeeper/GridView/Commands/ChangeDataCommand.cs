@@ -117,7 +117,20 @@ namespace Omnikeeper.GridView.Commands
                             return (null, new Exception($"Could not find the supplied column {cell.Name} in the configuration"));
                         }
 
-                        var writeLayer = configItem.WriteLayer != null ? configItem.WriteLayer.Value : config.WriteLayer;
+                        long writeLayer;
+
+                        if (configItem.WriteLayer == null)
+                        {
+                            writeLayer = config.WriteLayer;
+                        } else if (configItem.WriteLayer!.Value == -1)
+                        {
+                            return (null, new Exception($"Provided column {cell.Name} is not writable!"));
+                        } else
+                        {
+                            writeLayer = configItem.WriteLayer.Value;
+                        }
+
+                        //var writeLayer = configItem.WriteLayer != null ? configItem.WriteLayer.Value : config.WriteLayer;
 
                         if (!ciBasedAuthorizationService.CanWriteToCI(row.Ciid.Value))
                             return (null, new Exception($"User \"{user.Username}\" does not have permission to write to CI {row.Ciid.Value}"));
@@ -243,7 +256,7 @@ namespace Omnikeeper.GridView.Commands
                             el.Cells.Add(new Response.ChangeDataCell(
                                 name,
                                 attr.Value.Attribute.Value.Value2String(),
-                                (col.WriteLayer != null) && changable
+                                col.WriteLayer == null ? true : (col.WriteLayer != -1) && changable
                             ));
                         }
                         else
@@ -256,7 +269,7 @@ namespace Omnikeeper.GridView.Commands
                                         new Response.ChangeDataCell(
                                             name,
                                             attr.Value.Attribute.Value.Value2String(),
-                                            (col.WriteLayer != null) && changable
+                                            col.WriteLayer == null ? true : (col.WriteLayer != -1) && changable
                                         )
                                     }
                             ));

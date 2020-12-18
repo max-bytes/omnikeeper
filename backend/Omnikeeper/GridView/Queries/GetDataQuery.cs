@@ -120,7 +120,7 @@ namespace Omnikeeper.GridView.Queries
                             el.Cells.Add(new Cell(
                                 name,
                                 attr.Value.Attribute.Value.Value2String(),
-                                (col.WriteLayer != null) && changable
+                                col.WriteLayer == null ? true : (col.WriteLayer != -1) && changable 
                             ));
                         }
                         else
@@ -133,7 +133,7 @@ namespace Omnikeeper.GridView.Queries
                                         new Cell(
                                             name, 
                                             attr.Value.Attribute.Value.Value2String(),
-                                            (col.WriteLayer != null) && changable
+                                            col.WriteLayer == null ? true : (col.WriteLayer != -1) && changable
                                         )
                                     }
                             ));
