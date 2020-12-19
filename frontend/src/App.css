@@ -5,3 +5,8 @@
   outline: none !important;
   box-shadow: none !important;
 }
+
+/* ag grid popup */
+.ag-theme-balham .ag-popup {
+    height: auto; /* resize, so you have no white background*/
+}
