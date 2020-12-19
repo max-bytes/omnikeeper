@@ -178,7 +178,7 @@ namespace Omnikeeper.Base.Utils.ModelContext
     }
 
 
-    static class Helper
+    public static class Helper
     {
         /// <summary>
         /// despite some conflicting information on the web, IMemoryCache.GetOrCreate() is NOT(!) properly thread safe. That means that parallel invocations of it can lead to different values getting returned
@@ -209,7 +209,7 @@ namespace Omnikeeper.Base.Utils.ModelContext
         {
             var ts = GetOrCreateThreadSafe(memoryCache, tokenName, (ce) =>
             {
-                var ts = new CancellationTokenSource(); ;
+                var ts = new CancellationTokenSource();
                 return ts;
             });
             return new CancellationChangeToken(ts.Token);

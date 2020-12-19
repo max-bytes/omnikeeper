@@ -17,6 +17,10 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Castle.Core.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Service;
+using Microsoft.Extensions.Primitives;
+using FluentAssertions;
+using System.Threading;
 
 namespace Tests.Integration.Model
 {
@@ -61,31 +65,85 @@ namespace Tests.Integration.Model
         }
 
 
+        [Test]
+        public async Task IsCacheProperlyFilledAndEvicted()
+        {
+            var mocked = new FilledMockedBaseAttributeModel();
+            mocked.Setup(_ => _.RemoveAttribute(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<long>(), It.IsAny<IChangesetProxy>(), It.IsAny<IModelContext>())).ReturnsAsync(() =>
+            {
+                return (null!, true);
+            });
+            var attributeModel = new CachingBaseAttributeModel(mocked.Object);
+
+            var memoryCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+            var trans = new ModelContextImmediateMode(memoryCache, null!, NullLogger<IModelContext>.Instance);
+
+            var layerID = 1L;
+            var timeThreshold = TimeThreshold.BuildLatest();
+            await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid1, ciid2), layerID, trans, timeThreshold);
+
+            var changeTokenSource1 = memoryCache.Get<CancellationTokenSource>(CacheKeyService.AttributesChangeToken(ciid1, layerID));
+            Assert.IsNotNull(changeTokenSource1);
+            var changeTokenSource2 = memoryCache.Get<CancellationTokenSource>(CacheKeyService.AttributesChangeToken(ciid2, layerID));
+            Assert.IsNotNull(changeTokenSource2);
+
+            var cachedAttributes1 = memoryCache.Get<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid1, layerID));
+            cachedAttributes1.Should().BeEquivalentTo(
+                new List<CIAttribute>()
+                    {
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0740"), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a"), new DataOriginV1(DataOriginType.Manual)),
+                    }
+                );
+            var cachedAttributes2 = memoryCache.Get<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid2, layerID));
+            cachedAttributes2.Should().BeEquivalentTo(
+                new List<CIAttribute>()
+                    {
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a"), new DataOriginV1(DataOriginType.Manual))
+                    }
+                );
+
+            // remove one attribute
+            await attributeModel.RemoveAttribute("a1", ciid1, layerID, null!, trans);
+
+            // ensure this attribute is evicted from cache, the other on (in different ci) still exists in cache
+            var cachedAttributes21 = memoryCache.Get<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid1, layerID));
+            Assert.IsNull(cachedAttributes21);
+            var cachedAttributes22 = memoryCache.Get<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid2, layerID));
+            cachedAttributes22.Should().BeEquivalentTo(
+                new List<CIAttribute>()
+                    {
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a"), new DataOriginV1(DataOriginType.Manual))
+                    }
+                );
+
+        }
+
+
         class FilledMockedBaseAttributeModel : Mock<IBaseAttributeModel>
         {
             public FilledMockedBaseAttributeModel()
             {
-                Guid staticChangesetID = Guid.NewGuid();
+                Guid staticChangesetID = new Guid("6c1457d9-1807-453d-acab-68cd62726f1a");
                 Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
-                        new CIAttribute(Guid.NewGuid(), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual)),
-                        new CIAttribute(Guid.NewGuid(), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual))
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0740"), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual)),
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual))
                     };
                 });
                 Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
-                        new CIAttribute(Guid.NewGuid(), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual))
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0740"), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual))
                     };
                 });
                 Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
-                        new CIAttribute(Guid.NewGuid(), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual))
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual))
                     };
                 });
             }
