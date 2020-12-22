@@ -57,7 +57,7 @@ namespace PerfTests
 
             layerNames = Enumerable.Range(0, numLayers).Select(i =>
             {
-                var identity = "L" + RandomString.Generate(8, random);
+                var identity = "L" + RandomUtility.GenerateRandomString(8, random);
                 return identity;
             }).ToList();
 
@@ -75,11 +75,11 @@ namespace PerfTests
                 return layerModel.CreateLayer(identity, mc).GetAwaiter().GetResult();
             }).ToList();
 
-            var attributeNames = Enumerable.Range(0, numAttributeNames).Select(i => "A" + RandomString.Generate(32, random)).ToList();
+            var attributeNames = Enumerable.Range(0, numAttributeNames).Select(i => "A" + RandomUtility.GenerateRandomString(32, random)).ToList();
             var attributes = Enumerable.Range(0, numAttributeInserts).Select(i =>
             {
                 var name = attributeNames.GetRandom(random);
-                var value = new AttributeScalarValueText("V" + RandomString.Generate(8, random));
+                var value = new AttributeScalarValueText("V" + RandomUtility.GenerateRandomString(8, random));
                 var layer = layers.GetRandom(random);
                 var ciid = cis.GetRandom(random).Item1;
                 return attributeModel.InsertAttribute(name!, value, ciid, layer!.ID, changeset, new DataOriginV1(DataOriginType.Manual), mc).GetAwaiter().GetResult();

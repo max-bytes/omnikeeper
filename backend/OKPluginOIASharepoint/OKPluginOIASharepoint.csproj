@@ -7,8 +7,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Omnikeeper.Base\Omnikeeper.Base.csproj">
-      <Private>false</Private>
-      <ExcludeAssets>runtime</ExcludeAssets>
     </ProjectReference>
   </ItemGroup>
 

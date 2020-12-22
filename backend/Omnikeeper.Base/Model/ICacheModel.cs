@@ -2,7 +2,7 @@
 
 namespace Omnikeeper.Base.Model
 {
-    public interface IMemoryCacheModel
+    public interface ICacheModel
     {
         IEnumerable<string> GetKeys();
     }

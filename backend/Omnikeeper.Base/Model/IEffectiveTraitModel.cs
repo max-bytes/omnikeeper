@@ -16,8 +16,8 @@ namespace Omnikeeper.Base.Model
 
         Task<bool> DoesCIHaveTrait(MergedCI ci, Trait trait, IModelContext trans, TimeThreshold atTime);
 
-        Task<IEnumerable<MergedCI>> GetMergedCIsWithTrait(Trait trait, LayerSet layerSet, IModelContext trans, TimeThreshold atTime, Func<Guid, bool>? ciFilter = null);
+        Task<IEnumerable<MergedCI>> GetMergedCIsWithTrait(Trait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime);
 
-        Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> CalculateEffectiveTraitsForTrait(Trait trait, LayerSet layerSet, IModelContext trans, TimeThreshold atTime, Func<Guid, bool>? ciFilter = null);
+        Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> CalculateEffectiveTraitsForTrait(Trait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime);
     }
 }

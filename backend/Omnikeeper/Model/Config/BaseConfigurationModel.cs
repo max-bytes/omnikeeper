@@ -19,7 +19,7 @@ namespace Omnikeeper.Model
             this.logger = logger;
         }
 
-        public async Task<BaseConfigurationV1?> GetConfig(IModelContext trans)
+        public async Task<BaseConfigurationV1> GetConfig(IModelContext trans)
         {
             using var command = new NpgsqlCommand(@"
                 SELECT config FROM config.general WHERE key = 'base' LIMIT 1
@@ -27,7 +27,7 @@ namespace Omnikeeper.Model
             using var s = await command.ExecuteReaderAsync();
 
             if (!await s.ReadAsync())
-                return null;
+                throw new Exception("Could not find base config");
 
             var configJO = s.GetFieldValue<JObject>(0);
             try
@@ -39,26 +39,26 @@ namespace Omnikeeper.Model
             catch (Exception e)
             {
                 logger.LogError(e, $"Could not deserialize application configuration");
-                return null;
+                throw new Exception("Could not find base config", e);
             }
         }
 
         public async Task<BaseConfigurationV1> GetConfigOrDefault(IModelContext trans)
         {
-            var fromDB = await GetConfig(trans);
-            if (fromDB == null)
+            try
             {
+                var fromDB = await GetConfig(trans);
+                return fromDB;
+            } catch (Exception) {
                 // return default
-                return new BaseConfigurationV1
-                {
-                    ArchiveChangesetThreshold = TimeSpan.FromDays(90),
-                    CLBRunnerInterval = "*/15 * * * * *",
-                    ArchiveOldDataRunnerInterval = "*/5 * * * * *",
-                    MarkedForDeletionRunnerInterval = "* * * * *",
-                    ExternalIDManagerRunnerInterval = "*/5 * * * * *"
-                };
+                return new BaseConfigurationV1(
+                    TimeSpan.FromDays(90),
+                    "*/15 * * * * *",
+                    "*/5 * * * * *",
+                    "* * * * *",
+                    "*/5 * * * * *"
+                );
             }
-            return fromDB;
         }
 
         public async Task<BaseConfigurationV1> SetConfig(BaseConfigurationV1 config, IModelContext trans)

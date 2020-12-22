@@ -77,7 +77,7 @@ namespace Omnikeeper.GridView.Queries
 
                 var res = await effectiveTraitModel.GetMergedCIsWithTrait(
                     activeTrait,
-                    new LayerSet(config.ReadLayerset.ToArray()),
+                    new LayerSet(config.ReadLayerset.ToArray()), new AllCIIDsSelection(),
                     trans,
                     TimeThreshold.BuildLatest()
                     );

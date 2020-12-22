@@ -21,16 +21,19 @@ namespace Omnikeeper.Model.Decorators
         public async Task<RecursiveTraitSet> GetRecursiveTraitSet(IModelContext trans, TimeThreshold timeThreshold)
         {
             if (timeThreshold.IsLatest)
-                return await trans.GetOrCreateCachedValueAsync(CacheKeyService.Traits(), async () =>
+            {
+                var (item, hit) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.Traits(), async () =>
                 {
                     return await model.GetRecursiveTraitSet(trans, timeThreshold);
-                }, CacheKeyService.TraitsChangeToken());
+                });
+                return item;
+            }
             else return await model.GetRecursiveTraitSet(trans, timeThreshold);
         }
 
         public async Task<RecursiveTraitSet> SetRecursiveTraitSet(RecursiveTraitSet traitSet, IModelContext trans)
         {
-            trans.CancelToken(CacheKeyService.TraitsChangeToken()); // TODO: only evict cache when insert changes
+            trans.EvictFromCache(CacheKeyService.Traits()); // TODO: only evict cache when insert changes
             return await model.SetRecursiveTraitSet(traitSet, trans);
         }
     }

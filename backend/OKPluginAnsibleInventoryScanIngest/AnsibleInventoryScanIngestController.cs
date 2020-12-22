@@ -51,6 +51,11 @@ namespace Omnikeeper.Controllers.Ingest
                 var writeLayer = await layerModel.GetLayer(writeLayerID, mc);
                 var user = await currentUserService.GetCurrentUser(mc);
 
+                if (writeLayer == null)
+                {
+                    return BadRequest($"Cannot write to layer with ID {writeLayerID}: layer does not exist");
+                }
+
                 // authorization
                 if (!authorizationService.CanUserWriteToLayer(user, writeLayer))
                 {

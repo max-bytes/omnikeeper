@@ -177,7 +177,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IChangesetModel, ChangesetModel>();
             services.AddSingleton<ITemplateModel, TemplateModel>();
             services.AddSingleton<IPredicateModel, PredicateModel>();
-            services.AddSingleton<IMemoryCacheModel, MemoryCacheModel>();
+            services.AddSingleton<ICacheModel, CacheModel>();
             services.AddSingleton<IODataAPIContextModel, ODataAPIContextModel>();
             services.AddSingleton<IRecursiveTraitModel, RecursiveTraitModel>();
             services.AddSingleton<IEffectiveTraitModel, EffectiveTraitModel>();

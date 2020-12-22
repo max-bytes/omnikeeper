@@ -11,7 +11,7 @@ namespace Omnikeeper.Base.Service
             return TraitSet.Build(FlattenDependentTraits(rts.Traits));
         }
 
-        public static IEnumerable<Trait> FlattenDependentTraits(IReadOnlyDictionary<string, RecursiveTrait> input)
+        public static IEnumerable<Trait> FlattenDependentTraits(IDictionary<string, RecursiveTrait> input)
         {
             var flattened = new Dictionary<string, Trait>();
             var unflattened = new Dictionary<string, RecursiveTrait>(input);

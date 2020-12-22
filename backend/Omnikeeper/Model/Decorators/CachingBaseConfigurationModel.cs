@@ -17,25 +17,27 @@ namespace Omnikeeper.Model.Decorators
             Model = model;
         }
 
-        public async Task<BaseConfigurationV1?> GetConfig(IModelContext trans)
+        public async Task<BaseConfigurationV1> GetConfig(IModelContext trans)
         {
-            return await trans.GetOrCreateCachedValueAsync(CacheKeyService.BaseConfiguration(), async () =>
+            var (item, hit) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.BaseConfiguration(), async () =>
             {
                 return await Model.GetConfig(trans);
-            }, CacheKeyService.BaseConfigurationChangeToken());
+            });
+            return item;
         }
 
         public async Task<BaseConfigurationV1> GetConfigOrDefault(IModelContext trans)
         {
-            return await trans.GetOrCreateCachedValueAsync(CacheKeyService.BaseConfiguration(), async () =>
+            var (item, hit) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.BaseConfiguration(), async () =>
             {
                 return await Model.GetConfigOrDefault(trans);
-            }, CacheKeyService.BaseConfigurationChangeToken());
+            });
+            return item;
         }
 
         public async Task<BaseConfigurationV1> SetConfig(BaseConfigurationV1 config, IModelContext trans)
         {
-            trans.CancelToken(CacheKeyService.BaseConfigurationChangeToken());
+            trans.EvictFromCache(CacheKeyService.BaseConfiguration());
             return await Model.SetConfig(config, trans);
         }
     }

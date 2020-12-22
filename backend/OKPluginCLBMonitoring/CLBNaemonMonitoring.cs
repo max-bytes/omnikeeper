@@ -213,7 +213,7 @@ namespace OKPluginCLBMonitoring
 
             // assign monitored cis to naemon instances
             var monitoredByCIIDFragments = new List<BulkRelationDataPredicateScope.Fragment>();
-            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTrait(naemonInstanceTrait, layerSetAll, trans, timeThreshold);
+            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTrait(naemonInstanceTrait, layerSetAll, new AllCIIDsSelection(), trans, timeThreshold);
             foreach (var naemonInstanceTS in naemonInstancesTS)
                 foreach (var monitoredCI in monitoredCIs.Values)
                     if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value.et))

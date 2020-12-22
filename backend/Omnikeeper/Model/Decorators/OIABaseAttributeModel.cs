@@ -44,6 +44,12 @@ namespace Omnikeeper.Model.Decorators
             return await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
         }
 
+        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            // TODO: implement
+            return await model.FindCIIDsWithAttribute(name, selection, layerID, trans, atTime);
+        }
+
         public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))

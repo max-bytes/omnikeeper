@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 using Omnikeeper.Base.Model;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,11 +7,11 @@ using System.Reflection;
 
 namespace Omnikeeper.Model
 {
-    public class MemoryCacheModel : IMemoryCacheModel
+    public class CacheModel : ICacheModel
     {
-        private IMemoryCache cache;
+        private IDistributedCache cache;
 
-        public MemoryCacheModel(IMemoryCache cache)
+        public CacheModel(IDistributedCache cache)
         {
             this.cache = cache;
         }
@@ -18,8 +19,12 @@ namespace Omnikeeper.Model
         public IEnumerable<string> GetKeys()
         {
             // have to get items by reflection
+            // TODO: move and encapsulate access to IDistributedCache
+            var memcacheField = typeof(MemoryDistributedCache).GetField("_memCache", BindingFlags.NonPublic | BindingFlags.Instance);
+            var memcache = (MemoryCache)memcacheField!.GetValue(cache)!;
+
             var field = typeof(MemoryCache).GetProperty("EntriesCollection", BindingFlags.NonPublic | BindingFlags.Instance);
-            var value = field!.GetValue(cache);
+            var value = field!.GetValue(memcache);
 
             var keys = (value as IDictionary)!.Keys;
 

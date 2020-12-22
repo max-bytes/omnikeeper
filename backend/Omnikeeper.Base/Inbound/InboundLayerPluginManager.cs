@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -41,17 +42,22 @@ namespace Omnikeeper.Base.Inbound
 
         public async Task<bool> IsValidOnlinePluginInstance(string instanceName, IModelContext trans)
         {
-            var config = await ioaConfigModel.GetContextByName(instanceName, trans);
-            if (config != null)
+            if (instanceName == "") return false;
+            try
+            {
+                var config = await ioaConfigModel.GetContextByName(instanceName, trans);
                 return onlinePluginsBuilders.ContainsKey(config.Config.BuilderName);
-            return false;
+            } catch (Exception)
+            {
+                return false;
+            }
         }
 
         public async Task<IOnlineInboundAdapter?> GetOnlinePluginInstance(string instanceName, IModelContext trans)
         {
-            var config = await ioaConfigModel.GetContextByName(instanceName, trans);
-            if (config != null)
+            try
             {
+                var config = await ioaConfigModel.GetContextByName(instanceName, trans);
                 if (onlinePluginsBuilders.TryGetValue(config.Config.BuilderName, out var builder))
                 {
                     var idMapper = await externalIDMapper.CreateOrGetScoped(
@@ -61,8 +67,12 @@ namespace Omnikeeper.Base.Inbound
 
                     return builder.Build(config.Config, appConfig, idMapper, loggerFactory);
                 }
+                return null;
             }
-            return null;
+            catch (Exception)
+            {
+                return null;
+            }
         }
     }
 }

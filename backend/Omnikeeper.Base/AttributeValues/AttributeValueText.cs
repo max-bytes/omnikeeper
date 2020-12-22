@@ -15,11 +15,14 @@ namespace Omnikeeper.Entity.AttributeValues
         bool FullTextSearch(string searchString, CompareOptions compareOptions);
     }
 
+    [Serializable]
     public class AttributeScalarValueText : IAttributeScalarValue<string>, IEquatable<AttributeScalarValueText>, IAttributeValueText
     {
-        public bool Multiline { get; protected set; }
+        private readonly bool multiline;
+        public bool Multiline => multiline;
+        private readonly string value;
+        public string Value => value;
 
-        public string Value { get; private set; }
         public string Value2String() => Value;
         public string[] ToRawDTOValues() => new string[] { Value };
         public object ToGenericObject() => Value;
@@ -35,8 +38,8 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public AttributeScalarValueText(string value, bool multiline = false)
         {
-            Value = value;
-            Multiline = multiline;
+            this.value = value;
+            this.multiline = multiline;
         }
 
         public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
@@ -58,6 +61,7 @@ namespace Omnikeeper.Entity.AttributeValues
     }
 
 
+    [Serializable]
     public class AttributeArrayValueText : AttributeArrayValue<AttributeScalarValueText, string>, IAttributeValueText
     {
         protected AttributeArrayValueText(AttributeScalarValueText[] values) : base(values)

@@ -7,7 +7,6 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -56,7 +55,7 @@ namespace Omnikeeper.Base.Service
             private readonly IAttributeModel attributeModel;
             private readonly TimeThreshold atTime;
 
-            private readonly IDictionary<string, IImmutableDictionary<Guid, MergedCIAttribute>> attributeCache = new Dictionary<string, IImmutableDictionary<Guid, MergedCIAttribute>>();
+            private readonly IDictionary<string, IDictionary<Guid, MergedCIAttribute>> attributeCache = new Dictionary<string, IDictionary<Guid, MergedCIAttribute>>();
             private readonly IDictionary<Guid, Guid> temp2finalCIIDMapping = new Dictionary<Guid, Guid>();
 
 

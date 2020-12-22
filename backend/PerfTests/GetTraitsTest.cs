@@ -23,20 +23,12 @@ namespace PerfTests
 {
     class GetTraitsTest : DIServicedTestBase
     {
-        private List<Guid> ciNames = new List<Guid>();
+        private List<Guid> ciids = new List<Guid>();
         private List<string> layerNames = new List<string>();
 
         public GetTraitsTest() : base(true)
         {
 
-        }
-
-
-        private V GetRandom<V>(Random r, params (V item, int chance)[] possibilities)
-        {
-            var indices = possibilities.SelectMany((p, i) => Enumerable.Repeat(i, p.chance)).ToArray();
-            var index = r.Next(0, indices.Length - 1);
-            return possibilities[indices[index]].item;
         }
 
         public async Task SetupData()
@@ -52,19 +44,19 @@ namespace PerfTests
             var traitModel = ServiceProvider.GetRequiredService<IRecursiveTraitModel>();
             var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
             
-            var numCIs = 500;
+            var numCIs = 50000;
             var numLayers = 4;
-            var numAttributeInserts = 5000;
+            var numAttributeInserts = 500000;
 
             var random = new Random(3);
 
-            Func<IAttributeValue> randomAttributeValue = () => new AttributeScalarValueText("V" + RandomString.Generate(8, random));
+            Func<IAttributeValue> randomAttributeValue = () => new AttributeScalarValueText("V" + RandomUtility.GenerateRandomString(8, random));
             var possibleAttributes = new ((string name, Func<IAttributeValue> value), int chance)[]
             {
                 (("hostname", randomAttributeValue), 5),
                 (("ipAddress", randomAttributeValue), 1),
                 (("application_name", randomAttributeValue), 1),
-                (("os_family", () => new AttributeScalarValueText(GetRandom(random, ("Windows", 10), ("Redhat", 3), ("Gentoo", 1)))), 5),
+                (("os_family", () => new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Windows", 10), ("Redhat", 3), ("Gentoo", 1)))), 5),
                 (("device", randomAttributeValue), 1),
                 (("mount", randomAttributeValue), 1),
                 (("type", randomAttributeValue), 1),
@@ -76,43 +68,45 @@ namespace PerfTests
                 (("generic-attribute 5", randomAttributeValue), 1),
             };
 
-
-            ciNames = Enumerable.Range(0, numCIs).Select(i =>
+            ciids = Enumerable.Range(0, numCIs).Select(i =>
             {
                 return Guid.NewGuid();
             }).ToList();
 
             layerNames = Enumerable.Range(0, numLayers).Select(i =>
             {
-                var identity = "L" + RandomString.Generate(8, random);
+                var identity = "L" + RandomUtility.GenerateRandomString(8, random);
                 return identity;
             }).ToList();
 
             var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
 
-            //Console.WriteLine(ciNames.Count());
             using var mc = ModelContextBuilder.BuildDeferred();
-            var cis = ciNames.Select(identity =>
+            foreach(var ciid in ciids)
             {
-                return (ciModel.CreateCI(identity, mc).GetAwaiter().GetResult(), identity);
-            }).ToList();
+                ciModel.CreateCI(ciid, mc).GetAwaiter().GetResult();
+            };
 
             var layers = layerNames.Select(identity =>
             {
                 return layerModel.CreateLayer(identity, mc).GetAwaiter().GetResult();
             }).ToList();
 
-            var attributes = Enumerable.Range(0, numAttributeInserts).Select(i =>
+            await traitModel.SetRecursiveTraitSet(Traits.Get(), mc);
+
+            var fragments = Enumerable.Range(0, numAttributeInserts).Select(i =>
             {
-                var nameValue = GetRandom(random, possibleAttributes);
+                var nameValue = RandomUtility.GetRandom(random, possibleAttributes);
                 var name = nameValue.name;
                 var value = nameValue.value();
+                var ciid = ciids.GetRandom(random);
                 var layer = layers.GetRandom(random);
-                var ciid = cis.GetRandom(random).Item1;
-                return attributeModel.InsertAttribute(name!, value, ciid, layer!.ID, changeset, new DataOriginV1(DataOriginType.Manual), mc).GetAwaiter().GetResult();
-            }).ToList();
+                return (layer, new BulkCIAttributeDataLayerScope.Fragment(name, value, ciid));
+            }).GroupBy(t => t.layer.ID, t => t.Item2);
 
-            await traitModel.SetRecursiveTraitSet(Traits.Get(), mc);
+            foreach (var fg in fragments) {
+                await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", fg.Key, fg), changeset, new DataOriginV1(DataOriginType.Manual), mc);
+            }
 
             mc.Commit();
 
@@ -128,6 +122,7 @@ namespace PerfTests
             var random = new Random(3);
 
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
+            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
             var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
             var effectiveTraitModel = ServiceProvider.GetRequiredService<IEffectiveTraitModel>();
             var traitsProvider = ServiceProvider.GetRequiredService<ITraitsProvider>();
@@ -141,7 +136,7 @@ namespace PerfTests
 
             var cis = Time("First fetch of CIs with trait host", async () =>
             {
-                return await effectiveTraitModel.GetMergedCIsWithTrait(traitHost, layerset, mc, time);
+                return await effectiveTraitModel.GetMergedCIsWithTrait(traitHost, layerset, new AllCIIDsSelection(), mc, time);
             });
             Console.WriteLine($"Count: {cis.Count()}");
             Console.WriteLine("Attributes of random CI");
@@ -152,11 +147,11 @@ namespace PerfTests
 
             var cis2 = Time("Second fetch of CIs with trait host", async () =>
             {
-                return await effectiveTraitModel.GetMergedCIsWithTrait(traitHost, layerset, mc, time);
+                return await effectiveTraitModel.GetMergedCIsWithTrait(traitHost, layerset, new AllCIIDsSelection(), mc, time);
             });
             var cis3 = Time("Third fetch of CIs with trait host", async () =>
             {
-                return await effectiveTraitModel.GetMergedCIsWithTrait(traitHost, layerset, mc, time);
+                return await effectiveTraitModel.GetMergedCIsWithTrait(traitHost, layerset, new AllCIIDsSelection(), mc, time);
             });
             Console.WriteLine("Attributes of random CI 3");
             foreach (var aa in cis3.GetRandom(random).MergedAttributes)
@@ -167,7 +162,7 @@ namespace PerfTests
 
             var cis4 = Time("First fetch of CIs with trait linux-host", async () =>
             {
-                return await effectiveTraitModel.GetMergedCIsWithTrait(traitLinuxHost, layerset, mc, time);
+                return await effectiveTraitModel.GetMergedCIsWithTrait(traitLinuxHost, layerset, new AllCIIDsSelection(), mc, time);
             });
             Console.WriteLine($"Count: {cis4.Count()}");
             Console.WriteLine("Attributes of random CI");
@@ -178,7 +173,14 @@ namespace PerfTests
 
             var cis5 = Time("Second fetch of CIs with trait linux-host", async () =>
             {
-                return await effectiveTraitModel.GetMergedCIsWithTrait(traitLinuxHost, layerset, mc, time);
+                return await effectiveTraitModel.GetMergedCIsWithTrait(traitLinuxHost, layerset, new AllCIIDsSelection(), mc, time);
+            });
+
+            // fetch CIs directly, as comparison
+            var ciids = cis5.Select(ci => ci.ID);
+            var cis6 = Time("Fetching CIs directly", async () =>
+            {
+                return await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(ciids), layerset, false, mc, time);
             });
         }
 

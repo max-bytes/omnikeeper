@@ -13,7 +13,7 @@ namespace Omnikeeper.Base.Utils
 
         public NpgsqlConnection Build(IConfiguration configuration)
         {
-            var cs = configuration.GetConnectionString("LandscapeDatabaseConnection");
+            var cs = configuration.GetConnectionString("LandscapeDatabaseConnection"); // TODO: add Enlist=false to connection string
             NpgsqlConnection conn = new NpgsqlConnection(cs);
             conn.Open();
             connectorIDs.Add(conn.ProcessID);
@@ -26,7 +26,7 @@ namespace Omnikeeper.Base.Utils
 
         public NpgsqlConnection Build(string dbName, bool pooling = true, bool reloadTypes = false)
         {
-            NpgsqlConnection conn = new NpgsqlConnection($"Server=127.0.0.1;User Id=postgres; Password=postgres;Database={dbName};Pooling={pooling}");
+            NpgsqlConnection conn = new NpgsqlConnection($"Server=127.0.0.1;User Id=postgres; Password=postgres;Database={dbName};Pooling={pooling};Enlist=false");
             conn.Open();
             if (reloadTypes) conn.ReloadTypes(); // HACK, see https://github.com/npgsql/npgsql/issues/2366
             conn.TypeMapper.UseJsonNet();

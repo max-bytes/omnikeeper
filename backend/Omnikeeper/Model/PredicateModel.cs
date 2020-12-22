@@ -123,6 +123,7 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("at_time", atTime.Time);
             command.Parameters.AddWithValue("states", stateFilter.Filter2States());
             command.Parameters.AddWithValue("default_state", DefaultState);
+            command.Prepare();
             using (var s = await command.ExecuteReaderAsync())
             {
                 while (await s.ReadAsync())
@@ -148,7 +149,7 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<Predicate?> GetPredicate(string id, TimeThreshold atTime, AnchorStateFilter stateFilter, IModelContext trans)
+        public async Task<Predicate> GetPredicate(string id, TimeThreshold atTime, AnchorStateFilter stateFilter, IModelContext trans)
         {
             using var command = new NpgsqlCommand(@"
                 SELECT pw.wording_from, pw.wording_to, ps.state, pc.constraints
@@ -169,10 +170,10 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("atTime", atTime.Time);
             command.Parameters.AddWithValue("states", stateFilter.Filter2States());
             command.Parameters.AddWithValue("default_state", DefaultState);
-
+            command.Prepare();
             using var s = await command.ExecuteReaderAsync();
             if (!await s.ReadAsync())
-                return null;
+                throw new Exception($"Could not find predicate with ID {id}");
 
             var wordingFrom = (s.IsDBNull(0)) ? DefaultWordingFrom : s.GetString(0);
             var wordingTo = (s.IsDBNull(1)) ? DefaultWordingTo : s.GetString(1);
@@ -198,6 +199,7 @@ namespace Omnikeeper.Model
                 WHERE p.id = @id
             ", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("id", id);
+            command.Prepare();
             using var s = await command.ExecuteReaderAsync();
             if (!await s.ReadAsync())
                 return null;

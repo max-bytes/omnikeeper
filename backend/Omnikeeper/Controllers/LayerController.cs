@@ -43,7 +43,10 @@ namespace Omnikeeper.Controllers
         public async Task<ActionResult<LayerDTO>> GetLayerByName([FromQuery, Required] string layerName)
         {
             var trans = modelContextBuilder.BuildImmediate();
-            return Ok(LayerDTO.Build(await layerModel.GetLayer(layerName, trans)));
+            var layer = await layerModel.GetLayer(layerName, trans);
+            if (layer == null)
+                return NotFound($"Could not find layer with name {layerName}");
+            return Ok(LayerDTO.Build(layer));
         }
 
         /// <summary>
@@ -57,7 +60,12 @@ namespace Omnikeeper.Controllers
             var ret = new List<LayerDTO>();
             // TODO: better performance: use GetLayers()
             foreach (var layerName in layerNames)
-                ret.Add(LayerDTO.Build(await layerModel.GetLayer(layerName, trans)));
+            {
+                var layer = await layerModel.GetLayer(layerName, trans);
+                if (layer == null)
+                    return NotFound($"Could not find layer with name {layerName}");
+                ret.Add(LayerDTO.Build(layer));
+            }
             return Ok(ret);
         }
     }

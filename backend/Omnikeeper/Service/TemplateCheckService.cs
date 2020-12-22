@@ -7,10 +7,15 @@ namespace Omnikeeper.Service
 {
     public class TemplateCheckService
     {
-        public static (MergedCIAttribute foundAttribute, TemplateErrorsAttribute errors) CalculateTemplateErrorsAttribute(MergedCI ci, CIAttributeTemplate at)
+        public static (MergedCIAttribute? foundAttribute, TemplateErrorsAttribute errors) CalculateTemplateErrorsAttribute(MergedCI ci, CIAttributeTemplate at)
         {
-            var foundAttribute = ci.MergedAttributes.FirstOrDefault(a => a.Key == at.Name).Value;
-            return (foundAttribute, new TemplateErrorsAttribute(at.Name, PerAttributeTemplateChecks(foundAttribute, at)));
+            if (ci.MergedAttributes.TryGetValue(at.Name, out var found))
+            {
+                return (found, new TemplateErrorsAttribute(at.Name, PerAttributeTemplateChecks(found, at)));
+            } else
+            {
+                return (null, new TemplateErrorsAttribute(at.Name, new ITemplateErrorAttribute[] { new TemplateErrorAttributeMissing(at.Name, at.Type) }));
+            }
         }
         public static TemplateErrorsRelation CalculateTemplateErrorsRelation(IEnumerable<CompactRelatedCI> relations, RelationTemplate rt)
         {
@@ -20,27 +25,20 @@ namespace Omnikeeper.Service
         private static IEnumerable<ITemplateErrorAttribute> PerAttributeTemplateChecks(MergedCIAttribute foundAttribute, CIAttributeTemplate at)
         {
             // check required attributes
-            if (foundAttribute == null)
+            if (at.Type != null && (!foundAttribute.Attribute.Value.Type.Equals(at.Type.Value)))
             {
-                yield return new TemplateErrorAttributeMissing(at.Name, at.Type);
+                yield return TemplateErrorAttributeWrongType.BuildFromSingle(at.Type.Value, foundAttribute.Attribute.Value.Type);
             }
-            else
+            var isFoundAttributeArray = foundAttribute.Attribute.Value is IAttributeArrayValue;
+            if (at.IsArray.HasValue && isFoundAttributeArray != at.IsArray.Value)
             {
-                if (at.Type != null && (!foundAttribute.Attribute.Value.Type.Equals(at.Type.Value)))
-                {
-                    yield return TemplateErrorAttributeWrongType.BuildFromSingle(at.Type.Value, foundAttribute.Attribute.Value.Type);
-                }
-                var isFoundAttributeArray = foundAttribute.Attribute.Value is IAttributeArrayValue;
-                if (at.IsArray.HasValue && isFoundAttributeArray != at.IsArray.Value)
-                {
-                    yield return TemplateErrorAttributeWrongMultiplicity.Build(at.IsArray.Value);
-                }
+                yield return TemplateErrorAttributeWrongMultiplicity.Build(at.IsArray.Value);
+            }
 
-                foreach (var c in at.ValueConstraints)
-                {
-                    var ce = c.CalculateErrors(foundAttribute.Attribute.Value);
-                    foreach (var cc in ce) yield return cc;
-                }
+            foreach (var c in at.ValueConstraints)
+            {
+                var ce = c.CalculateErrors(foundAttribute.Attribute.Value);
+                foreach (var cc in ce) yield return cc;
             }
 
             // TODO: other checks

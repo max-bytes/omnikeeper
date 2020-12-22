@@ -4,9 +4,11 @@ using System.Linq;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
+    [Serializable]
     public class AttributeScalarValueInteger : IAttributeScalarValue<long>, IEquatable<AttributeScalarValueInteger>
     {
-        public long Value { get; private set; }
+        private readonly long value;
+        public long Value => value;
         public string Value2String() => Value.ToString();
         public string[] ToRawDTOValues() => new string[] { Value.ToString() };
         public object ToGenericObject() => Value;
@@ -22,7 +24,7 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public AttributeScalarValueInteger(long value)
         {
-            Value = value;
+            this.value = value;
         }
 
         public static AttributeScalarValueInteger BuildFromString(string value)
@@ -34,6 +36,7 @@ namespace Omnikeeper.Entity.AttributeValues
     }
 
 
+    [Serializable]
     public class AttributeArrayValueInteger : AttributeArrayValue<AttributeScalarValueInteger, long>
     {
         public AttributeArrayValueInteger(AttributeScalarValueInteger[] values) : base(values)

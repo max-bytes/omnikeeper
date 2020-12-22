@@ -75,6 +75,11 @@ namespace Omnikeeper.Model
 
             var current = await GetLayer(id, trans);
 
+            if (current == null)
+            {
+                throw new Exception("Could not update layer with ID {id} because it could not be found");
+            }
+
             Debug.Assert(current.ComputeLayerBrainLink != null);
             Debug.Assert(current.OnlineInboundAdapterLink != null);
 
@@ -152,22 +157,11 @@ namespace Omnikeeper.Model
             {
                 using var command = new NpgsqlCommand(@"select id from layer where name = @name LIMIT 1", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("name", ln);
+                command.Prepare();
                 var s = await command.ExecuteScalarAsync();
                 if (s == null)
                     throw new Exception(@$"Could not find layer with name ""{ln}""");
                 layerIDs.Add((long)s);
-            }
-            return new LayerSet(layerIDs.ToArray());
-        }
-
-        public async Task<LayerSet> BuildLayerSet(IModelContext trans)
-        {
-            var layerIDs = new List<long>();
-            using var command = new NpgsqlCommand(@"select id from layer", trans.DBConnection, trans.DBTransaction);
-            using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                layerIDs.Add(reader.GetInt64(0));
             }
             return new LayerSet(layerIDs.ToArray());
         }
@@ -190,6 +184,7 @@ namespace Omnikeeper.Model
                     ON lc.layer_id = l.id
                 WHERE {whereClause}", trans.DBConnection, trans.DBTransaction);
             addParameters(command.Parameters);
+            command.Prepare();
             using var r = await command.ExecuteReaderAsync();
             while (await r.ReadAsync())
             {
@@ -204,13 +199,13 @@ namespace Omnikeeper.Model
             return layers;
         }
 
-        public async Task<Layer> GetLayer(string layerName, IModelContext trans)
+        public async Task<Layer?> GetLayer(string layerName, IModelContext trans)
         {
             var layers = await _GetLayers("l.name = @name LIMIT 1", (p) => p.AddWithValue("name", layerName), trans);
             return layers.FirstOrDefault();
         }
 
-        public async Task<Layer> GetLayer(long layerID, IModelContext trans)
+        public async Task<Layer?> GetLayer(long layerID, IModelContext trans)
         {
             var layers = await _GetLayers("l.id = @id LIMIT 1", (p) => p.AddWithValue("id", layerID), trans);
             return layers.FirstOrDefault();

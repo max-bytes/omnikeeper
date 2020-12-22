@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Npgsql;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -11,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Model.Decorators
 {
+    // TODO: reactivate
     public class CachingPredicateModel : IPredicateModel
     {
         private IPredicateModel Model { get; }
@@ -23,22 +22,26 @@ namespace Omnikeeper.Model.Decorators
         public async Task<IDictionary<string, Predicate>> GetPredicates(IModelContext trans, TimeThreshold atTime, AnchorStateFilter stateFilter)
         {
             if (atTime.IsLatest)
-                return await trans.GetOrCreateCachedValueAsync(CacheKeyService.Predicates(stateFilter), async () =>
+            {
+                var (item, hit) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.Predicates(stateFilter), async () =>
                 {
                     return await Model.GetPredicates(trans, atTime, stateFilter);
-                }, CacheKeyService.PredicatesChangeToken());
-            else return await Model.GetPredicates(trans, atTime, stateFilter);
+                });
+                return item;
+            }
+            else
+                return await Model.GetPredicates(trans, atTime, stateFilter);
         }
 
-        public async Task<Predicate?> GetPredicate(string id, TimeThreshold atTime, AnchorStateFilter stateFilter, IModelContext trans)
+        public async Task<Predicate> GetPredicate(string id, TimeThreshold atTime, AnchorStateFilter stateFilter, IModelContext trans)
         {
-
             if (atTime.IsLatest)
             {
-                return await trans.GetOrCreateCachedValueAsync(CacheKeyService.Predicate(id), async () =>
+                var (item, hit) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.Predicate(id), async () =>
                 {
                     return await Model.GetPredicate(id, atTime, stateFilter, trans);
-                }, CacheKeyService.PredicatesChangeToken());
+                });
+                return item;
             }
 
             return await Model.GetPredicate(id, atTime, stateFilter, trans);
@@ -50,8 +53,7 @@ namespace Omnikeeper.Model.Decorators
 
             if (changed)
             {
-                trans.CancelToken(CacheKeyService.PredicatesChangeToken());
-                trans.CancelToken(CacheKeyService.PredicateChangeToken(id));
+                EvictFromCache(id, trans);
             }
 
             return (predicate, changed);
@@ -63,11 +65,21 @@ namespace Omnikeeper.Model.Decorators
 
             if (success)
             {
-                trans.CancelToken(CacheKeyService.PredicatesChangeToken());
-                trans.CancelToken(CacheKeyService.PredicateChangeToken(id));
+                EvictFromCache(id, trans);
             }
 
             return success;
+        }
+
+        private void EvictFromCache(string id, IModelContext trans)
+        {
+            trans.EvictFromCache(CacheKeyService.Predicate(id));
+            System.Collections.IList list = Enum.GetValues(typeof(AnchorStateFilter));
+            for (int i = 0; i < list.Count; i++)
+            {
+                AnchorStateFilter sf = (AnchorStateFilter)list[i]!;
+                trans.EvictFromCache(CacheKeyService.Predicates(sf));
+            }
         }
     }
 }

@@ -7,9 +7,11 @@ using System.Linq;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
+    [Serializable]
     public class AttributeScalarValueImage : IAttributeScalarValue<BinaryScalarAttributeValueProxy>, IEquatable<AttributeScalarValueImage>
     {
-        public BinaryScalarAttributeValueProxy Value { get; private set; }
+        private readonly BinaryScalarAttributeValueProxy value;
+        public BinaryScalarAttributeValueProxy Value => value;
         public string Value2String() => Value.ToString();
         public string[] ToRawDTOValues()
         {
@@ -31,11 +33,12 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public AttributeScalarValueImage(BinaryScalarAttributeValueProxy proxy)
         {
-            Value = proxy;
+            this.value = proxy;
         }
     }
 
 
+    [Serializable]
     public class AttributeArrayValueImage : AttributeArrayValue<AttributeScalarValueImage, BinaryScalarAttributeValueProxy>
     {
         protected AttributeArrayValueImage(AttributeScalarValueImage[] values) : base(values)

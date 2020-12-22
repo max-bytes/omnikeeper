@@ -193,7 +193,8 @@ namespace Omnikeeper.Startup
             });
             services.AddSwaggerGenNewtonsoftSupport();
 
-            services.AddMemoryCache();
+            //services.AddMemoryCache();
+            services.AddDistributedMemoryCache();
 
             // HACK: needed by odata, see: https://github.com/OData/WebApi/issues/2024
             services.AddMvcCore(options =>

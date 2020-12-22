@@ -25,15 +25,16 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    [Serializable]
     public class CIAttribute
     {
-        public Guid ID { get; private set; }
-        public string Name { get; private set; }
-        public Guid CIID { get; private set; }
-        public IAttributeValue Value { get; private set; }
-        public AttributeState State { get; private set; }
-        public Guid ChangesetID { get; private set; }
-        public DataOriginV1 Origin { get; private set; }
+        public readonly Guid ID;
+        public readonly string Name;
+        public readonly Guid CIID;
+        public readonly IAttributeValue Value;
+        public readonly AttributeState State;
+        public readonly Guid ChangesetID;
+        public readonly DataOriginV1 Origin;
 
         // information hash: 
         public string InformationHash => CreateInformationHash(Name, CIID);
