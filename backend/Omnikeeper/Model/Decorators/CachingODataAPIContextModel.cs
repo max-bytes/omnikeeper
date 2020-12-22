@@ -24,25 +24,25 @@ namespace Omnikeeper.Model.Decorators
             return await Model.GetContexts(trans);
         }
 
-        public async Task<ODataAPIContext?> GetContextByID(string id, IModelContext trans)
+        public async Task<ODataAPIContext> GetContextByID(string id, IModelContext trans)
         {
-            return await trans.GetOrCreateCachedValueAsync(CacheKeyService.ODataAPIContext(id), async () =>
+            var (item, hit) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.ODataAPIContext(id), async () =>
             {
                 return await Model.GetContextByID(id, trans);
-            }, CacheKeyService.ODataAPIContextChangeToken(id));
+            });
+            return item;
         }
 
-        public async Task<ODataAPIContext?> Upsert(string id, ODataAPIContext.IConfig config, IModelContext trans)
+        public async Task<ODataAPIContext> Upsert(string id, ODataAPIContext.IConfig config, IModelContext trans)
         {
-            trans.CancelToken(CacheKeyService.ODataAPIContextChangeToken(id));
+            trans.EvictFromCache(CacheKeyService.ODataAPIContext(id));
             return await Model.Upsert(id, config, trans);
         }
 
-        public async Task<ODataAPIContext?> Delete(string id, IModelContext trans)
+        public async Task<ODataAPIContext> Delete(string id, IModelContext trans)
         {
             var c = await Model.Delete(id, trans);
-            if (c != null)
-                trans.CancelToken(CacheKeyService.ODataAPIContextChangeToken(c.ID));
+            trans.EvictFromCache(CacheKeyService.ODataAPIContext(c.ID));
             return c;
         }
     }

@@ -16,21 +16,25 @@ namespace Omnikeeper.Base.Entity
         IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value);
     }
 
+    [Serializable]
     public class CIAttributeValueConstraintTextLength : ICIAttributeValueConstraint
     {
-        public int? Minimum { get; set; }
-        public int? Maximum { get; set; }
+        public readonly int? Minimum;
+        public readonly int? Maximum;
 
+        public CIAttributeValueConstraintTextLength(int? minimum, int? maximum)
+        {
+            Minimum = minimum;
+            Maximum = maximum;
+        }
+
+        [JsonIgnore]
         public string type => "textLength";
 
         public static CIAttributeValueConstraintTextLength Build(int? min, int? max)
         {
             if (min > max) throw new Exception("Minimum value must not be larger than maximum value");
-            return new CIAttributeValueConstraintTextLength()
-            {
-                Minimum = min,
-                Maximum = max
-            };
+            return new CIAttributeValueConstraintTextLength(min, max);
         }
 
         public IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value)
@@ -47,15 +51,32 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    [Serializable]
     public class CIAttributeValueConstraintTextRegex : ICIAttributeValueConstraint
     {
-        public Regex Regex { get; set; }
+        public readonly string RegexStr;
+        public readonly RegexOptions RegexOptions;
 
+        [JsonIgnore]
         public string type => "textRegex";
 
-        public CIAttributeValueConstraintTextRegex(Regex regex)
+        [JsonIgnore]
+        [NonSerialized]
+        private Regex? regex;
+
+        public CIAttributeValueConstraintTextRegex(Regex r)
         {
-            Regex = regex;
+            RegexStr = r.ToString(); // NOTE: weird, but ToString() returns the original pattern
+            RegexOptions = r.Options;
+            regex = r;
+        }
+
+        [JsonConstructor]
+        public CIAttributeValueConstraintTextRegex(string regexStr, RegexOptions regexOptions)
+        {
+            RegexStr = regexStr;
+            RegexOptions = regexOptions;
+            regex = null;
         }
 
         public IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value)
@@ -63,7 +84,9 @@ namespace Omnikeeper.Base.Entity
             // HACK: this is a bit unclean, as we do CLR type-checking, but return an error based on the AttributeValueType value
             if (value is IAttributeValueText v)
             {
-                return v.MatchRegex(Regex);
+                if (regex == null)
+                    regex = new Regex(RegexStr, RegexOptions);
+                return v.MatchRegex(regex);
             }
             else
             {
@@ -72,15 +95,16 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    [Serializable]
     public class CIAttributeTemplate
     {
-        public string Name { get; set; }
+        public readonly string Name;
         // TODO: descriptions
-        public AttributeValueType? Type { get; set; } // TODO: could be more than one type allowed
-        public bool? IsArray { get; set; }
+        public readonly AttributeValueType? Type; // TODO: could be more than one type allowed
+        public readonly bool? IsArray;
         // TODO: status: required(default, other statii: optional, not allowed)
         // TODO: required layer (optional)
-        public IEnumerable<ICIAttributeValueConstraint> ValueConstraints { get; set; }
+        public readonly IEnumerable<ICIAttributeValueConstraint> ValueConstraints;
 
         public static CIAttributeTemplate BuildFromParams(string name, AttributeValueType? type, bool? isArray, params ICIAttributeValueConstraint[] valueConstraints)
         {

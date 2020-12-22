@@ -39,20 +39,20 @@ namespace Tests.Integration.Model
             var testTrait2 = (await traitsProvider.GetActiveTrait("test_trait_2", trans, timeThreshold))!;
             var testTrait3 = (await traitsProvider.GetActiveTrait("test_trait_3", trans, timeThreshold))!;
 
-            var et1 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait1, layerset, trans, timeThreshold);
+            var et1 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait1, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(3, et1.Count());
-            var et2 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait2, layerset, trans, timeThreshold);
+            var et2 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait2, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(2, et2.Count());
             Assert.IsTrue(et2.All(t => t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a2") && t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a4")));
-            var et3 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait3, layerset, trans, timeThreshold);
+            var et3 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait3, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(2, et3.Count());
             Assert.IsTrue(et3.All(t => t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
 
-            var cis1 = await traitModel.GetMergedCIsWithTrait(testTrait1, layerset, trans, timeThreshold);
+            var cis1 = await traitModel.GetMergedCIsWithTrait(testTrait1, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(3, cis1.Count());
             cis1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
 
-            var cis2 = await traitModel.GetMergedCIsWithTrait(testTrait2, layerset, trans, timeThreshold);
+            var cis2 = await traitModel.GetMergedCIsWithTrait(testTrait2, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(2, cis2.Count());
             cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
 
@@ -71,9 +71,9 @@ namespace Tests.Integration.Model
             var t4 = await traitsProvider.GetActiveTrait("test_trait_4", trans, timeThreshold);
             var t5 = await traitsProvider.GetActiveTrait("test_trait_5", trans, timeThreshold);
 
-            var t1 = await traitModel.CalculateEffectiveTraitsForTrait(t4!, layerset, trans, timeThreshold);
+            var t1 = await traitModel.CalculateEffectiveTraitsForTrait(t4!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(2, t1.Count());
-            var t2 = await traitModel.CalculateEffectiveTraitsForTrait(t5!, layerset, trans, timeThreshold);
+            var t2 = await traitModel.CalculateEffectiveTraitsForTrait(t5!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(1, t2.Count());
         }
 
@@ -85,7 +85,7 @@ namespace Tests.Integration.Model
             var (traitModel, layerset, _) = await BaseSetup(traitsProvider);
             var trans = ModelContextBuilder.BuildImmediate();
             var tt1 = await traitsProvider.GetActiveTrait("test_trait_1", trans, timeThreshold);
-            var t1 = await traitModel.CalculateEffectiveTraitsForTrait(tt1!, layerset, trans, timeThreshold);
+            var t1 = await traitModel.CalculateEffectiveTraitsForTrait(tt1!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(0, t1.Count());
         }
 
@@ -100,7 +100,7 @@ namespace Tests.Integration.Model
             var predicateModel = new PredicateModel();
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
             var layerModel = new LayerModel();
-            var traitModel = new EffectiveTraitModel(ciModel, relationModel, traitsProvider, oap.Object, NullLogger<EffectiveTraitModel>.Instance);
+            var traitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, traitsProvider, oap.Object, NullLogger<EffectiveTraitModel>.Instance);
 
             var transI = ModelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, transI);

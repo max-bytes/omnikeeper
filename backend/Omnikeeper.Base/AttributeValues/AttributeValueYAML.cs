@@ -7,16 +7,19 @@ using YamlDotNet.RepresentationModel;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
+    [Serializable]
     public class AttributeScalarValueYAML : IAttributeScalarValue<YamlDocument>, IEquatable<AttributeScalarValueYAML>
     {
         private AttributeScalarValueYAML(YamlDocument value, string valueStr)
         {
-            Value = value;
-            ValueStr = valueStr;
+            this.value = value;
+            this.valueStr = valueStr;
         }
 
-        public YamlDocument Value { get; private set; }
-        private string ValueStr { get; set; }
+        private readonly YamlDocument value;
+        public YamlDocument Value => value;
+        private readonly string valueStr;
+        private string ValueStr => valueStr;
 
         public override string ToString() => $"AV-YAML: {Value2String()}";
 
@@ -55,6 +58,7 @@ namespace Omnikeeper.Entity.AttributeValues
     }
 
 
+    [Serializable]
     public class AttributeArrayValueYAML : AttributeArrayValue<AttributeScalarValueYAML, YamlDocument>
     {
         public AttributeArrayValueYAML(AttributeScalarValueYAML[] values) : base(values)

@@ -25,12 +25,18 @@ namespace Omnikeeper.Base.Entity
         {
             LayerIDs = layerIDs;
         }
+        public LayerSet(IEnumerable<long> layerIDs)
+        {
+            LayerIDs = layerIDs.ToArray();
+        }
 
         public IEnumerator<long> GetEnumerator() => ((IEnumerable<long>)LayerIDs).GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => LayerIDs.GetEnumerator();
 
         public bool IsEmpty => LayerIDs.Length <= 0;
+
+        public int Length => LayerIDs.Length;
 
         public static string CreateLayerSetSQLValues(LayerSet layers)
         {

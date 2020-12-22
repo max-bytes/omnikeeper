@@ -52,7 +52,7 @@ namespace Tasks.DBInit
             await traitModel.SetRecursiveTraitSet(DefaultTraits.Get(), mc);
 
             var numApplicationCIs = 1;
-            var numHostCIs = 1;
+            var numHostCIs = 50000;
             var numRunsOnRelations = 1;
             int numAttributesPerCIFrom = 20;
             int numAttributesPerCITo = 40;
@@ -63,17 +63,34 @@ namespace Tasks.DBInit
             //new Predicate("is_part_of", "is part of", "has part", AnchorState.Active),
             //new Predicate("is_attached_to", "is attached to", "has attachment", AnchorState.Active),
             //};
-            var regularAttributeNames = new[] { "att_1", "att_2", "att_3", "att_4", "att_5", "att_6", "att_7", "att_8", "att_9" };
-            var regularAttributeValues = Enumerable.Range(0, 10).Select<int, IAttributeValue>(i =>
+            //var regularAttributeNames = new[] { "att_1", "att_2", "att_3", "att_4", "att_5", "att_6", "att_7", "att_8", "att_9" };
+            //var regularAttributeValues = Enumerable.Range(0, 10).Select<int, IAttributeValue>(i =>
+            //{
+            //    var r = random.Next(6);
+            //    if (r == 0)
+            //        return new AttributeScalarValueInteger(random.Next(1000));
+            //    else if (r == 1)
+            //        return AttributeArrayValueText.BuildFromString(Enumerable.Range(0, random.Next(1, 5)).Select(i => $"value_{i}").ToArray());
+            //    else
+            //        return new AttributeScalarValueText($"attribute value {i + 1}");
+            //}).ToArray();
+            Func<IAttributeValue> randomAttributeValue = () => new AttributeScalarValueText("V" + RandomUtility.GenerateRandomString(8, random));
+            var possibleAttributes = new ((string name, Func<IAttributeValue> value), int chance)[]
             {
-                var r = random.Next(6);
-                if (r == 0)
-                    return new AttributeScalarValueInteger(random.Next(1000));
-                else if (r == 1)
-                    return AttributeArrayValueText.BuildFromString(Enumerable.Range(0, random.Next(1, 5)).Select(i => $"value_{i}").ToArray());
-                else
-                    return new AttributeScalarValueText($"attribute value {i + 1}");
-            }).ToArray();
+                //(("hostname", randomAttributeValue), 5),
+                //(("ipAddress", randomAttributeValue), 1),
+                //(("application_name", randomAttributeValue), 1),
+                //(("os_family", () => new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Windows", 10), ("Redhat", 3), ("Gentoo", 1)))), 5),
+                //(("device", randomAttributeValue), 1),
+                //(("mount", randomAttributeValue), 1),
+                //(("type", randomAttributeValue), 1),
+                //(("active", randomAttributeValue), 1),
+                (("generic-attribute 1", randomAttributeValue), 1),
+                (("generic-attribute 2", randomAttributeValue), 1),
+                (("generic-attribute 3", randomAttributeValue), 1),
+                (("generic-attribute 4", randomAttributeValue), 1),
+                (("generic-attribute 5", randomAttributeValue), 1),
+            };
 
             var applicationCIIDs = Enumerable.Range(0, numApplicationCIs).Select(i =>
             {
@@ -119,11 +136,16 @@ namespace Tasks.DBInit
             {
                 var index = 0;
                 var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+
+
+                var fragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
                 foreach (var ciid in applicationCIIDs)
                 {
                     await ciModel.CreateCI(ciid, trans);
-                    await attributeModel.InsertCINameAttribute($"Application_{index}", ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                    await attributeModel.InsertAttribute("application_name", new AttributeScalarValueText($"Application_{index}"), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    fragments.Add(new BulkCIAttributeDataLayerScope.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText($"Application_{index}"), ciid));
+                    fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("application_name", new AttributeScalarValueText($"Application_{index}"), ciid));
+                    //await attributeModel.InsertCINameAttribute($"Application_{index}", ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    //await attributeModel.InsertAttribute("application_name", new AttributeScalarValueText($"Application_{index}"), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                     index++;
                 }
                 index = 0;
@@ -131,15 +153,30 @@ namespace Tasks.DBInit
                 {
                     var ciType = new string[] { "Host Linux", "Host Windows" }.GetRandom(random);
                     var hostCIID = await ciModel.CreateCI(ciid, trans);
-                    if (ciType.Equals("Host Linux"))
+                    fragments.Add(new BulkCIAttributeDataLayerScope.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText($"{ciType}_{index}"), ciid));
+                    fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("hostname", new AttributeScalarValueText($"hostname_{index}.domain"), ciid));
+                    //await attributeModel.InsertCINameAttribute($"{ciType}_{index}", ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    //await attributeModel.InsertAttribute("hostname", new AttributeScalarValueText($"hostname_{index}.domain"), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    //await attributeModel.InsertAttribute("system", new AttributeScalarValueText($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+
+                    if (ciType.Equals("Host Linux")) {
                         linuxHostCIIds.Add(hostCIID);
-                    else
+                        fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("system", new AttributeScalarValueText($"Linux"), ciid));
+                        fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("os_family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Redhat", 3), ("Gentoo", 1))), ciid));
+                        //await attributeModel.InsertAttribute("os.family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Redhat", 3), ("Gentoo", 1))), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    }
+                    else 
+                    {
                         windowsHostCIIds.Add(hostCIID);
-                    await attributeModel.InsertCINameAttribute($"{ciType}_{index}", ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                    await attributeModel.InsertAttribute("hostname", new AttributeScalarValueText($"hostname_{index}.domain"), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                    await attributeModel.InsertAttribute("system", new AttributeScalarValueText($"{((ciType.Equals("Host Linux")) ? "Linux" : "Windows")}"), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                        fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("system", new AttributeScalarValueText($"Windows"), ciid));
+                        fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("os_family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Windows 7", 10), ("Windows XP", 3), ("Windows 10", 20))), ciid));
+                        //await attributeModel.InsertAttribute("os.family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Windows 7", 10), ("Windows XP", 3), ("Windows 10", 20))), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    }
+
                     index++;
                 }
+
+                await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", cmdbLayerID, fragments), changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
                 trans.Commit();
             }
@@ -161,8 +198,9 @@ namespace Tasks.DBInit
                 {
                     using var trans = modelContextBuilder.BuildDeferred();
                     var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                    var name = regularAttributeNames.GetRandom(random);
-                    var value = regularAttributeValues.GetRandom(random);
+                    var nameValue = RandomUtility.GetRandom(random, possibleAttributes);
+                    var name = nameValue.name;
+                    var value = nameValue.value();
                     await attributeModel.InsertAttribute(name, value, ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                     // TODO: attribute removals
                     trans.Commit();
@@ -257,8 +295,8 @@ namespace Tasks.DBInit
                     var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                    trans.Commit();
                 }
+                trans.Commit();
             }
             if (!linuxHostCIIds.IsEmpty())
             {
@@ -269,8 +307,8 @@ namespace Tasks.DBInit
                     var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                    trans.Commit();
                 }
+                trans.Commit();
             }
 
             // create ansible groups

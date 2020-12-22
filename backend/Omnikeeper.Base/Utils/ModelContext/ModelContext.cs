@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Npgsql;
@@ -7,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,11 +17,11 @@ namespace Omnikeeper.Base.Utils.ModelContext
 {
     public class ModelContextBuilder : IModelContextBuilder
     {
-        private readonly IMemoryCache? memoryCache;
+        private readonly IDistributedCache? memoryCache;
         private readonly NpgsqlConnection npgsqlConnection;
         private readonly ILogger<IModelContext> logger;
 
-        public ModelContextBuilder(IMemoryCache? memoryCache, NpgsqlConnection npgsqlConnection, ILogger<IModelContext> logger)
+        public ModelContextBuilder(IDistributedCache? memoryCache, NpgsqlConnection npgsqlConnection, ILogger<IModelContext> logger)
         {
             this.memoryCache = memoryCache;
             this.npgsqlConnection = npgsqlConnection;
@@ -38,11 +41,11 @@ namespace Omnikeeper.Base.Utils.ModelContext
 
     public class ModelContextImmediateMode : IModelContext
     {
-        private readonly IMemoryCache? memoryCache;
+        private readonly IDistributedCache? memoryCache;
         private readonly NpgsqlConnection conn;
         private readonly ILogger<IModelContext> logger;
 
-        public ModelContextImmediateMode(IMemoryCache? memoryCache, NpgsqlConnection conn, ILogger<IModelContext> logger)
+        public ModelContextImmediateMode(IDistributedCache? memoryCache, NpgsqlConnection conn, ILogger<IModelContext> logger)
         {
             this.memoryCache = memoryCache;
             this.conn = conn;
@@ -68,33 +71,31 @@ namespace Omnikeeper.Base.Utils.ModelContext
             // NO-OP
         }
 
-        public void CancelToken(string tokenName)
+        public void EvictFromCache(string key)
         {
             if (memoryCache != null)
-                Helper.CancelAndRemoveChangeToken(memoryCache, tokenName, logger);
+                memoryCache.RemoveValue(key);
         }
 
-        public async Task<TItem> GetOrCreateCachedValueAsync<TItem>(string key, Func<Task<TItem>> factory, params string[] cancellationTokensToAdd)
+        public async Task<(TItem item, bool hit)> GetOrCreateCachedValueAsync<TItem>(string key, Func<Task<TItem>> factory) where TItem : class
         {
             if (memoryCache != null)
-                return await memoryCache.GetOrCreateAsync(key, async (ce) =>
-                {
-                    var item = await factory();
-                    foreach (var ct in cancellationTokensToAdd)
-                        ce.AddExpirationToken(Helper.GetCancellationChangeToken(memoryCache, ct));
-                    return item;
-                });
+            {
+                return await memoryCache.GetOrCreateThreadSafeAsync(key, factory);
+            }
             else
             {
                 var item = await factory();
-                return item;
+                return (item, false);
             }
         }
 
-        public bool TryGetCachedValue<TItem>(string cacheKey, [MaybeNull] out TItem cacheValue)
+        public bool TryGetCachedValue<TItem>(string cacheKey, [MaybeNull] out TItem? cacheValue) where TItem : class
         {
             if (memoryCache != null)
+            {
                 return memoryCache.TryGetValue(cacheKey, out cacheValue);
+            } 
             else
             {
                 cacheValue = default;
@@ -102,11 +103,11 @@ namespace Omnikeeper.Base.Utils.ModelContext
             }
         }
 
-        public void SetCacheValue<TItem>(string cacheKey, TItem cacheValue, string cancellationToken)
+        public void SetCacheValue<TItem>(string cacheKey, TItem cacheValue) where TItem : class
         {
             if (memoryCache != null)
             {
-                memoryCache.Set(cacheKey, cacheValue, Helper.GetCancellationChangeToken(memoryCache, cancellationToken));
+                memoryCache.SetValue(cacheKey, cacheValue);
             }
         }
 
@@ -115,11 +116,11 @@ namespace Omnikeeper.Base.Utils.ModelContext
 
     public class ModelContextDeferredMode : IModelContext
     {
-        private readonly IMemoryCache? memoryCache;
+        private readonly IDistributedCache? memoryCache;
         private readonly ILogger<IModelContext> logger;
-        private readonly ISet<string> cacheCancellationTokens = new HashSet<string>();
+        private readonly ISet<string> cacheEvictions = new HashSet<string>();
 
-        public ModelContextDeferredMode(NpgsqlTransaction dbTransaction, IMemoryCache? memoryCache, ILogger<IModelContext> logger)
+        public ModelContextDeferredMode(NpgsqlTransaction dbTransaction, IDistributedCache? memoryCache, ILogger<IModelContext> logger)
         {
             DBTransaction = dbTransaction;
             this.memoryCache = memoryCache;
@@ -133,52 +134,139 @@ namespace Omnikeeper.Base.Utils.ModelContext
 
         public void Commit()
         {
+            // TODO: need a distributed lock here
             DBTransaction.Commit();
             if (memoryCache != null)
-                Helper.CancelAndRemoveChangeTokens(memoryCache, cacheCancellationTokens);
-            cacheCancellationTokens.Clear();
+                foreach(var ce in cacheEvictions) // TODO: consider having special method for removing multiples at once
+                    memoryCache.RemoveValue(ce);
+            cacheEvictions.Clear();
         }
 
         public void Dispose()
         {
             DBTransaction.Dispose();
-            cacheCancellationTokens.Clear();
+            cacheEvictions.Clear();
         }
 
         public void Rollback()
         {
             DBTransaction.Rollback();
-            cacheCancellationTokens.Clear();
+            cacheEvictions.Clear();
         }
 
-        public void CancelToken(string tokenName)
+        public void EvictFromCache(string key)
         {
-            cacheCancellationTokens.Add(tokenName);
+            cacheEvictions.Add(key);
         }
 
-        public async Task<TItem> GetOrCreateCachedValueAsync<TItem>(string key, Func<Task<TItem>> factory, params string[] cancellationTokensToAdd)
+        public async Task<(TItem item, bool hit)> GetOrCreateCachedValueAsync<TItem>(string key, Func<Task<TItem>> factory) where TItem : class
         {
             // we cannot use the cache at all in the deferred case, because it could return items that are not reflecting the changes in the transaction so far
-            return await factory();
+            // instead, we even need to add the key to the ones that need to be evicted on commit, because it might already be set and hence it needs to be updated
+            cacheEvictions.Add(key);
+            return (await factory(), false);
         }
 
-        public bool TryGetCachedValue<TItem>(string cacheKey, [MaybeNull] out TItem cacheValue)
+        public bool TryGetCachedValue<TItem>(string cacheKey, [MaybeNull] out TItem cacheValue) where TItem : class
         {
             // we cannot use the cache at all in the deferred case, because it could return items that are not reflecting the changes in the transaction so far
             cacheValue = default;
             return false;
         }
 
-        public void SetCacheValue<TItem>(string cacheKey, TItem cacheValue, string cancellationToken)
+        public void SetCacheValue<TItem>(string cacheKey, TItem cacheValue) where TItem : class
         {
             //  we cannot use cache at all
-            // instead, we even need to add the cancellationToken to the ones that need to be cancelled on commit, because it might already be set and hence it needs to be updated
-            cacheCancellationTokens.Add(cancellationToken);
+            // instead, we even need to add the key to the ones that need to be evicted on commit, because it might already be set and hence it needs to be updated
+            cacheEvictions.Add(cacheKey);
         }
     }
 
 
-    public static class Helper
+    public static class DistributedCacheExtensions
+    {
+        public static async Task<(T item, bool hit)> GetOrCreateThreadSafeAsync<T>(this IDistributedCache memoryCache, string key, Func<Task<T>> factory) where T : class
+        {
+            // try to avoid lock by first checking if the key is already present (which should be the case most of the time)
+            var bytes = memoryCache.Get(key);
+            T? r;
+            if (bytes != null)
+            {
+                r = FromByteArray<T>(bytes);
+                if (r != null)
+                    return (r, true);
+            }
+
+            r = await factory(); // TODO: move inside lock?
+            lock (TypeLock<T>.Lock) // TODO: this should be a distributed lock
+            {
+                var b = ToByteArray(r);
+                memoryCache.Set(key, b);
+                return (r, false);
+            }
+        }
+
+        internal static void SetValue<TItem>(this IDistributedCache memoryCache, string cacheKey, TItem cacheValue) where TItem : class
+        {
+            var b = ToByteArray(cacheValue);
+            memoryCache.Set(cacheKey, b);
+        }
+
+        public static TItem? GetValue<TItem>(this IDistributedCache memoryCache, string key) where TItem : class
+        {
+            var bytes = memoryCache.Get(key);
+            TItem? r = null;
+            if (bytes != null)
+            {
+                r = FromByteArray<TItem>(bytes);
+            }
+            return r;
+        }
+        internal static bool TryGetValue<TItem>(this IDistributedCache memoryCache, string key, out TItem? cacheValue) where TItem : class
+        {
+            var bytes = memoryCache.Get(key);
+            TItem? r = null;
+            if (bytes != null)
+            {
+                r = FromByteArray<TItem>(bytes);
+            }
+            if (r != null)
+            {
+                cacheValue = r;
+                return true;
+            }
+            cacheValue = null;
+            return false;
+        }
+
+        internal static void RemoveValue(this IDistributedCache memoryCache, string key)
+        {
+            memoryCache.Remove(key); // TODO: async without waiting better?
+        }
+
+        private static byte[] ToByteArray(object obj)
+        {
+            BinaryFormatter binaryFormatter = new BinaryFormatter();
+            using MemoryStream memoryStream = new MemoryStream();
+            binaryFormatter.Serialize(memoryStream, obj);
+            return memoryStream.ToArray();
+        }
+
+        private static T? FromByteArray<T>(byte[] byteArray) where T : class
+        {
+            BinaryFormatter binaryFormatter = new BinaryFormatter();
+            using MemoryStream memoryStream = new MemoryStream(byteArray);
+            return binaryFormatter.Deserialize(memoryStream) as T;
+        }
+
+        private static class TypeLock<T> where T : class
+        {
+            public static object Lock { get; } = new object();
+        }
+    }
+
+
+    public static class MemoryCacheHelper
     {
         /// <summary>
         /// despite some conflicting information on the web, IMemoryCache.GetOrCreate() is NOT(!) properly thread safe. That means that parallel invocations of it can lead to different values getting returned

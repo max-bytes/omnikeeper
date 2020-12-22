@@ -206,8 +206,6 @@ namespace Omnikeeper.GraphQL
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
                     var predicate = await predicateModel.GetPredicate(predicateID, userContext.TimeThreshold, AnchorStateFilter.ActiveOnly, userContext.Transaction);
-                    if (predicate == null)
-                        throw new ExecutionError($"Could not find predicate with ID {predicateID}");
 
                     IEnumerable<CompactCI> cis;
                     // predicate has no target constraints -> makes it easy, return ALL CIs
@@ -490,7 +488,7 @@ namespace Omnikeeper.GraphQL
                     var ret = new List<(string name, int count)>();
                     foreach (var trait in traits.Values)
                     {
-                        var ets = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(trait, userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
+                        var ets = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(trait, userContext.LayerSet, new AllCIIDsSelection(), userContext.Transaction, userContext.TimeThreshold);
                         var readableETs = ets.Count(et => ciBasedAuthorizationService.CanReadCI(et.Key)); // CI based filtering
                         ret.Add((name: trait.Name, count: readableETs));
                     }
@@ -500,7 +498,7 @@ namespace Omnikeeper.GraphQL
             Field<ListGraphType<StringGraphType>>("cacheKeys",
                 resolve: context =>
                 {
-                    var memoryCacheModel = context.RequestServices.GetRequiredService<IMemoryCacheModel>();
+                    var memoryCacheModel = context.RequestServices.GetRequiredService<ICacheModel>();
 
                     var keys = memoryCacheModel.GetKeys();
                     return keys;

@@ -42,6 +42,7 @@ namespace Omnikeeper.Model
                 WHERE c.id = @id", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("id", id);
+            command.Prepare();
             using var dr = await command.ExecuteReaderAsync();
 
             if (!await dr.ReadAsync())
@@ -102,6 +103,7 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("layer_ids", layers.LayerIDs);
             if (limit.HasValue)
                 command.Parameters.AddWithValue("limit", limit.Value);
+            command.Prepare();
             using var dr = await command.ExecuteReaderAsync();
 
             var ret = new List<Changeset>();
@@ -143,6 +145,7 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("layer_ids", layers.LayerIDs);
             if (limit.HasValue)
                 command.Parameters.AddWithValue("limit", limit.Value);
+            command.Prepare();
             using var dr = await command.ExecuteReaderAsync();
 
             var ret = new List<Changeset>();
@@ -202,6 +205,7 @@ namespace Omnikeeper.Model
             var now = TimeThreshold.BuildLatest();
             command.Parameters.AddWithValue("delete_threshold", threshold);
             command.Parameters.AddWithValue("now", now.Time);
+            command.Prepare();
 
             var numArchived = await command.ExecuteNonQueryAsync();
 

@@ -24,10 +24,11 @@ namespace Omnikeeper.Model
         }
         public async Task<Templates> GetTemplates(IModelContext trans)
         {
-            return await trans.GetOrCreateCachedValueAsync("templates", async () =>
+            var (item, hit) = await trans.GetOrCreateCachedValueAsync("templates", async () =>
             {
                 return await TP.GetTemplates(trans);
             });
+            return item;
         }
     }
 }

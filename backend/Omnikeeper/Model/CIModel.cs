@@ -21,7 +21,7 @@ namespace Omnikeeper.Model
             this.attributeModel = attributeModel;
         }
 
-        private string? GetNameFromAttributes(IImmutableDictionary<string, MergedCIAttribute> attributes)
+        private string? GetNameFromAttributes(IDictionary<string, MergedCIAttribute> attributes)
         {
             if (attributes.TryGetValue(ICIModel.NameAttribute, out var nameA))
                 return nameA.Attribute.Value.Value2String();
@@ -30,7 +30,7 @@ namespace Omnikeeper.Model
 
         private async Task<IDictionary<Guid, string?>> GetCINames(LayerSet layerset, ICIIDSelection selection, IModelContext trans, TimeThreshold atTime)
         {
-            IImmutableDictionary<Guid, MergedCIAttribute> attributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, selection, layerset, trans, atTime);
+            IDictionary<Guid, MergedCIAttribute> attributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, selection, layerset, trans, atTime);
             var AllSelectedCIIDs = await GetCIIDsFromSelection(selection, trans);
             return AllSelectedCIIDs.Select(ciid =>
             {
@@ -63,6 +63,7 @@ namespace Omnikeeper.Model
         public async Task<IEnumerable<Guid>> GetCIIDs(IModelContext trans)
         {
             using var command = new NpgsqlCommand(@"select id from ci", trans.DBConnection, trans.DBTransaction);
+            command.Prepare();
             var tmp = new List<Guid>();
             using var s = await command.ExecuteReaderAsync();
             while (await s.ReadAsync())
@@ -74,6 +75,7 @@ namespace Omnikeeper.Model
         {
             using var command = new NpgsqlCommand(@"select id from ci WHERE id = @ciid LIMIT 1", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("ciid", id);
+            command.Prepare();
 
             using var dr = await command.ExecuteReaderAsync();
 
@@ -98,8 +100,8 @@ namespace Omnikeeper.Model
             {
                 // check which ciids we already got and which are empty, add the empty ones
                 var AllSelectedCIIDs = await GetCIIDsFromSelection(selection, trans);
-                IImmutableDictionary<Guid, IImmutableDictionary<string, MergedCIAttribute>> emptyCIs = AllSelectedCIIDs.Except(attributes.Keys).ToImmutableDictionary(a => a, a => (IImmutableDictionary<string, MergedCIAttribute>)ImmutableDictionary<string, MergedCIAttribute>.Empty);
-                attributes = attributes.Concat(emptyCIs).ToImmutableDictionary(a => a.Key, a => a.Value);
+                IDictionary<Guid, IDictionary<string, MergedCIAttribute>> emptyCIs = AllSelectedCIIDs.Except(attributes.Keys).ToDictionary(a => a, a => (IDictionary<string, MergedCIAttribute>)ImmutableDictionary<string, MergedCIAttribute>.Empty);
+                attributes = attributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
             }
 
             var ret = new List<MergedCI>();
@@ -119,6 +121,7 @@ namespace Omnikeeper.Model
         {
             using var command = new NpgsqlCommand(@"INSERT INTO ci (id) VALUES (@id)", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("id", id);
+            command.Prepare();
             await command.ExecuteNonQueryAsync();
             return id;
         }

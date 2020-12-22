@@ -16,6 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Model.Decorators;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Tests.Integration
 {
@@ -60,7 +61,7 @@ namespace Tests.Integration
             ServiceRegistration.RegisterServices(services);
             ServiceRegistration.RegisterGraphQL(services);
 
-            services.AddScoped<IMemoryCache>((sp) => new Mock<IMemoryCache>().Object);
+            services.AddScoped<IDistributedCache>((sp) => new Mock<IDistributedCache>().Object);
 
             // TODO: add generic?
             services.AddScoped<ILogger<EffectiveTraitModel>>((sp) => NullLogger<EffectiveTraitModel>.Instance);
@@ -69,6 +70,7 @@ namespace Tests.Integration
             services.AddScoped<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance);
             services.AddScoped<ILogger<RecursiveTraitModel>>((sp) => NullLogger<RecursiveTraitModel>.Instance);
             services.AddScoped<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance);
+            services.AddScoped<ILogger<CachingBaseAttributeModel>>((sp) => NullLogger<CachingBaseAttributeModel>.Instance);
             services.AddScoped<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance);
             services.AddSingleton<ILoggerFactory, NullLoggerFactory>();
 

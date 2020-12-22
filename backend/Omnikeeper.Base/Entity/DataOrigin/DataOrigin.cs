@@ -1,4 +1,6 @@
 ﻿
+using System;
+
 namespace Omnikeeper.Base.Entity.DataOrigin
 {
     public enum DataOriginType
@@ -10,6 +12,7 @@ namespace Omnikeeper.Base.Entity.DataOrigin
         Generator // NOTE: not part of corresponding database-enum
     }
 
+    [Serializable]
     public class DataOriginV1
     {
         public DataOriginV1(DataOriginType type)
@@ -17,6 +20,6 @@ namespace Omnikeeper.Base.Entity.DataOrigin
             Type = type;
         }
 
-        public DataOriginType Type {get;}
+        public readonly DataOriginType Type;
     } // TODO: equality/hash/...?
 }

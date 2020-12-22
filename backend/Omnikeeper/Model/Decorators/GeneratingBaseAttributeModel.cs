@@ -43,6 +43,12 @@ namespace Omnikeeper.Model.Decorators
             return @base;
         }
 
+        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            // TODO: implement
+            return await model.FindCIIDsWithAttribute(name, selection, layerID, trans, atTime);
+        }
+
         public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             var @base = await model.GetAttribute(name, ciid, layerID, trans, atTime);
@@ -73,24 +79,25 @@ namespace Omnikeeper.Model.Decorators
 
         private async Task<IEnumerable<CIAttribute>> MergeInGeneratedAttributes(IEnumerable<CIAttribute> @base, ICIIDSelection ciidSelection, IGeneratorSelection generatorSelection, long layerID, IModelContext trans, TimeThreshold atTime)
         {
-            var existingAttributes = @base.Select(a => a.InformationHash).ToHashSet();
-
             // NOTE: we use the service provider here to avoid a circular dependency in DI
             var effectiveGeneratorProvider = sp.GetRequiredService<IEffectiveGeneratorProvider>();
 
-            var resolver = new GeneratorAttributeResolver();
-
             var egsTuples = await effectiveGeneratorProvider.GetEffectiveGeneratorItems(layerID, ciidSelection, generatorSelection, trans, atTime);
-            foreach (var (item, ci) in egsTuples)
+            if (!egsTuples.IsEmpty())
             {
-                var newAttributeHash = CIAttribute.CreateInformationHash(item.Name, ci.ID);
-                if (!existingAttributes.Contains(newAttributeHash))
+                var existingAttributes = @base.Select(a => a.InformationHash).ToHashSet();
+                var resolver = new GeneratorAttributeResolver();
+                foreach (var (item, ci) in egsTuples)
                 {
-                    var generatedAttribute = resolver.Resolve(ci, layerID, item);
-                    if (generatedAttribute != null)
+                    var newAttributeHash = CIAttribute.CreateInformationHash(item.Name, ci.ID);
+                    if (!existingAttributes.Contains(newAttributeHash))
                     {
-                        @base = @base.Concat(generatedAttribute);
-                        existingAttributes.Add(newAttributeHash);
+                        var generatedAttribute = resolver.Resolve(ci, layerID, item);
+                        if (generatedAttribute != null)
+                        {
+                            @base = @base.Concat(generatedAttribute);
+                            existingAttributes.Add(newAttributeHash);
+                        }
                     }
                 }
             }

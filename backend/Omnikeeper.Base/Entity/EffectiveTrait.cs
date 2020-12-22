@@ -1,13 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace Omnikeeper.Base.Entity
 {
+    [Serializable]
     public class EffectiveTrait
     {
-        public Trait UnderlyingTrait { get; private set; }
-        public IImmutableDictionary<string, MergedCIAttribute> TraitAttributes { get; private set; }
-        public IImmutableDictionary<string, IEnumerable<CompactRelatedCI>> TraitRelations { get; private set; }
+        public readonly Trait UnderlyingTrait;
+        public readonly IImmutableDictionary<string, MergedCIAttribute> TraitAttributes;
+        public readonly IImmutableDictionary<string, IEnumerable<CompactRelatedCI>> TraitRelations;
 
         public EffectiveTrait(Trait underlyingTrait,
             IDictionary<string, MergedCIAttribute> traitAttributes,

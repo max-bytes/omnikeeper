@@ -87,7 +87,7 @@ namespace Tests.Integration.Model
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                Assert.ThrowsAsync<KeyNotFoundException>(async () => await relationModel.InsertRelation(ciid1, ciid3, "unknown predicate ID", layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans));
+                Assert.ThrowsAsync<Exception>(async () => await relationModel.InsertRelation(ciid1, ciid3, "unknown predicate ID", layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans));
             }
         }
 

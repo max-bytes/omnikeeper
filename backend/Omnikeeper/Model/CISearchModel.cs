@@ -43,7 +43,8 @@ namespace Omnikeeper.Model
         {
             var finalSS = searchString.Trim();
 
-            var ls = await layerModel.BuildLayerSet(trans);
+            var layers = await layerModel.GetLayers(trans); // TODO: this is not a proper ordering, this can produce ANY ordering
+            var ls = await layerModel.BuildLayerSet(layers.Select(l => l.Name).ToArray(), trans);
 
             IEnumerable<CompactCI> cis = ImmutableArray<CompactCI>.Empty;
             if (Guid.TryParse(finalSS, out var guid))
@@ -117,15 +118,18 @@ namespace Omnikeeper.Model
                 // we could not find all traits
                 return ImmutableArray<CompactCI>.Empty;
             }
-            
+            if (foundCIIDs.IsEmpty())
+                return ImmutableArray<CompactCI>.Empty;
+
             var resultIsReducedByETs = false;
             foreach (var et in selectedTraits)
             {
-                var ciFilter = (searchAllCIsBasedOnSearchString && !resultIsReducedByETs) ? (Func<Guid, bool>?)null : (ciid) => foundCIIDs.Contains(ciid);
+                ICIIDSelection ciidSelection = new AllCIIDsSelection();
+                if (searchAllCIsBasedOnSearchString && !resultIsReducedByETs) 
+                    ciidSelection = SpecificCIIDsSelection.Build(foundCIIDs);
                 // TODO: replace with something less performance intensive, that only fetches the CIIDs (and also cached)
-                var ets = await traitModel.CalculateEffectiveTraitsForTrait(et, layerSet, trans, atTime, ciFilter);
-                var cisFulfillingTraitRequirement = ets.Select(et => et.Key);
-                foundCIIDs = cisFulfillingTraitRequirement.ToHashSet(); // reduce the number of cis to the ones that fulfill this trait requirement
+                var cisFulfillingTraitRequirement = await traitModel.GetMergedCIsWithTrait(et, layerSet, ciidSelection, trans, atTime);
+                foundCIIDs = cisFulfillingTraitRequirement.Select(ci => ci.ID).ToHashSet(); // reduce the number of cis to the ones that fulfill this trait requirement
                 resultIsReducedByETs = true;
             }
 

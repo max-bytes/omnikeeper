@@ -21,16 +21,17 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    [Serializable]
     public class Relation
     {
-        public Guid ID { get; private set; }
-        public Guid FromCIID { get; private set; }
-        public Guid ToCIID { get; private set; }
-        public string PredicateID { get => Predicate.ID; }
-        public Predicate Predicate { get; private set; }
-        public RelationState State { get; private set; }
-        public Guid ChangesetID { get; private set; }
-        public DataOriginV1 Origin { get; private set; }
+        public readonly Guid ID;
+        public readonly Guid FromCIID;
+        public readonly Guid ToCIID;
+        public string PredicateID => Predicate.ID;
+        public readonly Predicate Predicate;
+        public readonly RelationState State;
+        public readonly Guid ChangesetID;
+        public readonly DataOriginV1 Origin;
 
         // information hash: 
         public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);

@@ -54,7 +54,7 @@ namespace Omnikeeper.Model.Config
             return ret;
         }
 
-        public async Task<OIAContext?> GetContextByName(string name, IModelContext trans)
+        public async Task<OIAContext> GetContextByName(string name, IModelContext trans)
         {
             using var command = new NpgsqlCommand(@"
                 SELECT id, config FROM config.onlineinboundadapter_context WHERE name = @name LIMIT 1
@@ -62,7 +62,7 @@ namespace Omnikeeper.Model.Config
             command.Parameters.AddWithValue("name", name);
             using var s = await command.ExecuteReaderAsync();
             if (!await s.ReadAsync())
-                return null;
+                throw new Exception($"Could not find context with name {name}");
 
             var id = s.GetInt64(0);
             var configJO = s.GetFieldValue<JObject>(1);
@@ -74,7 +74,7 @@ namespace Omnikeeper.Model.Config
             catch (Exception e)
             {
                 logger.LogError(e, $"Could not deserialize OIA config \"{name}\"");
-                return null;
+                throw e;
             }
         }
 
@@ -99,7 +99,7 @@ namespace Omnikeeper.Model.Config
             return OIAContext.Build(name, id, config);
         }
 
-        public async Task<OIAContext?> Delete(long id, IModelContext trans)
+        public async Task<OIAContext> Delete(long id, IModelContext trans)
         {
             using var command = new NpgsqlCommand(@"DELETE FROM config.onlineinboundadapter_context WHERE id = @id RETURNING name, config", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("id", id);
@@ -116,7 +116,7 @@ namespace Omnikeeper.Model.Config
             catch (Exception e)
             {
                 logger.LogError(e, $"Could not deserialize OIA config \"{name}\"");
-                return null;
+                throw e;
             }
         }
     }

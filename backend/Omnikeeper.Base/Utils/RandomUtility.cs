@@ -3,11 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace PerfTests
+namespace Omnikeeper.Base.Utils
 {
-    class RandomString // TODO: move
+    public static class RandomUtility
     {
-        public static string Generate(int length, Random random, string allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+        public static V GetRandom<V>(Random r, params (V item, int chance)[] possibilities)
+        {
+            var indices = possibilities.SelectMany((p, i) => Enumerable.Repeat(i, p.chance)).ToArray();
+            var index = r.Next(0, indices.Length - 1);
+            return possibilities[indices[index]].item;
+        }
+
+        public static string GenerateRandomString(int length, Random random, string allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
         {
             if (length < 0) throw new ArgumentOutOfRangeException("length", "length cannot be less than zero.");
             if (string.IsNullOrEmpty(allowedChars)) throw new ArgumentException("allowedChars may not be empty.");

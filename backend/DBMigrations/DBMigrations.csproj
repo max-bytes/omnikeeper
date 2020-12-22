@@ -42,6 +42,7 @@
     <None Remove="Scripts\00034-migrate-config-to-config-schema" />
     <None Remove="Scripts\00034-migrate-config-to-config-schema.psql" />
     <None Remove="Scripts\00035-add-data-origin-type.psql" />
+    <None Remove="Scripts\00036-perf-index-improvements.psql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -78,6 +79,7 @@
     <EmbeddedResource Include="Scripts\00010-computerlayerbrain-rework.psql" />
     <EmbeddedResource Include="Scripts\00028-create-table-gridviewconfig.psql" />
     <EmbeddedResource Include="Scripts\00033-add-speakingName-description-columns.psql" />
+    <EmbeddedResource Include="Scripts\00036-perf-index-improvements.psql" />
     <EmbeddedResource Include="Scripts\00035-add-data-origin-type.psql" />
     <EmbeddedResource Include="Scripts\00034-migrate-config-to-config-schema.psql" />
   </ItemGroup>

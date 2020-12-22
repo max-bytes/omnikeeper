@@ -33,11 +33,11 @@ namespace Omnikeeper.Model.Decorators
 
         private void EvictFromCache(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans)
         {
-            trans.CancelToken(CacheKeyService.RelationsChangeToken(new RelationSelectionAll(), layerID));
-            trans.CancelToken(CacheKeyService.RelationsChangeToken(new RelationSelectionEitherFromOrTo(fromCIID), layerID));
-            trans.CancelToken(CacheKeyService.RelationsChangeToken(new RelationSelectionEitherFromOrTo(toCIID), layerID));
-            trans.CancelToken(CacheKeyService.RelationsChangeToken(new RelationSelectionFrom(fromCIID), layerID));
-            trans.CancelToken(CacheKeyService.RelationsChangeToken(new RelationSelectionWithPredicate(predicateID), layerID));
+            trans.EvictFromCache(CacheKeyService.Relations(new RelationSelectionAll(), layerID));
+            trans.EvictFromCache(CacheKeyService.Relations(new RelationSelectionEitherFromOrTo(fromCIID), layerID));
+            trans.EvictFromCache(CacheKeyService.Relations(new RelationSelectionEitherFromOrTo(toCIID), layerID));
+            trans.EvictFromCache(CacheKeyService.Relations(new RelationSelectionFrom(fromCIID), layerID));
+            trans.EvictFromCache(CacheKeyService.Relations(new RelationSelectionWithPredicate(predicateID), layerID));
         }
 
         public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans, TimeThreshold atTime)
@@ -50,10 +50,11 @@ namespace Omnikeeper.Model.Decorators
         {
             if (atTime.IsLatest)
             {
-                return await trans.GetOrCreateCachedValueAsync(CacheKeyService.Relations(rl, layerID), async () =>
+                var (item, hit) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.Relations(rl, layerID), async () =>
                 {
                     return await model.GetRelations(rl, layerID, trans, atTime);
-                }, CacheKeyService.RelationsChangeToken(rl, layerID));
+                });
+                return item;
             }
             else
                 return await model.GetRelations(rl, layerID, trans, atTime);

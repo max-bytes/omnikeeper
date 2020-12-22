@@ -37,13 +37,15 @@ namespace Omnikeeper.Entity.AttributeValues
         public S[] Values { get; }
     }
 
+    [Serializable]
     public abstract class AttributeArrayValue<S, T> : IAttributeArrayValue<S, T>, IEquatable<AttributeArrayValue<S, T>> where S : IAttributeScalarValue<T>
     {
-        public S[] Values { get; protected set; }
+        public S[] Values => values;
+        private readonly S[] values;
 
         protected AttributeArrayValue(S[] values)
         {
-            Values = values;
+            this.values = values;
         }
 
         public abstract AttributeValueType Type { get; }

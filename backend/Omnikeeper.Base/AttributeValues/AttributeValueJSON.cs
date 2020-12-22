@@ -6,13 +6,15 @@ using System.Linq;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
+    [Serializable]
     public class AttributeScalarValueJSON : IAttributeScalarValue<JToken>, IEquatable<AttributeScalarValueJSON>
     {
         public static JToken ErrorValue(string message) => JToken.Parse($"{{\"error\": \"{message}\" }}");
 
         public override string ToString() => $"AV-JSON: {Value2String()}";
 
-        public JToken Value { get; private set; }
+        private readonly JToken value;
+        public JToken Value => value;
         public string Value2String() => Value.ToString();
         public string[] ToRawDTOValues() => new string[] { Value.ToString() };
         public object ToGenericObject() => Value;
@@ -39,11 +41,12 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public AttributeScalarValueJSON(JToken value)
         {
-            Value = value;
+            this.value = value;
         }
     }
 
 
+    [Serializable]
     public class AttributeArrayValueJSON : AttributeArrayValue<AttributeScalarValueJSON, JToken>
     {
         protected AttributeArrayValueJSON(AttributeScalarValueJSON[] values) : base(values)

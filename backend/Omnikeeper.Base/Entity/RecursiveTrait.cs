@@ -1,16 +1,19 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Omnikeeper.Base.Utils;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
+    [Serializable]
     public class TraitRelation
     {
-        public RelationTemplate RelationTemplate { get; set; }
+        public readonly RelationTemplate RelationTemplate;
         // TODO: implement anyOf(RelationTemplate[])
-        public string Identifier { get; set; }
+        public readonly string Identifier;
 
         public TraitRelation(string identifier, RelationTemplate relationTemplate)
         {
@@ -18,10 +21,11 @@ namespace Omnikeeper.Base.Entity
             RelationTemplate = relationTemplate;
         }
     }
+    [Serializable]
     public class TraitAttribute
     {
-        public CIAttributeTemplate AttributeTemplate { get; set; }
-        public string Identifier { get; set; }
+        public readonly CIAttributeTemplate AttributeTemplate;
+        public readonly string Identifier;
 
         // TODO: implement anyOf(CIAttributeTemplate[])
 
@@ -32,13 +36,14 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    [Serializable]
     public class RecursiveTrait
     {
-        public string Name { get; set; }
-        public IImmutableList<TraitAttribute> RequiredAttributes { get; set; }
-        public IImmutableList<TraitAttribute> OptionalAttributes { get; set; }
-        public IImmutableList<string> RequiredTraits { get; set; }
-        public ImmutableList<TraitRelation> RequiredRelations { get; set; }
+        public readonly string Name;
+        public readonly TraitAttribute[] RequiredAttributes;
+        public readonly TraitAttribute[] OptionalAttributes;
+        public readonly string[] RequiredTraits;
+        public readonly TraitRelation[] RequiredRelations;
         // TODO: implement optional relations
 
         public RecursiveTrait(string name,
@@ -48,10 +53,10 @@ namespace Omnikeeper.Base.Entity
             IEnumerable<string>? requiredTraits = null)
         {
             Name = name;
-            RequiredAttributes = requiredAttributes?.ToImmutableList() ?? ImmutableList<TraitAttribute>.Empty;
-            OptionalAttributes = optionalAttributes?.ToImmutableList() ?? ImmutableList<TraitAttribute>.Empty;
-            RequiredRelations = requiredRelations?.ToImmutableList() ?? ImmutableList<TraitRelation>.Empty;
-            RequiredTraits = requiredTraits?.ToImmutableList() ?? ImmutableList<string>.Empty;
+            RequiredAttributes = requiredAttributes?.ToArray() ?? new TraitAttribute[0];
+            OptionalAttributes = optionalAttributes?.ToArray() ?? new TraitAttribute[0];
+            RequiredRelations = requiredRelations?.ToArray() ?? new TraitRelation[0];
+            RequiredTraits = requiredTraits?.ToArray() ?? new string[0];
         }
 
     }
@@ -84,23 +89,25 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    [Serializable]
     public class RecursiveTraitSet
     {
         [JsonConstructor]
-        private RecursiveTraitSet(IImmutableDictionary<string, RecursiveTrait> traits)
+        private RecursiveTraitSet(IDictionary<string, RecursiveTrait> traits)
         {
-            Traits = traits;
+            this.traits = traits;
         }
 
-        public IImmutableDictionary<string, RecursiveTrait> Traits { get; set; }
+        private readonly IDictionary<string, RecursiveTrait> traits;
+        public IDictionary<string, RecursiveTrait> Traits => traits;
 
         public static RecursiveTraitSet Build(IEnumerable<RecursiveTrait> traits)
         {
-            return new RecursiveTraitSet(traits.ToImmutableDictionary(t => t.Name));
+            return new RecursiveTraitSet(traits.ToDictionary(t => t.Name));
         }
         public static RecursiveTraitSet Build(params RecursiveTrait[] traits)
         {
-            return new RecursiveTraitSet(traits.ToImmutableDictionary(t => t.Name));
+            return new RecursiveTraitSet(traits.ToDictionary(t => t.Name));
         }
 
         public static MyJSONSerializer<RecursiveTraitSet> Serializer = new MyJSONSerializer<RecursiveTraitSet>(() =>

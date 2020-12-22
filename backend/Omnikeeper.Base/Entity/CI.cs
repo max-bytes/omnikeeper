@@ -1,7 +1,7 @@
 ﻿using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
@@ -9,16 +9,16 @@ namespace Omnikeeper.Base.Entity
     {
         public Guid ID { get; private set; }
         public string? Name { get; private set; }
-        public IImmutableDictionary<string, MergedCIAttribute> MergedAttributes { get; private set; }
+        public IDictionary<string, MergedCIAttribute> MergedAttributes { get; private set; }
         public LayerSet Layers { get; private set; }
         public TimeThreshold AtTime { get; private set; }
 
         public MergedCI(Guid id, string? name, LayerSet layers, TimeThreshold atTime, IEnumerable<MergedCIAttribute> attributes)
-            : this(id, name, layers, atTime, attributes.ToImmutableDictionary(a => a.Attribute.Name))
+            : this(id, name, layers, atTime, attributes.ToDictionary(a => a.Attribute.Name))
         {
         }
 
-        public MergedCI(Guid id, string? name, LayerSet layers, TimeThreshold atTime, IImmutableDictionary<string, MergedCIAttribute> attributes)
+        public MergedCI(Guid id, string? name, LayerSet layers, TimeThreshold atTime, IDictionary<string, MergedCIAttribute> attributes)
         {
             Name = name;
             Layers = layers;
@@ -27,24 +27,6 @@ namespace Omnikeeper.Base.Entity
             MergedAttributes = attributes;
         }
     }
-
-    //public class CI
-    //{
-    //    public Guid ID { get; private set; }
-    //    public string Name { get; private set; }
-    //    public IImmutableDictionary<string, CIAttribute> Attributes { get; private set; }
-    //    public long LayerID { get; private set; }
-    //    public TimeThreshold AtTime { get; private set; }
-
-    //    public CI(Guid id, string name, long layerID, TimeThreshold atTime, IEnumerable<CIAttribute> attributes)
-    //    {
-    //        Name = name;
-    //        LayerID = layerID;
-    //        AtTime = atTime;
-    //        ID = id;
-    //        Attributes = attributes.ToImmutableDictionary(a => a.Name);
-    //    }
-    //}
 
     public class CompactCI
     {

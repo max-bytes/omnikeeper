@@ -79,7 +79,7 @@ namespace Tests.Ingest
 
             var insertLayer = layer1;
             var hosts = new string[] { "h1jmplx01.mhx.at", "h1lscapet01.mhx.local" };
-            var layerSet = await layerModel.BuildLayerSet(mc);
+            var layerSet = await layerModel.BuildLayerSet(new string[] { layer1.Name }, mc);
 
             await predicateModel.InsertOrUpdate("has_network_interface", "has network interface", "is network interface of host", AnchorState.Active, PredicateModel.DefaultConstraits, mc);
             await predicateModel.InsertOrUpdate("has_mounted_device", "has mounted device", "is mounted at host", AnchorState.Active, PredicateModel.DefaultConstraits, mc);
