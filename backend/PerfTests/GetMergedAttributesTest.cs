@@ -61,7 +61,7 @@ namespace PerfTests
                 return identity;
             }).ToList();
 
-            var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+            var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
             //Console.WriteLine(ciNames.Count());
             using var mc = ModelContextBuilder.BuildDeferred();

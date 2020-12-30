@@ -150,6 +150,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IManagementAuthorizationService, ManagementAuthorizationService>();
             services.AddSingleton<ILayerBasedAuthorizationService, LayerBasedAuthorizationService>();
             services.AddSingleton<ICIBasedAuthorizationService, CIBasedAuthorizationService>();
+            services.AddSingleton<IDataPartitionService, DataPartitionService>();
             services.AddSingleton<MarkedForDeletionService>();
             services.AddScoped<IngestDataService>(); // TODO: make singleton
 
@@ -184,6 +185,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IBaseConfigurationModel, BaseConfigurationModel>();
             services.AddSingleton<IOIAContextModel, OIAContextModel>();
             services.AddSingleton<IGridViewContextModel, GridViewContextModel>();
+            services.AddSingleton<IPartitionModel, PartitionModel>();
 
             // these aren't real models, but we keep them here because they are closely related to models
             services.AddSingleton<ITraitsProvider, TraitsProvider>();

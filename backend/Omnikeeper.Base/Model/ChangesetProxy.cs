@@ -1,5 +1,6 @@
 ﻿using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ namespace Omnikeeper.Base.Model
 {
     public class ChangesetProxy : IChangesetProxy
     {
-        public DateTimeOffset Timestamp { get; private set; }
+        public TimeThreshold TimeThreshold { get; private set; }
         public UserInDatabase User { get; private set; }
         public IChangesetModel Model { get; private set; }
         private Changeset? Changeset { get; set; }
@@ -16,14 +17,14 @@ namespace Omnikeeper.Base.Model
         public async Task<Changeset> GetChangeset(IModelContext trans)
         {
             if (Changeset == null)
-                Changeset = await Model.CreateChangeset(User.ID, trans, Timestamp);
+                Changeset = await Model.CreateChangeset(User.ID, trans, TimeThreshold.Time);
             return Changeset;
         }
 
-        public ChangesetProxy(UserInDatabase user, DateTimeOffset timestamp, IChangesetModel model)
+        public ChangesetProxy(UserInDatabase user, TimeThreshold timeThreshold, IChangesetModel model)
         {
             User = user;
-            Timestamp = timestamp;
+            TimeThreshold = timeThreshold;
             Model = model;
             Changeset = null;
         }

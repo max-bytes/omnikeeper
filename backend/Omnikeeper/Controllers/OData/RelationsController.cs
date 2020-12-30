@@ -111,8 +111,7 @@ namespace Omnikeeper.Controllers.OData
                 return BadRequest($"CI with ID \"{relation.ToCIID}\" does not exist");
 
             var timeThreshold = TimeThreshold.BuildLatest();
-
-            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold.Time, changesetModel);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
             var (created, changed) = await relationModel.InsertRelation(relation.FromCIID, relation.ToCIID, relation.Predicate, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
 
@@ -137,7 +136,8 @@ namespace Omnikeeper.Controllers.OData
                 if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
                     return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
-                var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
+                var timeThreshold = TimeThreshold.BuildLatest();
+                var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
                 var (removed, changed) = await relationModel.RemoveRelation(keyFromCIID, keyToCIID, keyPredicate, writeLayerID, changesetProxy, trans);
                 trans.Commit();
             }

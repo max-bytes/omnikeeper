@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +34,12 @@ namespace Omnikeeper.Base.Utils.ModelContext
             var npgsqlTransaction = npgsqlConnection.BeginTransaction();
             return new ModelContextDeferredMode(npgsqlTransaction, memoryCache, logger);
         }
+        public IModelContext BuildDeferred(IsolationLevel isolationLevel)
+        {
+            var npgsqlTransaction = npgsqlConnection.BeginTransaction(isolationLevel);
+            return new ModelContextDeferredMode(npgsqlTransaction, memoryCache, logger);
+        }
+
         public IModelContext BuildImmediate()
         {
             return new ModelContextImmediateMode(memoryCache, npgsqlConnection, logger);
@@ -41,13 +48,13 @@ namespace Omnikeeper.Base.Utils.ModelContext
 
     public class ModelContextImmediateMode : IModelContext
     {
-        private readonly IDistributedCache? memoryCache;
+        private readonly IDistributedCache? cache;
         private readonly NpgsqlConnection conn;
         private readonly ILogger<IModelContext> logger;
 
-        public ModelContextImmediateMode(IDistributedCache? memoryCache, NpgsqlConnection conn, ILogger<IModelContext> logger)
+        public ModelContextImmediateMode(IDistributedCache? cache, NpgsqlConnection conn, ILogger<IModelContext> logger)
         {
-            this.memoryCache = memoryCache;
+            this.cache = cache;
             this.conn = conn;
             this.logger = logger;
         }
@@ -71,17 +78,19 @@ namespace Omnikeeper.Base.Utils.ModelContext
             // NO-OP
         }
 
-        public void EvictFromCache(string key)
+        public void ClearCache()
         {
-            if (memoryCache != null)
-                memoryCache.RemoveValue(key);
+            if (cache != null)
+            {
+                cache.Clear();
+            }
         }
 
         public async Task<(TItem item, bool hit)> GetOrCreateCachedValueAsync<TItem>(string key, Func<Task<TItem>> factory) where TItem : class
         {
-            if (memoryCache != null)
+            if (cache != null)
             {
-                return await memoryCache.GetOrCreateThreadSafeAsync(key, factory);
+                return await cache.GetOrCreateThreadSafeAsync(key, factory);
             }
             else
             {
@@ -92,9 +101,9 @@ namespace Omnikeeper.Base.Utils.ModelContext
 
         public bool TryGetCachedValue<TItem>(string cacheKey, [MaybeNull] out TItem? cacheValue) where TItem : class
         {
-            if (memoryCache != null)
+            if (cache != null)
             {
-                return memoryCache.TryGetValue(cacheKey, out cacheValue);
+                return cache.TryGetValue(cacheKey, out cacheValue);
             } 
             else
             {
@@ -105,12 +114,19 @@ namespace Omnikeeper.Base.Utils.ModelContext
 
         public void SetCacheValue<TItem>(string cacheKey, TItem cacheValue) where TItem : class
         {
-            if (memoryCache != null)
+            if (cache != null)
             {
-                memoryCache.SetValue(cacheKey, cacheValue);
+                cache.SetValue(cacheKey, cacheValue);
             }
         }
 
+        public void EvictFromCache(string key)
+        {
+            if (cache != null)
+            {
+                cache.RemoveValue(key);
+            }
+        }
     }
 
 
@@ -119,6 +135,7 @@ namespace Omnikeeper.Base.Utils.ModelContext
         private readonly IDistributedCache? memoryCache;
         private readonly ILogger<IModelContext> logger;
         private readonly ISet<string> cacheEvictions = new HashSet<string>();
+        private bool cacheClearFlag = false;
 
         public ModelContextDeferredMode(NpgsqlTransaction dbTransaction, IDistributedCache? memoryCache, ILogger<IModelContext> logger)
         {
@@ -137,9 +154,15 @@ namespace Omnikeeper.Base.Utils.ModelContext
             // TODO: need a distributed lock here
             DBTransaction.Commit();
             if (memoryCache != null)
-                foreach(var ce in cacheEvictions) // TODO: consider having special method for removing multiples at once
-                    memoryCache.RemoveValue(ce);
+            {
+                if (cacheClearFlag)
+                    memoryCache.Clear();
+                else
+                    foreach (var ce in cacheEvictions) // TODO: consider having special method for removing multiples at once
+                        memoryCache.RemoveValue(ce);
+            }
             cacheEvictions.Clear();
+            cacheClearFlag = false;
         }
 
         public void Dispose()
@@ -152,11 +175,17 @@ namespace Omnikeeper.Base.Utils.ModelContext
         {
             DBTransaction.Rollback();
             cacheEvictions.Clear();
+            cacheClearFlag = false;
         }
 
         public void EvictFromCache(string key)
         {
             cacheEvictions.Add(key);
+        }
+
+        public void ClearCache()
+        {
+            cacheClearFlag = true;
         }
 
         public async Task<(TItem item, bool hit)> GetOrCreateCachedValueAsync<TItem>(string key, Func<Task<TItem>> factory) where TItem : class
@@ -262,6 +291,20 @@ namespace Omnikeeper.Base.Utils.ModelContext
         private static class TypeLock<T> where T : class
         {
             public static object Lock { get; } = new object();
+        }
+
+        public static void Clear(this IDistributedCache cache)
+        {
+            if (cache is MemoryDistributedCache mdc)
+            {
+                // HACK: IDistributedCache interface sucks, so we write our own method to clear the cache based on reflection 
+                var memcacheField = typeof(MemoryDistributedCache).GetField("_memCache", BindingFlags.NonPublic | BindingFlags.Instance);
+                var memcache = (MemoryCache)memcacheField!.GetValue(mdc)!;
+                memcache.Compact(1.0);
+            } else
+            {
+                throw new Exception("Clearing cache not supported");
+            }
         }
     }
 

@@ -136,7 +136,7 @@ namespace Omnikeeper.Controllers.OData
 
             test.CopyChangedValues(oldDTO);
             var @newDTO = oldDTO;
-            var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
             var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, new AttributeScalarValueText(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
 
             var newMerged = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, readLayerset, trans, TimeThreshold.BuildLatest());
@@ -189,7 +189,7 @@ namespace Omnikeeper.Controllers.OData
                 }
             }
 
-            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold.Time, changesetModel);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
             // check if the ciid exists, create if not
             if (!(await ciModel.CIIDExists(finalCIID, trans)))
@@ -230,7 +230,7 @@ namespace Omnikeeper.Controllers.OData
                 if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
                     return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
-                var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
+                var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
                 await attributeModel.RemoveAttribute(keyAttributeName, keyCIID, writeLayerID, changesetProxy, trans);
                 trans.Commit();
             }

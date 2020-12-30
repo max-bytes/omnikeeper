@@ -159,7 +159,7 @@ namespace Omnikeeper.Controllers
             if (!ciBasedAuthorizationService.CanWriteToAllCIs(data.Fragments.Select(f => data.GetCIID(f)), out var notAllowedCI))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to CI {notAllowedCI}");
 
-            var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
             var inserted = await attributeModel.BulkReplaceAttributes(data, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
             trans.Commit();
             return Ok();

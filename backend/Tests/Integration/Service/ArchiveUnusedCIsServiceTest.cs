@@ -22,7 +22,7 @@ namespace Tests.Integration.Service
         [Test]
         public async Task TestArchiveUnusedCIs()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var model = new CIModel(attributeModel);
@@ -43,7 +43,7 @@ namespace Tests.Integration.Service
             Assert.AreEqual(0, await ArchiveUnusedCIsService.ArchiveUnusedCIs(e, ModelContextBuilder, NullLogger.Instance));
 
             var ciid2 = await model.CreateCI(trans);
-            var changeset1 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+            var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
             await attributeModel.InsertAttribute("foo", new AttributeScalarValueText("bar"), ciid2, layer.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);
 
             Assert.AreEqual(0, await ArchiveUnusedCIsService.ArchiveUnusedCIs(e, ModelContextBuilder, NullLogger.Instance));

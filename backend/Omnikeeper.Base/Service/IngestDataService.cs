@@ -35,9 +35,8 @@ namespace Omnikeeper.Base.Service
         public async Task<(int numIngestedCIs, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, AuthenticatedUser user, IModelContextBuilder modelContextBuilder, ILogger logger)
         {
             using var trans = modelContextBuilder.BuildDeferred();
-            var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, ChangesetModel);
-
             var timeThreshold = TimeThreshold.BuildLatest();
+            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, ChangesetModel);
 
             var ciMappingContext = new CIMappingService.CIMappingContext(AttributeModel, TimeThreshold.BuildLatest());
             var attributeData = new Dictionary<Guid, CICandidateAttributeData>();

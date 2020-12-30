@@ -46,7 +46,7 @@ namespace Tests.Integration.Model
         public async Task TestDeletion()
         {
             var layerModel = new LayerModel();
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var ciModel = new CIModel(attributeModel);
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
@@ -59,7 +59,7 @@ namespace Tests.Integration.Model
             var user = await userModel.UpsertUser("testuser", "testuser", Guid.NewGuid(), UserType.Human, trans);
 
             var ciid = await ciModel.CreateCI(trans);
-            var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+            var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
             await attributeModel.InsertAttribute("attribute", new AttributeScalarValueText("foo"), ciid, layerC.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 

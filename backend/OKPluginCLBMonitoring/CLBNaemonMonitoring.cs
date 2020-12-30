@@ -99,24 +99,22 @@ namespace OKPluginCLBMonitoring
             var contactgroupTrait = TraitSet.Traits["naemon_contactgroup"];
             var moduleTrait = TraitSet.Traits["naemon_service_module"];
 
-            var timeThreshold = TimeThreshold.BuildLatestAtTime(changesetProxy.Timestamp);
-
-            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, timeThreshold);
+            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
 
             // prepare contact groups
             var cgr = new ContactgroupResolver(relationModel, ciModel, traitModel, logger, errorHandler);
-            await cgr.Setup(layerSetAll, belongsToNaemonContactgroup, contactgroupTrait, trans, timeThreshold);
+            await cgr.Setup(layerSetAll, belongsToNaemonContactgroup, contactgroupTrait, trans, changesetProxy.TimeThreshold);
 
             // prepare list of all monitored cis
             var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).Distinct();
             if (monitoredCIIDs.IsEmpty()) return true;
-            var monitoredCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoredCIIDs), layerSetAll, true, trans, timeThreshold))
+            var monitoredCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoredCIIDs), layerSetAll, true, trans, changesetProxy.TimeThreshold))
                 .ToDictionary(ci => ci.ID);
 
             // prepare list of all monitoring modules
             var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.ToCIID).Distinct();
             if (monitoringModuleCIIDs.IsEmpty()) return true;
-            var monitoringModuleCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoringModuleCIIDs), layerSetMonitoringDefinitionsOnly, false, trans, timeThreshold))
+            var monitoringModuleCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoringModuleCIIDs), layerSetMonitoringDefinitionsOnly, false, trans, changesetProxy.TimeThreshold))
                 .ToDictionary(ci => ci.ID);
 
 
@@ -130,7 +128,7 @@ namespace OKPluginCLBMonitoring
 
                 var monitoringModuleCI = monitoringModuleCIs[p.Relation.ToCIID];
 
-                var monitoringModuleET = await traitModel.CalculateEffectiveTraitForCI(monitoringModuleCI, moduleTrait, trans, timeThreshold);
+                var monitoringModuleET = await traitModel.CalculateEffectiveTraitForCI(monitoringModuleCI, moduleTrait, trans, changesetProxy.TimeThreshold);
                 if (monitoringModuleET == null)
                 {
                     logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{moduleTrait.Name}\"");
@@ -141,7 +139,7 @@ namespace OKPluginCLBMonitoring
                 var templateStr = (monitoringModuleET.TraitAttributes["template"].Attribute.Value as AttributeScalarValueText)?.Value;
 
                 // create template context based on monitored CI, so that the templates can access all the related variables
-                var context = ScribanVariableService.CreateComplexCIBasedTemplateContext(monitoredCIs[p.Relation.FromCIID], layerSetAll, timeThreshold, trans, ciModel, relationModel);
+                var context = ScribanVariableService.CreateComplexCIBasedTemplateContext(monitoredCIs[p.Relation.FromCIID], layerSetAll, changesetProxy.TimeThreshold, trans, ciModel, relationModel);
 
                 logger.LogDebug("  Parse/Render config segments");
                 // template parsing and rendering
@@ -213,7 +211,7 @@ namespace OKPluginCLBMonitoring
 
             // assign monitored cis to naemon instances
             var monitoredByCIIDFragments = new List<BulkRelationDataPredicateScope.Fragment>();
-            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTrait(naemonInstanceTrait, layerSetAll, new AllCIIDsSelection(), trans, timeThreshold);
+            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTrait(naemonInstanceTrait, layerSetAll, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
             foreach (var naemonInstanceTS in naemonInstancesTS)
                 foreach (var monitoredCI in monitoredCIs.Values)
                     if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value.et))

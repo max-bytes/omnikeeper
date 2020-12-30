@@ -21,6 +21,7 @@ using GraphQL.Server;
 using Tests.Integration.GraphQL.Base;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Utils;
 
 namespace Tests.Integration.GraphQL
 {
@@ -55,7 +56,7 @@ namespace Tests.Integration.GraphQL
             var layer1 = await layerModel.CreateLayer("layer_1", trans);
             var layerID2 = await layerModel.CreateLayer("layer_2", trans);
             var user = new AuthenticatedUser(await userModel.UpsertUser(username, username, userGUID, UserType.Robot, trans), new List<Layer>());
-            var changeset = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
+            var changeset = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueInteger(3), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
             trans.Commit();
 

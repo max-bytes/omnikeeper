@@ -29,10 +29,10 @@ namespace Tests.Integration.Model
         {
             var oap = new Mock<IOnlineAccessProxy>();
             oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<long>(), It.IsAny<IModelContext>())).ReturnsAsync(false);
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var ciModel = new CIModel(attributeModel);
             var predicateModel = new PredicateModel();
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var layerModel = new LayerModel();
@@ -65,7 +65,7 @@ namespace Tests.Integration.Model
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 await attributeModel.InsertCINameAttribute("ci1", ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 await attributeModel.InsertCINameAttribute("ci2", ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 await attributeModel.InsertCINameAttribute("ci3", ciid3, layerID2, changeset, new DataOriginV1(DataOriginType.Manual), trans); // name on different layer
