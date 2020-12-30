@@ -56,12 +56,13 @@ namespace Tests.Ingest
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             //using var conn = dbcb.Build("landscape_prototype", false, true);
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var partitionModel = new PartitionModel();
+            var attributeModel = new AttributeModel(new BaseAttributeModel(partitionModel));
             var layerModel = new LayerModel();
             var userModel = new UserInDatabaseModel();
             var ciModel = new CIModel(attributeModel);
             var predicateModel = new PredicateModel();
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, partitionModel));
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance);
             var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel), relationModel, new CIMappingService());
 

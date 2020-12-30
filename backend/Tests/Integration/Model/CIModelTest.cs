@@ -24,7 +24,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestGetCIs()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var model = new CIModel(attributeModel);
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
@@ -55,7 +55,7 @@ namespace Tests.Integration.Model
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 var i1 = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 var i2 = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text1"), ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 var i3 = await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text1"), ciid1, layerID2, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -86,7 +86,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestLayerSets()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var model = new CIModel(attributeModel);
@@ -103,7 +103,7 @@ namespace Tests.Integration.Model
             var layerset3 = new LayerSet(new long[] { layer1.ID, layer2.ID });
             var layerset4 = new LayerSet(new long[] { layer2.ID, layer1.ID });
 
-            var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+            var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid1, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
@@ -127,7 +127,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestRemoveShowsLayerBelow()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var model = new CIModel(attributeModel);
@@ -142,10 +142,10 @@ namespace Tests.Integration.Model
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset1 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);
 
-                var changeset2 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                var changeset2 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid1, layer2.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans);
 
                 trans.Commit();
@@ -153,7 +153,7 @@ namespace Tests.Integration.Model
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset3 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                var changeset3 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 await attributeModel.RemoveAttribute("a1", ciid1, layer2.ID, changeset3, trans);
                 trans.Commit();
             }

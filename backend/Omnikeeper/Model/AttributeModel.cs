@@ -23,7 +23,7 @@ namespace Omnikeeper.Model
             this.baseModel = baseModel;
         }
 
-        // attributes must be a pre-sorted enumerable base on layer-sort
+        // attributes must be a pre-sorted enumerable based on layer-sort
         private IEnumerable<MergedCIAttribute> MergeAttributes(IEnumerable<(IEnumerable<CIAttribute> attributes, long layerID)> attributes)
         {
             var compound = new Dictionary<(Guid ciid, string name), List<(CIAttribute attribute, long layerID)>>();

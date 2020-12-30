@@ -71,7 +71,7 @@ namespace Omnikeeper.GraphQL
                     userContext.LayerSet = layers != null ? await layerModel.BuildLayerSet(layers, transaction) : null;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold.Time, changesetModel); //await changesetModel.CreateChangeset(userContext.User.InDatabase.ID, transaction, userContext.TimeThreshold.Time);
+                    var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel); //await changesetModel.CreateChangeset(userContext.User.InDatabase.ID, transaction, userContext.TimeThreshold.Time);
 
                     var groupedInsertAttributes = insertAttributes.GroupBy(a => a.CI);
                     var insertedAttributes = new List<CIAttribute>();
@@ -161,7 +161,7 @@ namespace Omnikeeper.GraphQL
                     using var transaction = modelContextBuilder.BuildDeferred();
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold.Time, changesetModel);
+                    var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
 
                     var createdCIIDs = new List<Guid>();
                     foreach (var ci in createCIs)

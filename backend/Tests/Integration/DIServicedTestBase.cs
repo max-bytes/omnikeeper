@@ -17,6 +17,8 @@ using Microsoft.Extensions.Caching.Memory;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Model.Decorators;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
+using Omnikeeper.Service;
 
 namespace Tests.Integration
 {
@@ -61,29 +63,41 @@ namespace Tests.Integration
             ServiceRegistration.RegisterServices(services);
             ServiceRegistration.RegisterGraphQL(services);
 
-            services.AddScoped<IDistributedCache>((sp) => new Mock<IDistributedCache>().Object);
+            if (enableModelCaching)
+            {
+                services.AddSingleton<IDistributedCache>((sp) =>
+                {
+                    var opts = Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions());
+                    return new MemoryDistributedCache(opts);
+                });
+            }
+            else
+            {
+                services.AddSingleton<IDistributedCache>((sp) => new Mock<IDistributedCache>().Object);
+            }
 
             // TODO: add generic?
-            services.AddScoped<ILogger<EffectiveTraitModel>>((sp) => NullLogger<EffectiveTraitModel>.Instance);
-            services.AddScoped<ILogger<BaseConfigurationModel>>((sp) => NullLogger<BaseConfigurationModel>.Instance);
-            services.AddScoped<ILogger<OIAContextModel>>((sp) => NullLogger<OIAContextModel>.Instance);
-            services.AddScoped<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance);
-            services.AddScoped<ILogger<RecursiveTraitModel>>((sp) => NullLogger<RecursiveTraitModel>.Instance);
-            services.AddScoped<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance);
-            services.AddScoped<ILogger<CachingBaseAttributeModel>>((sp) => NullLogger<CachingBaseAttributeModel>.Instance);
-            services.AddScoped<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance);
+            services.AddSingleton<ILogger<EffectiveTraitModel>>((sp) => NullLogger<EffectiveTraitModel>.Instance);
+            services.AddSingleton<ILogger<BaseConfigurationModel>>((sp) => NullLogger<BaseConfigurationModel>.Instance);
+            services.AddSingleton<ILogger<OIAContextModel>>((sp) => NullLogger<OIAContextModel>.Instance);
+            services.AddSingleton<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance);
+            services.AddSingleton<ILogger<RecursiveTraitModel>>((sp) => NullLogger<RecursiveTraitModel>.Instance);
+            services.AddSingleton<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance);
+            services.AddSingleton<ILogger<CachingBaseAttributeModel>>((sp) => NullLogger<CachingBaseAttributeModel>.Instance);
+            services.AddSingleton<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance);
             services.AddSingleton<ILoggerFactory, NullLoggerFactory>();
 
             services.AddSingleton<IConfiguration>((sp) => new Mock<IConfiguration>().Object);
 
             // override user service
             var currentUserService = new Mock<ICurrentUserService>();
-            services.AddScoped<ICurrentUserService>((sp) => currentUserService.Object);
+            services.AddSingleton<ICurrentUserService>((sp) => currentUserService.Object);
+            services.AddSingleton<ILogger<DataPartitionService>>((sp) => NullLogger<DataPartitionService>.Instance);
 
             // override authorization
-            services.AddScoped((sp) => new Mock<IManagementAuthorizationService>().Object);
-            services.AddScoped((sp) => new Mock<ILayerBasedAuthorizationService>().Object);
-            services.AddScoped((sp) => new Mock<ICIBasedAuthorizationService>().Object);
+            services.AddSingleton((sp) => new Mock<IManagementAuthorizationService>().Object);
+            services.AddSingleton((sp) => new Mock<ILayerBasedAuthorizationService>().Object);
+            services.AddSingleton((sp) => new Mock<ICIBasedAuthorizationService>().Object);
 
             return services;
         }

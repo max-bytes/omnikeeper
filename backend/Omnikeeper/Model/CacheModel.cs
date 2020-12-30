@@ -19,10 +19,9 @@ namespace Omnikeeper.Model
         public IEnumerable<string> GetKeys()
         {
             // have to get items by reflection
-            // TODO: move and encapsulate access to IDistributedCache
+            // TODO: move and encapsulate access to IDistributedCache, maybe use DistributedCacheExtensions
             var memcacheField = typeof(MemoryDistributedCache).GetField("_memCache", BindingFlags.NonPublic | BindingFlags.Instance);
             var memcache = (MemoryCache)memcacheField!.GetValue(cache)!;
-
             var field = typeof(MemoryCache).GetProperty("EntriesCollection", BindingFlags.NonPublic | BindingFlags.Instance);
             var value = field!.GetValue(memcache);
 

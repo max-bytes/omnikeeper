@@ -34,13 +34,14 @@ namespace Tasks.DBInit
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build("landscape_prototype", false, true);
 
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var partitionModel = new PartitionModel();
+            var attributeModel = new AttributeModel(new BaseAttributeModel(partitionModel));
             var ciModel = new CIModel(attributeModel);
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var layerModel = new LayerModel();
             var predicateModel = new CachingPredicateModel(new PredicateModel());
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, partitionModel));
             var traitModel = new RecursiveTraitModel(NullLogger<RecursiveTraitModel>.Instance);
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance);
 
@@ -135,7 +136,7 @@ namespace Tasks.DBInit
             using (var trans = modelContextBuilder.BuildDeferred())
             {
                 var index = 0;
-                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
 
                 var fragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
@@ -197,7 +198,7 @@ namespace Tasks.DBInit
                 for (int i = 0; i < numAttributeChanges; i++)
                 {
                     using var trans = modelContextBuilder.BuildDeferred();
-                    var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                    var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                     var nameValue = RandomUtility.GetRandom(random, possibleAttributes);
                     var name = nameValue.name;
                     var value = nameValue.value();
@@ -211,7 +212,7 @@ namespace Tasks.DBInit
             for (var i = 0; i < numRunsOnRelations; i++)
             {
                 using var trans = modelContextBuilder.BuildDeferred();
-                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 var ciid1 = applicationCIIDs.GetRandom(random);
                 var ciid2 = hostCIIDs.Except(new[] { ciid1 }).GetRandom(random); // TODO, HACK: slow
                 await relationModel.InsertRelation(ciid1, ciid2, predicateRunsOn.ID, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -226,7 +227,7 @@ namespace Tasks.DBInit
             Guid ciNaemon02;
             using (var trans = modelContextBuilder.BuildDeferred())
             {
-                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 ciNaemon01 = await ciModel.CreateCI(trans);
                 ciNaemon02 = await ciModel.CreateCI(trans);
                 await attributeModel.InsertCINameAttribute("Naemon Instance 01", ciNaemon01, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -292,7 +293,7 @@ namespace Tasks.DBInit
                 foreach (var ci in windowsHosts)
                 {
 
-                    var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                    var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 }
@@ -304,7 +305,7 @@ namespace Tasks.DBInit
                 var linuxHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(linuxHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, trans, TimeThreshold.BuildLatest());
                 foreach (var ci in linuxHosts)
                 {
-                    var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                    var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                     await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 }

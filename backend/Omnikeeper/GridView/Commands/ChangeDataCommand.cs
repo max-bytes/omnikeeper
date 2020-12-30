@@ -86,8 +86,9 @@ namespace Omnikeeper.GridView.Commands
 
                 using var trans = modelContextBuilder.BuildDeferred();
 
+                var timeThreshold = TimeThreshold.BuildLatest();
                 var user = await currentUserService.GetCurrentUser(trans);
-                var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
+                var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
                 var config = await gridViewContextModel.GetConfiguration(request.Context, trans);
 
@@ -168,7 +169,7 @@ namespace Omnikeeper.GridView.Commands
                     }
                 }
 
-                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, TimeThreshold.BuildLatest());
+                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, timeThreshold);
                 if (activeTrait == null)
                     return (null, new Exception($"Could not find trait {config.Trait}"));
 
@@ -178,12 +179,12 @@ namespace Omnikeeper.GridView.Commands
                     new LayerSet(config.ReadLayerset.ToArray()),
                     true,
                     trans,
-                    TimeThreshold.BuildLatest()
+                    timeThreshold
                     );
 
                 foreach (var mergedCI in mergedCIs)
                 {
-                    var hasTrait = await effectiveTraitModel.DoesCIHaveTrait(mergedCI, activeTrait, trans, TimeThreshold.BuildLatest());
+                    var hasTrait = await effectiveTraitModel.DoesCIHaveTrait(mergedCI, activeTrait, trans, timeThreshold);
 
                     if (!hasTrait)
                     {

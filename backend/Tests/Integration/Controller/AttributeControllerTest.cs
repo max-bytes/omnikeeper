@@ -11,6 +11,7 @@ using Omnikeeper.Base.Entity.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Utils;
 
 namespace Tests.Integration.Controller
 {
@@ -53,7 +54,7 @@ namespace Tests.Integration.Controller
                 var layer2 = await layerModel.CreateLayer("l2", trans);
                 layerID1 = layer1.ID;
                 layerID2 = layer2.ID;
-                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 var (attribute1, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 attribute1ID = attribute1.ID;
                 changesetID = attribute1.ChangesetID;

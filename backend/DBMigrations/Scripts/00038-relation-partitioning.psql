@@ -1,0 +1,46 @@
+-- partition table relation by recreating it and then copying the data
+ALTER TABLE public.relation rename to relation_old;
+CREATE TABLE public.relation
+(
+    from_ci_id uuid NOT NULL,
+    to_ci_id uuid NOT NULL,
+    predicate_id text COLLATE pg_catalog."default" NOT NULL,
+    layer_id bigint NOT NULL,
+    state relationstate NOT NULL DEFAULT 'new'::relationstate,
+    "timestamp" timestamp with time zone NOT NULL,
+    id uuid NOT NULL,
+    changeset_id uuid,
+    origin_type dataorigintype NOT NULL DEFAULT 'manual'::dataorigintype,
+	partition_index timestamp with time zone NOT NULL,
+    CONSTRAINT relation_pkey_partitioned PRIMARY KEY (id, partition_index),
+    CONSTRAINT f_changeset FOREIGN KEY (changeset_id)
+        REFERENCES public.changeset (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT f_from_id FOREIGN KEY (from_ci_id)
+        REFERENCES public.ci (id) MATCH SIMPLE
+        ON UPDATE RESTRICT
+        ON DELETE RESTRICT,
+    CONSTRAINT f_layer FOREIGN KEY (layer_id)
+        REFERENCES public.layer (id) MATCH SIMPLE
+        ON UPDATE RESTRICT
+        ON DELETE RESTRICT,
+    CONSTRAINT f_predicate FOREIGN KEY (predicate_id)
+        REFERENCES public.predicate (id) MATCH SIMPLE
+        ON UPDATE RESTRICT
+        ON DELETE RESTRICT,
+    CONSTRAINT f_to_ci FOREIGN KEY (to_ci_id)
+        REFERENCES public.ci (id) MATCH SIMPLE
+        ON UPDATE RESTRICT
+        ON DELETE RESTRICT
+) partition by list (partition_index);
+ALTER TABLE public.relation
+    OWNER to postgres;
+
+	
+-- select to_char( '1970-01-01 00:00:00Z'::timestamptz AT TIME ZONE 'UTC', 'YYYY_MM_DD_HH24_MI_SS')
+CREATE TABLE public.relation_1970_01_01_00_00_00 PARTITION OF public.relation
+    FOR VALUES IN ('1970-01-01 00:00:00Z'::timestamptz);
+	
+INSERT INTO public.relation (from_ci_id, to_ci_id, predicate_id, layer_id, "state", "timestamp", "id", changeset_id, origin_type, partition_index) select *, '1970-01-01 00:00:00Z'::timestamptz from public.relation_old;
+DROP TABLE public.relation_old;

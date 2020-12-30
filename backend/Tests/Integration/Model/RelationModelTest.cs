@@ -25,10 +25,10 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var ciModel = new CIModel(attributeModel);
             var predicateModel = new CachingPredicateModel(new PredicateModel());
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
             var layerModel = new LayerModel();
             var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
 
@@ -38,7 +38,7 @@ namespace Tests.Integration.Model
             ChangesetProxy changeset;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
                 ciid1 = await ciModel.CreateCI(trans);
                 var ciid2 = await ciModel.CreateCI(trans);
@@ -97,14 +97,14 @@ namespace Tests.Integration.Model
             using var trans = ModelContextBuilder.BuildDeferred();
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var ciModel = new CIModel(attributeModel);
             var predicateModel = new CachingPredicateModel(new PredicateModel());
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
             var layerModel = new LayerModel();
             var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
 
-            var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+            var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
@@ -133,14 +133,14 @@ namespace Tests.Integration.Model
             using var trans = ModelContextBuilder.BuildDeferred();
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var ciModel = new CIModel(attributeModel);
             var predicateModel = new CachingPredicateModel(new PredicateModel());
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
             var layerModel = new LayerModel();
             var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
 
-            var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+            var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
@@ -167,10 +167,10 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestRemoveShowsLayerBelow()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var ciModel = new CIModel(attributeModel);
             var predicateModel = new CachingPredicateModel(new PredicateModel());
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var layerModel = new LayerModel();
@@ -186,7 +186,7 @@ namespace Tests.Integration.Model
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 var (i1,c1) = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 var (i2,c2) = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 Assert.AreEqual(predicate1.ID, i1.PredicateID);
@@ -196,7 +196,7 @@ namespace Tests.Integration.Model
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 var removedRelation = await relationModel.RemoveRelation(ciid1, ciid2, predicate1.ID, layer2.ID, changeset, trans);
                 Assert.IsNotNull(removedRelation);
                 var r1 = await relationModel.GetMergedRelations(new RelationSelectionFrom(ciid1), layerset, trans, TimeThreshold.BuildLatest());
@@ -209,7 +209,7 @@ namespace Tests.Integration.Model
             // add relation again
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 var r2 = await relationModel.GetMergedRelations(new RelationSelectionFrom(ciid1), layerset, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, r2.Count());
@@ -225,15 +225,15 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var ciModel = new CIModel(attributeModel);
             var predicateModel = new CachingPredicateModel(new PredicateModel());
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
             var layerModel = new LayerModel();
             using var trans = ModelContextBuilder.BuildDeferred();
             var user = await DBSetup.SetupUser(userModel, trans);
 
-            var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+            var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
             var ciid1 = await ciModel.CreateCI(trans);
             var ciid2 = await ciModel.CreateCI(trans);
@@ -250,7 +250,7 @@ namespace Tests.Integration.Model
 
             // test bulk replace
             using var trans2 = ModelContextBuilder.BuildDeferred();
-            var changeset2 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+            var changeset2 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
             await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope(predicateID1.ID, layer1.ID, new BulkRelationDataPredicateScope.Fragment[] {
                     new BulkRelationDataPredicateScope.Fragment(ciid1, ciid2),
                     new BulkRelationDataPredicateScope.Fragment(ciid2, ciid1),

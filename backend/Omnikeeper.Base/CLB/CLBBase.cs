@@ -55,7 +55,7 @@ namespace Omnikeeper.Base.CLB
 
                 using var trans = modelContextBuilder.BuildDeferred();
 
-                var atTime = DateTimeOffset.Now;
+                var timeThreshold = TimeThreshold.BuildLatest();
 
                 var username = Name; // make username the same as CLB name
                 var displayName = username;
@@ -63,10 +63,10 @@ namespace Omnikeeper.Base.CLB
                 var clbUserGuidNamespace = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1");
                 var guid = GuidUtility.Create(clbUserGuidNamespace, Name);
                 var user = await userModel.UpsertUser(username, displayName, guid, UserType.Robot, trans);
-                var changesetProxy = new ChangesetProxy(user, atTime, changesetModel);
+                var changesetProxy = new ChangesetProxy(user, timeThreshold, changesetModel);
 
                 // prerequisits
-                var predicates = await predicateModel.GetPredicates(trans, TimeThreshold.BuildLatestAtTime(atTime), AnchorStateFilter.ActiveOnly);
+                var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.ActiveOnly);
                 var nonExistingRequiredPredicates = RequiredPredicates.Where(rp => !predicates.ContainsKey(rp));
 
                 if (nonExistingRequiredPredicates.Count() > 0)
