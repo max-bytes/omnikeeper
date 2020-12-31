@@ -137,8 +137,52 @@ namespace Tests.Integration.Model
             Assert.AreEqual(2, changesets2.Count());
         }
 
-
         [Test]
+        public async Task DeleteEmptyTest()
+        {
+            var userModel = new UserInDatabaseModel();
+            var changesetModel = new ChangesetModel(userModel);
+            var baseAttributeModel = new BaseAttributeModel(new PartitionModel());
+            var baseAttributeRevisionistModel = new BaseAttributeRevisionistModel();
+            var attributeModel = new AttributeModel(baseAttributeModel);
+            var ciModel = new CIModel(attributeModel);
+            var predicateModel = new CachingPredicateModel(new PredicateModel());
+            var baseRelationModel = new BaseRelationModel(predicateModel, new PartitionModel());
+            var relationModel = new RelationModel(baseRelationModel);
+            var layerModel = new LayerModel();
+
+            using var trans1 = ModelContextBuilder.BuildDeferred();
+            var user = await DBSetup.SetupUser(userModel, trans1);
+            var ciid1 = await ciModel.CreateCI(trans1);
+            var ciid2 = await ciModel.CreateCI(trans1);
+            var (predicate1, changedp1) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans1);
+            var layer1 = await layerModel.CreateLayer("l1", trans1);
+            var layer2 = await layerModel.CreateLayer("l2", trans1);
+            var layerset1 = new LayerSet(new long[] { layer1.ID });
+            var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(100)), changesetModel);
+            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("foo"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans1);
+            trans1.Commit();
+
+            using (var trans = ModelContextBuilder.BuildDeferred()) {
+                Assert.AreEqual(0, await changesetModel.DeleteEmptyChangesets(trans));
+                trans.Commit();
+            }
+
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                await baseAttributeRevisionistModel.DeleteAllAttributes(layer1.ID, trans);
+                trans.Commit();
+            }
+
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                Assert.AreEqual(1, await changesetModel.DeleteEmptyChangesets(trans));
+                trans.Commit();
+            }
+        }
+
+
+            [Test]
         public async Task ArchiveOldTest()
         {
             var userModel = new UserInDatabaseModel();

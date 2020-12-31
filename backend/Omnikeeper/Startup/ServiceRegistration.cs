@@ -170,6 +170,8 @@ namespace Omnikeeper.Startup
             services.AddSingleton<ICIModel, CIModel>();
             services.AddSingleton<IAttributeModel, AttributeModel>();
             services.AddSingleton<IBaseAttributeModel, BaseAttributeModel>();
+            services.AddSingleton<IBaseAttributeRevisionistModel, BaseAttributeRevisionistModel>();
+            services.AddSingleton<IBaseRelationRevisionistModel, BaseRelationRevisionistModel>();
             services.AddSingleton<IUserInDatabaseModel, UserInDatabaseModel>();
             services.AddSingleton<ILayerModel, LayerModel>();
             services.AddSingleton<ILayerStatisticsModel, LayerStatisticsModel>();
@@ -195,8 +197,10 @@ namespace Omnikeeper.Startup
             if (enableModelCaching)
             {
                 services.Decorate<IBaseAttributeModel, CachingBaseAttributeModel>();
+                services.Decorate<IBaseAttributeRevisionistModel, CachingBaseAttributeRevisionistModel>();
                 services.Decorate<ILayerModel, CachingLayerModel>();
                 services.Decorate<IBaseRelationModel, CachingBaseRelationModel>();
+                services.Decorate<IBaseRelationRevisionistModel, CachingBaseRelationRevisionistModel>();
                 services.Decorate<IPredicateModel, CachingPredicateModel>();
                 services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
                 services.Decorate<IRecursiveTraitModel, CachingRecursiveTraitModel>();

@@ -49,14 +49,19 @@ namespace Omnikeeper.Runners
 
                 var threshold = DateTimeOffset.Now.Add(archiveThreshold.Negate());
 
+                // TODO: rewrite to delete single attributes/relations (empty changeset deletion is handled later)
+                // OR: think about data archiving rather in terms of partitioning!
                 var numArchivedChangesets = await changesetModel.ArchiveUnusedChangesetsOlderThan(threshold, trans);
 
                 if (numArchivedChangesets > 0)
                     logger.LogInformation($"Archived {numArchivedChangesets} changesets because they are unused and older than {threshold}");
 
-                // TODO archive empty changesets
+                // archive empty changesets
                 // NOTE: several procedures exist that can delete attributes/relations, but do not check if the associated changeset becomes empty
                 // that's why we need a procedure here that checks for empty changesets and deletes them
+                var numDeletedEmptyChangesets = await changesetModel.DeleteEmptyChangesets(trans);
+                if (numDeletedEmptyChangesets > 0)
+                    logger.LogInformation($"Deleted {numDeletedEmptyChangesets} changesets because they were empty");
 
                 trans.Commit();
             }

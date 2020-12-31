@@ -27,7 +27,7 @@ import ManageCurrentUser from './components/manage/ManageCurrentUser';
 import ShowLogs from './components/manage/ShowLogs';
 import ShowVersion from './components/manage/ShowVersion';
 import { ReactKeycloakProvider } from '@react-keycloak/web'
-import LayerStatistics from 'components/manage/LayerStatistics';
+import LayerOperations from 'components/manage/LayerOperations';
 
 
 const keycloak = new Keycloak({
@@ -102,8 +102,8 @@ function App() {
               <PrivateRoute path="/manage/predicates">
                 <ManagePredicates />
               </PrivateRoute>
-              <PrivateRoute path="/manage/layers/statistics/:layerID">
-                <LayerStatistics />
+              <PrivateRoute path="/manage/layers/operations/:layerID">
+                <LayerOperations />
               </PrivateRoute>
               <PrivateRoute path="/manage/layers">
                 <ManageLayers />

@@ -177,6 +177,8 @@ namespace Omnikeeper.GraphQL
 
                     return new CreateCIsReturn(createdCIIDs);
                 });
+
+            CreateManage();
         }
     }
 }
