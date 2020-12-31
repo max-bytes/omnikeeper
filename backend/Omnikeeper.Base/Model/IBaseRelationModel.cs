@@ -19,4 +19,9 @@ namespace Omnikeeper.Base.Model
         Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans);
         Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans);
     }
+
+    public interface IBaseRelationRevisionistModel
+    {
+        Task<int> DeleteAllRelations(long layerID, IModelContext trans);
+    }
 }

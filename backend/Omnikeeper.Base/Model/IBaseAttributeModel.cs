@@ -28,6 +28,10 @@ namespace Omnikeeper.Base.Model
         Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changeset, IModelContext trans);
         Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans);
         Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans);
+    }
 
+    public interface IBaseAttributeRevisionistModel
+    {
+        Task<int> DeleteAllAttributes(long layerID, IModelContext trans);
     }
 }

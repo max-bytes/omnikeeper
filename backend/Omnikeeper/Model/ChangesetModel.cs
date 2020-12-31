@@ -167,6 +167,21 @@ namespace Omnikeeper.Model
             return ret;
         }
 
+        public async Task<int> DeleteEmptyChangesets(IModelContext trans)
+        {
+            var query = @"delete from changeset c where 
+                    not exists (select from attribute a where a.changeset_id = c.id) and
+                    not exists (select from relation r where r.changeset_id = c.id)";
+
+            using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
+
+            command.Prepare();
+
+            var numArchived = await command.ExecuteNonQueryAsync();
+
+            return numArchived;
+        }
+
         /// <summary>
         /// approach: only archive a changeset when ALL of its changes can be archived... which means that ALL of its changes to attribute and relations can be archived
         /// this is the case when the timestamp of the attribute/relation is older than the threshold AND the attribute/relation is NOT part of the latest/current data
@@ -210,7 +225,6 @@ namespace Omnikeeper.Model
             var numArchived = await command.ExecuteNonQueryAsync();
 
             return numArchived;
-
         }
 
         [Obsolete]

@@ -34,8 +34,8 @@ export default function ManageLayers(props) {
         values: ['ACTIVE', 'DEPRECATED', 'INACTIVE', 'MARKED_FOR_DELETION'],
       },
     },
-    { headerName: "Statistics", cellRenderer: 'linkCellRenderer', editable: false,
-      cellRendererParams: { link: (props) => `/manage/layers/statistics/${props.node.id}`, content: (props) => 'Statistics' }
+    { headerName: "Operations", cellRenderer: 'linkCellRenderer', editable: false,
+      cellRendererParams: { link: (props) => `/manage/layers/operations/${props.node.id}`, content: (props) => 'Operations' }
     }
   ];
 

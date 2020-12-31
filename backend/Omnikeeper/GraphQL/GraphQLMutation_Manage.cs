@@ -242,6 +242,30 @@ namespace Omnikeeper.GraphQL
               });
 
 
+            FieldAsync<BooleanGraphType>("truncateLayer",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<LongGraphType>> { Name = "id" }
+              ),
+              resolve: async context =>
+              {
+                  var baseAttributeRevisionistModel = context.RequestServices.GetRequiredService<IBaseAttributeRevisionistModel>();
+                  var baseRelationRevisionistModel = context.RequestServices.GetRequiredService<IBaseRelationRevisionistModel>();
+                  var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+
+                  var id = context.GetArgument<long>("id");
+
+                  // TODO: auth
+                  //if (!authorizationService.CanUserUpdateLayer(userContext.User))
+                  //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission");
+
+                  using var transaction = modelContextBuilder.BuildDeferred();
+                  var numDeletedAttributes = await baseAttributeRevisionistModel.DeleteAllAttributes(id, transaction);
+                  var numDeletedRelations = await baseRelationRevisionistModel.DeleteAllRelations(id, transaction);
+                  transaction.Commit();
+                  return true;
+              });
+
+
             FieldAsync<StringGraphType>("setTraitSet",
                 arguments: new QueryArguments(
                 new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "traitSet" }

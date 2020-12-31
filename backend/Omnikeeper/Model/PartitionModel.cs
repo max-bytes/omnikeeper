@@ -82,6 +82,8 @@ namespace Omnikeeper.Model
             await commandMoveRelations.ExecuteNonQueryAsync();
 
             // nuke the whole cache!
+            // TODO, HACK, NOTE: we'd like to be more specific here and only clear attributes and relations from the cache... 
+            // but that's not supported by the cache :(
             trans.ClearCache();
         }
     }
