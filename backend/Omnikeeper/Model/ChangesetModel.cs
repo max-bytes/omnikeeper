@@ -169,9 +169,11 @@ namespace Omnikeeper.Model
 
         public async Task<int> DeleteEmptyChangesets(IModelContext trans)
         {
-            var query = @"delete from changeset c where 
-                    not exists (select from attribute a where a.changeset_id = c.id) and
-                    not exists (select from relation r where r.changeset_id = c.id)";
+            var query = @"delete from changeset c where c.id not in (
+                select distinct changeset_id from attribute
+                union
+                select distinct changeset_id from relation
+            )";
 
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
 

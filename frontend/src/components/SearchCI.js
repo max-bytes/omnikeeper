@@ -7,8 +7,9 @@ import { withRouter, Link } from 'react-router-dom'
 function SearchCI(props) {
   const initialState = { results: [], searchString: '' }
 
-  const { loading, data: dataCIs, refetch: search } = useQuery(queries.SimpleSearchCIs, {variables: 
-    {searchString: initialState.searchString }
+  const { loading, data: dataCIs, refetch: search } = useQuery(queries.SimpleSearchCIs, {
+    variables: {searchString: initialState.searchString },
+    fetchPolicy: 'network-only'
   });
   const [state, setState] = useState(initialState);
 

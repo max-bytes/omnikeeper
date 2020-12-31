@@ -1,0 +1,7 @@
+-- to increase performance when looking for attributes/relations belonging to a changeset (such as when looking for empty changesets)
+CREATE INDEX attribute_changeset_id_idx
+    ON public.attribute USING btree
+    (changeset_id ASC NULLS LAST);
+CREATE INDEX relation_changeset_id_idx
+    ON public.relation USING btree
+    (changeset_id ASC NULLS LAST);
