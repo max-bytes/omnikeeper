@@ -54,6 +54,10 @@ namespace Omnikeeper.Runners
                 if (numArchivedChangesets > 0)
                     logger.LogInformation($"Archived {numArchivedChangesets} changesets because they are unused and older than {threshold}");
 
+                // TODO archive empty changesets
+                // NOTE: several procedures exist that can delete attributes/relations, but do not check if the associated changeset becomes empty
+                // that's why we need a procedure here that checks for empty changesets and deletes them
+
                 trans.Commit();
             }
 
