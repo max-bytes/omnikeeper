@@ -1,7 +1,6 @@
 ﻿using Hangfire;
 using Hangfire.Server;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
@@ -9,7 +8,6 @@ using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
-using System;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Runners
@@ -22,7 +20,7 @@ namespace Omnikeeper.Runners
         private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly IModelContextBuilder modelContextBuilder;
 
-        public ArchiveOldDataRunner(ILogger<ArchiveOldDataRunner> logger, IExternalIDMapPersister externalIDMapPersister, 
+        public ArchiveOldDataRunner(ILogger<ArchiveOldDataRunner> logger, IExternalIDMapPersister externalIDMapPersister,
             IChangesetModel changesetModel, IBaseConfigurationModel baseConfigurationModel, IModelContextBuilder modelContextBuilder)
         {
             this.logger = logger;

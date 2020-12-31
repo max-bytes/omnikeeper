@@ -83,7 +83,7 @@ namespace Omnikeeper.Base.Entity
             IEnumerable<TraitAttribute> optionalAttributes,
             IEnumerable<TraitRelation> requiredRelations)
         {
-            return new Trait(name, 
+            return new Trait(name,
                 requiredAttributes.ToImmutableList(), optionalAttributes.ToImmutableList(), requiredRelations.ToImmutableList()
             );
         }

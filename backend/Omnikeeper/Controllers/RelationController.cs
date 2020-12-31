@@ -6,7 +6,6 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -26,7 +25,7 @@ namespace Omnikeeper.Controllers
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
 
-        public RelationController(IRelationModel relationModel, ICIBasedAuthorizationService ciBasedAuthorizationService, 
+        public RelationController(IRelationModel relationModel, ICIBasedAuthorizationService ciBasedAuthorizationService,
             ICurrentUserService currentUserService, IModelContextBuilder modelContextBuilder)
         {
             this.relationModel = relationModel;

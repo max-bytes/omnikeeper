@@ -9,7 +9,6 @@ using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Response;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -131,7 +130,7 @@ namespace Omnikeeper.GridView.Queries
                                 new List<Cell>
                                     {
                                         new Cell(
-                                            name, 
+                                            name,
                                             attr.Value.Attribute.Value.Value2String(),
                                             (col.WriteLayer != null) && changable
                                         )

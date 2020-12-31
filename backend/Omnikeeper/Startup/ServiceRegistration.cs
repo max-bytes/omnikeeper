@@ -114,7 +114,7 @@ namespace Omnikeeper.Startup
                         {
                             PluginLoadContext loadContext = new PluginLoadContext(finalDLLFile);
                             assembly = loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(finalDLLFile)));
-                            services.Scan(scan => 
+                            services.Scan(scan =>
                                 scan.FromAssemblies(assembly)
                                     .AddClasses()
                                     .AsSelfWithInterfaces() // see https://andrewlock.net/using-scrutor-to-automatically-register-your-services-with-the-asp-net-core-di-container/#registering-an-implementation-using-forwarded-services

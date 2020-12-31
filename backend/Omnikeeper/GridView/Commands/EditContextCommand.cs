@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using MediatR;
-using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GridView.Entity;
 using Omnikeeper.GridView.Helper;

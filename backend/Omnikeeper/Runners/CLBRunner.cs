@@ -1,5 +1,4 @@
-﻿using GraphQL;
-using Hangfire.Server;
+﻿using Hangfire.Server;
 using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Model;
@@ -15,7 +14,7 @@ namespace Omnikeeper.Runners
 {
     public class CLBRunner
     {
-        public CLBRunner(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, 
+        public CLBRunner(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains,
             ILayerModel layerModel, ILogger<CLBRunner> logger, IModelContextBuilder modelContextBuilder)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Npgsql;
-using NpgsqlTypes;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;

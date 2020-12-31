@@ -37,7 +37,8 @@ namespace Omnikeeper.Base.Inbound
                 }
 
                 return ret;
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 return null;
             }
@@ -71,7 +72,8 @@ namespace Omnikeeper.Base.Inbound
                 }
 
                 return true;
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 return false;
             }

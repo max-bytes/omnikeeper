@@ -1,5 +1,4 @@
-﻿using Npgsql;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -125,7 +124,7 @@ namespace Omnikeeper.Model
             foreach (var et in selectedTraits)
             {
                 ICIIDSelection ciidSelection = new AllCIIDsSelection();
-                if (searchAllCIsBasedOnSearchString && !resultIsReducedByETs) 
+                if (searchAllCIsBasedOnSearchString && !resultIsReducedByETs)
                     ciidSelection = SpecificCIIDsSelection.Build(foundCIIDs);
                 // TODO: replace with something less performance intensive, that only fetches the CIIDs (and also cached)
                 var cisFulfillingTraitRequirement = await traitModel.GetMergedCIsWithTrait(et, layerSet, ciidSelection, trans, atTime);

@@ -1,27 +1,22 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Model.Decorators;
+﻿using FluentAssertions;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
-using Npgsql;
 using NUnit.Framework;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.Model.Decorators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Utils.ModelContext;
-using Castle.Core.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Omnikeeper.Base.Entity.DataOrigin;
-using Omnikeeper.Base.Service;
-using Microsoft.Extensions.Primitives;
-using FluentAssertions;
-using System.Threading;
-using Microsoft.Extensions.Caching.Distributed;
 
 namespace Tests.Integration.Model
 {
@@ -153,7 +148,8 @@ namespace Tests.Integration.Model
         [Test]
         public async Task GetAttributesMultiCIIDSelection()
         {
-            async Task TestBasic(Mock<IBaseAttributeModel> mocked) {
+            async Task TestBasic(Mock<IBaseAttributeModel> mocked)
+            {
                 var attributeModel = new CachingBaseAttributeModel(mocked.Object, NullLogger<CachingBaseAttributeModel>.Instance);
                 var memoryCache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
                 var trans = new ModelContextImmediateMode(memoryCache, null!, NullLogger<IModelContext>.Instance);
@@ -180,8 +176,8 @@ namespace Tests.Integration.Model
             var layerID = 1L;
             var timeThreshold = TimeThreshold.BuildLatest();
             await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(new Guid[] { ciid1 }), layerID, trans, timeThreshold);
-                mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once());
-                await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(new Guid[] { ciid1, ciid2 }), layerID, trans, timeThreshold);
+            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once());
+            await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(new Guid[] { ciid1, ciid2 }), layerID, trans, timeThreshold);
             mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Never());
             mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once());
         }

@@ -1,12 +1,10 @@
 ﻿using Npgsql;
-using Omnikeeper.Base.Entity;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Utils.ModelContext
-{ 
+{
     public interface IModelContextBuilder
     {
         IModelContext BuildDeferred();

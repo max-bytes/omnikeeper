@@ -1,23 +1,17 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Moq;
+using NUnit.Framework;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Templating;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
-using Moq;
-using Newtonsoft.Json.Linq;
-using Npgsql;
-using NUnit.Framework;
 using Scriban;
-using Scriban.Parsing;
 using Scriban.Runtime;
-using Scriban.Syntax;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using static Omnikeeper.Base.Templating.ScribanVariableService;
-using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Templating
 {
@@ -41,7 +35,7 @@ namespace Tests.Templating
                     //new MergedCIAttribute(new CIAttribute(0, "a.json", Guid.NewGuid(), AttributeValueJSONScalar.Build(
                     //    JObject.Parse(@"{ ""foo"": ""bar""}")), AttributeState.New, 0), new long[0])
                 });
-                var testCIB = new MergedCI(Guid.NewGuid(), "test-ci-b", new LayerSet(), atTime, new List<MergedCIAttribute>() {});
+                var testCIB = new MergedCI(Guid.NewGuid(), "test-ci-b", new LayerSet(), atTime, new List<MergedCIAttribute>() { });
 
                 var relationModel = new Mock<IRelationModel>();
                 relationModel.Setup(x => x.GetMergedRelations(It.IsAny<IRelationSelection>(), It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))

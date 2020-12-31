@@ -1,22 +1,16 @@
 ﻿using GraphQL;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 
 namespace Omnikeeper.GraphQL
 {
@@ -33,7 +27,7 @@ namespace Omnikeeper.GraphQL
                     var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
                     var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
-                    
+
                     var createLayer = context.GetArgument<CreateLayerInput>("layer");
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
 

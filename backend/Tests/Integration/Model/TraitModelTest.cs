@@ -1,14 +1,11 @@
 ﻿using FluentAssertions;
+using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Model;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using NUnit.Framework;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace Tests.Integration.Model 
+namespace Tests.Integration.Model
 {
     class TraitModelTest // TODO: this (TraitModelTest) is not the best name
     {

@@ -49,7 +49,9 @@ namespace Omnikeeper.Model
             {
                 var fromDB = await GetConfig(trans);
                 return fromDB;
-            } catch (Exception) {
+            }
+            catch (Exception)
+            {
                 // return default
                 return new BaseConfigurationV1(
                     TimeSpan.FromDays(90),

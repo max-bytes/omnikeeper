@@ -1,19 +1,14 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using Newtonsoft.Json;
-using OKPluginOIASharepoint;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static OKPluginOIASharepoint.Config;
-using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace OKPluginOIASharepoint
 {
@@ -98,7 +93,7 @@ namespace OKPluginOIASharepoint
         {
             var listIDGroups = idPairs.GroupBy(f => f.externalID.listID);
 
-            foreach(var listIDGroup in listIDGroups)
+            foreach (var listIDGroup in listIDGroups)
             {
                 var listID = listIDGroup.Key;
                 var listItemID2CIIDMap = listIDGroup.ToDictionary(l => l.externalID.itemID, l => l.ciid);
@@ -121,14 +116,15 @@ namespace OKPluginOIASharepoint
                     if (!listItemID2CIIDMap.TryGetValue(itemGuid, out var ciid))
                         continue; // the external item does not have a mapping to a CI
 
-                    foreach (var column in itemColumns) {
+                    foreach (var column in itemColumns)
+                    {
                         var columnName = column.Key;
                         var columnValue = column.Value;
                         var attributeValue = (columnValue as string);
                         if (columnValue == null) continue; // TODO: handle
                         if (attributeValue == null) continue; // TODO: handle
                         var attributeNames = listConfig.ColumnName2AttributeNames(columnName);
-                        foreach(var attributeName in attributeNames)
+                        foreach (var attributeName in attributeNames)
                             yield return BuildAttributeFromValue(attributeName, attributeValue, ciid);
                     }
                 }

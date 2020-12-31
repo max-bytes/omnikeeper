@@ -1,15 +1,14 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace OKPluginOIAOmnikeeper
 {
@@ -48,7 +47,7 @@ namespace OKPluginOIAOmnikeeper
 
             if (ciid.HasValue)
             {
-                return new CIAttribute(dto.ID, dto.Name, ciid.Value, AttributeValueBuilder.BuildFromDTO(dto.Value), 
+                return new CIAttribute(dto.ID, dto.Name, ciid.Value, AttributeValueBuilder.BuildFromDTO(dto.Value),
                     AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.InboundOnline));
             }
             else return null;

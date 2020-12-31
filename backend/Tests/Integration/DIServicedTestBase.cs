@@ -1,24 +1,19 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Inbound;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Model;
+﻿using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
-using Microsoft.Extensions.DependencyInjection;
-using Omnikeeper.Startup;
-using Microsoft.Extensions.Logging;
-using Omnikeeper.Model.Config;
-using Microsoft.Extensions.Logging.Abstractions;
 using Omnikeeper.Base.Service;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Caching.Memory;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Model;
+using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Options;
 using Omnikeeper.Service;
+using Omnikeeper.Startup;
 
 namespace Tests.Integration
 {

@@ -1,7 +1,5 @@
 ﻿using DbUp;
 using DbUp.Engine;
-using Npgsql;
-using System.Linq;
 using System.Reflection;
 
 namespace DBMigrations
@@ -17,11 +15,13 @@ namespace DBMigrations
                     .WithTransaction()
                     .WithScriptsEmbeddedInAssembly(Assembly.GetExecutingAssembly(), s => s.EndsWith(".psql"));
 
-            if (logOutput) {
-                    builder = builder
-                        .LogToConsole()
-                        .LogScriptOutput();
-            } else
+            if (logOutput)
+            {
+                builder = builder
+                    .LogToConsole()
+                    .LogScriptOutput();
+            }
+            else
             {
                 builder = builder.LogToNowhere();
             }

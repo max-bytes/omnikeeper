@@ -10,7 +10,7 @@ namespace Omnikeeper.Base.Entity.DTO
         [Required] public Guid ID { get; set; }
         [Required] public IDictionary<string, CIAttributeDTO> Attributes { get; set; }
 
-        public CIDTO (Guid ciid, IEnumerable<CIAttributeDTO> attributes)
+        public CIDTO(Guid ciid, IEnumerable<CIAttributeDTO> attributes)
         {
             ID = ciid;
             Attributes = attributes.ToDictionary(a => a.Name);

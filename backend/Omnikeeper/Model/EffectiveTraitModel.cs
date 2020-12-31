@@ -1,17 +1,16 @@
 ﻿using Microsoft.Extensions.Logging;
-using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Inbound;
-using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Omnikeeper.Model
 {
@@ -23,7 +22,7 @@ namespace Omnikeeper.Model
         private readonly IAttributeModel attributeModel;
         private readonly IRelationModel relationModel;
         private readonly ILogger<EffectiveTraitModel> logger;
-        public EffectiveTraitModel(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ITraitsProvider traitsProvider, IOnlineAccessProxy onlineAccessProxy, 
+        public EffectiveTraitModel(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ITraitsProvider traitsProvider, IOnlineAccessProxy onlineAccessProxy,
             ILogger<EffectiveTraitModel> logger)
         {
             this.traitsProvider = traitsProvider;
@@ -156,7 +155,8 @@ namespace Omnikeeper.Model
                 //    return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty;
 
                 //ciidSelection = SpecificCIIDsSelection.Build(candidateCIIDs);
-            } else
+            }
+            else
             {
                 return (ciidSelection, false); // pass-through
             }

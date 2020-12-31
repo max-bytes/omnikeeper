@@ -1,11 +1,11 @@
-﻿using System.Threading.Tasks;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Omnikeeper.GridView.Commands;
 using Omnikeeper.GridView.Queries;
 using Omnikeeper.GridView.Request;
+using System.Threading.Tasks;
 
 namespace LandscapeRegistry.GridView
 {
@@ -146,7 +146,7 @@ namespace LandscapeRegistry.GridView
         public async Task<IActionResult> GetData([FromRoute] string context)
         {
             var (result, exception) = await _mediatr.Send(new GetDataQuery.Query(context));
-            
+
             if (exception != null)
                 return BadRequest(exception);
 

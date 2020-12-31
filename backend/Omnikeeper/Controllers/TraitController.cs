@@ -20,12 +20,12 @@ namespace Omnikeeper.Controllers
     [Authorize]
     public class TraitController : ControllerBase
     {
-        private readonly IEffectiveTraitModel traitModel; 
+        private readonly IEffectiveTraitModel traitModel;
         private readonly ITraitsProvider traitsProvider;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
 
-        public TraitController(IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, ICIBasedAuthorizationService ciBasedAuthorizationService, 
+        public TraitController(IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, ICIBasedAuthorizationService ciBasedAuthorizationService,
             IModelContextBuilder modelContextBuilder)
         {
             this.traitModel = traitModel;

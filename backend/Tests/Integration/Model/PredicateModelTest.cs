@@ -1,8 +1,7 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using NUnit.Framework;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Model;
-using Omnikeeper.Utils;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

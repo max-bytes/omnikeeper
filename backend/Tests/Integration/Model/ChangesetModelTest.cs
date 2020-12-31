@@ -1,22 +1,17 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using NUnit.Framework;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Decorators;
-using Omnikeeper.Utils;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
-using NUnit.Framework;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Tests.Integration.Model.Mocks;
 using static Omnikeeper.Base.Model.IChangesetModel;
-using static Omnikeeper.Base.Model.IRelationModel;
-using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Model
 {
@@ -163,7 +158,8 @@ namespace Tests.Integration.Model
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("foo"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans1);
             trans1.Commit();
 
-            using (var trans = ModelContextBuilder.BuildDeferred()) {
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
                 Assert.AreEqual(0, await changesetModel.DeleteEmptyChangesets(trans));
                 trans.Commit();
             }
@@ -182,7 +178,7 @@ namespace Tests.Integration.Model
         }
 
 
-            [Test]
+        [Test]
         public async Task ArchiveOldTest()
         {
             var userModel = new UserInDatabaseModel();
@@ -249,7 +245,7 @@ namespace Tests.Integration.Model
             // delete attribute a2
             using var trans6 = ModelContextBuilder.BuildDeferred();
             var changeset5 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(250)), changesetModel);
-            await attributeModel.RemoveAttribute("a2",ciid1, layer1.ID, changeset5, trans6);
+            await attributeModel.RemoveAttribute("a2", ciid1, layer1.ID, changeset5, trans6);
             trans6.Commit();
 
             // changeset2 is now old "enough", and can be deleted

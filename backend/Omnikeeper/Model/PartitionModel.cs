@@ -16,7 +16,7 @@ namespace Omnikeeper.Model
             command.Prepare();
             var pi = (DateTime)await command.ExecuteScalarAsync();
             return pi;
-        }   
+        }
 
         public async Task StartNewPartition(TimeThreshold timeThreshold, IModelContext trans)
         {

@@ -1,5 +1,4 @@
-﻿using Npgsql;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
@@ -27,7 +26,7 @@ namespace Omnikeeper.Model
         private IEnumerable<MergedCIAttribute> MergeAttributes(IEnumerable<(IEnumerable<CIAttribute> attributes, long layerID)> attributes)
         {
             var compound = new Dictionary<(Guid ciid, string name), List<(CIAttribute attribute, long layerID)>>();
-            foreach(var g in attributes)
+            foreach (var g in attributes)
             {
                 var layerID = g.layerID;
                 foreach (var attribute in g.attributes)

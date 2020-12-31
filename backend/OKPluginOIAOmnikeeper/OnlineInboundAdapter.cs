@@ -1,15 +1,9 @@
-﻿using Flurl;
-using Flurl.Http;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Inbound;
-using Omnikeeper.Base.Model;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Threading.Tasks;
 
 namespace OKPluginOIAOmnikeeper
 {

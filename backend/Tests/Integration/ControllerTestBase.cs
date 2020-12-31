@@ -1,9 +1,9 @@
-﻿using Omnikeeper.Base.Entity;
-using System;
-using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Generic;
-using Omnikeeper.Base.Service;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Service;
+using System;
+using System.Collections.Generic;
 
 namespace Tests.Integration.Controller
 {

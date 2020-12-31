@@ -29,7 +29,8 @@ namespace Omnikeeper.Service
                 var mc = modelContextBuilder.BuildDeferred();// TODO: explore isolation level System.Data.IsolationLevel.Serializable
                 await partitionModel.StartNewPartition(timeThreshold, mc);
                 mc.Commit();
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 logger.LogWarning("Could not start new data partition", e);
                 return false;

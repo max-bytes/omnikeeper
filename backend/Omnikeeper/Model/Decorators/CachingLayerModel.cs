@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
-using Npgsql;
+﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
@@ -29,7 +27,7 @@ namespace Omnikeeper.Model.Decorators
         public async Task<LayerSet> BuildLayerSet(string[] layerNames, IModelContext trans)
         {
             var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByName(), async () => (await Model.GetLayers(trans)).ToDictionary(l => l.Name));
-            
+
             var selectedLayerIDs = layerNames.Select(name =>
             {
                 if (allLayers.TryGetValue(name, out var l))

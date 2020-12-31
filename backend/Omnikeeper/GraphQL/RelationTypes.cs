@@ -2,7 +2,6 @@
 using GraphQL.Utilities;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
-using System;
 
 namespace Omnikeeper.GraphQL
 {

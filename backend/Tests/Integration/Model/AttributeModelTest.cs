@@ -1,20 +1,15 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Inbound;
+﻿using Npgsql;
+using NUnit.Framework;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
-using Omnikeeper.Utils;
-using Moq;
-using Npgsql;
-using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Tests.Integration.Model.Mocks;
-using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Model
 {

@@ -1,7 +1,6 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using NUnit.Framework;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Model;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;

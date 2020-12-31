@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
-using System;
 using Omnikeeper.Base.Entity.Config;
+using System;
 
 namespace Tasks.Tools
 {

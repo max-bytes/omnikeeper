@@ -1,3 +1,4 @@
+using FluentValidation.AspNetCore;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using Hangfire;
@@ -5,6 +6,7 @@ using Hangfire.AspNetCore;
 using Hangfire.Console;
 using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
+using MediatR;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Formatter;
@@ -35,9 +37,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using MediatR;
-using FluentValidation.AspNetCore;
-using Omnikeeper.Model;
 
 namespace Omnikeeper.Startup
 {
@@ -174,7 +173,7 @@ namespace Omnikeeper.Startup
                     Flows = new OpenApiOAuthFlows
                     {
                         ClientCredentials = new OpenApiOAuthFlow
-                        {  
+                        {
                             Scopes = new Dictionary<string, string> { },
                             TokenUrl = new Uri(Configuration.GetSection("Authentication")["Authority"] + "/protocol/openid-connect/token", UriKind.Absolute),
                         },
@@ -316,9 +315,9 @@ namespace Omnikeeper.Startup
                 c.SwaggerEndpoint($"{Configuration["BaseURL"]}/swagger/v1/swagger.json", "Landscape omnikeeper REST API V1");
                 //if (env.IsDevelopment() || env.IsStaging())
                 //{
-                    c.OAuthClientId("landscape-omnikeeper");
-                    //c.OAuthClientId("landscape-omnikeeper-api");
-                    //c.OAuthClientSecret(Configuration.GetSection("SwaggerUI")["OAuthClientSecret"]);
+                c.OAuthClientId("landscape-omnikeeper");
+                //c.OAuthClientId("landscape-omnikeeper-api");
+                //c.OAuthClientSecret(Configuration.GetSection("SwaggerUI")["OAuthClientSecret"]);
                 //}
             });
 

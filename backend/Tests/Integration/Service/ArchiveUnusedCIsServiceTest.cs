@@ -1,19 +1,16 @@
-﻿using Omnikeeper.Base.Inbound;
+﻿using Microsoft.Extensions.Logging.Abstractions;
+using NUnit.Framework;
+using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
 using Omnikeeper.Service;
-using Microsoft.Extensions.Logging.Abstractions;
-using Npgsql;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Tests.Integration.Model;
-using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Service
 {

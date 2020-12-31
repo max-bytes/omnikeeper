@@ -8,7 +8,6 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -135,7 +134,8 @@ namespace Omnikeeper.Model.Decorators
                                     trans.SetCacheValue(CacheKeyService.Attributes(ciid, layerID), new List<CIAttribute>());
 
                                 found.AddRange(fetched);
-                            } else
+                            }
+                            else
                             {
                                 logger.LogTrace("Cache Hit - GetAttributes");
                             }

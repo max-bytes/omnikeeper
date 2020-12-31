@@ -1,24 +1,11 @@
-﻿using Omnikeeper.Base.Inbound;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Model;
-using Omnikeeper.Service;
-using Microsoft.Extensions.Logging.Abstractions;
-using Npgsql;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Tests.Integration.Model;
-using Omnikeeper.Base.Entity.DataOrigin;
+﻿using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using NUnit.Framework;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
-using FluentAssertions;
-using Microsoft.Extensions.Logging;
+using Omnikeeper.Base.Utils;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Tests.Integration.Service
 {
@@ -37,7 +24,7 @@ namespace Tests.Integration.Service
             var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
             var relationModel = ServiceProvider.GetRequiredService<IRelationModel>();
 
-            var attributesBefore = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), new Omnikeeper.Base.Entity.LayerSet(1,2), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            var attributesBefore = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), new Omnikeeper.Base.Entity.LayerSet(1, 2), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             var relationsBefore = await relationModel.GetMergedRelations(new RelationSelectionAll(), new Omnikeeper.Base.Entity.LayerSet(1, 2), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
 
             Assert.IsTrue(await dataPartitionService.StartNewPartition());

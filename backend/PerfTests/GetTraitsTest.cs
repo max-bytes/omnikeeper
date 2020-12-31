@@ -1,25 +1,16 @@
-﻿using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Model;
-using Omnikeeper.Utils;
+﻿using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Tests.Integration.Model.Mocks;
-using Omnikeeper.Base.Utils.ModelContext;
-using Microsoft.Extensions.Logging.Abstractions;
-using Omnikeeper.Base.Entity.DataOrigin;
-using Tests.Integration;
-using Microsoft.Extensions.DependencyInjection;
-using Omnikeeper.Controllers;
-using Omnikeeper.Base.Entity;
-using System.Text.RegularExpressions;
 using Tests;
-using Omnikeeper.Base.Service;
+using Tests.Integration;
 
 namespace PerfTests
 {

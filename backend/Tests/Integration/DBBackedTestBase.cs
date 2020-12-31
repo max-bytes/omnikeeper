@@ -3,9 +3,6 @@ using Npgsql;
 using NUnit.Framework;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Tests.Integration
 {

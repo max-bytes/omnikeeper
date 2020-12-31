@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
+using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
-using Omnikeeper.Base.Utils;
 
 namespace OKPluginActiveDirectoryXMLIngest.Tests
 {

@@ -1,19 +1,17 @@
 using FluentAssertions;
-using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Inbound;
-using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.Entity.AttributeValues;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NUnit.Framework;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Inbound;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Dynamic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -34,7 +32,7 @@ namespace OKPluginOIASharepoint.Tests
         public async Task TestLayerAccessProxy()
         {
             var config = new Config(ExternalSharepointTenantID, ExternalSharepointBaseURL, ExternalSharepointSite, ExternalSharepointClientID,
-                ExternalSharepointClientSecret, true, new TimeSpan(100), "sharepoint_test", 
+                ExternalSharepointClientSecret, true, new TimeSpan(100), "sharepoint_test",
                 new Config.ListConfig[] { new Config.ListConfig(ExternalSharepointListID,
                     new Config.ListColumnConfig[] {
                         new Config.ListColumnConfig("Title", "title_attribute"),
@@ -124,7 +122,7 @@ namespace OKPluginOIASharepoint.Tests
         {
             var config = new Config(ExternalSharepointTenantID, ExternalSharepointBaseURL, ExternalSharepointSite, ExternalSharepointClientID,
                 ExternalSharepointClientSecret, true, new TimeSpan(100), "sharepoint_test",
-                new Config.ListConfig[] { new Config.ListConfig(ExternalSharepointListID, 
+                new Config.ListConfig[] { new Config.ListConfig(ExternalSharepointListID,
                     new Config.ListColumnConfig[] {
                         new Config.ListColumnConfig("Title", "title_attribute"),
                         new Config.ListColumnConfig("Surname", "last_name"),
@@ -180,7 +178,7 @@ namespace OKPluginOIASharepoint.Tests
             var id = new SharepointExternalListItemID(listID, itemID);
             var s = id.SerializeToString();
             var deserialized = SharepointExternalListItemID.Deserialize(s);
-            Assert.AreEqual(id, deserialized); 
+            Assert.AreEqual(id, deserialized);
         }
 
         public Dictionary<string, object> Dyn2Dict(dynamic dynObj)

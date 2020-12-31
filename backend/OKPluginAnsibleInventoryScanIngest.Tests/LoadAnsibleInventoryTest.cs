@@ -1,23 +1,22 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.Controllers.Ingest;
-using Omnikeeper.Model;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.InternalAbstractions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Newtonsoft.Json.Linq;
-using Npgsql;
 using NUnit.Framework;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Controllers.Ingest;
+using Omnikeeper.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Tests.Integration;
-using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tests.Ingest
 {
@@ -69,7 +68,7 @@ namespace Tests.Ingest
             var mc = modelContextBuilder.BuildImmediate();
 
             Layer layer1 = await layerModel.CreateLayer("Inventory Scan", mc);
-            
+
             // mock the current user service
             var mockCurrentUserService = new Mock<ICurrentUserService>();
             var user = new AuthenticatedUser(await userModel.UpsertUser(username, displayName, userGUID, UserType.Robot, mc), new List<Layer>() { layer1 });

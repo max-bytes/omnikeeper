@@ -1,13 +1,13 @@
 ﻿using FluentAssertions;
+using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Entity.AttributeValues;
-using NUnit.Framework;
+using Omnikeeper.Ingest.ActiveDirectoryXML;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Omnikeeper.Ingest.ActiveDirectoryXML;
 
 namespace OKPluginActiveDirectoryXMLIngest.Tests
 {

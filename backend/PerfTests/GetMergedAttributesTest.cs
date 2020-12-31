@@ -1,21 +1,16 @@
-﻿using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Model;
-using Omnikeeper.Utils;
+﻿using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Tests.Integration.Model.Mocks;
-using Omnikeeper.Base.Utils.ModelContext;
-using Microsoft.Extensions.Logging.Abstractions;
-using Omnikeeper.Base.Entity.DataOrigin;
 using Tests.Integration;
-using Microsoft.Extensions.DependencyInjection;
-using Omnikeeper.Controllers;
 
 namespace PerfTests
 {
@@ -40,7 +35,7 @@ namespace PerfTests
             var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
             var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
             var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
-            
+
             var numCIs = 500;
             var numLayers = 2;
             var numAttributeInserts = 6000;
@@ -50,9 +45,9 @@ namespace PerfTests
 
             ciNames = Enumerable.Range(0, numCIs).Select(i =>
             {
-                    //var identity = "CI" + RandomString.Generate(8, random);
-                    //return identity;
-                    return Guid.NewGuid();
+                //var identity = "CI" + RandomString.Generate(8, random);
+                //return identity;
+                return Guid.NewGuid();
             }).ToList();
 
             layerNames = Enumerable.Range(0, numLayers).Select(i =>

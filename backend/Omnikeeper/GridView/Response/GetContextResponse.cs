@@ -1,5 +1,4 @@
 ﻿using Omnikeeper.GridView.Entity;
-using System.Collections.Generic;
 
 namespace Omnikeeper.GridView.Response
 {

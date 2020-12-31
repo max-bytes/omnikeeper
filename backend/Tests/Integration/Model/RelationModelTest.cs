@@ -1,20 +1,14 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using NUnit.Framework;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Decorators;
-using Omnikeeper.Utils;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
-using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Tests.Integration.Model.Mocks;
-using static Omnikeeper.Base.Model.IRelationModel;
-using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Base.Entity.DataOrigin;
 
 namespace Tests.Integration.Model
 {
@@ -50,7 +44,7 @@ namespace Tests.Integration.Model
                 var layerset = new LayerSet(new long[] { layerID1 });
 
                 // test single relation
-                var (i1,c1) = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var (i1, c1) = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 Assert.AreEqual(predicate1.ID, i1.PredicateID);
                 Assert.IsTrue(c1);
                 var r1 = await relationModel.GetMergedRelations(new RelationSelectionFrom(ciid1), layerset, trans, TimeThreshold.BuildLatest());
@@ -73,7 +67,7 @@ namespace Tests.Integration.Model
 
 
                 // test second relation
-                var (i3,c3) = await relationModel.InsertRelation(ciid1, ciid3, predicate1.ID, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var (i3, c3) = await relationModel.InsertRelation(ciid1, ciid3, predicate1.ID, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 Assert.AreEqual(predicate1.ID, i3.PredicateID);
                 var r2 = await relationModel.GetMergedRelations(new RelationSelectionFrom(ciid1), layerset, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(2, r2.Count());
@@ -114,8 +108,8 @@ namespace Tests.Integration.Model
             var layer2 = await layerModel.CreateLayer("l2", trans);
             var layerset = new LayerSet(new long[] { layer2.ID, layer1.ID });
 
-            var (i1,c1) = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-            var (i2,c2) = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            var (i1, c1) = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            var (i2, c2) = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
             Assert.AreEqual(predicate1.ID, i1.PredicateID);
             Assert.AreEqual(predicate1.ID, i2.PredicateID);
             Assert.IsTrue(c1);
@@ -187,8 +181,8 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                var (i1,c1) = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                var (i2,c2) = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var (i1, c1) = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                var (i2, c2) = await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 Assert.AreEqual(predicate1.ID, i1.PredicateID);
                 Assert.AreEqual(predicate1.ID, i2.PredicateID);
                 trans.Commit();

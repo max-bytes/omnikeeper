@@ -7,9 +7,7 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -130,7 +128,7 @@ namespace Omnikeeper.Base.Generator
         }
     }
 
-    
+
 
     public interface IEffectiveGeneratorProvider
     {
@@ -153,7 +151,8 @@ namespace Omnikeeper.Base.Generator
         public async Task<IEnumerable<(GeneratorItem generatorItem, MergedCI ci)>> GetEffectiveGeneratorItems(long layerID, ICIIDSelection selection, IGeneratorSelection generatorSelection, IModelContext mc, TimeThreshold timeThreshold)
         {
             // setup, TODO: move
-            var generators = new Dictionary<string, Generator>() {
+            var generators = new Dictionary<string, Generator>()
+            {
                 //{ "host_set_name_from_hostname", new Generator(new LayerSet(1), new GeneratorSelectorByTrait("host"), new List<GeneratorItem>()
                 //    {
                 //        new GeneratorItem("__name", GeneratorAttributeValue.Build("{{ a.hostname|string.upcase }}"))
@@ -201,7 +200,7 @@ namespace Omnikeeper.Base.Generator
 
                             if (applies)
                             {
-                                foreach(var item in items)
+                                foreach (var item in items)
                                     effectiveGeneratorItems.Add((item, ci));
                             }
                         }
@@ -230,7 +229,8 @@ namespace Omnikeeper.Base.Generator
                 Guid staticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
                 var ag = new CIAttribute(agGuid, item.Name, mergedCI.ID, value, AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Generator));
                 return ag;
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 return null;
             }

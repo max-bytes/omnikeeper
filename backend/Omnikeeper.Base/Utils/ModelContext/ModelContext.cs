@@ -3,7 +3,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Npgsql;
-using Omnikeeper.Base.Service;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -104,7 +103,7 @@ namespace Omnikeeper.Base.Utils.ModelContext
             if (cache != null)
             {
                 return cache.TryGetValue(cacheKey, out cacheValue);
-            } 
+            }
             else
             {
                 cacheValue = default;
@@ -301,7 +300,8 @@ namespace Omnikeeper.Base.Utils.ModelContext
                 var memcacheField = typeof(MemoryDistributedCache).GetField("_memCache", BindingFlags.NonPublic | BindingFlags.Instance);
                 var memcache = (MemoryCache)memcacheField!.GetValue(mdc)!;
                 memcache.Compact(1.0);
-            } else
+            }
+            else
             {
                 throw new Exception("Clearing cache not supported");
             }

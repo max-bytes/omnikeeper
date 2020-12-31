@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using MediatR;
-using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
@@ -100,7 +99,8 @@ namespace Omnikeeper.GridView.Commands
                     if (row.Ciid == null)
                     {
                         row.Ciid = await ciModel.CreateCI(trans);
-                    } else
+                    }
+                    else
                     {
                         var ciExists = await ciModel.CIIDExists(row.Ciid.Value, trans);
 

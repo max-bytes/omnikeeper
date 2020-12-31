@@ -12,7 +12,8 @@ namespace Omnikeeper.Service
             if (ci.MergedAttributes.TryGetValue(at.Name, out var found))
             {
                 return (found, new TemplateErrorsAttribute(at.Name, PerAttributeTemplateChecks(found, at)));
-            } else
+            }
+            else
             {
                 return (null, new TemplateErrorsAttribute(at.Name, new ITemplateErrorAttribute[] { new TemplateErrorAttributeMissing(at.Name, at.Type) }));
             }

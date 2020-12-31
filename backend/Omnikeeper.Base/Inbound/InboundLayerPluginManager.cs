@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -47,7 +46,8 @@ namespace Omnikeeper.Base.Inbound
             {
                 var config = await ioaConfigModel.GetContextByName(instanceName, trans);
                 return onlinePluginsBuilders.ContainsKey(config.Config.BuilderName);
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 return false;
             }

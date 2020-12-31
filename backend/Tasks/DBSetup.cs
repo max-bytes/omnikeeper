@@ -1,10 +1,10 @@
 ﻿using DBMigrations;
+using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
-using Npgsql;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tasks
 {

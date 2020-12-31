@@ -1,5 +1,4 @@
 ﻿using Omnikeeper.Base.Inbound;
-using Omnikeeper.Base.Service;
 
 namespace OKPluginOIASharepoint
 {

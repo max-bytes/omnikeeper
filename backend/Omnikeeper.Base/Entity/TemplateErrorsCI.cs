@@ -80,7 +80,7 @@ namespace Omnikeeper.Base.Entity
     {
         public string ErrorMessage { get; private set; }
 
-        public TemplateErrorRelationGeneric (string message)
+        public TemplateErrorRelationGeneric(string message)
         {
             ErrorMessage = message;
         }
