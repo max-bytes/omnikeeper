@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import PropTypes from 'prop-types'
-import { useMutation } from '@apollo/react-hooks';
-import { withApollo } from 'react-apollo';
+import { useMutation } from '@apollo/client';
 import { Button, Form, Row, Col } from "antd";
 import { mutations } from '../graphql/mutations'
 import LayerStackIcons from "./LayerStackIcons";
@@ -130,4 +129,4 @@ Attribute.propTypes = {
     }).isRequired
 }
 
-export default withApollo(Attribute);
+export default Attribute;

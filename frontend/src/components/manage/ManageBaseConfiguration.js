@@ -5,7 +5,7 @@ import { Form } from 'antd';
 import { queries } from 'graphql/queries'
 import { mutations } from 'graphql/mutations'
 import 'ace-builds';
-import { useQuery, useMutation } from '@apollo/react-hooks';
+import { useQuery, useMutation } from '@apollo/client';
 import 'ace-builds/webpack-resolver';
 import AceEditor from "react-ace";
 import { ErrorPopupButton } from "../ErrorPopupButton";

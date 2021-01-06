@@ -34,7 +34,7 @@ namespace Tests.Integration.Model
             var layerModel = new LayerModel();
             var traitsProvider = new MockedTraitsProvider();
             var traitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, traitsProvider, oap.Object, NullLogger<EffectiveTraitModel>.Instance);
-            var searchModel = new CISearchModel(attributeModel, ciModel, traitModel, layerModel, traitsProvider);
+            var searchModel = new CISearchModel(attributeModel, ciModel, traitModel, layerModel, traitsProvider, NullLogger<CISearchModel>.Instance);
             var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
             Guid ciid1;
             Guid ciid2;
@@ -83,10 +83,11 @@ namespace Tests.Integration.Model
             (await searchModel.SimpleSearch("ci2", transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci2"));
             (await searchModel.SimpleSearch("i3", transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci3"));
 
-            (await searchModel.AdvancedSearch("", new string[] { }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty);
-            (await searchModel.AdvancedSearch("", new string[] { "test_trait_3" }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci1"));
-            (await searchModel.AdvancedSearch("", new string[] { "test_trait_3" }, new LayerSet(layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty);
-            (await searchModel.AdvancedSearch("", new string[] { "test_trait_4" }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty);
+            (await searchModel.AdvancedSearch("", new string[] { }, new string[] { }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all);
+            (await searchModel.AdvancedSearch("", new string[] { "test_trait_3" }, new string[] { }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci1"));
+            (await searchModel.AdvancedSearch("", new string[] { "test_trait_3" }, new string[] { }, new LayerSet(layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty);
+            (await searchModel.AdvancedSearch("", new string[] { "test_trait_4" }, new string[] { }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty);
+            (await searchModel.AdvancedSearch("", new string[] { }, new string[] { "test_trait_3" }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name != "ci1"));
 
         }
     }

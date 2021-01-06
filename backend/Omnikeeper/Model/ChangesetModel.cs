@@ -135,7 +135,7 @@ namespace Omnikeeper.Model
                 AND
                     (EXISTS(SELECT * FROM attribute a WHERE a.changeset_id = c.id AND a.layer_id = ANY(@layer_ids))
                     OR EXISTS(SELECT * FROM relation r WHERE r.changeset_id = c.id AND r.layer_id = ANY(@layer_ids)))
-                ORDER BY c.timestamp DESC";
+                ORDER BY c.timestamp DESC NULLS LAST";
             if (limit.HasValue)
                 query += " LIMIT @limit";
 
@@ -203,7 +203,7 @@ namespace Omnikeeper.Model
 	                OR (a.state != 'removed' AND a.id IN (
 		                select distinct on(layer_id, ci_id, name) id FROM attribute
 				                where timestamp <= @now
-				                order by layer_id, ci_id, name, timestamp DESC
+				                order by layer_id, ci_id, name, timestamp DESC NULLS LAST
 	                ))
 	                UNION
 	                SELECT distinct c.id FROM changeset c
@@ -213,7 +213,7 @@ namespace Omnikeeper.Model
 	                OR (r.state != 'removed' AND  r.id IN (
 		                select distinct on(layer_id, from_ci_id, to_ci_id, predicate_id) id FROM relation
 				                where timestamp <= @now
-				                order by layer_id, from_ci_id, to_ci_id, predicate_id, timestamp DESC
+				                order by layer_id, from_ci_id, to_ci_id, predicate_id, timestamp DESC NULLS LAST
 	                ))
                 )";
 
@@ -235,7 +235,7 @@ namespace Omnikeeper.Model
             var query = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 LEFT JOIN ""user"" u ON c.user_id = u.id
                 WHERE c.timestamp < @threshold
-                ORDER BY c.timestamp DESC";
+                ORDER BY c.timestamp DESC NULLS LAST";
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("threshold", threshold);

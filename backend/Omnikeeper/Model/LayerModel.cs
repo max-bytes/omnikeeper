@@ -171,16 +171,16 @@ namespace Omnikeeper.Model
             var layers = new List<Layer>();
             using var command = new NpgsqlCommand($@"SELECT l.id, l.name, ls.state, lclb.brainname, loilp.pluginname, lc.color FROM layer l
                 LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC) ls
+                    (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC NULLS LAST) ls
                     ON ls.layer_id = l.id
                 LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain ORDER BY layer_id, timestamp DESC) lclb
+                    (SELECT DISTINCT ON (layer_id) layer_id, brainname FROM layer_computelayerbrain ORDER BY layer_id, timestamp DESC NULLS LAST) lclb
                     ON lclb.layer_id = l.id
                 LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, pluginname FROM layer_onlineinboundlayerplugin ORDER BY layer_id, timestamp DESC) loilp
+                    (SELECT DISTINCT ON (layer_id) layer_id, pluginname FROM layer_onlineinboundlayerplugin ORDER BY layer_id, timestamp DESC NULLS LAST) loilp
                     ON loilp.layer_id = l.id
                 LEFT JOIN 
-                    (SELECT DISTINCT ON (layer_id) layer_id, color FROM layer_color ORDER BY layer_id, timestamp DESC) lc
+                    (SELECT DISTINCT ON (layer_id) layer_id, color FROM layer_color ORDER BY layer_id, timestamp DESC NULLS LAST) lc
                     ON lc.layer_id = l.id
                 WHERE {whereClause}", trans.DBConnection, trans.DBTransaction);
             addParameters(command.Parameters);

@@ -44,12 +44,25 @@ export const queries = {
         ${Fragments.compactCI}
     `,
     AdvancedSearchCIs: gql`
-        query advancedSearchCIs($searchString: String!, $withEffectiveTraits: [String]!, $layers: [String]!) {
-            advancedSearchCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits, layers: $layers) {
+        query advancedSearchCIs($searchString: String!, $withEffectiveTraits: [String]!, $withoutEffectiveTraits: [String]!, $layers: [String]!) {
+            advancedSearchCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits, withoutEffectiveTraits: $withoutEffectiveTraits, layers: $layers) {
                 ...CompactCI
             }
         }
         ${Fragments.compactCI}
+    `,
+    EffectiveTraitList: gql`
+        query effectiveTraitList($layers: [String]!) {
+            effectiveTraitList(layers: $layers) {
+                name
+                count
+            }
+        }
+    `,
+    ActiveTraits: gql`
+        query activeTraits {
+            activeTraits
+        }
     `,
 
     FullCI: gql`

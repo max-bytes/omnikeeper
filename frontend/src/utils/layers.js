@@ -1,4 +1,5 @@
 import { useQuery } from '@apollo/client';
+import { useState, useEffect } from "react";
 import { queries } from 'graphql/queries';
 import _ from 'lodash';
 
@@ -6,17 +7,22 @@ export function useExplorerLayers(skipInvisible = false, skipReadonly = false) {
     const { error, data, loading } = useQuery(queries.Layers);
     var { data: layerSettingsData } = useQuery(queries.LayerSettings);
 
-    if (data && layerSettingsData) {
-        let layers = mergeSettingsAndSortLayers(data.layers, layerSettingsData.layerSettings);
+    const [explorerLayers, setExplorerLayers] = useState({error: undefined, data: [], loading: undefined});
 
-        if (skipInvisible)
-            layers = layers.filter(l => l.visible);
-        if (skipReadonly)
-            layers = layers.filter(l => l.writable && l.state === 'ACTIVE');
-            
-        return {error: error, data: layers, loading: loading};
-    }
-    return {error: error, data: undefined, loading: loading};
+    useEffect(() => {
+        if (data && layerSettingsData) {
+            let layers = mergeSettingsAndSortLayers(data.layers, layerSettingsData.layerSettings);
+    
+            if (skipInvisible)
+                layers = layers.filter(l => l.visible);
+            if (skipReadonly)
+                layers = layers.filter(l => l.writable && l.state === 'ACTIVE');
+                
+            setExplorerLayers({error: error, data: layers, loading: loading});
+        }
+    }, [data, error, loading, layerSettingsData, skipInvisible, skipReadonly]);
+
+    return explorerLayers;
 }
 
 export function mergeSettingsAndSortLayers(layers, layerSettings) {

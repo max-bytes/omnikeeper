@@ -1,5 +1,7 @@
 using Omnikeeper.Base.Entity.DataOrigin;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
@@ -80,11 +82,11 @@ namespace Omnikeeper.Base.Entity
         public Guid GetFromCIID(Fragment fragment) => fragment.From;
         public Guid GetToCIID(Fragment fragment) => fragment.To;
 
-        public BulkRelationDataPredicateScope(string predicateID, long layerID, Fragment[] fragments)
+        public BulkRelationDataPredicateScope(string predicateID, long layerID, IEnumerable<Fragment> fragments)
         {
             PredicateID = predicateID;
             LayerID = layerID;
-            Fragments = fragments;
+            Fragments = fragments.ToArray();
         }
     }
 
@@ -110,10 +112,10 @@ namespace Omnikeeper.Base.Entity
         public Guid GetFromCIID(Fragment fragment) => fragment.From;
         public Guid GetToCIID(Fragment fragment) => fragment.To;
 
-        public BulkRelationDataLayerScope(long layerID, Fragment[] fragments)
+        public BulkRelationDataLayerScope(long layerID, IEnumerable<Fragment> fragments)
         {
             LayerID = layerID;
-            Fragments = fragments;
+            Fragments = fragments.ToArray();
         }
     }
 }

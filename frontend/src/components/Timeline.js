@@ -2,11 +2,11 @@ import { useQuery } from '@apollo/client';
 import React, { useState } from 'react';
 import PropTypes from 'prop-types'
 import { queries } from 'graphql/queries'
-import LoadingOverlay from 'react-loading-overlay'
+import LoadingOverlay from 'react-loading-overlay' // TODO: switch to antd spin
 import { Form, Button } from "antd";
 import { Button as SemanticButton, Icon } from 'semantic-ui-react'
 import { mutations } from 'graphql/mutations';
-import { useMutation } from '@apollo/react-hooks';
+import { useMutation } from '@apollo/client';
 import UserTypeIcon from './UserTypeIcon';
 import { formatTimestamp } from 'utils/datetime.js';
 import { ErrorView } from './ErrorView';

@@ -282,31 +282,36 @@ namespace Tasks.DBInit
             }
 
             // create monitoring relations
-            if (!windowsHostCIIds.IsEmpty())
+            using (var trans = modelContextBuilder.BuildDeferred())
             {
-                using var trans = modelContextBuilder.BuildDeferred();
-                var windowsHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(windowsHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, trans, TimeThreshold.BuildLatest());
-                foreach (var ci in windowsHosts)
+                var fragments = new List<BulkRelationDataLayerScope.Fragment>();
+                if (!windowsHostCIIds.IsEmpty())
                 {
+                    var windowsHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(windowsHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, trans, TimeThreshold.BuildLatest());
+                    foreach (var ci in windowsHosts)
+                    {
+                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHost, "has_monitoring_module"));
+                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHostWindows, "has_monitoring_module"));
+                        //await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                        //await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    }
+                }
+                if (!linuxHostCIIds.IsEmpty())
+                {
+                    var linuxHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(linuxHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, trans, TimeThreshold.BuildLatest());
+                    foreach (var ci in linuxHosts)
+                    {
+                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHost, "has_monitoring_module"));
+                        fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHostLinux, "has_monitoring_module"));
+                        //await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                        //await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                    }
+                }
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                await relationModel.BulkReplaceRelations(new BulkRelationDataLayerScope(cmdbLayerID, fragments), changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                trans.Commit();
+            }
 
-                    var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                    await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                    await relationModel.InsertRelation(ci.ID, ciMonModuleHostWindows, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                }
-                trans.Commit();
-            }
-            if (!linuxHostCIIds.IsEmpty())
-            {
-                using var trans = modelContextBuilder.BuildDeferred();
-                var linuxHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(linuxHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, trans, TimeThreshold.BuildLatest());
-                foreach (var ci in linuxHosts)
-                {
-                    var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                    await relationModel.InsertRelation(ci.ID, ciMonModuleHost, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                    await relationModel.InsertRelation(ci.ID, ciMonModuleHostLinux, "has_monitoring_module", monitoringDefinitionsLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                }
-                trans.Commit();
-            }
 
             // create ansible groups
             //Guid ciAutomationAnsibleHostGroupTest;
@@ -346,14 +351,14 @@ namespace Tasks.DBInit
                             CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
-                    new RecursiveTrait("windows_host", new List<TraitAttribute>() {
+                    new RecursiveTrait("host_windows", new List<TraitAttribute>() {
                         new TraitAttribute("os_family",
                             CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                                 new CIAttributeValueConstraintTextRegex(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                         )
                     }, requiredTraits: new string[] { "host" }),
 
-                    new RecursiveTrait("linux_host", new List<TraitAttribute>() {
+                    new RecursiveTrait("host_linux", new List<TraitAttribute>() {
                         new TraitAttribute("os_family",
                             CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                                 new CIAttributeValueConstraintTextRegex(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
@@ -401,12 +406,12 @@ namespace Tasks.DBInit
                             new TraitAttribute("variables",
                                 CIAttributeTemplate.BuildFromParams("automation.ansible_variables", AttributeValueType.JSON, false)
                             )
-                        },
-                        new List<TraitRelation>() {
-                            new TraitRelation("ansible_groups",
-                                new RelationTemplate("has_ansible_group", 1, null)
-                            )
                         }
+                        //new List<TraitRelation>() {
+                        //    new TraitRelation("ansible_groups",
+                        //        new RelationTemplate("has_ansible_group", 1, null)
+                        //    )
+                        //}
                     )
                 );
         }

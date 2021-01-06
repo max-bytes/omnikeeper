@@ -1,8 +1,8 @@
 import React from 'react';
 import { queries } from '../graphql/queries'
 import { ApolloProvider, ApolloClient, createHttpLink, InMemoryCache,gql,defaultDataIdFromObject  } from '@apollo/client';
-import { ApolloProvider as ApolloHooksProvider } from '@apollo/react-hooks'
-import { setContext } from "apollo-link-context";
+import { ApolloProvider as ApolloHooksProvider } from '@apollo/client'
+import { setContext } from "@apollo/client/link/context";
 import moment from 'moment'
 import env from "@beam-australia/react-env";
 

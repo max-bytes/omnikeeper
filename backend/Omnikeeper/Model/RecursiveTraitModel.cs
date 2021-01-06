@@ -24,7 +24,7 @@ namespace Omnikeeper.Model
         {
             using var command = new NpgsqlCommand(@"
                 SELECT config FROM traits WHERE timestamp <= @timestamp 
-                ORDER BY timestamp DESC LIMIT 1
+                ORDER BY timestamp DESC NULLS LAST LIMIT 1
             ", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("timestamp", timeThreshold.Time);
             using var dr = await command.ExecuteReaderAsync();

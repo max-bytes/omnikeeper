@@ -26,7 +26,7 @@ namespace Omnikeeper.Model
                     SELECT DISTINCT ON (ci_id, name) state
                     FROM attribute ATTR
                     WHERE ATTR.timestamp <= @time_threshold AND ATTR.layer_id = @layer_id
-                    ORDER BY ATTR.ci_id, ATTR.name, ATTR.timestamp DESC
+                    ORDER BY ATTR.ci_id, ATTR.name, ATTR.timestamp DESC NULLS LAST
                 ) R
                 WHERE R.state != 'removed'
             ", trans.DBConnection, trans.DBTransaction);
@@ -63,7 +63,7 @@ namespace Omnikeeper.Model
                     SELECT DISTINCT ON (R.from_ci_id, R.to_ci_id, R.predicate_id) R.id, R.from_ci_id, R.to_ci_id, R.predicate_id, R.state, R.changeset_id  
                     FROM relation R
                     WHERE R.timestamp <= @time_threshold AND R.layer_id = @layer_id 
-                    ORDER BY R.from_ci_id, R.to_ci_id, R.predicate_id, R.layer_id, R.timestamp DESC
+                    ORDER BY R.from_ci_id, R.to_ci_id, R.predicate_id, R.layer_id, R.timestamp DESC NULLS LAST
                 ) RES
                 WHERE RES.STATE != 'removed'
             ", trans.DBConnection, trans.DBTransaction);

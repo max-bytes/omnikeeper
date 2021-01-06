@@ -127,7 +127,7 @@ namespace Omnikeeper.Model
                 //                from(select distinct on(ci_id, name, layer_id) * from
                 //                      attribute where timestamp <= @time_threshold and layer_id = ANY(@layer_ids)
                 //                         and name = ANY(@required_attributes)
-                //                         order by ci_id, name, layer_id, timestamp DESC
+                //                         order by ci_id, name, layer_id, timestamp DESC NULLS LAST
                 //        ) inn
                 //        inner join ({lsValues}) as ls(id,""order"") ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
                 //        where inn.state != 'removed'::attributestate -- remove entries from layers which' last item is deleted

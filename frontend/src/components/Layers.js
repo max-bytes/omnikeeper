@@ -4,7 +4,7 @@ import { Icon } from 'semantic-ui-react'
 import { Button } from 'semantic-ui-react'
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import { queries } from 'graphql/queries'
-import { useQuery } from '@apollo/react-hooks';
+import { useQuery } from '@apollo/client';
 import { mergeSettingsAndSortLayers } from 'utils/layers'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCogs, faPlug, faBan, faEdit } from '@fortawesome/free-solid-svg-icons'

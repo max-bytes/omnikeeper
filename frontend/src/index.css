@@ -66,3 +66,17 @@ body {
 .cell-wrap-text {
   white-space: normal !important;
 }
+
+/* HACK workaround to make antd spin behave well with dynamic children and full height components */
+.ant-spin-nested-loading {
+  display: inherit;
+  flex-grow: inherit;
+  flex-direction: inherit;
+  width: 100%;
+}
+.ant-spin-container {
+  display: inherit;
+  flex-grow: inherit;
+  flex-direction: inherit;
+  width: inherit;
+}
