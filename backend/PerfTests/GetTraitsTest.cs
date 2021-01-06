@@ -61,7 +61,7 @@ namespace PerfTests
             var layerset = layerModel.BuildLayerSet(layerNames.ToArray(), mc).GetAwaiter().GetResult();
             var time = TimeThreshold.BuildLatest();
             var traitHost = await traitsProvider.GetActiveTrait("host", mc, time);
-            var traitLinuxHost = await traitsProvider.GetActiveTrait("linux_host", mc, time);
+            var traitLinuxHost = await traitsProvider.GetActiveTrait("host_linux", mc, time);
 
             var cis = Time("First fetch of CIs with trait host", async () =>
             {
@@ -127,6 +127,10 @@ namespace PerfTests
 
             // fetch CIs directly, as comparison
             var cis9 = Time("Fetching CIs directly after partitioning", async () =>
+            {
+                return await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(ciids), layerset, false, mc, time);
+            });
+            var cis10 = Time("Fetching CIs directly again after partitioning", async () =>
             {
                 return await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(ciids), layerset, false, mc, time);
             });

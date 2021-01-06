@@ -52,7 +52,7 @@ namespace Omnikeeper.Model
             FROM (
                 select distinct on(ci_id, name, layer_id) id FROM attribute 
                 where timestamp <= @time_threshold and partition_index = @old_partition_index
-                order by ci_id, name, layer_id, timestamp DESC) AS sub
+                order by ci_id, name, layer_id, timestamp DESC NULLS LAST) AS sub
             WHERE attribute.id = sub.id", trans.DBConnection, trans.DBTransaction);
             commandMoveAttributes.Parameters.AddWithValue("time_threshold", timeThreshold.Time);
             commandMoveAttributes.Parameters.AddWithValue("old_partition_index", oldPartitionIndex);
@@ -74,7 +74,7 @@ namespace Omnikeeper.Model
             FROM (
                 select distinct on (from_ci_id, to_ci_id, predicate_id, layer_id) id from relation 
                 where timestamp <= @time_threshold and partition_index = @old_partition_index
-                order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC) AS sub
+                order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC NULLS LAST) AS sub
             WHERE relation.id = sub.id", trans.DBConnection, trans.DBTransaction);
             commandMoveRelations.Parameters.AddWithValue("time_threshold", timeThreshold.Time);
             commandMoveRelations.Parameters.AddWithValue("old_partition_index", oldPartitionIndex);

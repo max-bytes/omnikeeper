@@ -31,7 +31,7 @@ namespace Omnikeeper.Model
 
         public async Task<UserInDatabase?> GetUser(long id, IModelContext trans)
         {
-            using var command = new NpgsqlCommand(@"SELECT keycloak_id, username, displayName, type, timestamp FROM ""user"" WHERE id = @id ORDER BY timestamp DESC LIMIT 1", trans.DBConnection, trans.DBTransaction);
+            using var command = new NpgsqlCommand(@"SELECT keycloak_id, username, displayName, type, timestamp FROM ""user"" WHERE id = @id ORDER BY timestamp DESC NULLS LAST LIMIT 1", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("id", id);
             command.Prepare();
             using var dr = await command.ExecuteReaderAsync();
@@ -49,7 +49,7 @@ namespace Omnikeeper.Model
 
         private async Task<UserInDatabase?> GetUser(string username, Guid uuid, IModelContext trans)
         {
-            using var command = new NpgsqlCommand(@"SELECT id, timestamp, type, displayName FROM ""user"" WHERE keycloak_id = @uuid AND username = @username ORDER BY timestamp DESC LIMIT 1", trans.DBConnection, trans.DBTransaction);
+            using var command = new NpgsqlCommand(@"SELECT id, timestamp, type, displayName FROM ""user"" WHERE keycloak_id = @uuid AND username = @username ORDER BY timestamp DESC NULLS LAST LIMIT 1", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("uuid", uuid);
             command.Parameters.AddWithValue("username", username);

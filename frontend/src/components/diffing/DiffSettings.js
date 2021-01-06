@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react';
 import { queries } from 'graphql/queries'
 import { Dropdown } from 'semantic-ui-react'
-import { useQuery } from '@apollo/react-hooks';
+import { useQuery } from '@apollo/client';
 import Layers from 'components/Layers';
 import { format2ShortGuid } from 'utils/shortGuid';
 import { mergeSettingsAndSortLayers } from 'utils/layers'; 

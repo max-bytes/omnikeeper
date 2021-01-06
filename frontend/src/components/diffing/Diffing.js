@@ -4,9 +4,9 @@ import { DiffArea } from './DiffArea';
 import { queries } from 'graphql/queries'
 import { useLocation } from 'react-router-dom'
 import { Segment, Divider } from 'semantic-ui-react'
-import { useQuery, useLazyQuery } from '@apollo/react-hooks';
+import { useQuery, useLazyQuery } from '@apollo/client';
 import { Form, Row, Col, Button, Checkbox } from "antd";
-import LoadingOverlay from 'react-loading-overlay';
+import LoadingOverlay from 'react-loading-overlay'; // TODO: switch to antd spin
 import queryString from 'query-string';
 import { withRouter } from 'react-router-dom'
 import _ from 'lodash';

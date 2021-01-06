@@ -36,7 +36,7 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(@"
             select id, ci_id, type, value_text, value_binary, value_control, state, changeset_id, origin_type FROM attribute 
             where timestamp <= @time_threshold and ci_id = @ci_id and layer_id = @layer_id and name = @name and partition_index >= @partition_index
-            order by timestamp DESC LIMIT 1
+            order by timestamp DESC NULLS LAST LIMIT 1
             ", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("ci_id", ciid);
             command.Parameters.AddWithValue("layer_id", layerID);
@@ -96,7 +96,7 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand($@"
             select distinct on(ci_id, name) state, id, name, ci_id, type, value_text, value_binary, value_control, changeset_id, origin_type FROM attribute 
             where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and layer_id = @layer_id and partition_index >= @partition_index
-            order by ci_id, name, timestamp DESC
+            order by ci_id, name, timestamp DESC NULLS LAST
             ", trans.DBConnection, trans.DBTransaction);
             AddQueryParametersFromCIIDSelection(selection, command.Parameters);
             command.Parameters.AddWithValue("layer_id", layerID);
@@ -140,7 +140,7 @@ namespace Omnikeeper.Model
             select distinct on(ci_id, name) state, id, name, ci_id, type, value_text, value_binary, value_control, changeset_id, origin_type from
                 attribute where timestamp <= @time_threshold and layer_id = @layer_id and name ~ @regex and ({CIIDSelection2WhereClause(selection)}) 
                 and partition_index >= @partition_index
-                order by ci_id, name, timestamp DESC
+                order by ci_id, name, timestamp DESC NULLS LAST
             ", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("layer_id", layerID);
@@ -184,7 +184,7 @@ namespace Omnikeeper.Model
                 select distinct on (ci_id) state, id, ci_id, type, value_text, value_binary, value_control, changeset_id, origin_type from
                     attribute where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id 
                     and partition_index >= @partition_index
-                    order by ci_id, timestamp DESC
+                    order by ci_id, timestamp DESC NULLS LAST
             ", trans.DBConnection, trans.DBTransaction))
             {
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
@@ -230,7 +230,7 @@ namespace Omnikeeper.Model
                 select distinct on (ci_id) state, ci_id from
                     attribute where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id 
                     and partition_index >= @partition_index
-                    order by ci_id, timestamp DESC
+                    order by ci_id, timestamp DESC NULLS LAST
             ", trans.DBConnection, trans.DBTransaction))
             {
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);

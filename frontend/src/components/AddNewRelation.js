@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useLazyQuery } from '@apollo/client';
 import PropTypes from 'prop-types'
-import { useMutation } from '@apollo/react-hooks';
-import { withApollo } from 'react-apollo';
+import { useMutation } from '@apollo/client';
 import { mutations } from '../graphql/mutations'
 import { queries } from '../graphql/queries'
 import { Form, Select, Button, Card } from "antd";
@@ -140,4 +139,4 @@ AddNewRelation.propTypes = {
   ciIdentity: PropTypes.string.isRequired
 }
 
-export default withApollo(AddNewRelation);
+export default AddNewRelation;

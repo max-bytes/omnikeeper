@@ -28,19 +28,6 @@ namespace Omnikeeper.Model
             return null; // TODO: we assume we can convert the name to a string, is this correct?
         }
 
-        private async Task<IDictionary<Guid, string?>> GetCINames(LayerSet layerset, ICIIDSelection selection, IModelContext trans, TimeThreshold atTime)
-        {
-            IDictionary<Guid, MergedCIAttribute> attributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, selection, layerset, trans, atTime);
-            var AllSelectedCIIDs = await GetCIIDsFromSelection(selection, trans);
-            return AllSelectedCIIDs.Select(ciid =>
-            {
-                if (attributes.TryGetValue(ciid, out var nameAttribute))
-                    return (ciid, name: nameAttribute?.Attribute.Value.Value2String());
-                else
-                    return (ciid, name: null);
-            }).ToDictionary(kv => kv.ciid, kv => kv.name);
-        }
-
         private async Task<IEnumerable<Guid>> GetCIIDsFromSelection(ICIIDSelection selection, IModelContext trans)
         {
             return selection switch
@@ -53,11 +40,17 @@ namespace Omnikeeper.Model
 
         public async Task<IEnumerable<CompactCI>> GetCompactCIs(ICIIDSelection selection, LayerSet visibleLayers, IModelContext trans, TimeThreshold atTime)
         {
-            var CIIDs = await GetCIIDsFromSelection(selection, trans);
-            var ciNames = await GetCINames(visibleLayers, selection, trans, atTime);
+            IDictionary<Guid, MergedCIAttribute> attributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, selection, visibleLayers, trans, atTime);
+            var AllSelectedCIIDs = await GetCIIDsFromSelection(selection, trans);
+            var layerHash = visibleLayers.LayerHash;
+            return AllSelectedCIIDs.Select(ciid =>
+            {
+                if (attributes.TryGetValue(ciid, out var nameAttribute))
+                    return new CompactCI(ciid, nameAttribute?.Attribute.Value.Value2String(), layerHash, atTime);
+                else
+                    return new CompactCI(ciid, null, layerHash, atTime);
+            });
             // TODO: this actually returns empty compact CIs for ANY Guid/CI-ID, even ones that don't exist. check if that's expected, I believe not
-
-            return CIIDs.Select(ciid => new CompactCI(ciid, ciNames[ciid], visibleLayers.LayerHash, atTime));
         }
 
         public async Task<IEnumerable<Guid>> GetCIIDs(IModelContext trans)
@@ -124,6 +117,16 @@ namespace Omnikeeper.Model
             command.Prepare();
             await command.ExecuteNonQueryAsync();
             return id;
+        }
+        public async Task BulkCreateCIs(IEnumerable<Guid> ids, IModelContext trans)
+        {
+            using var writer = trans.DBConnection.BeginBinaryImport(@"COPY ci (id) FROM STDIN (FORMAT BINARY)");
+            foreach (var ciid in ids)
+            {
+                writer.StartRow();
+                writer.Write(ciid);
+            }
+            await writer.CompleteAsync();
         }
     }
 }

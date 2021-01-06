@@ -3,7 +3,7 @@ import React from 'react';
 import CI from './CI';
 import PropTypes from 'prop-types'
 import { queries } from '../graphql/queries'
-import LoadingOverlay from 'react-loading-overlay'
+import LoadingOverlay from 'react-loading-overlay' // TODO: switch to antd spin
 import { ErrorView } from './ErrorView';
 import { useExplorerLayers } from '../utils/layers';
 import { useSelectedTime } from '../utils/useSelectedTime';

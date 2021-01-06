@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import PropTypes from 'prop-types'
-import { useMutation } from '@apollo/react-hooks';
-import { withApollo } from 'react-apollo';
+import { useMutation } from '@apollo/client';
 import { mutations } from '../graphql/mutations'
 import { AttributeTypes } from '../utils/attributeTypes'
 import EditableAttributeValue from "./EditableAttributeValue";
@@ -120,4 +119,4 @@ AddNewAttribute.propTypes = {
   ciIdentity: PropTypes.string.isRequired
 }
 
-export default withApollo(AddNewAttribute);
+export default AddNewAttribute;

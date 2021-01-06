@@ -1,7 +1,6 @@
 import React from "react";
-import { withApollo } from 'react-apollo';
 import { mutations } from '../graphql/mutations';
-import { useMutation } from '@apollo/react-hooks';
+import { useMutation } from '@apollo/client';
 import LayerStackIcons from "./LayerStackIcons";
 import { Form, Button } from 'antd';
 import { Link  } from 'react-router-dom'
@@ -57,4 +56,4 @@ RelatedCI.propTypes = {
   // TODO
 }
 
-export default withApollo(RelatedCI);
+export default RelatedCI;

@@ -52,7 +52,7 @@ namespace Omnikeeper.Model
                 select distinct on (from_ci_id, to_ci_id, predicate_id) id, from_ci_id, to_ci_id, predicate_id, state, changeset_id, origin_type from relation 
                     where timestamp <= @time_threshold and ({innerWhereClause}) and layer_id = @layer_id 
                     and partition_index >= @partition_index
-                    order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC
+                    order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC NULLS LAST
             "; // TODO: remove order by layer_id, but consider not breaking indices first
 
             var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
@@ -74,7 +74,7 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(@"select id, state, changeset_id, origin_type from relation where 
                 timestamp <= @time_threshold AND from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id and layer_id = @layer_id and predicate_id = @predicate_id 
                 and partition_index >= @partition_index
-                order by timestamp DESC 
+                order by timestamp DESC NULLS LAST
                 LIMIT 1", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("from_ci_id", fromCIID);
             command.Parameters.AddWithValue("to_ci_id", toCIID);

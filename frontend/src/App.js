@@ -9,7 +9,7 @@ import { Menu, Icon } from 'semantic-ui-react'
 import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/AddNewCI'
-import SearchCI from './components/SearchCI'
+import SearchCIAdvanced from './components/search/SearchCIAdvanced'
 import GridView from './components/gridView/GridView'
 import Manage from './components/manage/Manage'
 import UserBar from './components/UserBar';
@@ -87,7 +87,7 @@ function App() {
                 <AddNewCI />
               </PrivateRoute>
               <PrivateRoute path="/explorer">
-                <SearchCI />
+                <SearchCIAdvanced />
               </PrivateRoute>
               <PrivateRoute exact path="/grid-view">
                 <Redirect to="/grid-view/explorer" />

@@ -22,5 +22,6 @@ namespace Omnikeeper.Base.Model
 
         Task<Guid> CreateCI(Guid id, IModelContext trans);
         Task<Guid> CreateCI(IModelContext trans);
+        Task BulkCreateCIs(IEnumerable<Guid> ids, IModelContext trans);
     }
 }
