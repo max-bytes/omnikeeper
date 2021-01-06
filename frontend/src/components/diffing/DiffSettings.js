@@ -5,7 +5,8 @@ import { useQuery } from '@apollo/client';
 import Layers from 'components/Layers';
 import { format2ShortGuid } from 'utils/shortGuid';
 import { mergeSettingsAndSortLayers } from 'utils/layers'; 
-import { Radio } from "antd";
+import { Radio, Select } from "antd";
+const { Option } = Select;
 
 function ChangesetDropdown(props) {
   const { ciids, layers, timeSettings, setTimeSettings } = props;
@@ -68,24 +69,22 @@ function DiffCISettingsSpecificCIs(props) {
   var ciList = [];
   if (data)
     ciList = data.compactCIs.map(d => {
-      return { key: d.id, value: d.id, text: `${d.name ?? '[UNNAMED]'} - ${format2ShortGuid(d.id)}`, orderLast: !!d.name, sortName: d.name };
-    }).sort((a, b) => {
-      if (a.orderLast !== b.orderLast) return ((a.orderLast) ? -1 : 1);
-      if (a.sortName && b.sortName) return a.sortName.localeCompare(b.sortName);
-      else return a.key.localeCompare(b.key);
-    }).map(({orderLast, sortName, ...rest}) => rest);
-
-  return <Dropdown style={{flexBasis: '550px', flexGrow: 1}} loading={loading}
-                  disabled={loading}
-                  value={props.selectedCIIDs ?? []}
-                  placeholder='Select CIs...'
-                  onChange={(_, data) => { props.setSelectedCIIDs(data.value);}}
-                  fluid
-                  multiple
-                  search
-                  selection
-                  options={ciList}
-                />;
+      return <Option key={d.id} value={d.id}>{`${d.name ?? '[UNNAMED]'} - ${format2ShortGuid(d.id)}`}</Option>;
+    });
+    
+  return <Select
+    mode="multiple"
+    disabled={loading}
+    allowClear
+    filterOption={(input, option) => {
+      return option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0;
+    }}
+    style={{ width: '100%' }}
+    placeholder="Select CIs..."
+    value={props.selectedCIIDs ?? []}
+    onChange={(value) => { props.setSelectedCIIDs(value); }}
+  >{ciList}
+  </Select>;
 }
 
 export function DiffCISettings(props) {

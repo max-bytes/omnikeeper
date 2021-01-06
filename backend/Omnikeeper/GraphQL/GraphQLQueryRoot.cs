@@ -124,6 +124,9 @@ namespace Omnikeeper.GraphQL
                     var cis = await ciModel.GetCompactCIs(new AllCIIDsSelection(), userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
                     // reduce CIs to those that are allowed
                     cis = cis.Where(ci => ciBasedAuthorizationService.CanReadCI(ci.ID));
+
+                    cis = cis.OrderBy(ci => ci.Name ?? "ZZZZZZZZZZZ"); // order by name
+
                     return cis;
                 });
 
