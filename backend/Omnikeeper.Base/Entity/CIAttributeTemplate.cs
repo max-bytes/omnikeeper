@@ -1,6 +1,8 @@
 ﻿using JsonSubTypes;
 using Newtonsoft.Json;
 using Omnikeeper.Entity.AttributeValues;
+using ProtoBuf;
+using ProtoBuf.Serializers;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -10,17 +12,20 @@ namespace Omnikeeper.Base.Entity
     [JsonConverter(typeof(JsonSubtypes), "type")]
     [JsonSubtypes.KnownSubType(typeof(CIAttributeValueConstraintTextRegex), "textRegex")]
     [JsonSubtypes.KnownSubType(typeof(CIAttributeValueConstraintTextLength), "textLength")]
+    [ProtoContract]
+    [ProtoInclude(1, typeof(CIAttributeValueConstraintTextLength))]
+    [ProtoInclude(2, typeof(CIAttributeValueConstraintTextRegex))]
     public interface ICIAttributeValueConstraint
     {
         public string type { get; }
         IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value);
     }
 
-    [Serializable]
+    [ProtoContract(SkipConstructor = true)]
     public class CIAttributeValueConstraintTextLength : ICIAttributeValueConstraint
     {
-        public readonly int? Minimum;
-        public readonly int? Maximum;
+        [ProtoMember(1)] public readonly int? Minimum;
+        [ProtoMember(2)] public readonly int? Maximum;
 
         public CIAttributeValueConstraintTextLength(int? minimum, int? maximum)
         {
@@ -51,7 +56,7 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    [Serializable]
+    [ProtoContract(Serializer = typeof(Serializer))]
     public class CIAttributeValueConstraintTextRegex : ICIAttributeValueConstraint
     {
         public readonly string RegexStr;
@@ -93,18 +98,58 @@ namespace Omnikeeper.Base.Entity
                 return new ITemplateErrorAttribute[] { new TemplateErrorAttributeWrongType(new AttributeValueType[] { AttributeValueType.Text, AttributeValueType.MultilineText }, value.Type) };
             }
         }
+
+        public class Serializer : ISubTypeSerializer<CIAttributeValueConstraintTextRegex>, ISerializer<CIAttributeValueConstraintTextRegex>
+        {
+            SerializerFeatures ISerializer<CIAttributeValueConstraintTextRegex>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
+            void ISerializer<CIAttributeValueConstraintTextRegex>.Write(ref ProtoWriter.State state, CIAttributeValueConstraintTextRegex value)
+                => ((ISubTypeSerializer<CIAttributeValueConstraintTextRegex>)this).WriteSubType(ref state, value);
+            CIAttributeValueConstraintTextRegex ISerializer<CIAttributeValueConstraintTextRegex>.Read(ref ProtoReader.State state, CIAttributeValueConstraintTextRegex value)
+                => ((ISubTypeSerializer<CIAttributeValueConstraintTextRegex>)this).ReadSubType(ref state, SubTypeState<CIAttributeValueConstraintTextRegex>.Create(state.Context, value));
+
+            public void WriteSubType(ref ProtoWriter.State state, CIAttributeValueConstraintTextRegex value)
+            {
+                state.WriteFieldHeader(1, WireType.String);
+                state.WriteString(value.RegexStr);
+                state.WriteFieldHeader(2, WireType.Varint);
+                state.WriteInt32((int)value.RegexOptions);
+            }
+
+            public CIAttributeValueConstraintTextRegex ReadSubType(ref ProtoReader.State state, SubTypeState<CIAttributeValueConstraintTextRegex> value)
+            {
+                int field;
+                string regexStr = "";
+                RegexOptions regexOptions = default;
+                while ((field = state.ReadFieldHeader()) > 0)
+                {
+                    switch (field)
+                    {
+                        case 1:
+                            regexStr = state.ReadString();
+                            break;
+                        case 2:
+                            regexOptions = (RegexOptions)state.ReadInt32();
+                            break;
+                        default:
+                            state.SkipField();
+                            break;
+                    }
+                }
+                return new CIAttributeValueConstraintTextRegex(regexStr, regexOptions);
+            }
+        }
     }
 
-    [Serializable]
+    [ProtoContract(SkipConstructor = true)]
     public class CIAttributeTemplate
     {
-        public readonly string Name;
+        [ProtoMember(1)] public readonly string Name;
         // TODO: descriptions
-        public readonly AttributeValueType? Type; // TODO: could be more than one type allowed
-        public readonly bool? IsArray;
+        [ProtoMember(2)] public readonly AttributeValueType? Type; // TODO: could be more than one type allowed
+        [ProtoMember(3)] public readonly bool? IsArray;
         // TODO: status: required(default, other statii: optional, not allowed)
         // TODO: required layer (optional)
-        public readonly IEnumerable<ICIAttributeValueConstraint> ValueConstraints;
+        [ProtoMember(4)] public readonly IEnumerable<ICIAttributeValueConstraint> ValueConstraints;
 
         public static CIAttributeTemplate BuildFromParams(string name, AttributeValueType? type, bool? isArray, params ICIAttributeValueConstraint[] valueConstraints)
         {

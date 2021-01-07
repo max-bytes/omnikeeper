@@ -5,13 +5,14 @@ using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Decorators;
 using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {
-    class LayerStatisticsModelTest
+    class LayerStatisticsModelTest // TODO: use some TestBase class
     {
         [SetUp]
         public void Setup()
@@ -24,7 +25,7 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance);
+            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var predicateModel = new CachingPredicateModel(new PredicateModel());
@@ -70,7 +71,7 @@ namespace Tests.Integration.Model
         {
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
-            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance);
+            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var predicateModel = new CachingPredicateModel(new PredicateModel());

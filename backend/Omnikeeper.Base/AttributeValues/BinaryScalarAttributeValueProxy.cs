@@ -1,20 +1,21 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Security.Cryptography;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    [Serializable]
+    [ProtoContract(SkipConstructor = true)]
     public class BinaryScalarAttributeValueProxy
     {
         public bool HasFullData() => FullData != null;
 
-        private readonly byte[]? fullData;
+        [ProtoMember(1)] private readonly byte[]? fullData;
         public byte[]? FullData => fullData;
-        private readonly int fullSize;
+        [ProtoMember(2)] private readonly int fullSize;
         public int FullSize => fullSize;
-        private readonly byte[] sha256Hash;
+        [ProtoMember(3)] private readonly byte[] sha256Hash;
         public byte[] Sha256Hash => sha256Hash;
-        private readonly string mimeType;
+        [ProtoMember(4)] private readonly string mimeType;
         public string MimeType => mimeType;
 
         private BinaryScalarAttributeValueProxy(byte[] sha256Hash, string mimeType, int fullSize, byte[]? fullData)

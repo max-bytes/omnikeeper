@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Entity.AttributeValues;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,21 +26,20 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    [Serializable]
+    [ProtoContract(SkipConstructor = true)]
     public class CIAttribute
     {
-        public readonly Guid ID;
-        public readonly string Name;
-        public readonly Guid CIID;
-        public readonly IAttributeValue Value;
-        public readonly AttributeState State;
-        public readonly Guid ChangesetID;
-        public readonly DataOriginV1 Origin;
+        [ProtoMember(1)] public readonly Guid ID;
+        [ProtoMember(2)] public readonly string Name;
+        [ProtoMember(3)] public readonly Guid CIID;
+        [ProtoMember(4)] public readonly IAttributeValue Value;
+        [ProtoMember(5)] public readonly AttributeState State;
+        [ProtoMember(6)] public readonly Guid ChangesetID;
+        [ProtoMember(7)] public readonly DataOriginV1 Origin;
 
         // information hash: 
         public string InformationHash => CreateInformationHash(Name, CIID);
         public static string CreateInformationHash(string name, Guid ciid) => name + "_" + ciid;
-
 
         public CIAttribute(Guid id, string name, Guid CIID, IAttributeValue value, AttributeState state, Guid changesetID, DataOriginV1 origin)
         {

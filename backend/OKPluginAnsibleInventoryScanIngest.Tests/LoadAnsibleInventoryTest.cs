@@ -9,6 +9,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.Controllers.Ingest;
 using Omnikeeper.Model;
 using System;
@@ -62,7 +63,7 @@ namespace Tests.Ingest
             var ciModel = new CIModel(attributeModel);
             var predicateModel = new PredicateModel();
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel, partitionModel));
-            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance);
+            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
             var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel), relationModel, new CIMappingService());
 
             var mc = modelContextBuilder.BuildImmediate();

@@ -1,4 +1,5 @@
 using Omnikeeper.Base.Entity.DataOrigin;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,17 +24,17 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    [Serializable]
+    [ProtoContract(SkipConstructor = true)]
     public class Relation
     {
-        public readonly Guid ID;
-        public readonly Guid FromCIID;
-        public readonly Guid ToCIID;
+        [ProtoMember(1)] public readonly Guid ID;
+        [ProtoMember(2)] public readonly Guid FromCIID;
+        [ProtoMember(3)] public readonly Guid ToCIID;
         public string PredicateID => Predicate.ID;
-        public readonly Predicate Predicate;
-        public readonly RelationState State;
-        public readonly Guid ChangesetID;
-        public readonly DataOriginV1 Origin;
+        [ProtoMember(4)] public readonly Predicate Predicate;
+        [ProtoMember(5)] public readonly RelationState State;
+        [ProtoMember(6)] public readonly Guid ChangesetID;
+        [ProtoMember(7)] public readonly DataOriginV1 Origin;
 
         // information hash: 
         public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);

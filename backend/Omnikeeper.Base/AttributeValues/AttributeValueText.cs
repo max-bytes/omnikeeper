@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -14,12 +15,12 @@ namespace Omnikeeper.Entity.AttributeValues
         bool FullTextSearch(string searchString, CompareOptions compareOptions);
     }
 
-    [Serializable]
+    [ProtoContract(SkipConstructor = true)]
     public class AttributeScalarValueText : IAttributeScalarValue<string>, IEquatable<AttributeScalarValueText>, IAttributeValueText
     {
-        private readonly bool multiline;
+        [ProtoMember(1)] private readonly bool multiline;
         public bool Multiline => multiline;
-        private readonly string value;
+        [ProtoMember(2)] private readonly string value;
         public string Value => value;
 
         public string Value2String() => Value;
@@ -59,8 +60,7 @@ namespace Omnikeeper.Entity.AttributeValues
             => CultureInfo.InvariantCulture.CompareInfo.IndexOf(Value, searchString, compareOptions) >= 0;
     }
 
-
-    [Serializable]
+    [ProtoContract(SkipConstructor = true)]
     public class AttributeArrayValueText : AttributeArrayValue<AttributeScalarValueText, string>, IAttributeValueText
     {
         protected AttributeArrayValueText(AttributeScalarValueText[] values) : base(values)

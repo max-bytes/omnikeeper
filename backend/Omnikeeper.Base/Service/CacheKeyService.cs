@@ -21,6 +21,8 @@ namespace Omnikeeper.Base.Service
 
         public static string Predicate(string id) => $"predicate_{id}";
 
+        public static string LatestPartitionIndex() => $"latestPartitionIndex";
+
         public static string Traits() => $"traits";
 
         public static string AllLayersByID() => $"layers_all_byid";

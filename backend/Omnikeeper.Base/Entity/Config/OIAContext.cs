@@ -3,6 +3,7 @@ using System;
 
 namespace Omnikeeper.Base.Entity
 {
+    [Serializable] // NOTE: serializing via protobuf would not work well due to dynamic IOnlineInboundAdapter.IConfig, that's why we fallback to Serializable and BinaryFormatter
     public class OIAContext : IEquatable<OIAContext>
     {
         public OIAContext(string name, long iD, IOnlineInboundAdapter.IConfig config)

@@ -1,12 +1,14 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using ProtoBuf;
+using ProtoBuf.Serializers;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
-    [Serializable]
+    [ProtoContract(Serializer = typeof(AttributeScalarValueJSONSerializer))]
     public class AttributeScalarValueJSON : IAttributeScalarValue<JToken>, IEquatable<AttributeScalarValueJSON>
     {
         public static JToken ErrorValue(string message) => JToken.Parse($"{{\"error\": \"{message}\" }}");
@@ -15,8 +17,11 @@ namespace Omnikeeper.Entity.AttributeValues
 
         private readonly JToken value;
         public JToken Value => value;
-        public string Value2String() => Value.ToString();
-        public string[] ToRawDTOValues() => new string[] { Value.ToString() };
+        private readonly string valueStr;
+        public string ValueStr => valueStr;
+
+        public string Value2String() => valueStr;
+        public string[] ToRawDTOValues() => new string[] { valueStr };
         public object ToGenericObject() => Value;
         public bool IsArray => false;
 
@@ -31,22 +36,65 @@ namespace Omnikeeper.Entity.AttributeValues
             try
             {
                 var v = JToken.Parse(value);
-                return new AttributeScalarValueJSON(v);
+                return new AttributeScalarValueJSON(v, v.ToString());
             }
             catch (JsonReaderException e)
             {
-                return new AttributeScalarValueJSON(ErrorValue(e.Message));
+                var eJson = ErrorValue(e.Message);
+                return new AttributeScalarValueJSON(eJson, eJson.ToString());
             }
         }
 
-        public AttributeScalarValueJSON(JToken value)
+        public static AttributeScalarValueJSON Build(JToken value)
+        {
+            return new AttributeScalarValueJSON(value, value.ToString());
+        }
+
+        private AttributeScalarValueJSON(JToken value, string valueStr)
         {
             this.value = value;
+            this.valueStr = valueStr;
         }
     }
 
+    public class AttributeScalarValueJSONSerializer : ISubTypeSerializer<AttributeScalarValueJSON>, ISerializer<AttributeScalarValueJSON>
+    {
+        SerializerFeatures ISerializer<AttributeScalarValueJSON>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
+        void ISerializer<AttributeScalarValueJSON>.Write(ref ProtoWriter.State state, AttributeScalarValueJSON value)
+            => ((ISubTypeSerializer<AttributeScalarValueJSON>)this).WriteSubType(ref state, value);
+        AttributeScalarValueJSON ISerializer<AttributeScalarValueJSON>.Read(ref ProtoReader.State state, AttributeScalarValueJSON value)
+            => ((ISubTypeSerializer<AttributeScalarValueJSON>)this).ReadSubType(ref state, SubTypeState<AttributeScalarValueJSON>.Create(state.Context, value));
 
-    [Serializable]
+        public void WriteSubType(ref ProtoWriter.State state, AttributeScalarValueJSON value)
+        {
+            state.WriteFieldHeader(1, WireType.String);
+            state.WriteString(value.ValueStr);
+        }
+
+        public AttributeScalarValueJSON ReadSubType(ref ProtoReader.State state, SubTypeState<AttributeScalarValueJSON> value)
+        {
+            int field;
+            string valueStr = "";
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                        valueStr = state.ReadString();
+                        break;
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            if (valueStr != "")
+                return AttributeScalarValueJSON.BuildFromString(valueStr);
+            else
+                throw new Exception("Could not deserialize AttributeScalarValueJSON");
+        }
+    }
+
+    [ProtoContract(SkipConstructor = true)]
     public class AttributeArrayValueJSON : AttributeArrayValue<AttributeScalarValueJSON, JToken>
     {
         protected AttributeArrayValueJSON(AttributeScalarValueJSON[] values) : base(values)
@@ -74,7 +122,7 @@ namespace Omnikeeper.Entity.AttributeValues
         public static AttributeArrayValueJSON Build(JToken[] values)
         {
             var n = new AttributeArrayValueJSON(
-                values.Select(v => new AttributeScalarValueJSON(v)).ToArray()
+                values.Select(v => AttributeScalarValueJSON.Build(v)).ToArray()
             );
             return n;
         }

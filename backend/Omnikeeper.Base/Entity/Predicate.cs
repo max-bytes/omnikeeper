@@ -1,9 +1,10 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
-    [Serializable]
+    [ProtoContract(SkipConstructor = true)]
     public class Predicate : IEquatable<Predicate>
     {
         public Predicate(string iD, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints)
@@ -15,11 +16,11 @@ namespace Omnikeeper.Base.Entity
             Constraints = constraints;
         }
 
-        public readonly string ID;
-        public readonly string WordingFrom;
-        public readonly string WordingTo;
-        public readonly AnchorState State;
-        public readonly PredicateConstraints Constraints;
+        [ProtoMember(1)] public readonly string ID;
+        [ProtoMember(2)] public readonly string WordingFrom;
+        [ProtoMember(3)] public readonly string WordingTo;
+        [ProtoMember(4)] public readonly AnchorState State;
+        [ProtoMember(5)] public readonly PredicateConstraints Constraints;
 
         public override bool Equals(object? obj) => Equals(obj as Predicate);
         public bool Equals(Predicate? other)
@@ -33,7 +34,6 @@ namespace Omnikeeper.Base.Entity
         public override int GetHashCode() => HashCode.Combine(ID, WordingFrom, WordingTo, State);
     }
 
-    [Serializable]
     public class DirectedPredicate : IEquatable<DirectedPredicate>
     {
         public DirectedPredicate(string predicateID, AnchorState predicateState, string wording, bool forward)
@@ -60,11 +60,11 @@ namespace Omnikeeper.Base.Entity
         public override int GetHashCode() => HashCode.Combine(PredicateID, Wording, PredicateState, Forward);
     }
 
-    [Serializable]
+    [ProtoContract(SkipConstructor = true)]
     public class PredicateConstraints
     {
-        public readonly string[] PreferredTraitsTo;
-        public readonly string[] PreferredTraitsFrom;
+        [ProtoMember(1)] public readonly string[] PreferredTraitsTo;
+        [ProtoMember(2)] public readonly string[] PreferredTraitsFrom;
 
         [System.Text.Json.Serialization.JsonIgnore]
         public bool HasPreferredTraitsTo => PreferredTraitsTo.Length > 0;
