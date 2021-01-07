@@ -303,7 +303,7 @@ namespace Omnikeeper.Controllers.Ingest
         {
             var v = o[jsonName];
             if (v == null) return null;
-            return new CICandidateAttributeData.Fragment(attributeName ?? jsonName, new AttributeScalarValueJSON(v));
+            return new CICandidateAttributeData.Fragment(attributeName ?? jsonName, AttributeScalarValueJSON.Build(v));
         }
         private CICandidateAttributeData.Fragment? JValuePath2TextAttribute(JToken o, string jsonPath, string attributeName)
         {
@@ -324,7 +324,7 @@ namespace Omnikeeper.Controllers.Ingest
         private CICandidateAttributeData.Fragment? JToken2JSONAttribute(JToken? o, string attributeName)
         {
             if (o == null) return null;
-            return new CICandidateAttributeData.Fragment(attributeName, new AttributeScalarValueJSON(o));
+            return new CICandidateAttributeData.Fragment(attributeName, AttributeScalarValueJSON.Build(o));
         }
     }
 }

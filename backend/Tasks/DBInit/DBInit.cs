@@ -5,6 +5,7 @@ using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Decorators;
@@ -38,7 +39,7 @@ namespace Tasks.DBInit
             var predicateModel = new CachingPredicateModel(new PredicateModel());
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel, partitionModel));
             var traitModel = new RecursiveTraitModel(NullLogger<RecursiveTraitModel>.Instance);
-            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance);
+            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
 
             var random = new Random(3);
 

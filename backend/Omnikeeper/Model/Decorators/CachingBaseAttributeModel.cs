@@ -91,7 +91,7 @@ namespace Omnikeeper.Model.Decorators
         {
             // NOTE: caching is not even faster in a lot of circumstances, so we don't actually cache (for now)
             // this might change in the future, which is why the code stays
-            var cachingEnabled = false;
+            var cachingEnabled = true;
 
             if (cachingEnabled && atTime.IsLatest)
             {
@@ -99,7 +99,7 @@ namespace Omnikeeper.Model.Decorators
                 {
                     case SpecificCIIDsSelection mcs:
                         {
-                            // check which item can be found in the cache
+                            // check which items can be found in the cache
                             var found = new List<CIAttribute>();
                             var notFoundCIIDs = new List<Guid>();
                             foreach (var ciid in mcs.CIIDs)

@@ -6,49 +6,49 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
-using NUnit.Framework;
+using Npgsql;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
 using Omnikeeper.Service;
 using Omnikeeper.Startup;
+using Tests.Integration;
 
-namespace Tests.Integration
+namespace PerfTests
 {
-    abstract class DIServicedTestBase : DBBackedTestBase
+    public class Base
     {
+        private NpgsqlConnection? conn;
+        private ModelContextBuilder? modelContextBuilder;
         private ServiceProvider? serviceProvider;
 
-        protected bool enableModelCaching;
+        protected ModelContextBuilder ModelContextBuilder => modelContextBuilder!;
 
-        protected DIServicedTestBase(bool enableModelCaching)
+        public virtual void Setup(bool enableModelCaching)
         {
-            this.enableModelCaching = enableModelCaching;
-        }
+            DBSetup.Setup();
 
-        [SetUp]
-        public override void Setup()
-        {
-            base.Setup();
+            var dbcb = new DBConnectionBuilder();
+            conn = dbcb.Build(DBSetup.dbName, false, true);
+            modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
 
-            var services = InitServices();
+            var services = InitServices(enableModelCaching);
             serviceProvider = services.BuildServiceProvider();
         }
 
-        [TearDown]
-        public override void TearDown()
+        public virtual void TearDown()
         {
-            base.TearDown();
-
+            if (conn != null)
+                conn.Close();
             if (serviceProvider != null)
                 serviceProvider.Dispose();
         }
 
-        protected ServiceProvider ServiceProvider => serviceProvider!;
-
-        protected virtual IServiceCollection InitServices()
+        protected virtual IServiceCollection InitServices(bool enableModelCaching)
         {
             var services = new ServiceCollection();
             ServiceRegistration.RegisterLogging(services);
@@ -96,5 +96,7 @@ namespace Tests.Integration
 
             return services;
         }
+
+        protected ServiceProvider ServiceProvider => serviceProvider!;
     }
 }

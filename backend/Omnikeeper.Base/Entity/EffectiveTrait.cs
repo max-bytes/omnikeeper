@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 
 namespace Omnikeeper.Base.Entity
 {
-    [Serializable]
     public class EffectiveTrait
     {
         public readonly Trait UnderlyingTrait;

@@ -11,6 +11,7 @@ using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.GraphQL;
 using Omnikeeper.GridView.Model;
 using Omnikeeper.Model;
@@ -193,6 +194,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<ITraitsProvider, TraitsProvider>();
             services.AddSingleton<ITemplatesProvider, TemplatesProvider>();
             services.AddSingleton<IEffectiveGeneratorProvider, EffectiveGeneratorProvider>();
+            services.AddSingleton<IDataSerializer, ProtoBufDataSerializer>();
 
             if (enableModelCaching)
             {
@@ -205,6 +207,7 @@ namespace Omnikeeper.Startup
                 services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
                 services.Decorate<IRecursiveTraitModel, CachingRecursiveTraitModel>();
                 services.Decorate<IBaseConfigurationModel, CachingBaseConfigurationModel>();
+                services.Decorate<IPartitionModel, CachingPartitionModel>();
 
                 services.Decorate<ITemplatesProvider, CachedTemplatesProvider>();
             }

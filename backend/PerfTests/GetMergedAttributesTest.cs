@@ -14,14 +14,21 @@ using Tests.Integration;
 
 namespace PerfTests
 {
-    class GetMergedAttributesTest : DIServicedTestBase
+    class GetMergedAttributesTest : Base
     {
         private List<Guid> ciNames = new List<Guid>();
         private List<string> layerNames = new List<string>();
 
-        public GetMergedAttributesTest() : base(true)
+        [SetUp]
+        public void Setup()
         {
+            Setup(true);
+        }
 
+        [TearDown]
+        public override void TearDown()
+        {
+            base.TearDown();
         }
 
         public async Task SetupData()

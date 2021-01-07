@@ -3,6 +3,9 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Npgsql;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Utils.Serialization;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -20,12 +23,14 @@ namespace Omnikeeper.Base.Utils.ModelContext
         private readonly IDistributedCache? memoryCache;
         private readonly NpgsqlConnection npgsqlConnection;
         private readonly ILogger<IModelContext> logger;
+        private readonly IDataSerializer dataSerializer;
 
-        public ModelContextBuilder(IDistributedCache? memoryCache, NpgsqlConnection npgsqlConnection, ILogger<IModelContext> logger)
+        public ModelContextBuilder(IDistributedCache? memoryCache, NpgsqlConnection npgsqlConnection, ILogger<IModelContext> logger, IDataSerializer dataSerializer)
         {
             this.memoryCache = memoryCache;
             this.npgsqlConnection = npgsqlConnection;
             this.logger = logger;
+            this.dataSerializer = dataSerializer;
         }
 
         public IModelContext BuildDeferred()
@@ -41,7 +46,7 @@ namespace Omnikeeper.Base.Utils.ModelContext
 
         public IModelContext BuildImmediate()
         {
-            return new ModelContextImmediateMode(memoryCache, npgsqlConnection, logger);
+            return new ModelContextImmediateMode(memoryCache, npgsqlConnection, logger, dataSerializer);
         }
     }
 
@@ -50,12 +55,14 @@ namespace Omnikeeper.Base.Utils.ModelContext
         private readonly IDistributedCache? cache;
         private readonly NpgsqlConnection conn;
         private readonly ILogger<IModelContext> logger;
+        private readonly IDataSerializer dataSerializer;
 
-        public ModelContextImmediateMode(IDistributedCache? cache, NpgsqlConnection conn, ILogger<IModelContext> logger)
+        public ModelContextImmediateMode(IDistributedCache? cache, NpgsqlConnection conn, ILogger<IModelContext> logger, IDataSerializer dataSerializer)
         {
             this.cache = cache;
             this.conn = conn;
             this.logger = logger;
+            this.dataSerializer = dataSerializer;
         }
 
         public IDbConnection Connection => conn;
@@ -89,7 +96,7 @@ namespace Omnikeeper.Base.Utils.ModelContext
         {
             if (cache != null)
             {
-                return await cache.GetOrCreateThreadSafeAsync(key, factory);
+                return await cache.GetOrCreateThreadSafeAsync(key, factory, dataSerializer);
             }
             else
             {
@@ -102,7 +109,7 @@ namespace Omnikeeper.Base.Utils.ModelContext
         {
             if (cache != null)
             {
-                return cache.TryGetValue(cacheKey, out cacheValue);
+                return cache.TryGetValue(cacheKey, out cacheValue, dataSerializer);
             }
             else
             {
@@ -111,11 +118,19 @@ namespace Omnikeeper.Base.Utils.ModelContext
             }
         }
 
+        public TItem? GetCachedValue<TItem>(string cacheKey) where TItem : class
+        {
+            if (cache != null)
+                return cache.GetValue<TItem>(cacheKey, dataSerializer);
+            else
+                return default;
+        }
+
         public void SetCacheValue<TItem>(string cacheKey, TItem cacheValue) where TItem : class
         {
             if (cache != null)
             {
-                cache.SetValue(cacheKey, cacheValue);
+                cache.SetValue(cacheKey, cacheValue, dataSerializer);
             }
         }
 
@@ -213,14 +228,14 @@ namespace Omnikeeper.Base.Utils.ModelContext
 
     public static class DistributedCacheExtensions
     {
-        public static async Task<(T item, bool hit)> GetOrCreateThreadSafeAsync<T>(this IDistributedCache memoryCache, string key, Func<Task<T>> factory) where T : class
+        public static async Task<(T item, bool hit)> GetOrCreateThreadSafeAsync<T>(this IDistributedCache memoryCache, string key, Func<Task<T>> factory, IDataSerializer dataSerializer) where T : class
         {
             // try to avoid lock by first checking if the key is already present (which should be the case most of the time)
             var bytes = memoryCache.Get(key);
             T? r;
             if (bytes != null)
             {
-                r = FromByteArray<T>(bytes);
+                r = dataSerializer.FromByteArray<T>(bytes);
                 if (r != null)
                     return (r, true);
             }
@@ -228,35 +243,35 @@ namespace Omnikeeper.Base.Utils.ModelContext
             r = await factory(); // TODO: move inside lock?
             lock (TypeLock<T>.Lock) // TODO: this should be a distributed lock
             {
-                var b = ToByteArray(r);
+                var b = dataSerializer.ToByteArray(r);
                 memoryCache.Set(key, b);
                 return (r, false);
             }
         }
 
-        internal static void SetValue<TItem>(this IDistributedCache memoryCache, string cacheKey, TItem cacheValue) where TItem : class
+        internal static void SetValue<TItem>(this IDistributedCache memoryCache, string cacheKey, TItem cacheValue, IDataSerializer dataSerializer) where TItem : class
         {
-            var b = ToByteArray(cacheValue);
+            var b = dataSerializer.ToByteArray(cacheValue);
             memoryCache.Set(cacheKey, b);
         }
 
-        public static TItem? GetValue<TItem>(this IDistributedCache memoryCache, string key) where TItem : class
+        public static TItem? GetValue<TItem>(this IDistributedCache memoryCache, string key, IDataSerializer dataSerializer) where TItem : class
         {
             var bytes = memoryCache.Get(key);
             TItem? r = null;
             if (bytes != null)
             {
-                r = FromByteArray<TItem>(bytes);
+                r = dataSerializer.FromByteArray<TItem>(bytes);
             }
             return r;
         }
-        internal static bool TryGetValue<TItem>(this IDistributedCache memoryCache, string key, out TItem? cacheValue) where TItem : class
+        internal static bool TryGetValue<TItem>(this IDistributedCache memoryCache, string key, out TItem? cacheValue, IDataSerializer dataSerializer) where TItem : class
         {
             var bytes = memoryCache.Get(key);
             TItem? r = null;
             if (bytes != null)
             {
-                r = FromByteArray<TItem>(bytes);
+                r = dataSerializer.FromByteArray<TItem>(bytes);
             }
             if (r != null)
             {
@@ -270,21 +285,6 @@ namespace Omnikeeper.Base.Utils.ModelContext
         internal static void RemoveValue(this IDistributedCache memoryCache, string key)
         {
             memoryCache.Remove(key); // TODO: async without waiting better?
-        }
-
-        private static byte[] ToByteArray(object obj)
-        {
-            BinaryFormatter binaryFormatter = new BinaryFormatter();
-            using MemoryStream memoryStream = new MemoryStream();
-            binaryFormatter.Serialize(memoryStream, obj);
-            return memoryStream.ToArray();
-        }
-
-        private static T? FromByteArray<T>(byte[] byteArray) where T : class
-        {
-            BinaryFormatter binaryFormatter = new BinaryFormatter();
-            using MemoryStream memoryStream = new MemoryStream(byteArray);
-            return binaryFormatter.Deserialize(memoryStream) as T;
         }
 
         private static class TypeLock<T> where T : class

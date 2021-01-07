@@ -1,19 +1,20 @@
 ﻿using Newtonsoft.Json;
 using Omnikeeper.Base.Utils;
+using ProtoBuf;
 using System;
 
 namespace Omnikeeper.Base.Entity.Config
 {
-    [Serializable]
+    [ProtoContract(SkipConstructor = true)]
     public class BaseConfigurationV1
     {
         public readonly static TimeSpan InfiniteArchiveChangesetThreshold = TimeSpan.FromTicks(long.MaxValue);
 
-        private readonly TimeSpan archiveChangesetThreshold;
-        private readonly string clbRunnerInterval;
-        private readonly string markedForDeletionRunnerInterval;
-        private readonly string externalIDManagerRunnerInterval;
-        private readonly string archiveOldDataRunnerInterval;
+        [ProtoMember(1)] private readonly TimeSpan archiveChangesetThreshold;
+        [ProtoMember(2)] private readonly string clbRunnerInterval;
+        [ProtoMember(3)] private readonly string markedForDeletionRunnerInterval;
+        [ProtoMember(4)] private readonly string externalIDManagerRunnerInterval;
+        [ProtoMember(5)] private readonly string archiveOldDataRunnerInterval;
 
         [JsonProperty(Required = Required.Always)]
         public TimeSpan ArchiveChangesetThreshold => archiveChangesetThreshold;

@@ -62,10 +62,6 @@ namespace Tests
             using (var mc = modelContextBuilder.BuildDeferred())
             {
                 await ciModel.BulkCreateCIs(ciids, mc);
-                //foreach (var ciid in ciids)
-                //{
-                //    ciModel.CreateCI(ciid, mc).GetAwaiter().GetResult();
-                //};
 
                 layers = layerNames.Select(identity =>
                 {

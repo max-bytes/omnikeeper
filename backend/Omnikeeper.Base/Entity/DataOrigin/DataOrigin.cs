@@ -1,4 +1,5 @@
 ﻿
+using ProtoBuf;
 using System;
 
 namespace Omnikeeper.Base.Entity.DataOrigin
@@ -12,7 +13,7 @@ namespace Omnikeeper.Base.Entity.DataOrigin
         Generator // NOTE: not part of corresponding database-enum
     }
 
-    [Serializable]
+    [ProtoContract(SkipConstructor = true)]
     public class DataOriginV1
     {
         public DataOriginV1(DataOriginType type)
@@ -20,6 +21,7 @@ namespace Omnikeeper.Base.Entity.DataOrigin
             Type = type;
         }
 
+        [ProtoMember(1)]
         public readonly DataOriginType Type;
     } // TODO: equality/hash/...?
 }
