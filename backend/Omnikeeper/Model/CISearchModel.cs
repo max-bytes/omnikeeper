@@ -107,7 +107,7 @@ namespace Omnikeeper.Model
                 var activeTraitSet = await traitsProvider.GetActiveTraitSet(trans, atTime);
                 var requiredTraits = activeTraitSet.Traits.Values.Where(t => withEffectiveTraits.Contains(t.Name));
                 var requiredNonTraits = activeTraitSet.Traits.Values.Where(t => withoutEffectiveTraits.Contains(t.Name));
-                var mergedCIs = await ciModel.GetMergedCIs(ciSelection, layerSet, false, trans, atTime);
+                var mergedCIs = await ciModel.GetMergedCIs(ciSelection, layerSet, true, trans, atTime);
 
                 foreach (var et in requiredTraits)
                 {
