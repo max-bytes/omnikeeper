@@ -127,8 +127,8 @@ namespace Tasks.DBInit
             }
 
             // create regular CIs
-            var windowsHostCIIds = new List<Guid>();
-            var linuxHostCIIds = new List<Guid>();
+            var windowsHostCIIds = new HashSet<Guid>();
+            var linuxHostCIIds = new HashSet<Guid>();
             using (var trans = modelContextBuilder.BuildDeferred())
             {
                 var index = 0;

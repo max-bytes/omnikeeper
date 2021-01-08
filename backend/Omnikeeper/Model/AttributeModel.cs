@@ -39,6 +39,21 @@ namespace Omnikeeper.Model
             return compound.Select(t => new MergedCIAttribute(t.Value.First().attribute, layerStackIDs: t.Value.Select(tt => tt.layerID).Reverse().ToArray()));
         }
 
+        // strings must be a pre-sorted enumerable based on layer-sort
+        private IDictionary<Guid, string> MergeStrings(IEnumerable<(IDictionary<Guid, string> strings, long layerID)> strings)
+        {
+            var ret = new Dictionary<Guid, string>();
+            foreach (var g in strings)
+            {
+                var layerID = g.layerID;
+                foreach (var kv in g.strings)
+                {
+                    ret.TryAdd(kv.Key, kv.Value);
+                }
+            }
+            return ret;
+        }
+
         public async Task<MergedCIAttribute?> GetMergedAttribute(string name, Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             return await _GetMergedAttribute(name, ciid, layers, trans, atTime, false);
@@ -156,6 +171,23 @@ namespace Omnikeeper.Model
             return ret;
         }
 
+        public async Task<IDictionary<Guid, string>> GetMergedCINames(ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        {
+            if (layers.IsEmpty)
+                return ImmutableDictionary<Guid, string>.Empty; // return empty, an empty layer list can never produce anything
+
+            var names = new (IDictionary<Guid, string> names, long layerID)[layers.Length];
+            var i = 0;
+            foreach (var layerID in layers)
+            {
+                var la = await baseModel.GetCINames(selection, layerID, trans, atTime);
+                names[i++] = (la, layerID);
+            }
+
+            var ret = MergeStrings(names);
+            return ret;
+        }
+
         public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await baseModel.GetAttributes(selection, layerID, trans, atTime);
@@ -203,6 +235,11 @@ namespace Omnikeeper.Model
         public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
             return await baseModel.BulkReplaceAttributes(data, changeset, origin, trans);
+        }
+
+        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            return await baseModel.GetCINames(selection, layerID, trans, atTime);
         }
     }
 }

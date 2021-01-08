@@ -12,15 +12,15 @@ namespace Omnikeeper.Base.Model
 
     public class SpecificCIIDsSelection : ICIIDSelection
     {
-        public Guid[] CIIDs { get; }
-        private SpecificCIIDsSelection(IEnumerable<Guid> ciids)
+        public ISet<Guid> CIIDs { get; }
+        private SpecificCIIDsSelection(ISet<Guid> ciids)
         {
-            CIIDs = ciids.ToArray();
+            CIIDs = ciids;
         }
 
         public bool Contains(Guid ciid) => CIIDs.Contains(ciid);
 
-        public static SpecificCIIDsSelection Build(IEnumerable<Guid> ciids)
+        public static SpecificCIIDsSelection Build(ISet<Guid> ciids)
         {
             if (ciids.IsEmpty()) throw new Exception("Empty SpecificCIIDsSelection not allowed");
             return new SpecificCIIDsSelection(ciids);
@@ -28,7 +28,7 @@ namespace Omnikeeper.Base.Model
         public static SpecificCIIDsSelection Build(params Guid[] ciids)
         {
             if (ciids.IsEmpty()) throw new Exception("Empty SpecificCIIDsSelection not allowed");
-            return new SpecificCIIDsSelection(ciids);
+            return new SpecificCIIDsSelection(ciids.ToHashSet());
         }
     }
 

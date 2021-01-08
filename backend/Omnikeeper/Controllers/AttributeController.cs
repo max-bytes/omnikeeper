@@ -74,14 +74,16 @@ namespace Omnikeeper.Controllers
             if (ciids.IsEmpty())
                 return BadRequest("Empty CIID list");
 
+            ISet<Guid> ciidSet = ciids.ToHashSet(); // TODO: needed
+
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
-            if (!ciBasedAuthorizationService.CanReadAllCIs(ciids, out var notAllowedCI))
+            if (!ciBasedAuthorizationService.CanReadAllCIs(ciidSet, out var notAllowedCI))
                 return Forbid($"User \"{user.Username}\" does not have permission to read from CI {notAllowedCI}");
 
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
-            var attributes = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciids), layerset, trans, timeThreshold);
+            var attributes = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciidSet), layerset, trans, timeThreshold);
             return Ok(attributes.SelectMany(t => t.Value.Select(a => CIAttributeDTO.Build(a.Value))));
         }
 
@@ -126,9 +128,10 @@ namespace Omnikeeper.Controllers
                 selection = new AllCIIDsSelection();
             else
             {
-                if (!ciBasedAuthorizationService.CanReadAllCIs(ciids, out var notAllowedCI))
+                ISet<Guid> ciidSet = ciids.ToHashSet(); // TODO: needed
+                if (!ciBasedAuthorizationService.CanReadAllCIs(ciidSet, out var notAllowedCI))
                     return Forbid($"User \"{user.Username}\" does not have permission to read from CI {notAllowedCI}");
-                selection = SpecificCIIDsSelection.Build(ciids);
+                selection = SpecificCIIDsSelection.Build(ciidSet);
             }
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var attributes = await attributeModel.FindMergedAttributesByName(regex, selection, new LayerSet(layerIDs), trans, timeThreshold);

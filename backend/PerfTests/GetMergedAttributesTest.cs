@@ -18,6 +18,7 @@ namespace PerfTests
     {
         private List<Guid> ciNames = new List<Guid>();
         private List<string> layerNames = new List<string>();
+        private IModelContextBuilder modelContextBuilder;
 
         [SetUp]
         public void Setup()
@@ -41,7 +42,8 @@ namespace PerfTests
             var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
             var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
             var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
-            var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
+            modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
+            var user = await DBSetup.SetupUser(userModel, modelContextBuilder.BuildImmediate());
 
             var numCIs = 500;
             var numLayers = 2;
@@ -66,7 +68,7 @@ namespace PerfTests
             var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
             //Console.WriteLine(ciNames.Count());
-            using var mc = ModelContextBuilder.BuildDeferred();
+            using var mc = modelContextBuilder.BuildDeferred();
             var cis = ciNames.Select(identity =>
             {
                 return (ciModel.CreateCI(identity, mc).GetAwaiter().GetResult(), identity);
@@ -101,7 +103,7 @@ namespace PerfTests
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
             var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
 
-            using var mc = ModelContextBuilder.BuildDeferred();
+            using var mc = modelContextBuilder.BuildDeferred();
 
             var layerset = layerModel.BuildLayerSet(layerNames.ToArray(), mc).GetAwaiter().GetResult();
 

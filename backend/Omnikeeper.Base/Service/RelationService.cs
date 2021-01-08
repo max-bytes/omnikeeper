@@ -15,7 +15,7 @@ namespace Omnikeeper.Base.Service
             Guid ciid, LayerSet layers, ICIModel ciModel, IRelationModel relationModel, IModelContext trans, TimeThreshold atTime)
         {
             var relations = await relationModel.GetMergedRelations(new RelationSelectionEitherFromOrTo(ciid), layers, trans, atTime);
-            var relationsOtherCIIDs = relations.Select(r => (r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID).Distinct();
+            var relationsOtherCIIDs = relations.Select(r => (r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID).ToHashSet();
             if (relationsOtherCIIDs.IsEmpty()) return new List<MergedRelatedCI>().ToLookup(x => "");
             var relationsOtherCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(relationsOtherCIIDs), layers, true, trans, atTime)).ToDictionary(ci => ci.ID);
             var relationsAndToCIs = relations.Select(r => new MergedRelatedCI(r.Relation, ciid, relationsOtherCIs[(r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID]));
@@ -56,7 +56,7 @@ namespace Omnikeeper.Base.Service
 
             if (!relationTuples.IsEmpty())
             {
-                var relatedCompactCIs = (await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(relationTuples.Select(t => t.relatedCIID).Distinct()), layerset, trans, atTime))
+                var relatedCompactCIs = (await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(relationTuples.Select(t => t.relatedCIID).ToHashSet()), layerset, trans, atTime))
                     .ToDictionary(ci => ci.ID); // TODO: performance improvements
                 foreach ((var relation, var relatedCIID, var isForwardRelation) in relationTuples)
                 {

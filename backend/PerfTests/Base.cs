@@ -23,10 +23,7 @@ namespace PerfTests
     public class Base
     {
         private NpgsqlConnection? conn;
-        private ModelContextBuilder? modelContextBuilder;
         private ServiceProvider? serviceProvider;
-
-        protected ModelContextBuilder ModelContextBuilder => modelContextBuilder!;
 
         public virtual void Setup(bool enableModelCaching)
         {
@@ -34,7 +31,6 @@ namespace PerfTests
 
             var dbcb = new DBConnectionBuilder();
             conn = dbcb.Build(DBSetup.dbName, false, true);
-            modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
 
             var services = InitServices(enableModelCaching);
             serviceProvider = services.BuildServiceProvider();

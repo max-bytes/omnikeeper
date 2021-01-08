@@ -94,13 +94,13 @@ namespace OKPluginCLBMonitoring
             await cgr.Setup(layerSetAll, belongsToNaemonContactgroup, contactgroupTrait, trans, changesetProxy.TimeThreshold);
 
             // prepare list of all monitored cis
-            var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).Distinct();
+            var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).ToHashSet();
             if (monitoredCIIDs.IsEmpty()) return true;
             var monitoredCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoredCIIDs), layerSetAll, true, trans, changesetProxy.TimeThreshold))
                 .ToDictionary(ci => ci.ID);
 
             // prepare list of all monitoring modules
-            var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.ToCIID).Distinct();
+            var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.ToCIID).ToHashSet();
             if (monitoringModuleCIIDs.IsEmpty()) return true;
             var monitoringModuleCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoringModuleCIIDs), layerSetMonitoringDefinitionsOnly, false, trans, changesetProxy.TimeThreshold))
                 .ToDictionary(ci => ci.ID);
@@ -314,7 +314,7 @@ namespace OKPluginCLBMonitoring
                 }
                 else
                 {
-                    var contactGroupCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(contactGroupRelations.Select(r => r.Relation.ToCIID).Distinct()), layerSetAll, false, trans, timeThreshold)).ToDictionary(t => t.ID);
+                    var contactGroupCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(contactGroupRelations.Select(r => r.Relation.ToCIID).ToHashSet()), layerSetAll, false, trans, timeThreshold)).ToDictionary(t => t.ID);
                     contactGroupsMap = contactGroupRelations.GroupBy(r => r.Relation.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.Relation.ToCIID]));
                     foreach (var ci in contactGroupsMap.Values.SelectMany(t => t).Distinct())
                     {

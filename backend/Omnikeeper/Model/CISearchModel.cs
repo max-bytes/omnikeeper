@@ -3,10 +3,10 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -34,8 +34,8 @@ namespace Omnikeeper.Model
         public async Task<IEnumerable<CompactCI>> FindCIsWithName(string CIName, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             // TODO: performance improvements
-            var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), layerSet, trans, timeThreshold);
-            var foundCIIDs = ciNamesFromNameAttributes.Where(a => a.Value.Attribute.Value.Value2String().Equals(CIName)).Select(a => a.Key).ToHashSet();
+            var ciNamesFromNameAttributes = await attributeModel.GetMergedCINames(new AllCIIDsSelection(), layerSet, trans, timeThreshold);
+            var foundCIIDs = ciNamesFromNameAttributes.Where(a => a.Value.Equals(CIName)).Select(a => a.Key).ToHashSet();
             if (foundCIIDs.IsEmpty()) return ImmutableArray<CompactCI>.Empty;
             var cis = await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(foundCIIDs), layerSet, trans, timeThreshold);
             return cis;
@@ -56,16 +56,11 @@ namespace Omnikeeper.Model
             else if (finalSS.Length > 0)
             {
                 // TODO: performance improvements
-                var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), ls, trans, atTime);
-                var foundCIIDs = ciNamesFromNameAttributes.Where(kv =>
+                var ciNames = await attributeModel.GetMergedCINames(new AllCIIDsSelection(), ls, trans, atTime);
+                var foundCIIDs = ciNames.Where(kv =>
                 {
-                    if (kv.Value.Attribute.Value is IAttributeValueText t)
-                    {
-                        return t.FullTextSearch(finalSS, System.Globalization.CompareOptions.IgnoreCase);
-                    }
-                    return false;
-                })
-                    .Select(kv => kv.Key).ToHashSet();
+                    return CultureInfo.InvariantCulture.CompareInfo.IndexOf(kv.Value, searchString, CompareOptions.IgnoreCase) >= 0;
+                }).Select(kv => kv.Key).ToHashSet();
                 if (!foundCIIDs.IsEmpty())
                     cis = await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(foundCIIDs), ls, trans, atTime);
             }
@@ -93,14 +88,10 @@ namespace Omnikeeper.Model
             }
             else if (finalSS.Length > 0)
             {
-                var ciNamesFromNameAttributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, new AllCIIDsSelection(), layerSet, trans, atTime);
-                var foundCIIDs = ciNamesFromNameAttributes.Where(kv =>
+                var ciNames = await attributeModel.GetMergedCINames(new AllCIIDsSelection(), layerSet, trans, atTime);
+                var foundCIIDs = ciNames.Where(kv =>
                 {
-                    if (kv.Value.Attribute.Value is IAttributeValueText t)
-                    {
-                        return t.FullTextSearch(finalSS, System.Globalization.CompareOptions.IgnoreCase);
-                    }
-                    return false;
+                    return CultureInfo.InvariantCulture.CompareInfo.IndexOf(kv.Value, searchString, CompareOptions.IgnoreCase) >= 0;
                 }).Select(kv => kv.Key).ToHashSet();
                 if (foundCIIDs.IsEmpty())
                     return ImmutableArray<CompactCI>.Empty;
@@ -141,7 +132,7 @@ namespace Omnikeeper.Model
 
                 if (mergedCIs.IsEmpty())
                     return ImmutableArray<CompactCI>.Empty;
-                ciSelection = SpecificCIIDsSelection.Build(mergedCIs.Select(ci => ci.ID));
+                ciSelection = SpecificCIIDsSelection.Build(mergedCIs.Select(ci => ci.ID).ToHashSet());
             }
 
             var cis = await ciModel.GetCompactCIs(ciSelection, layerSet, trans, atTime);

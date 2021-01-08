@@ -31,6 +31,35 @@ namespace Omnikeeper.Model.Decorators
             return await model.FindAttributesByName(regex, selection, layerID, trans, atTime);
         }
 
+        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            if (atTime.IsLatest)
+            {
+                var (names, hit) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.CINames(layerID), async () =>
+                {
+                    return await model.GetCINames(new AllCIIDsSelection(), layerID, trans, atTime);
+                });
+
+                switch (selection)
+                {
+                    case SpecificCIIDsSelection ss:
+                        names = names.Where(kv => ss.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
+                        break;
+                    case AllCIIDsSelection _:
+                        break;
+                    default:
+                        throw new Exception("Unknown ciid selection encountered");
+                }
+
+                return names;
+            }
+            else
+            {
+                logger.LogTrace("Cache Nope - GetCINames");
+                return await model.GetCINames(selection, layerID, trans, atTime);
+            }
+        }
+
         public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             // TODO: caching?
@@ -89,8 +118,8 @@ namespace Omnikeeper.Model.Decorators
 
         public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
         {
-            // NOTE: caching is not even faster in a lot of circumstances, so we don't actually cache (for now)
-            // this might change in the future, which is why the code stays
+            // NOTE: caching is not even faster in a lot of circumstances, so we still consider if we should cache at all
+            // this might change in the future, which is why the code stays like this for now
             var cachingEnabled = true;
 
             if (cachingEnabled && atTime.IsLatest)
@@ -101,7 +130,7 @@ namespace Omnikeeper.Model.Decorators
                         {
                             // check which items can be found in the cache
                             var found = new List<CIAttribute>();
-                            var notFoundCIIDs = new List<Guid>();
+                            var notFoundCIIDs = new HashSet<Guid>();
                             foreach (var ciid in mcs.CIIDs)
                             {
                                 if (trans.TryGetCachedValue<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid, layerID), out var attributesOfCI))
@@ -142,7 +171,8 @@ namespace Omnikeeper.Model.Decorators
                             return found;
                         }
                     case AllCIIDsSelection acs:
-                        // NOTE: caching seems slower for this path, so we avoid it entirely
+                        // TODO: implement caching; but that requires having something like a AllCIIDsExceptSelection selection, that enables us to 
+                        // fetch only the missing data from the db
                         logger.LogTrace("Cache Nope - GetAttributes");
                         return await model.GetAttributes(acs, layerID, trans, atTime);
                     default:
@@ -163,6 +193,7 @@ namespace Omnikeeper.Model.Decorators
             {
                 trans.EvictFromCache(CacheKeyService.Attributes(ciid, layerID));
                 trans.EvictFromCache(CacheKeyService.CIIDsWithAttributeName(name, layerID));
+                if (name == ICIModel.NameAttribute) trans.EvictFromCache(CacheKeyService.CINames(layerID));
             }
             return t;
         }
@@ -174,6 +205,7 @@ namespace Omnikeeper.Model.Decorators
             {
                 trans.EvictFromCache(CacheKeyService.Attributes(ciid, layerID));
                 trans.EvictFromCache(CacheKeyService.CIIDsWithAttributeName(ICIModel.NameAttribute, layerID));
+                trans.EvictFromCache(CacheKeyService.CINames(layerID));
             }
             return t;
         }
@@ -185,6 +217,7 @@ namespace Omnikeeper.Model.Decorators
             {
                 trans.EvictFromCache(CacheKeyService.Attributes(ciid, layerID));
                 trans.EvictFromCache(CacheKeyService.CIIDsWithAttributeName(name, layerID));
+                if (name == ICIModel.NameAttribute) trans.EvictFromCache(CacheKeyService.CINames(layerID));
             }
             return t;
         }
@@ -192,11 +225,14 @@ namespace Omnikeeper.Model.Decorators
         public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var inserted = await model.BulkReplaceAttributes(data, changesetProxy, origin, trans);
+            var evictCINames = false;
             foreach (var (ciid, fullName, _, _) in inserted)
             {
                 trans.EvictFromCache(CacheKeyService.Attributes(ciid, data.LayerID)); // NOTE: inserted list is not distinct on ciids, but that's ok
                 trans.EvictFromCache(CacheKeyService.CIIDsWithAttributeName(fullName, data.LayerID)); // NOTE: inserted list is not distinct on attribute names, but that's ok
+                evictCINames = evictCINames || fullName == ICIModel.NameAttribute;
             }
+            if (evictCINames) trans.EvictFromCache(CacheKeyService.CINames(data.LayerID));
             return inserted;
         }
     }

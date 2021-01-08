@@ -7,6 +7,7 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model
@@ -71,7 +72,7 @@ namespace Omnikeeper.Model
             return selection switch
             {
                 AllCIIDsSelection _ => "1=1",
-                SpecificCIIDsSelection _ => "ci_id = ANY(@ci_ids)",
+                SpecificCIIDsSelection _ => "ci_id = ANY(@ci_ids)", // TODO: performance test the in, some places suggest its slow: https://dba.stackexchange.com/questions/91247/optimizing-a-postgres-query-with-a-large-in
                 _ => throw new NotImplementedException("")
             };
         }
@@ -81,7 +82,7 @@ namespace Omnikeeper.Model
             switch (selection)
             {
                 case SpecificCIIDsSelection m:
-                    p.AddWithValue("ci_ids", m.CIIDs);
+                    p.AddWithValue("ci_ids", m.CIIDs.ToList());
                     break;
                 default:
                     break;
@@ -221,6 +222,14 @@ namespace Omnikeeper.Model
             return ret;
         }
 
+        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            // NOTE: re-using FindAttributesByFullName() because the custom implementation is not very different
+            var attributes = await FindAttributesByFullName(ICIModel.NameAttribute, selection, layerID, trans, atTime);
+            return attributes.ToDictionary(a => a.CIID, a => a.Value.Value2String());
+        }
+
+        // TODO: actually needed? check and remove if not
         public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);

@@ -49,6 +49,12 @@ namespace Omnikeeper.Model.Decorators
             return await model.FindCIIDsWithAttribute(name, selection, layerID, trans, atTime);
         }
 
+        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            // TODO: implement
+            return await model.GetCINames(selection, layerID, trans, atTime);
+        }
+
         public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             var @base = await model.GetAttribute(name, ciid, layerID, trans, atTime);

@@ -12,7 +12,7 @@ namespace Omnikeeper.Entity.AttributeValues
     {
         IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum);
         IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex);
-        bool FullTextSearch(string searchString, CompareOptions compareOptions);
+        bool FullTextSearch(string searchString, CompareOptions compareOptions); // TODO: remove, not needed
     }
 
     [ProtoContract(SkipConstructor = true)]
@@ -56,6 +56,7 @@ namespace Omnikeeper.Entity.AttributeValues
                 yield return new TemplateErrorAttributeGeneric($"Regex {regex} did not match text {Value}");
         }
 
+        // TODO: not needed, remove
         public bool FullTextSearch(string searchString, CompareOptions compareOptions)
             => CultureInfo.InvariantCulture.CompareInfo.IndexOf(Value, searchString, compareOptions) >= 0;
     }

@@ -32,6 +32,7 @@ namespace Tests
             var possibleAttributes = new ((string name, Func<IAttributeValue> value), int chance)[]
             {
                 (("hostname", randomAttributeValue), 5),
+                (("__name", randomAttributeValue), 5),
                 (("ipAddress", randomAttributeValue), 1),
                 (("application_name", randomAttributeValue), 1),
                 (("os_family", () => new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Windows", 10), ("Redhat", 3), ("Gentoo", 1)))), 5),

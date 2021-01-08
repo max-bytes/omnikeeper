@@ -10,14 +10,13 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Tests;
-using Tests.Integration;
 
 namespace PerfTests
 {
+    //[SimpleJob(RunStrategy.Monitoring, launchCount: 0, warmupCount: 0, targetCount: 1)]
     public class GetMergedCIsWithTraitTest : Base
     {
         [GlobalSetup(Target = nameof(GetMergedCIsWithTraitWithoutPartitioning))]
@@ -25,8 +24,8 @@ namespace PerfTests
         [Benchmark]
         public async Task GetMergedCIsWithTraitWithoutPartitioning()
         {
-            using var mc = ModelContextBuilder.BuildImmediate();
-            (await effectiveTraitModel.GetMergedCIsWithTrait(traitHost, layerset, new AllCIIDsSelection(), mc, time)).Consume(consumer);
+            using var mc = modelContextBuilder.BuildImmediate();
+            (await effectiveTraitModel.GetMergedCIsWithTrait(traitHost, layerset, selectedCIIDs, mc, time)).Consume(consumer);
         }
 
         [GlobalSetup(Target = nameof(GetMergedCIsWithTrait))]
@@ -34,47 +33,60 @@ namespace PerfTests
         [Benchmark]
         public async Task GetMergedCIsWithTrait()
         {
-            using var mc = ModelContextBuilder.BuildImmediate();
-            (await effectiveTraitModel.GetMergedCIsWithTrait(traitHost, layerset, new AllCIIDsSelection(), mc, time)).Consume(consumer);
+            using var mc = modelContextBuilder.BuildImmediate();
+            (await effectiveTraitModel.GetMergedCIsWithTrait(traitHost, layerset, selectedCIIDs, mc, time)).Consume(consumer);
         }
+        [GlobalCleanup(Target = nameof(GetMergedCIsWithTrait))]
+        public void TearDownWithPartitioning() => TearDown();
+
 
         [GlobalSetup(Target = nameof(GetMergedCIsWithTraitWithoutCaching))]
         public async Task SetupWithPartitioningWithoutCaching() => await SetupGeneric(true, false);
         [Benchmark]
         public async Task GetMergedCIsWithTraitWithoutCaching()
         {
-            using var mc = ModelContextBuilder.BuildImmediate();
-            (await effectiveTraitModel.GetMergedCIsWithTrait(traitHost, layerset, new AllCIIDsSelection(), mc, time)).Consume(consumer);
+            using var mc = modelContextBuilder.BuildImmediate();
+            (await effectiveTraitModel.GetMergedCIsWithTrait(traitHost, layerset, selectedCIIDs, mc, time)).Consume(consumer);
         }
+        [GlobalCleanup(Target = nameof(GetMergedCIsWithTraitWithoutCaching))]
+        public void TearDownWithoutCaching() => TearDown();
 
         private IEffectiveTraitModel effectiveTraitModel;
+        private IModelContextBuilder modelContextBuilder;
         private Trait traitHost;
         private Trait traitLinuxHost;
         private LayerSet layerset;
         private TimeThreshold time;
+        private ICIIDSelection selectedCIIDs;
         private readonly Consumer consumer = new Consumer();
 
         public async Task SetupGeneric(bool runPartitioning, bool enableCaching)
         {
             Setup(enableCaching);
 
-            var numCIs = 5000;
+            var numCIs = 500;
             var numLayers = 4;
-            var numAttributeInserts = 50000;
+            var numAttributeInserts = 5000;
             var numDataTransactions = 1;
 
-            var layerNames = await ExampleDataSetup.SetupCMDBExampleData(numCIs, numLayers, numAttributeInserts, numDataTransactions, false, ServiceProvider, ModelContextBuilder);
-
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
+            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
             var traitsProvider = ServiceProvider.GetRequiredService<ITraitsProvider>();
             effectiveTraitModel = ServiceProvider.GetRequiredService<IEffectiveTraitModel>();
+            modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
 
-            using var mc = ModelContextBuilder.BuildImmediate();
+            var layerNames = await ExampleDataSetup.SetupCMDBExampleData(numCIs, numLayers, numAttributeInserts, numDataTransactions, false, ServiceProvider, modelContextBuilder);
+
+            using var mc = modelContextBuilder.BuildImmediate();
 
             layerset = layerModel.BuildLayerSet(layerNames.ToArray(), mc).GetAwaiter().GetResult();
             time = TimeThreshold.BuildLatest();
             traitHost = await traitsProvider.GetActiveTrait("host", mc, time);
             traitLinuxHost = await traitsProvider.GetActiveTrait("host_linux", mc, time);
+
+            var allCIIDs = await ciModel.GetCIIDs(mc);
+            var random = new Random(3);
+            selectedCIIDs = SpecificCIIDsSelection.Build(allCIIDs.Where(ciid => random.Next(0, 2 + 1) == 0).ToHashSet());
 
             if (runPartitioning)
             {

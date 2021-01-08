@@ -173,7 +173,7 @@ namespace Omnikeeper.GridView.Commands
                 if (activeTrait == null)
                     return (null, new Exception($"Could not find trait {config.Trait}"));
 
-                var cisList = SpecificCIIDsSelection.Build(request.Changes.SparseRows.Select(i => i.Ciid!.Value));
+                var cisList = SpecificCIIDsSelection.Build(request.Changes.SparseRows.Select(i => i.Ciid!.Value).ToHashSet());
                 var mergedCIs = await ciModel.GetMergedCIs(
                     cisList,
                     new LayerSet(config.ReadLayerset.ToArray()),

@@ -40,17 +40,17 @@ namespace Omnikeeper.Model
 
         public async Task<IEnumerable<CompactCI>> GetCompactCIs(ICIIDSelection selection, LayerSet visibleLayers, IModelContext trans, TimeThreshold atTime)
         {
-            IDictionary<Guid, MergedCIAttribute> attributes = await attributeModel.FindMergedAttributesByFullName(ICIModel.NameAttribute, selection, visibleLayers, trans, atTime);
+            IDictionary<Guid, string> names = await attributeModel.GetMergedCINames(selection, visibleLayers, trans, atTime);
             var AllSelectedCIIDs = await GetCIIDsFromSelection(selection, trans);
             var layerHash = visibleLayers.LayerHash;
             return AllSelectedCIIDs.Select(ciid =>
             {
-                if (attributes.TryGetValue(ciid, out var nameAttribute))
-                    return new CompactCI(ciid, nameAttribute?.Attribute.Value.Value2String(), layerHash, atTime);
+                if (names.TryGetValue(ciid, out var name))
+                    return new CompactCI(ciid, name, layerHash, atTime);
                 else
                     return new CompactCI(ciid, null, layerHash, atTime);
             });
-            // TODO: this actually returns empty compact CIs for ANY Guid/CI-ID, even ones that don't exist. check if that's expected, I believe not
+            // TODO: this actually returns empty compact CIs for ANY Guid/CI-ID, even ones that don't exist, when selection = SpecificCIIDSelection. check if that's expected, I believe not
         }
 
         public async Task<IEnumerable<Guid>> GetCIIDs(IModelContext trans)
