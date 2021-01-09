@@ -82,16 +82,7 @@ namespace OKPluginOIAOmnikeeper
         {
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
-            IEnumerable<Guid> GetCIIDs(ICIIDSelection selection)
-            {
-                return selection switch
-                {
-                    AllCIIDsSelection _ => mapper.GetAllCIIDs(),
-                    SpecificCIIDsSelection multiple => multiple.CIIDs,
-                    _ => throw new NotImplementedException()
-                };
-            }
-            var ciids = GetCIIDs(selection).ToHashSet();
+            var ciids = selection.GetCIIDs(() => mapper.GetAllCIIDs()).ToHashSet();
 
             // we need to map the ciids to external ciids, even if they are the same, to ensure that only mapped cis are fetched
             var IDPairs = mapper.GetIDPairs(ciids);
@@ -151,12 +142,7 @@ namespace OKPluginOIAOmnikeeper
             var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
             var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
 
-            var ciids = selection switch
-            {
-                AllCIIDsSelection _ => null,
-                SpecificCIIDsSelection m => m.CIIDs,
-                _ => throw new NotImplementedException()
-            };
+            var ciids = selection.GetCIIDs(() => mapper.GetAllCIIDs()).ToHashSet();
             var attributesDTO = await client.FindMergedAttributesByNameAsync(regex, ciids, remoteLayerIDs, time, ClientVersion);
 
             foreach (var r in AttributeDTO2Regular(attributesDTO))

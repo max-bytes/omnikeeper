@@ -47,6 +47,9 @@ namespace Omnikeeper.Model.Decorators
                         break;
                     case AllCIIDsSelection _:
                         break;
+                    case AllCIIDsExceptSelection es:
+                        names = names.Where(kv => es.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
+                        break;
                     default:
                         throw new Exception("Unknown ciid selection encountered");
                 }
@@ -120,7 +123,7 @@ namespace Omnikeeper.Model.Decorators
         {
             // NOTE: caching is not even faster in a lot of circumstances, so we still consider if we should cache at all
             // this might change in the future, which is why the code stays like this for now
-            var cachingEnabled = true;
+            var cachingEnabled = false;
 
             if (cachingEnabled && atTime.IsLatest)
             {
@@ -170,6 +173,10 @@ namespace Omnikeeper.Model.Decorators
                             }
                             return found;
                         }
+                    case AllCIIDsExceptSelection ecs:
+                        // TODO: implement caching
+                        logger.LogTrace("Cache Nope - GetAttributes");
+                        return await model.GetAttributes(ecs, layerID, trans, atTime);
                     case AllCIIDsSelection acs:
                         // TODO: implement caching; but that requires having something like a AllCIIDsExceptSelection selection, that enables us to 
                         // fetch only the missing data from the db

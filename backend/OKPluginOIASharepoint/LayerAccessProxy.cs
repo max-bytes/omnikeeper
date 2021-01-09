@@ -83,7 +83,7 @@ namespace OKPluginOIASharepoint
         {
             if (!atTime.IsLatest && !useCurrentForHistoric) yield break; // we don't have historic information
 
-            var ciids = GetCIIDsFromSelections(selection).ToHashSet();
+            var ciids = selection.GetCIIDs(() => mapper.GetAllCIIDs()).ToHashSet();
             var idPairs = mapper.GetIDPairs(ciids);
 
             await foreach (var a in GetAttributes(idPairs))
@@ -135,7 +135,7 @@ namespace OKPluginOIASharepoint
         {
             if (!atTime.IsLatest && !useCurrentForHistoric) yield break; // we don't have historic information
 
-            var ciids = GetCIIDsFromSelections(selection).ToHashSet();
+            var ciids = selection.GetCIIDs(() => mapper.GetAllCIIDs()).ToHashSet();
             var idPairs = mapper.GetIDPairs(ciids);
 
             var listIDGroups = idPairs.GroupBy(f => f.externalID.listID);
@@ -200,17 +200,6 @@ namespace OKPluginOIASharepoint
         public Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)
         {
             return Task.FromResult<Relation?>(null);// TODO: implement
-        }
-
-
-        private IEnumerable<Guid> GetCIIDsFromSelections(ICIIDSelection selection)
-        {
-            return selection switch
-            {
-                AllCIIDsSelection _ => mapper.GetAllCIIDs(),
-                SpecificCIIDsSelection multiple => multiple.CIIDs,
-                _ => throw new NotImplementedException()
-            };
         }
     }
 }

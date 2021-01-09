@@ -73,6 +73,7 @@ namespace Omnikeeper.Model
             {
                 AllCIIDsSelection _ => "1=1",
                 SpecificCIIDsSelection _ => "ci_id = ANY(@ci_ids)", // TODO: performance test the in, some places suggest its slow: https://dba.stackexchange.com/questions/91247/optimizing-a-postgres-query-with-a-large-in
+                AllCIIDsExceptSelection _ => "ci_id <> ALL(@ci_ids)", // TODO: performance test the in, some places suggest its slow: https://dba.stackexchange.com/questions/91247/optimizing-a-postgres-query-with-a-large-in
                 _ => throw new NotImplementedException("")
             };
         }
@@ -83,6 +84,9 @@ namespace Omnikeeper.Model
             {
                 case SpecificCIIDsSelection m:
                     p.AddWithValue("ci_ids", m.CIIDs.ToList());
+                    break;
+                case AllCIIDsExceptSelection a:
+                    p.AddWithValue("ci_ids", a.ExceptCIIDs.ToList());
                     break;
                 default:
                     break;

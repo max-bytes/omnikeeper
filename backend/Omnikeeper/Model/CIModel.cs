@@ -28,22 +28,12 @@ namespace Omnikeeper.Model
             return null; // TODO: we assume we can convert the name to a string, is this correct?
         }
 
-        private async Task<IEnumerable<Guid>> GetCIIDsFromSelection(ICIIDSelection selection, IModelContext trans)
-        {
-            return selection switch
-            {
-                AllCIIDsSelection _ => await GetCIIDs(trans),
-                SpecificCIIDsSelection multiple => multiple.CIIDs,
-                _ => throw new NotImplementedException()
-            };
-        }
-
         public async Task<IEnumerable<CompactCI>> GetCompactCIs(ICIIDSelection selection, LayerSet visibleLayers, IModelContext trans, TimeThreshold atTime)
         {
             IDictionary<Guid, string> names = await attributeModel.GetMergedCINames(selection, visibleLayers, trans, atTime);
-            var AllSelectedCIIDs = await GetCIIDsFromSelection(selection, trans);
+            var allSelectedCIIDs = await selection.GetCIIDsAsync(async () => await GetCIIDs(trans));
             var layerHash = visibleLayers.LayerHash;
-            return AllSelectedCIIDs.Select(ciid =>
+            return allSelectedCIIDs.Select(ciid =>
             {
                 if (names.TryGetValue(ciid, out var name))
                     return new CompactCI(ciid, name, layerHash, atTime);
@@ -92,8 +82,8 @@ namespace Omnikeeper.Model
             if (includeEmptyCIs)
             {
                 // check which ciids we already got and which are empty, add the empty ones
-                var AllSelectedCIIDs = await GetCIIDsFromSelection(selection, trans);
-                IDictionary<Guid, IDictionary<string, MergedCIAttribute>> emptyCIs = AllSelectedCIIDs.Except(attributes.Keys).ToDictionary(a => a, a => (IDictionary<string, MergedCIAttribute>)ImmutableDictionary<string, MergedCIAttribute>.Empty);
+                var allSelectedCIIDs = await selection.GetCIIDsAsync(async () => await GetCIIDs(trans)); // TODO: performance improvement possible by first reducing the selection, then getting the ciids
+                IDictionary<Guid, IDictionary<string, MergedCIAttribute>> emptyCIs = allSelectedCIIDs.Except(attributes.Keys).ToDictionary(a => a, a => (IDictionary<string, MergedCIAttribute>)ImmutableDictionary<string, MergedCIAttribute>.Empty);
                 attributes = attributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
             }
 
