@@ -130,26 +130,26 @@ namespace Omnikeeper.GraphQL
                     return cis;
                 });
 
-            FieldAsync<ListGraphType<CompactCIType>>("simpleSearchCIs",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "searchString" }),
-                resolve: async context =>
-                {
-                    var ciSearchModel = context.RequestServices.GetRequiredService<ICISearchModel>();
-                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
-                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+            //FieldAsync<ListGraphType<CompactCIType>>("simpleSearchCIs",
+            //    arguments: new QueryArguments(
+            //        new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "searchString" }),
+            //    resolve: async context =>
+            //    {
+            //        var ciSearchModel = context.RequestServices.GetRequiredService<ICISearchModel>();
+            //        var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+            //        var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                    userContext.Transaction = modelContextBuilder.BuildImmediate();
-                    var searchString = context.GetArgument<string>("searchString");
-                    var ciid = context.GetArgument<Guid>("identity");
-                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
+            //        var userContext = (context.UserContext as OmnikeeperUserContext)!;
+            //        userContext.Transaction = modelContextBuilder.BuildImmediate();
+            //        var searchString = context.GetArgument<string>("searchString");
+            //        var ciid = context.GetArgument<Guid>("identity");
+            //        userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var cis = await ciSearchModel.SimpleSearch(searchString, userContext.Transaction, userContext.TimeThreshold);
-                    // reduce CIs to those that are allowed
-                    cis = cis.Where(ci => ciBasedAuthorizationService.CanReadCI(ci.ID));
-                    return cis;
-                });
+            //        var cis = await ciSearchModel.SimpleSearch(searchString, userContext.Transaction, userContext.TimeThreshold);
+            //        // reduce CIs to those that are allowed
+            //        cis = cis.Where(ci => ciBasedAuthorizationService.CanReadCI(ci.ID));
+            //        return cis;
+            //    });
 
             FieldAsync<ListGraphType<CompactCIType>>("advancedSearchCIs",
                 arguments: new QueryArguments(

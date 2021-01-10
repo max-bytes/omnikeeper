@@ -17,16 +17,14 @@ namespace Omnikeeper.Model
         private readonly IAttributeModel attributeModel;
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel traitModel;
-        private readonly ILayerModel layerModel;
         private readonly ITraitsProvider traitsProvider;
         private readonly ILogger<CISearchModel> logger;
 
-        public CISearchModel(IAttributeModel attributeModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ILayerModel layerModel, ITraitsProvider traitsProvider, ILogger<CISearchModel> logger)
+        public CISearchModel(IAttributeModel attributeModel, ICIModel ciModel, IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, ILogger<CISearchModel> logger)
         {
             this.attributeModel = attributeModel;
             this.ciModel = ciModel;
             this.traitModel = traitModel;
-            this.layerModel = layerModel;
             this.traitsProvider = traitsProvider;
             this.logger = logger;
         }
@@ -41,38 +39,38 @@ namespace Omnikeeper.Model
             return cis;
         }
 
-        public async Task<IEnumerable<CompactCI>> SimpleSearch(string searchString, IModelContext trans, TimeThreshold atTime)
-        {
-            var finalSS = searchString.Trim();
+        //public async Task<IEnumerable<CompactCI>> SimpleSearch(string searchString, IModelContext trans, TimeThreshold atTime)
+        //{
+        //    var finalSS = searchString.Trim();
 
-            var layers = await layerModel.GetLayers(trans); // TODO: this is not a proper ordering, this can produce ANY ordering
-            var ls = await layerModel.BuildLayerSet(layers.Select(l => l.Name).ToArray(), trans);
+        //    var layers = await layerModel.GetLayers(trans); // TODO: this is not a proper ordering, this can produce ANY ordering
+        //    var ls = await layerModel.BuildLayerSet(layers.Select(l => l.Name).ToArray(), trans);
 
-            IEnumerable<CompactCI> cis = ImmutableArray<CompactCI>.Empty;
-            if (Guid.TryParse(finalSS, out var guid))
-            {
-                cis = await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(guid), ls, trans, atTime);
-            }
-            else if (finalSS.Length > 0)
-            {
-                // TODO: performance improvements
-                var ciNames = await attributeModel.GetMergedCINames(new AllCIIDsSelection(), ls, trans, atTime);
-                var foundCIIDs = ciNames.Where(kv =>
-                {
-                    return CultureInfo.InvariantCulture.CompareInfo.IndexOf(kv.Value, searchString, CompareOptions.IgnoreCase) >= 0;
-                }).Select(kv => kv.Key).ToHashSet();
-                if (!foundCIIDs.IsEmpty())
-                    cis = await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(foundCIIDs), ls, trans, atTime);
-            }
-            else
-            {
-                cis = await ciModel.GetCompactCIs(new AllCIIDsSelection(), ls, trans, atTime);
-            }
+        //    IEnumerable<CompactCI> cis = ImmutableArray<CompactCI>.Empty;
+        //    if (Guid.TryParse(finalSS, out var guid))
+        //    {
+        //        cis = await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(guid), ls, trans, atTime);
+        //    }
+        //    else if (finalSS.Length > 0)
+        //    {
+        //        // TODO: performance improvements
+        //        var ciNames = await attributeModel.GetMergedCINames(new AllCIIDsSelection(), ls, trans, atTime);
+        //        var foundCIIDs = ciNames.Where(kv =>
+        //        {
+        //            return CultureInfo.InvariantCulture.CompareInfo.IndexOf(kv.Value, searchString, CompareOptions.IgnoreCase) >= 0;
+        //        }).Select(kv => kv.Key).ToHashSet();
+        //        if (!foundCIIDs.IsEmpty())
+        //            cis = await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(foundCIIDs), ls, trans, atTime);
+        //    }
+        //    else
+        //    {
+        //        cis = await ciModel.GetCompactCIs(new AllCIIDsSelection(), ls, trans, atTime);
+        //    }
 
 
-            // HACK, properly sort unnamed CIs
-            return cis.OrderBy(t => t.Name ?? "ZZZZZZZZZZZ").Take(1500); // TODO: remove hard limit, customize
-        }
+        //    // HACK, properly sort unnamed CIs
+        //    return cis.OrderBy(t => t.Name ?? "ZZZZZZZZZZZ").Take(1500); // TODO: remove hard limit, customize
+        //}
 
         public async Task<IEnumerable<CompactCI>> AdvancedSearch(string searchString, string[] withEffectiveTraits, string[] withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
@@ -104,11 +102,41 @@ namespace Omnikeeper.Model
 
             if (!withEffectiveTraits.IsEmpty() || !withoutEffectiveTraits.IsEmpty())
             {
-                // TODO: reduce/prefilter traits by their dependencies. For example: when trait host is forbidden, but trait host_linux is required, we can bail as that can not produce anything
-                // second example: trait host is required AND trait host_linux is required, we can skip checking trait host because host_linux checks that anyway
                 var activeTraitSet = await traitsProvider.GetActiveTraitSet(trans, atTime);
                 var requiredTraits = activeTraitSet.Traits.Values.Where(t => withEffectiveTraits.Contains(t.Name));
                 var requiredNonTraits = activeTraitSet.Traits.Values.Where(t => withoutEffectiveTraits.Contains(t.Name));
+
+                // reduce/prefilter traits by their dependencies. For example: when trait host is forbidden, but trait host_linux is required, we can bail as that can not produce anything
+                // second example: trait host is required AND trait host_linux is required, we can skip checking trait host because host_linux checks that anyway
+                var filteredRequiredTraits = new HashSet<string>();
+                var filteredRequiredNonTraits = new HashSet<string>();
+                foreach (var rt in requiredTraits)
+                {
+                    foreach(var pt in rt.AncestorTraits)
+                    {
+                        if (requiredNonTraits.Any(rn2 => rn2.Name.Equals(pt))) // a parent trait is a non-required trait -> bail completely
+                        {
+                            return ImmutableArray<CompactCI>.Empty;
+                        }
+                        if (requiredTraits.Any(rt2 => rt2.Name.Equals(pt))) // a parent trait is also a required trait, remove parent from requiredTraits
+                        {
+                            filteredRequiredTraits.Add(pt);
+                        }
+                    }
+                }
+                foreach (var rt in requiredNonTraits)
+                {
+                    foreach (var pt in rt.AncestorTraits)
+                    {
+                        if (requiredNonTraits.Any(rt2 => rt2.Name.Equals(pt))) // a parent trait is also a non-required trait, remove from nonRequiredTraits
+                        {
+                            filteredRequiredNonTraits.Add(pt);
+                        }
+                    }
+                }
+                requiredTraits = requiredTraits.Where(rt => !filteredRequiredTraits.Contains(rt.Name));
+                requiredNonTraits = requiredNonTraits.Where(rt => !filteredRequiredNonTraits.Contains(rt.Name));
+
                 var mergedCIs = await ciModel.GetMergedCIs(ciSelection, layerSet, true, trans, atTime);
 
                 foreach (var et in requiredTraits)

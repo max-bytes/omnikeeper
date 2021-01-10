@@ -68,16 +68,18 @@ namespace Omnikeeper.Base.Entity
 
     public class Trait
     {
-        private Trait(string name, IImmutableList<TraitAttribute> requiredAttributes, IImmutableList<TraitAttribute> optionalAttributes, ImmutableList<TraitRelation> requiredRelations)
+        private Trait(string name, IImmutableList<TraitAttribute> requiredAttributes, IImmutableList<TraitAttribute> optionalAttributes, ImmutableList<TraitRelation> requiredRelations, IImmutableSet<string> ancestorTraits)
         {
             Name = name;
             RequiredAttributes = requiredAttributes;
             OptionalAttributes = optionalAttributes;
             RequiredRelations = requiredRelations;
+            AncestorTraits = ancestorTraits;
         }
 
         public string Name { get; set; }
 
+        public IImmutableSet<string> AncestorTraits { get; set; }
         public IImmutableList<TraitAttribute> RequiredAttributes { get; set; }
         public IImmutableList<TraitAttribute> OptionalAttributes { get; set; }
         public ImmutableList<TraitRelation> RequiredRelations { get; set; }
@@ -86,11 +88,10 @@ namespace Omnikeeper.Base.Entity
         public static Trait Build(string name,
             IEnumerable<TraitAttribute> requiredAttributes,
             IEnumerable<TraitAttribute> optionalAttributes,
-            IEnumerable<TraitRelation> requiredRelations)
+            IEnumerable<TraitRelation> requiredRelations,
+            ISet<string> ancestorTraits)
         {
-            return new Trait(name,
-                requiredAttributes.ToImmutableList(), optionalAttributes.ToImmutableList(), requiredRelations.ToImmutableList()
-            );
+            return new Trait(name, requiredAttributes.ToImmutableList(), optionalAttributes.ToImmutableList(), requiredRelations.ToImmutableList(), ancestorTraits.ToImmutableHashSet());
         }
     }
 

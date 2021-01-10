@@ -134,11 +134,12 @@ namespace Tasks.DBInit
                 var index = 0;
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
+                await ciModel.BulkCreateCIs(applicationCIIDs, trans);
+                await ciModel.BulkCreateCIs(hostCIIDs, trans);
 
                 var fragments = new List<BulkCIAttributeDataLayerScope.Fragment>();
                 foreach (var ciid in applicationCIIDs)
                 {
-                    await ciModel.CreateCI(ciid, trans);
                     fragments.Add(new BulkCIAttributeDataLayerScope.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText($"Application_{index}"), ciid));
                     fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("application_name", new AttributeScalarValueText($"Application_{index}"), ciid));
                     //await attributeModel.InsertCINameAttribute($"Application_{index}", ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -149,7 +150,6 @@ namespace Tasks.DBInit
                 foreach (var ciid in hostCIIDs)
                 {
                     var ciType = new string[] { "Host Linux", "Host Windows" }.GetRandom(random);
-                    var hostCIID = await ciModel.CreateCI(ciid, trans);
                     fragments.Add(new BulkCIAttributeDataLayerScope.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText($"{ciType}_{index}"), ciid));
                     fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("hostname", new AttributeScalarValueText($"hostname_{index}.domain"), ciid));
                     //await attributeModel.InsertCINameAttribute($"{ciType}_{index}", ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -158,14 +158,14 @@ namespace Tasks.DBInit
 
                     if (ciType.Equals("Host Linux"))
                     {
-                        linuxHostCIIds.Add(hostCIID);
+                        linuxHostCIIds.Add(ciid);
                         fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("system", new AttributeScalarValueText($"Linux"), ciid));
                         fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("os_family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Redhat", 3), ("Gentoo", 1))), ciid));
                         //await attributeModel.InsertAttribute("os.family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Redhat", 3), ("Gentoo", 1))), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                     }
                     else
                     {
-                        windowsHostCIIds.Add(hostCIID);
+                        windowsHostCIIds.Add(ciid);
                         fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("system", new AttributeScalarValueText($"Windows"), ciid));
                         fragments.Add(new BulkCIAttributeDataLayerScope.Fragment("os_family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Windows 7", 10), ("Windows XP", 3), ("Windows 10", 20))), ciid));
                         //await attributeModel.InsertAttribute("os.family", new AttributeScalarValueText(RandomUtility.GetRandom(random, ("Windows 7", 10), ("Windows XP", 3), ("Windows 10", 20))), ciid, cmdbLayerID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -346,6 +346,11 @@ namespace Tasks.DBInit
         public static RecursiveTraitSet Get()
         {
             return RecursiveTraitSet.Build(
+                    new RecursiveTrait("named", new List<TraitAttribute>() {
+                        new TraitAttribute("name",
+                            CIAttributeTemplate.BuildFromParams("__name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        )
+                    }),
                     // hosts
                     new RecursiveTrait("host", new List<TraitAttribute>() {
                         new TraitAttribute("hostname",
