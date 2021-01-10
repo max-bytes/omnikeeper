@@ -88,14 +88,14 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<StringGraphType>>("ciids",
                 resolve: async context =>
                 {
-                    var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
+                    var ciidModel = context.RequestServices.GetRequiredService<ICIIDModel>();
                     var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
 
-                    var ciids = await ciModel.GetCIIDs(userContext.Transaction);
+                    var ciids = await ciidModel.GetCIIDs(userContext.Transaction);
                     // reduce CIs to those that are allowed
                     ciids = ciids.Where(ciid => ciBasedAuthorizationService.CanReadCI(ciid));
                     return ciids;

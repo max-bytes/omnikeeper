@@ -32,7 +32,7 @@ namespace Tasks.DBInit
 
             var partitionModel = new PartitionModel();
             var attributeModel = new AttributeModel(new BaseAttributeModel(partitionModel));
-            var ciModel = new CIModel(attributeModel);
+            var ciModel = new CIModel(attributeModel, new CIIDModel());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var layerModel = new LayerModel();

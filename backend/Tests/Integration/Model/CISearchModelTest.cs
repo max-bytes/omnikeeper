@@ -26,7 +26,7 @@ namespace Tests.Integration.Model
             var oap = new Mock<IOnlineAccessProxy>();
             oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<long>(), It.IsAny<IModelContext>())).ReturnsAsync(false);
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
-            var ciModel = new CIModel(attributeModel);
+            var ciModel = new CIModel(attributeModel, new CIIDModel());
             var predicateModel = new PredicateModel();
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
             var userModel = new UserInDatabaseModel();

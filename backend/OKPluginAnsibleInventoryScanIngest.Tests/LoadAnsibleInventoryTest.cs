@@ -60,7 +60,7 @@ namespace Tests.Ingest
             var attributeModel = new AttributeModel(new BaseAttributeModel(partitionModel));
             var layerModel = new LayerModel();
             var userModel = new UserInDatabaseModel();
-            var ciModel = new CIModel(attributeModel);
+            var ciModel = new CIModel(attributeModel, new CIIDModel());
             var predicateModel = new PredicateModel();
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel, partitionModel));
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());

@@ -34,6 +34,8 @@ namespace Omnikeeper.Controllers
             this.modelContextBuilder = modelContextBuilder;
         }
 
+        // TODO: consider moving
+        // TODO: create CISearchController -> add AdvancedSearch function from graphql
         [HttpGet("getEffectiveTraitsForTraitName")]
         public async Task<ActionResult<IDictionary<Guid, EffectiveTraitDTO>>> GetEffectiveTraitsForTraitName([FromQuery, Required] long[] layerIDs, [FromQuery, Required] string traitName, [FromQuery] DateTimeOffset? atTime = null)
         {

@@ -22,7 +22,7 @@ namespace Tests.Integration.Service
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var model = new CIModel(attributeModel);
+            var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             var e = new ExternalIDMapPostgresPersister();
             var p = new ScopedExternalIDMapPostgresPersister("tmp", e);

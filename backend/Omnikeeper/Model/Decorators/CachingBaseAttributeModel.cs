@@ -16,11 +16,13 @@ namespace Omnikeeper.Model.Decorators
     public class CachingBaseAttributeModel : IBaseAttributeModel
     {
         private readonly IBaseAttributeModel model;
+        private readonly ICIIDModel ciidModel;
         private readonly ILogger<CachingBaseAttributeModel> logger;
 
-        public CachingBaseAttributeModel(IBaseAttributeModel model, ILogger<CachingBaseAttributeModel> logger)
+        public CachingBaseAttributeModel(IBaseAttributeModel model, ICIIDModel ciidModel, ILogger<CachingBaseAttributeModel> logger)
         {
             this.model = model;
+            this.ciidModel = ciidModel;
             this.logger = logger;
         }
 
@@ -119,72 +121,58 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
+        // NOTE: caching is not even faster in a lot of circumstances, so we still consider if we should cache at all
+        // this might change in the future, which is why the code stays like this for now
+        // you can change this member mid-run to enable performance testing
+        public bool CachingEnabledForGetAttributes = true;
+
         public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
         {
-            // NOTE: caching is not even faster in a lot of circumstances, so we still consider if we should cache at all
-            // this might change in the future, which is why the code stays like this for now
-            var cachingEnabled = false;
-
-            if (cachingEnabled && atTime.IsLatest)
+            if (CachingEnabledForGetAttributes && atTime.IsLatest)
             {
-                switch (selection)
+                var neededCIIDs = await selection.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
+
+                // check which items can be found in the cache
+                var found = new List<CIAttribute>();
+                var notFoundCIIDs = new HashSet<Guid>();
+                foreach (var ciid in neededCIIDs)
                 {
-                    case SpecificCIIDsSelection mcs:
-                        {
-                            // check which items can be found in the cache
-                            var found = new List<CIAttribute>();
-                            var notFoundCIIDs = new HashSet<Guid>();
-                            foreach (var ciid in mcs.CIIDs)
-                            {
-                                if (trans.TryGetCachedValue<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid, layerID), out var attributesOfCI))
-                                {
-                                    found.AddRange(attributesOfCI!);
-                                }
-                                else
-                                    notFoundCIIDs.Add(ciid);
-                            }
-
-                            // get the non-cached items
-                            if (notFoundCIIDs.Count > 0)
-                            {
-                                if (found.Count == 0)
-                                    logger.LogTrace("Cache Nope - GetAttributes");
-                                else
-                                    logger.LogTrace("Cache Partial - GetAttributes");
-
-                                var fetched = (await model.GetAttributes(SpecificCIIDsSelection.Build(notFoundCIIDs), layerID, trans, atTime));
-
-                                // add them to the cache
-                                foreach (var a in fetched.ToLookup(a => a.CIID))
-                                    trans.SetCacheValue(CacheKeyService.Attributes(a.Key, layerID), a.ToList());
-
-                                // NOTE: a CI containing NO attributes does not return any (obv), and so would also not get a cache entry (with an empty list as value)
-                                // meaning it would NEVER get cached and retrieved all the time instead...
-                                // to counter that, we check for empty CIs and insert an empty list for those
-                                var emptyCIs = notFoundCIIDs.Except(fetched.Select(k => k.CIID).Distinct());
-                                foreach (var ciid in emptyCIs)
-                                    trans.SetCacheValue(CacheKeyService.Attributes(ciid, layerID), new List<CIAttribute>());
-
-                                found.AddRange(fetched);
-                            }
-                            else
-                            {
-                                logger.LogTrace("Cache Hit - GetAttributes");
-                            }
-                            return found;
-                        }
-                    case AllCIIDsExceptSelection ecs:
-                        // TODO: implement caching
-                        logger.LogTrace("Cache Nope - GetAttributes");
-                        return await model.GetAttributes(ecs, layerID, trans, atTime);
-                    case AllCIIDsSelection acs:
-                        // TODO: implement caching; but that requires having something like a AllCIIDsExceptSelection selection, that enables us to 
-                        // fetch only the missing data from the db
-                        logger.LogTrace("Cache Nope - GetAttributes");
-                        return await model.GetAttributes(acs, layerID, trans, atTime);
-                    default:
-                        throw new Exception("Invalid CIIDSelection");
+                    if (trans.TryGetCachedValue<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid, layerID), out var attributesOfCI))
+                    {
+                        found.AddRange(attributesOfCI!);
+                    }
+                    else
+                        notFoundCIIDs.Add(ciid);
                 }
+
+                // get the non-cached items
+                if (notFoundCIIDs.Count > 0)
+                {
+                    if (found.Count == 0)
+                        logger.LogTrace("Cache Nope - GetAttributes");
+                    else
+                        logger.LogTrace("Cache Partial - GetAttributes");
+
+                    var fetched = (await model.GetAttributes(SpecificCIIDsSelection.Build(notFoundCIIDs), layerID, trans, atTime));
+
+                    // add them to the cache
+                    foreach (var a in fetched.ToLookup(a => a.CIID))
+                        trans.SetCacheValue(CacheKeyService.Attributes(a.Key, layerID), a.ToList());
+
+                    // NOTE: a CI containing NO attributes does not return any (obv), and so would also not get a cache entry (with an empty list as value)
+                    // meaning it would NEVER get cached and retrieved all the time instead...
+                    // to counter that, we check for empty CIs and insert an empty list for those
+                    var emptyCIs = notFoundCIIDs.Except(fetched.Select(k => k.CIID).Distinct());
+                    foreach (var ciid in emptyCIs)
+                        trans.SetCacheValue(CacheKeyService.Attributes(ciid, layerID), new List<CIAttribute>());
+
+                    found.AddRange(fetched);
+                }
+                else
+                {
+                    logger.LogTrace("Cache Hit - GetAttributes");
+                }
+                return found;
             }
             else
             {

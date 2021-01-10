@@ -23,7 +23,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
-            var ciModel = new CIModel(attributeModel);
+            var ciModel = new CIModel(attributeModel, new CIIDModel());
             var predicateModel = new CachingPredicateModel(new PredicateModel());
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
             var layerModel = new LayerModel();
@@ -91,7 +91,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
-            var ciModel = new CIModel(attributeModel);
+            var ciModel = new CIModel(attributeModel, new CIIDModel());
             var predicateModel = new CachingPredicateModel(new PredicateModel());
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
             var layerModel = new LayerModel();
@@ -140,7 +140,7 @@ namespace Tests.Integration.Model
             var baseAttributeModel = new BaseAttributeModel(new PartitionModel());
             var baseAttributeRevisionistModel = new BaseAttributeRevisionistModel();
             var attributeModel = new AttributeModel(baseAttributeModel);
-            var ciModel = new CIModel(attributeModel);
+            var ciModel = new CIModel(attributeModel, new CIIDModel());
             var predicateModel = new CachingPredicateModel(new PredicateModel());
             var baseRelationModel = new BaseRelationModel(predicateModel, new PartitionModel());
             var relationModel = new RelationModel(baseRelationModel);
@@ -185,7 +185,7 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel);
             var baseAttributeModel = new BaseAttributeModel(new PartitionModel());
             var attributeModel = new AttributeModel(baseAttributeModel);
-            var ciModel = new CIModel(attributeModel);
+            var ciModel = new CIModel(attributeModel, new CIIDModel());
             var predicateModel = new CachingPredicateModel(new PredicateModel());
             var baseRelationModel = new BaseRelationModel(predicateModel, new PartitionModel());
             var relationModel = new RelationModel(baseRelationModel);

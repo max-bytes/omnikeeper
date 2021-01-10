@@ -13,6 +13,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.Model;
 using Omnikeeper.Model.Decorators;
 using System;
 using System.Collections.Generic;
@@ -37,11 +38,27 @@ namespace Tests.Integration.Model
             }
         }
 
+        class MockedCIIDModel : Mock<ICIIDModel>
+        {
+            public MockedCIIDModel()
+            {
+                Setup(_ => _.GetCIIDs(It.IsAny<IModelContext>())).ReturnsAsync(() =>
+                {
+                    return new List<Guid>() { ciid1, ciid2 };
+                });
+                Setup(_ => _.CIIDExists(It.IsAny<Guid>(), It.IsAny<IModelContext>())).ReturnsAsync((Guid guid, IModelContext mc) =>
+                {
+                    return guid == ciid1 || guid == ciid2;
+                });
+            }
+        }
+        private readonly MockedCIIDModel mockedCIIDModel = new MockedCIIDModel();
+
         [Test]
         public async Task GetAttributesSingleCIIDSelection()
         {
             var mocked = new EmptyMockedBaseAttributeModel();
-            var attributeModel = new CachingBaseAttributeModel(mocked.Object, NullLogger<CachingBaseAttributeModel>.Instance);
+            var attributeModel = new CachingBaseAttributeModel(mocked.Object, mockedCIIDModel.Object, NullLogger<CachingBaseAttributeModel>.Instance);
 
             var memoryCache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
             var trans = new ModelContextImmediateMode(memoryCache, null!, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
@@ -70,7 +87,7 @@ namespace Tests.Integration.Model
             {
                 return (null!, true);
             });
-            var attributeModel = new CachingBaseAttributeModel(mocked.Object, NullLogger<CachingBaseAttributeModel>.Instance);
+            var attributeModel = new CachingBaseAttributeModel(mocked.Object, mockedCIIDModel.Object, NullLogger<CachingBaseAttributeModel>.Instance);
 
             var memoryCache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
             var trans = new ModelContextImmediateMode(memoryCache, null!, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
@@ -102,6 +119,24 @@ namespace Tests.Integration.Model
             Assert.IsNull(cachedAttributes21);
             var cachedAttributes22 = trans.GetCachedValue<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid2, layerID));
             cachedAttributes22.Should().BeEquivalentTo(
+                new List<CIAttribute>()
+                    {
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a"), new DataOriginV1(DataOriginType.Manual))
+                    }
+                );
+
+            // fetch all cis, expecting both CIs and their attributes in the cache again
+            var cachedAttributes3 = await attributeModel.GetAttributes(new AllCIIDsSelection(), layerID, trans, timeThreshold);
+            Assert.AreEqual(2, cachedAttributes3.Count());
+            var cachedAttributes31 = trans.GetCachedValue<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid1, layerID));
+            cachedAttributes31.Should().BeEquivalentTo(
+                new List<CIAttribute>()
+                    {
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0740"), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a"), new DataOriginV1(DataOriginType.Manual)),
+                    }
+                );
+            var cachedAttributes32 = trans.GetCachedValue<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid2, layerID));
+            cachedAttributes32.Should().BeEquivalentTo(
                 new List<CIAttribute>()
                     {
                         new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a"), new DataOriginV1(DataOriginType.Manual))
@@ -146,7 +181,7 @@ namespace Tests.Integration.Model
         {
             async Task TestBasic(Mock<IBaseAttributeModel> mocked)
             {
-                var attributeModel = new CachingBaseAttributeModel(mocked.Object, NullLogger<CachingBaseAttributeModel>.Instance);
+                var attributeModel = new CachingBaseAttributeModel(mocked.Object, mockedCIIDModel.Object, NullLogger<CachingBaseAttributeModel>.Instance);
                 var memoryCache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
                 var trans = new ModelContextImmediateMode(memoryCache, null!, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
 
@@ -168,7 +203,7 @@ namespace Tests.Integration.Model
             var mocked = new FilledMockedBaseAttributeModel();
             var memoryCache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
             var trans = new ModelContextImmediateMode(memoryCache, null!, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
-            var attributeModel = new CachingBaseAttributeModel(mocked.Object, NullLogger<CachingBaseAttributeModel>.Instance);
+            var attributeModel = new CachingBaseAttributeModel(mocked.Object, mockedCIIDModel.Object, NullLogger<CachingBaseAttributeModel>.Instance);
             var layerID = 1L;
             var timeThreshold = TimeThreshold.BuildLatest();
             await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(new Guid[] { ciid1 }), layerID, trans, timeThreshold);

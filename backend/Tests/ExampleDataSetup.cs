@@ -54,7 +54,7 @@ namespace Tests
 
             var layerNames = Enumerable.Range(0, numLayers).Select(i =>
             {
-                var identity = "L" + RandomUtility.GenerateRandomString(8, random);
+                var identity = "L" + i;// RandomUtility.GenerateRandomString(8, random);
                 return identity;
             }).ToList();
 

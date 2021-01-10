@@ -7,13 +7,9 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model
 {
-    public interface ICIModel
+    public interface ICIModel : ICIIDModel
     {
         public static readonly string NameAttribute = "__name";
-
-        // TODO: should return an ISet instead
-        Task<IEnumerable<Guid>> GetCIIDs(IModelContext trans);
-        Task<bool> CIIDExists(Guid id, IModelContext trans);
 
         // merged
         Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime);

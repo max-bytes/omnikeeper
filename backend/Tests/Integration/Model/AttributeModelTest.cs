@@ -19,7 +19,7 @@ namespace Tests.Integration.Model
         public async Task TestAddingUpdatingRemovingAndRenewingOfAttributes()
         {
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
-            var model = new CIModel(attributeModel);
+            var model = new CIModel(attributeModel, new CIIDModel());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var layerModel = new LayerModel();
@@ -118,7 +118,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
-            var model = new CIModel(attributeModel);
+            var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             var transI = ModelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, transI);
@@ -163,7 +163,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
-            var model = new CIModel(attributeModel);
+            var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             var transI = ModelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, transI);
@@ -198,7 +198,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
-            var model = new CIModel(attributeModel);
+            var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             var transI = ModelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, transI);
@@ -274,7 +274,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
-            var model = new CIModel(attributeModel);
+            var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             using var trans = ModelContextBuilder.BuildDeferred();
             var user = await DBSetup.SetupUser(userModel, trans);
@@ -303,7 +303,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
-            var model = new CIModel(attributeModel);
+            var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             using var trans = ModelContextBuilder.BuildDeferred();
             var user = await DBSetup.SetupUser(userModel, trans);
@@ -348,7 +348,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
-            var model = new CIModel(attributeModel);
+            var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             using var trans = ModelContextBuilder.BuildDeferred();
             var user = await DBSetup.SetupUser(userModel, trans);

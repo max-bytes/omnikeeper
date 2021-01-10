@@ -104,6 +104,8 @@ namespace Omnikeeper.Model
 
             if (!withEffectiveTraits.IsEmpty() || !withoutEffectiveTraits.IsEmpty())
             {
+                // TODO: reduce/prefilter traits by their dependencies. For example: when trait host is forbidden, but trait host_linux is required, we can bail as that can not produce anything
+                // second example: trait host is required AND trait host_linux is required, we can skip checking trait host because host_linux checks that anyway
                 var activeTraitSet = await traitsProvider.GetActiveTraitSet(trans, atTime);
                 var requiredTraits = activeTraitSet.Traits.Values.Where(t => withEffectiveTraits.Contains(t.Name));
                 var requiredNonTraits = activeTraitSet.Traits.Values.Where(t => withoutEffectiveTraits.Contains(t.Name));

@@ -45,7 +45,7 @@ namespace Tests.Integration.Model
         {
             var layerModel = new LayerModel();
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
-            var ciModel = new CIModel(attributeModel);
+            var ciModel = new CIModel(attributeModel, new CIIDModel());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             using var trans = ModelContextBuilder.BuildImmediate();

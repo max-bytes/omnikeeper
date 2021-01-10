@@ -15,10 +15,12 @@ namespace Omnikeeper.Model
     public class CIModel : ICIModel
     {
         private readonly IAttributeModel attributeModel;
+        private readonly ICIIDModel ciidModel;
 
-        public CIModel(IAttributeModel attributeModel)
+        public CIModel(IAttributeModel attributeModel, ICIIDModel ciidModel)
         {
             this.attributeModel = attributeModel;
+            this.ciidModel = ciidModel;
         }
 
         private string? GetNameFromAttributes(IDictionary<string, MergedCIAttribute> attributes)
@@ -31,7 +33,7 @@ namespace Omnikeeper.Model
         public async Task<IEnumerable<CompactCI>> GetCompactCIs(ICIIDSelection selection, LayerSet visibleLayers, IModelContext trans, TimeThreshold atTime)
         {
             IDictionary<Guid, string> names = await attributeModel.GetMergedCINames(selection, visibleLayers, trans, atTime);
-            var allSelectedCIIDs = await selection.GetCIIDsAsync(async () => await GetCIIDs(trans));
+            var allSelectedCIIDs = await selection.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
             var layerHash = visibleLayers.LayerHash;
             return allSelectedCIIDs.Select(ciid =>
             {
@@ -41,30 +43,6 @@ namespace Omnikeeper.Model
                     return new CompactCI(ciid, null, layerHash, atTime);
             });
             // TODO: this actually returns empty compact CIs for ANY Guid/CI-ID, even ones that don't exist, when selection = SpecificCIIDSelection. check if that's expected, I believe not
-        }
-
-        public async Task<IEnumerable<Guid>> GetCIIDs(IModelContext trans)
-        {
-            using var command = new NpgsqlCommand(@"select id from ci", trans.DBConnection, trans.DBTransaction);
-            command.Prepare();
-            var tmp = new List<Guid>();
-            using var s = await command.ExecuteReaderAsync();
-            while (await s.ReadAsync())
-                tmp.Add(s.GetGuid(0));
-            return tmp;
-        }
-
-        public async Task<bool> CIIDExists(Guid id, IModelContext trans)
-        {
-            using var command = new NpgsqlCommand(@"select id from ci WHERE id = @ciid LIMIT 1", trans.DBConnection, trans.DBTransaction);
-            command.Parameters.AddWithValue("ciid", id);
-            command.Prepare();
-
-            using var dr = await command.ExecuteReaderAsync();
-
-            if (!await dr.ReadAsync())
-                return false;
-            return true;
         }
 
         public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
@@ -82,7 +60,7 @@ namespace Omnikeeper.Model
             if (includeEmptyCIs)
             {
                 // check which ciids we already got and which are empty, add the empty ones
-                var allSelectedCIIDs = await selection.GetCIIDsAsync(async () => await GetCIIDs(trans)); // TODO: performance improvement possible by first reducing the selection, then getting the ciids
+                var allSelectedCIIDs = await selection.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans)); // TODO: performance improvement possible by first reducing the selection, then getting the ciids
                 IDictionary<Guid, IDictionary<string, MergedCIAttribute>> emptyCIs = allSelectedCIIDs.Except(attributes.Keys).ToDictionary(a => a, a => (IDictionary<string, MergedCIAttribute>)ImmutableDictionary<string, MergedCIAttribute>.Empty);
                 attributes = attributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
             }
@@ -117,6 +95,16 @@ namespace Omnikeeper.Model
                 writer.Write(ciid);
             }
             await writer.CompleteAsync();
+        }
+
+        public async Task<IEnumerable<Guid>> GetCIIDs(IModelContext trans)
+        {
+            return await ciidModel.GetCIIDs(trans);
+        }
+
+        public async Task<bool> CIIDExists(Guid id, IModelContext trans)
+        {
+            return await ciidModel.CIIDExists(id, trans);
         }
     }
 }

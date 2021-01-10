@@ -169,6 +169,7 @@ namespace Omnikeeper.Startup
         {
             services.AddSingleton<ICISearchModel, CISearchModel>();
             services.AddSingleton<ICIModel, CIModel>();
+            services.AddSingleton<ICIIDModel, CIIDModel>();
             services.AddSingleton<IAttributeModel, AttributeModel>();
             services.AddSingleton<IBaseAttributeModel, BaseAttributeModel>();
             services.AddSingleton<IBaseAttributeRevisionistModel, BaseAttributeRevisionistModel>();
