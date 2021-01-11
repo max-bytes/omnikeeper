@@ -174,7 +174,7 @@ namespace Omnikeeper.Controllers.OData
             }
             else if (attribute.CIName != null && attribute.CIName != "")
             { // ciid not set, try to match using ci name, which is set
-                var foundCIs = (await ciSearchModel.FindCIsWithName(attribute.CIName, readLayerset, trans, timeThreshold)).ToList();
+                var foundCIs = (await ciSearchModel.FindCompactCIsWithName(attribute.CIName, readLayerset, trans, timeThreshold)).ToList();
                 if (foundCIs.Count == 0)
                 { // ok case, continue
                 }

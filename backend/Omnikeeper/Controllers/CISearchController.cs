@@ -18,36 +18,32 @@ namespace Omnikeeper.Controllers
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [Authorize]
-    public class TraitController : ControllerBase
+    public class CISearchController : ControllerBase
     {
-        private readonly IEffectiveTraitModel traitModel;
+        private readonly ICISearchModel ciSearchModel;
         private readonly ITraitsProvider traitsProvider;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
 
-        public TraitController(IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, ICIBasedAuthorizationService ciBasedAuthorizationService,
+        public CISearchController(ICISearchModel ciSearchModel, ITraitsProvider traitsProvider, ICIBasedAuthorizationService ciBasedAuthorizationService,
             IModelContextBuilder modelContextBuilder)
         {
-            this.traitModel = traitModel;
+            this.ciSearchModel = ciSearchModel;
             this.traitsProvider = traitsProvider;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.modelContextBuilder = modelContextBuilder;
         }
 
-        [HttpGet("getEffectiveTraitsForTraitName")]
-        public async Task<ActionResult<IDictionary<Guid, EffectiveTraitDTO>>> GetEffectiveTraitsForTraitName([FromQuery, Required] long[] layerIDs, [FromQuery, Required] string traitName, [FromQuery] DateTimeOffset? atTime = null)
+        [HttpGet("searchCIsByTraits")]
+        public async Task<ActionResult<IEnumerable<CIDTO>>> SearchCIsByTraits([FromQuery, Required] long[] layerIDs, [FromQuery, Required] string[] withTraits, [FromQuery, Required] string[] withoutTraits, [FromQuery] DateTimeOffset? atTime = null)
         {
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
             var trans = modelContextBuilder.BuildImmediate();
 
-            var trait = await traitsProvider.GetActiveTrait(traitName, trans, timeThreshold);
-            if (trait == null)
-                return BadRequest($"Trait with name \"{traitName}\" not found");
-            var traitSets = await traitModel.CalculateEffectiveTraitsForTrait(trait, layerset, new AllCIIDsSelection(), trans, timeThreshold);
-            return Ok(traitSets
-                .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key))
-                .ToDictionary(kv => kv.Key, kv => EffectiveTraitDTO.Build(kv.Value.et)));
+            var cis = await ciSearchModel.SearchForMergedCIsByTraits(new AllCIIDsSelection(), withTraits, withoutTraits, layerset, trans, timeThreshold);
+
+            return Ok(cis.Select(ci => CIDTO.BuildFromMergedCI(ci)));
         }
     }
 }

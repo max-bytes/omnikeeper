@@ -175,7 +175,7 @@ namespace Omnikeeper.GraphQL
                     userContext.LayerSet = ls;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var cis = await ciSearchModel.AdvancedSearch(searchString, withEffectiveTraits, withoutEffectiveTraits, ls, userContext.Transaction, userContext.TimeThreshold);
+                    var cis = await ciSearchModel.AdvancedSearchForCompactCIs(searchString, withEffectiveTraits, withoutEffectiveTraits, ls, userContext.Transaction, userContext.TimeThreshold);
                     // reduce CIs to those that are allowed
                     cis = cis.Where(ci => ciBasedAuthorizationService.CanReadCI(ci.ID));
                     return cis;
