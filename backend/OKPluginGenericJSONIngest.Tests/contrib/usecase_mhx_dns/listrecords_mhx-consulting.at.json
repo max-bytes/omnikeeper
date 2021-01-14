@@ -1,0 +1,18 @@
+﻿[
+    {
+        "id": 1569516122,
+        "name": "mhx-consulting.at",
+        "priority": null,
+        "ttl": 86400,
+        "type": "NS",
+        "value": "ns1.he.net"
+    },
+    {
+        "id": 1569516123,
+        "name": "mhx-consulting.at",
+        "priority": null,
+        "ttl": 86400,
+        "type": "NS",
+        "value": "ns2.he.net"
+    }
+]

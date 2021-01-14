@@ -1,0 +1,135 @@
+{
+  "attributes": [
+    {
+      "name": "id",
+      "ciid": "@zone@mhx-consulting.at",
+      "value": 718656,
+      "type": "integer"
+    },
+    {
+      "name": "name",
+      "ciid": "@zone@mhx-consulting.at",
+      "value": "mhx-consulting.at",
+      "type": "text"
+    },
+    {
+      "name": "id",
+      "ciid": "@zone@mhx.at",
+      "value": 742507,
+      "type": "integer"
+    },
+    {
+      "name": "name",
+      "ciid": "@zone@mhx.at",
+      "value": "mhx.at",
+      "type": "text"
+    },
+    {
+      "name": "id",
+      "ciid": "@record@1569516122",
+      "value": 1569516122,
+      "type": "integer"
+    },
+    {
+      "name": "name",
+      "ciid": "@record@1569516122",
+      "value": "mhx-consulting.at",
+      "type": "text"
+    },
+    {
+      "name": "ttl",
+      "ciid": "@record@1569516122",
+      "value": 86400,
+      "type": "integer"
+    },
+    {
+      "name": "type",
+      "ciid": "@record@1569516122",
+      "value": "NS",
+      "type": "text"
+    },
+    {
+      "name": "value",
+      "ciid": "@record@1569516122",
+      "value": "ns1.he.net",
+      "type": "text"
+    },
+    {
+      "name": "id",
+      "ciid": "@record@1569516123",
+      "value": 1569516123,
+      "type": "integer"
+    },
+    {
+      "name": "name",
+      "ciid": "@record@1569516123",
+      "value": "mhx-consulting.at",
+      "type": "text"
+    },
+    {
+      "name": "ttl",
+      "ciid": "@record@1569516123",
+      "value": 86400,
+      "type": "integer"
+    },
+    {
+      "name": "type",
+      "ciid": "@record@1569516123",
+      "value": "NS",
+      "type": "text"
+    },
+    {
+      "name": "value",
+      "ciid": "@record@1569516123",
+      "value": "ns2.he.net",
+      "type": "text"
+    },
+    {
+      "name": "id",
+      "ciid": "@record@2569516148",
+      "value": 2569516148,
+      "type": "integer"
+    },
+    {
+      "name": "name",
+      "ciid": "@record@2569516148",
+      "value": "mhx.at",
+      "type": "text"
+    },
+    {
+      "name": "ttl",
+      "ciid": "@record@2569516148",
+      "value": 86400,
+      "type": "integer"
+    },
+    {
+      "name": "type",
+      "ciid": "@record@2569516148",
+      "value": "NS",
+      "type": "text"
+    },
+    {
+      "name": "value",
+      "ciid": "@record@2569516148",
+      "value": "ns-mhx1.he.net",
+      "type": "text"
+    }
+  ],
+  "relations": [
+    {
+      "from": "@record@1569516122",
+      "predicate": "assigned_to",
+      "to": "@zone@listrecords_mhx-consulting.at.json"
+    },
+    {
+      "from": "@record@1569516123",
+      "predicate": "assigned_to",
+      "to": "@zone@listrecords_mhx-consulting.at.json"
+    },
+    {
+      "from": "@record@2569516148",
+      "predicate": "assigned_to",
+      "to": "@zone@listrecords_mhx.at.json"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+﻿{
+	attributes: [
+		[?filename == 'listzones.json'].data[].[
+			{name: 'id', ciid:ciid('zone',name), value:id, type:'integer'},
+			{name: 'name', ciid:ciid('zone',name), value:name, type:'text'}
+		] | [],
+		[?regex('listrecords.*json', filename)].data[].[
+			{name: 'id', ciid:ciid('record',id), value:id, type:'integer'},
+			{name: 'name', ciid:ciid('record',id), value:name, type:'text'},
+			{name: 'ttl', ciid:ciid('record',id), value:ttl, type:'integer'},
+			{name: 'type', ciid:ciid('record',id), value:type, type:'text'},
+			{name: 'value', ciid:ciid('record',id), value:value, type:'text'}
+		] | []
+	] | [],
+
+	relations: map(&{zone: store('zone', filename), data: data[].[
+				{from: ciid('record',id), predicate: 'assigned_to', to: ciid('zone', retrieve('zone'))}
+			] | []}.data, [?regex('listrecords.*json', filename)]) | []
+}

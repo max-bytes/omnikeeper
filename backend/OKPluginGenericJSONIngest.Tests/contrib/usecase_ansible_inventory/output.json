@@ -1,0 +1,77 @@
+{
+  "attributes": [
+    {
+      "name": "os_family",
+      "ciid": "listzones.json",
+      "value": "x86_64",
+      "type": "text"
+    },
+    {
+      "name": "ansible.inventory.cmdline",
+      "ciid": "listzones.json",
+      "value": {
+        "BOOT_IMAGE": "/vmlinuz-3.10.0-1062.18.1.el7.x86_64",
+        "LANG": "en_US.UTF-8",
+        "quiet": true,
+        "rd.lvm.lv": "vg_sys/lv_swap",
+        "rhgb": true,
+        "ro": true,
+        "root": "/dev/mapper/vg_sys-lv_root"
+      },
+      "type": "json"
+    },
+    {
+      "name": "block_available",
+      "ciid": "listzones.json@ansible_mounts@0",
+      "value": 89390,
+      "type": "integer"
+    },
+    {
+      "name": "block_size",
+      "ciid": "listzones.json@ansible_mounts@0",
+      "value": 4096,
+      "type": "integer"
+    },
+    {
+      "name": "block_available",
+      "ciid": "listzones.json@ansible_mounts@1",
+      "value": 123520,
+      "type": "integer"
+    },
+    {
+      "name": "block_size",
+      "ciid": "listzones.json@ansible_mounts@1",
+      "value": 4096,
+      "type": "integer"
+    },
+    {
+      "name": "block_available",
+      "ciid": "listzones.json@ansible_mounts@2",
+      "value": 2705254,
+      "type": "integer"
+    },
+    {
+      "name": "block_size",
+      "ciid": "listzones.json@ansible_mounts@2",
+      "value": 4096,
+      "type": "integer"
+    }
+  ],
+  "relations": [
+    {
+      "from": "listzones.json",
+      "predicate": "has_mounted_device",
+      "to": "listzones.json@ansible_mounts@0"
+    },
+    {
+      "from": "listzones.json",
+      "predicate": "has_mounted_device",
+      "to": "listzones.json@ansible_mounts@1"
+    },
+    {
+      "from": "listzones.json",
+      "predicate": "has_mounted_device",
+      "to": "listzones.json@ansible_mounts@2"
+    }
+  ]
+}

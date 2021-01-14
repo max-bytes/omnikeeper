@@ -1,0 +1,15 @@
+﻿{
+	attributes: ansible_facts.[
+		[
+			ansible_architecture.{name: 'os_family', ciid:ciid(), value:@, type:'text'},
+			ansible_cmdline.{name: 'ansible.inventory.cmdline', ciid:ciid(), value:@, type:'json'}
+		],
+		ansible_mounts[].[
+			{name: 'block_available', ciid:ciid('ansible_mounts', idx('block_available')), value: block_available, type:'integer'},
+			{name: 'block_size', ciid:ciid('ansible_mounts', idx('block_size')), value: block_size, type:'integer'}
+		] | []
+	] | [],
+	relations: [
+		map(&{from: ciid(), predicate: 'has_mounted_device', to: ciid('ansible_mounts', idx('block_available_redo'))}, ansible_facts.ansible_mounts[])
+	] | []
+}
