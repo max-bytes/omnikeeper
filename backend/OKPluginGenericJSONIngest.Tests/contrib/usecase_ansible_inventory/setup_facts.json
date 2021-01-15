@@ -603,22 +603,6 @@
         "size_total": 533368832,
         "uuid": "ee632d3f-4de3-4181-963d-43be80ecca8f"
       },
-      {
-        "block_available": 2705254,
-        "block_size": 4096,
-        "block_total": 3143168,
-        "block_used": 437914,
-        "device": "/dev/mapper/vg_sys-lv_root",
-        "fstype": "xfs",
-        "inode_available": 6255518,
-        "inode_total": 6291456,
-        "inode_used": 35938,
-        "mount": "/",
-        "options": "rw,relatime,attr2,inode64,noquota",
-        "size_available": 11080720384,
-        "size_total": 12874416128,
-        "uuid": "4e192b68-ccff-44d2-9222-03b2dd69408a"
-      }
     ],
     "ansible_nodename": "h1jmplx01.mhx.at",
     "ansible_os_family": "RedHat",

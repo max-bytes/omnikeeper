@@ -1,8 +1,11 @@
 using DevLab.JmesPath;
+using FluentAssertions;
 using Microsoft.DotNet.InternalAbstractions;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using OKPluginGenericJSONIngest.JMESPath;
+using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.IO;
 
@@ -13,48 +16,120 @@ namespace OKPluginGenericJSONIngest.Tests
         [Test]
         public void Test1()
         {
-            string inputZones = File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(), 
-                "contrib", "usecase_mhx_dns", "listzones.json"));
-            string inputRecords1 = File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                "contrib", "usecase_mhx_dns", "listrecords_mhx-consulting.at.json"));
-            string inputRecords2 = File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                "contrib", "usecase_mhx_dns", "listrecords_mhx.at.json"));
-
-            var fullInput = new JArray();
-            fullInput.Add(new JObject
+            var documents = new Dictionary<string, JToken>()
             {
-                ["filename"] = "listzones.json",
-                ["data"] = JToken.Parse(inputZones)
-            });
-            fullInput.Add(new JObject
-            {
-                ["filename"] = "listrecords_mhx-consulting.at.json",
-                ["data"] = JToken.Parse(inputRecords1)
-            });
-            fullInput.Add(new JObject
-            {
-                ["filename"] = "listrecords_mhx.at.json",
-                ["data"] = JToken.Parse(inputRecords2)
-            });
+                {
+                    "listzones.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                        "contrib", "usecase_mhx_dns", "listzones.json")))
+                },
+                {
+                    "listrecords_mhx-consulting.at.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                        "contrib", "usecase_mhx_dns", "listrecords_mhx-consulting.at.json")))
+                },
+                {
+                    "listrecords_mhx.at.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                        "contrib", "usecase_mhx_dns", "listrecords_mhx.at.json")))
+                }
+            };
 
             string expression = File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                 "contrib", "usecase_mhx_dns", "expression.jmes"));
 
-            var tmpValues = new Dictionary<string, string>();
+            var transformer = new Transformer();
+            var result = transformer.Transform(documents, expression);
 
-            var jmes = new JmesPath();
-            jmes.FunctionRepository.Register("ciid", new CIIDFunc("")); // TODO: prefix for CIIDFunc
-            jmes.FunctionRepository.Register("idx", new IndexBuilder());
-            jmes.FunctionRepository.Register("regex", new RegexMatchFunc());
-            jmes.FunctionRepository.Register("store", new StoreFunc(tmpValues));
-            jmes.FunctionRepository.Register("retrieve", new RetrieveFunc(tmpValues));
-            var result = jmes.Transform(fullInput.ToString(), expression);
+            var expected = new GenericInboundData
+            {
+                cis = new List<GenericInboundCI>
+                {
+                    new GenericInboundCI
+                    {
+                        tempID = "tempCIID>zone>mhx-consulting.at",
+                        idMethod = new GenericInboundIDMethod { method = "byData", attributes = new string[]{ "id" } },
+                        attributes = new List<GenericInboundAttribute>
+                        {
+                            new GenericInboundAttribute { name = "id", value = 718656, type = AttributeValueType.Integer },
+                            new GenericInboundAttribute { name = "name", value = "mhx-consulting.at", type = AttributeValueType.Text },
+                        }
+                    },
+                    new GenericInboundCI
+                    {
+                        tempID = "tempCIID>zone>mhx.at",
+                        idMethod = new GenericInboundIDMethod { method = "byData", attributes = new string[]{ "id" } },
+                        attributes = new List<GenericInboundAttribute>
+                        {
+                            new GenericInboundAttribute { name = "id", value = 742507, type = AttributeValueType.Integer },
+                            new GenericInboundAttribute { name = "name", value = "mhx.at", type = AttributeValueType.Text },
+                        }
+                    },
 
-            var token = JToken.Parse(result);
-            var text = token.ToString();
+                    new GenericInboundCI
+                    {
+                        tempID = "tempCIID>record>1569516122",
+                        idMethod = new GenericInboundIDMethod { method = "byData", attributes = new string[]{ "id" } },
+                        attributes = new List<GenericInboundAttribute>
+                        {
+                            new GenericInboundAttribute { name = "id", value = 1569516122, type = AttributeValueType.Integer },
+                            new GenericInboundAttribute { name = "name", value = "mhx-consulting.at", type = AttributeValueType.Text },
+                            new GenericInboundAttribute { name = "ttl", value = 86400, type = AttributeValueType.Integer },
+                            new GenericInboundAttribute { name = "type", value = "NS", type = AttributeValueType.Text },
+                            new GenericInboundAttribute { name = "value", value = "ns1.he.net", type = AttributeValueType.Text },
+                        }
+                    },
+                    new GenericInboundCI
+                    {
+                        tempID = "tempCIID>record>1569516123",
+                        idMethod = new GenericInboundIDMethod { method = "byData", attributes = new string[]{ "id" } },
+                        attributes = new List<GenericInboundAttribute>
+                        {
+                            new GenericInboundAttribute { name = "id", value = 1569516123, type = AttributeValueType.Integer },
+                            new GenericInboundAttribute { name = "name", value = "mhx-consulting.at", type = AttributeValueType.Text },
+                            new GenericInboundAttribute { name = "ttl", value = 86400, type = AttributeValueType.Integer },
+                            new GenericInboundAttribute { name = "type", value = "NS", type = AttributeValueType.Text },
+                            new GenericInboundAttribute { name = "value", value = "ns2.he.net", type = AttributeValueType.Text },
+                        }
+                    },
+                    new GenericInboundCI
+                    {
+                        tempID = "tempCIID>record>2569516148",
+                        idMethod = new GenericInboundIDMethod { method = "byData", attributes = new string[]{ "id" } },
+                        attributes = new List<GenericInboundAttribute>
+                        {
+                            new GenericInboundAttribute { name = "id", value = 2569516148, type = AttributeValueType.Integer },
+                            new GenericInboundAttribute { name = "name", value = "mhx.at", type = AttributeValueType.Text },
+                            new GenericInboundAttribute { name = "ttl", value = 86400, type = AttributeValueType.Integer },
+                            new GenericInboundAttribute { name = "type", value = "NS", type = AttributeValueType.Text },
+                            new GenericInboundAttribute { name = "value", value = "ns-mhx1.he.net", type = AttributeValueType.Text },
+                        }
+                    },
+                },
+                relations = new List<GenericInboundRelation>
+                {
+                    new GenericInboundRelation
+                    {
+                        from = "tempCIID>record>1569516122",
+                        predicate = "assigned_to",
+                        to = "tempCIID>zone>mhx-consulting.at"
+                    },
+                    new GenericInboundRelation
+                    {
+                        from = "tempCIID>record>1569516123",
+                        predicate = "assigned_to",
+                        to = "tempCIID>zone>mhx-consulting.at"
+                    },
+                    new GenericInboundRelation
+                    {
+                        from = "tempCIID>record>2569516148",
+                        predicate = "assigned_to",
+                        to = "tempCIID>zone>mhx.at"
+                    },
+                }
+            };
+            result.Should().BeEquivalentTo(expected);
 
+            string resultJson = JsonConvert.SerializeObject(result, Formatting.Indented);
             File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                "contrib", "usecase_mhx_dns", "output.json"), text);
+                "contrib", "usecase_mhx_dns", "output.json"), resultJson);
         }
     }
 }

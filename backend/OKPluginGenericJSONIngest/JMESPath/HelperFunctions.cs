@@ -21,13 +21,13 @@ namespace OKPluginGenericJSONIngest.JMESPath
         {
             var stringArgs = args.Select(arg => arg.Token.ToString()); // TODO: what if arg is an expression instead of a token?
             stringArgs = new List<string> { fileID }.Concat(stringArgs);
-            return JValue.CreateString(string.Join('@', stringArgs)); // TODO: do we need to escape @ in strings?
+            return JValue.CreateString(string.Join('>', stringArgs)); // TODO: do we need to escape @ in strings?
         }
     }
 
-    public class RegexMatchFunc : JmesPathFunction
+    public class RegexIsMatchFunc : JmesPathFunction
     {
-        public RegexMatchFunc() : base("regex", 2)
+        public RegexIsMatchFunc() : base("regexIsMatch", 2)
         {
         }
 
@@ -38,6 +38,23 @@ namespace OKPluginGenericJSONIngest.JMESPath
             var regex = new Regex(regexStr);
             var matches = regex.IsMatch(subject);
             return new JValue(matches);
+        }
+    }
+
+    public class RegexMatchFunc : JmesPathFunction
+    {
+        public RegexMatchFunc() : base("regexMatch", 2)
+        {
+        }
+
+        public override JToken Execute(params JmesPathFunctionArgument[] args)
+        {
+            var regexStr = args[0].Token.ToString(); // TODO: what if arg is an expression instead of a token?
+            var subject = args[1].Token.ToString(); // TODO: what if arg is an expression instead of a token?
+            var regex = new Regex(regexStr);
+            var matches = regex.Match(subject);
+            var matchesString = matches.Groups.Values.Select(m => m.Value);
+            return JArray.FromObject(matchesString);
         }
     }
 

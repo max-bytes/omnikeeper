@@ -1,19 +1,33 @@
 ﻿{
-	attributes: [
-		[?filename == 'listzones.json'].data[].[
-			{name: 'id', ciid:ciid('zone',name), value:id, type:'integer'},
-			{name: 'name', ciid:ciid('zone',name), value:name, type:'text'}
-		] | [],
-		[?regex('listrecords.*json', filename)].data[].[
-			{name: 'id', ciid:ciid('record',id), value:id, type:'integer'},
-			{name: 'name', ciid:ciid('record',id), value:name, type:'text'},
-			{name: 'ttl', ciid:ciid('record',id), value:ttl, type:'integer'},
-			{name: 'type', ciid:ciid('record',id), value:type, type:'text'},
-			{name: 'value', ciid:ciid('record',id), value:value, type:'text'}
-		] | []
+	cis: [
+		[?document == 'listzones.json'] | [0].data[].{
+			tempID: ciid('zone',name),
+			idMethod: {
+				method: 'byData',
+				attributes: ['id']
+			},
+			attributes: [
+				{name: 'id', value:id, type:'integer'},
+				{name: 'name', value:name, type:'text'}
+			]
+		},
+		[?regexIsMatch('listrecords.*json', document)].data[].{
+			tempID: ciid('record',id),
+			idMethod: {
+				method: 'byData',
+				attributes: ['id']
+			},
+			attributes: [
+				{name: 'id', value:id, type:'integer'},
+				{name: 'name', value:name, type:'text'},
+				{name: 'ttl', value:ttl, type:'integer'},
+				{name: 'type', value:type, type:'text'},
+				{name: 'value', value:value, type:'text'}
+			]
+		}
 	] | [],
 
-	relations: map(&{zone: store('zone', filename), data: data[].[
+	relations: map(&{zone: store('zone', regexMatch('listrecords_(.*)\.json', document) | [1]), data: data[].[
 				{from: ciid('record',id), predicate: 'assigned_to', to: ciid('zone', retrieve('zone'))}
-			] | []}.data, [?regex('listrecords.*json', filename)]) | []
+			] | []}.data, [?regexIsMatch('listrecords.*json', document)]) | []
 }
