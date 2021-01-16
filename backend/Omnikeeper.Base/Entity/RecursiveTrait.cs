@@ -95,7 +95,7 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
-    [ProtoContract(SkipConstructor = true)]
+    [ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
     public class RecursiveTraitSet
     {
         [JsonConstructor]
@@ -104,8 +104,12 @@ namespace Omnikeeper.Base.Entity
             this.traits = traits;
         }
 
+#pragma warning disable CS8618
+        private RecursiveTraitSet() { }
+#pragma warning restore CS8618
+
         [ProtoMember(1)]
-        private readonly IDictionary<string, RecursiveTrait> traits;
+        private readonly IDictionary<string, RecursiveTrait> traits = new Dictionary<string,RecursiveTrait>();
         public IDictionary<string, RecursiveTrait> Traits => traits;
 
         public static RecursiveTraitSet Build(IEnumerable<RecursiveTrait> traits)

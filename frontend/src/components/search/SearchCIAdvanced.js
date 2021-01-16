@@ -27,9 +27,10 @@ function SearchCIAdvanced(props) {
         }
     }, [loadEffectiveTraits, visibleLayers]);
     
+    var [initialSetOfCheckedTraits, setIitialSetOfCheckedTraits] = useState(false); // HACK: shouldn't need this flag
     var [checkedTraits, setCheckedTraits] = useState([]);
     useEffect(() => {
-        if (_.keys(checkedTraits).length === 0 && effectiveTraits) {
+        if (!initialSetOfCheckedTraits && effectiveTraits) {
             const newChecked = [];
             for(const et of effectiveTraits.activeTraits) {
                 if (urlParams.requiredTraits.includes(et))
@@ -40,8 +41,9 @@ function SearchCIAdvanced(props) {
                     newChecked[et] = 0;
             }
             setCheckedTraits(newChecked);
+            setIitialSetOfCheckedTraits(true);
         }
-    }, [effectiveTraits, checkedTraits, setCheckedTraits, urlParams]);
+    }, [effectiveTraits, checkedTraits, setCheckedTraits, urlParams, initialSetOfCheckedTraits, setIitialSetOfCheckedTraits]);
     
     useEffect(() => {
         if (_.keys(checkedTraits).length !== 0) // we only start updating the url/history once the checkedTraits are loaded
