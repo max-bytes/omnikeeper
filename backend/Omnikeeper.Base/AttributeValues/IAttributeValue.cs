@@ -124,6 +124,44 @@ namespace Omnikeeper.Entity.AttributeValues
 
     public static class AttributeValueBuilder
     {
+        public static IAttributeValue BuildFromTypeAndObject(AttributeValueType type, object o)
+        {
+            if (o is Array a)
+            {
+                return type switch
+                {
+                    AttributeValueType.Text => (a is string[] t) ? AttributeArrayValueText.BuildFromString(t, false) :
+                        throw new Exception($"Could not build attribute value of type {type} from object {o}"),
+                    AttributeValueType.MultilineText => (a is string[] t) ? AttributeArrayValueText.BuildFromString(t, true) :
+                        throw new Exception($"Could not build attribute value of type {type} from object {o}"),
+                    AttributeValueType.Integer => (a is long[] t) ? AttributeArrayValueInteger.Build(t) :
+                        throw new Exception($"Could not build attribute value of type {type} from object {o}"),
+                    AttributeValueType.JSON => (a is JToken[] t) ? AttributeArrayValueJSON.Build(t) :
+                        throw new Exception($"Could not build attribute value of type {type} from object {o}"),
+                    AttributeValueType.YAML => (a is string[] t) ? AttributeArrayValueYAML.BuildFromString(t) :
+                        throw new Exception($"Could not build attribute value of type {type} from object {o}"),
+                    AttributeValueType.Image => throw new Exception("Building AttributeValueImage from type and object not allowed"),
+                    _ => throw new Exception($"Unknown type {type} encountered"),
+                };
+            } else
+            {
+                return type switch
+                {
+                    AttributeValueType.Text => (o is string t) ? new AttributeScalarValueText(t, false) :
+                        throw new Exception($"Could not build attribute value of type {type} from object {o}"),
+                    AttributeValueType.MultilineText => (o is string t) ? new AttributeScalarValueText(t, true) :
+                        throw new Exception($"Could not build attribute value of type {type} from object {o}"),
+                    AttributeValueType.Integer => (o is long t) ? new AttributeScalarValueInteger(t) :
+                        throw new Exception($"Could not build attribute value of type {type} from object {o}"),
+                    AttributeValueType.JSON => (o is JToken t) ? AttributeScalarValueJSON.Build(t) :
+                        throw new Exception($"Could not build attribute value of type {type} from object {o}"),
+                    AttributeValueType.YAML => (o is string t) ? AttributeScalarValueYAML.BuildFromString(t) :
+                        throw new Exception($"Could not build attribute value of type {type} from object {o}"),
+                    AttributeValueType.Image => throw new Exception("Building AttributeValueImage from type and object not allowed"),
+                    _ => throw new Exception($"Unknown type {type} encountered"),
+                };
+            }
+        }
         public static IAttributeValue BuildFromDTO(AttributeValueDTO generic)
         {
             if (generic.IsArray)

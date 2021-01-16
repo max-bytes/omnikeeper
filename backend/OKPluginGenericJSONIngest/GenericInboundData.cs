@@ -1,4 +1,6 @@
-﻿using Omnikeeper.Entity.AttributeValues;
+﻿using Newtonsoft.Json;
+using OKPluginGenericJSONIngest.JMESPath;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -27,6 +29,7 @@ namespace OKPluginGenericJSONIngest
     public class GenericInboundAttribute
     {
         public string name;
+        [JsonConverter(typeof(AttributeValueConverter<string>))]
         public object value;
         public AttributeValueType type;
     }

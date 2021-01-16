@@ -1,15 +1,13 @@
-using DevLab.JmesPath;
 using FluentAssertions;
 using Microsoft.DotNet.InternalAbstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
-using OKPluginGenericJSONIngest.JMESPath;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.IO;
 
-namespace OKPluginGenericJSONIngest.Tests
+namespace OKPluginGenericJSONIngest.Tests.Transform
 {
     public class UsecaseMHXDNS
     {
@@ -20,22 +18,22 @@ namespace OKPluginGenericJSONIngest.Tests
             {
                 {
                     "listzones.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                        "contrib", "usecase_mhx_dns", "listzones.json")))
+                        "data", "usecase_mhx_dns", "listzones.json")))
                 },
                 {
                     "listrecords_mhx-consulting.at.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                        "contrib", "usecase_mhx_dns", "listrecords_mhx-consulting.at.json")))
+                        "data", "usecase_mhx_dns", "listrecords_mhx-consulting.at.json")))
                 },
                 {
                     "listrecords_mhx.at.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                        "contrib", "usecase_mhx_dns", "listrecords_mhx.at.json")))
+                        "data", "usecase_mhx_dns", "listrecords_mhx.at.json")))
                 }
             };
 
             string expression = File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                "contrib", "usecase_mhx_dns", "expression.jmes"));
+                "data", "usecase_mhx_dns", "expression.jmes"));
 
-            var transformer = new Transformer();
+            var transformer = new JMESPathTransformer();
             var result = transformer.Transform(documents, expression);
 
             var expected = new GenericInboundData
@@ -129,7 +127,7 @@ namespace OKPluginGenericJSONIngest.Tests
 
             string resultJson = JsonConvert.SerializeObject(result, Formatting.Indented);
             File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                "contrib", "usecase_mhx_dns", "output.json"), resultJson);
+                "data", "usecase_mhx_dns", "output.json"), resultJson);
         }
     }
 }

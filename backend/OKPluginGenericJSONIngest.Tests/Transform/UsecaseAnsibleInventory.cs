@@ -9,7 +9,7 @@ using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.IO;
 
-namespace OKPluginGenericJSONIngest.Tests
+namespace OKPluginGenericJSONIngest.Tests.Transform
 {
     public class UsecaseAnsibleInventory
     {
@@ -20,14 +20,14 @@ namespace OKPluginGenericJSONIngest.Tests
             {
                 {
                     "setup_facts.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                        "contrib", "usecase_ansible_inventory", "setup_facts.json")))
+                        "data", "usecase_ansible_inventory", "setup_facts.json")))
                 }
             };
 
             string expression = File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                "contrib", "usecase_ansible_inventory", "expression.jmes"));
+                "data", "usecase_ansible_inventory", "expression.jmes"));
 
-            var transformer = new Transformer();
+            var transformer = new TransformerJMESPath();
             var result = transformer.Transform(documents, expression);
 
             var expected = new GenericInboundData
@@ -96,7 +96,7 @@ namespace OKPluginGenericJSONIngest.Tests
 
             string resultJson = JsonConvert.SerializeObject(result, Formatting.Indented);
             File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                "contrib", "usecase_ansible_inventory", "output.json"), resultJson);
+                "data", "usecase_ansible_inventory", "output.json"), resultJson);
         }
     }
 }
