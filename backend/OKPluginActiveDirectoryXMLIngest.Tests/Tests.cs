@@ -28,7 +28,7 @@ namespace OKPluginActiveDirectoryXMLIngest.Tests
             Assert.AreEqual(0, logger.GetCount(Microsoft.Extensions.Logging.LogLevel.Warning));
             Assert.AreEqual(0, logger.GetCount(Microsoft.Extensions.Logging.LogLevel.Error));
 
-            ciCandidates.Values.Select(c => c.Attributes).Should().BeEquivalentTo(new List<CICandidateAttributeData>()
+            ciCandidates.Select(c => c.Attributes).Should().BeEquivalentTo(new List<CICandidateAttributeData>()
             {
                 //groups
                 new CICandidateAttributeData(new CICandidateAttributeData.Fragment[] {

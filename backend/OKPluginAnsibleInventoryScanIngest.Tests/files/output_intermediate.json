@@ -1,0 +1,1330 @@
+{
+  "cis": [
+    {
+      "tempID": "tempCIID>h1jmplx01.mhx.at",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "fqdn"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "h1jmplx01.mhx.at",
+          "type": "Text"
+        },
+        {
+          "name": "fqdn",
+          "value": "h1jmplx01.mhx.at",
+          "type": "Text"
+        },
+        {
+          "name": "os_family",
+          "value": "x86_64",
+          "type": "Text"
+        },
+        {
+          "name": "ansible.inventory.cmdline",
+          "value": {
+            "BOOT_IMAGE": "/vmlinuz-3.10.0-1062.18.1.el7.x86_64",
+            "LANG": "en_US.UTF-8",
+            "quiet": true,
+            "rd.lvm.lv": "vg_sys/lv_swap",
+            "rhgb": true,
+            "ro": true,
+            "root": "/dev/mapper/vg_sys-lv_root"
+          },
+          "type": "JSON"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1jmplx01.mhx.at>ansible_mounts>0",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name",
+          "device",
+          "mount"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "h1jmplx01.mhx.at:/boot",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "/dev/sda1",
+          "type": "Text"
+        },
+        {
+          "name": "mount",
+          "value": "/boot",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1jmplx01.mhx.at>ansible_mounts>1",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name",
+          "device",
+          "mount"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "h1jmplx01.mhx.at:/data",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "/dev/mapper/vg_data-lv_data",
+          "type": "Text"
+        },
+        {
+          "name": "mount",
+          "value": "/data",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1jmplx01.mhx.at>ansible_mounts>2",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name",
+          "device",
+          "mount"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "h1jmplx01.mhx.at:/",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "/dev/mapper/vg_sys-lv_root",
+          "type": "Text"
+        },
+        {
+          "name": "mount",
+          "value": "/",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1jmplx01.mhx.at>ansible_interfaces>0",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface dmzpub0@h1jmplx01.mhx.at",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "dmzpub0",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "ether",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "7e:10:82:6d:db:6d",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1jmplx01.mhx.at>ansible_interfaces>1",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface lo@h1jmplx01.mhx.at",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "lo",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "loopback",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "fqdn"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "fqdn",
+          "value": "h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "os_family",
+          "value": "x86_64",
+          "type": "Text"
+        },
+        {
+          "name": "ansible.inventory.cmdline",
+          "value": {
+            "BOOT_IMAGE": "/vmlinuz-3.10.0-1062.18.1.el7.x86_64",
+            "LANG": "en_US.UTF-8",
+            "quiet": true,
+            "rd.lvm.lv": "vg_sys/lv_swap",
+            "rhgb": true,
+            "ro": true,
+            "root": "/dev/mapper/vg_sys-lv_root"
+          },
+          "type": "JSON"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_mounts>3",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name",
+          "device",
+          "mount"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "h1lscapet01.mhx.local:/var/lib/docker",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "/dev/mapper/vg_data-lv_docker",
+          "type": "Text"
+        },
+        {
+          "name": "mount",
+          "value": "/var/lib/docker",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_mounts>4",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name",
+          "device",
+          "mount"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "h1lscapet01.mhx.local:/boot",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "/dev/sda1",
+          "type": "Text"
+        },
+        {
+          "name": "mount",
+          "value": "/boot",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_mounts>5",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name",
+          "device",
+          "mount"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "h1lscapet01.mhx.local:/data",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "/dev/mapper/vg_data-lv_data",
+          "type": "Text"
+        },
+        {
+          "name": "mount",
+          "value": "/data",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_mounts>6",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name",
+          "device",
+          "mount"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "h1lscapet01.mhx.local:/",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "/dev/mapper/vg_sys-lv_root",
+          "type": "Text"
+        },
+        {
+          "name": "mount",
+          "value": "/",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>2",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface br-1125d81ad27f@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "br-1125d81ad27f",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "bridge",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "02:42:4a:24:1c:b4",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>3",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface br-305b70f24e0d@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "br-305b70f24e0d",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "false",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "bridge",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "02:42:b3:e7:59:a4",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>4",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface br-4413cc8ab2e7@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "br-4413cc8ab2e7",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "false",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "bridge",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "02:42:44:1a:82:cd",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>5",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface br-4a88e0a1b4b9@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "br-4a88e0a1b4b9",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "bridge",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "02:42:11:8b:7d:7f",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>6",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface br-6626a1b1ae37@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "br-6626a1b1ae37",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "bridge",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "02:42:2e:d9:39:f8",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>7",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface br-93f487bc4aeb@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "br-93f487bc4aeb",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "bridge",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "02:42:b8:21:2d:22",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>8",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface br-be6404f2e8bc@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "br-be6404f2e8bc",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "false",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "bridge",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "02:42:da:81:24:39",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>9",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface br-e76a7949f497@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "br-e76a7949f497",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "false",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "bridge",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "02:42:67:be:76:cf",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>10",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface docker0@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "docker0",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "bridge",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "02:42:4b:65:1c:89",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>11",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface eth0@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "eth0",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "ether",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "86:39:0c:f1:7f:31",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>12",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface lo@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "lo",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "loopback",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>13",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface veth30fb492@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "veth30fb492",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "ether",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "06:a1:80:67:0b:d7",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>14",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface veth58b0f73@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "veth58b0f73",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "ether",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "ca:f4:eb:9a:cf:0b",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>15",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface veth5f7849e@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "veth5f7849e",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "ether",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "52:5d:9c:55:4e:37",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>16",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface veth6afd332@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "veth6afd332",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "ether",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "62:1d:23:8e:e0:3c",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>17",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface veth86f9190@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "veth86f9190",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "ether",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "0a:0a:83:5b:27:00",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>18",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface veth8b6427d@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "veth8b6427d",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "ether",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "32:c8:a7:06:d3:ab",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>19",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface veth93a8241@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "veth93a8241",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "ether",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "12:b1:22:fa:09:a8",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>20",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface vetha384a3f@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "vetha384a3f",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "ether",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "6a:01:74:17:bf:05",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>21",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface vethc282a11@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "vethc282a11",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "ether",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "62:a9:f3:1e:09:11",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>22",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface vethc670421@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "vethc670421",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "ether",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "22:ad:f8:92:c8:64",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>23",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface vethd5f6c33@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "vethd5f6c33",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "ether",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "0e:fe:f0:83:68:24",
+          "type": "Text"
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>24",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "__name"
+        ]
+      },
+      "attributes": [
+        {
+          "name": "__name",
+          "value": "Network Interface vethdc66a0e@h1lscapet01.mhx.local",
+          "type": "Text"
+        },
+        {
+          "name": "device",
+          "value": "vethdc66a0e",
+          "type": "Text"
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "type": "Text"
+        },
+        {
+          "name": "type",
+          "value": "ether",
+          "type": "Text"
+        },
+        {
+          "name": "macaddress",
+          "value": "9a:59:7f:00:da:58",
+          "type": "Text"
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "from": "tempCIID>h1jmplx01.mhx.at",
+      "predicate": "has_mounted_device",
+      "to": "tempCIID>h1jmplx01.mhx.at>ansible_mounts>0"
+    },
+    {
+      "from": "tempCIID>h1jmplx01.mhx.at",
+      "predicate": "has_mounted_device",
+      "to": "tempCIID>h1jmplx01.mhx.at>ansible_mounts>1"
+    },
+    {
+      "from": "tempCIID>h1jmplx01.mhx.at",
+      "predicate": "has_mounted_device",
+      "to": "tempCIID>h1jmplx01.mhx.at>ansible_mounts>2"
+    },
+    {
+      "from": "tempCIID>h1jmplx01.mhx.at",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1jmplx01.mhx.at>ansible_interfaces>0"
+    },
+    {
+      "from": "tempCIID>h1jmplx01.mhx.at",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1jmplx01.mhx.at>ansible_interfaces>1"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_mounted_device",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_mounts>3"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_mounted_device",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_mounts>4"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_mounted_device",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_mounts>5"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_mounted_device",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_mounts>6"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>2"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>3"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>4"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>5"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>6"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>7"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>8"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>9"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>10"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>11"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>12"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>13"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>14"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>15"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>16"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>17"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>18"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>19"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>20"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>21"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>22"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>23"
+    },
+    {
+      "from": "tempCIID>h1lscapet01.mhx.local",
+      "predicate": "has_network_interface",
+      "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>24"
+    }
+  ]
+}

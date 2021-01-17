@@ -1,0 +1,16 @@
+{
+  "changed": false,
+  "failed": false,
+  "results": [
+    {
+      "arch": "x86_64",
+      "envra": "1:NetworkManager-libnm-1.18.0-5.el7_7.2.x86_64",
+      "epoch": "1",
+      "name": "NetworkManager-libnm",
+      "release": "5.el7_7.2",
+      "repo": "installed",
+      "version": "1.18.0",
+      "yumstate": "installed"
+    }
+  ]
+}

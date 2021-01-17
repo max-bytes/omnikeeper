@@ -3,11 +3,12 @@ using Microsoft.DotNet.InternalAbstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
+using OKPluginGenericJSONIngest.JMESPath;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.IO;
 
-namespace OKPluginGenericJSONIngest.Tests.Transform
+namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
 {
     public class UsecaseMHXDNS
     {
@@ -33,8 +34,8 @@ namespace OKPluginGenericJSONIngest.Tests.Transform
             string expression = File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                 "data", "usecase_mhx_dns", "expression.jmes"));
 
-            var transformer = new JMESPathTransformer();
-            var result = transformer.Transform(documents, expression);
+            var transformer = new TransformerJMESPath();
+            var result = transformer.Transform(documents, new TransformerConfigJMESPath(expression));
 
             var expected = new GenericInboundData
             {

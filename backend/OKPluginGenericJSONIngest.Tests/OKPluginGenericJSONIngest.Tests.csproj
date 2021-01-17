@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\OKPluginAnsibleInventoryScanIngest\OKPluginAnsibleInventoryScanIngest.csproj" />
     <ProjectReference Include="..\OKPluginGenericJSONIngest\OKPluginGenericJSONIngest.csproj" />
   </ItemGroup>
 

@@ -14,23 +14,28 @@ namespace Omnikeeper.Base.Service
     public class IngestDataService
     {
         private readonly CIMappingService ciMappingService;
+        private readonly IModelContextBuilder modelContextBuilder;
+        private readonly ILogger<IngestDataService> logger;
 
         private IAttributeModel AttributeModel { get; }
         private ICIModel CIModel { get; }
         private IChangesetModel ChangesetModel { get; }
         private IRelationModel RelationModel { get; }
 
-        public IngestDataService(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, IRelationModel relationModel, CIMappingService ciMappingService)
+        public IngestDataService(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, IRelationModel relationModel, 
+            CIMappingService ciMappingService, IModelContextBuilder modelContextBuilder, ILogger<IngestDataService> logger)
         {
             AttributeModel = attributeModel;
             CIModel = ciModel;
             ChangesetModel = changesetModel;
             RelationModel = relationModel;
             this.ciMappingService = ciMappingService;
+            this.modelContextBuilder = modelContextBuilder;
+            this.logger = logger;
         }
 
         // TODO: add ci-based authorization
-        public async Task<(int numIngestedCIs, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, AuthenticatedUser user, IModelContextBuilder modelContextBuilder, ILogger logger)
+        public async Task<(int numIngestedCIs, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, AuthenticatedUser user)
         {
             using var trans = modelContextBuilder.BuildDeferred();
             var timeThreshold = TimeThreshold.BuildLatest();
@@ -40,11 +45,11 @@ namespace Omnikeeper.Base.Service
             var attributeData = new Dictionary<Guid, CICandidateAttributeData>();
             foreach (var cic in data.CICandidates)
             {
-                var attributes = cic.Value.Attributes;
-                var ciCandidateID = cic.Key;
+                var attributes = cic.Attributes;
+                var ciCandidateID = cic.TempCIID;
 
                 // find out if it's a new CI or an existing one
-                var foundCIIDs = await ciMappingService.TryToMatch(ciCandidateID.ToString(), cic.Value.IdentificationMethod, ciMappingContext, trans, logger);
+                var foundCIIDs = await ciMappingService.TryToMatch(ciCandidateID.ToString(), cic.IdentificationMethod, ciMappingContext, trans, logger);
 
                 Guid finalCIID;
                 if (!foundCIIDs.IsEmpty())
@@ -97,18 +102,20 @@ namespace Omnikeeper.Base.Service
 
     public class CICandidate
     {
+        public Guid TempCIID { get; private set; }
         public ICIIdentificationMethod IdentificationMethod { get; private set; }
         public CICandidateAttributeData Attributes { get; private set; }
 
-        public CICandidate(ICIIdentificationMethod identificationMethod, CICandidateAttributeData attributes)
+        public CICandidate(Guid tempCIID, ICIIdentificationMethod identificationMethod, CICandidateAttributeData attributes)
         {
+            TempCIID = tempCIID;
             IdentificationMethod = identificationMethod;
             Attributes = attributes;
         }
 
         public static CICandidate BuildWithAdditionalAttributes(CICandidate @base, CICandidateAttributeData additionalAttributes)
         {
-            return new CICandidate(@base.IdentificationMethod, @base.Attributes.Concat(additionalAttributes));
+            return new CICandidate(@base.TempCIID, @base.IdentificationMethod, @base.Attributes.Concat(additionalAttributes));
         }
     }
 
@@ -128,10 +135,10 @@ namespace Omnikeeper.Base.Service
 
     public class IngestData
     {
-        public IDictionary<Guid, CICandidate> CICandidates { get; private set; }
+        public IEnumerable<CICandidate> CICandidates { get; private set; }
         public IEnumerable<RelationCandidate> RelationCandidates { get; private set; }
 
-        public IngestData(IDictionary<Guid, CICandidate> cis, IEnumerable<RelationCandidate> relationCandidates)
+        public IngestData(IEnumerable<CICandidate> cis, IEnumerable<RelationCandidate> relationCandidates)
         {
             CICandidates = cis;
             RelationCandidates = relationCandidates;

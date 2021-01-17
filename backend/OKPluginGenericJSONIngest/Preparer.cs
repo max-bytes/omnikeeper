@@ -10,14 +10,14 @@ using System.Threading.Tasks;
 
 namespace OKPluginGenericJSONIngest
 {
-    public class Loader
+    public class Preparer
     {
-        private readonly ILogger logger;
+        //private readonly ILogger logger;
 
-        public Loader(ILogger logger)
-        {
-            this.logger = logger;
-        }
+        //public Loader(ILogger logger)
+        //{
+        //    this.logger = logger;
+        //}
 
         private CICandidateAttributeData.Fragment GenericAttribute2Fragment(GenericInboundAttribute a)
         {
@@ -29,6 +29,7 @@ namespace OKPluginGenericJSONIngest
         {
             var tempCIIDMapping = new Dictionary<string, Guid>(); // maps tempIDs to temporary Guids
 
+            // TODO: rewrite to for loop instead of select to explicitly model sideeffect of writing tempCIIDMapping
             var ciCandidates = data.cis.Select(ci =>
             {
                 var fragments = ci.attributes.Select(a => GenericAttribute2Fragment(a));
@@ -38,10 +39,10 @@ namespace OKPluginGenericJSONIngest
                 var idMethod = CIIdentificationMethodByData.BuildFromAttributes(ci.idMethod.attributes, attributes, searchLayers);
 
                 var tempGuid = Guid.NewGuid();
-                tempCIIDMapping.Add(ci.tempID, tempGuid);
+                tempCIIDMapping.TryAdd(ci.tempID, tempGuid);
 
-                return (tempGuid, new CICandidate(idMethod, attributes));
-            }).ToDictionary(t => t.tempGuid, t => t.Item2);
+                return new CICandidate(tempGuid, idMethod, attributes);
+            }).ToList();
 
             var relationCandidates = data.relations.Select(r =>
             {
@@ -56,10 +57,10 @@ namespace OKPluginGenericJSONIngest
             return new IngestData(ciCandidates, relationCandidates);
         }
 
-        public async Task Load(IngestData ingestData, Layer writeLayer, AuthenticatedUser user, IngestDataService ingestDataService, IModelContextBuilder modelContextBuilder)
-        {
-            var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user, modelContextBuilder, logger);
-            // TODO: result
-        }
+        //public async Task Load(IngestData ingestData, Layer writeLayer, AuthenticatedUser user, IngestDataService ingestDataService)
+        //{
+        //    var (numIngestedCIs, numIngestedRelations) = await ingestDataService.Ingest(ingestData, writeLayer, user);
+        //    // TODO: result
+        //}
     }
 }

@@ -602,7 +602,7 @@
         "size_available": 505937920,
         "size_total": 533368832,
         "uuid": "ee632d3f-4de3-4181-963d-43be80ecca8f"
-      },
+      }
     ],
     "ansible_nodename": "h1jmplx01.mhx.at",
     "ansible_os_family": "RedHat",

@@ -57,15 +57,15 @@ namespace Omnikeeper.Base.Inbound
         {
             try
             {
-                var config = await ioaConfigModel.GetContextByName(instanceName, trans);
-                if (onlinePluginsBuilders.TryGetValue(config.Config.BuilderName, out var builder))
+                var context = await ioaConfigModel.GetContextByName(instanceName, trans);
+                if (onlinePluginsBuilders.TryGetValue(context.Config.BuilderName, out var builder))
                 {
                     var idMapper = await externalIDMapper.CreateOrGetScoped(
-                        config.Config.MapperScope,
-                        () => builder.BuildIDMapper(persister.CreateScopedPersister(config.Config.MapperScope)),
+                        context.Config.MapperScope,
+                        () => builder.BuildIDMapper(persister.CreateScopedPersister(context.Config.MapperScope)),
                         trans);
 
-                    return builder.Build(config.Config, appConfig, idMapper, loggerFactory);
+                    return builder.Build(context.Config, appConfig, idMapper, loggerFactory);
                 }
                 return null;
             }

@@ -1,0 +1,65 @@
+using DevLab.JmesPath;
+using FluentAssertions;
+using Microsoft.DotNet.InternalAbstractions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NUnit.Framework;
+using OKPluginAnsibleInventoryScanIngest;
+using OKPluginGenericJSONIngest.JMESPath;
+using Omnikeeper.Entity.AttributeValues;
+using System.Collections.Generic;
+using System.IO;
+
+namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
+{
+    public class UsecaseAnsibleInventory
+    {
+        [Test]
+        public void Test1()
+        {
+            var documents = new Dictionary<string, JToken>()
+            {
+                {
+                    "setup_facts_h1jmplx01.mhx.at", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                        "data", "usecase_ansible_inventory", "setup_facts_h1jmplx01.mhx.at.json"))) 
+                },
+                {
+                    "yum_installed_h1jmplx01.mhx.at", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                        "data", "usecase_ansible_inventory", "yum_installed_h1jmplx01.mhx.at.json")))
+                },
+                {
+                    "yum_repos_h1jmplx01.mhx.at", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                        "data", "usecase_ansible_inventory", "yum_repos_h1jmplx01.mhx.at.json")))
+                },
+                {
+                    "yum_updates_h1jmplx01.mhx.at", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                        "data", "usecase_ansible_inventory", "yum_updates_h1jmplx01.mhx.at.json")))
+                },
+                { 
+                    "setup_facts_h1lscapet01.mhx.local", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                        "data", "usecase_ansible_inventory", "setup_facts_h1lscapet01.mhx.local.json")))
+                }
+            };
+
+            var transformer = new TransformerJMESPath();
+            var inputJSON = transformer.Documents2JSON(documents);
+            var genericInboundDataJson = transformer.TransformJSON(inputJSON, new TransformerConfigJMESPath(JMESPathExpression.Expression));
+
+            File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                "data", "usecase_ansible_inventory", "output_intermediate.json"), JToken.Parse(genericInboundDataJson).ToString(Formatting.Indented));
+
+            var result = transformer.DeserializeJson(genericInboundDataJson);
+
+            var tmp = JsonConvert.SerializeObject(result);
+
+            var expected = JsonConvert.DeserializeObject<GenericInboundData>(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                        "data", "usecase_ansible_inventory", "expected.json")));
+
+            result.Should().BeEquivalentTo(expected);
+
+            string resultJson = JsonConvert.SerializeObject(result, Formatting.Indented);
+            File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                "data", "usecase_ansible_inventory", "output.json"), resultJson);
+        }
+    }
+}

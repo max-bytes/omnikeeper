@@ -110,4 +110,33 @@ namespace OKPluginGenericJSONIngest.JMESPath
             return JValue.CreateString(index.ToString());
         }
     }
+
+    public class FilterHashKeys : JmesPathFunction
+    {
+        public FilterHashKeys() : base("filterHashKeys", 2)
+        {
+        }
+
+        public override JToken Execute(params JmesPathFunctionArgument[] args)
+        {
+            var validKeys = args[0].Token;
+            var subject = args[1].Token;
+            return new JObject(subject.Children<JProperty>().Where(jp => validKeys.Values().Contains(jp.Name)));
+        }
+    }
+
+    public class StringReplaceFunc : JmesPathFunction
+    {
+        public StringReplaceFunc() : base("stringReplace", 3)
+        {
+        }
+
+        public override JToken Execute(params JmesPathFunctionArgument[] args)
+        {
+            var subject = args[0].Token;
+            var replace = args[1].Token;
+            var replaceWith = args[2].Token;
+            return JValue.CreateString(subject.ToString().Replace(replace.ToString(), replaceWith.ToString()));
+        }
+    }
 }

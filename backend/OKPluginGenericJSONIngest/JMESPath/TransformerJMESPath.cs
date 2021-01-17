@@ -9,8 +9,20 @@ namespace OKPluginGenericJSONIngest.JMESPath
     {
         public GenericInboundData Transform(IDictionary<string, JToken> documents, TransformerConfigJMESPath config)
         {
+            var input = Documents2JSON(documents);
+            var resultJson = TransformJSON(input, config);
+            return DeserializeJson(resultJson);
+        }
+
+        public GenericInboundData DeserializeJson(string resultJson)
+        {
+            return JsonConvert.DeserializeObject<GenericInboundData>(resultJson);
+        }
+
+        public JArray Documents2JSON(IDictionary<string, JToken> documents)
+        {
             var input = new JArray();
-            foreach(var kv in documents)
+            foreach (var kv in documents)
             {
                 input.Add(new JObject
                 {
@@ -18,7 +30,11 @@ namespace OKPluginGenericJSONIngest.JMESPath
                     ["data"] = kv.Value
                 });
             }
+            return input;
+        }
 
+        public string TransformJSON(JArray input, TransformerConfigJMESPath config)
+        {
             var tmpValues = new Dictionary<string, string>();
 
             var jmes = new JmesPath();
@@ -28,11 +44,10 @@ namespace OKPluginGenericJSONIngest.JMESPath
             jmes.FunctionRepository.Register("regexMatch", new RegexMatchFunc());
             jmes.FunctionRepository.Register("store", new StoreFunc(tmpValues));
             jmes.FunctionRepository.Register("retrieve", new RetrieveFunc(tmpValues));
+            jmes.FunctionRepository.Register("filterHashKeys", new FilterHashKeys());
+            jmes.FunctionRepository.Register("stringReplace", new StringReplaceFunc());
             var resultJson = jmes.Transform(input.ToString(), config.Expression);
-
-            var r = JsonConvert.DeserializeObject<GenericInboundData>(resultJson);
-
-            return r;
+            return resultJson;
         }
     }
 }

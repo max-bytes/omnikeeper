@@ -15,7 +15,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
         [Test]
         public void TestBasicGenericInboundData2IngestData()
         {
-            var loader = new Loader(NullLogger.Instance);
+            var loader = new Preparer();
 
             var inboundData = new GenericInboundData
             {
@@ -28,7 +28,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
 
             ingestData.Should().BeEquivalentTo(
                 new IngestData(
-                    new Dictionary<Guid, CICandidate> { }, 
+                    new List<CICandidate> { }, 
                     new List<RelationCandidate> { }
                 )
             );
@@ -37,7 +37,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
         [Test]
         public void TestInvalidRelationID()
         {
-            var loader = new Loader(NullLogger.Instance);
+            var loader = new Preparer();
 
             var inboundData = new GenericInboundData
             {
