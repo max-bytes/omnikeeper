@@ -17,6 +17,12 @@ function EditableAttributeValue(props) {
     const canRemoveItem = values.length > 1;
 
     return <div style={{ display: 'flex', flexDirection: 'column', flexGrow: '1', alignSelf: 'center' }}>
+      {values.length === 0 && isEditable && <Button icon={<FontAwesomeIcon icon={faPlus} style={{marginRight: "10px", marginLeft: "0.25rem"}}/>} disabled={!isEditable} onClick={e => {
+                e.preventDefault();
+                let newValues = values.slice();
+                newValues.splice(0, 0, '');
+                props.setValues(newValues);
+                }}></Button>}
         {values.map((v, index) => {
           return <Row key={index} id={`value:${name}:${index}:${controlIdSuffix}`} gutter={4}>
             <Col span={19}>
