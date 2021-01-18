@@ -43,6 +43,10 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
 
             var jmes = new JmesPath();
             jmes.FunctionRepository.Register("ciid", new CIIDFunc("tempCIID"));
+            jmes.FunctionRepository.Register("attribute", new AttributeFunc());
+            jmes.FunctionRepository.Register("relation", new RelationFunc());
+            jmes.FunctionRepository.Register("idMethodByData", new IDMethodByDataFunc());
+            jmes.FunctionRepository.Register("idMethodByTempID", new IDMethodByTempIDFunc());
             jmes.FunctionRepository.Register("idx", new IndexBuilder());
             jmes.FunctionRepository.Register("regexIsMatch", new RegexIsMatchFunc());
             jmes.FunctionRepository.Register("regexMatch", new RegexMatchFunc());

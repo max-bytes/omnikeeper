@@ -2,32 +2,26 @@
 	cis: [
 		[?document == 'listzones.json'] | [0].data[].{
 			tempID: ciid('zone',name),
-			idMethod: {
-				method: 'byData',
-				attributes: ['id']
-			},
+			idMethod: idMethodByData(['id']),
 			attributes: [
-				{name: 'id', value:id, type:'integer'},
-				{name: 'name', value:name, type:'text'}
+				attribute('id', id, 'Integer'),
+				attribute('name', name)
 			]
 		},
 		[?regexIsMatch('listrecords.*json', document)].data[].{
 			tempID: ciid('record',id),
-			idMethod: {
-				method: 'byData',
-				attributes: ['id']
-			},
+			idMethod: idMethodByData(['id']),
 			attributes: [
-				{name: 'id', value:id, type:'integer'},
-				{name: 'name', value:name, type:'text'},
-				{name: 'ttl', value:ttl, type:'integer'},
-				{name: 'type', value:type, type:'text'},
-				{name: 'value', value:value, type:'text'}
+				attribute('id', id, 'Integer'),
+				attribute('name', name),
+				attribute('ttl', ttl, 'Integer'),
+				attribute('type', type),
+				attribute('value', value)
 			]
 		}
 	] | [],
 
 	relations: map(&{zone: store('zone', regexMatch('listrecords_(.*)\.json', document) | [1]), data: data[].[
-				{from: ciid('record',id), predicate: 'assigned_to', to: ciid('zone', retrieve('zone'))}
+				relation(ciid('record',id), 'assigned_to', ciid('zone', retrieve('zone')))
 			] | []}.data, [?regexIsMatch('listrecords.*json', document)]) | []
 }

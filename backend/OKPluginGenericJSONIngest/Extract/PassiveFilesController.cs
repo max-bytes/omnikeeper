@@ -27,7 +27,7 @@ namespace Omnikeeper.Controllers.Ingest
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/ingest/genericJSON/files")]
-    //[Authorize]
+    [Authorize]
     public class PassiveFilesController : ControllerBase
     {
         private readonly IngestDataService ingestDataService;
@@ -60,7 +60,7 @@ namespace Omnikeeper.Controllers.Ingest
                 if (ctx == null)
                     return BadRequest($"Context with name \"{context}\" not found");
                 if (!(ctx.ExtractConfig is ExtractConfigPassiveRESTFiles f))
-                    return BadRequest($"Context with name \"{context}\" does not accept files like this");
+                    return BadRequest($"Context with name \"{context}\" does not accept files via REST API");
                 if (files.IsEmpty())
                     return BadRequest($"No files specified");
 

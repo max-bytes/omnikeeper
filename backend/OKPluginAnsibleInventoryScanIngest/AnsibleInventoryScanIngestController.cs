@@ -1,23 +1,18 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.DotNet.PlatformAbstractions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OKPluginGenericJSONIngest;
-using OKPluginGenericJSONIngest.Transform.JMESPath;
 using OKPluginGenericJSONIngest.Load;
+using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Controllers.Ingest

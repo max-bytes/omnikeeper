@@ -2,14 +2,11 @@
 	cis: [
 		{
 			tempID: ciid(),
-			idMethod: {
-				method: 'byData',
-				attributes: ['foo']
-			},
+			idMethod: idMethodByData(['foo']),
 			attributes: [
-				{name: 'textscalar', value:'value 1', type:'Text'},
-				{name: 'textarray', value:['value 1', 'value 2'], type:'Text'},
-				{name: 'jsonarray', value:[{foo: 'bar', blub: 'bla'}, {foo2: 'bar2', blub2: 'bla2'}], type:'JSON'}
+				attribute('textscalar', 'value 1'),
+				attribute('textarray', ['value 1', 'value 2']),
+				attribute('jsonarray', [{foo: 'bar', blub: 'bla'}, {foo2: 'bar2', blub2: 'bla2'}], 'JSON')
 			]
 		}
 	],

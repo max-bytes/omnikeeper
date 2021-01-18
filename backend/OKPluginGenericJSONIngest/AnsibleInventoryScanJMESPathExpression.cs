@@ -14,75 +14,66 @@ namespace OKPluginGenericJSONIngest
 		cis: data.ansible_facts.[
 			{
 				tempID: ciid(retrieve('fqdn')),
-				idMethod: {
-					method: 'byData',
-					attributes: ['fqdn']
-				},
+				idMethod: idMethodByData(['fqdn']),
 				attributes: [
-					{name: '__name', value:ansible_fqdn, type:'Text'},
-					{name: 'fqdn', value:ansible_fqdn, type:'Text'},
-					{name: 'os_family', value:ansible_distribution, type:'Text'},
-					{name: 'architecture', value:ansible_architecture, type:'Text'},
-					{name: 'ansible.inventory.cmdline', value:ansible_cmdline, type:'JSON'},
-					{name: 'ansible.inventory.last_scan_time', value:to_string(ansible_date_time.iso8601), type:'Text'},
-					{name: 'default_ipv4', value:ansible_default_ipv4, type:'JSON'},
-					{name: 'hostname', value: ansible_hostname, type:'Text'},
-					{name: 'distribution', value: ansible_distribution, type:'Text'},
-					{name: 'distribution_file_variety', value: ansible_distribution_file_variety, type:'Text'},
-					{name: 'distribution_major_version', value: ansible_distribution_major_version, type:'Text'},
-					{name: 'distribution_release', value: ansible_distribution_release, type:'Text'},
-					{name: 'distribution_version', value: ansible_distribution_version, type:'Text'},
-					{name: 'processor_vcpus', value: ansible_processor_vcpus, type:'Integer'},
-					{name: 'processor_cores', value: ansible_processor_cores, type:'Integer'},
-					{name: 'processor_count', value: ansible_processor_count, type:'Integer'},
-					{name: 'kernel', value: ansible_kernel, type:'Text'},
-					{name: 'memtotal_mb', value: ansible_memtotal_mb, type:'Integer'},
-					{name: 'interfaces', value: ansible_interfaces, type:'Text'},
-					{name: 'dns', value: ansible_dns, type:'JSON'}
+					attribute('__name', retrieve('fqdn')),
+					attribute('fqdn',ansible_fqdn),
+					attribute('os_family',ansible_distribution),
+					attribute('architecture',ansible_architecture),
+					attribute('ansible.inventory.cmdline', ansible_cmdline, 'JSON'),
+					attribute('ansible.inventory.last_scan_time',to_string(ansible_date_time.iso8601)),
+					attribute('default_ipv4',ansible_default_ipv4, 'JSON'),
+					attribute('hostname', ansible_hostname),
+					attribute('distribution', ansible_distribution),
+					attribute('distribution_file_variety', ansible_distribution_file_variety),
+					attribute('distribution_major_version', ansible_distribution_major_version),
+					attribute('distribution_release', ansible_distribution_release),
+					attribute('distribution_version', ansible_distribution_version),
+					attribute('processor_vcpus', ansible_processor_vcpus, 'Integer'),
+					attribute('processor_cores', ansible_processor_cores, 'Integer'),
+					attribute('processor_count', ansible_processor_count, 'Integer'),
+					attribute('kernel', ansible_kernel),
+					attribute('memtotal_mb', ansible_memtotal_mb, 'Integer'),
+					attribute('interfaces', ansible_interfaces),
+					attribute('dns', ansible_dns, 'JSON')
 				]
 			},
 			ansible_mounts[].{
 				tempID: ciid(retrieve('fqdn'), 'ansible_mounts', idx('ansible_mounts')),
-				idMethod: {
-					method: 'byData',
-					attributes: ['__name', 'device', 'mount']
-				},
+				idMethod: idMethodByData(['__name', 'device', 'mount']),
 				attributes: [
-					{name: '__name', value: join(':', [retrieve('fqdn'), mount]), type:'Text'},
-					{name: 'device', value: device, type:'Text'},
-					{name: 'mount', value: mount, type:'Text'},
-					{name: 'block_available', value: block_available, type:'Integer'},
-					{name: 'block_size', value: block_size, type:'Integer'},
-					{name: 'block_total', value: block_total, type:'Integer'},
-					{name: 'block_used', value: block_used, type:'Integer'},
-					{name: 'fstype', value: fstype, type:'Text'},
-					{name: 'inode_available', value: inode_available, type:'Integer'},
-					{name: 'inode_total', value: inode_total, type:'Integer'},
-					{name: 'inode_used', value: inode_used, type:'Integer'},
-					{name: 'options', value: options, type:'Text'},
-					{name: 'size_available', value: size_available, type:'Integer'},
-					{name: 'size_total', value: size_total, type:'Integer'},
-					{name: 'uuid', value: uuid, type:'Text'}
+					attribute('__name', join(':', [retrieve('fqdn'), mount])),
+					attribute('device', device),
+					attribute('mount', mount),
+					attribute('block_available', block_available, 'Integer'),
+					attribute('block_size', block_size, 'Integer'),
+					attribute('block_total', block_total, 'Integer'),
+					attribute('block_used', block_used, 'Integer'),
+					attribute('fstype', fstype),
+					attribute('inode_available', inode_available, 'Integer'),
+					attribute('inode_total', inode_total, 'Integer'),
+					attribute('inode_used', inode_used, 'Integer'),
+					attribute('options', options),
+					attribute('size_available', size_available, 'Integer'),
+					attribute('size_total', size_total, 'Integer'),
+					attribute('uuid', uuid)
 				]
 			},
 			values(filterHashKeys(map(&join('', ['ansible_', stringReplace(@, '-', '_')]), ansible_interfaces[]), @))[].{
 				tempID: ciid(retrieve('fqdn'), 'ansible_interfaces', idx('ansible_interfaces')),
-					idMethod: {
-						method: 'byData',
-						attributes: ['__name']
-					},
+				idMethod: idMethodByData(['__name']),
 				attributes: [
-					{name: '__name', value: join('', ['Network Interface ', device, '@', retrieve('fqdn')]), type:'Text'},
-					{name: 'device', value: device, type:'Text'},
-					{name: 'active', value: to_string(active), type:'Text'},
-					{name: 'type', value: type, type:'Text'},
-					macaddress.{name: 'macaddress', value: @, type:'Text'}
+					attribute('__name', join('', ['Network Interface ', device, '@', retrieve('fqdn')])),
+					attribute('device', device),
+					attribute('active', to_string(active)),
+					attribute('type', type),
+					attribute('macaddress', macaddress)
 				] | []
 			}
 		] | [],
 		relations: [
-			map(&{from: ciid(retrieve('fqdn')), predicate: 'has_mounted_device', to: ciid(retrieve('fqdn'), 'ansible_mounts', idx('ansible_mounts_redo'))}, data.ansible_facts.ansible_mounts[]),
-			map(&{from: ciid(retrieve('fqdn')), predicate: 'has_network_interface', to: ciid(retrieve('fqdn'), 'ansible_interfaces', idx('ansible_interfaces_redo'))}, data.ansible_facts.ansible_interfaces[])
+			map(&relation(ciid(retrieve('fqdn')), 'has_mounted_device', ciid(retrieve('fqdn'), 'ansible_mounts', idx('ansible_mounts_redo'))), data.ansible_facts.ansible_mounts[]),
+			map(&relation(ciid(retrieve('fqdn')), 'has_network_interface', ciid(retrieve('fqdn'), 'ansible_interfaces', idx('ansible_interfaces_redo'))), data.ansible_facts.ansible_interfaces[])
 		] | []
 	},
 
@@ -90,12 +81,9 @@ namespace OKPluginGenericJSONIngest
 		fqdn: store('fqdn', regexMatch('yum_installed_(.*).json', document) | [1]),
 		cis: data.[{
 			tempID: ciid(retrieve('fqdn'), 'yum_installed'),
-			idMethod: {
-				method: 'byTempID',
-				tempID: ciid(retrieve('fqdn'))
-			},
+			idMethod: idMethodByTempID(ciid(retrieve('fqdn'))),
 			attributes: [
-				{name: 'yum.installed', value: results, type: 'JSON'}
+				attribute('yum.installed', results, 'JSON')
 			]
 		}]
 	},
@@ -103,12 +91,9 @@ namespace OKPluginGenericJSONIngest
 		fqdn: store('fqdn', regexMatch('yum_repos_(.*).json', document) | [1]),
 		cis: data.[{
 			tempID: ciid(retrieve('fqdn'), 'yum_repos'),
-			idMethod: {
-				method: 'byTempID',
-				tempID: ciid(retrieve('fqdn'))
-			},
+			idMethod: idMethodByTempID(ciid(retrieve('fqdn'))),
 			attributes: [
-				{name: 'yum.repos', value: results, type: 'JSON'}
+				attribute('yum.repos', results, 'JSON')
 			]
 		}]
 	},
@@ -116,12 +101,9 @@ namespace OKPluginGenericJSONIngest
 		fqdn: store('fqdn', regexMatch('yum_updates_(.*).json', document) | [1]),
 		cis: data.[{
 			tempID: ciid(retrieve('fqdn'), 'yum_updates'),
-			idMethod: {
-				method: 'byTempID',
-				tempID: ciid(retrieve('fqdn'))
-			},
+			idMethod: idMethodByTempID(ciid(retrieve('fqdn'))),
 			attributes: [
-				{name: 'yum.updates', value: results, type: 'JSON'}
+				attribute('yum.updates', results, 'JSON')
 			]
 		}]
 	}
