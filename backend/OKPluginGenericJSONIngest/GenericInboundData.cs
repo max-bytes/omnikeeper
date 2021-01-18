@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using OKPluginGenericJSONIngest.JMESPath;
+using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
@@ -24,6 +24,7 @@ namespace OKPluginGenericJSONIngest
     {
         public string method; // TODO: should be made generic
         public string[] attributes;
+        public string tempID;
     }
 
     public class GenericInboundAttribute

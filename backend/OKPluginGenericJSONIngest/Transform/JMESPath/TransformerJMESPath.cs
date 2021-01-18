@@ -3,11 +3,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 
-namespace OKPluginGenericJSONIngest.JMESPath
+namespace OKPluginGenericJSONIngest.Transform.JMESPath
 {
     public class TransformerJMESPath
     {
-        public GenericInboundData Transform(IDictionary<string, JToken> documents, TransformerConfigJMESPath config)
+        public GenericInboundData Transform(IDictionary<string, JToken> documents, TransformConfigJMESPath config)
         {
             var input = Documents2JSON(documents);
             var resultJson = TransformJSON(input, config);
@@ -16,7 +16,11 @@ namespace OKPluginGenericJSONIngest.JMESPath
 
         public GenericInboundData DeserializeJson(string resultJson)
         {
-            return JsonConvert.DeserializeObject<GenericInboundData>(resultJson);
+            var settings = new JsonSerializerSettings
+            {
+                DateParseHandling = DateParseHandling.None // TODO: move?
+            };
+            return JsonConvert.DeserializeObject<GenericInboundData>(resultJson, settings);
         }
 
         public JArray Documents2JSON(IDictionary<string, JToken> documents)
@@ -33,7 +37,7 @@ namespace OKPluginGenericJSONIngest.JMESPath
             return input;
         }
 
-        public string TransformJSON(JArray input, TransformerConfigJMESPath config)
+        public string TransformJSON(JArray input, TransformConfigJMESPath config)
         {
             var tmpValues = new Dictionary<string, string>();
 

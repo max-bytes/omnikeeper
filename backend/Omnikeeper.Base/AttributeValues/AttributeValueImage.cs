@@ -39,12 +39,16 @@ namespace Omnikeeper.Entity.AttributeValues
         }
     }
 
-    [ProtoContract(SkipConstructor = true)]
+    [ProtoContract]
     public class AttributeArrayValueImage : AttributeArrayValue<AttributeScalarValueImage, BinaryScalarAttributeValueProxy>
     {
         protected AttributeArrayValueImage(AttributeScalarValueImage[] values) : base(values)
         {
         }
+
+#pragma warning disable CS8618
+        protected AttributeArrayValueImage() { }
+#pragma warning restore CS8618
 
         public override AttributeValueType Type => AttributeValueType.Image;
 

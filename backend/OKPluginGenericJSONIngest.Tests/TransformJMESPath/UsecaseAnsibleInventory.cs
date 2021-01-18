@@ -4,8 +4,7 @@ using Microsoft.DotNet.InternalAbstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
-using OKPluginAnsibleInventoryScanIngest;
-using OKPluginGenericJSONIngest.JMESPath;
+using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.IO;
@@ -20,40 +19,44 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
             var documents = new Dictionary<string, JToken>()
             {
                 {
-                    "setup_facts_h1jmplx01.mhx.at", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                    "setup_facts_h1jmplx01.mhx.at.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                         "data", "usecase_ansible_inventory", "setup_facts_h1jmplx01.mhx.at.json"))) 
                 },
                 {
-                    "yum_installed_h1jmplx01.mhx.at", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                    "yum_installed_h1jmplx01.mhx.at.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                         "data", "usecase_ansible_inventory", "yum_installed_h1jmplx01.mhx.at.json")))
                 },
                 {
-                    "yum_repos_h1jmplx01.mhx.at", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                    "yum_repos_h1jmplx01.mhx.at.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                         "data", "usecase_ansible_inventory", "yum_repos_h1jmplx01.mhx.at.json")))
                 },
                 {
-                    "yum_updates_h1jmplx01.mhx.at", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                    "yum_updates_h1jmplx01.mhx.at.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                         "data", "usecase_ansible_inventory", "yum_updates_h1jmplx01.mhx.at.json")))
                 },
-                { 
-                    "setup_facts_h1lscapet01.mhx.local", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
+                {
+                    "setup_facts_h1lscapet01.mhx.local.json", JToken.Parse(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                         "data", "usecase_ansible_inventory", "setup_facts_h1lscapet01.mhx.local.json")))
                 }
             };
 
             var transformer = new TransformerJMESPath();
             var inputJSON = transformer.Documents2JSON(documents);
-            var genericInboundDataJson = transformer.TransformJSON(inputJSON, new TransformerConfigJMESPath(JMESPathExpression.Expression));
+            var genericInboundDataJson = transformer.TransformJSON(inputJSON, new TransformConfigJMESPath(AnsibleInventoryScanJMESPathExpression.Expression));
 
             File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                 "data", "usecase_ansible_inventory", "output_intermediate.json"), JToken.Parse(genericInboundDataJson).ToString(Formatting.Indented));
 
             var result = transformer.DeserializeJson(genericInboundDataJson);
 
-            var tmp = JsonConvert.SerializeObject(result);
+            //var tmp = JsonConvert.SerializeObject(result);
 
+            var settings = new JsonSerializerSettings
+            {
+                DateParseHandling = DateParseHandling.None // TODO: move?
+            };
             var expected = JsonConvert.DeserializeObject<GenericInboundData>(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
-                        "data", "usecase_ansible_inventory", "expected.json")));
+                        "data", "usecase_ansible_inventory", "expected.json")), settings);
 
             result.Should().BeEquivalentTo(expected);
 

@@ -110,7 +110,7 @@ namespace Tests.Ingest
 
         private async Task<ActionResult> PerformIngest(AnsibleInventoryScanIngestController controller, string[] hosts, Layer insertLayer, LayerSet searchLayerSet)
         {
-            var setupFacts = hosts.ToDictionary(fqdn => fqdn, fqdn =>
+            var setupFacts = hosts.ToDictionary(fqdn => $"{fqdn}.json", fqdn =>
             {
                 var f = LoadFile($"{fqdn}\\setup_facts.json");
                 var jo = JObject.Parse(f);

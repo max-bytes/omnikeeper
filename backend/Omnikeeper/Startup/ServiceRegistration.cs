@@ -4,6 +4,7 @@ using GraphQL.Types;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
+using OKPluginGenericJSONIngest;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
@@ -190,6 +191,8 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IOIAContextModel, OIAContextModel>();
             services.AddSingleton<IGridViewContextModel, GridViewContextModel>();
             services.AddSingleton<IPartitionModel, PartitionModel>();
+
+            services.AddSingleton<IContextModel, ContextModel>(); // TODO: this is in a plugin -> move?
 
             // these aren't real models, but we keep them here because they are closely related to models
             services.AddSingleton<ITraitsProvider, TraitsProvider>();

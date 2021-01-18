@@ -8,17 +8,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace OKPluginGenericJSONIngest
+namespace OKPluginGenericJSONIngest.Load
 {
     public class Preparer
     {
-        //private readonly ILogger logger;
-
-        //public Loader(ILogger logger)
-        //{
-        //    this.logger = logger;
-        //}
-
         private CICandidateAttributeData.Fragment GenericAttribute2Fragment(GenericInboundAttribute a)
         {
             var value = AttributeValueBuilder.BuildFromTypeAndObject(a.type, a.value);
@@ -35,8 +28,13 @@ namespace OKPluginGenericJSONIngest
                 var fragments = ci.attributes.Select(a => GenericAttribute2Fragment(a));
                 var attributes = new CICandidateAttributeData(fragments);
 
-                // id method, TODO: make dynamic, not hardcoded to CIIdentificationMethodByData
-                var idMethod = CIIdentificationMethodByData.BuildFromAttributes(ci.idMethod.attributes, attributes, searchLayers);
+                // id method, TODO: make proper, not via fields that have different meanings depending on .method
+                ICIIdentificationMethod idMethod = ci.idMethod.method switch
+                {
+                    "byData" => CIIdentificationMethodByData.BuildFromAttributes(ci.idMethod.attributes, attributes, searchLayers),
+                    "byTempID" => CIIdentificationMethodByTemporaryCIID.Build(tempCIIDMapping.GetValueOrDefault(ci.idMethod.tempID)),
+                    _ => throw new Exception($"Invalid idMethod \"{ci.idMethod.method}\" for ci candidate \"{ci.tempID}\" encountered")
+                };
 
                 var tempGuid = Guid.NewGuid();
                 tempCIIDMapping.TryAdd(ci.tempID, tempGuid);

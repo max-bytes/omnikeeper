@@ -61,12 +61,16 @@ namespace Omnikeeper.Entity.AttributeValues
             => CultureInfo.InvariantCulture.CompareInfo.IndexOf(Value, searchString, compareOptions) >= 0;
     }
 
-    [ProtoContract(SkipConstructor = true)]
+    [ProtoContract]
     public class AttributeArrayValueText : AttributeArrayValue<AttributeScalarValueText, string>, IAttributeValueText
     {
         protected AttributeArrayValueText(AttributeScalarValueText[] values) : base(values)
         {
         }
+
+#pragma warning disable CS8618
+        protected AttributeArrayValueText() { }
+#pragma warning restore CS8618
 
         public override AttributeValueType Type => Values.Any(v => v.Multiline) ? AttributeValueType.MultilineText : AttributeValueType.Text;
 

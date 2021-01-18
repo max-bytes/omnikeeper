@@ -58,22 +58,22 @@ namespace PerfTests
         [Benchmark]
         public byte[] SerializeScalarTextOld() => binaryFormatterDS.ToByteArray(aScalarText);
         [Benchmark]
-        public CIAttribute DeserializeScalarTextOld() => binaryFormatterDS.FromByteArray<CIAttribute>(bOldAttributeScalarText);
+        public CIAttribute DeserializeScalarTextOld() => binaryFormatterDS.FromByteArray<CIAttribute>(bOldAttributeScalarText)!;
 
         [Benchmark]
         public byte[] SerializeScalarText() => protoBufDS.ToByteArray(aScalarText);
         [Benchmark]
-        public CIAttribute DeserializeScalarText() => protoBufDS.FromByteArray<CIAttribute>(bAttributeScalarText);
+        public CIAttribute DeserializeScalarText() => protoBufDS.FromByteArray<CIAttribute>(bAttributeScalarText)!;
 
         [Benchmark]
         public byte[] SerializeScalarYAML() => protoBufDS.ToByteArray(aScalarYAML);
         [Benchmark]
-        public CIAttribute DeserializeScalarYAML() => protoBufDS.FromByteArray<CIAttribute>(bAttributeScalarYAML);
+        public CIAttribute DeserializeScalarYAML() => protoBufDS.FromByteArray<CIAttribute>(bAttributeScalarYAML)!;
 
         [Benchmark]
         public byte[] SerializeScalarJSON() => protoBufDS.ToByteArray(aScalarJSON);
         [Benchmark]
-        public CIAttribute DeserializeScalarJSON() => protoBufDS.FromByteArray<CIAttribute>(bAttributeScalarJSON);
+        public CIAttribute DeserializeScalarJSON() => protoBufDS.FromByteArray<CIAttribute>(bAttributeScalarJSON)!;
 
         [Test]
         public void Run()

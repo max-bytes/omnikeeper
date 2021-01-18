@@ -36,12 +36,16 @@ namespace Omnikeeper.Entity.AttributeValues
 
     }
 
-    [ProtoContract(SkipConstructor = true)]
+    [ProtoContract]
     public class AttributeArrayValueInteger : AttributeArrayValue<AttributeScalarValueInteger, long>
     {
         public AttributeArrayValueInteger(AttributeScalarValueInteger[] values) : base(values)
         {
         }
+
+#pragma warning disable CS8618
+        protected AttributeArrayValueInteger() { }
+#pragma warning restore CS8618
 
         public override AttributeValueType Type => AttributeValueType.Integer;
 

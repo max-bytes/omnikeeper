@@ -98,12 +98,16 @@ namespace Omnikeeper.Entity.AttributeValues
     }
 
 
-    [ProtoContract(SkipConstructor = true)]
+    [ProtoContract]
     public class AttributeArrayValueYAML : AttributeArrayValue<AttributeScalarValueYAML, YamlDocument>
     {
         public AttributeArrayValueYAML(AttributeScalarValueYAML[] values) : base(values)
         {
         }
+
+#pragma warning disable CS8618
+        protected AttributeArrayValueYAML() { }
+#pragma warning restore CS8618
 
         public override AttributeValueType Type => AttributeValueType.YAML;
 

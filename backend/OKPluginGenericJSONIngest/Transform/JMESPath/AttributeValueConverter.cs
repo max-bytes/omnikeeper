@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace OKPluginGenericJSONIngest.JMESPath
+namespace OKPluginGenericJSONIngest.Transform.JMESPath
 {
     // NOTE: this converter exists so that the attribute value is - when it comes in as an array - properly deserialized into an array of X
     // (where X is the type of the item of the array)
@@ -23,7 +23,7 @@ namespace OKPluginGenericJSONIngest.JMESPath
                     array.Add(item);
                     reader.Read();
                 }
-                return array;
+                return array.ToArray();
             }
             else
                 return serializer.Deserialize(reader, objectType);

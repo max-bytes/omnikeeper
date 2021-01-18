@@ -24,19 +24,19 @@ namespace PerfTests
         [Benchmark]
         public async Task GetMergedCIsWithTrait()
         {
-            using var mc = modelContextBuilder.BuildImmediate();
+            using var mc = modelContextBuilder!.BuildImmediate();
             var ciSelection = (SpecificCIs) ? selectedCIIDs : new AllCIIDsSelection();
-            (await effectiveTraitModel.GetMergedCIsWithTrait(traitHost, layerset, ciSelection, mc, time)).Consume(consumer);
+            (await effectiveTraitModel!.GetMergedCIsWithTrait(traitHost!, layerset!, ciSelection!, mc, time)).Consume(consumer);
         }
         [GlobalCleanup(Target = nameof(GetMergedCIsWithTrait))]
         public void TearDownT() => TearDown();
 
-        private IEffectiveTraitModel effectiveTraitModel;
-        private IModelContextBuilder modelContextBuilder;
-        private Trait traitHost;
-        private LayerSet layerset;
+        private IEffectiveTraitModel? effectiveTraitModel;
+        private IModelContextBuilder? modelContextBuilder;
+        private Trait? traitHost;
+        private LayerSet? layerset;
         private TimeThreshold time;
-        private ICIIDSelection selectedCIIDs;
+        private ICIIDSelection? selectedCIIDs;
         private readonly Consumer consumer = new Consumer();
 
         [ParamsSource(nameof(AttributeCITuples))]
@@ -71,7 +71,7 @@ namespace PerfTests
             {
                 // NOTE: this is a pretty hacky way to get the decorator and set the flag, but it does the job... 
                 var cachedBaseAttributeModel = ServiceProvider.GetRequiredService<IBaseAttributeModel>() as CachingBaseAttributeModel;
-                cachedBaseAttributeModel.CachingEnabledForGetAttributes = WithCachingForGetAttributes;
+                cachedBaseAttributeModel!.CachingEnabledForGetAttributes = WithCachingForGetAttributes;
             }
 
             using var mc = modelContextBuilder.BuildImmediate();

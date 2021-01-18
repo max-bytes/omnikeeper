@@ -21,6 +21,11 @@
                 },
                 {
                     "name": "os_family",
+                    "value": "CentOS",
+                    "type": 0
+                },
+                {
+                    "name": "architecture",
                     "value": "x86_64",
                     "type": 0
                 },
@@ -184,11 +189,6 @@
                     "type": 2
                 },
                 {
-                    "name": "device",
-                    "value": "/dev/sda1",
-                    "type": 0
-                },
-                {
                     "name": "fstype",
                     "value": "xfs",
                     "type": 0
@@ -207,11 +207,6 @@
                     "name": "inode_used",
                     "value": 332,
                     "type": 2
-                },
-                {
-                    "name": "mount",
-                    "value": "/boot",
-                    "type": 0
                 },
                 {
                     "name": "options",
@@ -282,11 +277,6 @@
                     "type": 2
                 },
                 {
-                    "name": "device",
-                    "value": "/dev/mapper/vg_data-lv_data",
-                    "type": 0
-                },
-                {
                     "name": "fstype",
                     "value": "xfs",
                     "type": 0
@@ -305,11 +295,6 @@
                     "name": "inode_used",
                     "value": 20,
                     "type": 2
-                },
-                {
-                    "name": "mount",
-                    "value": "/data",
-                    "type": 0
                 },
                 {
                     "name": "options",
@@ -421,6 +406,11 @@
                 },
                 {
                     "name": "os_family",
+                    "value": "CentOS",
+                    "type": 0
+                },
+                {
+                    "name": "architecture",
                     "value": "x86_64",
                     "type": 0
                 },
@@ -583,11 +573,6 @@
                     "type": 2
                 },
                 {
-                    "name": "device",
-                    "value": "/dev/mapper/vg_data-lv_docker",
-                    "type": 0
-                },
-                {
                     "name": "fstype",
                     "value": "xfs",
                     "type": 0
@@ -606,11 +591,6 @@
                     "name": "inode_used",
                     "value": 232473,
                     "type": 2
-                },
-                {
-                    "name": "mount",
-                    "value": "/var/lib/docker",
-                    "type": 0
                 },
                 {
                     "name": "options",
@@ -681,11 +661,6 @@
                     "type": 2
                 },
                 {
-                    "name": "device",
-                    "value": "/dev/sda1",
-                    "type": 0
-                },
-                {
                     "name": "fstype",
                     "value": "xfs",
                     "type": 0
@@ -704,11 +679,6 @@
                     "name": "inode_used",
                     "value": 332,
                     "type": 2
-                },
-                {
-                    "name": "mount",
-                    "value": "/boot",
-                    "type": 0
                 },
                 {
                     "name": "options",
@@ -769,24 +739,12 @@
             ]
         },
         {
-            "tempID": "tempCIID>h1jmplx01.mhx.at",
+            "tempID": "tempCIID>h1jmplx01.mhx.at>yum_installed",
             "idMethod": {
-                "method": "byData",
-                "attributes": [
-                    "fqdn"
-                ]
+                "method": "byTempID",
+                "tempID": "tempCIID>h1jmplx01.mhx.at"
             },
             "attributes": [
-                {
-                    "name": "__name",
-                    "value": "h1jmplx01.mhx.at",
-                    "type": 0
-                },
-                {
-                    "name": "fqdn",
-                    "value": "h1jmplx01.mhx.at",
-                    "type": 0
-                },
                 {
                     "name": "yum.installed",
                     "value": [
@@ -806,24 +764,12 @@
             ]
         },
         {
-            "tempID": "tempCIID>h1jmplx01.mhx.at",
+            "tempID": "tempCIID>h1jmplx01.mhx.at>yum_repos",
             "idMethod": {
-                "method": "byData",
-                "attributes": [
-                    "fqdn"
-                ]
+                "method": "byTempID",
+                "tempID": "tempCIID>h1jmplx01.mhx.at"
             },
             "attributes": [
-                {
-                    "name": "__name",
-                    "value": "h1jmplx01.mhx.at",
-                    "type": 0
-                },
-                {
-                    "name": "fqdn",
-                    "value": "h1jmplx01.mhx.at",
-                    "type": 0
-                },
                 {
                     "name": "yum.repos",
                     "value": [
@@ -849,24 +795,12 @@
             ]
         },
         {
-            "tempID": "tempCIID>h1jmplx01.mhx.at",
+            "tempID": "tempCIID>h1jmplx01.mhx.at>yum_updates",
             "idMethod": {
-                "method": "byData",
-                "attributes": [
-                    "fqdn"
-                ]
+                "method": "byTempID",
+                "tempID": "tempCIID>h1jmplx01.mhx.at"
             },
             "attributes": [
-                {
-                    "name": "__name",
-                    "value": "h1jmplx01.mhx.at",
-                    "type": 0
-                },
-                {
-                    "name": "fqdn",
-                    "value": "h1jmplx01.mhx.at",
-                    "type": 0
-                },
                 {
                     "name": "yum.updates",
                     "value": [

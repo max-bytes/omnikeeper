@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace OKPluginAnsibleInventoryScanIngest
+namespace OKPluginGenericJSONIngest
 {
-    public static class JMESPathExpression
+	// TODO: move/replace with config
+    public static class AnsibleInventoryScanJMESPathExpression
     {
         public static readonly string Expression = @"
 [
-	[?regexIsMatch('setup_facts_.*', document)] | [].{
-		fqdn: store('fqdn', regexMatch('setup_facts_(.*)', document) | [1]),
+	[?regexIsMatch('setup_facts_.*.json', document)] | [].{
+		fqdn: store('fqdn', regexMatch('setup_facts_(.*).json', document) | [1]),
 		cis: data.ansible_facts.[
 			{
 				tempID: ciid(retrieve('fqdn')),
@@ -20,9 +21,10 @@ namespace OKPluginAnsibleInventoryScanIngest
 				attributes: [
 					{name: '__name', value:ansible_fqdn, type:'Text'},
 					{name: 'fqdn', value:ansible_fqdn, type:'Text'},
-					{name: 'os_family', value:ansible_architecture, type:'Text'},
+					{name: 'os_family', value:ansible_distribution, type:'Text'},
+					{name: 'architecture', value:ansible_architecture, type:'Text'},
 					{name: 'ansible.inventory.cmdline', value:ansible_cmdline, type:'JSON'},
-					{name: 'ansible.inventory.last_scan_time', value:ansible_date_time.iso8601, type:'Text'},
+					{name: 'ansible.inventory.last_scan_time', value:to_string(ansible_date_time.iso8601), type:'Text'},
 					{name: 'default_ipv4', value:ansible_default_ipv4, type:'JSON'},
 					{name: 'hostname', value: ansible_hostname, type:'Text'},
 					{name: 'distribution', value: ansible_distribution, type:'Text'},
@@ -53,12 +55,10 @@ namespace OKPluginAnsibleInventoryScanIngest
 					{name: 'block_size', value: block_size, type:'Integer'},
 					{name: 'block_total', value: block_total, type:'Integer'},
 					{name: 'block_used', value: block_used, type:'Integer'},
-					{name: 'device', value: device, type:'Text'},
 					{name: 'fstype', value: fstype, type:'Text'},
 					{name: 'inode_available', value: inode_available, type:'Integer'},
 					{name: 'inode_total', value: inode_total, type:'Integer'},
 					{name: 'inode_used', value: inode_used, type:'Integer'},
-					{name: 'mount', value: mount, type:'Text'},
 					{name: 'options', value: options, type:'Text'},
 					{name: 'size_available', value: size_available, type:'Integer'},
 					{name: 'size_total', value: size_total, type:'Integer'},
@@ -86,47 +86,41 @@ namespace OKPluginAnsibleInventoryScanIngest
 		] | []
 	},
 
-	[?regexIsMatch('yum_installed_.*', document)] | [].{
-		fqdn: store('fqdn', regexMatch('yum_installed_(.*)', document) | [1]),
+	[?regexIsMatch('yum_installed_.*.json', document)] | [].{
+		fqdn: store('fqdn', regexMatch('yum_installed_(.*).json', document) | [1]),
 		cis: data.[{
-			tempID: ciid(retrieve('fqdn')),
+			tempID: ciid(retrieve('fqdn'), 'yum_installed'),
 			idMethod: {
-				method: 'byData',
-				attributes: ['fqdn']
+				method: 'byTempID',
+				tempID: ciid(retrieve('fqdn'))
 			},
 			attributes: [
-				{name: '__name', value: retrieve('fqdn'), type: 'Text'},
-				{name: 'fqdn', value: retrieve('fqdn'), type: 'Text'},
 				{name: 'yum.installed', value: results, type: 'JSON'}
 			]
 		}]
 	},
-	[?regexIsMatch('yum_repos_.*', document)] | [].{
-		fqdn: store('fqdn', regexMatch('yum_repos_(.*)', document) | [1]),
+	[?regexIsMatch('yum_repos_.*.json', document)] | [].{
+		fqdn: store('fqdn', regexMatch('yum_repos_(.*).json', document) | [1]),
 		cis: data.[{
-			tempID: ciid(retrieve('fqdn')),
+			tempID: ciid(retrieve('fqdn'), 'yum_repos'),
 			idMethod: {
-				method: 'byData',
-				attributes: ['fqdn']
+				method: 'byTempID',
+				tempID: ciid(retrieve('fqdn'))
 			},
 			attributes: [
-				{name: '__name', value: retrieve('fqdn'), type: 'Text'},
-				{name: 'fqdn', value: retrieve('fqdn'), type: 'Text'},
 				{name: 'yum.repos', value: results, type: 'JSON'}
 			]
 		}]
 	},
-	[?regexIsMatch('yum_updates_.*', document)] | [].{
-		fqdn: store('fqdn', regexMatch('yum_updates_(.*)', document) | [1]),
+	[?regexIsMatch('yum_updates_.*.json', document)] | [].{
+		fqdn: store('fqdn', regexMatch('yum_updates_(.*).json', document) | [1]),
 		cis: data.[{
-			tempID: ciid(retrieve('fqdn')),
+			tempID: ciid(retrieve('fqdn'), 'yum_updates'),
 			idMethod: {
-				method: 'byData',
-				attributes: ['fqdn']
+				method: 'byTempID',
+				tempID: ciid(retrieve('fqdn'))
 			},
 			attributes: [
-				{name: '__name', value: retrieve('fqdn'), type: 'Text'},
-				{name: 'fqdn', value: retrieve('fqdn'), type: 'Text'},
 				{name: 'yum.updates', value: results, type: 'JSON'}
 			]
 		}]

@@ -3,7 +3,7 @@ using Microsoft.DotNet.InternalAbstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
-using OKPluginGenericJSONIngest.JMESPath;
+using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.IO;
@@ -21,7 +21,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                 "data", "usecase_array", "expression.jmes"));
 
             var transformer = new TransformerJMESPath();
-            var result = transformer.Transform(documents, new TransformerConfigJMESPath(expression));
+            var result = transformer.Transform(documents, new TransformConfigJMESPath(expression));
 
             // test that attribute values that are arrays are also properly deserialized 
             var expected = new GenericInboundData
