@@ -1,0 +1,14 @@
+﻿{
+	cis: [
+		{
+			tempID: ciid(),
+			idMethod: idMethodByData(['foo']),
+			attributes: [
+				attribute('textscalar', 'value 1'),
+				attribute('textarray', ['value 1', 'value 2']),
+				attribute('jsonarray', [{foo: 'bar', blub: 'bla'}, {foo2: 'bar2', blub2: 'bla2'}], 'JSON')
+			]
+		}
+	],
+	relations: []
+}

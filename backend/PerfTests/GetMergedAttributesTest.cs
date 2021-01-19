@@ -18,7 +18,7 @@ namespace PerfTests
     {
         private List<Guid> ciNames = new List<Guid>();
         private List<string> layerNames = new List<string>();
-        private IModelContextBuilder modelContextBuilder;
+        private IModelContextBuilder? modelContextBuilder;
 
         [SetUp]
         public void Setup()
@@ -103,7 +103,7 @@ namespace PerfTests
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
             var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
 
-            using var mc = modelContextBuilder.BuildDeferred();
+            using var mc = modelContextBuilder!.BuildDeferred();
 
             var layerset = layerModel.BuildLayerSet(layerNames.ToArray(), mc).GetAwaiter().GetResult();
 

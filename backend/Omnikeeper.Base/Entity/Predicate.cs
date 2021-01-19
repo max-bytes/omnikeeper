@@ -60,7 +60,7 @@ namespace Omnikeeper.Base.Entity
         public override int GetHashCode() => HashCode.Combine(PredicateID, Wording, PredicateState, Forward);
     }
 
-    [ProtoContract(SkipConstructor = true)]
+    [ProtoContract]
     public class PredicateConstraints
     {
         [ProtoMember(1)] public readonly string[] PreferredTraitsTo;

@@ -94,12 +94,16 @@ namespace Omnikeeper.Entity.AttributeValues
         }
     }
 
-    [ProtoContract(SkipConstructor = true)]
+    [ProtoContract]
     public class AttributeArrayValueJSON : AttributeArrayValue<AttributeScalarValueJSON, JToken>
     {
         protected AttributeArrayValueJSON(AttributeScalarValueJSON[] values) : base(values)
         {
         }
+
+#pragma warning disable CS8618
+        protected AttributeArrayValueJSON() { }
+#pragma warning restore CS8618
 
         public override AttributeValueType Type => AttributeValueType.JSON;
 

@@ -157,6 +157,7 @@ namespace Omnikeeper.Base.Service
         {
             return new CIIdentificationMethodByTemporaryCIID() { CIID = ciid };
         }
+        private CIIdentificationMethodByTemporaryCIID() { }
     }
     public class CIIdentificationMethodByCIID : ICIIdentificationMethod
     {
@@ -165,6 +166,7 @@ namespace Omnikeeper.Base.Service
         {
             return new CIIdentificationMethodByCIID() { CIID = ciid };
         }
+        private CIIdentificationMethodByCIID() { }
     }
 
     public class CIIdentificationMethodNoop : ICIIdentificationMethod

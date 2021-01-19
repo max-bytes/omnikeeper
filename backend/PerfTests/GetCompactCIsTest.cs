@@ -23,8 +23,8 @@ namespace PerfTests
         [Benchmark]
         public async Task GetCompactCIs()
         {
-            using var mc = modelContextBuilder.BuildImmediate();
-            (await ciModel.GetCompactCIs(new AllCIIDsSelection(), layerset, mc, time)).Consume(consumer);
+            using var mc = modelContextBuilder!.BuildImmediate();
+            (await ciModel!.GetCompactCIs(new AllCIIDsSelection(), layerset!, mc, time)).Consume(consumer);
         }
         [GlobalCleanup(Target = nameof(GetCompactCIs))]
         public void TearDown1() => TearDown();
@@ -35,15 +35,15 @@ namespace PerfTests
         [Benchmark]
         public async Task GetCompactCIsWithoutCaching()
         {
-            using var mc = modelContextBuilder.BuildImmediate();
-            (await ciModel.GetCompactCIs(new AllCIIDsSelection(), layerset, mc, time)).Consume(consumer);
+            using var mc = modelContextBuilder!.BuildImmediate();
+            (await ciModel!.GetCompactCIs(new AllCIIDsSelection(), layerset!, mc, time)).Consume(consumer);
         }
         [GlobalCleanup(Target = nameof(GetCompactCIsWithoutCaching))]
         public void TearDownWithoutCaching() => TearDown();
 
-        private ICIModel ciModel;
-        private IModelContextBuilder modelContextBuilder;
-        private LayerSet layerset;
+        private ICIModel? ciModel;
+        private IModelContextBuilder? modelContextBuilder;
+        private LayerSet? layerset;
         private TimeThreshold time;
         private readonly Consumer consumer = new Consumer();
 

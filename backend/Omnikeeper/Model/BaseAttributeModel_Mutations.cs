@@ -110,8 +110,9 @@ namespace Omnikeeper.Model
             return (new CIAttribute(id, name, ciid, value, state, changeset.ID, origin), true);
         }
 
-        // NOTE: this bulk operation does not check if the attributes that are inserted are "unique":
-        // it is possible to insert the "same" attribute (same ciid, name and layer) multiple times
+        // NOTE: this bulk operation DOES check if the attributes that are inserted are "unique":
+        // it is not possible to insert the "same" attribute (same ciid, name and layer) multiple times
+        // if this operation detects a duplicate, an exception is thrown;
         // the caller is responsible for making sure there are no duplicates
         public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
@@ -125,6 +126,7 @@ namespace Omnikeeper.Model
             }).ToDictionary(a => a.InformationHash);
 
             var actualInserts = new List<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>();
+            var informationHashesToInsert = new HashSet<string>();
             foreach (var fragment in data.Fragments)
             {
                 var fullName = data.GetFullName(fragment);
@@ -132,7 +134,13 @@ namespace Omnikeeper.Model
                 var value = data.GetValue(fragment);
 
                 var informationHash = CIAttribute.CreateInformationHash(fullName, ciid);
-                // remove the current attribute from the list of attribute to remove
+                if (informationHashesToInsert.Contains(informationHash))
+                {
+                    throw new Exception($"Duplicate attribute fragment detected! Bulk insertion does not support duplicate attributes; attribute name: {fullName}, ciid: {ciid}");
+                }
+                informationHashesToInsert.Add(informationHash);
+
+                // remove the current attribute from the list of attributes to remove
                 outdatedAttributes.Remove(informationHash, out var currentAttribute);
 
                 var state = AttributeState.New;

@@ -1,0 +1,176 @@
+{
+  "cis": [
+    {
+      "tempID": "tempCIID>zone>mhx-consulting.at",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "id"
+        ],
+        "tempID": null
+      },
+      "attributes": [
+        {
+          "name": "id",
+          "value": 718656,
+          "type": 2
+        },
+        {
+          "name": "name",
+          "value": "mhx-consulting.at",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>zone>mhx.at",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "id"
+        ],
+        "tempID": null
+      },
+      "attributes": [
+        {
+          "name": "id",
+          "value": 742507,
+          "type": 2
+        },
+        {
+          "name": "name",
+          "value": "mhx.at",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>record>1569516122",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "id"
+        ],
+        "tempID": null
+      },
+      "attributes": [
+        {
+          "name": "id",
+          "value": 1569516122,
+          "type": 2
+        },
+        {
+          "name": "name",
+          "value": "mhx-consulting.at",
+          "type": 0
+        },
+        {
+          "name": "ttl",
+          "value": 86400,
+          "type": 2
+        },
+        {
+          "name": "type",
+          "value": "NS",
+          "type": 0
+        },
+        {
+          "name": "value",
+          "value": "ns1.he.net",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>record>1569516123",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "id"
+        ],
+        "tempID": null
+      },
+      "attributes": [
+        {
+          "name": "id",
+          "value": 1569516123,
+          "type": 2
+        },
+        {
+          "name": "name",
+          "value": "mhx-consulting.at",
+          "type": 0
+        },
+        {
+          "name": "ttl",
+          "value": 86400,
+          "type": 2
+        },
+        {
+          "name": "type",
+          "value": "NS",
+          "type": 0
+        },
+        {
+          "name": "value",
+          "value": "ns2.he.net",
+          "type": 0
+        }
+      ]
+    },
+    {
+      "tempID": "tempCIID>record>2569516148",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "id"
+        ],
+        "tempID": null
+      },
+      "attributes": [
+        {
+          "name": "id",
+          "value": 2569516148,
+          "type": 2
+        },
+        {
+          "name": "name",
+          "value": "mhx.at",
+          "type": 0
+        },
+        {
+          "name": "ttl",
+          "value": 86400,
+          "type": 2
+        },
+        {
+          "name": "type",
+          "value": "NS",
+          "type": 0
+        },
+        {
+          "name": "value",
+          "value": "ns-mhx1.he.net",
+          "type": 0
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "from": "tempCIID>record>1569516122",
+      "predicate": "assigned_to",
+      "to": "tempCIID>zone>mhx-consulting.at"
+    },
+    {
+      "from": "tempCIID>record>1569516123",
+      "predicate": "assigned_to",
+      "to": "tempCIID>zone>mhx-consulting.at"
+    },
+    {
+      "from": "tempCIID>record>2569516148",
+      "predicate": "assigned_to",
+      "to": "tempCIID>zone>mhx.at"
+    }
+  ]
+}

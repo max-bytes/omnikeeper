@@ -1,0 +1,27 @@
+﻿{
+	cis: [
+		[?document == 'listzones.json'] | [0].data[].{
+			tempID: ciid('zone',name),
+			idMethod: idMethodByData(['id']),
+			attributes: [
+				attribute('id', id, 'Integer'),
+				attribute('name', name)
+			]
+		},
+		[?regexIsMatch('listrecords.*json', document)].data[].{
+			tempID: ciid('record',id),
+			idMethod: idMethodByData(['id']),
+			attributes: [
+				attribute('id', id, 'Integer'),
+				attribute('name', name),
+				attribute('ttl', ttl, 'Integer'),
+				attribute('type', type),
+				attribute('value', value)
+			]
+		}
+	] | [],
+
+	relations: map(&{zone: store('zone', regexMatch('listrecords_(.*)\.json', document) | [1]), data: data[].[
+				relation(ciid('record',id), 'assigned_to', ciid('zone', retrieve('zone')))
+			] | []}.data, [?regexIsMatch('listrecords.*json', document)]) | []
+}

@@ -1,0 +1,44 @@
+{
+  "cis": [
+    {
+      "tempID": "tempCIID",
+      "idMethod": {
+        "method": "byData",
+        "attributes": [
+          "foo"
+        ],
+        "tempID": null
+      },
+      "attributes": [
+        {
+          "name": "textscalar",
+          "value": "value 1",
+          "type": 0
+        },
+        {
+          "name": "textarray",
+          "value": [
+            "value 1",
+            "value 2"
+          ],
+          "type": 0
+        },
+        {
+          "name": "jsonarray",
+          "value": [
+            {
+              "foo": "bar",
+              "blub": "bla"
+            },
+            {
+              "foo2": "bar2",
+              "blub2": "bla2"
+            }
+          ],
+          "type": 3
+        }
+      ]
+    }
+  ],
+  "relations": []
+}

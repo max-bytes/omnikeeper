@@ -64,7 +64,7 @@ namespace Tests.Ingest
             var predicateModel = new PredicateModel();
             var relationModel = new RelationModel(new BaseRelationModel(predicateModel, partitionModel));
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
-            var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel), relationModel, new CIMappingService());
+            var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel), relationModel, new CIMappingService(), modelContextBuilder, NullLogger<IngestDataService>.Instance);
 
             var mc = modelContextBuilder.BuildImmediate();
 
@@ -110,7 +110,7 @@ namespace Tests.Ingest
 
         private async Task<ActionResult> PerformIngest(AnsibleInventoryScanIngestController controller, string[] hosts, Layer insertLayer, LayerSet searchLayerSet)
         {
-            var setupFacts = hosts.ToDictionary(fqdn => fqdn, fqdn =>
+            var setupFacts = hosts.ToDictionary(fqdn => $"{fqdn}.json", fqdn =>
             {
                 var f = LoadFile($"{fqdn}\\setup_facts.json");
                 var jo = JObject.Parse(f);

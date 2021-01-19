@@ -50,7 +50,7 @@ namespace Omnikeeper.Entity.AttributeValues
         public S[] Values { get; }
     }
 
-    [ProtoContract(SkipConstructor = true)]
+    [ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
     [ProtoInclude(2, typeof(AttributeArrayValueImage))]
     [ProtoInclude(3, typeof(AttributeArrayValueInteger))]
     [ProtoInclude(4, typeof(AttributeArrayValueJSON))]
@@ -60,12 +60,16 @@ namespace Omnikeeper.Entity.AttributeValues
     {
         public S[] Values => values;
         [ProtoMember(1)]
-        private readonly S[] values;
+        private readonly S[] values = Array.Empty<S>();
 
         protected AttributeArrayValue(S[] values)
         {
             this.values = values;
         }
+
+#pragma warning disable CS8618
+        protected AttributeArrayValue() { }
+#pragma warning restore CS8618
 
         public abstract AttributeValueType Type { get; }
 
@@ -124,6 +128,90 @@ namespace Omnikeeper.Entity.AttributeValues
 
     public static class AttributeValueBuilder
     {
+        public static IAttributeValue BuildFromTypeAndObject(AttributeValueType type, object o)
+        {
+            switch (type)
+            {
+                case AttributeValueType.Text:
+                    {
+                        try
+                        {
+                            if (o.GetType().IsArray)
+                                return AttributeArrayValueText.BuildFromString((o as object[]).OfType<string>().ToArray(), false);
+                            else
+                                return new AttributeScalarValueText((o as string)!, false);
+                        }
+                        catch (Exception)
+                        {
+                            throw new Exception($"Could not build attribute value of type {type} from object {o}");
+                        }
+                    }
+                case AttributeValueType.MultilineText: 
+                    {
+                        try
+                        {
+                            if (o.GetType().IsArray)
+                                return AttributeArrayValueText.BuildFromString((o as object[]).OfType<string>().ToArray(), true);
+                            else
+                                return new AttributeScalarValueText((o as string)!, true);
+                        }
+                        catch (Exception)
+                        {
+                            throw new Exception($"Could not build attribute value of type {type} from object {o}");
+                        }
+                    }
+                case AttributeValueType.Integer: 
+                    {
+                        try
+                        {
+                            if (o.GetType().IsArray)
+                                return AttributeArrayValueInteger.Build((o as object[]).OfType<long>().ToArray());
+                            else
+                                return new AttributeScalarValueInteger((o as long?)!.Value);
+                        }
+                        catch (Exception)
+                        {
+                            throw new Exception($"Could not build attribute value of type {type} from object {o}");
+                        }
+                    }
+                case AttributeValueType.JSON: 
+                    {
+                        try
+                        {
+                            if (o is JArray a)
+                                return AttributeArrayValueJSON.Build(a.Children().ToArray());
+                            else if (o is object[] oa)
+                                return AttributeArrayValueJSON.Build(oa.Select(t => t as JToken)!.ToArray()!);
+                            else
+                                return AttributeScalarValueJSON.Build((o as JToken)!);
+                        }
+                        catch (Exception)
+                        {
+                            throw new Exception($"Could not build attribute value of type {type} from object {o}");
+                        }
+                    }
+                case AttributeValueType.YAML: 
+                    {
+                        try
+                        {
+                            if (o.GetType().IsArray)
+                                return AttributeArrayValueYAML.BuildFromString((o as object[]).OfType<string>().ToArray());
+                            else
+                                return AttributeScalarValueYAML.BuildFromString((o as string)!);
+                        }
+                        catch (Exception)
+                        {
+                            throw new Exception($"Could not build attribute value of type {type} from object {o}");
+                        }
+                    }
+                case AttributeValueType.Image: 
+                    {
+                        throw new Exception("Building AttributeValueImage from type and object not allowed");
+                    }
+                default:
+                    throw new Exception($"Unknown type {type} encountered");
+            }
+        }
         public static IAttributeValue BuildFromDTO(AttributeValueDTO generic)
         {
             if (generic.IsArray)
