@@ -1,10 +1,11 @@
 ﻿using Keycloak.Net;
+using Newtonsoft.Json;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,8 +43,8 @@ namespace OKPluginOIAKeycloak
             CIAttribute BuildAttribute(string name, Guid ciid, IAttributeValue value, Guid changesetID)
             {
                 // create a deterministic, dependent guid from the ciid + attribute name + value
-                var id = GuidUtility.Create(ciid, name + layer.ID.ToString());// TODO: determine if we need to factor in value or not
-                return new CIAttribute(id, name, ciid, value, AttributeState.New, changesetID);
+                var id = GuidUtility.Create(ciid, name + layer.ID.ToString() + value.Value2String()); // NOTE: id must change when the value changes
+                return new CIAttribute(id, name, ciid, value, AttributeState.New, changesetID, new DataOriginV1(DataOriginType.InboundOnline));
             }
 
             yield return BuildAttribute(ICIModel.NameAttribute, ciid, new AttributeScalarValueText($"User {CIName}"), changesetID);
@@ -54,7 +55,7 @@ namespace OKPluginOIAKeycloak
             yield return BuildAttribute("keycloak.id", ciid, new AttributeScalarValueText(user.Id), changesetID);
 
             // roles
-            if (roleMappings != null)
+            if (roleMappings != null && roleMappings.ClientMappings != null)
             {
                 yield return BuildAttribute("keycloak.client_mappings", ciid, AttributeScalarValueJSON.BuildFromString(JsonConvert.SerializeObject(roleMappings.ClientMappings)), changesetID);
             }
@@ -85,18 +86,7 @@ namespace OKPluginOIAKeycloak
         {
             if (!atTime.IsLatest) yield break; // we don't have historic information
 
-            IEnumerable<Guid> GetCIIDs(ICIIDSelection selection)
-            {
-                return selection switch
-                {
-                    AllCIIDsSelection _ => mapper.GetAllCIIDs(),
-                    SpecificCIIDsSelection multiple => multiple.CIIDs,
-                    _ => throw new NotImplementedException()
-                };
-            }
-
-            var ciids = GetCIIDs(selection).ToHashSet();
-
+            var ciids = selection.GetCIIDs(() => mapper.GetAllCIIDs()).ToHashSet();
 
             foreach (var (ciid, externalID) in mapper.GetIDPairs(ciids))
             {
@@ -155,6 +145,21 @@ namespace OKPluginOIAKeycloak
                         {
                             var id = mapper.GetCIID(new ExternalIDString(user.Id));
                             if (id.HasValue)
+                            {
+                                foreach (var a in BuildAttributesFromUser(user, id.Value, null))
+                                    if (Regex.IsMatch(a.Name, regex)) // HACK: we are getting ALL attributes of the user and then discard many of them again
+                                        yield return a;
+                            }
+                        }
+                        break;
+                    }
+                case AllCIIDsExceptSelection allExcept:
+                    {
+                        var users = await client.GetUsersAsync(realm, true, null, null, null, null, 99999, null, null); // TODO, HACK: magic number, how to properly get all user IDs?
+                        foreach (var user in users)
+                        {
+                            var id = mapper.GetCIID(new ExternalIDString(user.Id));
+                            if (id.HasValue && allExcept.Contains(id.Value))
                             {
                                 foreach (var a in BuildAttributesFromUser(user, id.Value, null))
                                     if (Regex.IsMatch(a.Name, regex)) // HACK: we are getting ALL attributes of the user and then discard many of them again

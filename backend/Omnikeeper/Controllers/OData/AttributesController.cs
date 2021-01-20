@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNet.OData;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -135,8 +135,8 @@ namespace Omnikeeper.Controllers.OData
 
             test.CopyChangedValues(oldDTO);
             var @newDTO = oldDTO;
-            var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, new AttributeScalarValueText(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, trans);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+            var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, new AttributeScalarValueText(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
 
             var newMerged = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, readLayerset, trans, TimeThreshold.BuildLatest());
             if (newMerged == null) return BadRequest();
@@ -174,7 +174,7 @@ namespace Omnikeeper.Controllers.OData
             }
             else if (attribute.CIName != null && attribute.CIName != "")
             { // ciid not set, try to match using ci name, which is set
-                var foundCIs = (await ciSearchModel.FindCIsWithName(attribute.CIName, readLayerset, trans, timeThreshold)).ToList();
+                var foundCIs = (await ciSearchModel.FindCompactCIsWithName(attribute.CIName, readLayerset, trans, timeThreshold)).ToList();
                 if (foundCIs.Count == 0)
                 { // ok case, continue
                 }
@@ -188,14 +188,14 @@ namespace Omnikeeper.Controllers.OData
                 }
             }
 
-            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold.Time, changesetModel);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
             // check if the ciid exists, create if not
             if (!(await ciModel.CIIDExists(finalCIID, trans)))
             {
                 await ciModel.CreateCI(finalCIID, trans);
                 if (attribute.CIName != null && attribute.CIName != "")
-                    await attributeModel.InsertCINameAttribute(attribute.CIName, finalCIID, writeLayerID, changesetProxy, trans);
+                    await attributeModel.InsertCINameAttribute(attribute.CIName, finalCIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
             }
             else
             { // ci exists already, make sure either name is not set or it matches already present name
@@ -207,7 +207,7 @@ namespace Omnikeeper.Controllers.OData
                 }
             }
 
-            var created = await attributeModel.InsertAttribute(attribute.AttributeName, new AttributeScalarValueText(attribute.Value), finalCIID, writeLayerID, changesetProxy, trans);
+            var created = await attributeModel.InsertAttribute(attribute.AttributeName, new AttributeScalarValueText(attribute.Value), finalCIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
 
             var nameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, finalCIID, readLayerset, trans, timeThreshold);
             var createdMerged = await attributeModel.GetMergedAttribute(attribute.AttributeName, finalCIID, readLayerset, trans, TimeThreshold.BuildLatest());
@@ -229,7 +229,7 @@ namespace Omnikeeper.Controllers.OData
                 if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
                     return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
-                var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
+                var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
                 await attributeModel.RemoveAttribute(keyAttributeName, keyCIID, writeLayerID, changesetProxy, trans);
                 trans.Commit();
             }

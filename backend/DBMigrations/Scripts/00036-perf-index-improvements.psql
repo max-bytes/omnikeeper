@@ -1,0 +1,5 @@
+DROP INDEX attribute_layer_id_name_timestamp_idx;
+CREATE INDEX
+    ON public.attribute USING btree
+    (layer_id ASC NULLS LAST, name COLLATE pg_catalog."default" text_pattern_ops ASC NULLS LAST, "timestamp" DESC NULLS LAST)
+    TABLESPACE pg_default;

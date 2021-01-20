@@ -2,6 +2,7 @@
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
@@ -79,8 +80,8 @@ namespace Omnikeeper.GraphQL
 
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                var et = await traitModel.CalculateEffectiveTraitSetForCI(context.Source, userContext.Transaction, userContext.TimeThreshold);
-                return et.EffectiveTraits.Values;
+                var et = await traitModel.CalculateEffectiveTraitsForCI(context.Source, userContext.Transaction, userContext.TimeThreshold);
+                return et;
             });
         }
     }
@@ -123,6 +124,7 @@ namespace Omnikeeper.GraphQL
             Field("id", x => x.ID);
             Field("ciid", x => x.CIID);
             Field(x => x.ChangesetID);
+            Field(x => x.Origin, type: typeof(DataOriginGQL));
             Field(x => x.Name);
             Field(x => x.State, type: typeof(AttributeStateType));
             Field("value", x => AttributeValueDTO.Build(x.Value), type: typeof(AttributeValueDTOType));
@@ -147,6 +149,18 @@ namespace Omnikeeper.GraphQL
             Field(x => x.Values);
             Field(x => x.IsArray);
         }
+    }
+
+    public class DataOriginGQL : ObjectGraphType<DataOriginV1>
+    {
+        public DataOriginGQL()
+        {
+            Field(x => x.Type, type: typeof(DataOriginTypeGQL));
+        }
+    }
+
+    public class DataOriginTypeGQL : EnumerationGraphType<DataOriginType>
+    {
     }
 
     public class TimeThresholdType : ObjectGraphType<TimeThreshold>

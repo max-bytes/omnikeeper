@@ -6,11 +6,11 @@ import 'semantic-ui-css/semantic.min.css'
 import 'antd/dist/antd.css';
 import Keycloak from 'keycloak-js'
 import { Menu, Icon } from 'semantic-ui-react'
-import { KeycloakProvider } from '@react-keycloak/web'
 import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/AddNewCI'
-import SearchCI from './components/SearchCI'
+import SearchCIAdvanced from './components/search/SearchCIAdvanced'
+import GridView from './components/gridView/GridView'
 import Manage from './components/manage/Manage'
 import UserBar from './components/UserBar';
 import { Redirect, Route, Switch, BrowserRouter, Link  } from 'react-router-dom'
@@ -26,18 +26,9 @@ import ManageCache from './components/manage/ManageCache';
 import ManageCurrentUser from './components/manage/ManageCurrentUser';
 import ShowLogs from './components/manage/ShowLogs';
 import ShowVersion from './components/manage/ShowVersion';
-import { useKeycloak } from '@react-keycloak/web'
-import { useEffect } from 'react';
-import LayerStatistics from 'components/manage/LayerStatistics';
+import { ReactKeycloakProvider } from '@react-keycloak/web'
+import LayerOperations from 'components/manage/LayerOperations';
 
-  // TODO: move?
-function KeycloakTokenSetter() {
-  const [ keycloak ] = useKeycloak();
-  useEffect(() => {
-      localStorage.setItem('token', keycloak.token);
-  }, [keycloak.token]);
-  return null;
-}
 
 const keycloak = new Keycloak({
   "realm": env("KEYCLOAK_REALM"),
@@ -52,7 +43,7 @@ const keycloak = new Keycloak({
   "enable-cors": true
 })
 
-const keycloakProviderInitConfig = {
+const keycloakProviderInitOptions = {
   // workaround, disabling of checking iframe cookie, because its a cross-site one, and chrome stopped accepting them
   // when they don't have SameSite=None set... and keycloak doesn't send a proper cookie yet: 
   // https://issues.redhat.com/browse/KEYCLOAK-12125
@@ -76,6 +67,7 @@ function App() {
                 <Menu.Item><Link to="/createCI"><Icon name="plus" /> Create New CI</Link></Menu.Item>
                 <Menu.Item><Link to="/explorer"><Icon name="search" /> Search CI</Link></Menu.Item>
                 <Menu.Item><Link to="/diffing"><Icon name="exchange" /> Diffing</Link></Menu.Item>
+                <Menu.Item><Link to="/grid-view"><Icon name="grid layout" /> Grid View</Link></Menu.Item>
               </Route>
               <UserBar />
             </div>
@@ -95,7 +87,13 @@ function App() {
                 <AddNewCI />
               </PrivateRoute>
               <PrivateRoute path="/explorer">
-                <SearchCI />
+                <SearchCIAdvanced />
+              </PrivateRoute>
+              <PrivateRoute exact path="/grid-view">
+                <Redirect to="/grid-view/explorer" />
+              </PrivateRoute>
+              <PrivateRoute path="/grid-view">
+                <GridView />
               </PrivateRoute>
               
               <PrivateRoute path="/manage/baseconfiguration">
@@ -104,8 +102,8 @@ function App() {
               <PrivateRoute path="/manage/predicates">
                 <ManagePredicates />
               </PrivateRoute>
-              <PrivateRoute path="/manage/layers/statistics/:layerID">
-                <LayerStatistics />
+              <PrivateRoute path="/manage/layers/operations/:layerID">
+                <LayerOperations />
               </PrivateRoute>
               <PrivateRoute path="/manage/layers">
                 <ManageLayers />
@@ -144,13 +142,17 @@ function App() {
   }
   
 
+  const tokenSetter = (token) => {
+    localStorage.setItem('token', token.token);
+  }
+
   return (
-    <KeycloakProvider keycloak={keycloak} initConfig={keycloakProviderInitConfig} LoadingComponent={<>Loading...</>}>
+    <ReactKeycloakProvider authClient={keycloak} initOptions={keycloakProviderInitOptions} 
+      onTokens={tokenSetter}  LoadingComponent={<>Loading...</>}>
       <div style={{height: '100%'}}>
-        <KeycloakTokenSetter />
         <ApolloWrapper component={BR} />
       </div>
-    </KeycloakProvider>
+    </ReactKeycloakProvider>
   );
 }
 

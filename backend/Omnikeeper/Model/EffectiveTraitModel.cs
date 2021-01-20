@@ -1,18 +1,16 @@
 ﻿using Microsoft.Extensions.Logging;
-using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
-using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Inbound;
-using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Omnikeeper.Model
 {
@@ -21,175 +19,216 @@ namespace Omnikeeper.Model
         private readonly ITraitsProvider traitsProvider;
         private readonly IOnlineAccessProxy onlineAccessProxy;
         private readonly ICIModel ciModel;
+        private readonly IAttributeModel attributeModel;
         private readonly IRelationModel relationModel;
         private readonly ILogger<EffectiveTraitModel> logger;
-        public EffectiveTraitModel(ICIModel ciModel, IRelationModel relationModel, ITraitsProvider traitsProvider, IOnlineAccessProxy onlineAccessProxy, 
+        public EffectiveTraitModel(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ITraitsProvider traitsProvider, IOnlineAccessProxy onlineAccessProxy,
             ILogger<EffectiveTraitModel> logger)
         {
             this.traitsProvider = traitsProvider;
             this.onlineAccessProxy = onlineAccessProxy;
             this.ciModel = ciModel;
+            this.attributeModel = attributeModel;
             this.relationModel = relationModel;
             this.logger = logger;
         }
 
-        public async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetForCIs(IEnumerable<MergedCI> cis, string[] traitNames, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<EffectiveTrait>> CalculateEffectiveTraitsForCI(MergedCI ci, IModelContext trans, TimeThreshold atTime)
         {
             var traits = (await traitsProvider.GetActiveTraitSet(trans, atTime)).Traits;
 
-            var selectedTraits = traits.Where(t => traitNames.Contains(t.Key)).Select(t => t.Value);
-
-            var candidates = cis.SelectMany(ci => selectedTraits.Select(t => new EffectiveTraitCandidate(t, ci))).ToList();
-            var ret = await ResolveETCandidates(candidates, trans, atTime);
-            return ret;
+            var resolved = new List<EffectiveTrait>();
+            foreach (var trait in traits.Values)
+            {
+                var r = await Resolve(trait, ci, trans, atTime);
+                if (r != null)
+                    resolved.Add(r);
+            }
+            return resolved;
         }
 
-        public async Task<EffectiveTraitSet> CalculateEffectiveTraitSetForCI(MergedCI ci, IModelContext trans, TimeThreshold atTime)
+        public async Task<bool> DoesCIHaveTrait(MergedCI ci, Trait trait, IModelContext trans, TimeThreshold atTime)
         {
-            var traits = (await traitsProvider.GetActiveTraitSet(trans, atTime)).Traits;
-
-            var candidates = traits.Values.Select(t => new EffectiveTraitCandidate(t, ci)).ToList();
-            var ret = await ResolveETCandidates(candidates, trans, atTime);
-            return ret.FirstOrDefault() ?? new EffectiveTraitSet(ci, ImmutableList<EffectiveTrait>.Empty);
+            var ret = await CanResolve(trait, ci, trans, atTime);
+            return ret;
         }
 
         public async Task<EffectiveTrait?> CalculateEffectiveTraitForCI(MergedCI ci, Trait trait, IModelContext trans, TimeThreshold atTime)
         {
-            var ret = await ResolveETCandidates(new List<EffectiveTraitCandidate>() { new EffectiveTraitCandidate(trait, ci) }, trans, atTime);
-            return ret.FirstOrDefault()?.EffectiveTraits[trait.Name]; // TODO: this whole thing can be structured better
+            return await Resolve(trait, ci, trans, atTime);
         }
 
-        public async Task<IEnumerable<MergedCI>?> CalculateMergedCIsWithTrait(string traitName, LayerSet layerSet, IModelContext trans, TimeThreshold atTime, Func<Guid, bool>? ciFilter = null)
-        {
-            var traits = (await traitsProvider.GetActiveTraitSet(trans, atTime)).Traits;
-            var trait = traits.GetValueOrDefault(traitName);
-            if (trait == null) return null; // trait not found by name
-            return await CalculateMergedCIsWithTrait(trait, layerSet, trans, atTime, ciFilter);
-        }
-        public async Task<IEnumerable<MergedCI>> CalculateMergedCIsWithTrait(Trait trait, LayerSet layerSet, IModelContext trans, TimeThreshold atTime, Func<Guid, bool>? ciFilter = null)
-        {
-            var ts = await CalculateEffectiveTraitSetsForTrait(trait, layerSet, trans, atTime, ciFilter);
-            return ts.Select(ts => ts.UnderlyingCI);
-        }
 
-        public async Task<IDictionary<Guid, EffectiveTrait>?> CalculateEffectiveTraitsForTraitName(string traitName, LayerSet layerSet, IModelContext trans, TimeThreshold atTime, Func<Guid, bool>? ciFilter = null)
-        {
-            var traits = (await traitsProvider.GetActiveTraitSet(trans, atTime)).Traits;
-            var trait = traits.GetValueOrDefault(traitName);
-            if (trait == null) return null; // trait not found by name
-            return await CalculateEffectiveTraitsForTrait(trait, layerSet, trans, atTime, ciFilter);
-        }
-        public async Task<IDictionary<Guid, EffectiveTrait>> CalculateEffectiveTraitsForTrait(Trait trait, LayerSet layerSet, IModelContext trans, TimeThreshold atTime, Func<Guid, bool>? ciFilter = null)
-        {
-            var ts = await CalculateEffectiveTraitSetsForTrait(trait, layerSet, trans, atTime, ciFilter);
-            return ts.ToDictionary(ets => ets.UnderlyingCI.ID, ets => ets.EffectiveTraits[trait.Name]);
-        }
-
-        private async Task<IEnumerable<EffectiveTraitSet>> CalculateEffectiveTraitSetsForTrait(Trait trait, LayerSet layerSet, IModelContext trans, TimeThreshold atTime, Func<Guid, bool>? ciFilter = null)
+        public async Task<IEnumerable<MergedCI>> GetMergedCIsWithTrait(Trait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
         {
             if (layerSet.IsEmpty)
-                return ImmutableList<EffectiveTraitSet>.Empty; // return empty, an empty layer list can never produce any traits
+                return ImmutableList<MergedCI>.Empty; // return empty, an empty layer list can never produce any traits
 
+            bool bail;
+            (ciidSelection, bail) = await Prefilter(trait, layerSet, ciidSelection, trans, atTime);
+            if (bail)
+                return ImmutableList<MergedCI>.Empty;
+
+            // now do a full pass to check which ci's REALLY fulfill the trait's requirements
+            var cis = await ciModel.GetMergedCIs(ciidSelection, layerSet, false, trans, atTime);
+            var ret = new List<MergedCI>();
+            foreach (var ci in cis)
+            {
+                var canResolve = await CanResolve(trait, ci, trans, atTime);
+                if (canResolve)
+                    ret.Add(ci);
+            }
+
+            return ret;
+        }
+
+        private async Task<(ICIIDSelection filteredSelection, bool bail)> Prefilter(Trait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
+        {
             var hasOnlineInboundLayers = false;
-            foreach(var l in layerSet)
+            foreach (var l in layerSet)
             {
                 if (hasOnlineInboundLayers = await onlineAccessProxy.IsOnlineInboundLayer(l, trans))
                     break;
             }
 
-            var candidateCIIDs = new List<Guid>();
+            // TODO: this is not even faster for a lot of cases, consider when to actually use this
+            var runPrecursorFiltering = false;
             // do a precursor filtering based on required attribute names
             // we can only do this filtering (better performance) when the trait has required attributes AND no online inbound layers are in play
-            if (trait.RequiredAttributes.Count > 0 && !hasOnlineInboundLayers)
+            if (runPrecursorFiltering && trait.RequiredAttributes.Count > 0 && !hasOnlineInboundLayers)
             {
                 var requiredAttributeNames = trait.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
-
-                var lsValues = LayerSet.CreateLayerSetSQLValues(layerSet);
-
-                using var command = new NpgsqlCommand(@$"
-                    select a.ci_id from
-                    (
-                        select distinct on (inn.name, inn.ci_id) inn.name, inn.ci_id
-                                from(select distinct on(ci_id, name, layer_id) * from
-                                      attribute where timestamp <= @time_threshold and layer_id = ANY(@layer_ids)
-                                         and name = ANY(@required_attributes)
-                                         order by ci_id, name, layer_id, timestamp DESC
-                        ) inn
-                        inner join ({lsValues}) as ls(id,""order"") ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
-                        where inn.state != 'removed'::attributestate -- remove entries from layers which' last item is deleted
-                        order by inn.name, inn.ci_id, ls.order DESC
-                    ) a
-                    group by a.ci_id
-                    having count(a.ci_id) = cardinality(@required_attributes)", trans.DBConnection, trans.DBTransaction);
-                command.Parameters.AddWithValue("time_threshold", atTime.Time);
-                command.Parameters.AddWithValue("layer_ids", layerSet.ToArray());
-                command.Parameters.AddWithValue("required_attributes", requiredAttributeNames.ToArray());
-                using var dr = command.ExecuteReader();
-
-                var finalCIFilter = ciFilter ?? ((id) => true);
-
-                while (dr.Read())
+                ISet<Guid>? candidateCIIDs = null;
+                foreach (var requiredAttributeName in requiredAttributeNames)
                 {
-                    var CIID = dr.GetGuid(0);
-                    if (finalCIFilter(CIID))
-                        candidateCIIDs.Add(CIID);
+                    ISet<Guid> ciidsHavingAttributes = new HashSet<Guid>();
+                    foreach (var layerID in layerSet.LayerIDs)
+                    {
+                        var ciids = await attributeModel.FindCIIDsWithAttribute(requiredAttributeName, ciidSelection, layerID, trans, atTime);
+                        ciidsHavingAttributes.UnionWith(ciids);
+                    }
+                    if (candidateCIIDs == null)
+                        candidateCIIDs = new HashSet<Guid>(ciidsHavingAttributes);
+                    else
+                        candidateCIIDs.IntersectWith(ciidsHavingAttributes);
                 }
+                if (candidateCIIDs!.IsEmpty())
+                    return (new AllCIIDsSelection(), true);
+                return (SpecificCIIDsSelection.Build(candidateCIIDs!), false);
+
+
+                // old precursor filter method
+                //var requiredAttributeNames = trait.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
+                //var lsValues = LayerSet.CreateLayerSetSQLValues(layerSet);
+                //using var command = new NpgsqlCommand(@$"
+                //    select a.ci_id from
+                //    (
+                //        select distinct on (inn.name, inn.ci_id) inn.name, inn.ci_id
+                //                from(select distinct on(ci_id, name, layer_id) * from
+                //                      attribute where timestamp <= @time_threshold and layer_id = ANY(@layer_ids)
+                //                         and name = ANY(@required_attributes)
+                //                         order by ci_id, name, layer_id, timestamp DESC NULLS LAST
+                //        ) inn
+                //        inner join ({lsValues}) as ls(id,""order"") ON inn.layer_id = ls.id -- inner join to only keep rows that are in the selected layers
+                //        where inn.state != 'removed'::attributestate -- remove entries from layers which' last item is deleted
+                //        order by inn.name, inn.ci_id, ls.order DESC
+                //    ) a
+                //    group by a.ci_id
+                //    having count(a.ci_id) = cardinality(@required_attributes)", trans.DBConnection, trans.DBTransaction);
+                //command.Parameters.AddWithValue("time_threshold", atTime.Time);
+                //command.Parameters.AddWithValue("layer_ids", layerSet.ToArray());
+                //command.Parameters.AddWithValue("required_attributes", requiredAttributeNames.ToArray());
+                //command.Prepare();
+                //using var dr = command.ExecuteReader();
+
+                // T O D O use ciid selection instead of filter
+                //var finalCIFilter = ciFilter ?? ((id) => true);
+
+                //var candidateCIIDs = new List<Guid>();
+                //while (dr.Read())
+                //{
+                //    var CIID = dr.GetGuid(0);
+                //    if (finalCIFilter(CIID))
+                //        candidateCIIDs.Add(CIID);
+                //}
+                //if (candidateCIIDs.IsEmpty())
+                //    return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty;
+
+                //ciidSelection = SpecificCIIDsSelection.Build(candidateCIIDs);
             }
             else
             {
-                var tmp = await ciModel.GetCIIDs(trans);
-                if (ciFilter != null)
-                    candidateCIIDs.AddRange(tmp.Where(c => ciFilter(c)));
-                else
-                    candidateCIIDs.AddRange(tmp);
+                return (ciidSelection, false); // pass-through
             }
+        }
 
-            if (candidateCIIDs.IsEmpty())
-                return ImmutableList<EffectiveTraitSet>.Empty;
+        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> CalculateEffectiveTraitsForTrait(Trait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
+        {
+            if (layerSet.IsEmpty)
+                return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty; // return empty, an empty layer list can never produce any traits
+
+            bool bail;
+            (ciidSelection, bail) = await Prefilter(trait, layerSet, ciidSelection, trans, atTime);
+            if (bail)
+                return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty;
 
             // now do a full pass to check which ci's REALLY fulfill the trait's requirements
-            var cis = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(candidateCIIDs), layerSet, false, trans, atTime);
-
-            var candidates = cis.Select(ci => new EffectiveTraitCandidate(trait, ci)).ToList();
-            var ts = await ResolveETCandidates(candidates, trans, atTime);
-            return ts;
-        }
-
-        private async Task<IEnumerable<EffectiveTraitSet>> ResolveETCandidates(IEnumerable<EffectiveTraitCandidate> candidates, IModelContext trans, TimeThreshold atTime)
-        {
-            var resolved = new List<(EffectiveTraitCandidate candidate, EffectiveTrait result)>();
-            foreach (var c in candidates)
+            var cis = await ciModel.GetMergedCIs(ciidSelection, layerSet, false, trans, atTime);
+            var ret = new Dictionary<Guid, (MergedCI ci, EffectiveTrait et)>();
+            foreach (var ci in cis)
             {
-                var r = await Resolve(c, trans, atTime);
-                if (r != null)
-                    resolved.Add((c, r));
+                var et = await Resolve(trait, ci, trans, atTime);
+                if (et != null)
+                    ret.Add(ci.ID, (ci, et));
             }
 
-            return resolved.GroupBy(c => c.candidate.CI).Select(t => new EffectiveTraitSet(t.Key, t.Select(t => t.result)));
+            return ret;
         }
 
-        private async Task<EffectiveTrait?> Resolve(EffectiveTraitCandidate et, IModelContext trans, TimeThreshold atTime)
+        private async Task<bool> CanResolve(Trait trait, MergedCI ci, IModelContext trans, TimeThreshold atTime)
         {
-            var ci = et.CI;
-            var trait = et.Trait;
+            foreach (var ta in trait.RequiredAttributes)
+            {
+                var traitAttributeIdentifier = ta.Identifier;
+                var (_, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
+                if (!checks.Errors.IsEmpty())
+                    return false;
+            };
+            if (trait.RequiredRelations.Count > 0)
+            {
+                var allCompactRelatedCIs = await RelationService.GetCompactRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, null, trans, atTime);
+                foreach (var tr in trait.RequiredRelations)
+                {
+                    var traitRelationIdentifier = tr.Identifier;
+                    var relatedCIs = allCompactRelatedCIs.Where(rci => rci.PredicateID == tr.RelationTemplate.PredicateID);
+                    var checks = TemplateCheckService.CalculateTemplateErrorsRelation(relatedCIs, tr.RelationTemplate);
+                    if (!checks.Errors.IsEmpty())
+                        return false;
+                };
+            }
 
+            return true;
+        }
+
+        private async Task<EffectiveTrait?> Resolve(Trait trait, MergedCI ci, IModelContext trans, TimeThreshold atTime)
+        {
             var requiredEffectiveTraitAttributes = trait.RequiredAttributes.Select(ta =>
             {
                 var traitAttributeIdentifier = ta.Identifier;
                 var (foundAttribute, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
                 return (traitAttributeIdentifier, foundAttribute, checks);
             });
-            IEnumerable<(string traitRelationIdentifier, IEnumerable<MergedRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)> requiredEffectiveTraitRelations
-                = new List<(string traitRelationIdentifier, IEnumerable<MergedRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)>();
-            if (trait.RequiredRelations.Count > 0)
+            IEnumerable<(string traitRelationIdentifier, IEnumerable<CompactRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)> requiredEffectiveTraitRelations
+                = new List<(string traitRelationIdentifier, IEnumerable<CompactRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)>();
+            if (trait.RequiredRelations.Count > 0) // TODO: consider removing requiredRelations... they are TOUGH on performance
             {
-                var allMergedRelatedCIs = (await RelationService.GetMergedRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, trans, atTime));
+                var allCompactRelatedCIs = await RelationService.GetCompactRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, null, trans, atTime);
                 requiredEffectiveTraitRelations = trait.RequiredRelations.Select(tr =>
                 {
                     var traitRelationIdentifier = tr.Identifier;
-                    var mergedRelatedCIs = allMergedRelatedCIs[tr.RelationTemplate.PredicateID];
-                    var checks = TemplateCheckService.CalculateTemplateErrorsRelation(mergedRelatedCIs, tr.RelationTemplate);
-                    return (traitRelationIdentifier, mergedRelatedCIs, checks);
+                    var relatedCIs = allCompactRelatedCIs.Where(rci => rci.PredicateID == tr.RelationTemplate.PredicateID);
+                    var checks = TemplateCheckService.CalculateTemplateErrorsRelation(relatedCIs, tr.RelationTemplate);
+                    return (traitRelationIdentifier, relatedCIs, checks);
                 });
             }
 
@@ -207,7 +246,7 @@ namespace Omnikeeper.Model
                 }).Where(t => t.checks.Errors.IsEmpty());
 
                 var resolvedET = new EffectiveTrait(trait,
-                    requiredEffectiveTraitAttributes.Concat(optionalEffectiveTraitAttributes).ToDictionary(t => t.traitAttributeIdentifier, t => t.foundAttribute),
+                    requiredEffectiveTraitAttributes.Concat(optionalEffectiveTraitAttributes).ToDictionary(t => t.traitAttributeIdentifier, t => t.foundAttribute!),
                     requiredEffectiveTraitRelations.ToDictionary(t => t.traitRelationIdentifier, t => t.mergedRelatedCIs));
                 return resolvedET;
             }
@@ -215,18 +254,6 @@ namespace Omnikeeper.Model
             {
                 return null;
             }
-        }
-
-        private class EffectiveTraitCandidate
-        {
-            public EffectiveTraitCandidate(Trait trait, MergedCI ci)
-            {
-                Trait = trait;
-                CI = ci;
-            }
-
-            public Trait Trait { get; }
-            public MergedCI CI { get; }
         }
     }
 }

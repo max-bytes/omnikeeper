@@ -1,3 +1,4 @@
+using FluentValidation.AspNetCore;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using Hangfire;
@@ -5,6 +6,7 @@ using Hangfire.AspNetCore;
 using Hangfire.Console;
 using Hangfire.Dashboard;
 using Hangfire.MemoryStorage;
+using MediatR;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Formatter;
@@ -53,6 +55,7 @@ namespace Omnikeeper.Startup
         {
             services.AddApiVersioning();
 
+            services.AddMediatR(Assembly.GetExecutingAssembly());
             services.AddCors(options => options.AddPolicy("DefaultCORSPolicy", builder =>
                builder.WithOrigins(Configuration.GetSection("CORS")["AllowedHosts"].Split(","))
                .AllowCredentials()
@@ -70,7 +73,7 @@ namespace Omnikeeper.Startup
             ServiceRegistration.RegisterLogging(services);
             ServiceRegistration.RegisterDB(services, Configuration);
             ServiceRegistration.RegisterOIABase(services);
-            ServiceRegistration.RegisterModels(services, true, true);
+            ServiceRegistration.RegisterModels(services, true, true, true);
             ServiceRegistration.RegisterServices(services);
             ServiceRegistration.RegisterGraphQL(services);
             var assemblies = ServiceRegistration.RegisterOKPlugins(services, pluginFolder);
@@ -172,8 +175,14 @@ namespace Omnikeeper.Startup
                         ClientCredentials = new OpenApiOAuthFlow
                         {
                             Scopes = new Dictionary<string, string> { },
+                            TokenUrl = new Uri(Configuration.GetSection("Authentication")["Authority"] + "/protocol/openid-connect/token", UriKind.Absolute),
+                        },
+                        AuthorizationCode = new OpenApiOAuthFlow
+                        {
+                            Scopes = new Dictionary<string, string> { },
                             AuthorizationUrl = new Uri(Configuration.GetSection("Authentication")["Authority"] + "/protocol/openid-connect/auth", UriKind.Absolute),
                             TokenUrl = new Uri(Configuration.GetSection("Authentication")["Authority"] + "/protocol/openid-connect/token", UriKind.Absolute),
+                            RefreshUrl = new Uri(Configuration.GetSection("Authentication")["Authority"] + "/protocol/openid-connect/token", UriKind.Absolute)
                         }
                     }
                 });
@@ -183,7 +192,8 @@ namespace Omnikeeper.Startup
             });
             services.AddSwaggerGenNewtonsoftSupport();
 
-            services.AddMemoryCache();
+            //services.AddMemoryCache();
+            services.AddDistributedMemoryCache();
 
             // HACK: needed by odata, see: https://github.com/OData/WebApi/issues/2024
             services.AddMvcCore(options =>
@@ -232,7 +242,7 @@ namespace Omnikeeper.Startup
                 {
                     inputFormatter.BaseAddressFactory = (m) => ModifyBaseAddress(m);
                 }
-            });
+            }).AddFluentValidation();
         }
 
         private IWebHostEnvironment CurrentEnvironment { get; set; }
@@ -303,8 +313,12 @@ namespace Omnikeeper.Startup
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint($"{Configuration["BaseURL"]}/swagger/v1/swagger.json", "Landscape omnikeeper REST API V1");
-                c.OAuthClientId("landscape-registry-api");
-                c.OAuthClientSecret(Configuration.GetSection("SwaggerUI")["OAuthClientSecret"]);
+                //if (env.IsDevelopment() || env.IsStaging())
+                //{
+                c.OAuthClientId("landscape-omnikeeper");
+                //c.OAuthClientId("landscape-omnikeeper-api");
+                //c.OAuthClientSecret(Configuration.GetSection("SwaggerUI")["OAuthClientSecret"]);
+                //}
             });
 
             // Configure hangfire to use the new JobActivator we defined.

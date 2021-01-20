@@ -1,13 +1,13 @@
 ﻿using FluentAssertions;
+using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Entity.AttributeValues;
-using NUnit.Framework;
+using Omnikeeper.Ingest.ActiveDirectoryXML;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Omnikeeper.Ingest.ActiveDirectoryXML;
 
 namespace OKPluginActiveDirectoryXMLIngest.Tests
 {
@@ -28,7 +28,7 @@ namespace OKPluginActiveDirectoryXMLIngest.Tests
             Assert.AreEqual(0, logger.GetCount(Microsoft.Extensions.Logging.LogLevel.Warning));
             Assert.AreEqual(0, logger.GetCount(Microsoft.Extensions.Logging.LogLevel.Error));
 
-            ciCandidates.Values.Select(c => c.Attributes).Should().BeEquivalentTo(new List<CICandidateAttributeData>()
+            ciCandidates.Select(c => c.Attributes).Should().BeEquivalentTo(new List<CICandidateAttributeData>()
             {
                 //groups
                 new CICandidateAttributeData(new CICandidateAttributeData.Fragment[] {

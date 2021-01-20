@@ -1,24 +1,21 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Entity.AttributeValues;
-using Npgsql;
+﻿using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Entity.DTO;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Controllers;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Threading.Tasks;
-using Omnikeeper.Controllers;
-using Microsoft.Extensions.DependencyInjection;
-using FluentAssertions;
-using Omnikeeper.Base.Entity.DTO;
-using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Linq;
-using Omnikeeper.Base.Service;
-using Moq;
-using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tests.Integration.Controller
 {
-    class AttributeControllerTest : DIServicedTestBase
+    class AttributeControllerTest : ControllerTestBase
     {
         protected override IServiceCollection InitServices()
         {
@@ -26,15 +23,6 @@ namespace Tests.Integration.Controller
 
             // add controller
             services.AddScoped<AttributeController>();
-
-            var lbas = new Mock<ILayerBasedAuthorizationService>();
-            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
-            services.AddScoped((sp) => lbas.Object);
-            var cbas = new Mock<ICIBasedAuthorizationService>();
-            cbas.Setup(x => x.CanReadCI(It.IsAny<Guid>())).Returns(true);
-            Guid? tmp;
-            cbas.Setup(x => x.CanReadAllCIs(It.IsAny<IEnumerable<Guid>>(), out tmp)).Returns(true);
-            services.AddScoped((sp) => cbas.Object);
 
             return services;
         }
@@ -66,11 +54,11 @@ namespace Tests.Integration.Controller
                 var layer2 = await layerModel.CreateLayer("l2", trans);
                 layerID1 = layer1.ID;
                 layerID2 = layer2.ID;
-                var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-                var (attribute1, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, trans);
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                var (attribute1, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 attribute1ID = attribute1.ID;
                 changesetID = attribute1.ChangesetID;
-                var (attribute2, _) = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid2, layerID1, changeset, trans);
+                var (attribute2, _) = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 attribute2ID = attribute2.ID;
                 trans.Commit();
             }
@@ -79,7 +67,7 @@ namespace Tests.Integration.Controller
 
             var expectedAttribute1 = CIAttributeDTO.Build(
                 new MergedCIAttribute(
-                    new CIAttribute(attribute1ID, "a1", ciid1, new AttributeScalarValueText("text1"), AttributeState.New, changesetID),
+                    new CIAttribute(attribute1ID, "a1", ciid1, new AttributeScalarValueText("text1"), AttributeState.New, changesetID, new DataOriginV1(DataOriginType.Manual)),
                     new long[] { layerID1 }
                 ));
             (ma1.Result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedAttribute1);
@@ -89,7 +77,7 @@ namespace Tests.Integration.Controller
 
             var expectedAttribute2 = CIAttributeDTO.Build(
                 new MergedCIAttribute(
-                    new CIAttribute(attribute2ID, "a2", ciid2, new AttributeScalarValueText("text2"), AttributeState.New, changesetID),
+                    new CIAttribute(attribute2ID, "a2", ciid2, new AttributeScalarValueText("text2"), AttributeState.New, changesetID, new DataOriginV1(DataOriginType.Manual)),
                     new long[] { layerID1 }
                 ));
             var r = (ma2.Result as OkObjectResult)!.Value;

@@ -1,15 +1,14 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using NUnit.Framework;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
-using Omnikeeper.Utils;
-using NUnit.Framework;
 using System;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
-using Tests.Integration.Model.Mocks;
 
 namespace Tests.Integration.Model
 {
@@ -45,8 +44,8 @@ namespace Tests.Integration.Model
         public async Task TestDeletion()
         {
             var layerModel = new LayerModel();
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
-            var ciModel = new CIModel(attributeModel);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var ciModel = new CIModel(attributeModel, new CIIDModel());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             using var trans = ModelContextBuilder.BuildImmediate();
@@ -58,9 +57,9 @@ namespace Tests.Integration.Model
             var user = await userModel.UpsertUser("testuser", "testuser", Guid.NewGuid(), UserType.Human, trans);
 
             var ciid = await ciModel.CreateCI(trans);
-            var changeset = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
+            var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
-            await attributeModel.InsertAttribute("attribute", new AttributeScalarValueText("foo"), ciid, layerC.ID, changeset, trans);
+            await attributeModel.InsertAttribute("attribute", new AttributeScalarValueText("foo"), ciid, layerC.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
             Assert.AreEqual(true, await layerModel.TryToDelete(layerA.ID, trans));
             Assert.AreEqual(true, await layerModel.TryToDelete(layerB.ID, trans));

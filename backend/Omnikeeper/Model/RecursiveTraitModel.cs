@@ -24,7 +24,7 @@ namespace Omnikeeper.Model
         {
             using var command = new NpgsqlCommand(@"
                 SELECT config FROM traits WHERE timestamp <= @timestamp 
-                ORDER BY timestamp DESC LIMIT 1
+                ORDER BY timestamp DESC NULLS LAST LIMIT 1
             ", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("timestamp", timeThreshold.Time);
             using var dr = await command.ExecuteReaderAsync();
@@ -35,7 +35,7 @@ namespace Omnikeeper.Model
             var configJO = dr.GetFieldValue<JObject>(0);
             try
             {
-                var traits = TraitsProvider.TraitSetSerializer.Deserialize(configJO);
+                var traits = RecursiveTraitSet.Serializer.Deserialize(configJO);
 
                 return traits;
             }
@@ -48,7 +48,7 @@ namespace Omnikeeper.Model
 
         public async Task<RecursiveTraitSet> SetRecursiveTraitSet(RecursiveTraitSet traitSet, IModelContext trans)
         {
-            var traitsJO = TraitsProvider.TraitSetSerializer.SerializeToJObject(traitSet);
+            var traitsJO = RecursiveTraitSet.Serializer.SerializeToJObject(traitSet);
             using var command = new NpgsqlCommand(@"INSERT INTO traits (config, timestamp) VALUES (@config, @timestamp)", trans.DBConnection, trans.DBTransaction);
             command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = traitsJO });
             command.Parameters.AddWithValue("timestamp", TimeThreshold.BuildLatest().Time);

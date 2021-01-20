@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useLazyQuery } from '@apollo/client';
 import PropTypes from 'prop-types'
-import { useMutation } from '@apollo/react-hooks';
-import { withApollo } from 'react-apollo';
+import { useMutation } from '@apollo/client';
 import { mutations } from '../graphql/mutations'
 import { queries } from '../graphql/queries'
 import { Form, Select, Button, Card } from "antd";
@@ -15,6 +14,7 @@ function AddNewRelation(props) {
   const [insertError, setInsertError] = useState(undefined);
   const canBeEdited = props.isEditable && props.visibleAndWritableLayers.length > 0;
   // use useRef to ensure reference is constant and can be properly used in dependency array
+  const visibleLayersRef = useRef(JSON.stringify(props.visibleLayers)); // because JS only does reference equality, we need to convert the array to a string
   const { current: initialRelation } = useRef({predicateID: null, targetCIID: null, forward: true, layer: null });
   const [isOpen, setOpen] = useState(false);
 
@@ -23,7 +23,7 @@ function AddNewRelation(props) {
   useEffect(() => { setOpen(false); setNewRelation(initialRelation); }, 
     [
       props.ciIdentity, 
-      JSON.stringify(props.visibleLayers), // because JS only does reference equality, we need to convert the array to a string
+      visibleLayersRef, 
       initialRelation
     ]);
 
@@ -139,4 +139,4 @@ AddNewRelation.propTypes = {
   ciIdentity: PropTypes.string.isRequired
 }
 
-export default withApollo(AddNewRelation);
+export default AddNewRelation;

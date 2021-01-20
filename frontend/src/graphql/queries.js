@@ -35,21 +35,34 @@ export const queries = {
         ${Fragments.directedPredicate}
     `,
 
-    SimpleSearchCIs: gql`
-        query simpleSearchCIs($searchString: String!) {
-            simpleSearchCIs(searchString: $searchString) {
+    // SimpleSearchCIs: gql`
+    //     query simpleSearchCIs($searchString: String!) {
+    //         simpleSearchCIs(searchString: $searchString) {
+    //             ...CompactCI
+    //         }
+    //     }
+    //     ${Fragments.compactCI}
+    // `,
+    AdvancedSearchCIs: gql`
+        query advancedSearchCIs($searchString: String!, $withEffectiveTraits: [String]!, $withoutEffectiveTraits: [String]!, $layers: [String]!) {
+            advancedSearchCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits, withoutEffectiveTraits: $withoutEffectiveTraits, layers: $layers) {
                 ...CompactCI
             }
         }
         ${Fragments.compactCI}
     `,
-    AdvancedSearchCIs: gql`
-        query advancedSearchCIs($searchString: String!, $withEffectiveTraits: [String]!, $layers: [String]!) {
-            advancedSearchCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits, layers: $layers) {
-                ...CompactCI
+    EffectiveTraitList: gql`
+        query effectiveTraitList($layers: [String]!) {
+            effectiveTraitList(layers: $layers) {
+                name
+                count
             }
         }
-        ${Fragments.compactCI}
+    `,
+    ActiveTraits: gql`
+        query activeTraits {
+            activeTraits
+        }
     `,
 
     FullCI: gql`

@@ -1,7 +1,8 @@
 ﻿using DBMigrations;
+using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
-using Npgsql;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Threading.Tasks;
 
@@ -27,16 +28,16 @@ namespace Tasks
             conn.Close();
 
             // create db, setup schema and migrations
-            var migrationResult = DBMigration.Migrate($"Server=localhost;User Id=postgres; Password=postgres;Database={_dbName};Pooling=false");
+            var migrationResult = DBMigration.Migrate($"Server=localhost;User Id=postgres; Password=postgres;Database={_dbName};Pooling=false", true);
 
             if (!migrationResult.Successful)
                 throw new Exception("Database migration failed!", migrationResult.Error);
         }
 
-        public static async Task<UserInDatabase> SetupUser(IUserInDatabaseModel userModel, string username = "test-user", Guid? userGUID = null, UserType type = UserType.Robot)
+        public static async Task<UserInDatabase> SetupUser(IUserInDatabaseModel userModel, IModelContext trans, string username = "test-user", Guid? userGUID = null, UserType type = UserType.Robot)
         {
             var guid = userGUID ?? new Guid("2544f9a7-cc17-4cba-8052-f88656cf1ef1");
-            return await userModel.UpsertUser(username, username, guid, type, null);
+            return await userModel.UpsertUser(username, username, guid, type, trans);
         }
     }
 }

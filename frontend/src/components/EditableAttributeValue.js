@@ -5,9 +5,10 @@ import { faTimes, faPlus, faChevronUp, faChevronDown } from '@fortawesome/free-s
 import { InputControl } from '../utils/attributeTypes'
 
 function EditableAttributeValue(props) {
-  var {values, setValues, type, isArray, autoFocus, isEditable, setHasErrors, name, controlIdSuffix /*, ciid*/} = props;
+  var {values, setValues, type, isArray, autoFocus, isEditable, setHasErrors, name, controlIdSuffix , ciid } = props;
   
   isEditable = isEditable ?? true;
+  controlIdSuffix = controlIdSuffix ?? "";
 
   var [errorsInArray, setErrorsInArray] = useState([]);
   useEffect(() => setHasErrors(errorsInArray.filter(e => e).length > 0), [errorsInArray, setHasErrors]);
@@ -16,12 +17,18 @@ function EditableAttributeValue(props) {
     const canRemoveItem = values.length > 1;
 
     return <div style={{ display: 'flex', flexDirection: 'column', flexGrow: '1', alignSelf: 'center' }}>
+      {values.length === 0 && isEditable && <Button icon={<FontAwesomeIcon icon={faPlus} style={{marginRight: "10px", marginLeft: "0.25rem"}}/>} disabled={!isEditable} onClick={e => {
+                e.preventDefault();
+                let newValues = values.slice();
+                newValues.splice(0, 0, '');
+                props.setValues(newValues);
+                }}></Button>}
         {values.map((v, index) => {
           return <Row key={index} id={`value:${name}:${index}:${controlIdSuffix}`} gutter={4}>
             <Col span={19}>
-                <InputControl hideNameLabel={props.hideNameLabel} name={name + "_" + index + "_" + controlIdSuffix} setHasErrors={e => {
+                <InputControl hideNameLabel={props.hideNameLabel} attributeName={name} ciid={ciid} setHasErrors={e => {
                 setErrorsInArray(oldErrorsInArray => { let newErrorsInArray = [...oldErrorsInArray]; newErrorsInArray[index] = e; return newErrorsInArray;});
-                }} key={index} type={type} isArray={isArray} value={v} disabled={!isEditable} autoFocus={autoFocus && index === 0}
+                }} key={index} type={type} isArray={isArray} arrayIndex={index} value={v} disabled={!isEditable} autoFocus={autoFocus && index === 0}
                 onChange={value => {
                     let newValues = values.slice();
                     newValues[index] = value;
@@ -57,7 +64,8 @@ function EditableAttributeValue(props) {
         }
     </div>;
   } else {
-    return <InputControl hideNameLabel={props.hideNameLabel} name={name + "_" + controlIdSuffix} setHasErrors={setHasErrors} isArray={isArray} type={type} value={values[0]} 
+    return <InputControl hideNameLabel={props.hideNameLabel} attributeName={name} ciid={ciid} setHasErrors={setHasErrors} 
+      isArray={false} arrayIndex={0} type={type} value={values[0]} 
       disabled={!isEditable} autoFocus={autoFocus} onChange={value => setValues([value])} />
   }
 }

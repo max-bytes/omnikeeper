@@ -1,23 +1,23 @@
-﻿using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.Controllers.Ingest;
-using Omnikeeper.Model;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.InternalAbstractions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Newtonsoft.Json.Linq;
-using Npgsql;
 using NUnit.Framework;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Utils.Serialization;
+using Omnikeeper.Controllers.Ingest;
+using Omnikeeper.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Tests.Integration;
-using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tests.Ingest
 {
@@ -56,19 +56,20 @@ namespace Tests.Ingest
             var dbcb = new DBConnectionBuilder();
             using var conn = dbcb.Build(DBSetup.dbName, false, true);
             //using var conn = dbcb.Build("landscape_prototype", false, true);
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var partitionModel = new PartitionModel();
+            var attributeModel = new AttributeModel(new BaseAttributeModel(partitionModel));
             var layerModel = new LayerModel();
             var userModel = new UserInDatabaseModel();
-            var ciModel = new CIModel(attributeModel);
+            var ciModel = new CIModel(attributeModel, new CIIDModel());
             var predicateModel = new PredicateModel();
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
-            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance);
-            var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel), relationModel, new CIMappingService());
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, partitionModel));
+            var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
+            var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel), relationModel, new CIMappingService(), modelContextBuilder, NullLogger<IngestDataService>.Instance);
 
             var mc = modelContextBuilder.BuildImmediate();
 
             Layer layer1 = await layerModel.CreateLayer("Inventory Scan", mc);
-            
+
             // mock the current user service
             var mockCurrentUserService = new Mock<ICurrentUserService>();
             var user = new AuthenticatedUser(await userModel.UpsertUser(username, displayName, userGUID, UserType.Robot, mc), new List<Layer>() { layer1 });
@@ -79,7 +80,7 @@ namespace Tests.Ingest
 
             var insertLayer = layer1;
             var hosts = new string[] { "h1jmplx01.mhx.at", "h1lscapet01.mhx.local" };
-            var layerSet = await layerModel.BuildLayerSet(mc);
+            var layerSet = await layerModel.BuildLayerSet(new string[] { layer1.Name }, mc);
 
             await predicateModel.InsertOrUpdate("has_network_interface", "has network interface", "is network interface of host", AnchorState.Active, PredicateModel.DefaultConstraits, mc);
             await predicateModel.InsertOrUpdate("has_mounted_device", "has mounted device", "is mounted at host", AnchorState.Active, PredicateModel.DefaultConstraits, mc);
@@ -89,7 +90,7 @@ namespace Tests.Ingest
             var response = await PerformIngest(controller, hosts, insertLayer, layerSet);
             Assert.IsTrue(response is OkResult);
 
-            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, mc, TimeThreshold.BuildLatest());
+            var cis = await ciModel.GetCompactCIs(new AllCIIDsSelection(), layerSet, mc, TimeThreshold.BuildLatest());
             Assert.That(cis.Select(ci => ci.Name), Is.SupersetOf(hosts));
             Assert.IsTrue(cis.Any(ci => ci.Name == "h1jmplx01.mhx.at:/"));
             Assert.IsTrue(cis.Any(ci => ci.Name == "h1jmplx01.mhx.at:/boot"));
@@ -103,20 +104,20 @@ namespace Tests.Ingest
             // perform ingest again, ci count must stay equal
             var response2 = await PerformIngest(controller, hosts, insertLayer, layerSet);
             Assert.IsTrue(response2 is OkResult);
-            var cis2 = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, mc, TimeThreshold.BuildLatest());
+            var cis2 = await ciModel.GetCompactCIs(new AllCIIDsSelection(), layerSet, mc, TimeThreshold.BuildLatest());
             Assert.AreEqual(34, cis2.Count());
         }
 
         private async Task<ActionResult> PerformIngest(AnsibleInventoryScanIngestController controller, string[] hosts, Layer insertLayer, LayerSet searchLayerSet)
         {
-            var setupFacts = hosts.ToDictionary(fqdn => fqdn, fqdn =>
+            var setupFacts = hosts.ToDictionary(fqdn => $"{fqdn}.json", fqdn =>
             {
                 var f = LoadFile($"{fqdn}\\setup_facts.json");
                 var jo = JObject.Parse(f);
                 return jo;
             });
 
-            var response = await controller.IngestAnsibleInventoryScan(insertLayer.ID, searchLayerSet.LayerIDs, new Omnikeeper.Base.Entity.DTO.Ingest.AnsibleInventoryScanDTO(
+            var response = await controller.IngestAnsibleInventoryScan(insertLayer.ID, searchLayerSet.LayerIDs, new AnsibleInventoryScanDTO(
                 setupFacts,
                 new Dictionary<string, JObject>() { },
                 new Dictionary<string, JObject>() { },

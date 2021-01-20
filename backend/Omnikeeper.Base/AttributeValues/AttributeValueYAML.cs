@@ -1,22 +1,28 @@
-﻿using System;
+﻿using ProtoBuf;
+using ProtoBuf.Serializers;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
 using YamlDotNet.RepresentationModel;
+using YamlDotNet.Serialization;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
+    [ProtoContract(Serializer = typeof(AttributeScalarValueYAMLSerializer))]
     public class AttributeScalarValueYAML : IAttributeScalarValue<YamlDocument>, IEquatable<AttributeScalarValueYAML>
     {
         private AttributeScalarValueYAML(YamlDocument value, string valueStr)
         {
-            Value = value;
-            ValueStr = valueStr;
+            this.value = value;
+            this.valueStr = valueStr;
         }
 
-        public YamlDocument Value { get; private set; }
-        private string ValueStr { get; set; }
+        private readonly YamlDocument value;
+        public YamlDocument Value => value;
+        private readonly string valueStr;
+        public string ValueStr => valueStr;
 
         public override string ToString() => $"AV-YAML: {Value2String()}";
 
@@ -54,12 +60,54 @@ namespace Omnikeeper.Entity.AttributeValues
         }
     }
 
+    public class AttributeScalarValueYAMLSerializer : ISubTypeSerializer<AttributeScalarValueYAML>, ISerializer<AttributeScalarValueYAML>
+    {
+        SerializerFeatures ISerializer<AttributeScalarValueYAML>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
+        void ISerializer<AttributeScalarValueYAML>.Write(ref ProtoWriter.State state, AttributeScalarValueYAML value) 
+            => ((ISubTypeSerializer<AttributeScalarValueYAML>)this).WriteSubType(ref state, value);
+        AttributeScalarValueYAML ISerializer<AttributeScalarValueYAML>.Read(ref ProtoReader.State state, AttributeScalarValueYAML value) 
+            => ((ISubTypeSerializer<AttributeScalarValueYAML>)this).ReadSubType(ref state, SubTypeState<AttributeScalarValueYAML>.Create(state.Context, value));
 
+        public void WriteSubType(ref ProtoWriter.State state, AttributeScalarValueYAML value)
+        {
+            state.WriteFieldHeader(1, WireType.String);
+            state.WriteString(value.ValueStr);
+        }
+
+        public AttributeScalarValueYAML ReadSubType(ref ProtoReader.State state, SubTypeState<AttributeScalarValueYAML> value)
+        {
+            int field;
+            string valueStr = "";
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                        valueStr = state.ReadString();
+                        break;
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            if (valueStr != "")
+                return AttributeScalarValueYAML.BuildFromString(valueStr);
+            else
+                throw new Exception("Could not deserialize AttributeScalarValueYAML");
+        }
+    }
+
+
+    [ProtoContract]
     public class AttributeArrayValueYAML : AttributeArrayValue<AttributeScalarValueYAML, YamlDocument>
     {
         public AttributeArrayValueYAML(AttributeScalarValueYAML[] values) : base(values)
         {
         }
+
+#pragma warning disable CS8618
+        protected AttributeArrayValueYAML() { }
+#pragma warning restore CS8618
 
         public override AttributeValueType Type => AttributeValueType.YAML;
 

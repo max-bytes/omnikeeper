@@ -1,9 +1,6 @@
-﻿using Omnikeeper.Base.Inbound;
-using Newtonsoft.Json;
-using NUnit.Framework;
+﻿using NUnit.Framework;
+using Omnikeeper.Base.Inbound;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Tasks.Tools
 {
@@ -17,7 +14,7 @@ namespace Tasks.Tools
                 "https://mhx.registry-test.mhx.at/backend/api",
                 "https://auth-test.mhx.at/",
                 "mhx",
-                "landscape-registry-api",
+                "landscape-omnikeeper-api",
                 "9c98eb5f-22f0-47d1-8123-810d7d96104f",
                 new string[] { "CMDB" },
                 new TimeSpan(0, 1, 0),

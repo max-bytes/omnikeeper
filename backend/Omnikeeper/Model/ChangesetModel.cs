@@ -42,6 +42,7 @@ namespace Omnikeeper.Model
                 WHERE c.id = @id", trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("id", id);
+            command.Prepare();
             using var dr = await command.ExecuteReaderAsync();
 
             if (!await dr.ReadAsync())
@@ -102,6 +103,7 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("layer_ids", layers.LayerIDs);
             if (limit.HasValue)
                 command.Parameters.AddWithValue("limit", limit.Value);
+            command.Prepare();
             using var dr = await command.ExecuteReaderAsync();
 
             var ret = new List<Changeset>();
@@ -133,7 +135,7 @@ namespace Omnikeeper.Model
                 AND
                     (EXISTS(SELECT * FROM attribute a WHERE a.changeset_id = c.id AND a.layer_id = ANY(@layer_ids))
                     OR EXISTS(SELECT * FROM relation r WHERE r.changeset_id = c.id AND r.layer_id = ANY(@layer_ids)))
-                ORDER BY c.timestamp DESC";
+                ORDER BY c.timestamp DESC NULLS LAST";
             if (limit.HasValue)
                 query += " LIMIT @limit";
 
@@ -143,6 +145,7 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("layer_ids", layers.LayerIDs);
             if (limit.HasValue)
                 command.Parameters.AddWithValue("limit", limit.Value);
+            command.Prepare();
             using var dr = await command.ExecuteReaderAsync();
 
             var ret = new List<Changeset>();
@@ -164,6 +167,23 @@ namespace Omnikeeper.Model
             return ret;
         }
 
+        public async Task<int> DeleteEmptyChangesets(IModelContext trans)
+        {
+            var query = @"delete from changeset c where c.id not in (
+                select distinct changeset_id from attribute
+                union
+                select distinct changeset_id from relation
+            )";
+
+            using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
+
+            command.Prepare();
+
+            var numArchived = await command.ExecuteNonQueryAsync();
+
+            return numArchived;
+        }
+
         /// <summary>
         /// approach: only archive a changeset when ALL of its changes can be archived... which means that ALL of its changes to attribute and relations can be archived
         /// this is the case when the timestamp of the attribute/relation is older than the threshold AND the attribute/relation is NOT part of the latest/current data
@@ -183,7 +203,7 @@ namespace Omnikeeper.Model
 	                OR (a.state != 'removed' AND a.id IN (
 		                select distinct on(layer_id, ci_id, name) id FROM attribute
 				                where timestamp <= @now
-				                order by layer_id, ci_id, name, timestamp DESC
+				                order by layer_id, ci_id, name, timestamp DESC NULLS LAST
 	                ))
 	                UNION
 	                SELECT distinct c.id FROM changeset c
@@ -193,7 +213,7 @@ namespace Omnikeeper.Model
 	                OR (r.state != 'removed' AND  r.id IN (
 		                select distinct on(layer_id, from_ci_id, to_ci_id, predicate_id) id FROM relation
 				                where timestamp <= @now
-				                order by layer_id, from_ci_id, to_ci_id, predicate_id, timestamp DESC
+				                order by layer_id, from_ci_id, to_ci_id, predicate_id, timestamp DESC NULLS LAST
 	                ))
                 )";
 
@@ -202,11 +222,11 @@ namespace Omnikeeper.Model
             var now = TimeThreshold.BuildLatest();
             command.Parameters.AddWithValue("delete_threshold", threshold);
             command.Parameters.AddWithValue("now", now.Time);
+            command.Prepare();
 
             var numArchived = await command.ExecuteNonQueryAsync();
 
             return numArchived;
-
         }
 
         [Obsolete]
@@ -215,7 +235,7 @@ namespace Omnikeeper.Model
             var query = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 LEFT JOIN ""user"" u ON c.user_id = u.id
                 WHERE c.timestamp < @threshold
-                ORDER BY c.timestamp DESC";
+                ORDER BY c.timestamp DESC NULLS LAST";
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
 
             command.Parameters.AddWithValue("threshold", threshold);

@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Npgsql;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
 using System.Threading.Tasks;
@@ -24,10 +22,11 @@ namespace Omnikeeper.Model
         }
         public async Task<Templates> GetTemplates(IModelContext trans)
         {
-            return await trans.GetOrCreateCachedValueAsync("templates", async () =>
+            var (item, hit) = await trans.GetOrCreateCachedValueAsync("templates", async () =>
             {
                 return await TP.GetTemplates(trans);
             });
+            return item;
         }
     }
 }

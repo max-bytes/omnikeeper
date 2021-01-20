@@ -109,13 +109,13 @@ namespace Omnikeeper.Model
                 SELECT p.id, pw.wording_from, pw.wording_to, ps.state, pc.constraints
                 FROM predicate p
                 LEFT JOIN 
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, wording_from, wording_to, timestamp FROM predicate_wording WHERE timestamp <= @at_time ORDER BY predicate_id, timestamp DESC) pw
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, wording_from, wording_to, timestamp FROM predicate_wording WHERE timestamp <= @at_time ORDER BY predicate_id, timestamp DESC NULLS LAST) pw
                     ON pw.predicate_id = p.id
                 LEFT JOIN
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, state, timestamp FROM predicate_state WHERE timestamp <= @at_time ORDER BY predicate_id, timestamp DESC) ps
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, state, timestamp FROM predicate_state WHERE timestamp <= @at_time ORDER BY predicate_id, timestamp DESC NULLS LAST) ps
                     ON ps.predicate_id = p.id
                 LEFT JOIN
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, constraints, timestamp FROM predicate_constraints WHERE timestamp <= @at_time ORDER BY predicate_id, timestamp DESC) pc
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, constraints, timestamp FROM predicate_constraints WHERE timestamp <= @at_time ORDER BY predicate_id, timestamp DESC NULLS LAST) pc
                     ON pc.predicate_id = p.id
                 WHERE (ps.state = ANY(@states) OR (ps.state IS NULL AND @default_state = ANY(@states)))
             ", trans.DBConnection, trans.DBTransaction);
@@ -123,6 +123,7 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("at_time", atTime.Time);
             command.Parameters.AddWithValue("states", stateFilter.Filter2States());
             command.Parameters.AddWithValue("default_state", DefaultState);
+            command.Prepare();
             using (var s = await command.ExecuteReaderAsync())
             {
                 while (await s.ReadAsync())
@@ -148,19 +149,19 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<Predicate?> GetPredicate(string id, TimeThreshold atTime, AnchorStateFilter stateFilter, IModelContext trans)
+        public async Task<Predicate> GetPredicate(string id, TimeThreshold atTime, AnchorStateFilter stateFilter, IModelContext trans)
         {
             using var command = new NpgsqlCommand(@"
                 SELECT pw.wording_from, pw.wording_to, ps.state, pc.constraints
                 FROM predicate p
                 LEFT JOIN 
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, wording_from, wording_to FROM predicate_wording WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC) pw
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, wording_from, wording_to FROM predicate_wording WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC NULLS LAST) pw
                     ON pw.predicate_id = p.id
                 LEFT JOIN
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, state from predicate_state WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC) ps
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, state from predicate_state WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC NULLS LAST) ps
                     ON ps.predicate_id = p.id
                 LEFT JOIN
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, constraints from predicate_constraints WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC) pc
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, constraints from predicate_constraints WHERE timestamp <= @atTime ORDER BY predicate_id, timestamp DESC NULLS LAST) pc
                     ON pc.predicate_id = p.id
                 WHERE p.id = @id AND ((ps.state = ANY(@states) OR (ps.state IS NULL AND @default_state = ANY(@states))))
             ", trans.DBConnection, trans.DBTransaction);
@@ -169,10 +170,10 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("atTime", atTime.Time);
             command.Parameters.AddWithValue("states", stateFilter.Filter2States());
             command.Parameters.AddWithValue("default_state", DefaultState);
-
+            command.Prepare();
             using var s = await command.ExecuteReaderAsync();
             if (!await s.ReadAsync())
-                return null;
+                throw new Exception($"Could not find predicate with ID {id}");
 
             var wordingFrom = (s.IsDBNull(0)) ? DefaultWordingFrom : s.GetString(0);
             var wordingTo = (s.IsDBNull(1)) ? DefaultWordingTo : s.GetString(1);
@@ -187,17 +188,18 @@ namespace Omnikeeper.Model
                 SELECT pw.wording_from, pw.wording_to, ps.state, pc.constraints
                 FROM predicate p
                 LEFT JOIN 
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, wording_from, wording_to FROM predicate_wording ORDER BY predicate_id, timestamp DESC) pw
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, wording_from, wording_to FROM predicate_wording ORDER BY predicate_id, timestamp DESC NULLS LAST) pw
                     ON pw.predicate_id = p.id
                 LEFT JOIN
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, state from predicate_state ORDER BY predicate_id, timestamp DESC) ps
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, state from predicate_state ORDER BY predicate_id, timestamp DESC NULLS LAST) ps
                     ON ps.predicate_id = p.id
                 LEFT JOIN
-                    (SELECT DISTINCT ON (predicate_id) predicate_id, constraints from predicate_constraints ORDER BY predicate_id, timestamp DESC) pc
+                    (SELECT DISTINCT ON (predicate_id) predicate_id, constraints from predicate_constraints ORDER BY predicate_id, timestamp DESC NULLS LAST) pc
                     ON pc.predicate_id = p.id
                 WHERE p.id = @id
             ", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("id", id);
+            command.Prepare();
             using var s = await command.ExecuteReaderAsync();
             if (!await s.ReadAsync())
                 return null;

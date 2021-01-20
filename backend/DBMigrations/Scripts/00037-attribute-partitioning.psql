@@ -1,0 +1,70 @@
+-- create partition table and fill with initial value
+CREATE TABLE public.partition
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+    partition_index timestamp with time zone NOT NULL,
+    PRIMARY KEY (id)
+);
+
+ALTER TABLE public.partition
+    OWNER to postgres;
+	
+CREATE UNIQUE INDEX partition_partition_index_idx
+    ON public.partition USING btree
+    (partition_index DESC NULLS LAST)
+    TABLESPACE pg_default;
+	
+INSERT INTO public.partition(
+	partition_index)
+	VALUES ('1970-01-01 00:00:00Z'::timestamptz) ON CONFLICT DO NOTHING;
+
+
+-- partition table attribute by recreating it and then copying the data
+ALTER TABLE public.attribute rename to attribute_old;
+CREATE TABLE public.attribute
+(
+    name text COLLATE pg_catalog."default" NOT NULL,
+    ci_id uuid NOT NULL,
+    type attributevaluetype NOT NULL DEFAULT 'text'::attributevaluetype,
+    value_text text COLLATE pg_catalog."default" NOT NULL,
+    layer_id bigint NOT NULL,
+    state attributestate NOT NULL DEFAULT 'new'::attributestate,
+    "timestamp" timestamp with time zone NOT NULL,
+    id uuid NOT NULL,
+    changeset_id uuid,
+    value_control bytea NOT NULL DEFAULT ''::bytea,
+    value_binary bytea NOT NULL DEFAULT ''::bytea,
+    origin_type dataorigintype NOT NULL DEFAULT 'manual'::dataorigintype,
+    partition_index timestamp with time zone NOT NULL,
+    CONSTRAINT attribute_pkey_partitioned PRIMARY KEY (id, partition_index),
+    CONSTRAINT f_anchor FOREIGN KEY (ci_id)
+        REFERENCES public.ci (id) MATCH SIMPLE
+        ON UPDATE RESTRICT
+        ON DELETE RESTRICT,
+    CONSTRAINT f_changeset FOREIGN KEY (changeset_id)
+        REFERENCES public.changeset (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT f_layer FOREIGN KEY (layer_id)
+        REFERENCES public.layer (id) MATCH SIMPLE
+        ON UPDATE RESTRICT
+        ON DELETE RESTRICT
+) partition by list (partition_index);
+ALTER TABLE public.attribute
+    OWNER to postgres;
+CREATE INDEX attribute_ci_id_idx_partitioned
+    ON public.attribute USING btree
+    (ci_id ASC NULLS LAST);
+CREATE INDEX attribute_ci_id_name_layer_id_timestamp_idx_partitioned
+    ON public.attribute USING btree
+    (ci_id ASC NULLS LAST, name COLLATE pg_catalog."default" ASC NULLS LAST, layer_id ASC NULLS LAST, "timestamp" DESC NULLS LAST);
+CREATE INDEX attribute_layer_id_name_timestamp_idx_partitioned
+    ON public.attribute USING btree
+    (layer_id ASC NULLS LAST, name COLLATE pg_catalog."default" text_pattern_ops ASC NULLS LAST, "timestamp" DESC NULLS LAST);
+	
+-- select to_char( '1970-01-01 00:00:00Z'::timestamptz AT TIME ZONE 'UTC', 'YYYY_MM_DD_HH24_MI_SS')
+CREATE TABLE public.attribute_1970_01_01_00_00_00 PARTITION OF public.attribute
+    FOR VALUES IN ('1970-01-01 00:00:00Z'::timestamptz);
+	
+INSERT INTO public.attribute (name, ci_id, type, value_text, layer_id, state, "timestamp", id, changeset_id, value_control, value_binary, origin_type, partition_index) select *, '1970-01-01 00:00:00Z'::timestamptz from public.attribute_old;
+DROP TABLE public.attribute_old;

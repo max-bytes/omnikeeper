@@ -1,4 +1,8 @@
+using Omnikeeper.Base.Entity.DataOrigin;
+using ProtoBuf;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
@@ -20,21 +24,23 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    [ProtoContract(SkipConstructor = true)]
     public class Relation
     {
-        public Guid ID { get; private set; }
-        public Guid FromCIID { get; private set; }
-        public Guid ToCIID { get; private set; }
-        public string PredicateID { get => Predicate.ID; }
-        public Predicate Predicate { get; private set; }
-        public RelationState State { get; private set; }
-        public Guid ChangesetID { get; private set; }
+        [ProtoMember(1)] public readonly Guid ID;
+        [ProtoMember(2)] public readonly Guid FromCIID;
+        [ProtoMember(3)] public readonly Guid ToCIID;
+        public string PredicateID => Predicate.ID;
+        [ProtoMember(4)] public readonly Predicate Predicate;
+        [ProtoMember(5)] public readonly RelationState State;
+        [ProtoMember(6)] public readonly Guid ChangesetID;
+        [ProtoMember(7)] public readonly DataOriginV1 Origin;
 
         // information hash: 
         public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);
         public static string CreateInformationHash(Guid fromCIID, Guid toCIID, string predicateID) => fromCIID + "_" + toCIID + "_" + predicateID;
 
-        public Relation(Guid id, Guid fromCIID, Guid toCIID, Predicate predicate, RelationState state, Guid changesetID)
+        public Relation(Guid id, Guid fromCIID, Guid toCIID, Predicate predicate, RelationState state, Guid changesetID, DataOriginV1 origin)
         {
             ID = id;
             FromCIID = fromCIID;
@@ -42,6 +48,7 @@ namespace Omnikeeper.Base.Entity
             Predicate = predicate;
             State = state;
             ChangesetID = changesetID;
+            Origin = origin;
         }
     }
 
@@ -76,11 +83,11 @@ namespace Omnikeeper.Base.Entity
         public Guid GetFromCIID(Fragment fragment) => fragment.From;
         public Guid GetToCIID(Fragment fragment) => fragment.To;
 
-        public BulkRelationDataPredicateScope(string predicateID, long layerID, Fragment[] fragments)
+        public BulkRelationDataPredicateScope(string predicateID, long layerID, IEnumerable<Fragment> fragments)
         {
             PredicateID = predicateID;
             LayerID = layerID;
-            Fragments = fragments;
+            Fragments = fragments.ToArray();
         }
     }
 
@@ -106,10 +113,10 @@ namespace Omnikeeper.Base.Entity
         public Guid GetFromCIID(Fragment fragment) => fragment.From;
         public Guid GetToCIID(Fragment fragment) => fragment.To;
 
-        public BulkRelationDataLayerScope(long layerID, Fragment[] fragments)
+        public BulkRelationDataLayerScope(long layerID, IEnumerable<Fragment> fragments)
         {
             LayerID = layerID;
-            Fragments = fragments;
+            Fragments = fragments.ToArray();
         }
     }
 }

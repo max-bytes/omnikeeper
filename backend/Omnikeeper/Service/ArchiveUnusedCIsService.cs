@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Npgsql;
-using NpgsqlTypes;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -19,9 +18,13 @@ namespace Omnikeeper.Service
 
             // prefetch a list of CIIDs that do not have any attributes nor any relations (also historic)
             var unusedCIIDs = new HashSet<Guid>();
-            var queryUnusedCIIDs = @"SELECT id FROM ci ci WHERE
-                NOT EXISTS (SELECT 1 FROM attribute a WHERE a.ci_id = ci.id) AND 
-                NOT EXISTS (SELECT 1 FROM relation r WHERE r.from_ci_id = ci.id OR r.to_ci_id = ci.id)";
+            var queryUnusedCIIDs = @"select id from ci ci WHERE ci.id not in (
+                select distinct ci_id from attribute
+                union
+                select distinct from_ci_id from relation
+                union 
+                select distinct to_ci_id from relation
+            )";
             using (var commandUnusedCIIDs = new NpgsqlCommand(queryUnusedCIIDs, trans.DBConnection, null))
             {
                 using var s = await commandUnusedCIIDs.ExecuteReaderAsync();
@@ -39,23 +42,41 @@ namespace Omnikeeper.Service
             var deleted = 0;
             if (unusedCIIDs.Count > 0)
             {
-                using var commandDelete = new NpgsqlCommand(@"DELETE FROM ci WHERE id = @id RETURNING *", trans.DBConnection, null);
-                commandDelete.Parameters.Add("id", NpgsqlDbType.Uuid);
-                foreach (var ciid in unusedCIIDs)
+                // try to delete in bulk
+                try
                 {
-                    try
-                    {
-                        using var transD = modelContextBuilder.BuildDeferred();
-                        commandDelete.Parameters[0].Value = ciid;
-                        var d = await commandDelete.ExecuteScalarAsync();
-                        deleted++;
-                        transD.Commit();
-                    }
-                    catch (PostgresException e)
-                    {
-                        logger.LogWarning(e, $"Could not delete unused CI \"{ciid}\"");
-                    }
+                    using var transD = modelContextBuilder.BuildDeferred();
+                    using var commandDeleteBulk = new NpgsqlCommand(@"DELETE FROM ci WHERE id = ANY(@ciids)", trans.DBConnection, trans.DBTransaction);
+                    commandDeleteBulk.Parameters.AddWithValue("ciids", unusedCIIDs.ToArray());
+                    var d = await commandDeleteBulk.ExecuteNonQueryAsync();
+                    deleted = d;
+                    transD.Commit();
                 }
+                catch (Exception e)
+                {
+                    logger.LogWarning(e, $"Could not delete unused CIs in bulk");
+
+                    // TODO: should we try to delete CIs one-by-one as a fallback?
+                    // example code:
+                    //using var commandDelete = new NpgsqlCommand(@"DELETE FROM ci WHERE id = @id RETURNING *", trans.DBConnection, null);
+                    //commandDelete.Parameters.Add("id", NpgsqlDbType.Uuid);
+                    //foreach (var ciid in unusedCIIDs)
+                    //{
+                    //    try
+                    //    {
+                    //        using var transD = modelContextBuilder.BuildDeferred();
+                    //        commandDelete.Parameters[0].Value = ciid;
+                    //        var d = await commandDelete.ExecuteScalarAsync();
+                    //        deleted++;
+                    //        transD.Commit();
+                    //    }
+                    //    catch (PostgresException e)
+                    //    {
+                    //        logger.LogWarning(e, $"Could not delete unused CI \"{ciid}\"");
+                    //    }
+                    //}
+                }
+
             }
 
             return deleted;

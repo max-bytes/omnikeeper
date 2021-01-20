@@ -2,14 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Flurl.Http" Version="2.4.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Omnikeeper.Base\Omnikeeper.Base.csproj" />
+    <ProjectReference Include="..\Omnikeeper.Base\Omnikeeper.Base.csproj">
+    </ProjectReference>
   </ItemGroup>
 
   <PropertyGroup>

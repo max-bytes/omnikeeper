@@ -1,5 +1,4 @@
-﻿using Npgsql;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -47,6 +46,8 @@ namespace Omnikeeper.Base.Model
         Task<Changeset?> GetChangeset(Guid id, IModelContext trans);
         Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, IModelContext trans, int? limit = null);
 
+        [Obsolete("Archiving full-changesets-only is not necessary anymore, consider writing a simpler method that just removes outdated attributes/relations")]
         Task<int> ArchiveUnusedChangesetsOlderThan(DateTimeOffset threshold, IModelContext trans);
+        Task<int> DeleteEmptyChangesets(IModelContext trans);
     }
 }

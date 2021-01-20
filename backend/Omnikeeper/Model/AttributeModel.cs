@@ -1,5 +1,5 @@
-﻿using Npgsql;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -22,21 +22,36 @@ namespace Omnikeeper.Model
             this.baseModel = baseModel;
         }
 
-        private IEnumerable<MergedCIAttribute> MergeAttributes(IEnumerable<(CIAttribute attribute, long layerID)> attributes, LayerSet layers)
+        // attributes must be a pre-sorted enumerable based on layer-sort
+        private IEnumerable<MergedCIAttribute> MergeAttributes(IEnumerable<(IEnumerable<CIAttribute> attributes, long layerID)> attributes)
         {
-            var compound = new Dictionary<(Guid ciid, string name), SortedList<int, (CIAttribute attribute, long layerID)>>();
-
-            foreach (var (attribute, layerID) in attributes)
+            var compound = new Dictionary<(Guid ciid, string name), List<(CIAttribute attribute, long layerID)>>();
+            foreach (var g in attributes)
             {
-                var layerSortOrder = layers.GetOrder(layerID);
-
-                compound.AddOrUpdate((attribute.CIID, attribute.Name),
-                    () => new SortedList<int, (CIAttribute attribute, long layerID)>() { { layerSortOrder, (attribute, layerID) } },
-                    (old) => { old.Add(layerSortOrder, (attribute, layerID)); return old; }
-                );
+                var layerID = g.layerID;
+                foreach (var attribute in g.attributes)
+                {
+                    compound.AddOrUpdate((attribute.CIID, attribute.Name),
+                        () => new List<(CIAttribute attribute, long layerID)>() { (attribute, layerID) },
+                        (old) => { old.Add((attribute, layerID)); return old; });
+                }
             }
+            return compound.Select(t => new MergedCIAttribute(t.Value.First().attribute, layerStackIDs: t.Value.Select(tt => tt.layerID).Reverse().ToArray()));
+        }
 
-            return compound.Select(t => new MergedCIAttribute(t.Value.First().Value.attribute, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).Reverse().ToArray()));
+        // strings must be a pre-sorted enumerable based on layer-sort
+        private IDictionary<Guid, string> MergeStrings(IEnumerable<(IDictionary<Guid, string> strings, long layerID)> strings)
+        {
+            var ret = new Dictionary<Guid, string>();
+            foreach (var g in strings)
+            {
+                var layerID = g.layerID;
+                foreach (var kv in g.strings)
+                {
+                    ret.TryAdd(kv.Key, kv.Value);
+                }
+            }
+            return ret;
         }
 
         public async Task<MergedCIAttribute?> GetMergedAttribute(string name, Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
@@ -53,8 +68,8 @@ namespace Omnikeeper.Model
             if (layers.IsEmpty)
                 return null; // return empty, an empty layer list can never produce any attributes
 
-            var attributes = new List<(CIAttribute attribute, long layerID)>();
-
+            var attributes = new (IEnumerable<CIAttribute> attributes, long layerID)[layers.Length];
+            var i = 0;
             foreach (var layerID in layers)
             {
                 CIAttribute? a;
@@ -63,10 +78,10 @@ namespace Omnikeeper.Model
                 else
                     a = await baseModel.GetAttribute(name, ciid, layerID, trans, atTime);
                 if (a != null)
-                    attributes.Add((a, layerID));
+                    attributes[i++] = (new CIAttribute[] { a }, layerID);
             }
 
-            var mergedAttributes = MergeAttributes(attributes, layers);
+            var mergedAttributes = MergeAttributes(attributes);
 
             if (mergedAttributes.Count() > 1)
                 throw new Exception("Should never happen!");
@@ -78,39 +93,38 @@ namespace Omnikeeper.Model
             return ma;
         }
 
-        public async Task<IImmutableDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             var d = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), layers, trans, atTime);
-            return d.GetValueOrDefault(ciid, ImmutableDictionary<string, MergedCIAttribute>.Empty);
+            return d.GetValueOrDefault(ciid, new Dictionary<string, MergedCIAttribute>());
         }
 
-        public async Task<IImmutableDictionary<Guid, IImmutableDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
-            var ret = new Dictionary<Guid, IImmutableDictionary<string, MergedCIAttribute>>();
+            var ret = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
 
             if (layers.IsEmpty)
-                return ImmutableDictionary<Guid, IImmutableDictionary<string, MergedCIAttribute>>.Empty; // return empty, an empty layer list can never produce any attributes
+                return ImmutableDictionary<Guid, IDictionary<string, MergedCIAttribute>>.Empty; // return empty, an empty layer list can never produce any attributes
 
-            var attributes = new List<(CIAttribute attribute, long layerID)>();
-
+            var attributes = new (IEnumerable<CIAttribute> attributes, long layerID)[layers.Length];
+            var i = 0;
             foreach (var layerID in layers)
             {
                 var la = await baseModel.GetAttributes(cs, layerID, trans, atTime);
-                foreach (var a in la)
-                    attributes.Add((a, layerID));
+                attributes[i++] = (la, layerID);
             }
 
-            var mergedAttributes = MergeAttributes(attributes, layers);
+            var mergedAttributes = MergeAttributes(attributes);
 
             foreach (var ma in mergedAttributes)
             {
                 var CIID = ma.Attribute.CIID;
                 if (!ret.ContainsKey(CIID))
-                    ret.Add(CIID, ImmutableDictionary<string, MergedCIAttribute>.Empty);
-                ret[CIID] = ret[CIID].Add(ma.Attribute.Name, ma);
+                    ret.Add(CIID, new Dictionary<string, MergedCIAttribute>());
+                ret[CIID].Add(ma.Attribute.Name, ma);
             }
 
-            return ret.ToImmutableDictionary();
+            return ret;
         }
 
         public async Task<IEnumerable<MergedCIAttribute>> FindMergedAttributesByName(string regex, ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
@@ -118,37 +132,35 @@ namespace Omnikeeper.Model
             if (layers.IsEmpty)
                 return ImmutableList<MergedCIAttribute>.Empty; // return empty, an empty layer list can never produce any attributes
 
-            var attributes = new List<(CIAttribute attribute, long layerID)>();
-
+            var attributes = new (IEnumerable<CIAttribute> attributes, long layerID)[layers.Length];
+            var i = 0;
             foreach (var layerID in layers)
             {
                 var la = await baseModel.FindAttributesByName(regex, selection, layerID, trans, atTime);
-                foreach (var a in la)
-                    attributes.Add((a, layerID));
+                attributes[i++] = (la, layerID);
             }
 
-            var mergedAttributes = MergeAttributes(attributes, layers);
+            var mergedAttributes = MergeAttributes(attributes);
 
             return mergedAttributes;
         }
 
-        public async Task<IImmutableDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             var ret = new Dictionary<Guid, MergedCIAttribute>();
 
             if (layers.IsEmpty)
                 return ImmutableDictionary<Guid, MergedCIAttribute>.Empty; // return empty, an empty layer list can never produce any attributes
 
-            var attributes = new List<(CIAttribute attribute, long layerID)>();
-
+            var attributes = new (IEnumerable<CIAttribute> attributes, long layerID)[layers.Length];
+            var i = 0;
             foreach (var layerID in layers)
             {
                 var la = await baseModel.FindAttributesByFullName(name, selection, layerID, trans, atTime);
-                foreach (var a in la)
-                    attributes.Add((a, layerID));
+                attributes[i++] = (la, layerID);
             }
 
-            var mergedAttributes = MergeAttributes(attributes, layers);
+            var mergedAttributes = MergeAttributes(attributes);
 
             foreach (var ma in mergedAttributes)
             {
@@ -156,7 +168,24 @@ namespace Omnikeeper.Model
                 ret.Add(CIID, ma);
             }
 
-            return ret.ToImmutableDictionary();
+            return ret;
+        }
+
+        public async Task<IDictionary<Guid, string>> GetMergedCINames(ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        {
+            if (layers.IsEmpty)
+                return ImmutableDictionary<Guid, string>.Empty; // return empty, an empty layer list can never produce anything
+
+            var names = new (IDictionary<Guid, string> names, long layerID)[layers.Length];
+            var i = 0;
+            foreach (var layerID in layers)
+            {
+                var la = await baseModel.GetCINames(selection, layerID, trans, atTime);
+                names[i++] = (la, layerID);
+            }
+
+            var ret = MergeStrings(names);
+            return ret;
         }
 
         public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
@@ -183,9 +212,14 @@ namespace Omnikeeper.Model
             return await baseModel.FindAttributesByFullName(name, selection, layerID, trans, atTime);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changeset, IModelContext trans)
+        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
         {
-            return await baseModel.InsertAttribute(name, value, ciid, layerID, changeset, trans);
+            return await baseModel.FindCIIDsWithAttribute(name, selection, layerID, trans, atTime);
+        }
+
+        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
+        {
+            return await baseModel.InsertAttribute(name, value, ciid, layerID, changeset, origin, trans);
         }
 
         public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changeset, IModelContext trans)
@@ -193,14 +227,19 @@ namespace Omnikeeper.Model
             return await baseModel.RemoveAttribute(name, ciid, layerID, changeset, trans);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changeset, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
-            return await baseModel.InsertCINameAttribute(nameValue, ciid, layerID, changeset, trans);
+            return await baseModel.InsertCINameAttribute(nameValue, ciid, layerID, changeset, origin, trans);
         }
 
-        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, IModelContext trans)
+        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
-            return await baseModel.BulkReplaceAttributes(data, changeset, trans);
+            return await baseModel.BulkReplaceAttributes(data, changeset, origin, trans);
+        }
+
+        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            return await baseModel.GetCINames(selection, layerID, trans, atTime);
         }
     }
 }

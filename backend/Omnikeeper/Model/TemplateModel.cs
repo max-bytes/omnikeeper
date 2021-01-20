@@ -1,5 +1,4 @@
-﻿using Npgsql;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -42,7 +41,7 @@ namespace Omnikeeper.Model
             IImmutableDictionary<string, CIAttributeTemplate>? attributesTemplates = null;
             IImmutableDictionary<string, RelationTemplate>? relationTemplates = null;
 
-            var relationsAndToCIs = (await RelationService.GetMergedRelatedCIs(ci.ID, ci.Layers, CIModel, RelationModel, trans, atTime));
+            var relationsAndToCIs = (await RelationService.GetCompactRelatedCIs(ci.ID, ci.Layers, CIModel, RelationModel, null, trans, atTime)).ToLookup(c => c.PredicateID);
 
             var errorsAttribute = new Dictionary<string, TemplateErrorsAttribute>();
             if (attributesTemplates != null)

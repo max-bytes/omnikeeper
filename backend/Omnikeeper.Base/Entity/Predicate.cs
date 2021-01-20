@@ -1,8 +1,10 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
+    [ProtoContract(SkipConstructor = true)]
     public class Predicate : IEquatable<Predicate>
     {
         public Predicate(string iD, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints)
@@ -14,11 +16,11 @@ namespace Omnikeeper.Base.Entity
             Constraints = constraints;
         }
 
-        public string ID { get; private set; }
-        public string WordingFrom { get; private set; }
-        public string WordingTo { get; private set; }
-        public AnchorState State { get; private set; }
-        public PredicateConstraints Constraints { get; private set; }
+        [ProtoMember(1)] public readonly string ID;
+        [ProtoMember(2)] public readonly string WordingFrom;
+        [ProtoMember(3)] public readonly string WordingTo;
+        [ProtoMember(4)] public readonly AnchorState State;
+        [ProtoMember(5)] public readonly PredicateConstraints Constraints;
 
         public override bool Equals(object? obj) => Equals(obj as Predicate);
         public bool Equals(Predicate? other)
@@ -42,10 +44,10 @@ namespace Omnikeeper.Base.Entity
             Forward = forward;
         }
 
-        public string PredicateID { get; private set; }
-        public AnchorState PredicateState { get; private set; }
-        public string Wording { get; private set; }
-        public bool Forward { get; private set; }
+        public readonly string PredicateID;
+        public readonly AnchorState PredicateState;
+        public readonly string Wording;
+        public readonly bool Forward;
 
         public override bool Equals(object? obj) => Equals(obj as DirectedPredicate);
         public bool Equals(DirectedPredicate? other)
@@ -58,10 +60,11 @@ namespace Omnikeeper.Base.Entity
         public override int GetHashCode() => HashCode.Combine(PredicateID, Wording, PredicateState, Forward);
     }
 
+    [ProtoContract]
     public class PredicateConstraints
     {
-        public string[] PreferredTraitsTo { get; private set; }
-        public string[] PreferredTraitsFrom { get; private set; }
+        [ProtoMember(1)] public readonly string[] PreferredTraitsTo;
+        [ProtoMember(2)] public readonly string[] PreferredTraitsFrom;
 
         [System.Text.Json.Serialization.JsonIgnore]
         public bool HasPreferredTraitsTo => PreferredTraitsTo.Length > 0;

@@ -1,7 +1,6 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using NUnit.Framework;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Model;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -15,7 +14,7 @@ namespace Tasks.Tools
         public void Build()
         {
             var traits = DefaultTraits.Get();
-            var json = TraitsProvider.TraitSetSerializer.SerializeToString(traits);
+            var json = RecursiveTraitSet.Serializer.SerializeToString(traits);
 
             Console.WriteLine(json);
         }
@@ -33,14 +32,14 @@ namespace Tasks.Tools
                             CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
-                    new RecursiveTrait("windows_host", new List<TraitAttribute>() {
+                    new RecursiveTrait("host_windows", new List<TraitAttribute>() {
                         new TraitAttribute("os_family",
                             CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                                 new CIAttributeValueConstraintTextRegex(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                         )
                     }, requiredTraits: new string[] { "host" }),
 
-                    new RecursiveTrait("linux_host", new List<TraitAttribute>() {
+                    new RecursiveTrait("host_linux", new List<TraitAttribute>() {
                         new TraitAttribute("os_family",
                             CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                                 new CIAttributeValueConstraintTextRegex(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
@@ -88,12 +87,12 @@ namespace Tasks.Tools
                             new TraitAttribute("variables",
                                 CIAttributeTemplate.BuildFromParams("automation.ansible_variables", AttributeValueType.JSON, false)
                             )
-                        },
-                        new List<TraitRelation>() {
-                            new TraitRelation("ansible_groups",
-                                new RelationTemplate("has_ansible_group", 1, null)
-                            )
                         }
+                        //new List<TraitRelation>() {
+                        //    new TraitRelation("ansible_groups",
+                        //        new RelationTemplate("has_ansible_group", 1, null)
+                        //    )
+                        //}
                     ),
                 };
 

@@ -1,14 +1,13 @@
 ﻿using DotLiquid;
-using Omnikeeper.Base.Templating;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Tests.Templating
 {
 
-    class CustomDict : Dictionary<string, object> {
+    class CustomDict : Dictionary<string, object>
+    {
         private readonly string scalarValue;
         public CustomDict(string scalarValue)
         {

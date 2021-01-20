@@ -1,5 +1,4 @@
-﻿using Hangfire.Annotations;
-using Hangfire.Dashboard;
+﻿using Hangfire.Dashboard;
 
 namespace Omnikeeper.Startup
 {

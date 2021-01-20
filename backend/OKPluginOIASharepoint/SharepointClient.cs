@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Dynamic;
 using System.IO;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -106,7 +103,8 @@ namespace OKPluginOIASharepoint
             {
                 // did not find item in list
                 return new ExpandoObject();
-            } else if (itemList.Count > 1)
+            }
+            else if (itemList.Count > 1)
             {
                 // ??? possible? TODO: handle this case
             }

@@ -9,16 +9,8 @@ using GraphQL.Validation;
 using GraphQL.Validation.Complexity;
 using GraphQLParser.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using NUnit.Framework;
-using Omnikeeper.Base.Model;
 using Omnikeeper.GraphQL;
-using Omnikeeper.Model;
-using Omnikeeper.Model.Config;
-using Omnikeeper.Service;
-using Omnikeeper.Startup;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,7 +20,7 @@ namespace Tests.Integration.GraphQL.Base
 {
     abstract class QueryTestBase : DIServicedTestBase
     {
-        public QueryTestBase()
+        public QueryTestBase() : base(false)
         {
             Executer = new DocumentExecuter(new GraphQLDocumentBuilder(), new DocumentValidator(), new ComplexityAnalyzer());
             Writer = new DocumentWriter(indent: true);

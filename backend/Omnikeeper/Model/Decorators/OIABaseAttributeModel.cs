@@ -1,5 +1,5 @@
-﻿using Npgsql;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
@@ -43,6 +43,24 @@ namespace Omnikeeper.Model.Decorators
             return await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
         }
 
+        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            // TODO: implement
+            return await model.FindCIIDsWithAttribute(name, selection, layerID, trans, atTime);
+        }
+
+        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
+            {
+                // TODO: implement properly, instead of falling back to FindAttributesByFullName()
+                var attributes = await FindAttributesByFullName(ICIModel.NameAttribute, selection, layerID, trans, atTime);
+                return attributes.ToDictionary(a => a.CIID, a => a.Value.Value2String());
+            }
+
+            return await model.GetCINames(selection, layerID, trans, atTime);
+        }
+
         public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
@@ -73,18 +91,18 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetAttributes(selection, layerID, trans, atTime);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
 
-            return await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, trans);
+            return await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, origin, trans);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
 
-            return await model.InsertCINameAttribute(nameValue, ciid, layerID, changesetProxy, trans);
+            return await model.InsertCINameAttribute(nameValue, ciid, layerID, changesetProxy, origin, trans);
         }
 
         public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
@@ -94,11 +112,11 @@ namespace Omnikeeper.Model.Decorators
             return await model.RemoveAttribute(name, ciid, layerID, changesetProxy, trans);
         }
 
-        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(data.LayerID, trans)) throw new Exception("Cannot write to online inbound layer");
 
-            return await model.BulkReplaceAttributes(data, changesetProxy, trans);
+            return await model.BulkReplaceAttributes(data, changesetProxy, origin, trans);
         }
     }
 }

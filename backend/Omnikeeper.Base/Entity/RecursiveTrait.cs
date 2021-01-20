@@ -1,14 +1,20 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Omnikeeper.Base.Utils;
+using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
+    [ProtoContract(SkipConstructor = true)]
     public class TraitRelation
     {
-        public RelationTemplate RelationTemplate { get; set; }
+        [ProtoMember(1)] public readonly RelationTemplate RelationTemplate;
         // TODO: implement anyOf(RelationTemplate[])
-        public string Identifier { get; set; }
+        [ProtoMember(2)] public readonly string Identifier;
 
         public TraitRelation(string identifier, RelationTemplate relationTemplate)
         {
@@ -16,10 +22,11 @@ namespace Omnikeeper.Base.Entity
             RelationTemplate = relationTemplate;
         }
     }
+    [ProtoContract(SkipConstructor = true)]
     public class TraitAttribute
     {
-        public CIAttributeTemplate AttributeTemplate { get; set; }
-        public string Identifier { get; set; }
+        [ProtoMember(1)] public readonly CIAttributeTemplate AttributeTemplate;
+        [ProtoMember(2)] public readonly string Identifier;
 
         // TODO: implement anyOf(CIAttributeTemplate[])
 
@@ -30,14 +37,19 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    [ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
     public class RecursiveTrait
     {
-        public string Name { get; set; }
-        public IImmutableList<TraitAttribute> RequiredAttributes { get; set; }
-        public IImmutableList<TraitAttribute> OptionalAttributes { get; set; }
-        public IImmutableList<string> RequiredTraits { get; set; }
-        public ImmutableList<TraitRelation> RequiredRelations { get; set; }
+        [ProtoMember(1)] public readonly string Name;
+        [ProtoMember(2)] public readonly TraitAttribute[] RequiredAttributes = Array.Empty<TraitAttribute>();
+        [ProtoMember(3)] public readonly TraitAttribute[] OptionalAttributes = Array.Empty<TraitAttribute>();
+        [ProtoMember(4)] public readonly string[] RequiredTraits = Array.Empty<string>();
+        [ProtoMember(5)] public readonly TraitRelation[] RequiredRelations = Array.Empty<TraitRelation>();
         // TODO: implement optional relations
+
+#pragma warning disable CS8618
+        private RecursiveTrait() { }
+#pragma warning restore CS8618
 
         public RecursiveTrait(string name,
             IEnumerable<TraitAttribute>? requiredAttributes = null,
@@ -46,25 +58,28 @@ namespace Omnikeeper.Base.Entity
             IEnumerable<string>? requiredTraits = null)
         {
             Name = name;
-            RequiredAttributes = requiredAttributes?.ToImmutableList() ?? ImmutableList<TraitAttribute>.Empty;
-            OptionalAttributes = optionalAttributes?.ToImmutableList() ?? ImmutableList<TraitAttribute>.Empty;
-            RequiredRelations = requiredRelations?.ToImmutableList() ?? ImmutableList<TraitRelation>.Empty;
-            RequiredTraits = requiredTraits?.ToImmutableList() ?? ImmutableList<string>.Empty;
+            RequiredAttributes = requiredAttributes?.ToArray() ?? new TraitAttribute[0];
+            OptionalAttributes = optionalAttributes?.ToArray() ?? new TraitAttribute[0];
+            RequiredRelations = requiredRelations?.ToArray() ?? new TraitRelation[0];
+            RequiredTraits = requiredTraits?.ToArray() ?? new string[0];
         }
+
     }
 
     public class Trait
     {
-        private Trait(string name, IImmutableList<TraitAttribute> requiredAttributes, IImmutableList<TraitAttribute> optionalAttributes, ImmutableList<TraitRelation> requiredRelations)
+        private Trait(string name, IImmutableList<TraitAttribute> requiredAttributes, IImmutableList<TraitAttribute> optionalAttributes, ImmutableList<TraitRelation> requiredRelations, IImmutableSet<string> ancestorTraits)
         {
             Name = name;
             RequiredAttributes = requiredAttributes;
             OptionalAttributes = optionalAttributes;
             RequiredRelations = requiredRelations;
+            AncestorTraits = ancestorTraits;
         }
 
         public string Name { get; set; }
 
+        public IImmutableSet<string> AncestorTraits { get; set; }
         public IImmutableList<TraitAttribute> RequiredAttributes { get; set; }
         public IImmutableList<TraitAttribute> OptionalAttributes { get; set; }
         public ImmutableList<TraitRelation> RequiredRelations { get; set; }
@@ -73,32 +88,48 @@ namespace Omnikeeper.Base.Entity
         public static Trait Build(string name,
             IEnumerable<TraitAttribute> requiredAttributes,
             IEnumerable<TraitAttribute> optionalAttributes,
-            IEnumerable<TraitRelation> requiredRelations)
+            IEnumerable<TraitRelation> requiredRelations,
+            ISet<string> ancestorTraits)
         {
-            return new Trait(name, 
-                requiredAttributes.ToImmutableList(), optionalAttributes.ToImmutableList(), requiredRelations.ToImmutableList()
-            );
+            return new Trait(name, requiredAttributes.ToImmutableList(), optionalAttributes.ToImmutableList(), requiredRelations.ToImmutableList(), ancestorTraits.ToImmutableHashSet());
         }
     }
 
+    [ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
     public class RecursiveTraitSet
     {
         [JsonConstructor]
-        private RecursiveTraitSet(IImmutableDictionary<string, RecursiveTrait> traits)
+        private RecursiveTraitSet(IDictionary<string, RecursiveTrait> traits)
         {
-            Traits = traits;
+            this.traits = traits;
         }
 
-        public IImmutableDictionary<string, RecursiveTrait> Traits { get; set; }
+#pragma warning disable CS8618
+        private RecursiveTraitSet() { }
+#pragma warning restore CS8618
+
+        [ProtoMember(1)]
+        private readonly IDictionary<string, RecursiveTrait> traits = new Dictionary<string,RecursiveTrait>();
+        public IDictionary<string, RecursiveTrait> Traits => traits;
 
         public static RecursiveTraitSet Build(IEnumerable<RecursiveTrait> traits)
         {
-            return new RecursiveTraitSet(traits.ToImmutableDictionary(t => t.Name));
+            return new RecursiveTraitSet(traits.ToDictionary(t => t.Name));
         }
         public static RecursiveTraitSet Build(params RecursiveTrait[] traits)
         {
-            return new RecursiveTraitSet(traits.ToImmutableDictionary(t => t.Name));
+            return new RecursiveTraitSet(traits.ToDictionary(t => t.Name));
         }
+
+        public static MyJSONSerializer<RecursiveTraitSet> Serializer = new MyJSONSerializer<RecursiveTraitSet>(() =>
+        {
+            var s = new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Objects
+            };
+            s.Converters.Add(new StringEnumConverter());
+            return s;
+        });
     }
 
     public class TraitSet

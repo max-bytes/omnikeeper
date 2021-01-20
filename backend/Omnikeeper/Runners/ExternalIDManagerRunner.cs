@@ -1,7 +1,6 @@
 ﻿using Hangfire;
 using Hangfire.Server;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;

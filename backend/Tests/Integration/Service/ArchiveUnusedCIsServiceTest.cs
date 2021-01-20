@@ -1,18 +1,16 @@
-﻿using Omnikeeper.Base.Inbound;
+﻿using Microsoft.Extensions.Logging.Abstractions;
+using NUnit.Framework;
+using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
 using Omnikeeper.Service;
-using Microsoft.Extensions.Logging.Abstractions;
-using Npgsql;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Tests.Integration.Model;
 
 namespace Tests.Integration.Service
 {
@@ -21,10 +19,10 @@ namespace Tests.Integration.Service
         [Test]
         public async Task TestArchiveUnusedCIs()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var model = new CIModel(attributeModel);
+            var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             var e = new ExternalIDMapPostgresPersister();
             var p = new ScopedExternalIDMapPostgresPersister("tmp", e);
@@ -42,8 +40,8 @@ namespace Tests.Integration.Service
             Assert.AreEqual(0, await ArchiveUnusedCIsService.ArchiveUnusedCIs(e, ModelContextBuilder, NullLogger.Instance));
 
             var ciid2 = await model.CreateCI(trans);
-            var changeset1 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("foo", new AttributeScalarValueText("bar"), ciid2, layer.ID, changeset1, trans);
+            var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+            await attributeModel.InsertAttribute("foo", new AttributeScalarValueText("bar"), ciid2, layer.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);
 
             Assert.AreEqual(0, await ArchiveUnusedCIsService.ArchiveUnusedCIs(e, ModelContextBuilder, NullLogger.Instance));
 

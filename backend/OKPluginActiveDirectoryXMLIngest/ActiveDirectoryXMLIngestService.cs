@@ -18,10 +18,10 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
 
         private readonly XNamespace @namespace = "http://schemas.microsoft.com/powershell/2004/04";
 
-        public (IDictionary<Guid, CICandidate>, IEnumerable<RelationCandidate>) Files2IngestCandidates(IEnumerable<(Func<Stream> stream, string filename)> files, LayerSet searchLayers, ILogger logger)
+        public (IEnumerable<CICandidate>, IEnumerable<RelationCandidate>) Files2IngestCandidates(IEnumerable<(Func<Stream> stream, string filename)> files, LayerSet searchLayers, ILogger logger)
         {
-            var ciCandidatesGroups = new Dictionary<Guid, CICandidate>();
-            var ciCandidatesUsers = new Dictionary<Guid, CICandidate>();
+            var ciCandidatesGroups = new List<CICandidate>();
+            var ciCandidatesUsers = new List<CICandidate>();
             var relationCandidates = new List<RelationCandidate>();
 
             // resolve order of processing between files manually and report error if a dependency is missing (f.e. ADUsers.xml must be present, is basis for ADGroups.xml and ADComputers.xml)
@@ -33,19 +33,19 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
             else
             {
                 using var fs = fUsers.stream();
-                foreach (var (ciid, cic) in ParseUsers(fs, searchLayers, logger))
-                    ciCandidatesUsers.Add(ciid, cic);
+                foreach (var cic in ParseUsers(fs, searchLayers, logger))
+                    ciCandidatesUsers.Add(cic);
             }
 
             // build a lookup table of users with distinguished names as keys
-            Dictionary<string, (Guid Key, CICandidate Value)> userLookupViaDN = ciCandidatesUsers.ToDictionary(kv => kv.Value.Attributes.Fragments.First(f => f.Name.Equals("ad.distinguishedName")).Value.Value2String(), kv => (kv.Key, kv.Value));
+            Dictionary<string, CICandidate> userLookupViaDN = ciCandidatesUsers.ToDictionary(kv => kv.Attributes.Fragments.First(f => f.Name.Equals("ad.distinguishedName")).Value.Value2String(), kv => kv);
 
             var fComputers = files.FirstOrDefault(f => "ADComputers.xml".Equals(f.filename));
             if (fComputers != default)
             {
                 using var fs = fComputers.stream();
                 var (computers, relations) = ParseComputersAndRelationsToUsers(userLookupViaDN, fs, searchLayers, logger);
-                foreach (var (ciid, cic) in computers) ciCandidatesGroups.Add(ciid, cic);
+                foreach (var cic in computers) ciCandidatesGroups.Add(cic);
                 relationCandidates.AddRange(relations);
             }
             var fGroups = files.FirstOrDefault(f => "ADGroups.xml".Equals(f.filename));
@@ -53,14 +53,14 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
             {
                 using var fs = fGroups.stream();
                 var (groups, relations) = ParseGroupsAndRelationsToUsers(userLookupViaDN, fs, searchLayers, logger);
-                foreach (var (ciid, cic) in groups) ciCandidatesGroups.Add(ciid, cic);
+                foreach (var cic in groups) ciCandidatesGroups.Add(cic);
                 relationCandidates.AddRange(relations);
             }
 
-            return (ciCandidatesUsers.Concat(ciCandidatesGroups).ToDictionary(k => k.Key, k => k.Value), relationCandidates);
+            return (ciCandidatesUsers.Concat(ciCandidatesGroups), relationCandidates);
         }
 
-        IEnumerable<(Guid, CICandidate)> ParseUsers(Stream fs, LayerSet searchLayers, ILogger logger)
+        IEnumerable<CICandidate> ParseUsers(Stream fs, LayerSet searchLayers, ILogger logger)
         {
             var @base = XElement.Load(fs);
             foreach (var group in @base.Elements(@namespace + "Obj"))
@@ -84,14 +84,14 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Surname", "user.last_name"));
 
                 var ad = new CICandidateAttributeData(fragments);
-                var ciCandidate = new CICandidate(CIIdentificationMethodByData.BuildFromAttributes(IdentifiableUserAttributes, ad, searchLayers), ad);
-                yield return (Guid.NewGuid(), ciCandidate);
+                var ciCandidate = new CICandidate(Guid.NewGuid(), CIIdentificationMethodByData.BuildFromAttributes(IdentifiableUserAttributes, ad, searchLayers), ad);
+                yield return ciCandidate;
             }
         }
 
-        (IEnumerable<(Guid, CICandidate)>, IEnumerable<RelationCandidate>) ParseComputersAndRelationsToUsers(Dictionary<string, (Guid Key, CICandidate Value)> userLookupViaDN, Stream fs, LayerSet searchLayers, ILogger logger)
+        (IEnumerable<CICandidate>, IEnumerable<RelationCandidate>) ParseComputersAndRelationsToUsers(Dictionary<string, CICandidate> userLookupViaDN, Stream fs, LayerSet searchLayers, ILogger logger)
         {
-            var computers = new List<(Guid, CICandidate)>();
+            var computers = new List<CICandidate>();
             var relations = new List<RelationCandidate>();
             var @base = XElement.Load(fs);
 
@@ -120,7 +120,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                 {
                     if (userLookupViaDN.TryGetValue(managedByUserDN, out var foundUser))
                     {
-                        var r = new RelationCandidate(CIIdentificationMethodByTemporaryCIID.Build(computerGuid), CIIdentificationMethodByTemporaryCIID.Build(foundUser.Key), "managed_by");
+                        var r = new RelationCandidate(CIIdentificationMethodByTemporaryCIID.Build(computerGuid), CIIdentificationMethodByTemporaryCIID.Build(foundUser.TempCIID), "managed_by");
                         relations.Add(r);
                     }
                     else
@@ -134,16 +134,16 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                 }
 
                 var ad = new CICandidateAttributeData(fragments);
-                var ciCandidate = new CICandidate(CIIdentificationMethodByData.BuildFromAttributes(IdentifiableComputerAttributes, ad, searchLayers), ad);
-                computers.Add((computerGuid, ciCandidate));
+                var ciCandidate = new CICandidate(computerGuid, CIIdentificationMethodByData.BuildFromAttributes(IdentifiableComputerAttributes, ad, searchLayers), ad);
+                computers.Add(ciCandidate);
             }
 
             return (computers, relations);
         }
 
-        (IEnumerable<(Guid, CICandidate)>, IEnumerable<RelationCandidate>) ParseGroupsAndRelationsToUsers(Dictionary<string, (Guid Key, CICandidate Value)> userLookupViaDN, Stream fs, LayerSet searchLayers, ILogger logger)
+        (IEnumerable<CICandidate>, IEnumerable<RelationCandidate>) ParseGroupsAndRelationsToUsers(Dictionary<string, CICandidate> userLookupViaDN, Stream fs, LayerSet searchLayers, ILogger logger)
         {
-            var groups = new List<(Guid, CICandidate)>();
+            var groups = new List<CICandidate>();
             var relations = new List<RelationCandidate>();
             var @base = XElement.Load(fs);
 
@@ -174,7 +174,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                     { // find user CICandidate by distinguished name
                         if (userLookupViaDN.TryGetValue(userDN, out var foundUser))
                         {
-                            var r = new RelationCandidate(CIIdentificationMethodByTemporaryCIID.Build(foundUser.Key), CIIdentificationMethodByTemporaryCIID.Build(groupGuid), "member_of_group");
+                            var r = new RelationCandidate(CIIdentificationMethodByTemporaryCIID.Build(foundUser.TempCIID), CIIdentificationMethodByTemporaryCIID.Build(groupGuid), "member_of_group");
                             relations.Add(r);
                         }
                         else
@@ -189,8 +189,8 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                 }
 
                 var ad = new CICandidateAttributeData(fragments);
-                var ciCandidate = new CICandidate(CIIdentificationMethodByData.BuildFromAttributes(IdentifiableGroupAttributes, ad, searchLayers), ad);
-                groups.Add((groupGuid, ciCandidate));
+                var ciCandidate = new CICandidate(groupGuid, CIIdentificationMethodByData.BuildFromAttributes(IdentifiableGroupAttributes, ad, searchLayers), ad);
+                groups.Add(ciCandidate);
             }
 
             return (groups, relations);

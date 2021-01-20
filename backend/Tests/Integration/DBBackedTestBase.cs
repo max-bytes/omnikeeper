@@ -3,9 +3,7 @@ using Npgsql;
 using NUnit.Framework;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Omnikeeper.Base.Utils.Serialization;
 
 namespace Tests.Integration
 {
@@ -23,7 +21,7 @@ namespace Tests.Integration
 
             var dbcb = new DBConnectionBuilder();
             conn = dbcb.Build(DBSetup.dbName, false, true);
-            modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance);
+            modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
         }
 
         [TearDown]

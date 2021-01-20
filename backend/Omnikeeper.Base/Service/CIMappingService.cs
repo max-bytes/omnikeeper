@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
@@ -7,7 +6,6 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -56,7 +54,7 @@ namespace Omnikeeper.Base.Service
             private readonly IAttributeModel attributeModel;
             private readonly TimeThreshold atTime;
 
-            private readonly IDictionary<string, IImmutableDictionary<Guid, MergedCIAttribute>> attributeCache = new Dictionary<string, IImmutableDictionary<Guid, MergedCIAttribute>>();
+            private readonly IDictionary<string, IDictionary<Guid, MergedCIAttribute>> attributeCache = new Dictionary<string, IDictionary<Guid, MergedCIAttribute>>();
             private readonly IDictionary<Guid, Guid> temp2finalCIIDMapping = new Dictionary<Guid, Guid>();
 
 
@@ -159,6 +157,7 @@ namespace Omnikeeper.Base.Service
         {
             return new CIIdentificationMethodByTemporaryCIID() { CIID = ciid };
         }
+        private CIIdentificationMethodByTemporaryCIID() { }
     }
     public class CIIdentificationMethodByCIID : ICIIdentificationMethod
     {
@@ -167,6 +166,7 @@ namespace Omnikeeper.Base.Service
         {
             return new CIIdentificationMethodByCIID() { CIID = ciid };
         }
+        private CIIdentificationMethodByCIID() { }
     }
 
     public class CIIdentificationMethodNoop : ICIIdentificationMethod

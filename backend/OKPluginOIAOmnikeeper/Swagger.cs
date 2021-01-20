@@ -14,7 +14,6 @@ namespace OKPluginOIAOmnikeeper
 {
     using Omnikeeper.Base.Entity;
     using Omnikeeper.Base.Entity.DTO;
-    using Omnikeeper.Base.Entity.DTO.Ingest;
     using System = global::System;
     
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "13.8.2.0 (NJsonSchema v10.2.1.0 (Newtonsoft.Json v12.0.0.2))")]
@@ -28,15 +27,6 @@ namespace OKPluginOIAOmnikeeper
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         System.Threading.Tasks.Task IngestAsync(string version, long? writeLayerID, System.Collections.Generic.IEnumerable<long> searchLayerIDs, System.Collections.Generic.IEnumerable<FileParameter> files, System.Threading.CancellationToken cancellationToken);
-    
-        /// <returns>Success</returns>
-        /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task IngestAnsibleInventoryScanAsync(long writeLayerID, System.Collections.Generic.IEnumerable<long> searchLayerIDs, string version, AnsibleInventoryScanDTO body);
-    
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>Success</returns>
-        /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task IngestAnsibleInventoryScanAsync(long writeLayerID, System.Collections.Generic.IEnumerable<long> searchLayerIDs, string version, AnsibleInventoryScanDTO body, System.Threading.CancellationToken cancellationToken);
     
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
@@ -325,91 +315,6 @@ namespace OKPluginOIAOmnikeeper
                             content_.Add(content_files_, "files", item_.FileName ?? "files");
                         }
                     }
-                    request_.Content = content_;
-                    request_.Method = new System.Net.Http.HttpMethod("POST");
-    
-                    PrepareRequest(client_, request_, urlBuilder_);
-                    var url_ = urlBuilder_.ToString();
-                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
-                    PrepareRequest(client_, request_, url_);
-    
-                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-                    var disposeResponse_ = true;
-                    try
-                    {
-                        var headers_ = System.Linq.Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
-                        if (response_.Content != null && response_.Content.Headers != null)
-                        {
-                            foreach (var item_ in response_.Content.Headers)
-                                headers_[item_.Key] = item_.Value;
-                        }
-    
-                        ProcessResponse(client_, response_);
-    
-                        var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
-                        {
-                            return;
-                        }
-                        else
-                        {
-                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false); 
-                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
-                        }
-                    }
-                    finally
-                    {
-                        if (disposeResponse_)
-                            response_.Dispose();
-                    }
-                }
-            }
-            finally
-            {
-                if (disposeClient_)
-                    client_.Dispose();
-            }
-        }
-    
-        /// <returns>Success</returns>
-        /// <exception cref="ApiException">A server side error occurred.</exception>
-        public System.Threading.Tasks.Task IngestAnsibleInventoryScanAsync(long writeLayerID, System.Collections.Generic.IEnumerable<long> searchLayerIDs, string version, AnsibleInventoryScanDTO body)
-        {
-            return IngestAnsibleInventoryScanAsync(writeLayerID, searchLayerIDs, version, body, System.Threading.CancellationToken.None);
-        }
-    
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>Success</returns>
-        /// <exception cref="ApiException">A server side error occurred.</exception>
-        public async System.Threading.Tasks.Task IngestAnsibleInventoryScanAsync(long writeLayerID, System.Collections.Generic.IEnumerable<long> searchLayerIDs, string version, AnsibleInventoryScanDTO body, System.Threading.CancellationToken cancellationToken)
-        {
-            if (version == null)
-                throw new System.ArgumentNullException("version");
-    
-            if (writeLayerID == null)
-                throw new System.ArgumentNullException("writeLayerID");
-    
-            if (searchLayerIDs == null)
-                throw new System.ArgumentNullException("searchLayerIDs");
-    
-            if (body == null)
-                throw new System.ArgumentNullException("body");
-    
-            var urlBuilder_ = new System.Text.StringBuilder();
-            urlBuilder_.Append("api/v{version}/AnsibleIngest/IngestAnsibleInventoryScan?");
-            urlBuilder_.Replace("{version}", System.Uri.EscapeDataString(ConvertToString(version, System.Globalization.CultureInfo.InvariantCulture)));
-            urlBuilder_.Append(System.Uri.EscapeDataString("writeLayerID") + "=").Append(System.Uri.EscapeDataString(ConvertToString(writeLayerID, System.Globalization.CultureInfo.InvariantCulture))).Append("&");
-            foreach (var item_ in searchLayerIDs) { urlBuilder_.Append(System.Uri.EscapeDataString("searchLayerIDs") + "=").Append((item_ == null) ? "" : System.Uri.EscapeDataString(ConvertToString(item_, System.Globalization.CultureInfo.InvariantCulture))).Append("&"); }
-            urlBuilder_.Length--;
-    
-            var client_ = _httpClient;
-            var disposeClient_ = false;
-            try
-            {
-                using (var request_ = new System.Net.Http.HttpRequestMessage())
-                {
-                    var content_ = new System.Net.Http.StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(body, _settings.Value));
-                    content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json;odata.metadata=minimal;odata.streaming=true");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
     

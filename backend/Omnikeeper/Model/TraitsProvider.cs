@@ -1,7 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Npgsql;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
@@ -53,14 +50,14 @@ namespace Omnikeeper.Model
             return TraitSet.Build(flattened);
         }
 
-        public static MyJSONSerializer<RecursiveTraitSet> TraitSetSerializer = new MyJSONSerializer<RecursiveTraitSet>(() =>
+        public async Task<Trait?> GetActiveTrait(string traitName, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var s = new JsonSerializerSettings()
-            {
-                TypeNameHandling = TypeNameHandling.Objects
-            };
-            s.Converters.Add(new StringEnumConverter());
-            return s;
-        });
+            // TODO: can be done more efficiently? here we get ALL traits, just to select a single one... but the flattening is necessary
+            var ts = await GetActiveTraitSet(trans, timeThreshold);
+
+            if (ts.Traits.TryGetValue(traitName, out var trait))
+                return trait;
+            return null;
+        }
     }
 }

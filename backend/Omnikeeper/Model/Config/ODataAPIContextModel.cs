@@ -55,7 +55,7 @@ namespace Omnikeeper.Model.Config
             return ret;
         }
 
-        public async Task<ODataAPIContext?> GetContextByID(string id, IModelContext trans)
+        public async Task<ODataAPIContext> GetContextByID(string id, IModelContext trans)
         {
             using var command = new NpgsqlCommand(@"
                 SELECT config FROM config.odataapi_context WHERE id = @id LIMIT 1
@@ -63,23 +63,29 @@ namespace Omnikeeper.Model.Config
             command.Parameters.AddWithValue("id", id);
             using var s = await command.ExecuteReaderAsync();
             if (!await s.ReadAsync())
-                return null;
+                throw new Exception($"Could not find context with ID {id}");
 
             var configJO = s.GetFieldValue<JObject>(0);
-            return Deserialize(id, configJO);
+            var d = Deserialize(id, configJO);
+            if (d == null)
+                throw new Exception($"Could not deserialized context with ID {id}");
+            return d;
         }
 
-        public async Task<ODataAPIContext?> Upsert(string id, ODataAPIContext.IConfig config, IModelContext trans)
+        public async Task<ODataAPIContext> Upsert(string id, ODataAPIContext.IConfig config, IModelContext trans)
         {
             var configJO = ODataAPIContext.ConfigSerializer.SerializeToJObject(config);
             using var command = new NpgsqlCommand(@"INSERT INTO config.odataapi_context (id, config) VALUES (@id, @config) ON CONFLICT (id) DO UPDATE SET config = EXCLUDED.config", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("id", id);
             command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = configJO });
             await command.ExecuteNonQueryAsync();
-            return Deserialize(id, configJO);
+            var d = Deserialize(id, configJO);
+            if (d == null)
+                throw new Exception($"Could not deserialized context with ID {id}");
+            return d;
         }
 
-        public async Task<ODataAPIContext?> Delete(string id, IModelContext trans)
+        public async Task<ODataAPIContext> Delete(string id, IModelContext trans)
         {
             using var command = new NpgsqlCommand(@"DELETE FROM config.odataapi_context WHERE id = @id RETURNING config", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("id", id);
@@ -88,7 +94,10 @@ namespace Omnikeeper.Model.Config
             await reader.ReadAsync();
             var config = reader.GetFieldValue<JObject>(0);
 
-            return Deserialize(id, config);
+            var d = Deserialize(id, config);
+            if (d == null)
+                throw new Exception($"Could not deserialized context with ID {id}");
+            return d;
         }
     }
 }

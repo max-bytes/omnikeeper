@@ -1,6 +1,7 @@
 ﻿using Npgsql;
 using NpgsqlTypes;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -31,9 +32,10 @@ namespace Omnikeeper.Model
             }
 
             var changeset = await changesetProxy.GetChangeset(trans);
+            var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
-            using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id) 
-                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id)", trans.DBConnection, trans.DBTransaction);
+            using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, origin_type, partition_index) 
+                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id, @origin_type, @partition_index)", trans.DBConnection, trans.DBTransaction);
 
             var (valueText, valueBinary, valueControl) = Marshal(currentAttribute.Value);
 
@@ -49,17 +51,19 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("state", AttributeState.Removed);
             command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
             command.Parameters.AddWithValue("changeset_id", changeset.ID);
+            command.Parameters.AddWithValue("origin_type", currentAttribute.Origin.Type);
+            command.Parameters.AddWithValue("partition_index", partitionIndex);
 
             await command.ExecuteNonQueryAsync();
-            var ret = new CIAttribute(id, name, ciid, currentAttribute.Value, AttributeState.Removed, changeset.ID);
+            var ret = new CIAttribute(id, name, ciid, currentAttribute.Value, AttributeState.Removed, changeset.ID, currentAttribute.Origin);
 
             return (ret, true);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
-            => await InsertAttribute(ICIModel.NameAttribute, new AttributeScalarValueText(nameValue), ciid, layerID, changesetProxy, trans);
+        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+            => await InsertAttribute(ICIModel.NameAttribute, new AttributeScalarValueText(nameValue), ciid, layerID, changesetProxy, origin, trans);
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var readTS = TimeThreshold.BuildLatest();
             var currentAttribute = await GetAttribute(name, ciid, layerID, trans, readTS);
@@ -75,13 +79,15 @@ namespace Omnikeeper.Model
 
             // handle equality case
             // which user it is does not make any difference; if the data is the same, no insert is made
+            // the origin also does not make a difference... TODO: think about that! Is this correct?
             if (currentAttribute != null && currentAttribute.State != AttributeState.Removed && currentAttribute.Value.Equals(value))
                 return (currentAttribute, false);
 
             var changeset = await changesetProxy.GetChangeset(trans);
+            var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
-            using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id) 
-                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id)", trans.DBConnection, trans.DBTransaction);
+            using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, origin_type, partition_index) 
+                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id, @origin_type, @partition_index)", trans.DBConnection, trans.DBTransaction);
 
             var (valueText, valueBinary, valueControl) = Marshal(value);
 
@@ -97,23 +103,30 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("state", state);
             command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
             command.Parameters.AddWithValue("changeset_id", changeset.ID);
+            command.Parameters.AddWithValue("origin_type", origin.Type);
+            command.Parameters.AddWithValue("partition_index", partitionIndex);
 
             await command.ExecuteNonQueryAsync();
-            return (new CIAttribute(id, name, ciid, value, state, changeset.ID), true);
+            return (new CIAttribute(id, name, ciid, value, state, changeset.ID, origin), true);
         }
 
-        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, IModelContext trans)
+        // NOTE: this bulk operation DOES check if the attributes that are inserted are "unique":
+        // it is not possible to insert the "same" attribute (same ciid, name and layer) multiple times
+        // if this operation detects a duplicate, an exception is thrown;
+        // the caller is responsible for making sure there are no duplicates
+        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var readTS = TimeThreshold.BuildLatest();
 
             var outdatedAttributes = (data switch
-            {
+            { // TODO: performance improvements when data.NamePrefix is empty?
                 BulkCIAttributeDataLayerScope d => (await FindAttributesByName($"^{data.NamePrefix}", new AllCIIDsSelection(), data.LayerID, trans, readTS)),
                 BulkCIAttributeDataCIScope d => (await FindAttributesByName($"^{data.NamePrefix}", SpecificCIIDsSelection.Build(d.CIID), data.LayerID, trans, readTS)),
                 _ => null
             }).ToDictionary(a => a.InformationHash);
 
             var actualInserts = new List<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>();
+            var informationHashesToInsert = new HashSet<string>();
             foreach (var fragment in data.Fragments)
             {
                 var fullName = data.GetFullName(fragment);
@@ -121,7 +134,13 @@ namespace Omnikeeper.Model
                 var value = data.GetValue(fragment);
 
                 var informationHash = CIAttribute.CreateInformationHash(fullName, ciid);
-                // remove the current attribute from the list of attribute to remove
+                if (informationHashesToInsert.Contains(informationHash))
+                {
+                    throw new Exception($"Duplicate attribute fragment detected! Bulk insertion does not support duplicate attributes; attribute name: {fullName}, ciid: {ciid}");
+                }
+                informationHashesToInsert.Add(informationHash);
+
+                // remove the current attribute from the list of attributes to remove
                 outdatedAttributes.Remove(informationHash, out var currentAttribute);
 
                 var state = AttributeState.New;
@@ -145,8 +164,10 @@ namespace Omnikeeper.Model
             {
                 Changeset changeset = await changesetProxy.GetChangeset(trans);
 
+                var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
+
                 // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
-                using var writer = trans.DBConnection.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id) FROM STDIN (FORMAT BINARY)");
+                using var writer = trans.DBConnection.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, origin_type, partition_index) FROM STDIN (FORMAT BINARY)");
                 foreach (var (ciid, fullName, value, state) in actualInserts)
                 {
                     var (valueText, valueBinary, valueControl) = Marshal(value);
@@ -163,6 +184,8 @@ namespace Omnikeeper.Model
                     writer.Write(state, "attributestate");
                     writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                     writer.Write(changeset.ID);
+                    writer.Write(origin.Type, "dataorigintype");
+                    writer.Write(partitionIndex, NpgsqlDbType.TimestampTz);
                 }
 
                 // remove outdated 
@@ -182,6 +205,8 @@ namespace Omnikeeper.Model
                     writer.Write(AttributeState.Removed, "attributestate");
                     writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                     writer.Write(changeset.ID);
+                    writer.Write(outdatedAttribute.Origin.Type, "dataorigintype");
+                    writer.Write(partitionIndex, NpgsqlDbType.TimestampTz);
                 }
                 writer.Complete();
             }

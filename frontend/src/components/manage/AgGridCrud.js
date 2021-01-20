@@ -175,7 +175,7 @@ export default function AgGridCrud(props) {
         columnDefs={columnDefs}
         defaultColDef={defaultColDef}
         rowData={props.rowData}
-        deltaRowDataMode
+        immutableData
         getRowNodeId={data => {
             if (isFrontendRowNodeOnly(data)) return data.frontend_id; else return getRowNodeId(data);
         }} />

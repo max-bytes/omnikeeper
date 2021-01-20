@@ -7,7 +7,7 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs"
 
 
-
+# TODO: split into build and publish
 build-backend:
   image: docker:stable
   stage: build
@@ -27,7 +27,7 @@ build-backend:
     - "docker build -t $CI_REGISTRY/landscape/omnikeeper/backend:$VERSION -t $CI_REGISTRY/landscape/omnikeeper/backend:latest -f ./Omnikeeper/Dockerfile --build-arg version=$VERSION ."
     - "docker push $CI_REGISTRY/landscape/omnikeeper/backend"
 
-
+# TODO: split into build and publish
 build-frontend:
   image: docker:stable
   stage: build
@@ -44,7 +44,7 @@ build-frontend:
     - "cd frontend"
     - "VERSION=$CI_COMMIT_TAG"
     - echo "Building frontend version $VERSION"
-    - "docker build -t $CI_REGISTRY/landscape/omnikeeper/frontend:$VERSION -t $CI_REGISTRY/landscape/omnikeeper/frontend:latest --build-arg version=$VERSION ."
+    - "docker build -t $CI_REGISTRY/landscape/omnikeeper/frontend:$VERSION -t $CI_REGISTRY/landscape/omnikeeper/frontend:latest --build-arg version=$VERSION --build-arg npm_repo_key=$NPM_REPO_KEY ."
     - "docker push $CI_REGISTRY/landscape/omnikeeper/frontend"
     
 
@@ -61,9 +61,9 @@ build-nuget-package-base:
   script:
     - "VERSION=$CI_COMMIT_TAG"
     - echo "Building nuget package for omnikeeper base version $VERSION"
-    - dotnet nuget update source "MHX nuget Repository" --username "${NUGET_REPO_USER}" --password "${NUGET_REPO_PASS}" --store-password-in-clear-text --configfile backend/NuGet.Config
-    - dotnet pack backend/Omnikeeper.Base/Omnikeeper.Base.csproj /p:Version=${VERSION} -c Release
-    - mv backend/Omnikeeper.Base/bin/Release/Omnikeeper.Base.${VERSION}.nupkg Omnikeeper.Base.nupkg
+    - dotnet nuget update source "MHX nuget Repository" --username "$NUGET_REPO_USER" --password "$NUGET_REPO_PASS" --store-password-in-clear-text --configfile backend/NuGet.Config
+    - dotnet pack backend/Omnikeeper.Base/Omnikeeper.Base.csproj /p:Version=$VERSION -c Release
+    - mv backend/Omnikeeper.Base/bin/Release/Omnikeeper.Base.$VERSION.nupkg Omnikeeper.Base.nupkg
   artifacts:
     paths:
       - Omnikeeper.Base.nupkg
@@ -81,7 +81,8 @@ publish-nuget-package-base:
   only: 
     - tags
 
-build-nuget-package-okplugin-active-directory-xml-ingest:
+
+.build-nuget-package-okplugin:
   image: mcr.microsoft.com/dotnet/core/sdk:3.1-buster
   stage: build
   when: on_success
@@ -93,23 +94,81 @@ build-nuget-package-okplugin-active-directory-xml-ingest:
     - tags
   script:
     - "VERSION=$CI_COMMIT_TAG"
-    - echo "Building nuget package for omnikeeper plugin ActiveDirectoryXMLIngest $VERSION"
-    - dotnet nuget update source "MHX nuget Repository" --username "${NUGET_REPO_USER}" --password "${NUGET_REPO_PASS}" --store-password-in-clear-text --configfile backend/NuGet.Config
-    - dotnet pack backend/OKPluginActiveDirectoryXMLIngest/OKPluginActiveDirectoryXMLIngest.csproj /p:Version=${VERSION} -c Release
-    - mv backend/OKPluginActiveDirectoryXMLIngest/bin/Release/OKPluginActiveDirectoryXMLIngest.${VERSION}.nupkg OKPluginActiveDirectoryXMLIngest.nupkg
+    - echo "Building nuget package for omnikeeper plugin $PLUGIN_NAME $VERSION"
+    - dotnet nuget update source "MHX nuget Repository" --username "$NUGET_REPO_USER" --password "$NUGET_REPO_PASS" --store-password-in-clear-text --configfile backend/NuGet.Config
+    - dotnet pack backend/$PLUGIN_NAME/$PLUGIN_NAME.csproj /p:Version=$VERSION -c Release
+    - mv backend/$PLUGIN_NAME/bin/Release/$PLUGIN_NAME.$VERSION.nupkg $PLUGIN_NAME.nupkg
   artifacts:
     paths:
-      - OKPluginActiveDirectoryXMLIngest.nupkg
+      - $PLUGIN_NAME.nupkg
     expire_in: 2 days
-publish-nuget-package-okplugin-active-directory-xml-ingest:
+.publish-nuget-package-okplugin:
   image: docker-registry.mhx.at/infra-docker/container-images/push-to-nexus-nuget:latest
   stage: publish
   when: on_success
-  needs: ["build-nuget-package-okplugin-active-directory-xml-ingest"]
   variables:
     NEXUS_BASEURL: "https://repo.mhx.at"
-    PACKAGE_NAME: "OKPluginActiveDirectoryXMLIngest"
   script:
-    - sh /upload-nuget.sh OKPluginActiveDirectoryXMLIngest.nupkg
+    - sh /upload-nuget.sh $PACKAGE_NAME.nupkg
   only: 
     - tags
+
+build-nuget-package-okplugin-active-directory-xml-ingest:
+  extends: .build-nuget-package-okplugin
+  variables:
+    PLUGIN_NAME: "OKPluginActiveDirectoryXMLIngest"
+publish-nuget-package-okplugin-active-directory-xml-ingest:
+  extends: ".publish-nuget-package-okplugin"
+  needs: ["build-nuget-package-okplugin-active-directory-xml-ingest"]
+  variables:
+    PACKAGE_NAME: "OKPluginActiveDirectoryXMLIngest"
+
+build-nuget-package-okplugin-ansible-inventory-scan-ingest:
+  extends: .build-nuget-package-okplugin
+  variables:
+    PLUGIN_NAME: "OKPluginAnsibleInventoryScanIngest"
+publish-nuget-package-okplugin-ansible-inventory-scan-ingest:
+  extends: ".publish-nuget-package-okplugin"
+  needs: ["build-nuget-package-okplugin-ansible-inventory-scan-ingest"]
+  variables:
+    PACKAGE_NAME: "OKPluginAnsibleInventoryScanIngest"
+
+build-nuget-package-okplugin-clb-monitoring:
+  extends: .build-nuget-package-okplugin
+  variables:
+    PLUGIN_NAME: "OKPluginCLBMonitoring"
+publish-nuget-package-okplugin-clb-monitoring:
+  extends: ".publish-nuget-package-okplugin"
+  needs: ["build-nuget-package-okplugin-clb-monitoring"]
+  variables:
+    PACKAGE_NAME: "OKPluginCLBMonitoring"
+
+build-nuget-package-okplugin-oia-keycloak:
+  extends: .build-nuget-package-okplugin
+  variables:
+    PLUGIN_NAME: "OKPluginOIAKeycloak"
+publish-nuget-package-okplugin-oia-keycloak:
+  extends: ".publish-nuget-package-okplugin"
+  needs: ["build-nuget-package-okplugin-oia-keycloak"]
+  variables:
+    PACKAGE_NAME: "OKPluginOIAKeycloak"
+    
+build-nuget-package-okplugin-oia-omnikeeper:
+  extends: .build-nuget-package-okplugin
+  variables:
+    PLUGIN_NAME: "OKPluginOIAOmnikeeper"
+publish-nuget-package-okplugin-oia-omnikeeper:
+  extends: ".publish-nuget-package-okplugin"
+  needs: ["build-nuget-package-okplugin-oia-omnikeeper"]
+  variables:
+    PACKAGE_NAME: "OKPluginOIAOmnikeeper"
+
+build-nuget-package-okplugin-oia-sharepoint:
+  extends: .build-nuget-package-okplugin
+  variables:
+    PLUGIN_NAME: "OKPluginOIASharepoint"
+publish-nuget-package-okplugin-oia-sharepoint:
+  extends: ".publish-nuget-package-okplugin"
+  needs: ["build-nuget-package-okplugin-oia-sharepoint"]
+  variables:
+    PACKAGE_NAME: "OKPluginOIASharepoint"

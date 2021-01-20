@@ -1,24 +1,29 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Security.Cryptography;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
+    [ProtoContract(SkipConstructor = true)]
     public class BinaryScalarAttributeValueProxy
     {
         public bool HasFullData() => FullData != null;
-        public byte[]? FullData { get; }
-        public int FullSize { get; }
-        public byte[] Sha256Hash { get; }
-        public string MimeType { get; }
-        private readonly string hashString;
+
+        [ProtoMember(1)] private readonly byte[]? fullData;
+        public byte[]? FullData => fullData;
+        [ProtoMember(2)] private readonly int fullSize;
+        public int FullSize => fullSize;
+        [ProtoMember(3)] private readonly byte[] sha256Hash;
+        public byte[] Sha256Hash => sha256Hash;
+        [ProtoMember(4)] private readonly string mimeType;
+        public string MimeType => mimeType;
 
         private BinaryScalarAttributeValueProxy(byte[] sha256Hash, string mimeType, int fullSize, byte[]? fullData)
         {
-            Sha256Hash = sha256Hash;
-            FullSize = fullSize;
-            FullData = fullData;
-            hashString = Convert.ToBase64String(sha256Hash);
-            MimeType = mimeType;
+            this.sha256Hash = sha256Hash;
+            this.fullSize = fullSize;
+            this.fullData = fullData;
+            this.mimeType = mimeType;
         }
 
         private bool AreEqual(byte[] a, byte[] b)
@@ -45,7 +50,7 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public override string ToString()
         {
-            return hashString;
+            return Convert.ToBase64String(sha256Hash);
         }
 
 

@@ -1,0 +1,15 @@
+CREATE INDEX 
+    ON public.layer_state USING btree
+    (layer_id ASC NULLS LAST, "timestamp" DESC NULLS LAST);
+
+CREATE INDEX 
+    ON public.layer_computelayerbrain USING btree
+    (layer_id ASC NULLS LAST, "timestamp" DESC NULLS LAST);
+
+CREATE INDEX 
+    ON public.layer_onlineinboundlayerplugin USING btree
+    (layer_id ASC NULLS LAST, "timestamp" DESC NULLS LAST);
+
+CREATE INDEX 
+    ON public.layer_color USING btree
+    (layer_id ASC NULLS LAST, "timestamp" DESC NULLS LAST);

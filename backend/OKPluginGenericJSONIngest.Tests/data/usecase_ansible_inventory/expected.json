@@ -1,0 +1,851 @@
+﻿{
+    "cis": [
+        {
+            "tempID": "tempCIID>h1jmplx01.mhx.at",
+            "idMethod": {
+                "method": "byData",
+                "attributes": [
+                    "fqdn"
+                ]
+            },
+            "attributes": [
+                {
+                    "name": "__name",
+                    "value": "h1jmplx01.mhx.at",
+                    "type": 0
+                },
+                {
+                    "name": "fqdn",
+                    "value": "h1jmplx01.mhx.at",
+                    "type": 0
+                },
+                {
+                    "name": "os_family",
+                    "value": "CentOS",
+                    "type": 0
+                },
+                {
+                    "name": "architecture",
+                    "value": "x86_64",
+                    "type": 0
+                },
+                {
+                    "name": "ansible.inventory.cmdline",
+                    "value": {
+                        "BOOT_IMAGE": "/vmlinuz-3.10.0-1062.18.1.el7.x86_64",
+                        "LANG": "en_US.UTF-8",
+                        "quiet": true,
+                        "rd.lvm.lv": "vg_sys/lv_swap",
+                        "rhgb": true,
+                        "ro": true,
+                        "root": "/dev/mapper/vg_sys-lv_root"
+                    },
+                    "type": 3
+                },
+                {
+                    "name": "ansible.inventory.last_scan_time",
+                    "value": "2020-04-21T07:51:39Z",
+                    "type": 0
+                },
+                {
+                    "name": "default_ipv4",
+                    "value": {
+                        "address": "116.202.206.196",
+                        "alias": "dmzpub0",
+                        "broadcast": "116.202.206.207",
+                        "gateway": "116.202.206.193",
+                        "interface": "dmzpub0",
+                        "macaddress": "7e:10:82:6d:db:6d",
+                        "mtu": 1500,
+                        "netmask": "255.255.255.240",
+                        "network": "116.202.206.192",
+                        "type": "ether"
+                    },
+                    "type": 3
+                },
+                {
+                    "name": "hostname",
+                    "value": "h1jmplx01",
+                    "type": 0
+                },
+                {
+                    "name": "distribution",
+                    "value": "CentOS",
+                    "type": 0
+                },
+                {
+                    "name": "distribution_file_variety",
+                    "value": "RedHat",
+                    "type": 0
+                },
+                {
+                    "name": "distribution_major_version",
+                    "value": "7",
+                    "type": 0
+                },
+                {
+                    "name": "distribution_release",
+                    "value": "Core",
+                    "type": 0
+                },
+                {
+                    "name": "distribution_version",
+                    "value": "7.7",
+                    "type": 0
+                },
+                {
+                    "name": "processor_vcpus",
+                    "value": 2,
+                    "type": 2
+                },
+                {
+                    "name": "processor_cores",
+                    "value": 2,
+                    "type": 2
+                },
+                {
+                    "name": "processor_count",
+                    "value": 1,
+                    "type": 2
+                },
+                {
+                    "name": "kernel",
+                    "value": "3.10.0-1062.18.1.el7.x86_64",
+                    "type": 0
+                },
+                {
+                    "name": "memtotal_mb",
+                    "value": 486,
+                    "type": 2
+                },
+                {
+                    "name": "interfaces",
+                    "value": [
+                        "lo",
+                        "dmzpub0"
+                    ],
+                    "type": 0
+                },
+                {
+                    "name": "dns",
+                    "value": {
+                        "nameservers": [
+                            "1.1.1.1",
+                            "1.0.0.1"
+                        ],
+                        "search": [
+                            "mhx.at",
+                            "mhx.local"
+                        ]
+                    },
+                    "type": 3
+                }
+            ]
+        },
+        {
+            "tempID": "tempCIID>h1jmplx01.mhx.at>ansible_mounts>0",
+            "idMethod": {
+                "method": "byData",
+                "attributes": [
+                    "__name",
+                    "device",
+                    "mount"
+                ]
+            },
+            "attributes": [
+                {
+                    "name": "__name",
+                    "value": "h1jmplx01.mhx.at:/boot",
+                    "type": 0
+                },
+                {
+                    "name": "device",
+                    "value": "/dev/sda1",
+                    "type": 0
+                },
+                {
+                    "name": "mount",
+                    "value": "/boot",
+                    "type": 0
+                },
+                {
+                    "name": "block_available",
+                    "value": 89390,
+                    "type": 2
+                },
+                {
+                    "name": "block_size",
+                    "value": 4096,
+                    "type": 2
+                },
+                {
+                    "name": "block_total",
+                    "value": 130217,
+                    "type": 2
+                },
+                {
+                    "name": "block_used",
+                    "value": 40827,
+                    "type": 2
+                },
+                {
+                    "name": "fstype",
+                    "value": "xfs",
+                    "type": 0
+                },
+                {
+                    "name": "inode_available",
+                    "value": 261812,
+                    "type": 2
+                },
+                {
+                    "name": "inode_total",
+                    "value": 262144,
+                    "type": 2
+                },
+                {
+                    "name": "inode_used",
+                    "value": 332,
+                    "type": 2
+                },
+                {
+                    "name": "options",
+                    "value": "rw,relatime,attr2,inode64,noquota",
+                    "type": 0
+                },
+                {
+                    "name": "size_available",
+                    "value": 366141440,
+                    "type": 2
+                },
+                {
+                    "name": "size_total",
+                    "value": 533368832,
+                    "type": 2
+                },
+                {
+                    "name": "uuid",
+                    "value": "7af4db46-3482-43a4-8875-91df0661675e",
+                    "type": 0
+                }
+            ]
+        },
+        {
+            "tempID": "tempCIID>h1jmplx01.mhx.at>ansible_mounts>1",
+            "idMethod": {
+                "method": "byData",
+                "attributes": [
+                    "__name",
+                    "device",
+                    "mount"
+                ]
+            },
+            "attributes": [
+                {
+                    "name": "__name",
+                    "value": "h1jmplx01.mhx.at:/data",
+                    "type": 0
+                },
+                {
+                    "name": "device",
+                    "value": "/dev/mapper/vg_data-lv_data",
+                    "type": 0
+                },
+                {
+                    "name": "mount",
+                    "value": "/data",
+                    "type": 0
+                },
+                {
+                    "name": "block_available",
+                    "value": 123520,
+                    "type": 2
+                },
+                {
+                    "name": "block_size",
+                    "value": 4096,
+                    "type": 2
+                },
+                {
+                    "name": "block_total",
+                    "value": 130217,
+                    "type": 2
+                },
+                {
+                    "name": "block_used",
+                    "value": 6697,
+                    "type": 2
+                },
+                {
+                    "name": "fstype",
+                    "value": "xfs",
+                    "type": 0
+                },
+                {
+                    "name": "inode_available",
+                    "value": 262124,
+                    "type": 2
+                },
+                {
+                    "name": "inode_total",
+                    "value": 262144,
+                    "type": 2
+                },
+                {
+                    "name": "inode_used",
+                    "value": 20,
+                    "type": 2
+                },
+                {
+                    "name": "options",
+                    "value": "rw,relatime,attr2,inode64,noquota",
+                    "type": 0
+                },
+                {
+                    "name": "size_available",
+                    "value": 505937920,
+                    "type": 2
+                },
+                {
+                    "name": "size_total",
+                    "value": 533368832,
+                    "type": 2
+                },
+                {
+                    "name": "uuid",
+                    "value": "ee632d3f-4de3-4181-963d-43be80ecca8f",
+                    "type": 0
+                }
+            ]
+        },
+        {
+            "tempID": "tempCIID>h1jmplx01.mhx.at>ansible_interfaces>0",
+            "idMethod": {
+                "method": "byData",
+                "attributes": [
+                    "__name"
+                ]
+            },
+            "attributes": [
+                {
+                    "name": "__name",
+                    "value": "Network Interface dmzpub0@h1jmplx01.mhx.at",
+                    "type": 0
+                },
+                {
+                    "name": "device",
+                    "value": "dmzpub0",
+                    "type": 0
+                },
+                {
+                    "name": "active",
+                    "value": "true",
+                    "type": 0
+                },
+                {
+                    "name": "type",
+                    "value": "ether",
+                    "type": 0
+                },
+                {
+                    "name": "macaddress",
+                    "value": "7e:10:82:6d:db:6d",
+                    "type": 0
+                }
+            ]
+        },
+        {
+            "tempID": "tempCIID>h1jmplx01.mhx.at>ansible_interfaces>1",
+            "idMethod": {
+                "method": "byData",
+                "attributes": [
+                    "__name"
+                ]
+            },
+            "attributes": [
+                {
+                    "name": "__name",
+                    "value": "Network Interface lo@h1jmplx01.mhx.at",
+                    "type": 0
+                },
+                {
+                    "name": "device",
+                    "value": "lo",
+                    "type": 0
+                },
+                {
+                    "name": "active",
+                    "value": "true",
+                    "type": 0
+                },
+                {
+                    "name": "type",
+                    "value": "loopback",
+                    "type": 0
+                }
+            ]
+        },
+        {
+            "tempID": "tempCIID>h1lscapet01.mhx.local",
+            "idMethod": {
+                "method": "byData",
+                "attributes": [
+                    "fqdn"
+                ]
+            },
+            "attributes": [
+                {
+                    "name": "__name",
+                    "value": "h1lscapet01.mhx.local",
+                    "type": 0
+                },
+                {
+                    "name": "fqdn",
+                    "value": "h1lscapet01.mhx.local",
+                    "type": 0
+                },
+                {
+                    "name": "os_family",
+                    "value": "CentOS",
+                    "type": 0
+                },
+                {
+                    "name": "architecture",
+                    "value": "x86_64",
+                    "type": 0
+                },
+                {
+                    "name": "ansible.inventory.cmdline",
+                    "value": {
+                        "BOOT_IMAGE": "/vmlinuz-3.10.0-1062.18.1.el7.x86_64",
+                        "LANG": "en_US.UTF-8",
+                        "quiet": true,
+                        "rd.lvm.lv": "vg_sys/lv_swap",
+                        "rhgb": true,
+                        "ro": true,
+                        "root": "/dev/mapper/vg_sys-lv_root"
+                    },
+                    "type": 3
+                },
+                {
+                    "name": "ansible.inventory.last_scan_time",
+                    "value": "2020-04-21T07:51:41Z",
+                    "type": 0
+                },
+                {
+                    "name": "default_ipv4",
+                    "value": {
+                        "address": "10.131.1.13",
+                        "alias": "eth0",
+                        "broadcast": "10.131.1.255",
+                        "gateway": "10.131.1.1",
+                        "interface": "eth0",
+                        "macaddress": "86:39:0c:f1:7f:31",
+                        "mtu": 1500,
+                        "netmask": "255.255.255.0",
+                        "network": "10.131.1.0",
+                        "type": "ether"
+                    },
+                    "type": 3
+                },
+                {
+                    "name": "hostname",
+                    "value": "h1lscapet01",
+                    "type": 0
+                },
+                {
+                    "name": "distribution",
+                    "value": "CentOS",
+                    "type": 0
+                },
+                {
+                    "name": "distribution_file_variety",
+                    "value": "RedHat",
+                    "type": 0
+                },
+                {
+                    "name": "distribution_major_version",
+                    "value": "7",
+                    "type": 0
+                },
+                {
+                    "name": "distribution_release",
+                    "value": "Core",
+                    "type": 0
+                },
+                {
+                    "name": "distribution_version",
+                    "value": "7.7",
+                    "type": 0
+                },
+                {
+                    "name": "processor_vcpus",
+                    "value": 2,
+                    "type": 2
+                },
+                {
+                    "name": "processor_cores",
+                    "value": 2,
+                    "type": 2
+                },
+                {
+                    "name": "processor_count",
+                    "value": 1,
+                    "type": 2
+                },
+                {
+                    "name": "kernel",
+                    "value": "3.10.0-1062.18.1.el7.x86_64",
+                    "type": 0
+                },
+                {
+                    "name": "memtotal_mb",
+                    "value": 1998,
+                    "type": 2
+                },
+                {
+                    "name": "interfaces",
+                    "value": [
+                        "br-93f487bc4aeb"
+                    ],
+                    "type": 0
+                },
+                {
+                    "name": "dns",
+                    "value": {
+                        "nameservers": [
+                            "1.1.1.1",
+                            "1.0.0.1"
+                        ],
+                        "search": [
+                            "mhx.at",
+                            "mhx.local"
+                        ]
+                    },
+                    "type": 3
+                }
+            ]
+        },
+        {
+            "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_mounts>2",
+            "idMethod": {
+                "method": "byData",
+                "attributes": [
+                    "__name",
+                    "device",
+                    "mount"
+                ]
+            },
+            "attributes": [
+                {
+                    "name": "__name",
+                    "value": "h1lscapet01.mhx.local:/var/lib/docker",
+                    "type": 0
+                },
+                {
+                    "name": "device",
+                    "value": "/dev/mapper/vg_data-lv_docker",
+                    "type": 0
+                },
+                {
+                    "name": "mount",
+                    "value": "/var/lib/docker",
+                    "type": 0
+                },
+                {
+                    "name": "block_available",
+                    "value": 1051938,
+                    "type": 2
+                },
+                {
+                    "name": "block_size",
+                    "value": 4096,
+                    "type": 2
+                },
+                {
+                    "name": "block_total",
+                    "value": 2356736,
+                    "type": 2
+                },
+                {
+                    "name": "block_used",
+                    "value": 1304798,
+                    "type": 2
+                },
+                {
+                    "name": "fstype",
+                    "value": "xfs",
+                    "type": 0
+                },
+                {
+                    "name": "inode_available",
+                    "value": 4486119,
+                    "type": 2
+                },
+                {
+                    "name": "inode_total",
+                    "value": 4718592,
+                    "type": 2
+                },
+                {
+                    "name": "inode_used",
+                    "value": 232473,
+                    "type": 2
+                },
+                {
+                    "name": "options",
+                    "value": "rw,relatime,attr2,inode64,noquota",
+                    "type": 0
+                },
+                {
+                    "name": "size_available",
+                    "value": 4308738048,
+                    "type": 2
+                },
+                {
+                    "name": "size_total",
+                    "value": 9653190656,
+                    "type": 2
+                },
+                {
+                    "name": "uuid",
+                    "value": "d221d65e-8ac7-4a6e-836f-4fac371e577c",
+                    "type": 0
+                }
+            ]
+        },
+        {
+            "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_mounts>3",
+            "idMethod": {
+                "method": "byData",
+                "attributes": [
+                    "__name",
+                    "device",
+                    "mount"
+                ]
+            },
+            "attributes": [
+                {
+                    "name": "__name",
+                    "value": "h1lscapet01.mhx.local:/boot",
+                    "type": 0
+                },
+                {
+                    "name": "device",
+                    "value": "/dev/sda1",
+                    "type": 0
+                },
+                {
+                    "name": "mount",
+                    "value": "/boot",
+                    "type": 0
+                },
+                {
+                    "name": "block_available",
+                    "value": 89390,
+                    "type": 2
+                },
+                {
+                    "name": "block_size",
+                    "value": 4096,
+                    "type": 2
+                },
+                {
+                    "name": "block_total",
+                    "value": 130217,
+                    "type": 2
+                },
+                {
+                    "name": "block_used",
+                    "value": 40827,
+                    "type": 2
+                },
+                {
+                    "name": "fstype",
+                    "value": "xfs",
+                    "type": 0
+                },
+                {
+                    "name": "inode_available",
+                    "value": 261812,
+                    "type": 2
+                },
+                {
+                    "name": "inode_total",
+                    "value": 262144,
+                    "type": 2
+                },
+                {
+                    "name": "inode_used",
+                    "value": 332,
+                    "type": 2
+                },
+                {
+                    "name": "options",
+                    "value": "rw,relatime,attr2,inode64,noquota",
+                    "type": 0
+                },
+                {
+                    "name": "size_available",
+                    "value": 366141440,
+                    "type": 2
+                },
+                {
+                    "name": "size_total",
+                    "value": 533368832,
+                    "type": 2
+                },
+                {
+                    "name": "uuid",
+                    "value": "7af4db46-3482-43a4-8875-91df0661675e",
+                    "type": 0
+                }
+            ]
+        },
+        {
+            "tempID": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>2",
+            "idMethod": {
+                "method": "byData",
+                "attributes": [
+                    "__name"
+                ]
+            },
+            "attributes": [
+                {
+                    "name": "__name",
+                    "value": "Network Interface br-93f487bc4aeb@h1lscapet01.mhx.local",
+                    "type": 0
+                },
+                {
+                    "name": "device",
+                    "value": "br-93f487bc4aeb",
+                    "type": 0
+                },
+                {
+                    "name": "active",
+                    "value": "true",
+                    "type": 0
+                },
+                {
+                    "name": "type",
+                    "value": "bridge",
+                    "type": 0
+                },
+                {
+                    "name": "macaddress",
+                    "value": "02:42:b8:21:2d:22",
+                    "type": 0
+                }
+            ]
+        },
+        {
+            "tempID": "tempCIID>h1jmplx01.mhx.at>yum_installed",
+            "idMethod": {
+                "method": "byTempID",
+                "tempID": "tempCIID>h1jmplx01.mhx.at"
+            },
+            "attributes": [
+                {
+                    "name": "yum.installed",
+                    "value": [
+                        {
+                            "arch": "x86_64",
+                            "envra": "1:NetworkManager-libnm-1.18.0-5.el7_7.2.x86_64",
+                            "epoch": "1",
+                            "name": "NetworkManager-libnm",
+                            "release": "5.el7_7.2",
+                            "repo": "installed",
+                            "version": "1.18.0",
+                            "yumstate": "installed"
+                        }
+                    ],
+                    "type": 3
+                }
+            ]
+        },
+        {
+            "tempID": "tempCIID>h1jmplx01.mhx.at>yum_repos",
+            "idMethod": {
+                "method": "byTempID",
+                "tempID": "tempCIID>h1jmplx01.mhx.at"
+            },
+            "attributes": [
+                {
+                    "name": "yum.repos",
+                    "value": [
+                        {
+                            "repoid": "base",
+                            "state": "enabled"
+                        },
+                        {
+                            "repoid": "epel",
+                            "state": "enabled"
+                        },
+                        {
+                            "repoid": "extras",
+                            "state": "enabled"
+                        },
+                        {
+                            "repoid": "updates",
+                            "state": "enabled"
+                        }
+                    ],
+                    "type": 3
+                }
+            ]
+        },
+        {
+            "tempID": "tempCIID>h1jmplx01.mhx.at>yum_updates",
+            "idMethod": {
+                "method": "byTempID",
+                "tempID": "tempCIID>h1jmplx01.mhx.at"
+            },
+            "attributes": [
+                {
+                    "name": "yum.updates",
+                    "value": [
+
+                    ],
+                    "type": 3
+                }
+            ]
+        }
+    ],
+    "relations": [
+        {
+            "from": "tempCIID>h1jmplx01.mhx.at",
+            "predicate": "has_mounted_device",
+            "to": "tempCIID>h1jmplx01.mhx.at>ansible_mounts>0"
+        },
+        {
+            "from": "tempCIID>h1jmplx01.mhx.at",
+            "predicate": "has_mounted_device",
+            "to": "tempCIID>h1jmplx01.mhx.at>ansible_mounts>1"
+        },
+        {
+            "from": "tempCIID>h1jmplx01.mhx.at",
+            "predicate": "has_network_interface",
+            "to": "tempCIID>h1jmplx01.mhx.at>ansible_interfaces>0"
+        },
+        {
+            "from": "tempCIID>h1jmplx01.mhx.at",
+            "predicate": "has_network_interface",
+            "to": "tempCIID>h1jmplx01.mhx.at>ansible_interfaces>1"
+        },
+        {
+            "from": "tempCIID>h1lscapet01.mhx.local",
+            "predicate": "has_mounted_device",
+            "to": "tempCIID>h1lscapet01.mhx.local>ansible_mounts>2"
+        },
+        {
+            "from": "tempCIID>h1lscapet01.mhx.local",
+            "predicate": "has_mounted_device",
+            "to": "tempCIID>h1lscapet01.mhx.local>ansible_mounts>3"
+        },
+        {
+            "from": "tempCIID>h1lscapet01.mhx.local",
+            "predicate": "has_network_interface",
+            "to": "tempCIID>h1lscapet01.mhx.local>ansible_interfaces>2"
+        }
+    ]
+}

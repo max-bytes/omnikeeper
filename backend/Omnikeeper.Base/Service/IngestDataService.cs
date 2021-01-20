@@ -1,8 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
-using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -15,38 +14,42 @@ namespace Omnikeeper.Base.Service
     public class IngestDataService
     {
         private readonly CIMappingService ciMappingService;
+        private readonly IModelContextBuilder modelContextBuilder;
+        private readonly ILogger<IngestDataService> logger;
 
         private IAttributeModel AttributeModel { get; }
         private ICIModel CIModel { get; }
         private IChangesetModel ChangesetModel { get; }
         private IRelationModel RelationModel { get; }
 
-        public IngestDataService(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, IRelationModel relationModel, CIMappingService ciMappingService)
+        public IngestDataService(IAttributeModel attributeModel, ICIModel ciModel, IChangesetModel changesetModel, IRelationModel relationModel, 
+            CIMappingService ciMappingService, IModelContextBuilder modelContextBuilder, ILogger<IngestDataService> logger)
         {
             AttributeModel = attributeModel;
             CIModel = ciModel;
             ChangesetModel = changesetModel;
             RelationModel = relationModel;
             this.ciMappingService = ciMappingService;
+            this.modelContextBuilder = modelContextBuilder;
+            this.logger = logger;
         }
 
         // TODO: add ci-based authorization
-        public async Task<(int numIngestedCIs, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, AuthenticatedUser user, IModelContextBuilder modelContextBuilder, ILogger logger)
+        public async Task<(int numIngestedCIs, int numIngestedRelations)> Ingest(IngestData data, Layer writeLayer, AuthenticatedUser user)
         {
             using var trans = modelContextBuilder.BuildDeferred();
-            var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, ChangesetModel);
-
             var timeThreshold = TimeThreshold.BuildLatest();
+            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, ChangesetModel);
 
             var ciMappingContext = new CIMappingService.CIMappingContext(AttributeModel, TimeThreshold.BuildLatest());
             var attributeData = new Dictionary<Guid, CICandidateAttributeData>();
             foreach (var cic in data.CICandidates)
             {
-                var attributes = cic.Value.Attributes;
-                var ciCandidateID = cic.Key;
+                var attributes = cic.Attributes;
+                var ciCandidateID = cic.TempCIID;
 
                 // find out if it's a new CI or an existing one
-                var foundCIIDs = await ciMappingService.TryToMatch(ciCandidateID.ToString(), cic.Value.IdentificationMethod, ciMappingContext, trans, logger);
+                var foundCIIDs = await ciMappingService.TryToMatch(ciCandidateID.ToString(), cic.IdentificationMethod, ciMappingContext, trans, logger);
 
                 Guid finalCIID;
                 if (!foundCIIDs.IsEmpty())
@@ -72,7 +75,7 @@ namespace Omnikeeper.Base.Service
             var bulkAttributeData = new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeData.SelectMany(ad =>
                 ad.Value.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, ad.Key))
             ));
-            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, trans);
+            await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans);
 
 
             var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
@@ -89,7 +92,7 @@ namespace Omnikeeper.Base.Service
                 relationFragments.Add(new BulkRelationDataLayerScope.Fragment(fromCIID, toCIID, cic.PredicateID));
             }
             var bulkRelationData = new BulkRelationDataLayerScope(writeLayer.ID, relationFragments.ToArray());
-            await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, trans);
+            await RelationModel.BulkReplaceRelations(bulkRelationData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans);
 
             trans.Commit();
 
@@ -99,18 +102,20 @@ namespace Omnikeeper.Base.Service
 
     public class CICandidate
     {
+        public Guid TempCIID { get; private set; }
         public ICIIdentificationMethod IdentificationMethod { get; private set; }
         public CICandidateAttributeData Attributes { get; private set; }
 
-        public CICandidate(ICIIdentificationMethod identificationMethod, CICandidateAttributeData attributes)
+        public CICandidate(Guid tempCIID, ICIIdentificationMethod identificationMethod, CICandidateAttributeData attributes)
         {
+            TempCIID = tempCIID;
             IdentificationMethod = identificationMethod;
             Attributes = attributes;
         }
 
         public static CICandidate BuildWithAdditionalAttributes(CICandidate @base, CICandidateAttributeData additionalAttributes)
         {
-            return new CICandidate(@base.IdentificationMethod, @base.Attributes.Concat(additionalAttributes));
+            return new CICandidate(@base.TempCIID, @base.IdentificationMethod, @base.Attributes.Concat(additionalAttributes));
         }
     }
 
@@ -130,10 +135,10 @@ namespace Omnikeeper.Base.Service
 
     public class IngestData
     {
-        public IDictionary<Guid, CICandidate> CICandidates { get; private set; }
+        public IEnumerable<CICandidate> CICandidates { get; private set; }
         public IEnumerable<RelationCandidate> RelationCandidates { get; private set; }
 
-        public IngestData(IDictionary<Guid, CICandidate> cis, IEnumerable<RelationCandidate> relationCandidates)
+        public IngestData(IEnumerable<CICandidate> cis, IEnumerable<RelationCandidate> relationCandidates)
         {
             CICandidates = cis;
             RelationCandidates = relationCandidates;

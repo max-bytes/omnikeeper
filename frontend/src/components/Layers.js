@@ -3,7 +3,7 @@ import LayerIcon from './LayerIcon';
 import { Button, Radio } from 'antd'
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import { queries } from 'graphql/queries'
-import { useQuery } from '@apollo/react-hooks';
+import { useQuery } from '@apollo/client';
 import { mergeSettingsAndSortLayers } from 'utils/layers'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye, faEyeSlash, faArrowAltCircleUp, faArrowAltCircleDown, faCogs, faPlug, faBan, faEdit } from '@fortawesome/free-solid-svg-icons'
@@ -84,7 +84,7 @@ function Layers(props) {
                     {!layer.writable && (<FontAwesomeIcon icon={faBan} />)}
                     {layer.writable && (<FontAwesomeIcon icon={faEdit} />)}
                     &nbsp;
-                    <span style={((layer.visible) ? {} : {color: '#ccc'})}>{layer.name} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
+                    <span style={((layer.visible) ? {} : {color: '#ccc'})}>[{layer.id}] {layer.name} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
                     {layer.brainName !== "" && (<FontAwesomeIcon icon={faCogs} />)}
                     {layer.onlineInboundAdapterName !== "" && (<FontAwesomeIcon icon={faPlug} />)}
                   </span>

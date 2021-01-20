@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Npgsql;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
@@ -25,31 +23,31 @@ namespace Omnikeeper.Model.Decorators
             return await Model.GetContexts(useFallbackConfig, trans);
         }
 
-        public async Task<OIAContext?> GetContextByName(string name, IModelContext trans)
+        public async Task<OIAContext> GetContextByName(string name, IModelContext trans)
         {
-            return await trans.GetOrCreateCachedValueAsync(CacheKeyService.OIAConfig(name), async () =>
+            var (item, hit) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.OIAConfig(name), async () =>
             {
                 return await Model.GetContextByName(name, trans);
-            }, CacheKeyService.OIAConfigChangeToken(name));
+            });
+            return item;
         }
 
         public async Task<OIAContext> Create(string name, IOnlineInboundAdapter.IConfig config, IModelContext trans)
         {
-            trans.CancelToken(CacheKeyService.OIAConfigChangeToken(name));
+            trans.EvictFromCache(CacheKeyService.OIAConfig(name));
             return await Model.Create(name, config, trans);
         }
 
         public async Task<OIAContext> Update(long id, string name, IOnlineInboundAdapter.IConfig config, IModelContext trans)
         {
-            trans.CancelToken(CacheKeyService.OIAConfigChangeToken(name));
+            trans.EvictFromCache(CacheKeyService.OIAConfig(name));
             return await Model.Update(id, name, config, trans);
         }
 
-        public async Task<OIAContext?> Delete(long iD, IModelContext trans)
+        public async Task<OIAContext> Delete(long iD, IModelContext trans)
         {
             var c = await Model.Delete(iD, trans);
-            if (c != null)
-                trans.CancelToken(CacheKeyService.OIAConfigChangeToken(c.Name));
+            trans.EvictFromCache(CacheKeyService.OIAConfig(c.Name));
             return c;
         }
     }

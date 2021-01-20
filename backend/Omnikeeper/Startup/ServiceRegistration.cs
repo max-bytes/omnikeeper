@@ -4,14 +4,17 @@ using GraphQL.Types;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
-using Omnikeeper.Base.CLB;
+using OKPluginGenericJSONIngest;
+using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.GraphQL;
+using Omnikeeper.GridView.Model;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
@@ -58,26 +61,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IInboundAdapterManager, InboundAdapterManager>();
         }
 
-        public static IEnumerable<Assembly> RegisterOKPlugins(IServiceCollection services, string? pluginFolder)
-        {
-            // register compute layer brains
-            services.AddSingleton<IComputeLayerBrain, OKPluginCLBMonitoring.CLBNaemonMonitoring>();
-
-            // register online inbound adapters
-            services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.Builder>();
-            services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIAKeycloak.OnlineInboundAdapter.BuilderInternal>();
-            services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIAOmnikeeper.OnlineInboundAdapter.Builder>();
-            services.AddSingleton<IOnlineInboundAdapterBuilder, OKPluginOIASharepoint.OnlineInboundAdapter.Builder>();
-
-            // find current framework
-            if (pluginFolder != null)
-            {
-                return LoadPlugins(services, pluginFolder);
-            }
-            return Enumerable.Empty<Assembly>();
-        }
-
-        private static IEnumerable<Assembly> LoadPlugins(IServiceCollection services, string pluginFolder)
+        public static IEnumerable<Assembly> RegisterOKPlugins(IServiceCollection services, string pluginFolder)
         {
             var dotNetFramework = Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
             var frameworkNameProvider = new FrameworkNameProvider(
@@ -132,7 +116,12 @@ namespace Omnikeeper.Startup
                         {
                             PluginLoadContext loadContext = new PluginLoadContext(finalDLLFile);
                             assembly = loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(finalDLLFile)));
-                            services.Scan(scan => scan.FromAssemblies(assembly).AddClasses().AsSelf().WithSingletonLifetime());
+                            services.Scan(scan =>
+                                scan.FromAssemblies(assembly)
+                                    .AddClasses()
+                                    .AsSelfWithInterfaces() // see https://andrewlock.net/using-scrutor-to-automatically-register-your-services-with-the-asp-net-core-di-container/#registering-an-implementation-using-forwarded-services
+                                    .WithSingletonLifetime()
+                            );
 
                             var assemblyName = assembly.GetName();
                             if (assemblyName == null)
@@ -159,13 +148,13 @@ namespace Omnikeeper.Startup
 
         public static void RegisterServices(IServiceCollection services)
         {
-            // TODO: make singleton
             services.AddSingleton<CIMappingService, CIMappingService>();
             services.AddSingleton<IManagementAuthorizationService, ManagementAuthorizationService>();
             services.AddSingleton<ILayerBasedAuthorizationService, LayerBasedAuthorizationService>();
             services.AddSingleton<ICIBasedAuthorizationService, CIBasedAuthorizationService>();
+            services.AddSingleton<IDataPartitionService, DataPartitionService>();
             services.AddSingleton<MarkedForDeletionService>();
-            services.AddScoped<IngestDataService>();
+            services.AddScoped<IngestDataService>(); // TODO: make singleton
 
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 
@@ -177,12 +166,15 @@ namespace Omnikeeper.Startup
             services.AddSingleton<NpgsqlLoggingProvider>();
         }
 
-        public static void RegisterModels(IServiceCollection services, bool enableModelCaching, bool enableOIA)
+        public static void RegisterModels(IServiceCollection services, bool enableModelCaching, bool enableOIA, bool enabledGenerators)
         {
             services.AddSingleton<ICISearchModel, CISearchModel>();
             services.AddSingleton<ICIModel, CIModel>();
+            services.AddSingleton<ICIIDModel, CIIDModel>();
             services.AddSingleton<IAttributeModel, AttributeModel>();
             services.AddSingleton<IBaseAttributeModel, BaseAttributeModel>();
+            services.AddSingleton<IBaseAttributeRevisionistModel, BaseAttributeRevisionistModel>();
+            services.AddSingleton<IBaseRelationRevisionistModel, BaseRelationRevisionistModel>();
             services.AddSingleton<IUserInDatabaseModel, UserInDatabaseModel>();
             services.AddSingleton<ILayerModel, LayerModel>();
             services.AddSingleton<ILayerStatisticsModel, LayerStatisticsModel>();
@@ -191,26 +183,35 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IChangesetModel, ChangesetModel>();
             services.AddSingleton<ITemplateModel, TemplateModel>();
             services.AddSingleton<IPredicateModel, PredicateModel>();
-            services.AddSingleton<IMemoryCacheModel, MemoryCacheModel>();
+            services.AddSingleton<ICacheModel, CacheModel>();
             services.AddSingleton<IODataAPIContextModel, ODataAPIContextModel>();
             services.AddSingleton<IRecursiveTraitModel, RecursiveTraitModel>();
             services.AddSingleton<IEffectiveTraitModel, EffectiveTraitModel>();
             services.AddSingleton<IBaseConfigurationModel, BaseConfigurationModel>();
             services.AddSingleton<IOIAContextModel, OIAContextModel>();
+            services.AddSingleton<IGridViewContextModel, GridViewContextModel>();
+            services.AddSingleton<IPartitionModel, PartitionModel>();
+
+            services.AddSingleton<IContextModel, ContextModel>(); // TODO: this is in a plugin -> move?
 
             // these aren't real models, but we keep them here because they are closely related to models
             services.AddSingleton<ITraitsProvider, TraitsProvider>();
             services.AddSingleton<ITemplatesProvider, TemplatesProvider>();
+            services.AddSingleton<IEffectiveGeneratorProvider, EffectiveGeneratorProvider>();
+            services.AddSingleton<IDataSerializer, ProtoBufDataSerializer>();
 
             if (enableModelCaching)
             {
                 services.Decorate<IBaseAttributeModel, CachingBaseAttributeModel>();
+                services.Decorate<IBaseAttributeRevisionistModel, CachingBaseAttributeRevisionistModel>();
                 services.Decorate<ILayerModel, CachingLayerModel>();
                 services.Decorate<IBaseRelationModel, CachingBaseRelationModel>();
+                services.Decorate<IBaseRelationRevisionistModel, CachingBaseRelationRevisionistModel>();
                 services.Decorate<IPredicateModel, CachingPredicateModel>();
                 services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
                 services.Decorate<IRecursiveTraitModel, CachingRecursiveTraitModel>();
                 services.Decorate<IBaseConfigurationModel, CachingBaseConfigurationModel>();
+                services.Decorate<IPartitionModel, CachingPartitionModel>();
 
                 services.Decorate<ITemplatesProvider, CachedTemplatesProvider>();
             }
@@ -219,6 +220,11 @@ namespace Omnikeeper.Startup
             {
                 services.Decorate<IBaseAttributeModel, OIABaseAttributeModel>();
                 services.Decorate<IBaseRelationModel, OIABaseRelationModel>();
+            }
+
+            if (enabledGenerators)
+            {
+                services.Decorate<IBaseAttributeModel, GeneratingBaseAttributeModel>();
             }
         }
 

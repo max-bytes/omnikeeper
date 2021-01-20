@@ -1,18 +1,16 @@
-﻿using Omnikeeper.Base.Inbound;
+﻿using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using NUnit.Framework;
+using NUnit.Framework.Internal;
+using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
-using Npgsql;
-using NUnit.Framework;
-using NUnit.Framework.Internal;
+using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tests.OIA
 {

@@ -1,12 +1,15 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
+    [ProtoContract(SkipConstructor = true)]
     public class AttributeScalarValueInteger : IAttributeScalarValue<long>, IEquatable<AttributeScalarValueInteger>
     {
-        public long Value { get; private set; }
+        [ProtoMember(1)] private readonly long value;
+        public long Value => value;
         public string Value2String() => Value.ToString();
         public string[] ToRawDTOValues() => new string[] { Value.ToString() };
         public object ToGenericObject() => Value;
@@ -22,7 +25,7 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public AttributeScalarValueInteger(long value)
         {
-            Value = value;
+            this.value = value;
         }
 
         public static AttributeScalarValueInteger BuildFromString(string value)
@@ -33,12 +36,16 @@ namespace Omnikeeper.Entity.AttributeValues
 
     }
 
-
+    [ProtoContract]
     public class AttributeArrayValueInteger : AttributeArrayValue<AttributeScalarValueInteger, long>
     {
         public AttributeArrayValueInteger(AttributeScalarValueInteger[] values) : base(values)
         {
         }
+
+#pragma warning disable CS8618
+        protected AttributeArrayValueInteger() { }
+#pragma warning restore CS8618
 
         public override AttributeValueType Type => AttributeValueType.Integer;
 

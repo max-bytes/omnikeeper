@@ -3,7 +3,7 @@ import { useKeycloak } from '@react-keycloak/web'
 import { Menu, Button } from 'semantic-ui-react'
 
 function UserBar(props) {
-  const [ keycloak, keycloakInitialized ] = useKeycloak()
+  const { keycloak, keycloakInitialized } = useKeycloak()
   const [ userProfile, setUserProfile ] = useState(undefined);
 
   useEffect(() => {

@@ -1,25 +1,19 @@
 ﻿using GraphQL;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
+using NUnit.Framework;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GraphQL;
-using Omnikeeper.Model;
-using Omnikeeper.Service;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
-using Npgsql;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Omnikeeper.Startup;
-using Omnikeeper.Model.Config;
-using GraphQL.Server;
 using Tests.Integration.GraphQL.Base;
-using Omnikeeper.Base.Service;
 
 namespace Tests.Integration.GraphQL
 {
@@ -54,8 +48,8 @@ namespace Tests.Integration.GraphQL
             var layer1 = await layerModel.CreateLayer("layer_1", trans);
             var layerID2 = await layerModel.CreateLayer("layer_2", trans);
             var user = new AuthenticatedUser(await userModel.UpsertUser(username, username, userGUID, UserType.Robot, trans), new List<Layer>());
-            var changeset = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a1", new AttributeScalarValueInteger(3), ciid1, layer1.ID, changeset, trans);
+            var changeset = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+            await attributeModel.InsertAttribute("a1", new AttributeScalarValueInteger(3), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
             trans.Commit();
 
             string query = @"

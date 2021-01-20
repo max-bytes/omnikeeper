@@ -34,9 +34,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginActiveDirectoryXMLI
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginActiveDirectoryXMLIngest.Tests", "OKPluginActiveDirectoryXMLIngest.Tests\OKPluginActiveDirectoryXMLIngest.Tests.csproj", "{F4980652-2813-47A6-ADF6-7FDE2553C39E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginAnsibleInventoryScanIngest", "OKPluginAnsibleInventoryScanIngest\OKPluginAnsibleInventoryScanIngest.csproj", "{9DFB4A5A-4BE4-4586-9200-2CB46264467E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginAnsibleInventoryScanIngest", "OKPluginAnsibleInventoryScanIngest\OKPluginAnsibleInventoryScanIngest.csproj", "{9DFB4A5A-4BE4-4586-9200-2CB46264467E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginAnsibleInventoryScanIngest.Tests", "OKPluginAnsibleInventoryScanIngest.Tests\OKPluginAnsibleInventoryScanIngest.Tests.csproj", "{63C2A24F-C710-4EAF-BEE7-7788817C73C4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginAnsibleInventoryScanIngest.Tests", "OKPluginAnsibleInventoryScanIngest.Tests\OKPluginAnsibleInventoryScanIngest.Tests.csproj", "{63C2A24F-C710-4EAF-BEE7-7788817C73C4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PerfTests", "PerfTests\PerfTests.csproj", "{887547A4-91E3-444D-B494-3AEA75691FB2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginGenericJSONIngest", "OKPluginGenericJSONIngest\OKPluginGenericJSONIngest.csproj", "{2D2F8E00-C340-47C9-9805-179934AD41C8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginGenericJSONIngest.Tests", "OKPluginGenericJSONIngest.Tests\OKPluginGenericJSONIngest.Tests.csproj", "{B240EFC7-6B36-47FA-8C01-90721E4C26B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -104,6 +110,18 @@ Global
 		{63C2A24F-C710-4EAF-BEE7-7788817C73C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63C2A24F-C710-4EAF-BEE7-7788817C73C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63C2A24F-C710-4EAF-BEE7-7788817C73C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{887547A4-91E3-444D-B494-3AEA75691FB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{887547A4-91E3-444D-B494-3AEA75691FB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{887547A4-91E3-444D-B494-3AEA75691FB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{887547A4-91E3-444D-B494-3AEA75691FB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D2F8E00-C340-47C9-9805-179934AD41C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D2F8E00-C340-47C9-9805-179934AD41C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D2F8E00-C340-47C9-9805-179934AD41C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D2F8E00-C340-47C9-9805-179934AD41C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B240EFC7-6B36-47FA-8C01-90721E4C26B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B240EFC7-6B36-47FA-8C01-90721E4C26B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B240EFC7-6B36-47FA-8C01-90721E4C26B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B240EFC7-6B36-47FA-8C01-90721E4C26B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

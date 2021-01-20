@@ -1,0 +1,5 @@
+ALTER TABLE ONLY public.gridview_config
+	ADD COLUMN speaking_name text;
+
+ALTER TABLE ONLY public.gridview_config
+	ADD COLUMN description text;

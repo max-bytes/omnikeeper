@@ -1,5 +1,4 @@
-﻿using Npgsql;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -12,7 +11,6 @@ namespace Omnikeeper.Service
         public static async Task<LayerSet> GetReadLayersetFromContext(IODataAPIContextModel model, string contextID, IModelContext trans)
         {
             var context = await model.GetContextByID(contextID, trans);
-            if (context == null) throw new Exception($"Invalid context ID \"{contextID}\"");
             return context.CConfig switch
             {
                 ODataAPIContext.ConfigV3 v3 => new LayerSet(v3.ReadLayerset),
@@ -22,7 +20,6 @@ namespace Omnikeeper.Service
         public static async Task<long> GetWriteLayerIDFromContext(IODataAPIContextModel model, string contextID, IModelContext trans)
         {
             var context = await model.GetContextByID(contextID, trans);
-            if (context == null) throw new Exception($"Invalid context ID \"{contextID}\"");
             return context.CConfig switch
             {
                 ODataAPIContext.ConfigV3 v3 => v3.WriteLayerID,

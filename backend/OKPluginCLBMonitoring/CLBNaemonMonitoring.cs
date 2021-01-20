@@ -1,31 +1,20 @@
-﻿using Scriban;
-using Omnikeeper.Base;
+﻿using JsonSubTypes;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using Omnikeeper.Base.AttributeValues;
+using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Templating;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
-using Microsoft.Extensions.Logging;
-using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Scriban.Runtime;
-using static Omnikeeper.Base.Templating.ScribanVariableService;
-using YamlDotNet.Core;
-using System.IO;
-using YamlDotNet.RepresentationModel;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-using JsonSubTypes;
-using DotLiquid.Util;
-using System.Reflection;
-using Omnikeeper.Base.AttributeValues;
-using Omnikeeper.Base.CLB;
-using Omnikeeper.Base.Utils.ModelContext;
 
 namespace OKPluginCLBMonitoring
 {
@@ -69,7 +58,7 @@ namespace OKPluginCLBMonitoring
             new TraitAttribute("config",
                 CIAttributeTemplate.BuildFromParams("naemon.config", AttributeValueType.JSON, true)
             ),
-            new TraitAttribute("requirements", 
+            new TraitAttribute("requirements",
                 CIAttributeTemplate.BuildFromParams("naemon.requirements", AttributeValueType.Text, true, CIAttributeValueConstraintTextLength.Build(1, null))
             ),
             new TraitAttribute("capabilities",
@@ -98,24 +87,22 @@ namespace OKPluginCLBMonitoring
             var contactgroupTrait = TraitSet.Traits["naemon_contactgroup"];
             var moduleTrait = TraitSet.Traits["naemon_service_module"];
 
-            var timeThreshold = TimeThreshold.BuildLatestAtTime(changesetProxy.Timestamp);
-
-            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, timeThreshold);
+            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
 
             // prepare contact groups
             var cgr = new ContactgroupResolver(relationModel, ciModel, traitModel, logger, errorHandler);
-            await cgr.Setup(layerSetAll, belongsToNaemonContactgroup, contactgroupTrait, trans, timeThreshold);
+            await cgr.Setup(layerSetAll, belongsToNaemonContactgroup, contactgroupTrait, trans, changesetProxy.TimeThreshold);
 
             // prepare list of all monitored cis
-            var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).Distinct();
+            var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).ToHashSet();
             if (monitoredCIIDs.IsEmpty()) return true;
-            var monitoredCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoredCIIDs), layerSetAll, true, trans, timeThreshold))
+            var monitoredCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoredCIIDs), layerSetAll, true, trans, changesetProxy.TimeThreshold))
                 .ToDictionary(ci => ci.ID);
 
             // prepare list of all monitoring modules
-            var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.ToCIID).Distinct();
+            var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.ToCIID).ToHashSet();
             if (monitoringModuleCIIDs.IsEmpty()) return true;
-            var monitoringModuleCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoringModuleCIIDs), layerSetMonitoringDefinitionsOnly, false, trans, timeThreshold))
+            var monitoringModuleCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoringModuleCIIDs), layerSetMonitoringDefinitionsOnly, false, trans, changesetProxy.TimeThreshold))
                 .ToDictionary(ci => ci.ID);
 
 
@@ -129,7 +116,7 @@ namespace OKPluginCLBMonitoring
 
                 var monitoringModuleCI = monitoringModuleCIs[p.Relation.ToCIID];
 
-                var monitoringModuleET = await traitModel.CalculateEffectiveTraitForCI(monitoringModuleCI, moduleTrait, trans, timeThreshold);
+                var monitoringModuleET = await traitModel.CalculateEffectiveTraitForCI(monitoringModuleCI, moduleTrait, trans, changesetProxy.TimeThreshold);
                 if (monitoringModuleET == null)
                 {
                     logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{moduleTrait.Name}\"");
@@ -140,7 +127,7 @@ namespace OKPluginCLBMonitoring
                 var templateStr = (monitoringModuleET.TraitAttributes["template"].Attribute.Value as AttributeScalarValueText)?.Value;
 
                 // create template context based on monitored CI, so that the templates can access all the related variables
-                var context = ScribanVariableService.CreateCIBasedTemplateContext(monitoredCIs[p.Relation.FromCIID], layerSetAll, timeThreshold, trans, ciModel, relationModel);
+                var context = ScribanVariableService.CreateComplexCIBasedTemplateContext(monitoredCIs[p.Relation.FromCIID], layerSetAll, changesetProxy.TimeThreshold, trans, ciModel, relationModel);
 
                 logger.LogDebug("  Parse/Render config segments");
                 // template parsing and rendering
@@ -203,20 +190,21 @@ namespace OKPluginCLBMonitoring
                     await errorHandler.LogError(ciid, "error", $"Error parsing the following command fragment:\n{commandStr}\nError: {error}");
                 }
             }
-            
+
             var fragments = renderedTemplatesPerCI.Select(t => new BulkCIAttributeDataLayerScope.Fragment("", t.attributeValue, t.ciid));
-            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.intermediate_config", targetLayer.ID, fragments), changesetProxy, trans);
+            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.intermediate_config", targetLayer.ID, fragments),
+                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
 
             logger.LogDebug("Updated executed commands per monitored CI");
 
             // assign monitored cis to naemon instances
             var monitoredByCIIDFragments = new List<BulkRelationDataPredicateScope.Fragment>();
-            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTrait(naemonInstanceTrait, layerSetAll, trans, timeThreshold);
+            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTrait(naemonInstanceTrait, layerSetAll, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
             foreach (var naemonInstanceTS in naemonInstancesTS)
                 foreach (var monitoredCI in monitoredCIs.Values)
-                    if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value))
+                    if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value.et))
                         monitoredByCIIDFragments.Add(new BulkRelationDataPredicateScope.Fragment(monitoredCI.ID, naemonInstanceTS.Key));
-            await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, trans);
+            await relationModel.BulkReplaceRelations(new BulkRelationDataPredicateScope(isMonitoredByPredicate, targetLayer.ID, monitoredByCIIDFragments.ToArray()), changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
             logger.LogDebug("Assigned CIs to naemon instances");
 
 
@@ -271,7 +259,8 @@ namespace OKPluginCLBMonitoring
                 //monitoringConfigs.Add(new BulkCIAttributeDataLayerScope.Fragment("", AttributeValueYAMLArray.Build(
                 //    templates.Select(t => t.yamlValue.Value).ToArray(), templates.Select(t => t.yamlValueStr).ToArray()), naemonInstance));
             }
-            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.config", targetLayer.ID, monitoringConfigs), changesetProxy, trans);
+            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("naemon.config", targetLayer.ID, monitoringConfigs),
+                changesetProxy, new DataOriginV1(DataOriginType.ComputeLayer), trans);
 
             logger.LogDebug("End clbMonitoring");
             return true;
@@ -282,7 +271,7 @@ namespace OKPluginCLBMonitoring
             naemonInstanceET.TraitAttributes.TryGetValue("capabilities", out var naemonCapabilitiesA);
             naemonInstanceET.TraitAttributes.TryGetValue("requirements", out var naemonRequirementsA);
             // TODO: would be better to use a trait than accessing the attribute directly
-            monitoredCI.MergedAttributes.TryGetValue("naemon.capabilities", out var ciCapabilitiesA); 
+            monitoredCI.MergedAttributes.TryGetValue("naemon.capabilities", out var ciCapabilitiesA);
             monitoredCI.MergedAttributes.TryGetValue("naemon.requirements", out var ciRequirementsA);
             var naemonCapabilities = naemonCapabilitiesA?.TryReadValueTextArray() ?? new string[0];
             var naemonRequirements = naemonRequirementsA?.TryReadValueTextArray() ?? new string[0];
@@ -325,7 +314,7 @@ namespace OKPluginCLBMonitoring
                 }
                 else
                 {
-                    var contactGroupCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(contactGroupRelations.Select(r => r.Relation.ToCIID).Distinct()), layerSetAll, false, trans, timeThreshold)).ToDictionary(t => t.ID);
+                    var contactGroupCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(contactGroupRelations.Select(r => r.Relation.ToCIID).ToHashSet()), layerSetAll, false, trans, timeThreshold)).ToDictionary(t => t.ID);
                     contactGroupsMap = contactGroupRelations.GroupBy(r => r.Relation.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.Relation.ToCIID]));
                     foreach (var ci in contactGroupsMap.Values.SelectMany(t => t).Distinct())
                     {
@@ -352,7 +341,7 @@ namespace OKPluginCLBMonitoring
             {
                 if (contactGroupsMap.TryGetValue(sourceCIID, out var ctCIs))
                 {
-                    foreach(var ctCI in ctCIs)
+                    foreach (var ctCI in ctCIs)
                     {
                         if (contactGroupNames.TryGetValue(ctCI.ID, out var name))
                             yield return name;

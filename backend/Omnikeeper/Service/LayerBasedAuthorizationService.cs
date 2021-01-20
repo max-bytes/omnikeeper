@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
-using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;

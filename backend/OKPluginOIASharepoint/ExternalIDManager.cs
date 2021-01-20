@@ -1,11 +1,8 @@
-﻿
-using DotLiquid.Tags;
-using Omnikeeper.Base.Entity;
+﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,7 +33,7 @@ namespace OKPluginOIASharepoint
                 {
                     var l = client.GetListItems(lc.listID, lc.identifiableColumnsAttributeTuples.Select(t => t.columnName).ToArray());
 
-                    await foreach(var (itemGuid, data) in l)
+                    await foreach (var (itemGuid, data) in l)
                     {
                         var identifiableFragments = new List<CICandidateAttributeData.Fragment>();
                         foreach (var (columnName, attributeName) in lc.identifiableColumnsAttributeTuples)
@@ -68,7 +65,8 @@ namespace OKPluginOIASharepoint
                         r.Add((new SharepointExternalListItemID(lc.listID, itemGuid), idMethod));
                     }
 
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     logger.LogWarning($"Unable to get external IDs for sharepoint list {lc.listID}", e);
                     throw e; // we must fail and throw, so that we don't run the ExternalIDManager with an empty set of external IDs

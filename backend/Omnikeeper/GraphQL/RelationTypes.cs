@@ -2,29 +2,9 @@
 using GraphQL.Utilities;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
-using System;
 
 namespace Omnikeeper.GraphQL
 {
-    // not needed (yet)
-    //public class MergedRelationType : ObjectGraphType<MergedRelation>
-    //{
-    //    public MergedRelationType(ILayerModel layerModel)
-    //    {
-    //        Field(x => x.LayerID);
-    //        Field(x => x.LayerStackIDs);
-    //        Field(x => x.Relation, type: typeof(RelationType));
-
-    //        FieldAsync<ListGraphType<LayerType>>("layerStack",
-    //        resolve: async (context) =>
-    //        {
-    //            var userContext = context.UserContext as OmnikeeperUserContext;
-    //            var layerstackIDs = context.Source.LayerStackIDs;
-    //            return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
-    //        });
-    //    }
-    //}
-
     public class RelationType : ObjectGraphType<Relation>
     {
         public RelationType()
@@ -35,6 +15,7 @@ namespace Omnikeeper.GraphQL
             Field(x => x.Predicate, type: typeof(PredicateType));
             Field(x => x.State, type: typeof(RelationStateType));
             Field(x => x.ChangesetID);
+            Field(x => x.Origin, type: typeof(DataOriginGQL));
         }
     }
 
@@ -54,6 +35,7 @@ namespace Omnikeeper.GraphQL
             Field(x => x.PredicateWording);
             Field(x => x.IsForwardRelation);
             Field(x => x.ChangesetID);
+            Field(x => x.Origin, type: typeof(DataOriginGQL));
             Field(x => x.LayerID);
             Field(x => x.LayerStackIDs);
             FieldAsync<ListGraphType<LayerType>>("layerStack",

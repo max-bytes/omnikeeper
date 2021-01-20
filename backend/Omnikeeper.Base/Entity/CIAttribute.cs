@@ -1,6 +1,8 @@
 
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Entity.AttributeValues;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,21 +26,22 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    [ProtoContract(SkipConstructor = true)]
     public class CIAttribute
     {
-        public Guid ID { get; private set; }
-        public string Name { get; private set; }
-        public Guid CIID { get; private set; }
-        public IAttributeValue Value { get; private set; }
-        public AttributeState State { get; private set; }
-        public Guid ChangesetID { get; private set; }
+        [ProtoMember(1)] public readonly Guid ID;
+        [ProtoMember(2)] public readonly string Name;
+        [ProtoMember(3)] public readonly Guid CIID;
+        [ProtoMember(4)] public readonly IAttributeValue Value;
+        [ProtoMember(5)] public readonly AttributeState State;
+        [ProtoMember(6)] public readonly Guid ChangesetID;
+        [ProtoMember(7)] public readonly DataOriginV1 Origin;
 
         // information hash: 
         public string InformationHash => CreateInformationHash(Name, CIID);
         public static string CreateInformationHash(string name, Guid ciid) => name + "_" + ciid;
 
-
-        public CIAttribute(Guid id, string name, Guid CIID, IAttributeValue value, AttributeState state, Guid changesetID)
+        public CIAttribute(Guid id, string name, Guid CIID, IAttributeValue value, AttributeState state, Guid changesetID, DataOriginV1 origin)
         {
             ID = id;
             Name = name;
@@ -46,6 +49,7 @@ namespace Omnikeeper.Base.Entity
             Value = value;
             State = state;
             ChangesetID = changesetID;
+            Origin = origin;
         }
     }
 
@@ -98,7 +102,7 @@ namespace Omnikeeper.Base.Entity
         public static BulkCIAttributeDataLayerScope BuildFromDTO(BulkCIAttributeLayerScopeDTO dto)
         {
             return new BulkCIAttributeDataLayerScope(
-                dto.NamePrefix, dto.LayerID, 
+                dto.NamePrefix, dto.LayerID,
                 dto.Fragments.Select(f => new Fragment(f.Name, AttributeValueBuilder.BuildFromDTO(f.Value), f.CIID)));
         }
     }

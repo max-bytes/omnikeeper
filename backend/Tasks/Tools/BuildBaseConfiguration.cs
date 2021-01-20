@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
-using System;
 using Omnikeeper.Base.Entity.Config;
+using System;
 
 namespace Tasks.Tools
 {
@@ -10,10 +10,7 @@ namespace Tasks.Tools
         [Test]
         public void Build()
         {
-            var config = new BaseConfigurationV1()
-            {
-                ArchiveChangesetThreshold = BaseConfigurationV1.InfiniteArchiveChangesetThreshold//TimeSpan.FromDays(90)
-            };
+            var config = new BaseConfigurationV1(BaseConfigurationV1.InfiniteArchiveChangesetThreshold, "0 0 0 0 0", "0 0 0 0 0", "0 0 0 0 0", "0 0 0 0 0");
             var json = BaseConfigurationV1.Serializer.SerializeToString(config);
 
             Console.WriteLine(json);

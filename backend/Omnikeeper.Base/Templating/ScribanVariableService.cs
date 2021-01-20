@@ -1,5 +1,4 @@
-﻿using Npgsql;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -81,9 +80,9 @@ namespace Omnikeeper.Base.Templating
             }
         }
 
-        public class ScriptObjectContext
+        public class ScriptObjectComplexContext
         {
-            public ScriptObjectContext(LayerSet layerset, IModelContext trans, TimeThreshold atTime, ICIModel ciModel, IRelationModel relationModel)
+            public ScriptObjectComplexContext(LayerSet layerset, IModelContext trans, TimeThreshold atTime, ICIModel ciModel, IRelationModel relationModel)
             {
                 Layerset = layerset;
                 Transaction = trans;
@@ -101,26 +100,26 @@ namespace Omnikeeper.Base.Templating
 
         public class ScriptObjectRelatedCIs : ScriptObject
         {
-            public ScriptObjectRelatedCIs(IEnumerable<CompactRelatedCI> relatedCIs, ScriptObjectContext context)
+            public ScriptObjectRelatedCIs(IEnumerable<CompactRelatedCI> relatedCIs, ScriptObjectComplexContext context)
             {
                 Add("forward", relatedCIs.Where(r => r.IsForwardRelation).GroupBy(r => r.PredicateID)
                     .ToDictionary(t => t.Key, t => t.Select(r =>
                     {
                         var ci = context.CIModel.GetMergedCI(r.CI.ID, context.Layerset, context.Transaction, context.AtTime).GetAwaiter().GetResult();
-                        return new ScriptObjectCI(ci, context);
+                        return new ScriptObjectComplexCI(ci, context);
                     })));
                 Add("back", relatedCIs.Where(r => !r.IsForwardRelation).GroupBy(r => r.PredicateID)
                     .ToDictionary(t => t.Key, t => t.Select(r =>
                     {
                         var ci = context.CIModel.GetMergedCI(r.CI.ID, context.Layerset, context.Transaction, context.AtTime).GetAwaiter().GetResult();
-                        return new ScriptObjectCI(ci, context);
+                        return new ScriptObjectComplexCI(ci, context);
                     })));
             }
         }
 
-        public class ScriptObjectCI : ScriptObject
+        public class ScriptObjectComplexCI : ScriptObject
         {
-            public ScriptObjectCI(MergedCI ci, ScriptObjectContext context)
+            public ScriptObjectComplexCI(MergedCI ci, ScriptObjectComplexContext context)
             {
                 Add("id", ci.ID);
                 Add("name", ci.Name);
@@ -141,15 +140,44 @@ namespace Omnikeeper.Base.Templating
             }
         }
 
-        public static TemplateContext CreateCIBasedTemplateContext(MergedCI ci, LayerSet layerSet, TimeThreshold atTime, IModelContext trans, ICIModel ciModel, IRelationModel relationModel)
+        public static TemplateContext CreateComplexCIBasedTemplateContext(MergedCI ci, LayerSet layerSet, TimeThreshold atTime, IModelContext trans, ICIModel ciModel, IRelationModel relationModel)
         {
-            var so = new ScriptObjectCI(ci, new ScriptObjectContext(layerSet, trans, atTime, ciModel, relationModel));
+            var so = new ScriptObjectComplexCI(ci, new ScriptObjectComplexContext(layerSet, trans, atTime, ciModel, relationModel));
             var context = new TemplateContext
             {
                 //context.StrictVariables = true;
                 EnableRelaxedMemberAccess = true
             };
             context.PushGlobal(new ScriptObject() { { "target", so } });
+            return context;
+        }
+
+
+        public class ScriptObjectSimpleCI : ScriptObject
+        {
+            public ScriptObjectSimpleCI(MergedCI ci)
+            {
+                Add("id", ci.ID);
+                Add("name", ci.Name);
+                this.Import("a", new Func<Dictionary<string, object>>(() =>
+                {
+                    // TODO: caching
+                    var attributeVariables = new Dictionary<string, object>();
+                    foreach (var attributeValues in ci.MergedAttributes.Values)
+                        AddNested(attributeVariables, attributeValues.Attribute.Name, attributeValues.Attribute.Value);
+                    return attributeVariables;
+                }));
+            }
+        }
+        public static TemplateContext CreateSimpleCIBasedTemplateContext(MergedCI ci)
+        {
+            var so = new ScriptObjectSimpleCI(ci);
+            var context = new TemplateContext
+            {
+                //context.StrictVariables = true;
+                EnableRelaxedMemberAccess = true
+            };
+            context.PushGlobal(so);
             return context;
         }
     }

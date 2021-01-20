@@ -1,14 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -31,7 +30,7 @@ namespace Omnikeeper.Controllers
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
 
-        public AttributeValueImageController(IAttributeModel attributeModel, ICurrentUserService currentUserService, ILayerBasedAuthorizationService layerBasedAuthorizationService, 
+        public AttributeValueImageController(IAttributeModel attributeModel, ICurrentUserService currentUserService, ILayerBasedAuthorizationService layerBasedAuthorizationService,
             IModelContextBuilder modelContextBuilder, IChangesetModel changesetModel, ICIBasedAuthorizationService ciBasedAuthorizationService)
         {
             this.attributeModel = attributeModel;
@@ -124,8 +123,8 @@ namespace Omnikeeper.Controllers
                 av = new AttributeScalarValueImage(proxies[0]);
             }
 
-            var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var inserted = await attributeModel.InsertAttribute(attributeName, av, ciid, layerID, changesetProxy, trans);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+            var inserted = await attributeModel.InsertAttribute(attributeName, av, ciid, layerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
             trans.Commit();
             return Ok();
         }

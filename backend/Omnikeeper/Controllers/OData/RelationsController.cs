@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNet.OData;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -110,10 +110,9 @@ namespace Omnikeeper.Controllers.OData
                 return BadRequest($"CI with ID \"{relation.ToCIID}\" does not exist");
 
             var timeThreshold = TimeThreshold.BuildLatest();
+            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
-            var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold.Time, changesetModel);
-
-            var (created, changed) = await relationModel.InsertRelation(relation.FromCIID, relation.ToCIID, relation.Predicate, writeLayerID, changesetProxy, trans);
+            var (created, changed) = await relationModel.InsertRelation(relation.FromCIID, relation.ToCIID, relation.Predicate, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
 
             // we fetch the just created relation again, but merged
             var r = await relationModel.GetMergedRelation(created.FromCIID, created.ToCIID, created.PredicateID, readLayerset, trans, timeThreshold);
@@ -136,7 +135,8 @@ namespace Omnikeeper.Controllers.OData
                 if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
                     return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
-                var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
+                var timeThreshold = TimeThreshold.BuildLatest();
+                var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
                 var (removed, changed) = await relationModel.RemoveRelation(keyFromCIID, keyToCIID, keyPredicate, writeLayerID, changesetProxy, trans);
                 trans.Commit();
             }

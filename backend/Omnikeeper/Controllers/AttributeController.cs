@@ -1,13 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -29,7 +28,7 @@ namespace Omnikeeper.Controllers
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
 
-        public AttributeController(IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserService currentUserService, 
+        public AttributeController(IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserService currentUserService,
             ILayerBasedAuthorizationService authorizationService, IModelContextBuilder modelContextBuilder, ICIBasedAuthorizationService ciBasedAuthorizationService)
         {
             this.modelContextBuilder = modelContextBuilder;
@@ -56,7 +55,7 @@ namespace Omnikeeper.Controllers
             var attributesDict = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsSelection(), layerset, trans, timeThreshold);
 
             var attributes = attributesDict
-                .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key))
+                .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key)) // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
                 .Select(kv => CIAttributeDTO.Build(kv.Value));
 
             return Ok(attributes);
@@ -75,14 +74,16 @@ namespace Omnikeeper.Controllers
             if (ciids.IsEmpty())
                 return BadRequest("Empty CIID list");
 
+            ISet<Guid> ciidSet = ciids.ToHashSet(); // TODO: needed
+
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
-            if (!ciBasedAuthorizationService.CanReadAllCIs(ciids, out var notAllowedCI))
+            if (!ciBasedAuthorizationService.CanReadAllCIs(ciidSet, out var notAllowedCI))
                 return Forbid($"User \"{user.Username}\" does not have permission to read from CI {notAllowedCI}");
 
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
-            var attributes = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciids), layerset, trans, timeThreshold);
+            var attributes = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciidSet), layerset, trans, timeThreshold);
             return Ok(attributes.SelectMany(t => t.Value.Select(a => CIAttributeDTO.Build(a.Value))));
         }
 
@@ -127,15 +128,16 @@ namespace Omnikeeper.Controllers
                 selection = new AllCIIDsSelection();
             else
             {
-                if (!ciBasedAuthorizationService.CanReadAllCIs(ciids, out var notAllowedCI))
+                ISet<Guid> ciidSet = ciids.ToHashSet(); // TODO: needed
+                if (!ciBasedAuthorizationService.CanReadAllCIs(ciidSet, out var notAllowedCI))
                     return Forbid($"User \"{user.Username}\" does not have permission to read from CI {notAllowedCI}");
-                selection = SpecificCIIDsSelection.Build(ciids);
+                selection = SpecificCIIDsSelection.Build(ciidSet);
             }
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var attributes = await attributeModel.FindMergedAttributesByName(regex, selection, new LayerSet(layerIDs), trans, timeThreshold);
 
             if (selection is AllCIIDsSelection)
-                attributes = attributes.Where(a => ciBasedAuthorizationService.CanReadCI(a.Attribute.CIID));
+                attributes = attributes.Where(a => ciBasedAuthorizationService.CanReadCI(a.Attribute.CIID)); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
 
             return Ok(attributes.Select(a => CIAttributeDTO.Build(a)));
         }
@@ -158,8 +160,8 @@ namespace Omnikeeper.Controllers
             if (!ciBasedAuthorizationService.CanWriteToAllCIs(data.Fragments.Select(f => data.GetCIID(f)), out var notAllowedCI))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to CI {notAllowedCI}");
 
-            var changesetProxy = new ChangesetProxy(user.InDatabase, DateTimeOffset.Now, changesetModel);
-            var inserted = await attributeModel.BulkReplaceAttributes(data, changesetProxy, trans);
+            var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+            var inserted = await attributeModel.BulkReplaceAttributes(data, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
             trans.Commit();
             return Ok();
         }

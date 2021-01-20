@@ -1,0 +1,12 @@
+
+ALTER TABLE public.gridview_config SET SCHEMA config;
+ALTER TABLE config.gridview_config RENAME TO gridview;
+
+ALTER TABLE config.gridview
+  DROP CONSTRAINT gridview_config_pkey;
+
+ALTER TABLE config.gridview 
+	DROP COLUMN id;
+
+ALTER TABLE config.gridview 
+	ADD PRIMARY KEY(name);

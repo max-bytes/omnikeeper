@@ -19,7 +19,7 @@ namespace DBMigrations
             {
                 try
                 {
-                    var result = DBMigration.Migrate(connectionString);
+                    var result = DBMigration.Migrate(connectionString, true);
 
                     if (!result.Successful)
                     {
@@ -35,7 +35,8 @@ namespace DBMigrations
                         Console.ResetColor();
                         succeeded = true;
                     }
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine(e.Message);

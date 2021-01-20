@@ -1,7 +1,7 @@
 ﻿using Omnikeeper.Base.Entity;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -12,14 +12,17 @@ namespace Omnikeeper.Entity.AttributeValues
     {
         IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum);
         IEnumerable<ITemplateErrorAttribute> MatchRegex(Regex regex);
-        bool FullTextSearch(string searchString, CompareOptions compareOptions);
+        bool FullTextSearch(string searchString, CompareOptions compareOptions); // TODO: remove, not needed
     }
 
+    [ProtoContract(SkipConstructor = true)]
     public class AttributeScalarValueText : IAttributeScalarValue<string>, IEquatable<AttributeScalarValueText>, IAttributeValueText
     {
-        public bool Multiline { get; protected set; }
+        [ProtoMember(1)] private readonly bool multiline;
+        public bool Multiline => multiline;
+        [ProtoMember(2)] private readonly string value;
+        public string Value => value;
 
-        public string Value { get; private set; }
         public string Value2String() => Value;
         public string[] ToRawDTOValues() => new string[] { Value };
         public object ToGenericObject() => Value;
@@ -35,8 +38,8 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public AttributeScalarValueText(string value, bool multiline = false)
         {
-            Value = value;
-            Multiline = multiline;
+            this.value = value;
+            this.multiline = multiline;
         }
 
         public IEnumerable<ITemplateErrorAttribute> ApplyTextLengthConstraint(int? minimum, int? maximum)
@@ -53,16 +56,21 @@ namespace Omnikeeper.Entity.AttributeValues
                 yield return new TemplateErrorAttributeGeneric($"Regex {regex} did not match text {Value}");
         }
 
+        // TODO: not needed, remove
         public bool FullTextSearch(string searchString, CompareOptions compareOptions)
             => CultureInfo.InvariantCulture.CompareInfo.IndexOf(Value, searchString, compareOptions) >= 0;
     }
 
-
+    [ProtoContract]
     public class AttributeArrayValueText : AttributeArrayValue<AttributeScalarValueText, string>, IAttributeValueText
     {
         protected AttributeArrayValueText(AttributeScalarValueText[] values) : base(values)
         {
         }
+
+#pragma warning disable CS8618
+        protected AttributeArrayValueText() { }
+#pragma warning restore CS8618
 
         public override AttributeValueType Type => Values.Any(v => v.Multiline) ? AttributeValueType.MultilineText : AttributeValueType.Text;
 

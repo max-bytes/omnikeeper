@@ -10,6 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\OKPluginGenericJSONIngest\OKPluginGenericJSONIngest.csproj" />
     <ProjectReference Include="..\Omnikeeper.Base\Omnikeeper.Base.csproj" />
   </ItemGroup>
 

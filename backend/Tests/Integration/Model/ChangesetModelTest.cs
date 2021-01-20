@@ -1,21 +1,17 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using NUnit.Framework;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Decorators;
-using Omnikeeper.Utils;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
-using NUnit.Framework;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Tests.Integration.Model.Mocks;
 using static Omnikeeper.Base.Model.IChangesetModel;
-using static Omnikeeper.Base.Model.IRelationModel;
-using Omnikeeper.Base.Utils.ModelContext;
 
 namespace Tests.Integration.Model
 {
@@ -26,10 +22,10 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
-            var ciModel = new CIModel(attributeModel);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var ciModel = new CIModel(attributeModel, new CIIDModel());
             var predicateModel = new CachingPredicateModel(new PredicateModel());
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
             var layerModel = new LayerModel();
 
             using var trans1 = ModelContextBuilder.BuildDeferred();
@@ -44,22 +40,22 @@ namespace Tests.Integration.Model
             using var trans2 = ModelContextBuilder.BuildDeferred();
             var layer1 = await layerModel.CreateLayer("l1", trans2);
             var layerset = new LayerSet(new long[] { layer1.ID });
-            var changeset1 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changeset1, trans2);
+            var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
             trans2.Commit();
 
             Thread.Sleep(500);
 
             using var trans3 = ModelContextBuilder.BuildDeferred();
-            var changeset2 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changeset2, trans3);
+            var changeset2 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+            await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans3);
             trans3.Commit();
 
             var t2 = DateTimeOffset.Now;
 
             using var trans4 = ModelContextBuilder.BuildDeferred();
-            var changeset3 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-            await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changeset3, trans4);
+            var changeset3 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+            await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid3, layer1.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans4);
             trans4.Commit();
 
             var t3 = DateTimeOffset.Now;
@@ -74,7 +70,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = await changesetModel.CreateChangeset(user.ID, trans);
-                await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changeset3, trans);
+                await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
                 trans.Commit();
             }
             var t4 = DateTimeOffset.Now;
@@ -94,10 +90,10 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel());
-            var ciModel = new CIModel(attributeModel);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var ciModel = new CIModel(attributeModel, new CIIDModel());
             var predicateModel = new CachingPredicateModel(new PredicateModel());
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel));
+            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
             var layerModel = new LayerModel();
 
             using var trans = ModelContextBuilder.BuildDeferred();
@@ -113,16 +109,16 @@ namespace Tests.Integration.Model
             using var trans2 = ModelContextBuilder.BuildDeferred();
             var layer1 = await layerModel.CreateLayer("l1", trans2);
             var layerset = new LayerSet(new long[] { layer1.ID });
-            var changeset1 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-            await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset1, trans2);
+            var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+            await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
             trans2.Commit();
 
             Thread.Sleep(500);
             var t2 = DateTimeOffset.Now;
 
             using var trans3 = ModelContextBuilder.BuildDeferred();
-            var changeset2 = new ChangesetProxy(user, DateTimeOffset.Now, changesetModel);
-            await relationModel.InsertRelation(ciid2, ciid1, predicate2.ID, layer1.ID, changeset2, trans3);
+            var changeset2 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+            await relationModel.InsertRelation(ciid2, ciid1, predicate2.ID, layer1.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans3);
             trans3.Commit();
 
             Thread.Sleep(500);
@@ -136,17 +132,62 @@ namespace Tests.Integration.Model
             Assert.AreEqual(2, changesets2.Count());
         }
 
+        [Test]
+        public async Task DeleteEmptyTest()
+        {
+            var userModel = new UserInDatabaseModel();
+            var changesetModel = new ChangesetModel(userModel);
+            var baseAttributeModel = new BaseAttributeModel(new PartitionModel());
+            var baseAttributeRevisionistModel = new BaseAttributeRevisionistModel();
+            var attributeModel = new AttributeModel(baseAttributeModel);
+            var ciModel = new CIModel(attributeModel, new CIIDModel());
+            var predicateModel = new CachingPredicateModel(new PredicateModel());
+            var baseRelationModel = new BaseRelationModel(predicateModel, new PartitionModel());
+            var relationModel = new RelationModel(baseRelationModel);
+            var layerModel = new LayerModel();
+
+            using var trans1 = ModelContextBuilder.BuildDeferred();
+            var user = await DBSetup.SetupUser(userModel, trans1);
+            var ciid1 = await ciModel.CreateCI(trans1);
+            var ciid2 = await ciModel.CreateCI(trans1);
+            var (predicate1, changedp1) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans1);
+            var layer1 = await layerModel.CreateLayer("l1", trans1);
+            var layer2 = await layerModel.CreateLayer("l2", trans1);
+            var layerset1 = new LayerSet(new long[] { layer1.ID });
+            var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(100)), changesetModel);
+            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("foo"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans1);
+            trans1.Commit();
+
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                Assert.AreEqual(0, await changesetModel.DeleteEmptyChangesets(trans));
+                trans.Commit();
+            }
+
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                await baseAttributeRevisionistModel.DeleteAllAttributes(layer1.ID, trans);
+                trans.Commit();
+            }
+
+            using (var trans = ModelContextBuilder.BuildDeferred())
+            {
+                Assert.AreEqual(1, await changesetModel.DeleteEmptyChangesets(trans));
+                trans.Commit();
+            }
+        }
+
 
         [Test]
         public async Task ArchiveOldTest()
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var baseAttributeModel = new BaseAttributeModel();
+            var baseAttributeModel = new BaseAttributeModel(new PartitionModel());
             var attributeModel = new AttributeModel(baseAttributeModel);
-            var ciModel = new CIModel(attributeModel);
+            var ciModel = new CIModel(attributeModel, new CIIDModel());
             var predicateModel = new CachingPredicateModel(new PredicateModel());
-            var baseRelationModel = new BaseRelationModel(predicateModel);
+            var baseRelationModel = new BaseRelationModel(predicateModel, new PartitionModel());
             var relationModel = new RelationModel(baseRelationModel);
             var layerModel = new LayerModel();
 
@@ -161,8 +202,8 @@ namespace Tests.Integration.Model
             using var trans2 = ModelContextBuilder.BuildDeferred();
             var layer1 = await layerModel.CreateLayer("l1", trans2);
             var layerset1 = new LayerSet(new long[] { layer1.ID });
-            var changeset1 = new ChangesetProxy(user, DateTimeOffset.FromUnixTimeSeconds(100), changesetModel);
-            await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset1, trans2);
+            var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(100)), changesetModel);
+            await relationModel.InsertRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
             trans2.Commit();
 
             using var transI = ModelContextBuilder.BuildImmediate();
@@ -170,9 +211,9 @@ namespace Tests.Integration.Model
 
 
             using var trans3 = ModelContextBuilder.BuildDeferred();
-            var changeset2 = new ChangesetProxy(user, DateTimeOffset.FromUnixTimeSeconds(150), changesetModel);
-            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("foo"), ciid1, layer1.ID, changeset2, trans3);
-            await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("bar"), ciid1, layer1.ID, changeset2, trans3);
+            var changeset2 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(150)), changesetModel);
+            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("foo"), ciid1, layer1.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans3);
+            await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("bar"), ciid1, layer1.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans3);
             trans3.Commit();
 
             Assert.AreEqual(0, await changesetModel.ArchiveUnusedChangesetsOlderThan(DateTimeOffset.FromUnixTimeSeconds(50), transI));
@@ -184,7 +225,7 @@ namespace Tests.Integration.Model
 
             // delete relation again
             using var trans4 = ModelContextBuilder.BuildDeferred();
-            var changeset3 = new ChangesetProxy(user, DateTimeOffset.FromUnixTimeSeconds(200), changesetModel);
+            var changeset3 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(200)), changesetModel);
             await relationModel.RemoveRelation(ciid1, ciid2, predicate1.ID, layer1.ID, changeset3, trans4);
             trans4.Commit();
 
@@ -193,8 +234,8 @@ namespace Tests.Integration.Model
 
             // overwrite attribute a1
             using var trans5 = ModelContextBuilder.BuildDeferred();
-            var changeset4 = new ChangesetProxy(user, DateTimeOffset.FromUnixTimeSeconds(200), changesetModel);
-            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("new foo"), ciid1, layer1.ID, changeset4, trans5);
+            var changeset4 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(200)), changesetModel);
+            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("new foo"), ciid1, layer1.ID, changeset4, new DataOriginV1(DataOriginType.Manual), trans5);
             trans5.Commit();
 
             // changeset2 is now old "enough", but still cannot be deleted because one of its attributes (a2) is the latest
@@ -203,8 +244,8 @@ namespace Tests.Integration.Model
 
             // delete attribute a2
             using var trans6 = ModelContextBuilder.BuildDeferred();
-            var changeset5 = new ChangesetProxy(user, DateTimeOffset.FromUnixTimeSeconds(250), changesetModel);
-            await attributeModel.RemoveAttribute("a2",ciid1, layer1.ID, changeset5, trans6);
+            var changeset5 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(250)), changesetModel);
+            await attributeModel.RemoveAttribute("a2", ciid1, layer1.ID, changeset5, trans6);
             trans6.Commit();
 
             // changeset2 is now old "enough", and can be deleted

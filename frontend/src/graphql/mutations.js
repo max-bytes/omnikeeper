@@ -146,6 +146,12 @@ CREATE_CI: gql`
     deleteOIAContext(oiaID: $oiaID)
   }
   `,
+  
+  TRUNCATE_LAYER: gql`
+  mutation TruncateLayer($id: Long!) {
+    truncateLayer(id: $id)
+  }
+  `,
 
   UPSERT_ODATAAPICONTEXT: gql`
     mutation UpsertODataAPIContext($odataAPIContext: UpsertODataAPIContextInputType!) {

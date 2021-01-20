@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -7,9 +8,12 @@ using System.Linq;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
+    [ProtoContract(SkipConstructor = true)]
     public class AttributeScalarValueImage : IAttributeScalarValue<BinaryScalarAttributeValueProxy>, IEquatable<AttributeScalarValueImage>
     {
-        public BinaryScalarAttributeValueProxy Value { get; private set; }
+        [ProtoMember(1)]
+        private readonly BinaryScalarAttributeValueProxy value;
+        public BinaryScalarAttributeValueProxy Value => value;
         public string Value2String() => Value.ToString();
         public string[] ToRawDTOValues()
         {
@@ -31,16 +35,20 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public AttributeScalarValueImage(BinaryScalarAttributeValueProxy proxy)
         {
-            Value = proxy;
+            this.value = proxy;
         }
     }
 
-
+    [ProtoContract]
     public class AttributeArrayValueImage : AttributeArrayValue<AttributeScalarValueImage, BinaryScalarAttributeValueProxy>
     {
         protected AttributeArrayValueImage(AttributeScalarValueImage[] values) : base(values)
         {
         }
+
+#pragma warning disable CS8618
+        protected AttributeArrayValueImage() { }
+#pragma warning restore CS8618
 
         public override AttributeValueType Type => AttributeValueType.Image;
 

@@ -1,8 +1,10 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Drawing;
 
 namespace Omnikeeper.Base.Entity
 {
+    [ProtoContract(SkipConstructor = true)]
     public class ComputeLayerBrainLink : IEquatable<ComputeLayerBrainLink>
     {
         private ComputeLayerBrainLink(string name)
@@ -10,7 +12,7 @@ namespace Omnikeeper.Base.Entity
             Name = name;
         }
 
-        public string Name { get; private set; }
+        [ProtoMember(1)] public readonly string Name;
 
         public override int GetHashCode() => HashCode.Combine(Name);
         public override bool Equals(object? obj) => Equals(obj as ComputeLayerBrainLink);
@@ -22,6 +24,7 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    [ProtoContract(SkipConstructor = true)]
     public class OnlineInboundAdapterLink : IEquatable<OnlineInboundAdapterLink>
     {
         private OnlineInboundAdapterLink(string adapterName)
@@ -29,7 +32,7 @@ namespace Omnikeeper.Base.Entity
             AdapterName = adapterName;
         }
 
-        public string AdapterName { get; private set; }
+        [ProtoMember(1)] public readonly string AdapterName;
 
         public override int GetHashCode() => HashCode.Combine(AdapterName);
         public override bool Equals(object? obj) => Equals(obj as OnlineInboundAdapterLink);
@@ -41,6 +44,7 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    [ProtoContract(SkipConstructor = true)]
     public class Layer : IEquatable<Layer>
     {
         private Layer(string name, long iD, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrainLink, OnlineInboundAdapterLink onlineInboundAdapterLink)
@@ -53,12 +57,12 @@ namespace Omnikeeper.Base.Entity
             OnlineInboundAdapterLink = onlineInboundAdapterLink;
         }
 
-        public string Name { get; private set; }
-        public long ID { get; private set; }
-        public AnchorState State { get; private set; }
-        public Color Color { get; private set; }
-        public ComputeLayerBrainLink ComputeLayerBrainLink { get; private set; }
-        public OnlineInboundAdapterLink OnlineInboundAdapterLink { get; private set; }
+        [ProtoMember(1)] public readonly string Name;
+        [ProtoMember(2)] public readonly long ID;
+        [ProtoMember(3)] public readonly AnchorState State;
+        [ProtoMember(4)] public readonly Color Color;
+        [ProtoMember(5)] public readonly ComputeLayerBrainLink ComputeLayerBrainLink;
+        [ProtoMember(6)] public readonly OnlineInboundAdapterLink OnlineInboundAdapterLink;
 
         public override int GetHashCode() => HashCode.Combine(Name, ID, State, Color, ComputeLayerBrainLink, OnlineInboundAdapterLink);
         public override bool Equals(object? obj) => Equals(obj as Layer);

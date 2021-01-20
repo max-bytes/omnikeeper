@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Omnikeeper.Base.Entity.DataOrigin;
+using System;
 
 namespace Omnikeeper.Base.Entity
 {
@@ -11,17 +12,20 @@ namespace Omnikeeper.Base.Entity
         public string PredicateID { get; private set; }
         public string PredicateWording { get; private set; }
         public Guid ChangesetID { get; private set; }
+        public DataOriginV1 Origin { get; private set; }
         public long LayerID { get => LayerStackIDs[^1]; }
         public long[] LayerStackIDs { get; private set; }
         public bool IsForwardRelation { get; private set; }
 
-        public CompactRelatedCI(CompactCI ci, Guid relationID, Guid fromCIID, Guid toCIID, Guid changesetID, string predicateID, bool isForwardRelation, string predicateWording, long[] layerStackIDs)
+        public CompactRelatedCI(CompactCI ci, Guid relationID, Guid fromCIID, Guid toCIID, Guid changesetID, DataOriginV1 origin,
+            string predicateID, bool isForwardRelation, string predicateWording, long[] layerStackIDs)
         {
             RelationID = relationID;
             CI = ci;
             FromCIID = fromCIID;
             ToCIID = toCIID;
             ChangesetID = changesetID;
+            Origin = origin;
             PredicateID = predicateID;
             PredicateWording = predicateWording;
             LayerStackIDs = layerStackIDs;

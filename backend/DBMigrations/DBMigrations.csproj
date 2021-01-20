@@ -33,10 +33,20 @@
     <None Remove="Scripts\00025-create-odata-api-context.psql" />
     <None Remove="Scripts\00026-create-traits.psql" />
     <None Remove="Scripts\00027-fix-foreign-key-changeset-to-attribute-and-relation.psql" />
+    <None Remove="Scripts\00028-create-table-gridviewconfig.psql" />
     <None Remove="Scripts\00029-create-config-schema.psql" />
     <None Remove="Scripts\00030-add-general-config.psql" />
     <None Remove="Scripts\00031-binary-attribute-values.psql" />
     <None Remove="Scripts\00032-attributevaluetype-image.psql" />
+    <None Remove="Scripts\00033-add-speakingName-description-columns.psql" />
+    <None Remove="Scripts\00034-migrate-config-to-config-schema" />
+    <None Remove="Scripts\00034-migrate-config-to-config-schema.psql" />
+    <None Remove="Scripts\00035-add-data-origin-type.psql" />
+    <None Remove="Scripts\00036-perf-index-improvements.psql" />
+    <None Remove="Scripts\00037-attribute-partitioning.psql" />
+    <None Remove="Scripts\00038-relation-partitioning.psql" />
+    <None Remove="Scripts\00039-add-index-changeset-id.psql" />
+    <None Remove="Scripts\00040-added-layer-indices.psql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -71,6 +81,15 @@
     <EmbeddedResource Include="Scripts\00012-computerlayerbrain-fix-foreign-key.psql" />
     <EmbeddedResource Include="Scripts\00011-citype-state.psql" />
     <EmbeddedResource Include="Scripts\00010-computerlayerbrain-rework.psql" />
+    <EmbeddedResource Include="Scripts\00028-create-table-gridviewconfig.psql" />
+    <EmbeddedResource Include="Scripts\00033-add-speakingName-description-columns.psql" />
+    <EmbeddedResource Include="Scripts\00040-added-layer-indices.psql" />
+    <EmbeddedResource Include="Scripts\00039-add-index-changeset-id.psql" />
+    <EmbeddedResource Include="Scripts\00038-relation-partitioning.psql" />
+    <EmbeddedResource Include="Scripts\00037-attribute-partitioning.psql" />
+    <EmbeddedResource Include="Scripts\00036-perf-index-improvements.psql" />
+    <EmbeddedResource Include="Scripts\00035-add-data-origin-type.psql" />
+    <EmbeddedResource Include="Scripts\00034-migrate-config-to-config-schema.psql" />
   </ItemGroup>
 
   <ItemGroup>

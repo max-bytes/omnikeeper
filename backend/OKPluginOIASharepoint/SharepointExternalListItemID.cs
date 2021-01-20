@@ -1,8 +1,5 @@
 ﻿using Omnikeeper.Base.Inbound;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace OKPluginOIASharepoint
@@ -32,7 +29,7 @@ namespace OKPluginOIASharepoint
             var itemIDStr = match.Groups["itemID"].Value;
             var listIDStr = match.Groups["listID"].Value;
             if (!Guid.TryParse(itemIDStr, out var itemID))
-                return default; 
+                return default;
             if (!Guid.TryParse(listIDStr, out var listID))
                 return default;
             return new SharepointExternalListItemID(listID, itemID);

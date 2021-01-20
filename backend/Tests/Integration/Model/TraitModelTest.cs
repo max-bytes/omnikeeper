@@ -1,14 +1,11 @@
 ﻿using FluentAssertions;
+using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Model;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using NUnit.Framework;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace Tests.Integration.Model 
+namespace Tests.Integration.Model
 {
     class TraitModelTest // TODO: this (TraitModelTest) is not the best name
     {
@@ -21,14 +18,14 @@ namespace Tests.Integration.Model
                         CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     )
                 }),
-                new RecursiveTrait("windows_host", new List<TraitAttribute>() {
+                new RecursiveTrait("host_windows", new List<TraitAttribute>() {
                     new TraitAttribute("os_family",
                         CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                             new CIAttributeValueConstraintTextRegex(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                     )
                 }, requiredTraits: new string[] { "host" }),
 
-                new RecursiveTrait("linux_host", new List<TraitAttribute>() {
+                new RecursiveTrait("host_linux", new List<TraitAttribute>() {
                     new TraitAttribute("os_family",
                         CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                             new CIAttributeValueConstraintTextRegex(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
@@ -63,18 +60,18 @@ namespace Tests.Integration.Model
                         new TraitAttribute("variables",
                             CIAttributeTemplate.BuildFromParams("automation.ansible_variables", AttributeValueType.JSON, false)
                         )
-                    },
-                    new List<TraitRelation>() {
-                        new TraitRelation("ansible_groups",
-                            new RelationTemplate("has_ansible_group", 1, null)
-                        )
                     }
+                    //new List<TraitRelation>() {
+                    //    new TraitRelation("ansible_groups",
+                    //        new RelationTemplate("has_ansible_group", 1, null)
+                    //    )
+                    //}
                 )
             );
 
-            var json = TraitsProvider.TraitSetSerializer.SerializeToString(traitset);
+            var json = RecursiveTraitSet.Serializer.SerializeToString(traitset);
 
-            var x = TraitsProvider.TraitSetSerializer.Deserialize(json);
+            var x = RecursiveTraitSet.Serializer.Deserialize(json);
 
             x.Should().BeEquivalentTo(traitset);
         }

@@ -21,6 +21,9 @@ export const Fragments = {
         name
         changesetID
         state
+        origin {
+            type
+        }
         value {
             type
             isArray
@@ -93,6 +96,7 @@ export const Fragments = {
         predicateWording
         layerID
         changesetID
+        origin { type }
         layerStackIDs
         layerStack {
             id

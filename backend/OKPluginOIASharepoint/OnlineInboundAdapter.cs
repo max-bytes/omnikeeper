@@ -1,17 +1,13 @@
-﻿using Flurl;
-using Flurl.Http;
-using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Inbound;
+﻿using Flurl.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using OKPluginOIASharepoint;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Inbound;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using static OKPluginOIASharepoint.Config;
-using static OKPluginOIASharepoint.OnlineInboundAdapter;
 
 namespace OKPluginOIASharepoint
 {
