@@ -76,7 +76,7 @@ namespace Omnikeeper.GridView.Queries
 
                 var res = await effectiveTraitModel.GetMergedCIsWithTrait(
                     activeTrait,
-                    new LayerSet(config.ReadLayerset.ToArray()), new AllCIIDsSelection(),
+                    new LayerSet(config.ReadLayerset), new AllCIIDsSelection(),
                     trans,
                     TimeThreshold.BuildLatest()
                     );
@@ -85,6 +85,7 @@ namespace Omnikeeper.GridView.Queries
                 {
                     var ci_id = item.ID;
 
+                    // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
                     var canRead = ciBasedAuthorizationService.CanReadCI(ci_id);
 
                     if (!canRead)

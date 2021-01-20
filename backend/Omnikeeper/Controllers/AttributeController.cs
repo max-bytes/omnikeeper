@@ -55,7 +55,7 @@ namespace Omnikeeper.Controllers
             var attributesDict = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsSelection(), layerset, trans, timeThreshold);
 
             var attributes = attributesDict
-                .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key))
+                .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key)) // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
                 .Select(kv => CIAttributeDTO.Build(kv.Value));
 
             return Ok(attributes);
@@ -137,7 +137,7 @@ namespace Omnikeeper.Controllers
             var attributes = await attributeModel.FindMergedAttributesByName(regex, selection, new LayerSet(layerIDs), trans, timeThreshold);
 
             if (selection is AllCIIDsSelection)
-                attributes = attributes.Where(a => ciBasedAuthorizationService.CanReadCI(a.Attribute.CIID));
+                attributes = attributes.Where(a => ciBasedAuthorizationService.CanReadCI(a.Attribute.CIID)); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
 
             return Ok(attributes.Select(a => CIAttributeDTO.Build(a)));
         }

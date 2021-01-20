@@ -221,9 +221,9 @@ namespace Omnikeeper.GridView.Commands
                     var ci_id = item.ID;
 
 
-                    var canRead = ciBasedAuthorizationService.CanReadCI(ci_id);
+                    var canWrite = ciBasedAuthorizationService.CanWriteToCI(ci_id); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
 
-                    if (!canRead)
+                    if (!canWrite)
                     {
                         continue;
                     }

@@ -42,7 +42,7 @@ namespace Omnikeeper.Controllers
         {
             var trans = modelContextBuilder.BuildImmediate();
             var ciids = await ciModel.GetCIIDs(trans);
-            ciids = ciids.Where(ciid => ciBasedAuthorizationService.CanReadCI(ciid));
+            ciids = ciids.Where(ciid => ciBasedAuthorizationService.CanReadCI(ciid)); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
             return Ok(ciids);
         }
 

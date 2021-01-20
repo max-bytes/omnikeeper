@@ -46,7 +46,7 @@ namespace Omnikeeper.Controllers
                 return BadRequest($"Trait with name \"{traitName}\" not found");
             var traitSets = await traitModel.CalculateEffectiveTraitsForTrait(trait, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             return Ok(traitSets
-                .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key))
+                .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key)) // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
                 .ToDictionary(kv => kv.Key, kv => EffectiveTraitDTO.Build(kv.Value.et)));
         }
     }
