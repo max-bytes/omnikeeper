@@ -94,6 +94,35 @@ namespace Tasks.Tools
                         //    )
                         //}
                     ),
+
+                    
+                    // timecontrol-timerecord
+                    new RecursiveTrait("timecontrol-timerecord", new List<TraitAttribute>() {
+                        new TraitAttribute("date",
+                            CIAttributeTemplate.BuildFromParams("date", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        ),
+                        new TraitAttribute("from",
+                            CIAttributeTemplate.BuildFromParams("from", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        ),
+                        new TraitAttribute("to",
+                            CIAttributeTemplate.BuildFromParams("to", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        ),
+                        new TraitAttribute("activity",
+                            CIAttributeTemplate.BuildFromParams("activity", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        ),
+                        new TraitAttribute("openproject_id",
+                            CIAttributeTemplate.BuildFromParams("openproject_id", AttributeValueType.Integer, false)
+                        ),
+                        new TraitAttribute("location",
+                            CIAttributeTemplate.BuildFromParams("location", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                        ),
+                        new TraitAttribute("factor",
+                            CIAttributeTemplate.BuildFromParams("factor", AttributeValueType.Integer, false)
+                        ),
+                        new TraitAttribute("billable",
+                            CIAttributeTemplate.BuildFromParams("billable", AttributeValueType.Integer, false)
+                        ),
+                    }),
                 };
 
             return RecursiveTraitSet.Build(traits);
