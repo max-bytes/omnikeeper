@@ -235,7 +235,7 @@ export function Context(props) {
                             status: rowStatus.new, // set status to 'new'
                         },
                     ], 
-                    addIndex: 0 
+                    addIndex: 0,
                     // remaining attributes: undefined
                 });
             }
