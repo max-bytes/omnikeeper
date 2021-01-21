@@ -19,7 +19,7 @@ export default function ContextButtonToolbar(props) {
                     }}
                 >
                     {/* New rows: */}
-                    {/* <Button type="text" style={{ cursor: "default" }}>
+                    <Button type="text" style={{ cursor: "default" }}>
                         New rows:
                     </Button>
                     <Button value={1} onClick={props.newRows}>
@@ -30,15 +30,15 @@ export default function ContextButtonToolbar(props) {
                     </Button>
                     <Button value={50} onClick={props.newRows}>
                         50
-                    </Button> */}
+                    </Button>
 
                     {/* Delete row */}
-                    {/* <Button
+                    <Button
                         style={{ marginLeft: "10px" }}
                         onClick={props.markRowAsDeleted}
                     >
                         Delete row
-                    </Button> */}
+                    </Button>
 
                     {/* Reset row */}
                     <Button

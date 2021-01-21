@@ -8,6 +8,7 @@ import "./Context.css";
 import GridViewDataParseModel from "./GridViewDataParseModel";
 import _ from "lodash";
 import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
+import { v4 as uuidv4 } from 'uuid';
 
 import { useParams, withRouter } from "react-router-dom";
 import FeedbackMsg from "./FeedbackMsg";
@@ -32,7 +33,6 @@ export function Context(props) {
     const [columnDefs, setColumnDefs] = useState(null);
     const [rowData, setRowData] = useState(null);
     const [rowDataSnapshot, setRowDataSnapshot] = useState(null);
-    const [tempId, setTempId] = useState(null);
     const defaultColDef = initDefaultColDef(); // Init defaultColDef
 
     const [swaggerMsg, setSwaggerMsg] = useState("");
@@ -97,7 +97,7 @@ export function Context(props) {
                             '<span class="ag-overlay-loading-center">Loading...</span>'
                         }
                         overlayNoRowsTemplate={
-                            '<span class="ag-overlay-loading-center">Please choose context.</span>'
+                            '<span class="ag-overlay-loading-center">No data.</span>'
                         }
                     />
                 ) :
@@ -231,12 +231,13 @@ export function Context(props) {
                 gridApi.applyTransaction({
                     add: [
                         {
-                            ciid: "_t_" + Number(tempId + i), // set tempId
+                            ciid: uuidv4(), // we generate the uuid here, it will stay the same from then on out
                             status: rowStatus.new, // set status to 'new'
                         },
-                    ], // remaining attributes: undefined
+                    ], 
+                    addIndex: 0 
+                    // remaining attributes: undefined
                 });
-                setTempId(Number(tempId) + Number(numberOfNewRows)); // set tempId (state)
             }
         }
     }
@@ -253,8 +254,8 @@ export function Context(props) {
             // directly delete entry, if "new"
             if (rowNode && selectedRows[i].status.id === rowStatus.new.id)
                 gridApi.applyTransaction({ remove: [selectedRows[i]] });
-            // set status to "deleted", when not "new"
-            else if (rowNode) rowNode.setDataValue("status", rowStatus.deleted);
+            // set status to "deleted", when not "new" // commented out for now, we don't support deletion
+            //else if (rowNode) rowNode.setDataValue("status", rowStatus.deleted);
         }
     }
 
@@ -302,8 +303,12 @@ export function Context(props) {
             let rowDataDiffs = [];
 
             await gridApi.forEachNode(async (node) => {
-                if (
-                    node.data.status.id === rowStatus.new.id || // CREATE
+                if (node.data.status.id === rowStatus.new.id) // CREATE
+                {
+                    let rowDataDiff = node.data;
+                    rowDataDiffs.push(rowDataDiff); // update all node columns
+                }
+                else if (
                     node.data.status.id === rowStatus.edited.id || // UPDATE
                     node.data.status.id === rowStatus.deleted.id // DELETE
                 ) {
@@ -313,9 +318,9 @@ export function Context(props) {
                         return rowSnapshot.ciid === node.data.ciid;
                     });
                     let rowDataDiff = getDiffBetweenObjects(node.data, rowSnapshot);
-                    rowDataDiff["ciid"] = node.data.ciid; // add ciid
+                    rowDataDiff.ciid = node.data.ciid; // add ciid in any case
 
-                    rowDataDiffs.push(rowDataDiff); // add to rowDataDiffs
+                    rowDataDiffs.push(rowDataDiff);
                 }
             });
 
@@ -336,14 +341,10 @@ export function Context(props) {
                         .then((result) => result.body);
 
                     // Create rowData from changeResults
-                    const rowDataChangeResults = gridViewDataParseModel.createRowData(
-                        changeResults
-                    );
+                    const rowDataChangeResults = gridViewDataParseModel.createRowData(changeResults);
 
                     // update rows
-                    _.forEach(rowDataChangeResults, function (value) {
-                        gridApi.applyTransaction({ update: [value] }); // delete from grid
-                    });
+                    gridApi.applyTransaction({ update: rowDataChangeResults });
 
                     setSwaggerErrorJson(false);
                     setSwaggerMsg("Saved.");
@@ -391,8 +392,6 @@ export function Context(props) {
                     gridApi.setColumnDefs(parsedColumnDefs);
                     gridApi.setRowData(parsedRowData);
                 }
-    
-                setTempId(0); // Reset tempId
 
                 // INFO: don't show message on basic load
             } catch(e) {

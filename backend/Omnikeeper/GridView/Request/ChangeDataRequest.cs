@@ -15,10 +15,10 @@ namespace Omnikeeper.GridView.Request
 
     public class SparseRow
     {
-        public Guid? Ciid { get; set; }
+        public Guid Ciid { get; set; }
         public List<ChangeDataCell> Cells { get; set; }
 
-        public SparseRow(Guid? Ciid, List<ChangeDataCell> Cells)
+        public SparseRow(Guid Ciid, List<ChangeDataCell> Cells)
         {
             this.Ciid = Ciid;
             this.Cells = Cells;

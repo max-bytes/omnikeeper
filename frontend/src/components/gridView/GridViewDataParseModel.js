@@ -76,7 +76,7 @@ export default function GridViewDataParseModel(rowStatus) {
         _.forEach(rowData, function (value) {
             let cells = [];
             _.forEach(value, function (value, key) {
-                if (key !== "ciid" && key !== "status")
+                if (key !== "ciid" && key !== "status" && key !== "reference") // TODO: what if columns are named like these?
                     cells.push({
                         name: key,
                         value: value,
@@ -84,6 +84,7 @@ export default function GridViewDataParseModel(rowStatus) {
             });
             let row = {
                 ciid: value.ciid,
+                reference: value.reference,
                 cells: cells,
             };
             sparseRows.push(row);
