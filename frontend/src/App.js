@@ -79,7 +79,8 @@ function App() {
                             <Menu.Item key="createCI"><Link to="/createCI"><Icon name="plus" /> Create New CI</Link></Menu.Item>
                             <Menu.Item key="explorer"><Link to="/explorer"><Icon name="search" /> Search CI</Link></Menu.Item>
                             <Menu.Item key="diffing"><Link to="/diffing"><Icon name="exchange" /> Diffing</Link></Menu.Item>
-                            <Menu.Item key="grid-view" style={{ paddingRight: "40px", borderRight: "1px solid #f0f0f0" }}><Link to="/grid-view"><Icon name="grid layout" /> Grid View</Link></Menu.Item>
+                            <Menu.Item key="grid-view" style={{ marginRight: "60px" }}><Link to="/grid-view"><Icon name="grid layout" /> Grid View</Link></Menu.Item>
+                            <Menu.Divider/>
                             <UserBar disabled={true} style={{ cursor: "unset" }} />
                         </Menu>
                     )}
