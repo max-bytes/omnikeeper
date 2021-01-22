@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Omnikeeper.Entity.AttributeValues;
+using System.Collections.Generic;
 
 namespace Omnikeeper.GridView.Entity
 {
@@ -24,13 +25,15 @@ namespace Omnikeeper.GridView.Entity
     {
         public string SourceAttributeName { get; set; }
         public string ColumnDescription { get; set; }
+        public AttributeValueType? ValueType { get; set; }
         public long? WriteLayer { get; set; }
 
-        public GridViewColumn(string SourceAttributeName, string ColumnDescription, long? WriteLayer)
+        public GridViewColumn(string SourceAttributeName, string ColumnDescription, long? WriteLayer, AttributeValueType? valueType)
         {
             this.SourceAttributeName = SourceAttributeName;
             this.ColumnDescription = ColumnDescription;
             this.WriteLayer = WriteLayer;
+            ValueType = valueType;
         }
     }
 }

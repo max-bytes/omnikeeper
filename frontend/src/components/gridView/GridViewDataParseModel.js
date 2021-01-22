@@ -3,6 +3,9 @@ import _ from "lodash";
 export default function GridViewDataParseModel(rowStatus) {
     // ########## FROM BACKEND-STRUCTURE TO FRONTEND/AG-GRID-STRUCTURE ##########
 
+     // TODO: what if a gridview context defines a column named "status" or "ciid"
+     // rename these two to something "cryptic", so the chances of a collision are slim
+
     // Create columnDefs from schema and data
     const createColumnDefs = (schema, data) => {
         let columnDefs = [
@@ -75,16 +78,15 @@ export default function GridViewDataParseModel(rowStatus) {
         let sparseRows = [];
         _.forEach(rowData, function (value) {
             let cells = [];
-            _.forEach(value, function (value, key) {
-                if (key !== "ciid" && key !== "status" && key !== "reference") // TODO: what if columns are named like these?
+            _.forOwn(value, function (v, key, o) {
+                if (key !== "ciid" && key !== "status")
                     cells.push({
                         name: key,
-                        value: value,
+                        value: v,
                     });
             });
             let row = {
                 ciid: value.ciid,
-                reference: value.reference,
                 cells: cells,
             };
             sparseRows.push(row);

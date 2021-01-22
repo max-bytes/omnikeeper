@@ -59,15 +59,7 @@ export default function ContextButtonToolbar(props) {
                         style={{ marginLeft: "10px" }}
                         onClick={props.setCellToNotSet}
                     >
-                        Set to '[not set]'
-                    </Button>
-
-                    {/* Set cell empty */}
-                    <Button
-                        onClick={props.setCellToEmpty}
-                        style={{ marginLeft: "10px" }}
-                    >
-                        Set empty
+                        Set cell to '[not set]'
                     </Button>
                 </div>
 

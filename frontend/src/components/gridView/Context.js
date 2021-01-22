@@ -9,6 +9,7 @@ import GridViewDataParseModel from "./GridViewDataParseModel";
 import _ from "lodash";
 import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
 import { v4 as uuidv4 } from 'uuid';
+import CustomLargetextCellEditor from './CustomLargeTextCellEditor';
 
 import { useParams, withRouter } from "react-router-dom";
 import FeedbackMsg from "./FeedbackMsg";
@@ -31,6 +32,7 @@ export function Context(props) {
     const [gridColumnApi, setGridColumnApi] = useState(null);
 
     const [columnDefs, setColumnDefs] = useState(null);
+    const [schema, setSchema] = useState(null);
     const [rowData, setRowData] = useState(null);
     const [rowDataSnapshot, setRowDataSnapshot] = useState(null);
     const defaultColDef = initDefaultColDef(); // Init defaultColDef
@@ -71,7 +73,6 @@ export function Context(props) {
                 {swaggerMsg && <FeedbackMsg alertProps={{message: swaggerMsg, type: swaggerErrorJson ? "error": "success", showIcon: true, banner: true}} swaggerErrorJson={swaggerErrorJson} />}
                 <ContextButtonToolbar
                     setCellToNotSet={setCellToNotSet}
-                    setCellToEmpty={setCellToEmpty}
                     newRows={newRows}
                     markRowAsDeleted={markRowAsDeleted}
                     resetRow={resetRow}
@@ -83,6 +84,10 @@ export function Context(props) {
             <Content>
                 { swaggerJson ? (
                     <AgGridCopyCutPaste
+                        frameworkComponents={{
+                            customLargetextCellEditor: CustomLargetextCellEditor
+                        }}
+                        stopEditingWhenGridLosesFocus={true}
                         onGridReady={onGridReady}
                         rowData={rowData}
                         columnDefs={columnDefs}
@@ -140,7 +145,7 @@ export function Context(props) {
                         return true;
                 },
             },
-            valueSetter: function (params) {
+            valueSetter: function (params) { // TODO: move to specific columnDef
                 // undefined/null -> ""
                 if (
                     (params.oldValue === undefined ||
@@ -155,10 +160,48 @@ export function Context(props) {
                     return true;
                 }
             },
-            valueFormatter: (params) => {
-                if (params.value === undefined || params.value === null)
-                    return "[not set]";
-                else return params.value;
+            valueParser: (params) => { // TODO: move to specific columnDef
+                return {...params.oldValue, values: [params.newValue]};
+            },
+            valueFormatter: (params) => { // TODO: move to specific columnDef
+                var colId = params.column.colId;
+                if (colId === 'ciid' || colId === 'status')
+                    return params.value;
+                // else if (params.value === undefined || params.value === null)
+                //     return "[not set]";
+                else {
+                    const value = params.value.values?.[0];
+                    if (value === undefined)
+                        return "[not set]";
+                    return value;
+                }
+            },
+            cellEditorSelector: function(params) { // TODO: move to specific columnDef
+                if (!params.value) { // TODO: new or unset cells are not an object (and do not have a type)... what to do here?
+                    console.error("Value not set");
+                    return null;
+                }
+                else if (params.value.type === 'MultilineText') {
+                    return { component: 'customLargetextCellEditor', params: {useFormatter: true} };
+                } else {
+                    return { component: 'agTextCellEditor', params: {useFormatter: true}};
+                }
+            },
+            suppressKeyboardEvent: (params) => { // TODO: move to specific columnDef
+                const colId = params.column.colId;
+                const value = params.data[colId];
+                
+                // TODO: this is not the best place for this, but I couldn't make it work inside the cell editor
+                if (value.type === 'MultilineText') {
+                    // prevent shift+enter from propagating
+                    const event = params.event;
+                    const key = event.which || event.keyCode;
+                    const keycodeEnter = 13;
+                    if (event.shiftKey && key === keycodeEnter) { // shift+enter allows for newlines
+                        return true;
+                    }
+                    return false;
+                } else return false;
             },
         };
     }
@@ -174,23 +217,10 @@ export function Context(props) {
                 const params = { ...focusedCell.column, node: rowNode }; // HACK: build needed 'params'-information
                 const editableCell = focusedCell.column.colDef.editable(params);
                 const editableCol = focusedCell.column.colDef.editable;
-                if (editableCol && editableCell)
-                    rowNode.setDataValue(focusedCell.column.colId, null);
-            }
-        }
-    }
-
-    // sets focused cell to ""
-    function setCellToEmpty() {
-        var focusedCell = gridApi.getFocusedCell();
-        if (focusedCell) {
-            var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
-            if (rowNode) {
-                const params = { ...focusedCell.column, node: rowNode }; // HACK: build needed 'params'-information
-                const editableCell = focusedCell.column.colDef.editable(params);
-                const editableCol = focusedCell.column.colDef.editable;
-                if (editableCol && editableCell)
-                    rowNode.setDataValue(focusedCell.column.colId, "");
+                if (editableCol && editableCell) {
+                    const currentValue = rowNode.data[focusedCell.column.colId];
+                    rowNode.setDataValue(focusedCell.column.colId, {...currentValue, values: []});
+                }
             }
         }
     }
@@ -206,16 +236,16 @@ export function Context(props) {
                 const oldValue =
                     e.oldValue === null || e.oldValue === undefined // [not set]-Attributes: null, undefined
                         ? null // set [not set]-Attributes to null, so js-comparison does not detect a difference
-                        : e.oldValue.toString(); // [set]-Attributes: e.g. "" (empty string), any other set value
+                        : e.oldValue; // [set]-Attributes: e.g. "" (empty string), any other set value
 
                 // analog to oldValue
                 const newValue =
                     e.newValue === null || e.newValue === undefined
                         ? null
-                        : e.newValue.toString();
+                        : e.newValue;
 
                 // ignore unchanged data
-                if (newValue !== oldValue)
+                if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) // HACK: deep comparison via JSON.stringify
                     rowNode.setDataValue("status", rowStatus.edited);
             }
         }
@@ -227,18 +257,24 @@ export function Context(props) {
     function newRows(e) {
         if (e) {
             var numberOfNewRows = e.currentTarget.value; // how many rows to add
+
+            var toAdd = [];
             for (var i = 0; i < numberOfNewRows; i++) {
-                gridApi.applyTransaction({
-                    add: [
-                        {
-                            ciid: uuidv4(), // we generate the uuid here, it will stay the same from then on out
-                            status: rowStatus.new, // set status to 'new'
-                        },
-                    ], 
-                    addIndex: 0,
-                    // remaining attributes: undefined
+                var newRow = {
+                    ciid: uuidv4(), // we generate the uuid here, it will stay the same from then on out
+                    status: rowStatus.new, // set status to 'new'
+                };
+                schema.columns.forEach(c => {
+                    newRow[c.name] = {values: [''], type: c.valueType };
                 });
+                // ...(schema.columns.map(c => {return {[c.name]: 'foo'}}))//.columns.reduce((acc, cur) => {acc[cur.name] = cur.valueType; return acc;}, {}));
+                toAdd.push(newRow);
             }
+            console.log(toAdd);
+            gridApi.applyTransaction({
+                add: toAdd, 
+                addIndex: 0
+            });
         }
     }
 
@@ -317,10 +353,10 @@ export function Context(props) {
                     ) {
                         return rowSnapshot.ciid === node.data.ciid;
                     });
-                    let rowDataDiff = getDiffBetweenObjects(node.data, rowSnapshot);
+                    let rowDataDiff = getDiffBetweenRows(node.data, rowSnapshot);
                     rowDataDiff.ciid = node.data.ciid; // add ciid in any case
-
                     rowDataDiffs.push(rowDataDiff);
+                    // rowDataDiffs.push(node.data); // update all node columns
                 }
             });
 
@@ -383,6 +419,7 @@ export function Context(props) {
                 ); // Create columnDefs from schema and data
                 const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
     
+                setSchema(schema);
                 setColumnDefs(parsedColumnDefs); // set columnDefs
                 setRowData(parsedRowData); // set rowData
                 setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
@@ -410,14 +447,15 @@ export function Context(props) {
 
     // ######################################## HELPERS ########################################
 
-    function getDiffBetweenObjects(newObj, oldObj) {
+    function getDiffBetweenRows(newObj, oldObj) {
         function changes(v, oldObj) {
-            return _.transform(newObj, function (result, value, key) {
+            return _.transform(v, function (result, value, key) {
                 if (!_.isEqual(value, oldObj[key])) {
-                    result[key] =
-                        _.isObject(value) && _.isObject(oldObj[key])
-                            ? changes(value, oldObj[key])
-                            : value;
+                    // const r = _.isObject(value) && _.isObject(oldObj[key])
+                    // ? changes(value, oldObj[key])
+                    // : value;
+                    result[key] = value;
+                        
                 }
             });
         }

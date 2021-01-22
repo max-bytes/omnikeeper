@@ -1,14 +1,18 @@
 ﻿using FluentValidation;
 using MediatR;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.GridView.Entity;
 using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Response;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -93,49 +97,52 @@ namespace Omnikeeper.GridView.Queries
                         continue;
                     }
 
-                    foreach (var attr in item.MergedAttributes)
+                    var filteredColumns = config.Columns.Select(column =>
                     {
-                        var name = attr.Value.Attribute.Name;
-                        var col = config.Columns.Find(el => el.SourceAttributeName == name);
-                        bool changable = true;
-
-                        if (col == null)
+                        if (item.MergedAttributes.TryGetValue(column.SourceAttributeName, out var attribute))
                         {
-                            continue;
+                            return ((GridViewColumn column, MergedCIAttribute? attr))(column, attribute);
+                        } else
+                        {
+                            return (column, null);
                         }
+                    });
 
-                        if (attr.Value.LayerStackIDs.Length > 1)
+                    foreach (var (column, attr) in filteredColumns)
+                    {
+                        bool changable = true;
+                        if (attr != null)
                         {
-                            if (attr.Value.LayerStackIDs[^1] != config.WriteLayer)
+                            if (attr.LayerStackIDs.Length > 1)
                             {
-                                changable = false;
+                                if (attr.LayerStackIDs[^1] != config.WriteLayer)
+                                {
+                                    changable = false;
+                                }
                             }
                         }
 
+                        var value = (attr != null) 
+                            ? AttributeValueDTO.Build(attr.Attribute.Value) 
+                            : AttributeValueDTO.BuildEmpty(column.ValueType ?? AttributeValueType.Text, false);
+
+                        var cell = new Cell(
+                                column.SourceAttributeName,
+                                value,
+                                column.WriteLayer == null ? true : (column.WriteLayer != -1) && changable
+                            );
 
                         var el = result.Rows.Find(el => el.Ciid == ci_id);
-
                         if (el != null)
                         {
-                            el.Cells.Add(new Cell(
-                                name,
-                                attr.Value.Attribute.Value.Value2String(),
-                                col.WriteLayer == null ? true : (col.WriteLayer != -1) && changable 
-                            ));
+                            el.Cells.Add(cell);
                         }
                         else
                         {
                             result.Rows.Add(new Row
                             (
                                 ci_id,
-                                new List<Cell>
-                                    {
-                                        new Cell(
-                                            name,
-                                            attr.Value.Attribute.Value.Value2String(),
-                                            col.WriteLayer == null ? true : (col.WriteLayer != -1) && changable
-                                        )
-                                    }
+                                new List<Cell> { cell }
                             ));
                         }
                     }

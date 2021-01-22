@@ -75,5 +75,15 @@ namespace Omnikeeper.Base.Entity.DTO
                 Type = a.Type
             };
         }
+
+        public static AttributeValueDTO BuildEmpty(AttributeValueType valueType, bool array)
+        {
+            return new AttributeValueDTO()
+            {
+                Values = new string[0],
+                IsArray = array,
+                Type = valueType
+            };
+        }
     }
 }
