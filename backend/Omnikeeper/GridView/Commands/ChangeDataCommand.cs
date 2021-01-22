@@ -96,18 +96,10 @@ namespace Omnikeeper.GridView.Commands
 
                 foreach (var row in request.Changes.SparseRows)
                 {
-                    if (row.Ciid == null)
+                    var ciExists = await ciModel.CIIDExists(row.Ciid, trans);
+                    if (!ciExists)
                     {
-                        row.Ciid = await ciModel.CreateCI(trans);
-                    }
-                    else
-                    {
-                        var ciExists = await ciModel.CIIDExists(row.Ciid.Value, trans);
-
-                        if (!ciExists)
-                        {
-                            return (null, new Exception($"The provided ci id: {row.Ciid} was not found!"));
-                        }
+                        row.Ciid = await ciModel.CreateCI(row.Ciid, trans);
                     }
 
                     foreach (var cell in row.Cells)
@@ -133,8 +125,8 @@ namespace Omnikeeper.GridView.Commands
 
                         //var writeLayer = configItem.WriteLayer != null ? configItem.WriteLayer.Value : config.WriteLayer;
 
-                        if (!ciBasedAuthorizationService.CanWriteToCI(row.Ciid.Value))
-                            return (null, new Exception($"User \"{user.Username}\" does not have permission to write to CI {row.Ciid.Value}"));
+                        if (!ciBasedAuthorizationService.CanWriteToCI(row.Ciid))
+                            return (null, new Exception($"User \"{user.Username}\" does not have permission to write to CI {row.Ciid}"));
 
                         if (cell.Value == null)
                         {
@@ -142,7 +134,7 @@ namespace Omnikeeper.GridView.Commands
                             {
                                 await attributeModel.RemoveAttribute(
                                     cell.Name,
-                                    row.Ciid.Value,
+                                    row.Ciid,
                                     writeLayer,
                                     changesetProxy,
                                     trans);
@@ -167,7 +159,7 @@ namespace Omnikeeper.GridView.Commands
                                 await attributeModel.InsertAttribute(
                                     cell.Name,
                                     val,
-                                    row.Ciid.Value,
+                                    row.Ciid,
                                     writeLayer,
                                     changesetProxy,
                                     new DataOriginV1(DataOriginType.Manual),
@@ -186,7 +178,7 @@ namespace Omnikeeper.GridView.Commands
                 if (activeTrait == null)
                     return (null, new Exception($"Could not find trait {config.Trait}"));
 
-                var cisList = SpecificCIIDsSelection.Build(request.Changes.SparseRows.Select(i => i.Ciid!.Value).ToHashSet());
+                var cisList = SpecificCIIDsSelection.Build(request.Changes.SparseRows.Select(i => i.Ciid).ToHashSet());
                 var mergedCIs = await ciModel.GetMergedCIs(
                     cisList,
                     new LayerSet(config.ReadLayerset.ToArray()),
