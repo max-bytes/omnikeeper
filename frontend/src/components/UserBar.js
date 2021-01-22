@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useKeycloak } from '@react-keycloak/web'
-import { Menu, Button } from 'semantic-ui-react'
+import { Menu, Button } from 'antd'
 
 function UserBar(props) {
   const { keycloak, keycloakInitialized } = useKeycloak()
@@ -15,18 +15,18 @@ function UserBar(props) {
 
   let items;
   if (userProfile) {
-    items = <div style={{display: 'flex'}}>
-      <Menu.Item>{userProfile.firstName} {userProfile.lastName} </Menu.Item>
-      <Menu.Item>
-        <Button onClick={() => keycloak.logout()}>Logout</Button>
+    items = <>
+      <Menu.Item {...props} key="userProfile">{userProfile.firstName} {userProfile.lastName}</Menu.Item>
+      <Menu.Item {...props} key="logout">
+        <Button onClick={() => keycloak.logout()} >Logout</Button>
       </Menu.Item>
-    </div>;
+    </>;
 
 
   } else {
-    items = <div>
-    {/* <Menu.Item>Not logged in</Menu.Item> */}
-  </div>;
+    items = <>
+    {/* <Menu.Item className="ant-menu-item ant-menu-item" style={{ paddingLeft: "40px", borderLeft: "1px solid #f0f0f0" }}>Not logged in</Menu.Item> */}
+  </>;
   }
   
   return items;
