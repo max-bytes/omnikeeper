@@ -58,7 +58,7 @@ function App() {
     return <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
         <nav style={{
                     borderBottom: "solid 1px #e8e8e8",
-                    overflow: "auto",
+                    overflow: "hidden",
                     boxShadow: "0 0 30px #f3f1f1",
                 }}>
             <div style={{ width: "200px", float: "left" }}>
@@ -74,7 +74,7 @@ function App() {
             <div style={{ width: "calc(100% - 200px)", float: "left" }}>
             <Route
                 render={({ location, history }) =>  (
-                        <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{ position: "relative", display: "flex", justifyContent: "flex-end" }}>
+                        <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{ position: "relative", display: "flex", justifyContent: "flex-end", borderBottom: "none" }}>
                             <Menu.Item key="manage"><Link to="/manage"><Icon name="wrench" /> Manage</Link></Menu.Item>
                             <Menu.Item key="createCI"><Link to="/createCI"><Icon name="plus" /> Create New CI</Link></Menu.Item>
                             <Menu.Item key="explorer"><Link to="/explorer"><Icon name="search" /> Search CI</Link></Menu.Item>
