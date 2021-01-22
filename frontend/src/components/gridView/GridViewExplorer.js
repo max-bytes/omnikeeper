@@ -7,7 +7,7 @@ import _ from "lodash";
 import FeedbackMsg from "./FeedbackMsg";
 
 function GridViewExplorer(props) {
-    const swaggerJson = props.swaggerJson;
+    const swaggerClient = props.swaggerClient;
     const apiVersion = props.apiVersion;
 
     const [loading, setLoading] = useState(true);
@@ -19,22 +19,20 @@ function GridViewExplorer(props) {
   
     // get contexts
     const refresh = useCallback(async () => {
-        if (swaggerJson) {
-            try {
-                setLoading(true);
-                // reload
-                const context = await swaggerJson.apis.GridView.GetContexts({ version: apiVersion })
-                    .then((result) => result.body);
-                setContext(context); // set context
+        try {
+            setLoading(true);
+            // reload
+            const context = await swaggerClient().apis.GridView.GetContexts({ version: apiVersion })
+                .then((result) => result.body);
+            setContext(context); // set context
 
-                // INFO: don't show message on basic load
-            } catch(e) {
-                setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
-                setSwaggerMsg(e.toString());
-            }
-            setLoading(false);
+            // INFO: don't show message on basic load
+        } catch(e) {
+            setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
+            setSwaggerMsg(e.toString());
         }
-    }, [swaggerJson, apiVersion])
+        setLoading(false);
+    }, [swaggerClient, apiVersion])
 
     useEffect(() => {refresh();}, [refresh]);
 
@@ -66,23 +64,21 @@ function GridViewExplorer(props) {
                                         <Popconfirm
                                             title={`Are you sure to delete ${result.speakingName}?`}
                                             onConfirm={async () => {
-                                                if (swaggerJson) {
-                                                    try {
-                                                        await swaggerJson.apis.GridView.DeleteContext(
-                                                                {
-                                                                    version: apiVersion,
-                                                                    name: result.name,
-                                                                }
-                                                            )
-                                                            .then((result) => result.body);
+                                                try {
+                                                    await swaggerClient().apis.GridView.DeleteContext(
+                                                            {
+                                                                version: apiVersion,
+                                                                name: result.name,
+                                                            }
+                                                        )
+                                                        .then((result) => result.body);
 
-                                                        setSwaggerErrorJson(false);
-                                                        setSwaggerMsg("'" + result.name + "' has been removed.");
-                                                        refresh(); // reload
-                                                    } catch(e) {
-                                                        setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
-                                                        setSwaggerMsg(e.toString());
-                                                    }
+                                                    setSwaggerErrorJson(false);
+                                                    setSwaggerMsg("'" + result.name + "' has been removed.");
+                                                    refresh(); // reload
+                                                } catch(e) {
+                                                    setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
+                                                    setSwaggerMsg(e.toString());
                                                 }
                                             }}
                                             okText="Yes"

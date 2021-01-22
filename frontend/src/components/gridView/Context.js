@@ -23,7 +23,7 @@ const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
 );  
 
 export function Context(props) {
-    const swaggerJson = props.swaggerJson;
+    const swaggerClient = props.swaggerClient;
     const apiVersion = props.apiVersion;
 
     const { contextName } = useParams(); // get contextName from path
@@ -82,31 +82,28 @@ export function Context(props) {
                 />
             </Header>
             <Content>
-                { swaggerJson ? (
-                    <AgGridCopyCutPaste
-                        frameworkComponents={{
-                            customLargetextCellEditor: CustomLargetextCellEditor
-                        }}
-                        stopEditingWhenGridLosesFocus={true}
-                        onGridReady={onGridReady}
-                        rowData={rowData}
-                        columnDefs={columnDefs}
-                        defaultColDef={defaultColDef}
-                        animateRows={true}
-                        rowSelection="multiple"
-                        onCellValueChanged={updateCellValue}
-                        getRowNodeId={function (data) {
-                            return data.ciid;
-                        }}
-                        overlayLoadingTemplate={
-                            '<span class="ag-overlay-loading-center">Loading...</span>'
-                        }
-                        overlayNoRowsTemplate={
-                            '<span class="ag-overlay-loading-center">No data.</span>'
-                        }
-                    />
-                ) :
-                <>Loading...</> }
+                <AgGridCopyCutPaste
+                    frameworkComponents={{
+                        customLargetextCellEditor: CustomLargetextCellEditor
+                    }}
+                    stopEditingWhenGridLosesFocus={true}
+                    onGridReady={onGridReady}
+                    rowData={rowData}
+                    columnDefs={columnDefs}
+                    defaultColDef={defaultColDef}
+                    animateRows={true}
+                    rowSelection="multiple"
+                    onCellValueChanged={updateCellValue}
+                    getRowNodeId={function (data) {
+                        return data.ciid;
+                    }}
+                    overlayLoadingTemplate={
+                        '<span class="ag-overlay-loading-center">Loading...</span>'
+                    }
+                    overlayNoRowsTemplate={
+                        '<span class="ag-overlay-loading-center">No data.</span>'
+                    }
+                />
             </Content>
         </Layout>
     );
@@ -335,106 +332,102 @@ export function Context(props) {
 
     // CREATE / UPDATE / DELETE on pressing 'save'
     async function save() {
-        if (swaggerJson) {
-            let rowDataDiffs = [];
+        let rowDataDiffs = [];
 
-            await gridApi.forEachNode(async (node) => {
-                if (node.data.status.id === rowStatus.new.id) // CREATE
-                {
-                    let rowDataDiff = node.data;
-                    rowDataDiffs.push(rowDataDiff); // update all node columns
-                }
-                else if (
-                    node.data.status.id === rowStatus.edited.id || // UPDATE
-                    node.data.status.id === rowStatus.deleted.id // DELETE
-                ) {
-                    const rowSnapshot = _.find(rowDataSnapshot, function (
-                        rowSnapshot
-                    ) {
-                        return rowSnapshot.ciid === node.data.ciid;
-                    });
-                    let rowDataDiff = getDiffBetweenRows(node.data, rowSnapshot);
-                    rowDataDiff.ciid = node.data.ciid; // add ciid in any case
-                    rowDataDiffs.push(rowDataDiff);
-                    // rowDataDiffs.push(node.data); // update all node columns
-                }
-            });
-
-            const changes = gridViewDataParseModel.createChanges(rowDataDiffs); // Create changes from rowData (delta)
-
-            try {
-                if (_.size(changes.sparseRows)) {
-                    // actually do the changes
-                    const changeResults = await swaggerJson.apis.GridView.ChangeData(
-                            {
-                                version: apiVersion,
-                                context: contextName,
-                            },
-                            {
-                                requestBody: changes,
-                            }
-                        )
-                        .then((result) => result.body);
-
-                    // Create rowData from changeResults
-                    const rowDataChangeResults = gridViewDataParseModel.createRowData(changeResults);
-
-                    // update rows
-                    gridApi.applyTransaction({ update: rowDataChangeResults });
-
-                    setSwaggerErrorJson(false);
-                    setSwaggerMsg("Saved.");
-                }
-            } catch(e) {
-                setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
-                setSwaggerMsg(e.toString());
+        await gridApi.forEachNode(async (node) => {
+            if (node.data.status.id === rowStatus.new.id) // CREATE
+            {
+                let rowDataDiff = node.data;
+                rowDataDiffs.push(rowDataDiff); // update all node columns
             }
+            else if (
+                node.data.status.id === rowStatus.edited.id || // UPDATE
+                node.data.status.id === rowStatus.deleted.id // DELETE
+            ) {
+                const rowSnapshot = _.find(rowDataSnapshot, function (
+                    rowSnapshot
+                ) {
+                    return rowSnapshot.ciid === node.data.ciid;
+                });
+                let rowDataDiff = getDiffBetweenRows(node.data, rowSnapshot);
+                rowDataDiff.ciid = node.data.ciid; // add ciid in any case
+                rowDataDiffs.push(rowDataDiff);
+                // rowDataDiffs.push(node.data); // update all node columns
+            }
+        });
+
+        const changes = gridViewDataParseModel.createChanges(rowDataDiffs); // Create changes from rowData (delta)
+
+        try {
+            if (_.size(changes.sparseRows)) {
+                // actually do the changes
+                const changeResults = await swaggerClient().apis.GridView.ChangeData(
+                        {
+                            version: apiVersion,
+                            context: contextName,
+                        },
+                        {
+                            requestBody: changes,
+                        }
+                    )
+                    .then((result) => result.body);
+
+                // Create rowData from changeResults
+                const rowDataChangeResults = gridViewDataParseModel.createRowData(changeResults);
+
+                // update rows
+                gridApi.applyTransaction({ update: rowDataChangeResults });
+
+                setSwaggerErrorJson(false);
+                setSwaggerMsg("Saved.");
+            }
+        } catch(e) {
+            setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
+            setSwaggerMsg(e.toString());
         }
     }
 
     // READ / refresh data
     async function refreshData() {
-        if (swaggerJson) {
-            // Tell AgGrid to reset columnDefs and rowData // important!
+        // Tell AgGrid to reset columnDefs and rowData // important!
+        if (gridApi) {
+            gridApi.setColumnDefs(null);
+            gridApi.setRowData(null);
+            gridApi.showLoadingOverlay(); // trigger "Loading"-state (otherwise would be in "No Rows"-state instead)
+        }
+        try {
+            const schema = await swaggerClient().apis.GridView.GetSchema({
+                    version: apiVersion,
+                    context: contextName,
+                })
+                .then((result) => result.body);
+            const data = await swaggerClient().apis.GridView.GetData({
+                    version: apiVersion,
+                    context: contextName,
+                })
+                .then((result) => result.body);
+
+            const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
+                schema,
+                data
+            ); // Create columnDefs from schema and data
+            const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
+
+            setSchema(schema);
+            setColumnDefs(parsedColumnDefs); // set columnDefs
+            setRowData(parsedRowData); // set rowData
+            setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
+
+            // Tell AgGrid to set columnDefs and rowData
             if (gridApi) {
-                gridApi.setColumnDefs(null);
-                gridApi.setRowData(null);
-                gridApi.showLoadingOverlay(); // trigger "Loading"-state (otherwise would be in "No Rows"-state instead)
+                gridApi.setColumnDefs(parsedColumnDefs);
+                gridApi.setRowData(parsedRowData);
             }
-            try {
-                const schema = await swaggerJson.apis.GridView.GetSchema({
-                        version: apiVersion,
-                        context: contextName,
-                    })
-                    .then((result) => result.body);
-                const data = await swaggerJson.apis.GridView.GetData({
-                        version: apiVersion,
-                        context: contextName,
-                    })
-                    .then((result) => result.body);
 
-                const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
-                    schema,
-                    data
-                ); // Create columnDefs from schema and data
-                const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
-    
-                setSchema(schema);
-                setColumnDefs(parsedColumnDefs); // set columnDefs
-                setRowData(parsedRowData); // set rowData
-                setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
-    
-                // Tell AgGrid to set columnDefs and rowData
-                if (gridApi) {
-                    gridApi.setColumnDefs(parsedColumnDefs);
-                    gridApi.setRowData(parsedRowData);
-                }
-
-                // INFO: don't show message on basic load
-            } catch(e) {
-                setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
-                setSwaggerMsg(e.toString());
-            }
+            // INFO: don't show message on basic load
+        } catch(e) {
+            setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
+            setSwaggerMsg(e.toString());
         }
     }
 

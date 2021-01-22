@@ -18,25 +18,32 @@ function GridView(props) {
 
     const [swaggerMsg, setSwaggerMsg] = useState("");
     const [swaggerErrorJson, setSwaggerErrorJson] = useState(false);
-    const [swaggerJson, setSwaggerJson] = useState(null);
+    const [swaggerClient, setSwaggerClient] = useState(null);
 
     // get swagger JSON
-    const getSwaggerJson = useCallback(async () => {
+    // NOTE: we use a useEffect to (re)load the client itself
+    // to make the client usable for others, the getSwaggerClient() callback is used
+    // the reason this callback exists is for setting the correct, updated access token
+    useEffect(() => { 
         try {
             const token = localStorage.getItem('token');
-            const swaggerJson = await new SwaggerClient(swaggerDefUrl, {
+            new SwaggerClient(swaggerDefUrl, {
                 authorizations: {
                     oauth2: { token: { access_token: token } },
                 }
+            }).then(d => {
+                setSwaggerClient(d);
             });
-            setSwaggerJson(swaggerJson);
         } catch(e) {
             setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
             setSwaggerMsg(e.toString());//e.statusCode + ": " + e.response.statusText + " " + e.response.url);
         }
-    }, [swaggerDefUrl])
-
-    useEffect(() => {getSwaggerJson();}, [getSwaggerJson]);
+    }, [swaggerDefUrl]);
+    const getSwaggerClient = useCallback(() => {
+        // update token before returning the client
+        swaggerClient.authorizations.oauth2.token.access_token = localStorage.getItem('token');
+        return swaggerClient;
+    }, [swaggerClient]);
 
     // TODO: menu: set defaultSelectedKeys based on selected route
 
@@ -49,19 +56,19 @@ function GridView(props) {
                         <Menu.Item key="createNewContext" ><Link to="/create-context"><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
                     </Menu>
                 </Route>
-                { !swaggerErrorJson && swaggerJson ? (
+                { !swaggerErrorJson && swaggerClient ? (
                     <Switch>
                         <PrivateRoute path="/explorer/:contextName">
-                            <Context swaggerJson={swaggerJson} apiVersion={apiVersion} />
+                            <Context swaggerClient={getSwaggerClient} apiVersion={apiVersion} />
                         </PrivateRoute>
                         <PrivateRoute path="/edit-context/:contextName">
-                            <AddNewContext swaggerJson={swaggerJson} apiVersion={apiVersion} editMode />
+                            <AddNewContext swaggerClient={getSwaggerClient} apiVersion={apiVersion} editMode />
                         </PrivateRoute>
                         <PrivateRoute path="/create-context">
-                            <AddNewContext swaggerJson={swaggerJson} apiVersion={apiVersion} />
+                            <AddNewContext swaggerClient={getSwaggerClient} apiVersion={apiVersion} />
                         </PrivateRoute>
                         <PrivateRoute path="/explorer">
-                            <GridViewExplorer swaggerJson={swaggerJson} apiVersion={apiVersion} />
+                            <GridViewExplorer swaggerClient={getSwaggerClient} apiVersion={apiVersion} />
                         </PrivateRoute>
 
                         <PrivateRoute path="*">
