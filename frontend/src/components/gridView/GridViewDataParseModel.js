@@ -139,8 +139,8 @@ export default function GridViewDataParseModel(rowStatus) {
     // ########## HELPERS ##########
 
     // returns editable/changeable-attr of cell, defined by its ciid and name/colName
-    function getCellEditable(ciid, name, data, columnWritable) {
-        if (!columnWritable) return false;
+    function getCellEditable(ciid, name, data, isColumnWritable) {
+        if (!isColumnWritable) return false;
         if (data) {
             let row = _.find(data.rows, o => o.ciid === ciid);
             if (row) {
@@ -149,7 +149,7 @@ export default function GridViewDataParseModel(rowStatus) {
                     return cell.changeable;
                 else return false;
             } else {
-                return true;
+                return true; // row must be new because we couldn't find it, treat cell as writable
             }
         }
         return false;

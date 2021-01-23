@@ -206,10 +206,10 @@ export function Context(props) {
                     ciid: uuidv4(), // we generate the uuid here, it will stay the same from then on out
                     status: rowStatus.new, // set status to 'new'
                 };
-                schema.columns.forEach(c => {
+                for(let i = 0;i < schema.columns.length;i++) {
+                    const c = schema.columns[i];
                     newRow[c.name] = {values: [], type: c.valueType, isArray: false };
-                });
-                // ...(schema.columns.map(c => {return {[c.name]: 'foo'}}))//.columns.reduce((acc, cur) => {acc[cur.name] = cur.valueType; return acc;}, {}));
+                }
                 toAdd.push(newRow);
             }
             gridApi.applyTransaction({
@@ -246,17 +246,7 @@ export function Context(props) {
             const rowNode = gridApi.getRowNode(row.ciid);
 
             if (rowNode) {
-                if (rowNode.data.status.id === rowStatus.new.id) {
-                    // reset row
-                    gridApi.applyTransaction({
-                        update: [
-                            {
-                                ciid: row.ciid,
-                                status: rowStatus.new,
-                            },
-                        ],
-                    });
-                } else {
+                if (rowNode.data.status.id !== rowStatus.new.id) {
                     // reset row
                     gridApi.applyTransaction({
                         update: [
