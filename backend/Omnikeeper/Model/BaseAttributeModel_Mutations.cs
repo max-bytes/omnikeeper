@@ -1,5 +1,6 @@
 ﻿using Npgsql;
 using NpgsqlTypes;
+using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
@@ -37,7 +38,7 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, origin_type, partition_index) 
                 VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id, @origin_type, @partition_index)", trans.DBConnection, trans.DBTransaction);
 
-            var (valueText, valueBinary, valueControl) = Marshal(currentAttribute.Value);
+            var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(currentAttribute.Value);
 
             var id = Guid.NewGuid();
             command.Parameters.AddWithValue("id", id);
@@ -89,7 +90,7 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, origin_type, partition_index) 
                 VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id, @origin_type, @partition_index)", trans.DBConnection, trans.DBTransaction);
 
-            var (valueText, valueBinary, valueControl) = Marshal(value);
+            var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
 
             var id = Guid.NewGuid();
             command.Parameters.AddWithValue("id", id);
@@ -170,7 +171,7 @@ namespace Omnikeeper.Model
                 using var writer = trans.DBConnection.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, origin_type, partition_index) FROM STDIN (FORMAT BINARY)");
                 foreach (var (ciid, fullName, value, state) in actualInserts)
                 {
-                    var (valueText, valueBinary, valueControl) = Marshal(value);
+                    var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
 
                     writer.StartRow();
                     writer.Write(Guid.NewGuid());
@@ -191,7 +192,7 @@ namespace Omnikeeper.Model
                 // remove outdated 
                 foreach (var outdatedAttribute in outdatedAttributes.Values)
                 {
-                    var (valueText, valueBinary, valueControl) = Marshal(outdatedAttribute.Value);
+                    var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(outdatedAttribute.Value);
 
                     writer.StartRow();
                     writer.Write(Guid.NewGuid());
