@@ -1,12 +1,12 @@
 import React, { useState, useRef, useImperativeHandle, forwardRef } from "react";
-import { Input } from 'antd';
+import { InputNumber } from 'antd';
 
 export default forwardRef((props, ref) => {
     const inputRef = useRef();
     const [value, setValue] = useState('');
 
     function inputHandler(e) {
-        setValue(e.target.value);
+        setValue(e);
     }
     useImperativeHandle(ref, () => {
         return {
@@ -21,13 +21,11 @@ export default forwardRef((props, ref) => {
     });
 
     return (
-        <Input.TextArea  rows={4}
-            type="text"
+        <InputNumber
             className="ag-input-field-input ag-text-field-input"
             ref={inputRef}
             onChange={inputHandler}
             value={value}
-            placeholder={'Enter ' + props.column.colId}
         />
     )
 })

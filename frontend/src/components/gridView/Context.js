@@ -9,7 +9,8 @@ import GridViewDataParseModel from "./GridViewDataParseModel";
 import _ from "lodash";
 import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
 import { v4 as uuidv4 } from 'uuid';
-import CustomLargetextCellEditor from './CustomLargeTextCellEditor';
+import MultilineTextCellEditor from './MultilineTextCellEditor';
+import IntegerCellEditor from './IntegerCellEditor';
 
 import { useParams, withRouter } from "react-router-dom";
 import FeedbackMsg from "./FeedbackMsg";
@@ -84,7 +85,8 @@ export function Context(props) {
             <Content>
                 <AgGridCopyCutPaste
                     frameworkComponents={{
-                        customLargetextCellEditor: CustomLargetextCellEditor
+                        multilineTextCellEditor: MultilineTextCellEditor,
+                        integerCellEditor: IntegerCellEditor
                     }}
                     stopEditingWhenGridLosesFocus={true}
                     onGridReady={onGridReady}
@@ -142,64 +144,7 @@ export function Context(props) {
                         return true;
                 },
             },
-            valueSetter: function (params) { // TODO: move to specific columnDef
-                // undefined/null -> ""
-                if (
-                    (params.oldValue === undefined ||
-                        params.oldValue === null) &&
-                    params.newValue === ""
-                ) {
-                    return true;
-                }
-                // normal input
-                else {
-                    params.data[params.colDef.field] = params.newValue;
-                    return true;
-                }
-            },
-            valueParser: (params) => { // TODO: move to specific columnDef
-                return {...params.oldValue, values: [params.newValue]};
-            },
-            valueFormatter: (params) => { // TODO: move to specific columnDef
-                var colId = params.column.colId;
-                if (colId === 'ciid' || colId === 'status')
-                    return params.value;
-                // else if (params.value === undefined || params.value === null)
-                //     return "[not set]";
-                else {
-                    const value = params.value.values?.[0];
-                    if (value === undefined)
-                        return "[not set]";
-                    return value;
-                }
-            },
-            cellEditorSelector: function(params) { // TODO: move to specific columnDef
-                if (!params.value) { // TODO: new or unset cells are not an object (and do not have a type)... what to do here?
-                    console.error("Value not set");
-                    return null;
-                }
-                else if (params.value.type === 'MultilineText') {
-                    return { component: 'customLargetextCellEditor', params: {useFormatter: true} };
-                } else {
-                    return { component: 'agTextCellEditor', params: {useFormatter: true}};
-                }
-            },
-            suppressKeyboardEvent: (params) => { // TODO: move to specific columnDef
-                const colId = params.column.colId;
-                const value = params.data[colId];
-                
-                // TODO: this is not the best place for this, but I couldn't make it work inside the cell editor
-                if (value.type === 'MultilineText') {
-                    // prevent shift+enter from propagating
-                    const event = params.event;
-                    const key = event.which || event.keyCode;
-                    const keycodeEnter = 13;
-                    if (event.shiftKey && key === keycodeEnter) { // shift+enter allows for newlines
-                        return true;
-                    }
-                    return false;
-                } else return false;
-            },
+            
         };
     }
 
@@ -262,7 +207,7 @@ export function Context(props) {
                     status: rowStatus.new, // set status to 'new'
                 };
                 schema.columns.forEach(c => {
-                    newRow[c.name] = {values: [''], type: c.valueType };
+                    newRow[c.name] = {values: [], type: c.valueType };
                 });
                 // ...(schema.columns.map(c => {return {[c.name]: 'foo'}}))//.columns.reduce((acc, cur) => {acc[cur.name] = cur.valueType; return acc;}, {}));
                 toAdd.push(newRow);
@@ -349,6 +294,9 @@ export function Context(props) {
                 ) {
                     return rowSnapshot.ciid === node.data.ciid;
                 });
+                if (!rowSnapshot) {
+                    console.error("Could not find row snapshot for edited row... is bug #1582 fixed (is related)?")
+                }
                 let rowDataDiff = getDiffBetweenRows(node.data, rowSnapshot);
                 rowDataDiff.ciid = node.data.ciid; // add ciid in any case
                 rowDataDiffs.push(rowDataDiff);
@@ -444,11 +392,7 @@ export function Context(props) {
         function changes(v, oldObj) {
             return _.transform(v, function (result, value, key) {
                 if (!_.isEqual(value, oldObj[key])) {
-                    // const r = _.isObject(value) && _.isObject(oldObj[key])
-                    // ? changes(value, oldObj[key])
-                    // : value;
                     result[key] = value;
-                        
                 }
             });
         }

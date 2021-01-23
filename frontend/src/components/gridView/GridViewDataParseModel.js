@@ -49,6 +49,46 @@ export default function GridViewDataParseModel(rowStatus) {
                     const editable = params.colDef.editable(params);
                     return editable ? {} : { fontStyle: "italic" };
                 },
+                valueParser: (params) => {
+                    return {...params.oldValue, values: [params.newValue]};
+                },
+                valueFormatter: (params) => {
+                    const value = params.value.values?.[0];
+                    if (value === undefined)
+                        return ""; // TODO: is this an Ok default for all cell editors?
+                    return value;
+                },
+                cellRenderer: (params) => {
+                    const value = params.value.values?.[0];
+                    if (value === undefined)
+                        return "[not set]";
+                    return value;
+                },
+                cellEditorSelector: function(params) {
+                    if (params.value.type === 'MultilineText') {
+                        return { component: 'multilineTextCellEditor' };
+                    } else if (params.value.type === 'Integer') {
+                        return { component: 'integerCellEditor' };
+                    } else {
+                        return { component: 'agTextCellEditor', params: {useFormatter: true}};
+                    }
+                },
+                suppressKeyboardEvent: (params) => {
+                    const colId = params.column.colId;
+                    const value = params.data[colId];
+                    
+                    // TODO: this is not the best place for this, but I couldn't make it work inside the cell editor
+                    if (value.type === 'MultilineText') {
+                        // prevent shift+enter from propagating
+                        const event = params.event;
+                        const key = event.which || event.keyCode;
+                        const keycodeEnter = 13;
+                        if (event.shiftKey && key === keycodeEnter) { // shift+enter allows for newlines
+                            return true;
+                        }
+                        return false;
+                    } else return false;
+                },
             });
         });
         return columnDefs;
