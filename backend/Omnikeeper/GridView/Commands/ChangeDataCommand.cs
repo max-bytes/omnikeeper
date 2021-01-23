@@ -129,21 +129,25 @@ namespace Omnikeeper.GridView.Commands
                         if (!ciBasedAuthorizationService.CanWriteToCI(row.Ciid))
                             return (null, new Exception($"User \"{user.Username}\" does not have permission to write to CI {row.Ciid}"));
                         
-                        if (cell.Value.Values.IsEmpty()) // we treat an empty values array as a request to remove the attribute
+                        if (cell.Value.Values.IsEmpty())
                         {
-                            try
+                            // we treat an empty values array as a request to remove the attribute, but only if the CI already exists
+                            if (ciExists)
                             {
-                                await attributeModel.RemoveAttribute(
-                                    cell.Name,
-                                    row.Ciid,
-                                    writeLayer,
-                                    changesetProxy,
-                                    trans);
-                            }
-                            catch (Exception e)
-                            {
-                                trans.Rollback();
-                                return (null, new Exception($"Removing attribute {cell.Name} for ci with id: {row.Ciid} failed!", e));
+                                try
+                                {
+                                    await attributeModel.RemoveAttribute(
+                                        cell.Name,
+                                        row.Ciid,
+                                        writeLayer,
+                                        changesetProxy,
+                                        trans);
+                                }
+                                catch (Exception e)
+                                {
+                                    trans.Rollback();
+                                    return (null, new Exception($"Removing attribute {cell.Name} for ci with id: {row.Ciid} failed!", e));
+                                }
                             }
                         }
                         else

@@ -60,7 +60,8 @@ namespace Omnikeeper.GridView.Queries
                 (
                     el.SourceAttributeName,
                     el.ColumnDescription,
-                    el.ValueType ?? AttributeValueType.Text
+                    el.ValueType ?? AttributeValueType.Text,
+                    el.WriteLayer != -1L
                 )));
 
                 return (result, null);

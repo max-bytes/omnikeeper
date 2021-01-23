@@ -43,7 +43,7 @@ export default function GridViewDataParseModel(rowStatus) {
                 editable: function (params) {
                     const ciid = params.node.data.ciid;
                     const name = params.colDef.field;
-                    return getCellEditable(ciid, name, data);
+                    return getCellEditable(ciid, name, data, value.writable); // TODO: this function sucks(?) it cannot deal with new items
                 },
                 cellStyle: function (params) {
                     const editable = params.colDef.editable(params);
@@ -139,18 +139,20 @@ export default function GridViewDataParseModel(rowStatus) {
     // ########## HELPERS ##########
 
     // returns editable/changeable-attr of cell, defined by its ciid and name/colName
-    function getCellEditable(ciid, name, data) {
-        let obj;
+    function getCellEditable(ciid, name, data, columnWritable) {
+        if (!columnWritable) return false;
         if (data) {
-            obj = _.find(data.rows, function (o) {
-                return o.ciid === ciid;
-            });
-            if (obj)
-                obj = _.find(obj.cells, function (o) {
-                    return o.name === name;
-                });
+            let row = _.find(data.rows, o => o.ciid === ciid);
+            if (row) {
+                let cell = _.find(row.cells, o => o.name === name);
+                if (cell)
+                    return cell.changeable;
+                else return false;
+            } else {
+                return true;
+            }
         }
-        return obj ? obj.changeable : true;
+        return false;
     }
 
     return {

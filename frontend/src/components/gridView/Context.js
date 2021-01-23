@@ -207,12 +207,11 @@ export function Context(props) {
                     status: rowStatus.new, // set status to 'new'
                 };
                 schema.columns.forEach(c => {
-                    newRow[c.name] = {values: [], type: c.valueType };
+                    newRow[c.name] = {values: [], type: c.valueType, isArray: false };
                 });
                 // ...(schema.columns.map(c => {return {[c.name]: 'foo'}}))//.columns.reduce((acc, cur) => {acc[cur.name] = cur.valueType; return acc;}, {}));
                 toAdd.push(newRow);
             }
-            console.log(toAdd);
             gridApi.applyTransaction({
                 add: toAdd, 
                 addIndex: 0
@@ -282,8 +281,16 @@ export function Context(props) {
         await gridApi.forEachNode(async (node) => {
             if (node.data.status.id === rowStatus.new.id) // CREATE
             {
-                let rowDataDiff = node.data;
-                rowDataDiffs.push(rowDataDiff); // update all node columns
+                // update columns, but leave out not-writable columns
+                let rowDataDiff = _.pickBy(node.data, function(value, key) {
+                    if (key === 'status') return false;
+                    else if (key === 'ciid') return true;
+                    else {
+                        const column = schema.columns.find(c => c.name === key);
+                        return column && column.writable;
+                    }
+                 });
+                rowDataDiffs.push(rowDataDiff);
             }
             else if (
                 node.data.status.id === rowStatus.edited.id || // UPDATE
