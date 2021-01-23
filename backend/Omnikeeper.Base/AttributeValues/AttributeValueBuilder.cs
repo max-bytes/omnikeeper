@@ -12,53 +12,32 @@ namespace Omnikeeper.Base.AttributeValues
     {
         public static IAttributeValue BuildFromTypeAndObject(AttributeValueType type, object o)
         {
-            switch (type)
+            try
             {
-                case AttributeValueType.Text:
-                    {
-                        try
+                switch (type)
+                {
+                    case AttributeValueType.Text:
                         {
                             if (o.GetType().IsArray)
                                 return AttributeArrayValueText.BuildFromString((o as object[]).OfType<string>().ToArray(), false);
                             else
                                 return new AttributeScalarValueText((o as string)!, false);
                         }
-                        catch (Exception)
-                        {
-                            throw new Exception($"Could not build attribute value of type {type} from object {o}");
-                        }
-                    }
-                case AttributeValueType.MultilineText:
-                    {
-                        try
+                    case AttributeValueType.MultilineText:
                         {
                             if (o.GetType().IsArray)
                                 return AttributeArrayValueText.BuildFromString((o as object[]).OfType<string>().ToArray(), true);
                             else
                                 return new AttributeScalarValueText((o as string)!, true);
                         }
-                        catch (Exception)
-                        {
-                            throw new Exception($"Could not build attribute value of type {type} from object {o}");
-                        }
-                    }
-                case AttributeValueType.Integer:
-                    {
-                        try
+                    case AttributeValueType.Integer:
                         {
                             if (o.GetType().IsArray)
                                 return AttributeArrayValueInteger.Build((o as object[]).OfType<long>().ToArray());
                             else
                                 return new AttributeScalarValueInteger((o as long?)!.Value);
                         }
-                        catch (Exception)
-                        {
-                            throw new Exception($"Could not build attribute value of type {type} from object {o}");
-                        }
-                    }
-                case AttributeValueType.JSON:
-                    {
-                        try
+                    case AttributeValueType.JSON:
                         {
                             if (o is JArray a)
                                 return AttributeArrayValueJSON.Build(a.Children().ToArray());
@@ -67,31 +46,24 @@ namespace Omnikeeper.Base.AttributeValues
                             else
                                 return AttributeScalarValueJSON.Build((o as JToken)!);
                         }
-                        catch (Exception)
-                        {
-                            throw new Exception($"Could not build attribute value of type {type} from object {o}");
-                        }
-                    }
-                case AttributeValueType.YAML:
-                    {
-                        try
+                    case AttributeValueType.YAML:
                         {
                             if (o.GetType().IsArray)
                                 return AttributeArrayValueYAML.BuildFromString((o as object[]).OfType<string>().ToArray());
                             else
                                 return AttributeScalarValueYAML.BuildFromString((o as string)!);
                         }
-                        catch (Exception)
+                    case AttributeValueType.Image:
                         {
-                            throw new Exception($"Could not build attribute value of type {type} from object {o}");
+                            throw new Exception("Building AttributeValueImage from type and object not allowed");
                         }
-                    }
-                case AttributeValueType.Image:
-                    {
-                        throw new Exception("Building AttributeValueImage from type and object not allowed");
-                    }
-                default:
-                    throw new Exception($"Unknown type {type} encountered");
+                    default:
+                        throw new Exception($"Unknown type {type} encountered");
+                }
+            }
+            catch (Exception)
+            {
+                throw new Exception($"Could not build attribute value of type {type} from object {o}");
             }
         }
         public static IAttributeValue BuildFromDTO(AttributeValueDTO generic)
