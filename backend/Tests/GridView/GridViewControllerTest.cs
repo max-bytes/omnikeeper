@@ -107,6 +107,7 @@ namespace Tests.Integration.Controller
                     new List<Cell>()
                     {
                         new Cell("a1", new AttributeValueDTO() { Values = new string[] { "text1" }, IsArray = false, Type = AttributeValueType.Text }, true),
+                        new Cell("a2", new AttributeValueDTO() { Values = new string[] { }, IsArray = false, Type = AttributeValueType.Text }, true), // empty / not-set cell
                     }
                 ),
                 new Row(
