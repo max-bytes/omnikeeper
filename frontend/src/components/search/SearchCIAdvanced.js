@@ -1,14 +1,13 @@
 import { useLazyQuery } from "@apollo/client";
 import React, { useState, useEffect, useCallback } from "react";
 import { queries } from "../../graphql/queries";
-import { Input } from "semantic-ui-react";
 import ExplorerLayers from "../ExplorerLayers.js";
 import { SearchResults } from "./SearchResults.js";
 import { useExplorerLayers } from "../../utils/layers";
 import EffectiveTraitList from "./EffectiveTraitList.js";
 import { withRouter } from "react-router-dom";
 import queryString from 'query-string';
-import { Spin } from 'antd';
+import { Spin, Form, Input } from 'antd';
 import { useLocation } from 'react-router-dom'
 import _ from 'lodash';
 
@@ -92,13 +91,15 @@ function SearchCIAdvanced(props) {
                     </div>
                     <div style={styles.searchRowEntry}>
                         <h4>Name or CI-ID</h4>
-                        <Input
-                            style={styles.searchField}
-                            icon="search"
-                            placeholder="Search..."
-                            value={searchString}
-                            onChange={(e, { value }) => setSearchString(value)}
-                        />
+                        <Form.Item initialValue={searchString ?? ""}>
+                            <Input
+                                style={styles.searchField}
+                                icon="search"
+                                placeholder="Search..."
+                                value={searchString ?? ""}
+                                onChange={(e) => setSearchString(e.target.value)}
+                            />
+                        </Form.Item>
                     </div>
                     <div style={styles.searchRowEntry}>
                         {effectiveTraits && 
