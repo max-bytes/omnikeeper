@@ -6,18 +6,19 @@ import ExplorerAttributeList from './ExplorerAttributeList';
 import TemplateErrors from './TemplateErrors';
 import CIRelations from './CIRelations';
 import EffectiveTraits from './EffectiveTraits';
-import { Tab } from 'semantic-ui-react'
+import { Tabs } from 'antd'
 import { useExplorerLayers } from '../utils/layers';
+
+const { TabPane } = Tabs;
 
 function CI(props) {
 
-  const [selectedTab, setSelectedTab] = useState(0);
   const [createNewAttribute, setCreateNewAttribute] = useState(undefined);
   const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
   const { data: visibleLayers } = useExplorerLayers(true);
     
-  const panes = [
-    { menuItem: 'Attributes', render: () => <Tab.Pane>
+  const panes = (<>
+    <TabPane tab="Attributes" key="attributes">
       <Row>
         <Col span={24}>
           <AddNewAttribute prefilled={createNewAttribute} isEditable={props.isEditable} ciIdentity={props.ci.id}></AddNewAttribute>
@@ -29,14 +30,15 @@ function CI(props) {
             ciIdentity={props.ci.id} visibleAndWritableLayers={visibleAndWritableLayers} visibleLayers={visibleLayers} />
         </Col>
       </Row>
-    </Tab.Pane> },
-    { menuItem: 'Relations', render: () => <Tab.Pane>
+    </TabPane>
+
+    <TabPane tab="Relations" key="relations">
       <CIRelations timeThreshold={props.timeThreshold} isEditable={props.isEditable} ciIdentity={props.ci.id} />
-    </Tab.Pane> },
-    { menuItem: 'Effective Traits', render: () => <Tab.Pane>
+    </TabPane>
+    <TabPane tab="Effective Traits" key="effectiveTraits">
       <EffectiveTraits timeThreshold={props.timeThreshold} traits={props.ci.effectiveTraits} ciIdentity={props.ci.id} />
-    </Tab.Pane> },
-  ]
+    </TabPane>
+  </>)
 
   return (<div style={{margin: "10px 10px"}}>
     <h3>CI "{props.ci.name ?? "[UNNAMED]"}" ({props.ci.id})</h3>
@@ -56,7 +58,7 @@ function CI(props) {
         }
       }}
       />
-    <Tab activeIndex={selectedTab} onTabChange={(e, {activeIndex}) => setSelectedTab(activeIndex)} panes={panes} />
+    <Tabs defaultActiveKey={"attributes"} style={{padding: "1rem"}}>{panes}</Tabs>
   </div>);
 }
 

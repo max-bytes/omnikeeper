@@ -1,8 +1,7 @@
 import { useMutation } from '@apollo/client';
 import React, { useState } from 'react';
 import { mutations } from '../graphql/mutations'
-import { Form, Button, Input, Checkbox } from "antd";
-import { Message, Icon } from 'semantic-ui-react'
+import { Form, Button, Input, Checkbox, Alert } from "antd";
 import { withRouter } from 'react-router-dom'
 import LayerDropdown from "./LayerDropdown";
 import { useExplorerLayers } from '../utils/layers';
@@ -51,10 +50,7 @@ function AddNewCI(props) {
             </Form.Item>
             <Form.Item>
                 <Button style={{ width: "100%" }} type="primary" htmlType="submit">Create New CI</Button>
-                {error && <Message attached='bottom' error>
-                <Icon name='warning sign' />
-                {error}
-                </Message>}
+                {error && <Alert message={error} type="error" showIcon />}
             </Form.Item>
           </Form>
 

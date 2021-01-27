@@ -1,14 +1,15 @@
-import React, {useState} from 'react';
+import React from 'react';
 import _ from 'lodash';
 import DiffAttributeList from 'components/diffing/DiffAttributeList';
 import DiffRelationList from 'components/diffing/DiffRelationList';
 import DiffEffectiveTraitsList from './DiffEffectiveTraitsList';
-import { Tab, Header } from 'semantic-ui-react'
+import { Tabs, Typography } from 'antd'
+
+const { TabPane } = Tabs;
+const { Title } = Typography;
 
 export function DiffArea(props) {
   
-  const [selectedTab, setSelectedTab] = useState(0);
-
   if (!props.leftCIs || !props.rightCIs) {
     return <div style={{minHeight: '200px'}}>&nbsp;</div>;
   } else {
@@ -74,40 +75,40 @@ export function DiffArea(props) {
       return {...m, mergedETs };
     });
 
-    const panes = [
-      { menuItem: 'Attributes', render: () => <Tab.Pane>
+    const panes = (<>
+      <TabPane tab="Attributes" key="attributes">
         {_.map(mergedCIs, (m, ciid) => {
           if (!props.showEqual && _.size(m.mergedAttributes) === 0)
             return <div key={ciid}></div>;
           return <div key={ciid} style={{marginTop: '1.5rem'}}>
-            <Header as='h4' style={{marginBottom: 0}}>{m.name} - {ciid}</Header>
+            <Title level={5} style={{marginBottom: 0}}>{m.name} - {ciid}</Title>
             <DiffAttributeList attributes={m.mergedAttributes} />
           </div>;
         })}
-      </Tab.Pane> },
-      { menuItem: 'Relations', render: () => <Tab.Pane>
+      </TabPane>
+      <TabPane tab="Relations" key="relations">
         {_.map(mergedCIs, (m, ciid) => {
           if (!props.showEqual && _.size(m.mergedRelations) === 0)
             return <div key={ciid}></div>;
           return <div key={ciid} style={{marginTop: '1.5rem'}}>
-            <Header as='h4' style={{marginBottom: 0}}>{m.name} - {ciid}</Header>
+            <Title level={5} style={{marginBottom: 0}}>{m.name} - {ciid}</Title>
             <DiffRelationList relations={m.mergedRelations} />
           </div>;
         })}
-      </Tab.Pane> },
-      { menuItem: 'Effective Traits', render: () => <Tab.Pane>
+      </TabPane>
+      <TabPane tab="Effective Traits" key="effectiveTraits">
         {_.map(mergedCIs, (m, ciid) => {
           if (!props.showEqual && _.size(m.mergedETs) === 0)
             return <div key={ciid}></div>;
           return <div key={ciid} style={{marginTop: '1.5rem'}}>
-            <Header as='h4' style={{marginBottom: 0}}>{m.name} - {ciid}</Header>
+            <Title level={5} style={{marginBottom: 0}}>{m.name} - {ciid}</Title>
             <DiffEffectiveTraitsList effectiveTraits={m.mergedETs} />
           </div>
         })}
-      </Tab.Pane> },
-    ]
+      </TabPane>
+    </>)
 
-    return <Tab activeIndex={selectedTab} onTabChange={(e, {activeIndex}) => setSelectedTab(activeIndex)} panes={panes} />;
+    return <Tabs defaultActiveKey={"attributes"} style={{padding: "1rem"}}>{panes}</Tabs>;
   }
 }
 

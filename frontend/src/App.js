@@ -5,7 +5,7 @@ import Diffing from './components/diffing/Diffing';
 import 'semantic-ui-css/semantic.min.css'
 import 'antd/dist/antd.css';
 import Keycloak from 'keycloak-js'
-import { Menu, Icon } from 'semantic-ui-react'
+import { Icon } from 'semantic-ui-react'
 import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/AddNewCI'
@@ -28,7 +28,7 @@ import ShowLogs from './components/manage/ShowLogs';
 import ShowVersion from './components/manage/ShowVersion';
 import { ReactKeycloakProvider } from '@react-keycloak/web'
 import LayerOperations from 'components/manage/LayerOperations';
-
+import { Menu } from 'antd';
 
 const keycloak = new Keycloak({
   "realm": env("KEYCLOAK_REALM"),
@@ -56,22 +56,38 @@ function App() {
 
   const BR = () => {
     return <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
-          <Menu fixed='top' inverted style={{display: 'flex', justifyContent: 'space-between'}}>
-            <div>
-              <Menu.Item style={{fontSize:'1.2em'}}>Landscape omnikeeper</Menu.Item>
+        <nav style={{
+                    borderBottom: "solid 1px #e8e8e8",
+                    overflow: "hidden",
+                    boxShadow: "0 0 30px #f3f1f1",
+                }}>
+            <div style={{ width: "200px", float: "left" }}>
+                <Link to="/">
+                    <img
+                        src={process.env.PUBLIC_URL + '/omnikeeper_logo_v1.0.png'}
+                        alt="omnikeeper logo" 
+                        className="logo"
+                        style={{ height: "38px", margin: "4px 8px" }}
+                    />
+                </Link>
             </div>
-            <div style={{flexGrow: 1}}></div>
-            <div style={{display:'flex'}}>
-              <Route path="*">
-                <Menu.Item><Link to="/manage"><Icon name="wrench" /> Manage</Link></Menu.Item>
-                <Menu.Item><Link to="/createCI"><Icon name="plus" /> Create New CI</Link></Menu.Item>
-                <Menu.Item><Link to="/explorer"><Icon name="search" /> Search CI</Link></Menu.Item>
-                <Menu.Item><Link to="/diffing"><Icon name="exchange" /> Diffing</Link></Menu.Item>
-                <Menu.Item><Link to="/grid-view"><Icon name="grid layout" /> Grid View</Link></Menu.Item>
-              </Route>
-              <UserBar />
+            <div style={{ width: "calc(100% - 200px)", float: "left" }}>
+            <Route
+                render={({ location, history }) =>  (
+                        <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{ position: "relative", display: "flex", justifyContent: "flex-end", borderBottom: "none" }}>
+                            <Menu.Item key="manage"><Link to="/manage"><Icon name="wrench" /> Manage</Link></Menu.Item>
+                            <Menu.Item key="createCI"><Link to="/createCI"><Icon name="plus" /> Create New CI</Link></Menu.Item>
+                            <Menu.Item key="explorer"><Link to="/explorer"><Icon name="search" /> Search CI</Link></Menu.Item>
+                            <Menu.Item key="diffing"><Link to="/diffing"><Icon name="exchange" /> Diffing</Link></Menu.Item>
+                            <Menu.Item key="grid-view" style={{ marginRight: "60px" }}><Link to="/grid-view"><Icon name="grid layout" /> Grid View</Link></Menu.Item>
+                            <Menu.Divider/>
+                            <UserBar disabled={true} style={{ cursor: "unset" }} />
+                        </Menu>
+                    )}
+                />
             </div>
-          </Menu>
+        </nav>
+           
           <div style={{height: '100%', paddingTop: '50px'}}> {/* HACK: because we are not 100% using semantic UI, move the main content down manually*/}
             <Switch>
               <Route path="/login">

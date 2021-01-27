@@ -42,7 +42,6 @@ export const AttributeTypes = [
 function attributeType2InputProps(type) {
     switch(type) {
       case 'INTEGER': return {type: 'number' };
-      case 'MULTILINE_TEXT': return {type: 'text', as: 'textarea', rows: 7 };
       default: return {type: 'text' };
     }
 };
@@ -93,6 +92,21 @@ export function InputControl(props) {
                 showPrintMargin: false
              }}
         />;
+    } else if (props.type === 'MULTILINE_TEXT') {
+        // from AntDesign Docs: use Input.TextArea instead of type="textarea"
+        return (
+            <Form.Item style={{ marginBottom: 0 }} labelCol={props.hideNameLabel ? {} : { span: "4" }} name={props.name} label={props.hideNameLabel ? "" : props.name} initialValue={props.value ?? ""}>
+                <Input.TextArea
+                    style={{ flexGrow: 1, alignSelf: "center" }}
+                    autoFocus={props.autoFocus}
+                    disabled={props.disabled}
+                    placeholder={props.disabled ? "[Empty]" : "Enter value"}
+                    value={props.value ?? ""}
+                    onChange={(e) => props.onChange(e.target.value)}
+                    autoSize={{ minRows: 3, maxRows: 5 }}
+                />
+            </Form.Item>
+        );
     } else {
         // simple type, simple handling
         return (
@@ -100,7 +114,6 @@ export function InputControl(props) {
                 <Input
                     style={{ flexGrow: 1, alignSelf: "center" }}
                     {...attributeType2InputProps(props.type)}
-                    type="text"
                     autoFocus={props.autoFocus}
                     disabled={props.disabled}
                     placeholder={props.disabled ? "[Empty]" : "Enter value"}
