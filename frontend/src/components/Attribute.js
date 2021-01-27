@@ -73,16 +73,16 @@ function Attribute(props) {
         id={`value:${attribute.attribute.name}:${controlIdSuffix}`}
         >
           <Row>
-            <Col span={4}>
+            <Col xs={4} xl={4}>
               {leftPart}
             </Col>
-            <Col span={14}>
+            <Col xs={18} xl={12}>
               {valueInput}
             </Col>
-            <Col span={2}>
+            <Col xs={2} xl={2}>
               {rightPart}
             </Col>
-            <Col span={4}>
+            <Col xs={24} xl={6} style={{ display: "flex", justifyContent: "flex-end" }}>
               <Button htmlType="submit" type="primary" className={'mx-1'} disabled={attribute.attribute.value.values === values || hasErrors}>Update</Button>
               {removeButton}
             </Col> 

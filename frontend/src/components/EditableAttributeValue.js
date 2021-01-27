@@ -25,7 +25,7 @@ function EditableAttributeValue(props) {
                 }}></Button>}
         {values.map((v, index) => {
           return <Row key={index} id={`value:${name}:${index}:${controlIdSuffix}`} gutter={4}>
-            <Col span={19}>
+            <Col xs={24} xl={12}>
                 <InputControl hideNameLabel={props.hideNameLabel} attributeName={name} ciid={ciid} setHasErrors={e => {
                 setErrorsInArray(oldErrorsInArray => { let newErrorsInArray = [...oldErrorsInArray]; newErrorsInArray[index] = e; return newErrorsInArray;});
                 }} key={index} type={type} isArray={isArray} arrayIndex={index} value={v} disabled={!isEditable} autoFocus={autoFocus && index === 0}
@@ -35,24 +35,24 @@ function EditableAttributeValue(props) {
                     props.setValues(newValues);
                 }} />
             </Col>
-            <Col span={1}>
-                {isEditable && <Button icon={<FontAwesomeIcon icon={faTimes} />} style={{ marginLeft: "0.25rem" }} disabled={!canRemoveItem || !isEditable} onClick={e => {
+            <Col xs={8} xl={2}>
+                {isEditable && <Button icon={<FontAwesomeIcon icon={faTimes} />} style={{ width: "100%" }} disabled={!canRemoveItem || !isEditable} onClick={e => {
                 e.preventDefault();
                 let newValues = values.slice();
                 newValues.splice(index, 1);
                 props.setValues(newValues);
                 }}/>}
             </Col>
-            <Col span={2}>
-                {isEditable && <Button icon={<FontAwesomeIcon icon={faPlus} style={{marginRight: "10px", marginLeft: "0.25rem"}}/>} disabled={!isEditable} onClick={e => {
+            <Col xs={8} xl={5}>
+                {isEditable && <Button icon={<FontAwesomeIcon icon={faPlus} style={{marginRight: "10px", marginLeft: "0.25rem"}}/>} style={{ width: "100%" }} disabled={!isEditable} onClick={e => {
                 e.preventDefault();
                 let newValues = values.slice();
                 newValues.splice(index, 0, '');
                 props.setValues(newValues);
                 }}><FontAwesomeIcon icon={faChevronUp} /></Button>}
             </Col>
-            <Col span={2}>
-                {isEditable && <Button icon={<FontAwesomeIcon icon={faPlus} style={{marginRight: "10px", marginLeft: "0.25rem"}}/>} disabled={!isEditable}  onClick={e => {
+            <Col xs={8} xl={5}>
+                {isEditable && <Button icon={<FontAwesomeIcon icon={faPlus} style={{marginRight: "10px", marginLeft: "0.25rem"}}/>} style={{ width: "100%" }} disabled={!isEditable}  onClick={e => {
                 e.preventDefault();
                 let newValues = values.slice();
                 newValues.splice(index + 1, 0, '');
