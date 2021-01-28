@@ -45,24 +45,27 @@ function DiffAttributeList(props) {
                 <div style={{padding: '5px 0px', backgroundColor: ((index % 2 === 1) ? '#00000009' : '#00000000')}}>
                 
                 <div style={{ width: "100%" }}>
-                  <Row style={{backgroundColor: stateBasedBackgroundColor(state)}}>
-                    <Col span={3}>
-                      <div style={{display: 'flex', width: '220px', minHeight: '38px', alignItems: 'center', justifyContent: 'flex-end'}}>
+                  <Row style={{ backgroundColor: stateBasedBackgroundColor(state), display: "flex", justifyContent: "space-evenly" }}>
+                    <Col xs={10} lg={3}>
+                      <div style={{display: 'flex', minHeight: '38px', alignItems: 'center', justifyContent: 'flex-end'}}>
                         <span style={{whiteSpace: 'nowrap', paddingRight: "0.25rem"}}>{a.name}</span>
                       </div>
                     </Col>
-                    <Col span={9}>
+                    
+                    <Col xs={14} lg={9}>
                       {a.leftRight.left && <Attribute controlIdSuffix={'left'} attribute={a.leftRight.left} hideNameLabel={true} isEditable={false} />}
                       {!a.leftRight.left && <MissingLabel /> }
                     </Col>
-                    <Col span={3}>
+                    
+                    <Col xs={10} lg={1}>
                       <CompareLabel state={state} />
                     </Col>
-                    <Col span={9}>
+
+                    <Col xs={14} lg={9}>
                       {a.leftRight.right && <Attribute controlIdSuffix={'right'} attribute={a.leftRight.right} hideNameLabel={true} isEditable={false} />}
                       {!a.leftRight.right && <MissingLabel /> }
-                    </Col>
-                  </Row>
+                    </Col>      
+                  </Row >
                 </div>
               </div>
             </Flipped>);
