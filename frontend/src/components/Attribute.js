@@ -73,16 +73,23 @@ function Attribute(props) {
         id={`value:${attribute.attribute.name}:${controlIdSuffix}`}
         >
           <Row>
-            <Col xs={4} xl={4}>
+            {/* name */}
+            <Col span={5}>
               {leftPart}
             </Col>
-            <Col xs={18} xl={12}>
+
+            {/* input */}
+            <Col style={{ flexGrow: 1 }}>
               {valueInput}
             </Col>
-            <Col xs={2} xl={2}>
+
+             {/* layer & user icon */}
+            <Col style={{ padding: "0 10px"}}>
               {rightPart}
             </Col>
-            <Col xs={24} xl={6} style={{ display: "flex", justifyContent: "flex-end" }}>
+
+            {/* buttons */}
+            <Col >
               <Button htmlType="submit" type="primary" className={'mx-1'} disabled={attribute.attribute.value.values === values || hasErrors}>Update</Button>
               {removeButton}
             </Col> 
