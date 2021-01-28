@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link  } from 'react-router-dom'
-import { Icon } from 'semantic-ui-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import { HubConnectionBuilder } from '@aspnet/signalr';
@@ -63,7 +64,7 @@ export default function ShowVersion() {
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Logs</h2>
-    <div style={{marginBottom: '10px'}}><Link to="/manage"><Icon name="angle left" fitted /> Back</Link></div>
+    <div style={{marginBottom: '10px'}}><Link to="/manage"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
     <div style={{backgroundColor: '#333333', overflow: 'scroll'}}>
       <Console logs={logs} variant="dark" />
     </div>

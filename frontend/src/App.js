@@ -88,7 +88,7 @@ function App() {
             </div>
         </nav>
            
-          <div style={{height: '100%', paddingTop: '50px'}}> {/* HACK: because we are not 100% using semantic UI, move the main content down manually*/}
+          <div style={{ height: 'calc(100% - 48px)' }}>
             <Switch>
               <Route path="/login">
                 <LoginPage />

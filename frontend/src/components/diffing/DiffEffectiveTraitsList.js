@@ -25,15 +25,15 @@ function DiffEffectiveTraitsList(props) {
         return (
         <Flipped key={r.key} flipId={r.key} onAppear={onAppear} onExit={onExit}>
             <div style={{ width: "100%" }}>
-            <Row style={{backgroundColor: stateBasedBackgroundColor(state)}} wrapperCol = {{ offset: "4" }}>
-                <Col span={10}>
+            <Row style={{ backgroundColor: stateBasedBackgroundColor(state), display: "flex", justifyContent: "space-evenly" }} >
+                <Col>
                     {r.left && <EffectiveTrait effectiveTrait={r.left} />}
                     {!r.left && <MissingLabel /> }
                 </Col>
-                <Col span={4}>
+                <Col>
                     <CompareLabel state={state} />
                 </Col>
-                <Col span={10}>
+                <Col>
                     {r.right && <EffectiveTrait effectiveTrait={r.left} />}
                     {!r.right && <MissingLabel /> }
                 </Col>

@@ -20,18 +20,18 @@ function DiffRelationList(props) {
           return (
             <Flipped key={r.key} flipId={r.key} onAppear={onAppear} onExit={onExit}>
               <div style={{ width: "100%" }}>
-                <Row style={{backgroundColor: stateBasedBackgroundColor(state)}}>
-                <Col span={10}>
-                    {r.left && <RelatedCI related={r.left} isEditable={false} alignRight></RelatedCI>}
-                    {!r.left && <MissingLabel /> }
-                </Col>
-                <Col span={4}>
-                    <CompareLabel state={state} />
-                </Col>
-                <Col span={10}>
-                    {r.right && <RelatedCI related={r.right} isEditable={false}></RelatedCI>}
-                    {!r.right && <MissingLabel /> }
-                </Col>
+                <Row style={{ backgroundColor: stateBasedBackgroundColor(state), display: "flex", justifyContent: "space-evenly" }}>
+                    <Col>
+                        {r.left && <RelatedCI related={r.left} isEditable={false} alignRight></RelatedCI>}
+                        {!r.left && <MissingLabel /> }
+                    </Col>
+                    <Col>
+                        <CompareLabel state={state} />
+                    </Col>
+                    <Col>
+                        {r.right && <RelatedCI related={r.right} isEditable={false}></RelatedCI>}
+                        {!r.right && <MissingLabel /> }
+                    </Col>
                 </Row>
               </div>
             </Flipped>
