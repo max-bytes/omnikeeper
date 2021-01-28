@@ -88,7 +88,7 @@ function App() {
             </div>
         </nav>
            
-          <div>
+          <div style={{ height: 'calc(100% - 48px)' }}>
             <Switch>
               <Route path="/login">
                 <LoginPage />

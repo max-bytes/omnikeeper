@@ -161,7 +161,7 @@ const styles = {
     resultsRow: {
         display: "flex",
         flexDirection: "column",
-        padding: "10px",
+        padding: "10px 0 0 10px",
         flex: "1 1 auto",
     },
 };

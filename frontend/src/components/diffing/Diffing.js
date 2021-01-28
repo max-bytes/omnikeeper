@@ -128,8 +128,8 @@ function Diffing(props) {
 
   if (layerData) {
 
-    return (<div style={{marginTop: '10px', marginBottom: '20px'}}>
-      <div style={{ width: "100%", padding: "0 15px" }}>
+    return (
+      <div style={{ width: "100%", padding: "10px" }}>
         <Segment>
           <Row>
             <Col span={4} style={{display: 'flex'}}>
@@ -189,7 +189,7 @@ function Diffing(props) {
           </Col>
         </Row>
       </div>
-    </div>)
+    )
   } else return 'Loading';
 }
 
