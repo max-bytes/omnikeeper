@@ -4,7 +4,8 @@ import PropTypes from 'prop-types'
 import { queries } from 'graphql/queries'
 import LoadingOverlay from 'react-loading-overlay' // TODO: switch to antd spin
 import { Form, Button } from "antd";
-import { Button as SemanticButton, Icon } from 'semantic-ui-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSync, faExchangeAlt, faArrowDown } from '@fortawesome/free-solid-svg-icons'
 import { mutations } from 'graphql/mutations';
 import { useMutation } from '@apollo/client';
 import UserTypeIcon from './UserTypeIcon';
@@ -67,9 +68,9 @@ function LoadingTimeline(props) {
     
     const latestChangeset = changesets.find(e => true);
   
-    const refreshButton = (<SemanticButton basic size='mini' compact onClick={() => {
+    const refreshButton = (<Button size='small' onClick={() => {
         setSelectedTimeThreshold({variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true, refreshCI: true }});
-    }}><Icon loading={loadingChangesets} fitted name={'sync'} /></SemanticButton>)
+    }}><FontAwesomeIcon icon={faSync} spin={loadingChangesets} color={"grey"} style={{ padding: "2px"}} /></Button>)
 
           
     const buttonStyle = {
@@ -89,9 +90,9 @@ function LoadingTimeline(props) {
 
     return (
       <div>
-        <div className={"d-flex align-items-center"}>
-          <h5 className={"flex-grow-1 my-0"}>Timeline</h5>
-          <Form layout="inline">
+        <div className={"d-flex align-items-center"} style={{minHeight: "24px"}}>
+          <h5 className={"flex-grow-1 my-0"} style={{float: "left"}}>Timeline</h5>
+          <Form layout="inline" style={{float: "right"}}>
             {refreshButton}
           </Form>
         </div>
@@ -111,13 +112,13 @@ function LoadingTimeline(props) {
                   {label}
                 </Button>
                 <Link style={diffButtonStyle} 
-                  to={`/diffing?${diffQuery}`}><Icon name="exchange" /></Link>
+                  to={`/diffing?${diffQuery}`}><FontAwesomeIcon icon={faExchangeAlt} /></Link>
               </div>);
           })}
           <Form layout="inline" style={{justifyContent: "center"}}>
-            <SemanticButton basic size='mini' compact onClick={() => {
+            <Button size='small' onClick={() => {
               setLimit(l => l + 10);
-            }}><Icon loading={loadingChangesets} fitted name={'arrow alternate circle down outline'} /></SemanticButton>
+            }}><FontAwesomeIcon icon={loadingChangesets ? faSync : faArrowDown} spin={loadingChangesets} color={"grey"} style={{ padding: "2px"}} /></Button>
           </Form>
         </LoadingOverlay>
       </div>);

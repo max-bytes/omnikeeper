@@ -73,16 +73,23 @@ function Attribute(props) {
         id={`value:${attribute.attribute.name}:${controlIdSuffix}`}
         >
           <Row>
-            <Col span={4}>
+            {/* name */}
+            <Col span={5}>
               {leftPart}
             </Col>
-            <Col span={14}>
+
+            {/* input */}
+            <Col style={{ flexGrow: 1 }}>
               {valueInput}
             </Col>
-            <Col span={2}>
+
+             {/* layer & user icon */}
+            <Col style={{ padding: "0 10px"}}>
               {rightPart}
             </Col>
-            <Col span={4}>
+
+            {/* buttons */}
+            <Col>
               <Button htmlType="submit" type="primary" className={'mx-1'} disabled={attribute.attribute.value.values === values || hasErrors}>Update</Button>
               {removeButton}
             </Col> 
@@ -92,13 +99,20 @@ function Attribute(props) {
   } else {
     input = (<Form id={`value:${attribute.attribute.name}:${controlIdSuffix}`}>
       <Row>
-        <Col span={4}>
+        {/* name */}
+        {hideNameLabel ? "" :
+        <Col span={5}>
           {leftPart}
         </Col>
-        <Col span={18}>
+        }
+
+        {/* input */}
+        <Col style={{ flexGrow: 1 }}>
           {valueInput}
         </Col>
-        <Col span={2}>
+
+        {/* layer & user icon */}
+        <Col style={{ padding: "0 10px"}}>
           {rightPart}
         </Col>
       </Row>

@@ -1,6 +1,5 @@
 import React, {useState, forwardRef, useImperativeHandle, useRef} from "react";
-import { Dropdown } from 'semantic-ui-react'
-import { Form, Row, Col } from "antd"
+import { Form, Row, Col, Select } from "antd"
 import { useQuery } from '@apollo/client';
 import { queries } from '../../graphql/queries';
 import _ from 'lodash';
@@ -18,8 +17,8 @@ export default forwardRef((props, ref) => {
         return {
             getValue: () => {
                 return {
-                    preferredTraitsFrom: inputRefFrom.current.state.value,
-                    preferredTraitsTo: inputRefTo.current.state.value
+                    preferredTraitsFrom: inputRefFrom.current.props.value,
+                    preferredTraitsTo: inputRefTo.current.props.value
                 };
             },
             isPopup: () => true
@@ -53,10 +52,16 @@ export default forwardRef((props, ref) => {
                     <Form.Item style={{float: "right", paddingRight: "8px"}}>From Traits:</Form.Item>
                 </Col>
                 <Col span={20}>
-                    <Dropdown placeholder='from' ref={inputRefFrom} fluid multiple search selection value={preferredTraitsFrom}
-                        onChange={(e, data) => {
-                            setPreferredTraitsFrom(data.value);
+                     <Select
+                        ref={inputRefFrom}
+                        value={preferredTraitsFrom}
+                        placeholder='from'
+                        style={{ width: "100%" }}
+                        onChange={(value) => {
+                            setPreferredTraitsFrom(value);
                         }}
+                        showSearch
+                        mode="multiple"
                         options={optionsFrom}
                     />
                 </Col>
@@ -66,10 +71,16 @@ export default forwardRef((props, ref) => {
                     <Form.Item style={{float: "right", paddingRight: "8px", marginBottom: 0}}>To Traits:</Form.Item>
                 </Col>
                 <Col span={20}>
-                    <Dropdown placeholder='to' ref={inputRefTo} fluid multiple search selection value={preferredTraitsTo}
-                        onChange={(e, data) => {
-                            setPreferredTraitsTo(data.value);
+                    <Select
+                        ref={inputRefTo} 
+                        value={preferredTraitsTo}
+                        placeholder='to'
+                        style={{ width: "100%" }}
+                        onChange={(value) => {
+                            setPreferredTraitsTo(value);
                         }}
+                        showSearch
+                        mode="multiple"
                         options={optionsTo}
                     />
                 </Col>

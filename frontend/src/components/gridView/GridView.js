@@ -50,13 +50,15 @@ function GridView(props) {
     return (
         <BrowserRouter basename={env("BASE_NAME") + "grid-view/"} forceRefresh={false}>
             <div style={{display: 'flex', flexDirection: 'column', height: '100%', paddingTop: "15px"}}>
-                <Route path="*">
-                    <Menu mode="horizontal" style={{display: 'flex', justifyContent: 'center', margin: "auto"}}>
-                    <Menu.Item key="contexts" ><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
-                        <Menu.Item key="createNewContext" ><Link to="/create-context"><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
-                    </Menu>
-                </Route>
-                { !swaggerErrorJson && swaggerClient ? (
+                <Route
+                    render={({ location, history }) =>  (
+                        <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{display: 'flex', justifyContent: 'center', margin: "auto"}}>
+                            <Menu.Item key="explorer" ><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
+                            <Menu.Item key="create-context" ><Link to="/create-context"><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
+                        </Menu>
+                        )}
+                    />
+                {!swaggerErrorJson && swaggerClient ? (
                     <Switch>
                         <PrivateRoute path="/explorer/:contextName">
                             <Context swaggerClient={getSwaggerClient} apiVersion={apiVersion} />
