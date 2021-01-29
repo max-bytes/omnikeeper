@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using MediatR;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GridView.Helper;
 using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Response;
@@ -58,7 +59,9 @@ namespace Omnikeeper.GridView.Queries
                 config.Columns.ForEach(el => result.Columns.Add(new Column
                 (
                     el.SourceAttributeName,
-                    el.ColumnDescription
+                    el.ColumnDescription,
+                    el.ValueType ?? AttributeValueType.Text,
+                    el.WriteLayer != -1L
                 )));
 
                 return (result, null);

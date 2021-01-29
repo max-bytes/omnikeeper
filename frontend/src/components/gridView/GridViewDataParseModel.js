@@ -3,6 +3,9 @@ import _ from "lodash";
 export default function GridViewDataParseModel(rowStatus) {
     // ########## FROM BACKEND-STRUCTURE TO FRONTEND/AG-GRID-STRUCTURE ##########
 
+     // TODO: what if a gridview context defines a column named "status" or "ciid"
+     // rename these two to something "cryptic", so the chances of a collision are slim
+
     // Create columnDefs from schema and data
     const createColumnDefs = (schema, data) => {
         let columnDefs = [
@@ -40,11 +43,51 @@ export default function GridViewDataParseModel(rowStatus) {
                 editable: function (params) {
                     const ciid = params.node.data.ciid;
                     const name = params.colDef.field;
-                    return getCellEditable(ciid, name, data);
+                    return getCellEditable(ciid, name, data, value.writable); // TODO: this function sucks(?) it cannot deal with new items
                 },
                 cellStyle: function (params) {
                     const editable = params.colDef.editable(params);
                     return editable ? {} : { fontStyle: "italic" };
+                },
+                valueParser: (params) => {
+                    return {...params.oldValue, values: [params.newValue]};
+                },
+                valueFormatter: (params) => {
+                    const value = params.value.values?.[0];
+                    if (value === undefined)
+                        return ""; // TODO: is this an Ok default for all cell editors?
+                    return value;
+                },
+                cellRenderer: (params) => {
+                    const value = params.value.values?.[0];
+                    if (value === undefined)
+                        return "[not set]";
+                    return value;
+                },
+                cellEditorSelector: function(params) {
+                    if (params.value.type === 'MultilineText') {
+                        return { component: 'multilineTextCellEditor' };
+                    } else if (params.value.type === 'Integer') {
+                        return { component: 'integerCellEditor' };
+                    } else {
+                        return { component: 'agTextCellEditor', params: {useFormatter: true}};
+                    }
+                },
+                suppressKeyboardEvent: (params) => {
+                    const colId = params.column.colId;
+                    const value = params.data[colId];
+                    
+                    // TODO: this is not the best place for this, but I couldn't make it work inside the cell editor
+                    if (value.type === 'MultilineText') {
+                        // prevent shift+enter from propagating
+                        const event = params.event;
+                        const key = event.which || event.keyCode;
+                        const keycodeEnter = 13;
+                        if (event.shiftKey && key === keycodeEnter) { // shift+enter allows for newlines
+                            return true;
+                        }
+                        return false;
+                    } else return false;
                 },
             });
         });
@@ -75,16 +118,15 @@ export default function GridViewDataParseModel(rowStatus) {
         let sparseRows = [];
         _.forEach(rowData, function (value) {
             let cells = [];
-            _.forEach(value, function (value, key) {
-                if (key !== "ciid" && key !== "status" && key !== "reference") // TODO: what if columns are named like these?
+            _.forOwn(value, function (v, key, o) {
+                if (key !== "ciid" && key !== "status")
                     cells.push({
                         name: key,
-                        value: value,
+                        value: v,
                     });
             });
             let row = {
                 ciid: value.ciid,
-                reference: value.reference,
                 cells: cells,
             };
             sparseRows.push(row);
@@ -97,18 +139,20 @@ export default function GridViewDataParseModel(rowStatus) {
     // ########## HELPERS ##########
 
     // returns editable/changeable-attr of cell, defined by its ciid and name/colName
-    function getCellEditable(ciid, name, data) {
-        let obj;
+    function getCellEditable(ciid, name, data, isColumnWritable) {
+        if (!isColumnWritable) return false;
         if (data) {
-            obj = _.find(data.rows, function (o) {
-                return o.ciid === ciid;
-            });
-            if (obj)
-                obj = _.find(obj.cells, function (o) {
-                    return o.name === name;
-                });
+            let row = _.find(data.rows, o => o.ciid === ciid);
+            if (row) {
+                let cell = _.find(row.cells, o => o.name === name);
+                if (cell)
+                    return cell.changeable;
+                else return false;
+            } else {
+                return true; // row must be new because we couldn't find it, treat cell as writable
+            }
         }
-        return obj ? obj.changeable : true;
+        return false;
     }
 
     return {

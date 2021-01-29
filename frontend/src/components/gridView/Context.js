@@ -9,6 +9,8 @@ import GridViewDataParseModel from "./GridViewDataParseModel";
 import _ from "lodash";
 import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
 import { v4 as uuidv4 } from 'uuid';
+import MultilineTextCellEditor from './MultilineTextCellEditor';
+import IntegerCellEditor from './IntegerCellEditor';
 
 import { useParams, withRouter } from "react-router-dom";
 import FeedbackMsg from "./FeedbackMsg";
@@ -22,7 +24,7 @@ const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
 );  
 
 export function Context(props) {
-    const swaggerJson = props.swaggerJson;
+    const swaggerClient = props.swaggerClient;
     const apiVersion = props.apiVersion;
 
     const { contextName } = useParams(); // get contextName from path
@@ -31,6 +33,7 @@ export function Context(props) {
     const [gridColumnApi, setGridColumnApi] = useState(null);
 
     const [columnDefs, setColumnDefs] = useState(null);
+    const [schema, setSchema] = useState(null);
     const [rowData, setRowData] = useState(null);
     const [rowDataSnapshot, setRowDataSnapshot] = useState(null);
     const defaultColDef = initDefaultColDef(); // Init defaultColDef
@@ -71,7 +74,6 @@ export function Context(props) {
                 {swaggerMsg && <FeedbackMsg alertProps={{message: swaggerMsg, type: swaggerErrorJson ? "error": "success", showIcon: true, banner: true}} swaggerErrorJson={swaggerErrorJson} />}
                 <ContextButtonToolbar
                     setCellToNotSet={setCellToNotSet}
-                    setCellToEmpty={setCellToEmpty}
                     newRows={newRows}
                     markRowAsDeleted={markRowAsDeleted}
                     resetRow={resetRow}
@@ -81,27 +83,29 @@ export function Context(props) {
                 />
             </Header>
             <Content>
-                { swaggerJson ? (
-                    <AgGridCopyCutPaste
-                        onGridReady={onGridReady}
-                        rowData={rowData}
-                        columnDefs={columnDefs}
-                        defaultColDef={defaultColDef}
-                        animateRows={true}
-                        rowSelection="multiple"
-                        onCellValueChanged={updateCellValue}
-                        getRowNodeId={function (data) {
-                            return data.ciid;
-                        }}
-                        overlayLoadingTemplate={
-                            '<span class="ag-overlay-loading-center">Loading...</span>'
-                        }
-                        overlayNoRowsTemplate={
-                            '<span class="ag-overlay-loading-center">No data.</span>'
-                        }
-                    />
-                ) :
-                <>Loading...</> }
+                <AgGridCopyCutPaste
+                    frameworkComponents={{
+                        multilineTextCellEditor: MultilineTextCellEditor,
+                        integerCellEditor: IntegerCellEditor
+                    }}
+                    stopEditingWhenGridLosesFocus={true}
+                    onGridReady={onGridReady}
+                    rowData={rowData}
+                    columnDefs={columnDefs}
+                    defaultColDef={defaultColDef}
+                    animateRows={true}
+                    rowSelection="multiple"
+                    onCellValueChanged={updateCellValue}
+                    getRowNodeId={function (data) {
+                        return data.ciid;
+                    }}
+                    overlayLoadingTemplate={
+                        '<span class="ag-overlay-loading-center">Loading...</span>'
+                    }
+                    overlayNoRowsTemplate={
+                        '<span class="ag-overlay-loading-center">No data.</span>'
+                    }
+                />
             </Content>
         </Layout>
     );
@@ -140,26 +144,7 @@ export function Context(props) {
                         return true;
                 },
             },
-            valueSetter: function (params) {
-                // undefined/null -> ""
-                if (
-                    (params.oldValue === undefined ||
-                        params.oldValue === null) &&
-                    params.newValue === ""
-                ) {
-                    return true;
-                }
-                // normal input
-                else {
-                    params.data[params.colDef.field] = params.newValue;
-                    return true;
-                }
-            },
-            valueFormatter: (params) => {
-                if (params.value === undefined || params.value === null)
-                    return "[not set]";
-                else return params.value;
-            },
+            
         };
     }
 
@@ -174,23 +159,10 @@ export function Context(props) {
                 const params = { ...focusedCell.column, node: rowNode }; // HACK: build needed 'params'-information
                 const editableCell = focusedCell.column.colDef.editable(params);
                 const editableCol = focusedCell.column.colDef.editable;
-                if (editableCol && editableCell)
-                    rowNode.setDataValue(focusedCell.column.colId, null);
-            }
-        }
-    }
-
-    // sets focused cell to ""
-    function setCellToEmpty() {
-        var focusedCell = gridApi.getFocusedCell();
-        if (focusedCell) {
-            var rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
-            if (rowNode) {
-                const params = { ...focusedCell.column, node: rowNode }; // HACK: build needed 'params'-information
-                const editableCell = focusedCell.column.colDef.editable(params);
-                const editableCol = focusedCell.column.colDef.editable;
-                if (editableCol && editableCell)
-                    rowNode.setDataValue(focusedCell.column.colId, "");
+                if (editableCol && editableCell) {
+                    const currentValue = rowNode.data[focusedCell.column.colId];
+                    rowNode.setDataValue(focusedCell.column.colId, {...currentValue, values: []});
+                }
             }
         }
     }
@@ -206,16 +178,16 @@ export function Context(props) {
                 const oldValue =
                     e.oldValue === null || e.oldValue === undefined // [not set]-Attributes: null, undefined
                         ? null // set [not set]-Attributes to null, so js-comparison does not detect a difference
-                        : e.oldValue.toString(); // [set]-Attributes: e.g. "" (empty string), any other set value
+                        : e.oldValue; // [set]-Attributes: e.g. "" (empty string), any other set value
 
                 // analog to oldValue
                 const newValue =
                     e.newValue === null || e.newValue === undefined
                         ? null
-                        : e.newValue.toString();
+                        : e.newValue;
 
                 // ignore unchanged data
-                if (newValue !== oldValue)
+                if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) // HACK: deep comparison via JSON.stringify
                     rowNode.setDataValue("status", rowStatus.edited);
             }
         }
@@ -227,18 +199,23 @@ export function Context(props) {
     function newRows(e) {
         if (e) {
             var numberOfNewRows = e.currentTarget.value; // how many rows to add
+
+            var toAdd = [];
             for (var i = 0; i < numberOfNewRows; i++) {
-                gridApi.applyTransaction({
-                    add: [
-                        {
-                            ciid: uuidv4(), // we generate the uuid here, it will stay the same from then on out
-                            status: rowStatus.new, // set status to 'new'
-                        },
-                    ], 
-                    addIndex: 0,
-                    // remaining attributes: undefined
-                });
+                var newRow = {
+                    ciid: uuidv4(), // we generate the uuid here, it will stay the same from then on out
+                    status: rowStatus.new, // set status to 'new'
+                };
+                for(let i = 0;i < schema.columns.length;i++) {
+                    const c = schema.columns[i];
+                    newRow[c.name] = {values: [], type: c.valueType, isArray: false };
+                }
+                toAdd.push(newRow);
             }
+            gridApi.applyTransaction({
+                add: toAdd, 
+                addIndex: 0
+            });
         }
     }
 
@@ -269,17 +246,7 @@ export function Context(props) {
             const rowNode = gridApi.getRowNode(row.ciid);
 
             if (rowNode) {
-                if (rowNode.data.status.id === rowStatus.new.id) {
-                    // reset row
-                    gridApi.applyTransaction({
-                        update: [
-                            {
-                                ciid: row.ciid,
-                                status: rowStatus.new,
-                            },
-                        ],
-                    });
-                } else {
+                if (rowNode.data.status.id !== rowStatus.new.id) {
                     // reset row
                     gridApi.applyTransaction({
                         update: [
@@ -299,105 +266,113 @@ export function Context(props) {
 
     // CREATE / UPDATE / DELETE on pressing 'save'
     async function save() {
-        if (swaggerJson) {
-            let rowDataDiffs = [];
+        let rowDataDiffs = [];
 
-            await gridApi.forEachNode(async (node) => {
-                if (node.data.status.id === rowStatus.new.id) // CREATE
-                {
-                    let rowDataDiff = node.data;
-                    rowDataDiffs.push(rowDataDiff); // update all node columns
-                }
-                else if (
-                    node.data.status.id === rowStatus.edited.id || // UPDATE
-                    node.data.status.id === rowStatus.deleted.id // DELETE
-                ) {
-                    const rowSnapshot = _.find(rowDataSnapshot, function (
-                        rowSnapshot
-                    ) {
-                        return rowSnapshot.ciid === node.data.ciid;
-                    });
-                    let rowDataDiff = getDiffBetweenObjects(node.data, rowSnapshot);
-                    rowDataDiff.ciid = node.data.ciid; // add ciid in any case
-
-                    rowDataDiffs.push(rowDataDiff);
-                }
-            });
-
-            const changes = gridViewDataParseModel.createChanges(rowDataDiffs); // Create changes from rowData (delta)
-
-            try {
-                if (_.size(changes.sparseRows)) {
-                    // actually do the changes
-                    const changeResults = await swaggerJson.apis.GridView.ChangeData(
-                            {
-                                version: apiVersion,
-                                context: contextName,
-                            },
-                            {
-                                requestBody: changes,
-                            }
-                        )
-                        .then((result) => result.body);
-
-                    // Create rowData from changeResults
-                    const rowDataChangeResults = gridViewDataParseModel.createRowData(changeResults);
-
-                    // update rows
-                    gridApi.applyTransaction({ update: rowDataChangeResults });
-
-                    setSwaggerErrorJson(false);
-                    setSwaggerMsg("Saved.");
-                }
-            } catch(e) {
-                setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
-                setSwaggerMsg(e.toString());
+        await gridApi.forEachNode(async (node) => {
+            if (node.data.status.id === rowStatus.new.id) // CREATE
+            {
+                // update columns, but leave out not-writable columns
+                let rowDataDiff = _.pickBy(node.data, function(value, key) {
+                    if (key === 'status') return false;
+                    else if (key === 'ciid') return true;
+                    else {
+                        const column = schema.columns.find(c => c.name === key);
+                        return column && column.writable;
+                    }
+                 });
+                rowDataDiffs.push(rowDataDiff);
             }
+            else if (
+                node.data.status.id === rowStatus.edited.id || // UPDATE
+                node.data.status.id === rowStatus.deleted.id // DELETE
+            ) {
+                const rowSnapshot = _.find(rowDataSnapshot, function (
+                    rowSnapshot
+                ) {
+                    return rowSnapshot.ciid === node.data.ciid;
+                });
+                if (!rowSnapshot) {
+                    console.error("Could not find row snapshot for edited row... is bug #1582 fixed (is related)?")
+                }
+                let rowDataDiff = getDiffBetweenRows(node.data, rowSnapshot);
+                rowDataDiff.ciid = node.data.ciid; // add ciid in any case
+                rowDataDiffs.push(rowDataDiff);
+                // rowDataDiffs.push(node.data); // update all node columns
+            }
+        });
+
+        const changes = gridViewDataParseModel.createChanges(rowDataDiffs); // Create changes from rowData (delta)
+
+        try {
+            if (_.size(changes.sparseRows)) {
+                // actually do the changes
+                const changeResults = await swaggerClient().apis.GridView.ChangeData(
+                        {
+                            version: apiVersion,
+                            context: contextName,
+                        },
+                        {
+                            requestBody: changes,
+                        }
+                    )
+                    .then((result) => result.body);
+
+                // Create rowData from changeResults
+                const rowDataChangeResults = gridViewDataParseModel.createRowData(changeResults);
+
+                // update rows
+                gridApi.applyTransaction({ update: rowDataChangeResults });
+
+                setSwaggerErrorJson(false);
+                setSwaggerMsg("Saved.");
+            }
+        } catch(e) {
+            setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
+            setSwaggerMsg(e.toString());
         }
     }
 
     // READ / refresh data
     async function refreshData() {
-        if (swaggerJson) {
-            // Tell AgGrid to reset columnDefs and rowData // important!
+        // Tell AgGrid to reset columnDefs and rowData // important!
+        if (gridApi) {
+            gridApi.setColumnDefs(null);
+            gridApi.setRowData(null);
+            gridApi.showLoadingOverlay(); // trigger "Loading"-state (otherwise would be in "No Rows"-state instead)
+        }
+        try {
+            const schema = await swaggerClient().apis.GridView.GetSchema({
+                    version: apiVersion,
+                    context: contextName,
+                })
+                .then((result) => result.body);
+            const data = await swaggerClient().apis.GridView.GetData({
+                    version: apiVersion,
+                    context: contextName,
+                })
+                .then((result) => result.body);
+
+            const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
+                schema,
+                data
+            ); // Create columnDefs from schema and data
+            const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
+
+            setSchema(schema);
+            setColumnDefs(parsedColumnDefs); // set columnDefs
+            setRowData(parsedRowData); // set rowData
+            setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
+
+            // Tell AgGrid to set columnDefs and rowData
             if (gridApi) {
-                gridApi.setColumnDefs(null);
-                gridApi.setRowData(null);
-                gridApi.showLoadingOverlay(); // trigger "Loading"-state (otherwise would be in "No Rows"-state instead)
+                gridApi.setColumnDefs(parsedColumnDefs);
+                gridApi.setRowData(parsedRowData);
             }
-            try {
-                const schema = await swaggerJson.apis.GridView.GetSchema({
-                        version: apiVersion,
-                        context: contextName,
-                    })
-                    .then((result) => result.body);
-                const data = await swaggerJson.apis.GridView.GetData({
-                        version: apiVersion,
-                        context: contextName,
-                    })
-                    .then((result) => result.body);
 
-                const parsedColumnDefs = gridViewDataParseModel.createColumnDefs(
-                    schema,
-                    data
-                ); // Create columnDefs from schema and data
-                const parsedRowData = gridViewDataParseModel.createRowData(data); // Create rowData from data
-    
-                setColumnDefs(parsedColumnDefs); // set columnDefs
-                setRowData(parsedRowData); // set rowData
-                setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
-    
-                // Tell AgGrid to set columnDefs and rowData
-                if (gridApi) {
-                    gridApi.setColumnDefs(parsedColumnDefs);
-                    gridApi.setRowData(parsedRowData);
-                }
-
-                // INFO: don't show message on basic load
-            } catch(e) {
-                setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
-                setSwaggerMsg(e.toString());
-            }
+            // INFO: don't show message on basic load
+        } catch(e) {
+            setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
+            setSwaggerMsg(e.toString());
         }
     }
 
@@ -410,14 +385,11 @@ export function Context(props) {
 
     // ######################################## HELPERS ########################################
 
-    function getDiffBetweenObjects(newObj, oldObj) {
+    function getDiffBetweenRows(newObj, oldObj) {
         function changes(v, oldObj) {
-            return _.transform(newObj, function (result, value, key) {
+            return _.transform(v, function (result, value, key) {
                 if (!_.isEqual(value, oldObj[key])) {
-                    result[key] =
-                        _.isObject(value) && _.isObject(oldObj[key])
-                            ? changes(value, oldObj[key])
-                            : value;
+                    result[key] = value;
                 }
             });
         }

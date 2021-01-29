@@ -1,15 +1,98 @@
-﻿using Omnikeeper.Base.Entity.DTO;
+﻿using Newtonsoft.Json.Linq;
+using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Omnikeeper.Model
+namespace Omnikeeper.Base.AttributeValues
 {
-    public partial class BaseAttributeModel
+    public static class AttributeValueBuilder
     {
-        private IAttributeValue Unmarshal(string valueText, byte[] valueBinary, byte[] valueControl, AttributeValueType type, bool fullBinary)
+        public static IAttributeValue BuildFromTypeAndObject(AttributeValueType type, object o)
+        {
+            try
+            {
+                switch (type)
+                {
+                    case AttributeValueType.Text:
+                        {
+                            if (o.GetType().IsArray)
+                                return AttributeArrayValueText.BuildFromString((o as object[]).OfType<string>().ToArray(), false);
+                            else
+                                return new AttributeScalarValueText((o as string)!, false);
+                        }
+                    case AttributeValueType.MultilineText:
+                        {
+                            if (o.GetType().IsArray)
+                                return AttributeArrayValueText.BuildFromString((o as object[]).OfType<string>().ToArray(), true);
+                            else
+                                return new AttributeScalarValueText((o as string)!, true);
+                        }
+                    case AttributeValueType.Integer:
+                        {
+                            if (o.GetType().IsArray)
+                                return AttributeArrayValueInteger.Build((o as object[]).OfType<long>().ToArray());
+                            else
+                                return new AttributeScalarValueInteger((o as long?)!.Value);
+                        }
+                    case AttributeValueType.JSON:
+                        {
+                            if (o is JArray a)
+                                return AttributeArrayValueJSON.Build(a.Children().ToArray());
+                            else if (o is object[] oa)
+                                return AttributeArrayValueJSON.Build(oa.Select(t => t as JToken)!.ToArray()!);
+                            else
+                                return AttributeScalarValueJSON.Build((o as JToken)!);
+                        }
+                    case AttributeValueType.YAML:
+                        {
+                            if (o.GetType().IsArray)
+                                return AttributeArrayValueYAML.BuildFromString((o as object[]).OfType<string>().ToArray());
+                            else
+                                return AttributeScalarValueYAML.BuildFromString((o as string)!);
+                        }
+                    case AttributeValueType.Image:
+                        {
+                            throw new Exception("Building AttributeValueImage from type and object not allowed");
+                        }
+                    default:
+                        throw new Exception($"Unknown type {type} encountered");
+                }
+            }
+            catch (Exception)
+            {
+                throw new Exception($"Could not build attribute value of type {type} from object {o}");
+            }
+        }
+        public static IAttributeValue BuildFromDTO(AttributeValueDTO generic)
+        {
+            if (generic.IsArray)
+                return generic.Type switch
+                {
+                    AttributeValueType.Text => AttributeArrayValueText.BuildFromString(generic.Values, false),
+                    AttributeValueType.MultilineText => AttributeArrayValueText.BuildFromString(generic.Values, true),
+                    AttributeValueType.Integer => AttributeArrayValueInteger.BuildFromString(generic.Values),
+                    AttributeValueType.JSON => AttributeArrayValueJSON.BuildFromString(generic.Values),
+                    AttributeValueType.YAML => AttributeArrayValueYAML.BuildFromString(generic.Values),
+                    AttributeValueType.Image => throw new Exception("Building AttributeValueImage from DTO not allowed"),
+                    _ => throw new Exception($"Unknown type {generic.Type} encountered"),
+                };
+            else
+                return generic.Type switch
+                {
+                    AttributeValueType.Text => new AttributeScalarValueText(generic.Values[0], false),
+                    AttributeValueType.MultilineText => new AttributeScalarValueText(generic.Values[0], true),
+                    AttributeValueType.Integer => AttributeScalarValueInteger.BuildFromString(generic.Values[0]),
+                    AttributeValueType.JSON => AttributeScalarValueJSON.BuildFromString(generic.Values[0]),
+                    AttributeValueType.YAML => AttributeScalarValueYAML.BuildFromString(generic.Values[0]),
+                    AttributeValueType.Image => throw new Exception("Building AttributeValueImage from DTO not allowed"),
+                    _ => throw new Exception($"Unknown type {generic.Type} encountered"),
+                };
+        }
+
+        public static IAttributeValue Unmarshal(string valueText, byte[] valueBinary, byte[] valueControl, AttributeValueType type, bool fullBinary)
         {
             if (valueControl.Length == 0)
             { // V1 TODO: remove once no longer used
@@ -55,7 +138,7 @@ namespace Omnikeeper.Model
             }
         }
 
-        private IAttributeValue UnmarshalNonV1(string valueText, byte[] valueBinary, byte[] valueControl, AttributeValueType type, bool fullBinary)
+        private static IAttributeValue UnmarshalNonV1(string valueText, byte[] valueBinary, byte[] valueControl, AttributeValueType type, bool fullBinary)
         {
             var version = valueControl[0];
             var isArray = valueControl[1] == 0x02;
@@ -125,7 +208,7 @@ namespace Omnikeeper.Model
             }
         }
 
-        private (string text, byte[] binary, byte[] control) Marshal(IAttributeValue value)
+        public static (string text, byte[] binary, byte[] control) Marshal(IAttributeValue value)
         {
             byte version = 0x02;
             if (version == 0x01)
@@ -154,7 +237,7 @@ namespace Omnikeeper.Model
             }
         }
 
-        private (string valueText, byte[] valueBinary, byte[] valueControl) MarshalV2(IAttributeValue av)
+        private static (string valueText, byte[] valueBinary, byte[] valueControl) MarshalV2(IAttributeValue av)
         {
             return av switch
             {
@@ -173,7 +256,7 @@ namespace Omnikeeper.Model
             };
         }
 
-        private (string valueText, byte[] valueBinary, byte[] valueControl) MarshalStringArrayV2(IEnumerable<string> values)
+        private static (string valueText, byte[] valueBinary, byte[] valueControl) MarshalStringArrayV2(IEnumerable<string> values)
         {
             var marshalled = string.Join("", values);
             var controlHeader = new byte[]
@@ -188,7 +271,7 @@ namespace Omnikeeper.Model
             return (marshalled, new byte[0], control);
         }
 
-        private (string valueText, byte[] valueBinary, byte[] valueControl) MarshalStringV2(string value)
+        private static (string valueText, byte[] valueBinary, byte[] valueControl) MarshalStringV2(string value)
         {
             var controlHeader = new byte[]
             {
@@ -199,7 +282,7 @@ namespace Omnikeeper.Model
             return (value, new byte[0], control);
         }
 
-        private (string valueText, byte[] valueBinary, byte[] valueControl) MarshalBinaryArrayV2(IEnumerable<BinaryScalarAttributeValueProxy> values)
+        private static (string valueText, byte[] valueBinary, byte[] valueControl) MarshalBinaryArrayV2(IEnumerable<BinaryScalarAttributeValueProxy> values)
         {
             if (values.Any(v => !v.HasFullData()))
                 throw new Exception("Cannot marshal binary attribute value that does not contain the full data");
@@ -223,7 +306,7 @@ namespace Omnikeeper.Model
             return ("", marshalled, control);
         }
 
-        private (string valueText, byte[] valueBinary, byte[] valueControl) MarshalBinaryV2(BinaryScalarAttributeValueProxy value)
+        private static (string valueText, byte[] valueBinary, byte[] valueControl) MarshalBinaryV2(BinaryScalarAttributeValueProxy value)
         {
             if (value.FullData == null)
                 throw new Exception("Cannot marshal binary attribute value that does not contain the full data");
@@ -245,7 +328,7 @@ namespace Omnikeeper.Model
             return ("", value.FullData, control);
         }
 
-        private string[] UnmarshalStringArrayV2(string valueText, byte[] valueControl)
+        private static string[] UnmarshalStringArrayV2(string valueText, byte[] valueControl)
         {
             var arrayLength = Bytes2int(valueControl, 2);
             var elementSizes = Enumerable.Range(0, arrayLength).Select(i => Bytes2int(valueControl, 2 + 4 + i * 4)).ToArray();
@@ -260,12 +343,12 @@ namespace Omnikeeper.Model
             return elements;
         }
 
-        private string UnmarshalStringV2(string valueText, byte[] valueControl)
+        private static string UnmarshalStringV2(string valueText, byte[] valueControl)
         {
             return valueText;
         }
 
-        private (byte[] elementHash, int elementSize, string mimeType)[] UnmarshalValueControlArrayV2(byte[] valueControl)
+        private static (byte[] elementHash, int elementSize, string mimeType)[] UnmarshalValueControlArrayV2(byte[] valueControl)
         {
             var byteOffset = 2;
             var arrayLength = Bytes2int(valueControl, byteOffset);
@@ -290,7 +373,7 @@ namespace Omnikeeper.Model
             }
             return ret;
         }
-        private (byte[] elementHash, int elementSize, string mimeType) UnmarshalValueControlV2(byte[] valueControl)
+        private static (byte[] elementHash, int elementSize, string mimeType) UnmarshalValueControlV2(byte[] valueControl)
         {
             var byteOffset = 2;
             var fullSize = Bytes2int(valueControl, byteOffset);
@@ -303,18 +386,18 @@ namespace Omnikeeper.Model
             return (hash, fullSize, mimeType);
         }
 
-        private IEnumerable<BinaryScalarAttributeValueProxy> UnmarshalProxyBinaryArrayV2(byte[] valueControl)
+        private static IEnumerable<BinaryScalarAttributeValueProxy> UnmarshalProxyBinaryArrayV2(byte[] valueControl)
         {
             var valueControlArray = UnmarshalValueControlArrayV2(valueControl);
             return valueControlArray.Select(i => BinaryScalarAttributeValueProxy.BuildFromHash(i.elementHash, i.mimeType, i.elementSize));
         }
-        private BinaryScalarAttributeValueProxy UnmarshalProxyBinaryV2(byte[] valueControl)
+        private static BinaryScalarAttributeValueProxy UnmarshalProxyBinaryV2(byte[] valueControl)
         {
             var (hash, size, mimeType) = UnmarshalValueControlV2(valueControl);
             return BinaryScalarAttributeValueProxy.BuildFromHash(hash, mimeType, size);
         }
 
-        private IEnumerable<BinaryScalarAttributeValueProxy> UnmarshalFullBinaryArrayV2(byte[] valueBinary, byte[] valueControl)
+        private static IEnumerable<BinaryScalarAttributeValueProxy> UnmarshalFullBinaryArrayV2(byte[] valueBinary, byte[] valueControl)
         {
             var valueControlArray = UnmarshalValueControlArrayV2(valueControl);
             var elements = new BinaryScalarAttributeValueProxy[valueControlArray.Length];
@@ -330,18 +413,18 @@ namespace Omnikeeper.Model
             }
             return elements;
         }
-        private BinaryScalarAttributeValueProxy UnmarshalFullBinaryV2(byte[] valueBinary, byte[] valueControl)
+        private static BinaryScalarAttributeValueProxy UnmarshalFullBinaryV2(byte[] valueBinary, byte[] valueControl)
         {
             var (hash, size, mimeType) = UnmarshalValueControlV2(valueControl);
             return BinaryScalarAttributeValueProxy.BuildFromHashAndFullData(hash, mimeType, size, valueBinary);
         }
 
         // NOTE: we assume little-endian (BitConverter.IsLittleEndian)
-        private byte[] Int2bytes(int number)
+        private static byte[] Int2bytes(int number)
         {
             return BitConverter.GetBytes(number);
         }
-        private int Bytes2int(byte[] b, int startIndex)
+        private static int Bytes2int(byte[] b, int startIndex)
         {
             return BitConverter.ToInt32(b, startIndex);
         }

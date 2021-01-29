@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using MediatR;
+using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
@@ -127,34 +128,33 @@ namespace Omnikeeper.GridView.Commands
 
                         if (!ciBasedAuthorizationService.CanWriteToCI(row.Ciid))
                             return (null, new Exception($"User \"{user.Username}\" does not have permission to write to CI {row.Ciid}"));
-
-                        if (cell.Value == null)
+                        
+                        if (cell.Value.Values.IsEmpty())
                         {
-                            try
+                            // we treat an empty values array as a request to remove the attribute, but only if the CI already exists
+                            if (ciExists)
                             {
-                                await attributeModel.RemoveAttribute(
-                                    cell.Name,
-                                    row.Ciid,
-                                    writeLayer,
-                                    changesetProxy,
-                                    trans);
-                            }
-                            catch (Exception e)
-                            {
-                                trans.Rollback();
-                                return (null, new Exception($"Removing attribute {cell.Name} for ci with id: {row.Ciid} failed!", e));
+                                try
+                                {
+                                    await attributeModel.RemoveAttribute(
+                                        cell.Name,
+                                        row.Ciid,
+                                        writeLayer,
+                                        changesetProxy,
+                                        trans);
+                                }
+                                catch (Exception e)
+                                {
+                                    trans.Rollback();
+                                    return (null, new Exception($"Removing attribute {cell.Name} for ci with id: {row.Ciid} failed!", e));
+                                }
                             }
                         }
                         else
                         {
                             try
                             {
-                                var val = AttributeValueBuilder.BuildFromDTO(new AttributeValueDTO
-                                {
-                                    IsArray = false,
-                                    Values = new string[] { cell.Value },
-                                    Type = AttributeValueType.Text
-                                });
+                                var val = AttributeValueBuilder.BuildFromDTO(cell.Value);
 
                                 await attributeModel.InsertAttribute(
                                     cell.Name,
@@ -220,51 +220,53 @@ namespace Omnikeeper.GridView.Commands
                         continue;
                     }
 
-                    foreach (var attr in item.MergedAttributes)
+                    var filteredColumns = config.Columns.Select(column =>
                     {
-                        var c = attr.Value;
-                        var name = attr.Value.Attribute.Name;
-
-                        var col = config.Columns.Find(el => el.SourceAttributeName == name);
-
-                        bool changable = true;
-
-                        if (col == null)
+                        if (item.MergedAttributes.TryGetValue(column.SourceAttributeName, out var attribute))
                         {
-                            continue;
+                            return ((GridViewColumn column, MergedCIAttribute? attr))(column, attribute);
                         }
-
-                        if (attr.Value.LayerStackIDs.Length > 1)
+                        else
                         {
-                            if (attr.Value.LayerStackIDs[^1] != config.WriteLayer)
+                            return (column, null);
+                        }
+                    });
+
+                    foreach (var (column, attr) in filteredColumns)
+                    {
+                        bool changable = true;
+                        if (attr != null)
+                        {
+                            if (attr.LayerStackIDs.Length > 1)
                             {
-                                changable = false;
+                                if (attr.LayerStackIDs[^1] != config.WriteLayer)
+                                {
+                                    changable = false;
+                                }
                             }
                         }
 
-                        var el = result.Rows.Find(el => el.Ciid == ci_id);
+                        var value = (attr != null)
+                            ? AttributeValueDTO.Build(attr.Attribute.Value)
+                            : AttributeValueDTO.BuildEmpty(column.ValueType ?? AttributeValueType.Text, false);
 
+                        var cell = new Response.ChangeDataCell(
+                                column.SourceAttributeName,
+                                value,
+                                column.WriteLayer == null ? true : (column.WriteLayer != -1) && changable
+                            );
+
+                        var el = result.Rows.Find(el => el.Ciid == ci_id);
                         if (el != null)
                         {
-                            el.Cells.Add(new Response.ChangeDataCell(
-                                name,
-                                attr.Value.Attribute.Value.Value2String(),
-                                col.WriteLayer == null ? true : (col.WriteLayer != -1) && changable
-                            ));
+                            el.Cells.Add(cell);
                         }
                         else
                         {
                             result.Rows.Add(new ChangeDataRow
                             (
                                 ci_id,
-                                new List<Response.ChangeDataCell>
-                                    {
-                                        new Response.ChangeDataCell(
-                                            name,
-                                            attr.Value.Attribute.Value.Value2String(),
-                                            col.WriteLayer == null ? true : (col.WriteLayer != -1) && changable
-                                        )
-                                    }
+                                new List<Response.ChangeDataCell> { cell }
                             ));
                         }
                     }

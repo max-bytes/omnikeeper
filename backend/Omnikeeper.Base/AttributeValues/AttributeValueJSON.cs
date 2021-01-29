@@ -40,7 +40,7 @@ namespace Omnikeeper.Entity.AttributeValues
             }
             catch (JsonReaderException e)
             {
-                var eJson = ErrorValue(e.Message);
+                var eJson = ErrorValue(e.Message); // TODO: we need to handling this different, probabl throw the error and have other systems deal with it
                 return new AttributeScalarValueJSON(eJson, eJson.ToString());
             }
         }
@@ -116,7 +116,7 @@ namespace Omnikeeper.Entity.AttributeValues
                     return JToken.Parse(value);
                 }
                 catch (JsonReaderException e)
-                {
+                { // TODO: we need to handling this different, probabl throw the error and have other systems deal with it
                     return AttributeScalarValueJSON.ErrorValue(e.Message);
                 }
             }).ToArray();

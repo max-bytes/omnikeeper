@@ -1,4 +1,5 @@
 ﻿using Npgsql;
+using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
@@ -58,7 +59,7 @@ namespace Omnikeeper.Model
             var valueText = dr.GetString(3);
             var valueBinary = dr.GetFieldValue<byte[]>(4);
             var valueControl = dr.GetFieldValue<byte[]>(5);
-            var av = Unmarshal(valueText, valueBinary, valueControl, type, fullBinary);
+            var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, fullBinary);
             var state = dr.GetFieldValue<AttributeState>(6);
             var changesetID = dr.GetGuid(7);
             var dataOriginType = dr.GetFieldValue<DataOriginType>(8);
@@ -124,7 +125,7 @@ namespace Omnikeeper.Model
                     var valueText = dr.GetString(5);
                     var valueBinary = dr.GetFieldValue<byte[]>(6);
                     var valueControl = dr.GetFieldValue<byte[]>(7);
-                    var av = Unmarshal(valueText, valueBinary, valueControl, type, false);
+                    var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
                     var changesetID = dr.GetGuid(8);
                     var dataOriginType = dr.GetFieldValue<DataOriginType>(9);
                     var origin = new DataOriginV1(dataOriginType);
@@ -169,7 +170,7 @@ namespace Omnikeeper.Model
                     var valueText = dr.GetString(5);
                     var valueBinary = dr.GetFieldValue<byte[]>(6);
                     var valueControl = dr.GetFieldValue<byte[]>(7);
-                    var av = Unmarshal(valueText, valueBinary, valueControl, type, false);
+                    var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
                     var changesetID = dr.GetGuid(8);
                     var dataOriginType = dr.GetFieldValue<DataOriginType>(9);
                     var origin = new DataOriginV1(dataOriginType);
@@ -213,7 +214,7 @@ namespace Omnikeeper.Model
                         var valueText = dr.GetString(4);
                         var valueBinary = dr.GetFieldValue<byte[]>(5);
                         var valueControl = dr.GetFieldValue<byte[]>(6);
-                        var av = Unmarshal(valueText, valueBinary, valueControl, type, false);
+                        var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
                         var changesetID = dr.GetGuid(7);
                         var dataOriginType = dr.GetFieldValue<DataOriginType>(8);
                         var origin = new DataOriginV1(dataOriginType);

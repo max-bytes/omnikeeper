@@ -5,7 +5,7 @@ import AceEditor from "react-ace";
 import FeedbackMsg from "./FeedbackMsg";
 
 function AddNewContext(props) {
-    const swaggerJson = props.swaggerJson;
+    const swaggerClient = props.swaggerClient;
     const apiVersion = props.apiVersion;
     const editMode = props.editMode;
     const { contextName } = useParams(); // get contextName from path
@@ -21,8 +21,7 @@ function AddNewContext(props) {
         try {
             setLoading(true);
             if (editMode) {
-                if (swaggerJson) {
-                    const contextJson = await swaggerJson.apis.GridView.GetContext(
+                    const contextJson = await swaggerClient().apis.GridView.GetContext(
                             {
                                 version: apiVersion,
                                 name: contextName
@@ -30,7 +29,6 @@ function AddNewContext(props) {
                         )
                         .then((result) => result.body);
                     setContext(JSON.stringify(contextJson.context, null, 2)); // set context
-                }
             } 
             else {
                 const initialNewContext = {
@@ -53,7 +51,7 @@ function AddNewContext(props) {
             setSwaggerMsg(e.toString());
         }
         setLoading(false);
-    }, [swaggerJson, apiVersion, contextName, editMode])
+    }, [swaggerClient, apiVersion, contextName, editMode])
 
     useEffect(() => {refresh();}, [refresh]);
 
@@ -62,31 +60,29 @@ function AddNewContext(props) {
             <Form onFinish={async (e) => {
                 if(!jsonHasErrors) {
                     try {
-                        if (swaggerJson) {
-                            setLoading(true);
-                            const addContext = editMode
-                                ? await swaggerJson.apis.GridView.EditContext(
-                                    {
-                                        version: apiVersion,
-                                        name: contextName,
-                                    },
-                                    {
-                                        requestBody: context,
-                                    }
-                                ).then((result) => result.body)
-                                : await swaggerJson.apis.GridView.AddContext(
-                                    {
-                                        version: apiVersion,
-                                    },
-                                    {
-                                        requestBody: context,
-                                    }
-                                ).then((result) => result.body);
+                        setLoading(true);
+                        const addContext = editMode
+                            ? await swaggerClient().apis.GridView.EditContext(
+                                {
+                                    version: apiVersion,
+                                    name: contextName,
+                                },
+                                {
+                                    requestBody: context,
+                                }
+                            ).then((result) => result.body)
+                            : await swaggerClient().apis.GridView.AddContext(
+                                {
+                                    version: apiVersion,
+                                },
+                                {
+                                    requestBody: context,
+                                }
+                            ).then((result) => result.body);
 
-                            setSwaggerErrorJson(false);
-                            if(editMode) setSwaggerMsg("'" + contextName + "' has been changed.");
-                            else setSwaggerMsg("'" + addContext.name + "' has been created.");
-                        }
+                        setSwaggerErrorJson(false);
+                        if(editMode) setSwaggerMsg("'" + contextName + "' has been changed.");
+                        else setSwaggerMsg("'" + addContext.name + "' has been created.");
                     } catch(e) {
                         setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
                         setSwaggerMsg(e.toString());

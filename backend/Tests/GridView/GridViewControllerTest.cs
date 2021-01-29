@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -77,8 +78,8 @@ namespace Tests.Integration.Controller
                             new List<long> { layerID1, layerID2 },
                             new List<GridViewColumn>()
                             {
-                                new GridViewColumn("a1", "", layerID1),
-                                new GridViewColumn("a2", "", 3) // invalid write layer
+                                new GridViewColumn("a1", "", layerID1, AttributeValueType.Text),
+                                new GridViewColumn("a2", "", 3, AttributeValueType.Text) // invalid write layer
                             },
                             "test_trait_1"
                         );
@@ -105,15 +106,16 @@ namespace Tests.Integration.Controller
                     ciid1,
                     new List<Cell>()
                     {
-                        new Cell("a1", "text1", true),
+                        new Cell("a1", new AttributeValueDTO() { Values = new string[] { "text1" }, IsArray = false, Type = AttributeValueType.Text }, true),
+                        new Cell("a2", new AttributeValueDTO() { Values = new string[] { }, IsArray = false, Type = AttributeValueType.Text }, true), // empty / not-set cell
                     }
                 ),
                 new Row(
                     ciid2,
                     new List<Cell>()
                     {
-                        new Cell("a1", "text1", true),
-                        new Cell("a2", "text2", true),
+                        new Cell("a1", new AttributeValueDTO() { Values = new string[] { "text1" }, IsArray = false, Type = AttributeValueType.Text }, true),
+                        new Cell("a2", new AttributeValueDTO() { Values = new string[] { "text2" }, IsArray = false, Type = AttributeValueType.Text }, true),
                     }
                 )
             });

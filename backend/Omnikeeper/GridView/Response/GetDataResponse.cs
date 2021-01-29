@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Omnikeeper.Base.Entity.DTO;
+using System;
 using System.Collections.Generic;
 
 namespace Omnikeeper.GridView.Response
@@ -28,10 +29,10 @@ namespace Omnikeeper.GridView.Response
     public class Cell
     {
         public string Name { get; set; }
-        public string? Value { get; set; }
+        public AttributeValueDTO Value { get; set; }
         public bool Changeable { get; set; }
 
-        public Cell(string Name, string? Value, bool Changeable)
+        public Cell(string Name, AttributeValueDTO Value, bool Changeable)
         {
             this.Name = Name;
             this.Value = Value;
