@@ -50,7 +50,7 @@ namespace Omnikeeper.Base.Service
             var optionalAttributes = trait.OptionalAttributes.Concat(flattenedDependencies.SelectMany(d => d.OptionalAttributes));
             var requiredRelations = trait.RequiredRelations.Concat(flattenedDependencies.SelectMany(d => d.RequiredRelations));
             var ancestorTraits = trait.RequiredTraits.Concat(flattenedDependencies.SelectMany(d => d.AncestorTraits)).ToHashSet();
-            var flattenedTrait = Trait.Build(trait.Name, requiredAttributes, optionalAttributes, requiredRelations, ancestorTraits);
+            var flattenedTrait = Trait.Build(trait.Name, trait.Origin, requiredAttributes, optionalAttributes, requiredRelations, ancestorTraits);
 
             flattened.Add(trait.Name, flattenedTrait);
 

@@ -1,5 +1,6 @@
 import React from "react";
 import { Button, Radio, Space } from 'antd';
+import { Icon, Popup } from 'semantic-ui-react'
 
 function EffectiveTraitList(props) {
 
@@ -13,7 +14,7 @@ function EffectiveTraitList(props) {
 
     function onChange(effectiveTrait, e) {
         var value = parseInt(e.target.value, 10);
-        props.setChecked({...props.checked, [effectiveTrait]: value});
+        props.setChecked({...props.checked, [effectiveTrait.name]: value});
     }
 
     return (
@@ -25,14 +26,31 @@ function EffectiveTraitList(props) {
                     </span>
                 </div>
             {props.effectiveTraitList.map((effectiveTrait, index) => {
+
+                const icon = (function(originType) {
+                    switch(originType) {
+                    case 'CONFIGURATION':
+                        return 'wrench';
+                    case 'PLUGIN':
+                        return 'plug';
+                    case 'CORE':
+                        return 'archive';
+                    default:
+                        return '';
+                    }
+                })(effectiveTrait.origin.type);
+
                 return (
                     <div key={index} style={styles.traitElement}>
+                        <span style={styles.traitsIcon}>
+                            <Icon name={icon} />
+                        </span>
                         <span style={styles.traitsName}>
-                            {effectiveTrait}
+                            {effectiveTrait.name}
                         </span>
                         <span>
-                                <Radio.Group  buttonStyle="solid" size="small"
-                                    onChange={(e) => onChange(effectiveTrait, e)} value={props.checked[effectiveTrait]?.toString()}>
+                                <Radio.Group buttonStyle="solid" size="small"
+                                    onChange={(e) => onChange(effectiveTrait, e)} value={props.checked[effectiveTrait.name]?.toString()}>
                                     <Radio.Button value="-1">No</Radio.Button>
                                     <Radio.Button value="0">May</Radio.Button>
                                     <Radio.Button value="1">Yes</Radio.Button>

@@ -43,13 +43,14 @@ namespace OKPluginCLBMonitoring
             belongsToNaemonContactgroup
         };
 
-        private readonly RecursiveTrait moduleRecursiveTrait = new RecursiveTrait("naemon_service_module", new List<TraitAttribute>() {
+        private static readonly TraitOriginV1 traitOrigin = new TraitOriginV1(TraitOriginType.Plugin, "CLBNaemonMonitoring");
+        private readonly RecursiveTrait moduleRecursiveTrait = new RecursiveTrait("naemon_service_module", traitOrigin, new List<TraitAttribute>() {
             new TraitAttribute("template",
                 CIAttributeTemplate.BuildFromParams("naemon.config_template", AttributeValueType.MultilineText, null, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
-        private readonly RecursiveTrait naemonInstanceRecursiveTrait = new RecursiveTrait("naemon_instance", new List<TraitAttribute>() {
+        private readonly RecursiveTrait naemonInstanceRecursiveTrait = new RecursiveTrait("naemon_instance", traitOrigin, new List<TraitAttribute>() {
             new TraitAttribute("name",
                 CIAttributeTemplate.BuildFromParams("naemon.instance_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
@@ -66,7 +67,7 @@ namespace OKPluginCLBMonitoring
             )
         });
 
-        private readonly RecursiveTrait contactgroupRecursiveTrait = new RecursiveTrait("naemon_contactgroup", new List<TraitAttribute>() {
+        private readonly RecursiveTrait contactgroupRecursiveTrait = new RecursiveTrait("naemon_contactgroup", traitOrigin, new List<TraitAttribute>() {
             new TraitAttribute("name",
                 CIAttributeTemplate.BuildFromParams("naemon.contactgroup_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )

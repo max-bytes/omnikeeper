@@ -135,7 +135,7 @@ namespace Tests.Integration.Controller
             public Task<TraitSet> GetActiveTraitSet(IModelContext trans, TimeThreshold timeThreshold)
             {
                 var r = new List<RecursiveTrait>() {
-                new RecursiveTrait("test_trait_1", new List<TraitAttribute>()
+                new RecursiveTrait("test_trait_1", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>()
                 {
                     new TraitAttribute("a1",
                         CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false)

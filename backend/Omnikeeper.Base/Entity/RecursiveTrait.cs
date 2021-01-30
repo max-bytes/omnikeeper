@@ -37,27 +37,51 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    public enum TraitOriginType
+    {
+        Configuration,
+        Plugin,
+        Core
+    }
+
+    [ProtoContract(SkipConstructor = true)]
+    public class TraitOriginV1
+    {
+        public TraitOriginV1(TraitOriginType type, string? info = null)
+        {
+            Type = type;
+            Info = info;
+        }
+
+        [ProtoMember(1)]
+        public readonly TraitOriginType Type;
+        [ProtoMember(2)]
+        public readonly string? Info;
+    } // TODO: equality/hash/...?
+
     [ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
     public class RecursiveTrait
     {
         [ProtoMember(1)] public readonly string Name;
-        [ProtoMember(2)] public readonly TraitAttribute[] RequiredAttributes = Array.Empty<TraitAttribute>();
-        [ProtoMember(3)] public readonly TraitAttribute[] OptionalAttributes = Array.Empty<TraitAttribute>();
-        [ProtoMember(4)] public readonly string[] RequiredTraits = Array.Empty<string>();
-        [ProtoMember(5)] public readonly TraitRelation[] RequiredRelations = Array.Empty<TraitRelation>();
+        [ProtoMember(2)] public readonly TraitOriginV1 Origin;
+        [ProtoMember(3)] public readonly TraitAttribute[] RequiredAttributes = Array.Empty<TraitAttribute>();
+        [ProtoMember(4)] public readonly TraitAttribute[] OptionalAttributes = Array.Empty<TraitAttribute>();
+        [ProtoMember(5)] public readonly string[] RequiredTraits = Array.Empty<string>();
+        [ProtoMember(6)] public readonly TraitRelation[] RequiredRelations = Array.Empty<TraitRelation>();
         // TODO: implement optional relations
 
 #pragma warning disable CS8618
         private RecursiveTrait() { }
 #pragma warning restore CS8618
 
-        public RecursiveTrait(string name,
+        public RecursiveTrait(string name, TraitOriginV1 origin,
             IEnumerable<TraitAttribute>? requiredAttributes = null,
             IEnumerable<TraitAttribute>? optionalAttributes = null,
             IEnumerable<TraitRelation>? requiredRelations = null,
             IEnumerable<string>? requiredTraits = null)
         {
             Name = name;
+            Origin = origin ?? new TraitOriginV1(TraitOriginType.Configuration);
             RequiredAttributes = requiredAttributes?.ToArray() ?? new TraitAttribute[0];
             OptionalAttributes = optionalAttributes?.ToArray() ?? new TraitAttribute[0];
             RequiredRelations = requiredRelations?.ToArray() ?? new TraitRelation[0];
@@ -66,11 +90,15 @@ namespace Omnikeeper.Base.Entity
 
     }
 
+    /// <summary>
+    /// comparable to RecursiveTrait, but with the recursive dependencies resolved and flattened
+    /// </summary>
     public class Trait
     {
-        private Trait(string name, IImmutableList<TraitAttribute> requiredAttributes, IImmutableList<TraitAttribute> optionalAttributes, ImmutableList<TraitRelation> requiredRelations, IImmutableSet<string> ancestorTraits)
+        private Trait(string name, TraitOriginV1 origin, IImmutableList<TraitAttribute> requiredAttributes, IImmutableList<TraitAttribute> optionalAttributes, ImmutableList<TraitRelation> requiredRelations, IImmutableSet<string> ancestorTraits)
         {
             Name = name;
+            Origin = origin;
             RequiredAttributes = requiredAttributes;
             OptionalAttributes = optionalAttributes;
             RequiredRelations = requiredRelations;
@@ -78,6 +106,7 @@ namespace Omnikeeper.Base.Entity
         }
 
         public string Name { get; set; }
+        public TraitOriginV1 Origin { get; set; }
 
         public IImmutableSet<string> AncestorTraits { get; set; }
         public IImmutableList<TraitAttribute> RequiredAttributes { get; set; }
@@ -85,13 +114,13 @@ namespace Omnikeeper.Base.Entity
         public ImmutableList<TraitRelation> RequiredRelations { get; set; }
         // TODO: implement optional relations
 
-        public static Trait Build(string name,
+        public static Trait Build(string name, TraitOriginV1 origin,
             IEnumerable<TraitAttribute> requiredAttributes,
             IEnumerable<TraitAttribute> optionalAttributes,
             IEnumerable<TraitRelation> requiredRelations,
             ISet<string> ancestorTraits)
         {
-            return new Trait(name, requiredAttributes.ToImmutableList(), optionalAttributes.ToImmutableList(), requiredRelations.ToImmutableList(), ancestorTraits.ToImmutableHashSet());
+            return new Trait(name, origin, requiredAttributes.ToImmutableList(), optionalAttributes.ToImmutableList(), requiredRelations.ToImmutableList(), ancestorTraits.ToImmutableHashSet());
         }
     }
 

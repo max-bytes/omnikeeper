@@ -61,7 +61,13 @@ export const queries = {
     `,
     ActiveTraits: gql`
         query activeTraits {
-            activeTraits
+            activeTraits {
+                name
+                origin {
+                    type
+                    info
+                }
+            }
         }
     `,
 
