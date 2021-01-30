@@ -374,7 +374,7 @@ namespace Omnikeeper.GraphQL
                     return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, selection, userContext.Transaction, limit);
                 });
 
-            FieldAsync<ListGraphType<StringGraphType>>("activeTraits",
+            FieldAsync<ListGraphType<TraitType>>("activeTraits",
                 resolve: async context =>
                 {
                     var traitsProvider = context.RequestServices.GetRequiredService<ITraitsProvider>();
@@ -385,7 +385,7 @@ namespace Omnikeeper.GraphQL
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
                     var traits = (await traitsProvider.GetActiveTraitSet(userContext.Transaction, userContext.TimeThreshold)).Traits;
-                    return traits.Keys.OrderBy(t => t);
+                    return traits.Values.OrderBy(t => t.Name);
                 });
 
             // returns counts for each trait within the specified layers

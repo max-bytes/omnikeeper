@@ -17,7 +17,19 @@ namespace Omnikeeper.GraphQL
         public TraitType()
         {
             Field(x => x.Name);
+            Field(x => x.Origin, type: typeof(TraitOriginV1Type));
         }
+    }
+    public class TraitOriginV1Type : ObjectGraphType<TraitOriginV1>
+    {
+        public TraitOriginV1Type()
+        {
+            Field(x => x.Type, type: typeof(TraitOriginTypeType));
+            Field(x => x.Info, nullable: true);
+        }
+    }
+    public class TraitOriginTypeType : EnumerationGraphType<TraitOriginType>
+    {
     }
 
     public class EffectiveTraitListItemType : ObjectGraphType<ValueTuple<string, int>>

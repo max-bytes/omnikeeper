@@ -5,6 +5,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -25,16 +26,24 @@ namespace Omnikeeper.Model
         // TODO: caching of active trait sets
         public async Task<TraitSet> GetActiveTraitSet(IModelContext trans, TimeThreshold timeThreshold)
         {
-            var dbTraitSet = await traitModel.GetRecursiveTraitSet(trans, timeThreshold);
-
             var computeLayerBrains = sp.GetServices<IComputeLayerBrain>(); // HACK: we get the CLBs here and not in the constructor because that would lead to a circular dependency
-            var nonDBTraitSets = new Dictionary<string, RecursiveTraitSet>();
+            var clbTraitSets = new Dictionary<string, RecursiveTraitSet>();
             foreach (var clb in computeLayerBrains)
-                nonDBTraitSets.Add($"CLB-{clb.Name}", clb.DefinedTraits);
+                clbTraitSets.Add($"CLB-{clb.Name}", clb.DefinedTraits);
+
+            var coreTraitSet = RecursiveTraitSet.Build(new RecursiveTrait("named", new TraitOriginV1(TraitOriginType.Core), new List<TraitAttribute>() {
+                new TraitAttribute("name",
+                    CIAttributeTemplate.BuildFromParams("__name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                )
+            }));
 
             // TODO, NOTE: this merges non-DB trait sets, that are not historic and DB traits sets that are... what should we do here?
-            var allTraitSets = new Dictionary<string, RecursiveTraitSet>() { { "default", dbTraitSet } };
-            foreach (var kv in nonDBTraitSets)
+            var configuredTraitSet = await traitModel.GetRecursiveTraitSet(trans, timeThreshold);
+            var allTraitSets = new Dictionary<string, RecursiveTraitSet>() {
+                { "core", coreTraitSet },
+                { "configuration", configuredTraitSet }
+            };
+            foreach (var kv in clbTraitSets)
                 allTraitSets.Add(kv.Key, kv.Value);
 
             // TODO: this merges the traits from all sources/sets, but it does so non-deterministicly
