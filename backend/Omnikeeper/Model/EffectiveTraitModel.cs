@@ -47,19 +47,19 @@ namespace Omnikeeper.Model
             return resolved;
         }
 
-        public async Task<bool> DoesCIHaveTrait(MergedCI ci, Trait trait, IModelContext trans, TimeThreshold atTime)
+        public async Task<bool> DoesCIHaveTrait(MergedCI ci, ITrait trait, IModelContext trans, TimeThreshold atTime)
         {
             var ret = await CanResolve(trait, ci, trans, atTime);
             return ret;
         }
 
-        public async Task<EffectiveTrait?> CalculateEffectiveTraitForCI(MergedCI ci, Trait trait, IModelContext trans, TimeThreshold atTime)
+        public async Task<EffectiveTrait?> CalculateEffectiveTraitForCI(MergedCI ci, ITrait trait, IModelContext trans, TimeThreshold atTime)
         {
             return await Resolve(trait, ci, trans, atTime);
         }
 
 
-        public async Task<IEnumerable<MergedCI>> GetMergedCIsWithTrait(Trait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedCI>> GetMergedCIsWithTrait(ITrait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
         {
             if (layerSet.IsEmpty)
                 return ImmutableList<MergedCI>.Empty; // return empty, an empty layer list can never produce any traits
@@ -82,7 +82,7 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        private async Task<(ICIIDSelection filteredSelection, bool bail)> Prefilter(Trait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
+        private async Task<(ICIIDSelection filteredSelection, bool bail)> Prefilter(ITrait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
         {
             var hasOnlineInboundLayers = false;
             foreach (var l in layerSet)
@@ -95,9 +95,9 @@ namespace Omnikeeper.Model
             var runPrecursorFiltering = false;
             // do a precursor filtering based on required attribute names
             // we can only do this filtering (better performance) when the trait has required attributes AND no online inbound layers are in play
-            if (runPrecursorFiltering && trait.RequiredAttributes.Count > 0 && !hasOnlineInboundLayers)
+            if (runPrecursorFiltering && trait is GenericTrait tt && tt.RequiredAttributes.Count > 0 && !hasOnlineInboundLayers)
             {
-                var requiredAttributeNames = trait.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
+                var requiredAttributeNames = tt.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
                 ISet<Guid>? candidateCIIDs = null;
                 foreach (var requiredAttributeName in requiredAttributeNames)
                 {
@@ -162,7 +162,7 @@ namespace Omnikeeper.Model
             }
         }
 
-        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> CalculateEffectiveTraitsForTrait(Trait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> CalculateEffectiveTraitsForTrait(ITrait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
         {
             if (layerSet.IsEmpty)
                 return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty; // return empty, an empty layer list can never produce any traits
@@ -185,74 +185,94 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        private async Task<bool> CanResolve(Trait trait, MergedCI ci, IModelContext trans, TimeThreshold atTime)
+        private async Task<bool> CanResolve(ITrait trait, MergedCI ci, IModelContext trans, TimeThreshold atTime)
         {
-            foreach (var ta in trait.RequiredAttributes)
+            switch (trait)
             {
-                var traitAttributeIdentifier = ta.Identifier;
-                var (_, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
-                if (!checks.Errors.IsEmpty())
-                    return false;
-            };
-            if (trait.RequiredRelations.Count > 0)
-            {
-                var allCompactRelatedCIs = await RelationService.GetCompactRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, null, trans, atTime);
-                foreach (var tr in trait.RequiredRelations)
-                {
-                    var traitRelationIdentifier = tr.Identifier;
-                    var relatedCIs = allCompactRelatedCIs.Where(rci => rci.PredicateID == tr.RelationTemplate.PredicateID);
-                    var checks = TemplateCheckService.CalculateTemplateErrorsRelation(relatedCIs, tr.RelationTemplate);
-                    if (!checks.Errors.IsEmpty())
-                        return false;
-                };
-            }
+                case GenericTrait tt:
+                    foreach (var ta in tt.RequiredAttributes)
+                    {
+                        var traitAttributeIdentifier = ta.Identifier;
+                        var (_, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
+                        if (!checks.Errors.IsEmpty())
+                            return false;
+                    };
+                    if (tt.RequiredRelations.Count > 0)
+                    {
+                        var allCompactRelatedCIs = await RelationService.GetCompactRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, null, trans, atTime);
+                        foreach (var tr in tt.RequiredRelations)
+                        {
+                            var traitRelationIdentifier = tr.Identifier;
+                            var relatedCIs = allCompactRelatedCIs.Where(rci => rci.PredicateID == tr.RelationTemplate.PredicateID);
+                            var checks = TemplateCheckService.CalculateTemplateErrorsRelation(relatedCIs, tr.RelationTemplate);
+                            if (!checks.Errors.IsEmpty())
+                                return false;
+                        };
+                    }
 
-            return true;
+                    return true;
+                case TraitEmpty te:
+                    if (ci.MergedAttributes.IsEmpty()) // TODO: check for relations too?
+                        return true;
+                    return false;
+                default:
+                    throw new Exception("Unknown trait encountered");
+            }
         }
 
-        private async Task<EffectiveTrait?> Resolve(Trait trait, MergedCI ci, IModelContext trans, TimeThreshold atTime)
+        private async Task<EffectiveTrait?> Resolve(ITrait trait, MergedCI ci, IModelContext trans, TimeThreshold atTime)
         {
-            var requiredEffectiveTraitAttributes = trait.RequiredAttributes.Select(ta =>
+            switch (trait)
             {
-                var traitAttributeIdentifier = ta.Identifier;
-                var (foundAttribute, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
-                return (traitAttributeIdentifier, foundAttribute, checks);
-            });
-            IEnumerable<(string traitRelationIdentifier, IEnumerable<CompactRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)> requiredEffectiveTraitRelations
-                = new List<(string traitRelationIdentifier, IEnumerable<CompactRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)>();
-            if (trait.RequiredRelations.Count > 0) // TODO: consider removing requiredRelations... they are TOUGH on performance
-            {
-                var allCompactRelatedCIs = await RelationService.GetCompactRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, null, trans, atTime);
-                requiredEffectiveTraitRelations = trait.RequiredRelations.Select(tr =>
-                {
-                    var traitRelationIdentifier = tr.Identifier;
-                    var relatedCIs = allCompactRelatedCIs.Where(rci => rci.PredicateID == tr.RelationTemplate.PredicateID);
-                    var checks = TemplateCheckService.CalculateTemplateErrorsRelation(relatedCIs, tr.RelationTemplate);
-                    return (traitRelationIdentifier, relatedCIs, checks);
-                });
-            }
+                case GenericTrait tt:
+                    var requiredEffectiveTraitAttributes = tt.RequiredAttributes.Select(ta =>
+                    {
+                        var traitAttributeIdentifier = ta.Identifier;
+                        var (foundAttribute, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
+                        return (traitAttributeIdentifier, foundAttribute, checks);
+                    });
+                    IEnumerable<(string traitRelationIdentifier, IEnumerable<CompactRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)> requiredEffectiveTraitRelations
+                        = new List<(string traitRelationIdentifier, IEnumerable<CompactRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)>();
+                    if (tt.RequiredRelations.Count > 0) // TODO: consider removing requiredRelations... they are TOUGH on performance
+                    {
+                        var allCompactRelatedCIs = await RelationService.GetCompactRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, null, trans, atTime);
+                        requiredEffectiveTraitRelations = tt.RequiredRelations.Select(tr =>
+                        {
+                            var traitRelationIdentifier = tr.Identifier;
+                            var relatedCIs = allCompactRelatedCIs.Where(rci => rci.PredicateID == tr.RelationTemplate.PredicateID);
+                            var checks = TemplateCheckService.CalculateTemplateErrorsRelation(relatedCIs, tr.RelationTemplate);
+                            return (traitRelationIdentifier, relatedCIs, checks);
+                        });
+                    }
 
-            var isTraitApplicable = requiredEffectiveTraitAttributes.All(t => t.checks.Errors.IsEmpty())
-                && requiredEffectiveTraitRelations.All(t => t.checks.Errors.IsEmpty());
+                    var isTraitApplicable = requiredEffectiveTraitAttributes.All(t => t.checks.Errors.IsEmpty())
+                        && requiredEffectiveTraitRelations.All(t => t.checks.Errors.IsEmpty());
 
-            if (isTraitApplicable)
-            {
-                // add optional traitAttributes
-                var optionalEffectiveTraitAttributes = trait.OptionalAttributes.Select(ta =>
-                {
-                    var traitAttributeIdentifier = ta.Identifier;
-                    var (foundAttribute, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
-                    return (traitAttributeIdentifier, foundAttribute, checks);
-                }).Where(t => t.checks.Errors.IsEmpty());
+                    if (isTraitApplicable)
+                    {
+                        // add optional traitAttributes
+                        var optionalEffectiveTraitAttributes = tt.OptionalAttributes.Select(ta =>
+                        {
+                            var traitAttributeIdentifier = ta.Identifier;
+                            var (foundAttribute, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
+                            return (traitAttributeIdentifier, foundAttribute, checks);
+                        }).Where(t => t.checks.Errors.IsEmpty());
 
-                var resolvedET = new EffectiveTrait(trait,
-                    requiredEffectiveTraitAttributes.Concat(optionalEffectiveTraitAttributes).ToDictionary(t => t.traitAttributeIdentifier, t => t.foundAttribute!),
-                    requiredEffectiveTraitRelations.ToDictionary(t => t.traitRelationIdentifier, t => t.mergedRelatedCIs));
-                return resolvedET;
-            }
-            else
-            {
-                return null;
+                        var resolvedET = new EffectiveTrait(tt,
+                            requiredEffectiveTraitAttributes.Concat(optionalEffectiveTraitAttributes).ToDictionary(t => t.traitAttributeIdentifier, t => t.foundAttribute!),
+                            requiredEffectiveTraitRelations.ToDictionary(t => t.traitRelationIdentifier, t => t.mergedRelatedCIs));
+                        return resolvedET;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                case TraitEmpty te:
+                    if (ci.MergedAttributes.IsEmpty()) // TODO: check for relations too?
+                        return new EffectiveTrait(te, new Dictionary<string, MergedCIAttribute>(), new Dictionary<string, IEnumerable<CompactRelatedCI>>());
+                    return null;
+                default:
+                    throw new Exception("Unknown trait encountered");
             }
         }
     }

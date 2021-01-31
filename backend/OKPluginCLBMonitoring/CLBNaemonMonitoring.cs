@@ -306,7 +306,7 @@ namespace OKPluginCLBMonitoring
                 this.errorHandler = errorHandler;
             }
 
-            public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, Trait contactgroupTrait, IModelContext trans, TimeThreshold timeThreshold)
+            public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, ITrait contactgroupTrait, IModelContext trans, TimeThreshold timeThreshold)
             {
                 var contactGroupRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(belongsToNaemonContactgroup), layerSetAll, trans, timeThreshold);
                 if (contactGroupRelations.IsEmpty())

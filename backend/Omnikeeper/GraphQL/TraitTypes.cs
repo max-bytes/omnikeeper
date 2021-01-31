@@ -12,7 +12,7 @@ namespace Omnikeeper.GraphQL
             Field("attributes", x => x.TraitAttributes.Values, type: typeof(ListGraphType<MergedCIAttributeType>)); // TODO: don't ignore/drop traitattribute identifier (=key of dict)
         }
     }
-    public class TraitType : ObjectGraphType<Trait>
+    public class TraitType : ObjectGraphType<ITrait>
     {
         public TraitType()
         {

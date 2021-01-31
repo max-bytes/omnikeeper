@@ -388,36 +388,6 @@ namespace Omnikeeper.GraphQL
                     return traits.Values.OrderBy(t => t.Name);
                 });
 
-            // returns counts for each trait within the specified layers
-            // TODO: consider renaming
-            //FieldAsync<ListGraphType<EffectiveTraitListItemType>>("effectiveTraitList",
-            //    arguments: new QueryArguments(new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
-            //    resolve: async context =>
-            //    {
-            //        var traitsProvider = context.RequestServices.GetRequiredService<ITraitsProvider>();
-            //        var effectiveTraitModel = context.RequestServices.GetRequiredService<IEffectiveTraitModel>();
-            //        var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
-            //        var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
-            //        var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
-
-            //        var userContext = (context.UserContext as OmnikeeperUserContext)!;
-            //        userContext.Transaction = modelContextBuilder.BuildImmediate();
-            //        var layerStrings = context.GetArgument<string[]>("layers");
-            //        userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
-            //        userContext.TimeThreshold = TimeThreshold.BuildLatest();
-
-            //        // TODO: HORRIBLE performance!, consider aggressive caching
-            //        var traits = (await traitsProvider.GetActiveTraitSet(userContext.Transaction, userContext.TimeThreshold)).Traits;
-            //        var ret = new List<(string name, int count)>();
-            //        foreach (var trait in traits.Values)
-            //        {
-            //            var ets = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(trait, userContext.LayerSet, new AllCIIDsSelection(), userContext.Transaction, userContext.TimeThreshold);
-            //            var readableETs = ets.Count(et => ciBasedAuthorizationService.CanReadCI(et.Key)); // CI based filtering
-            //            ret.Add((name: trait.Name, count: readableETs));
-            //        }
-            //        return ret;
-            //    });
-
             CreateManage();
         }
     }

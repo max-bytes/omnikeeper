@@ -11,9 +11,9 @@ namespace Omnikeeper.Base.Service
             return TraitSet.Build(FlattenDependentTraits(rts.Traits));
         }
 
-        public static IEnumerable<Trait> FlattenDependentTraits(IDictionary<string, RecursiveTrait> input)
+        public static IEnumerable<GenericTrait> FlattenDependentTraits(IDictionary<string, RecursiveTrait> input)
         {
-            var flattened = new Dictionary<string, Trait>();
+            var flattened = new Dictionary<string, GenericTrait>();
             var unflattened = new Dictionary<string, RecursiveTrait>(input);
             foreach (var kvi in input)
             {
@@ -22,13 +22,13 @@ namespace Omnikeeper.Base.Service
             return flattened.Values;
         }
 
-        private static Trait FlattenDependentTraitsRec(RecursiveTrait trait, IDictionary<string, Trait> flattened, IDictionary<string, RecursiveTrait> unflattened)
+        private static GenericTrait FlattenDependentTraitsRec(RecursiveTrait trait, IDictionary<string, GenericTrait> flattened, IDictionary<string, RecursiveTrait> unflattened)
         {
             if (flattened.ContainsKey(trait.Name)) return flattened[trait.Name];
 
             unflattened.Remove(trait.Name);
 
-            var flattenedDependencies = new List<Trait>();
+            var flattenedDependencies = new List<GenericTrait>();
             foreach (var rts in trait.RequiredTraits)
             {
                 if (flattened.TryGetValue(rts, out var resolvedRT))
@@ -50,7 +50,7 @@ namespace Omnikeeper.Base.Service
             var optionalAttributes = trait.OptionalAttributes.Concat(flattenedDependencies.SelectMany(d => d.OptionalAttributes));
             var requiredRelations = trait.RequiredRelations.Concat(flattenedDependencies.SelectMany(d => d.RequiredRelations));
             var ancestorTraits = trait.RequiredTraits.Concat(flattenedDependencies.SelectMany(d => d.AncestorTraits)).ToHashSet();
-            var flattenedTrait = Trait.Build(trait.Name, trait.Origin, requiredAttributes, optionalAttributes, requiredRelations, ancestorTraits);
+            var flattenedTrait = GenericTrait.Build(trait.Name, trait.Origin, requiredAttributes, optionalAttributes, requiredRelations, ancestorTraits);
 
             flattened.Add(trait.Name, flattenedTrait);
 

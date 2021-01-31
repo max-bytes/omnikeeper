@@ -33,7 +33,7 @@ namespace PerfTests
 
         private IEffectiveTraitModel? effectiveTraitModel;
         private IModelContextBuilder? modelContextBuilder;
-        private Trait? traitHost;
+        private ITrait? traitHost;
         private LayerSet? layerset;
         private TimeThreshold time;
         private ICIIDSelection? selectedCIIDs;
