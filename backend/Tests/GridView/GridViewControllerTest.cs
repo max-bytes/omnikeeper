@@ -123,7 +123,7 @@ namespace Tests.Integration.Controller
 
         public class MockedTraitsProvider : ITraitsProvider
         {
-            public async Task<Trait?> GetActiveTrait(string traitName, IModelContext trans, TimeThreshold timeThreshold)
+            public async Task<ITrait?> GetActiveTrait(string traitName, IModelContext trans, TimeThreshold timeThreshold)
             {
                 var ts = await GetActiveTraitSet(trans, timeThreshold);
 

@@ -6,11 +6,11 @@ namespace Omnikeeper.Base.Entity
 {
     public class EffectiveTrait
     {
-        public readonly Trait UnderlyingTrait;
+        public readonly ITrait UnderlyingTrait;
         public readonly IImmutableDictionary<string, MergedCIAttribute> TraitAttributes;
         public readonly IImmutableDictionary<string, IEnumerable<CompactRelatedCI>> TraitRelations;
 
-        public EffectiveTrait(Trait underlyingTrait,
+        public EffectiveTrait(ITrait underlyingTrait,
             IDictionary<string, MergedCIAttribute> traitAttributes,
             IDictionary<string, IEnumerable<CompactRelatedCI>> traitRelations)
         {

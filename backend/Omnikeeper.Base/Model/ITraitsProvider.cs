@@ -8,6 +8,6 @@ namespace Omnikeeper.Base.Model
     public interface ITraitsProvider
     {
         Task<TraitSet> GetActiveTraitSet(IModelContext trans, TimeThreshold timeThreshold);
-        Task<Trait?> GetActiveTrait(string traitName, IModelContext trans, TimeThreshold timeThreshold);
+        Task<ITrait?> GetActiveTrait(string traitName, IModelContext trans, TimeThreshold timeThreshold);
     }
 }

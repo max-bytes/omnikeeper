@@ -31,17 +31,19 @@ namespace Omnikeeper.Model
             foreach (var clb in computeLayerBrains)
                 clbTraitSets.Add($"CLB-{clb.Name}", clb.DefinedTraits);
 
-            var coreTraitSet = RecursiveTraitSet.Build(new RecursiveTrait("named", new TraitOriginV1(TraitOriginType.Core), new List<TraitAttribute>() {
-                new TraitAttribute("name",
-                    CIAttributeTemplate.BuildFromParams("__name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                )
-            }));
+            var coreRecursiveTraitSet = RecursiveTraitSet.Build(
+                new RecursiveTrait("named", new TraitOriginV1(TraitOriginType.Core), new List<TraitAttribute>() {
+                    new TraitAttribute("name",
+                        CIAttributeTemplate.BuildFromParams("__name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+                    )
+                })
+            );
 
             // TODO, NOTE: this merges non-DB trait sets, that are not historic and DB traits sets that are... what should we do here?
-            var configuredTraitSet = await traitModel.GetRecursiveTraitSet(trans, timeThreshold);
+            var configuredRecursiveTraitSet = await traitModel.GetRecursiveTraitSet(trans, timeThreshold);
             var allTraitSets = new Dictionary<string, RecursiveTraitSet>() {
-                { "core", coreTraitSet },
-                { "configuration", configuredTraitSet }
+                { "core", coreRecursiveTraitSet },
+                { "configuration", configuredRecursiveTraitSet }
             };
             foreach (var kv in clbTraitSets)
                 allTraitSets.Add(kv.Key, kv.Value);
@@ -56,10 +58,13 @@ namespace Omnikeeper.Model
             }
 
             var flattened = RecursiveTraitService.FlattenDependentTraits(ret);
-            return TraitSet.Build(flattened);
+
+            var finalTraits = new List<ITrait>(flattened);
+            finalTraits.Add(new TraitEmpty()); // mix in empty trait
+            return TraitSet.Build(finalTraits);
         }
 
-        public async Task<Trait?> GetActiveTrait(string traitName, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<ITrait?> GetActiveTrait(string traitName, IModelContext trans, TimeThreshold timeThreshold)
         {
             // TODO: can be done more efficiently? here we get ALL traits, just to select a single one... but the flattening is necessary
             var ts = await GetActiveTraitSet(trans, timeThreshold);
