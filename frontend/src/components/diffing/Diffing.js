@@ -3,7 +3,7 @@ import { DiffCISettings, DiffLayerSettings, DiffTimeSettings } from './DiffSetti
 import { DiffArea } from './DiffArea';
 import { queries } from 'graphql/queries'
 import { useLocation } from 'react-router-dom'
-import { Segment, Divider } from 'semantic-ui-react'
+import { Card, Divider } from "antd";
 import { useQuery, useLazyQuery } from '@apollo/client';
 import { Form, Row, Col, Button, Checkbox } from "antd";
 import LoadingOverlay from 'react-loading-overlay'; // TODO: switch to antd spin
@@ -130,7 +130,7 @@ function Diffing(props) {
 
     return (
       <div style={{ width: "100%", padding: "10px" }}>
-        <Segment>
+        <Card style={{ "boxShadow": "0px 0px 5px 0px rgba(0,0,0,0.25)" }}>
           <Row>
             <Col span={4} style={{display: 'flex'}}>
               <LeftLabel>Layers:</LeftLabel>
@@ -180,7 +180,7 @@ function Diffing(props) {
             </div>
           </Col>
         </Row>
-        </Segment>
+        </Card>
         <Row>
           <Col span={24}>
             <LoadingOverlay fadeSpeed={100} active={loadingLeftCI || loadingRightCI} spinner>

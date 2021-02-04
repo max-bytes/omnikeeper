@@ -53,7 +53,7 @@ export function SearchResults(props) {
     return <>
     <h3>Results:</h3>     
         <Spin spinning={props.loading}>
-            <h5>Number of CIs: {props.advancedSearchCIs?.length ?? '?'}</h5>
+            <h4>Number of CIs: {props.advancedSearchCIs?.length ?? '?'}</h4>
             <Results />
         </Spin>
     </>;

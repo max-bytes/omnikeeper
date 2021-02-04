@@ -1,6 +1,5 @@
 import React, {useEffect} from 'react';
 import { queries } from 'graphql/queries'
-import { Dropdown } from 'semantic-ui-react'
 import { useQuery } from '@apollo/client';
 import Layers from 'components/Layers';
 import { format2ShortGuid } from 'utils/shortGuid';
@@ -26,18 +25,16 @@ function ChangesetDropdown(props) {
       return b.text.localeCompare(a.text);
     });
   }
-  return <Dropdown loading={loading}
+  return <Select 
+    loading={loading}
     disabled={loading}
     value={timeSettings?.timeThreshold}
     placeholder='Select Changeset...'
-    onChange={(_, data) => setTimeSettings(ts => ({...ts, timeThreshold: data.value}))}
-    fluid
-    search
-    selection
+    onChange={(value) => setTimeSettings(ts => ({...ts, timeThreshold: value}))}
+    showSearch
     options={list}
   />;
 }
-
 
 export function DiffTimeSettings(props) {
   

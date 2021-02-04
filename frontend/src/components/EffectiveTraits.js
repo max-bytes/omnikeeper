@@ -4,7 +4,7 @@ import _ from 'lodash';
 
 function Attributes(props) {
   return <>
-    <h5 style={{margin: '0px', paddingLeft: '15px'}}>Attributes:</h5>
+    <h4 style={{margin: '0px', paddingLeft: '15px'}}>Attributes:</h4>
     {props.attributes.map(a => (<div key={a.attribute.name} style={{paddingLeft: '30px'}}>
     <div>{a.attribute.name}</div>
     <ReactJson collapsed={0} name={false} src={_.pick(a.attribute.value, ['type', 'isArray', 'values'])} enableClipboard={false} />
