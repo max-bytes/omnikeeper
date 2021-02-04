@@ -1,11 +1,23 @@
-import React from 'react'
-import { Icon, Popup } from 'semantic-ui-react'
-import { ErrorView } from './ErrorView'
+import React from "react";
+import { Popover } from "antd";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
+import { ErrorView } from "./ErrorView";
 
 export function ErrorPopupButton(props) {
-  if (!props.error) return "";
-  return (
-    <Popup className="semantic-popup" position="right center" positionFixed={true} on='click' trigger={<Icon color='red' name='warning circle' />}
-    ><Popup.Content><ErrorView error={props.error} inPopup={true} /></Popup.Content></Popup>
-  )
+    if (!props.error) return "";
+    return (
+        <Popover
+            className="semantic-popup"
+            placement="right"
+            trigger="click"
+            content={<ErrorView error={props.error} inPopup={true} />}
+        >
+            <FontAwesomeIcon
+                color="red"
+                icon={faExclamationCircle}
+                style={{ marginLeft: "0.5rem" }}
+            />
+        </Popover>
+    );
 }

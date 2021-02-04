@@ -1,6 +1,7 @@
 import React from "react";
 import { Button, Radio, Space } from 'antd';
-import { Icon, Popup } from 'semantic-ui-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faWrench, faPlug, faArchive } from '@fortawesome/free-solid-svg-icons';
 
 function EffectiveTraitList(props) {
 
@@ -30,11 +31,11 @@ function EffectiveTraitList(props) {
                 const icon = (function(originType) {
                     switch(originType) {
                     case 'CONFIGURATION':
-                        return 'wrench';
+                        return faWrench;
                     case 'PLUGIN':
-                        return 'plug';
+                        return faPlug;
                     case 'CORE':
-                        return 'archive';
+                        return faArchive;
                     default:
                         return '';
                     }
@@ -43,7 +44,7 @@ function EffectiveTraitList(props) {
                 return (
                     <div key={index} style={styles.traitElement}>
                         <span style={styles.traitsIcon}>
-                            <Icon name={icon} />
+                            <FontAwesomeIcon icon={icon} style={{ marginRight: "0.5rem" }}/>
                         </span>
                         <span style={styles.traitsName}>
                             {effectiveTrait.name}

@@ -3,9 +3,11 @@ import PropTypes from 'prop-types'
 import Attribute from './Attribute';
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import _ from 'lodash';
-import { Accordion, Button, Icon } from 'semantic-ui-react'
+import { Collapse, Button } from "antd";
 import { onAppear, onExit } from '../utils/animation';
 import {useAttributeSegmentsToggler} from 'utils/useAttributeSegmentsToggler'
+
+const { Panel } = Collapse;
 
 function ExplorerAttributeList(props) {
 
@@ -19,6 +21,7 @@ function ExplorerAttributeList(props) {
   const [toggleSegment, isSegmentActive, toggleExpandCollapseAll] = useAttributeSegmentsToggler(_.keys(nestedAttributes));
 
   const attributeAccordionItems = [];
+  const defaultActiveKeys = [];
   _.forEach(nestedAttributes, (na, key) => {
     var sortedAttributes = [...na];
     sortedAttributes.sort((a,b) => {
@@ -27,24 +30,23 @@ function ExplorerAttributeList(props) {
 
     const title = (key === "") ? "__base" : key;
 
-    const ret = (<div key={key}>
-      <Accordion.Title active={isSegmentActive(key)} onClick={(_, { index }) => toggleSegment(index)} index={key}>
-        <Icon name='dropdown' /> {title}
-      </Accordion.Title>
-      <Accordion.Content active={isSegmentActive(key)}>
-        <Flipper flipKey={sortedAttributes.map(a => a.layerStackIDs).join(' ')}>
-          {sortedAttributes.map((a, index) => {
-            var isEditable = props.isEditable && props.visibleAndWritableLayers.some(l => l.id === a.layerStackIDs[a.layerStackIDs.length - 1]);
-            return (<Flipped key={a.attribute.name} flipId={a.attribute.name} onAppear={onAppear} onExit={onExit}>
-              <Attribute visibleLayers={props.visibleLayers} style={{padding: '5px 0px', backgroundColor: ((index % 2 === 1) ? '#00000009' : '#00000000')}} 
-                attribute={a} ciIdentity={props.ciIdentity} isEditable={isEditable} />
-            </Flipped>);
-          })}
-        </Flipper>
-      </Accordion.Content>
-      </div>);
+    const ret = (
+        <Panel header={<div key={key} onClick={() => toggleSegment(key)}>{title}</div>} key={key}>
+          <Flipper flipKey={sortedAttributes.map(a => a.layerStackIDs).join(' ')}>
+            {sortedAttributes.map((a, index) => {
+              var isEditable = props.isEditable && props.visibleAndWritableLayers.some(l => l.id === a.layerStackIDs[a.layerStackIDs.length - 1]);
+              return (<Flipped key={a.attribute.name} flipId={a.attribute.name} onAppear={onAppear} onExit={onExit}>
+                <Attribute visibleLayers={props.visibleLayers} style={{padding: '5px 0px', backgroundColor: ((index % 2 === 1) ? '#00000009' : '#00000000')}} 
+                  attribute={a} ciIdentity={props.ciIdentity} isEditable={isEditable} />
+              </Flipped>);
+            })}
+          </Flipper>
+        </Panel>
+    );
 
-      attributeAccordionItems[key] = ret;
+    attributeAccordionItems[key] = ret;
+    const panelKey = (key === "") ? "0" : key; // AntDesign doesn't accept an empty string as a key for 'Panel', so it sets it as "0" instead -> Set defaultActiveKeys-entry also to "0", to make the 'defaultActiveKey'-prop work.
+    if (isSegmentActive(key)) defaultActiveKeys.push(panelKey);
   });
 
   // sort associative array
@@ -55,17 +57,14 @@ function ExplorerAttributeList(props) {
 
   return (
     <>
-       <div className={"d-flex align-items-end flex-column"} style={{ marginBottom: "0.5rem", position: "absolute", right: 0, top: "-38px" }}>
-            <Button
-                size={"tiny"}
-                onClick={() => toggleExpandCollapseAll()}
-            >
+       <div className={"d-flex align-items-end flex-column"} style={{ position: "absolute", right: 0, top: "-38px" }}>
+            <Button size="small" onClick={() => toggleExpandCollapseAll()}> {/* TODO: Expand/Collapse doesn't work anymore */}
                 Expand/Collapse All
             </Button>
         </div>
-        <Accordion styled exclusive={false} fluid>
+        <Collapse defaultActiveKey={defaultActiveKeys}>
             {_.values(attributeAccordionItemsSorted)}
-        </Accordion>
+        </Collapse>
     </>
   );
 }

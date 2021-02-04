@@ -79,6 +79,7 @@ function LoadingTimeline(props) {
       overflow: 'hidden',
       whiteSpace: 'nowrap',
       textOverflow: 'ellipsis',
+      width: "100%",
     };
     const diffButtonStyle = {
     };
@@ -91,7 +92,7 @@ function LoadingTimeline(props) {
     return (
       <div>
         <div className={"d-flex align-items-center"} style={{minHeight: "24px"}}>
-          <h5 className={"flex-grow-1 my-0"} style={{float: "left"}}>Timeline</h5>
+          <h4 className={"flex-grow-1 my-0"} style={{float: "left"}}>Timeline</h4>
           <Form layout="inline" style={{float: "right"}}>
             {refreshButton}
           </Form>

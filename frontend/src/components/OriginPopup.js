@@ -2,7 +2,9 @@ import React from 'react';
 import { useQuery } from '@apollo/client';
 import PropTypes from 'prop-types'
 import { queries } from '../graphql/queries'
-import { Button, Popup, Icon } from 'semantic-ui-react'
+import { Popover, Button } from 'antd';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSync, faExclamationCircle, faUser, faArchive, faPlug, faCogs, faCalculator } from '@fortawesome/free-solid-svg-icons';
 import UserTypeIcon from './UserTypeIcon';
 import { formatTimestamp } from 'utils/datetime.js';
 
@@ -12,8 +14,8 @@ function InnerPopup(props) {
     variables: { id: props.changesetID }
   });
 
-  if (loading) return (<Icon loading name={'sync'} />);
-  if (error) return (<Icon name={'exclamation circle'} />);
+  if (loading) return (<FontAwesomeIcon icon={faSync} />);
+  if (error) return (<FontAwesomeIcon icon={faExclamationCircle} />);
   if (data) {
     const dls = {display: 'flex', flexWrap: 'nowrap', marginBottom: '0px', whiteSpace: 'nowrap'};
     const dts = {width: '120px', textAlign: 'right', paddingRight: '10px' }
@@ -45,29 +47,30 @@ function OriginPopup(props) {
     const icon = (function(originType) {
       switch(originType) {
         case 'MANUAL':
-          return 'user outline';
+          return faUser;
         case 'INBOUND_INGEST':
-          return 'archive';
+          return faArchive;
         case 'INBOUND_ONLINE':
-          return 'plug';
+          return faPlug;
         case 'COMPUTE_LAYER':
-          return 'cogs';
+          return faCogs;
         case 'GENERATOR':
-          return 'calculator';
+          return faCalculator;
         default:
           return '';
       }
     })(props.originType)
 
     return (
-      <Popup
-        trigger={
-          <Button onClick={e => e.preventDefault()} basic size='mini' compact icon={`${icon}`} />
-        }
+      <Popover
+        placement="topRight"
+        trigger="click"
         content={<InnerPopup changesetID={props.changesetID} originType={props.originType} />}
         on='click'
         position='top right'
-      />
+      >
+        <Button size='small' style={{ marginRight: "5px" }} ><FontAwesomeIcon icon={icon} color={"gray"} /></Button>
+      </Popover>
   );
 }
 

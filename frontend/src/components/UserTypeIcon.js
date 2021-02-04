@@ -1,20 +1,21 @@
 import React from 'react';
 import PropTypes from 'prop-types'
-import { Icon } from 'semantic-ui-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCog, faUser, faQuestion } from '@fortawesome/free-solid-svg-icons';
 
 function UserTypeIcon(props) {
   var iconName = (function(userType) {
     switch(userType) {
       case 'ROBOT':
-        return 'cog';
+        return faCog;
       case 'HUMAN':
-        return 'user';
+        return faUser;
       default:
-        return 'question';
+        return faQuestion;
     }
   })(props.userType);
 
-  return <Icon style={props.style} fitted name={iconName} />;
+  return <FontAwesomeIcon style={props.style} icon={iconName} />;
 }
 
 UserTypeIcon.propTypes = {

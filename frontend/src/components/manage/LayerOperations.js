@@ -1,8 +1,8 @@
 import React, {useState} from 'react';
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation } from '@apollo/client';
-import { Icon } from 'semantic-ui-react';
-import { queries } from '../../graphql/queries'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';import { queries } from '../../graphql/queries'
 import { mutations } from '../../graphql/mutations'
 import { Button } from "antd";
 import 'ag-grid-community/dist/styles/ag-grid.css';
@@ -34,7 +34,7 @@ export default function LayerOperations(props) {
   if (data) {
     return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
       <h2>Layer Operations</h2>
-      <div style={{marginBottom: '10px'}}><Link to="/manage/layers"><Icon name="angle left" fitted /> Back</Link></div>
+      <div style={{marginBottom: '10px'}}><Link to="/manage/layers"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
         <div>Statistics for layer: {data.layerStatistics.layer.name}</div>
         <div>Note: showing statistics for stored data only, not showing data from online inbound adapters or generators</div>
         <div>

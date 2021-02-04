@@ -11,7 +11,7 @@ function Explorer() {
     <div style={{position: 'relative', height: '100%'}}>
       <div className="left-bar">
         <div className={"layers"}>
-          <h5>Layers</h5>
+          <h4>Layers</h4>
           <ExplorerLayers />
         </div>
         <div className={"timeline"}>

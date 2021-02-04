@@ -95,7 +95,7 @@ function DiffAttributeList(props) {
                 Expand/Collapse All
             </Button>
         </div> */}
-        <Collapse defaultActiveKey={defaultActiveKeys} bordered={false} >
+        <Collapse defaultActiveKey={defaultActiveKeys} style={{ marginTop: "10px" }}>
             {_.values(attributeAccordionItemsSorted)}
         </Collapse>
     </>
