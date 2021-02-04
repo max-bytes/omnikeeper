@@ -28,7 +28,7 @@ export default function ManageBaseConfiguration() {
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Base Configuration</h2>
     <div><Link to="/manage"><Icon name="angle left" fitted /> Back</Link></div>
-    <Form style={{margin:'10px 0px'}} onSubmit={e => {
+    <Form style={{margin:'10px 0px'}} onFinish={e => {
             setBaseConfiguration({ variables: { baseConfiguration: config } }).then(d => {
               var prettyStr = JSON.stringify(JSON.parse(d.data.setBaseConfiguration),null,2);  
               setConfig(prettyStr);
@@ -50,7 +50,7 @@ export default function ManageBaseConfiguration() {
                   showPrintMargin: false
               }}
           />
-      <Button primary type="submit" disabled={loading || hasErrors || setBaseConfigurationLoading}>Save</Button>
+      <Button type="primary" htmlType="submit" disabled={loading || hasErrors || setBaseConfigurationLoading}>Save</Button>
       <ErrorPopupButton error={setBaseConfigurationError} />
     </Form>
     
