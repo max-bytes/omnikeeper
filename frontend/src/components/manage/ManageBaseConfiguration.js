@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link  } from 'react-router-dom'
-import { Icon, Button } from 'semantic-ui-react';
-import { Form } from 'antd';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { Form, Button } from 'antd';
 import { queries } from 'graphql/queries'
 import { mutations } from 'graphql/mutations'
 import 'ace-builds';
@@ -27,7 +28,7 @@ export default function ManageBaseConfiguration() {
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Base Configuration</h2>
-    <div><Link to="/manage"><Icon name="angle left" fitted /> Back</Link></div>
+    <div><Link to="/manage"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
     <Form style={{margin:'10px 0px'}} onFinish={e => {
             setBaseConfiguration({ variables: { baseConfiguration: config } }).then(d => {
               var prettyStr = JSON.stringify(JSON.parse(d.data.setBaseConfiguration),null,2);  

@@ -14,7 +14,7 @@ function Explorer() {
           <Timeline ciid={ciid}></Timeline>
         </div>
         <div className={"layers"}>
-          <h5>Layers</h5>
+          <h4>Layers</h4>
           <ExplorerLayers />
         </div>
       </div>

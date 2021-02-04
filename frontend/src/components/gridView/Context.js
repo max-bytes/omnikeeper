@@ -266,6 +266,10 @@ export function Context(props) {
 
     // CREATE / UPDATE / DELETE on pressing 'save'
     async function save() {
+        // important to re-create FeedbackMsg, after it has been closed!
+        setSwaggerMsg("");
+        setSwaggerErrorJson("");
+
         let rowDataDiffs = [];
 
         await gridApi.forEachNode(async (node) => {
@@ -323,6 +327,7 @@ export function Context(props) {
                 // update rows
                 gridApi.applyTransaction({ update: rowDataChangeResults });
 
+                setRowDataSnapshot(_.cloneDeep(rowData)); // update rowData-snapshot
                 setSwaggerErrorJson(false);
                 setSwaggerMsg("Saved.");
             }
@@ -334,6 +339,10 @@ export function Context(props) {
 
     // READ / refresh data
     async function refreshData() {
+        // important to re-create FeedbackMsg, after it has been closed!
+        setSwaggerMsg("");
+        setSwaggerErrorJson("");
+
         // Tell AgGrid to reset columnDefs and rowData // important!
         if (gridApi) {
             gridApi.setColumnDefs(null);

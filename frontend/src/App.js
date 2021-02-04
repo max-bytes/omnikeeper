@@ -2,10 +2,10 @@ import React from 'react';
 import './App.css';
 import Explorer from './components/Explorer';
 import Diffing from './components/diffing/Diffing';
-import 'semantic-ui-css/semantic.min.css'
 import 'antd/dist/antd.css';
 import Keycloak from 'keycloak-js'
-import { Icon } from 'semantic-ui-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faExchangeAlt, faPlus, faSearch, faWrench, faTh } from '@fortawesome/free-solid-svg-icons';
 import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/AddNewCI'
@@ -75,11 +75,11 @@ function App() {
             <Route
                 render={({ location, history }) =>  (
                         <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{ position: "relative", display: "flex", justifyContent: "flex-end", borderBottom: "none" }}>
-                            <Menu.Item key="manage"><Link to="/manage"><Icon name="wrench" /> Manage</Link></Menu.Item>
-                            <Menu.Item key="createCI"><Link to="/createCI"><Icon name="plus" /> Create New CI</Link></Menu.Item>
-                            <Menu.Item key="explorer"><Link to="/explorer"><Icon name="search" /> Search CI</Link></Menu.Item>
-                            <Menu.Item key="diffing"><Link to="/diffing"><Icon name="exchange" /> Diffing</Link></Menu.Item>
-                            <Menu.Item key="grid-view" style={{ marginRight: "60px" }}><Link to="/grid-view"><Icon name="grid layout" /> Grid View</Link></Menu.Item>
+                            <Menu.Item key="manage"><Link to="/manage"><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/> Manage</Link></Menu.Item>
+                            <Menu.Item key="createCI"><Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link></Menu.Item>
+                            <Menu.Item key="explorer"><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{ marginRight: "0.5rem" }}/> Search CI</Link></Menu.Item>
+                            <Menu.Item key="diffing"><Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link></Menu.Item>
+                            <Menu.Item key="grid-view" style={{ marginRight: "60px" }}><Link to="/grid-view"><FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/> Grid View</Link></Menu.Item>
                             <Menu.Divider/>
                             <UserBar disabled={true} style={{ cursor: "unset" }} />
                         </Menu>

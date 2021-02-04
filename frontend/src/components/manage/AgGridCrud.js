@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { Button } from 'semantic-ui-react';
+import { Button } from 'antd';
 import { ErrorModalCellRenderer } from '../ErrorModalCellRenderer';
 import { RowStateCellRenderer } from '../RowStateCellRenderer';
 import { LayerColorCellRenderer } from '../LayerColorCellRenderer';
@@ -161,11 +161,18 @@ export default function AgGridCrud(props) {
   }
 
   return <>
-    <div style={{marginBottom: '10px'}}>
-      <Button primary onClick={e => save()} disabled={!hasEditedOrDeletedRowData} loading={isSaving} icon='save' content='Save' />
-      <Button positive icon='plus' onClick={e => addRow()} content='Add Row' />
-      <Button onClick={e => props.onRefresh()} loading={props.loading} icon='refresh' content={((!hasEditedOrDeletedRowData) ? 'Refresh' :  'Reset')} />
+    <div className="button-toolbar">
+        <div className="button-toolbar-row" style={{ display: "flex", justifyContent: "space-between", marginTop: "10px", marginBottom: "10px" }}>
+            <div style={{ display: "flex" }}>
+                <Button style={{ display: "flex" }} onClick={e => addRow()}>Add Row</Button>
+            </div>
+            <div style={{ display: "flex" }}>
+                <Button onClick={e => save()} disabled={!hasEditedOrDeletedRowData} loading={isSaving}>Save</Button>
+                <Button onClick={e => props.onRefresh()} loading={props.loading}>{((!hasEditedOrDeletedRowData) ? 'Refresh' :  'Reset')}</Button>
+            </div>
+        </div>
     </div>
+
     <div className="ag-theme-balham" style={{ flexGrow: 1, width: '100%' }}>
       <AgGridReact
         frameworkComponents={{

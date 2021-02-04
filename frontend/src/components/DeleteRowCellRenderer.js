@@ -1,5 +1,7 @@
 import React from 'react'
-import { Button } from 'semantic-ui-react'
+import { Button } from 'antd';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMinus } from '@fortawesome/free-solid-svg-icons';
 
 export default function DeleteRowCellRenderer(props) {
 
@@ -8,5 +10,5 @@ export default function DeleteRowCellRenderer(props) {
     props.flipDelete(props);
   }
 
-  return <Button compact negative={!isCurrentlyBeingDeleted} icon='minus' content={(isCurrentlyBeingDeleted) ? 'Undelete' : 'Delete'} onClick={e => flip()}></Button>;
+  return <Button danger={!isCurrentlyBeingDeleted} onClick={e => flip()}><FontAwesomeIcon icon={faMinus} style={{marginRight: "10px"}}/>{(isCurrentlyBeingDeleted) ? 'Undelete' : 'Delete'}</Button>;
 }
