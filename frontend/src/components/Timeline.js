@@ -15,6 +15,7 @@ import { useExplorerLayers } from 'utils/layers';
 import { useSelectedTime } from 'utils/useSelectedTime';
 import { Link } from 'react-router-dom';
 import { buildDiffingURLQueryBetweenChangesets } from 'components/diffing/Diffing'
+import _ from "lodash"
 
 function Timeline(props) {
   const { data: layers } = useExplorerLayers();
@@ -116,13 +117,20 @@ function LoadingTimeline(props) {
               </div>);
           })}
           <Form layout="inline" style={{justifyContent: "center"}}>
-            <Button size='small' onClick={() => {
+            {!(limit > _.size(changesets)) && <Button size='small' onClick={() => {
               setLimit(l => l + 10);
-            }}><FontAwesomeIcon icon={loadingChangesets ? faSync : faArrowDown} spin={loadingChangesets} color={"grey"} style={{ padding: "2px"}} /></Button>
+            }}><FontAwesomeIcon icon={loadingChangesets ? faSync : faArrowDown} spin={loadingChangesets} color={"grey"} style={{ padding: "2px"}} /></Button>}
           </Form>
         </LoadingOverlay>
       </div>);
-  } else if (loadingChangesets) return <p>Loading...</p>;
+  } else if (loadingChangesets) return ( 
+        <div style={{ height: (limit-8)*24+1 + "px" }}>  {/* setting the height to a specific, limit-dependent value ensures, that it doesn't 'jump around' while loading */}
+            <div className={"d-flex align-items-center"} style={{minHeight: "24px"}}>
+                <h5 className={"flex-grow-1 my-0"} style={{float: "left"}}>Timeline</h5>
+            </div>
+            <p>Loading...</p>
+        </div>
+  )
   else if (error) return <ErrorView error={error}/>;
   else return <p>?</p>;
 }
