@@ -1,14 +1,31 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Collapse, Alert } from "antd";
 import AceEditor from "react-ace";
 
 const { Panel } = Collapse;
 
 function FeedbackMsg(props) {
+
+    const [show, setShow] = useState(true);
+    useEffect(() => {
+        if (!props.swaggerErrorJson) {
+            const timeId = setTimeout(() => {
+                setShow(false);
+            }, 3000);
+
+            return () => {
+                clearTimeout(timeId);
+            };
+        }
+    }, [props.swaggerErrorJson]);
+
+    // INFO: Error messages do not close automatically
+    if (!show) return null;
+
     return (
         props.swaggerErrorJson ?
             <Collapse ghost >
-                <Panel header={<Alert {...props.alertProps} message={props.alertProps.message + " (click to show details)"} />} showArrow={false} key="swaggerErrorJson">
+                <Panel header={<Alert {...props.alertProps} message={props.alertProps.message + " (click to show details)"} closable onClose={() => setShow(false)} />} showArrow={false} key="swaggerErrorJson">
                     {/* <pre style={{ heisght: "500px"}}>{props.swaggerErrorJson}</pre> */}
                     <AceEditor
                         value={props.swaggerErrorJson}
@@ -27,7 +44,7 @@ function FeedbackMsg(props) {
             </Collapse>
         :
             <div style={{ padding: "12px" }}>
-                <Alert {...props.alertProps} />
+                <Alert {...props.alertProps} closable onClose={() => setShow(false)} />
             </div>
     );
 }
