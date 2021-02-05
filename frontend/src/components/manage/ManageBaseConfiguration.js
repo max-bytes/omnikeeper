@@ -40,8 +40,8 @@ export default function ManageBaseConfiguration() {
                 }}
                 initialValues={JSON.parse(config)}
             >
-                <Form.Item name="$type" label="$type" rules={[{ required: true }]}>
-                    <Input disabled />
+                <Form.Item name="$type" label="$type" rules={[{ required: true }]} hidden>
+                    <Input />
                 </Form.Item>
                 <Form.Item name="ArchiveChangesetThreshold" label="Archive Changeset Threshold" rules={[{ required: true }]}>
                     <Input />
@@ -58,8 +58,10 @@ export default function ManageBaseConfiguration() {
                 <Form.Item name="ArchiveOldDataRunnerInterval" label="Archive Old Data Runner Interval" rules={[{ required: true }]}>
                     <Input />
                 </Form.Item>
-            <Button type="primary" htmlType="submit" disabled={loading || setBaseConfigurationLoading}>Save</Button>
-            <ErrorPopupButton error={setBaseConfigurationError} />
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                    <Button type="primary" htmlType="submit" disabled={loading || setBaseConfigurationLoading} style={{ width: "100%"}}>Save</Button>
+                    <ErrorPopupButton error={setBaseConfigurationError} />
+                </div>
             </Form>
         </div>
     : "Loading..." }
