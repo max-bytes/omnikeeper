@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link  } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
-import { Form, Button } from 'antd';
+import { Form, Input, Button } from 'antd';
 import { queries } from 'graphql/queries'
 import { mutations } from 'graphql/mutations'
 import 'ace-builds';
 import { useQuery, useMutation } from '@apollo/client';
 import 'ace-builds/webpack-resolver';
-import AceEditor from "react-ace";
 import { ErrorPopupButton } from "../ErrorPopupButton";
 
 import "ace-builds/src-noconflict/mode-json";
@@ -17,8 +16,7 @@ export default function ManageBaseConfiguration() {
 
   const { data, loading } = useQuery(queries.BaseConfiguration, {fetchPolicy: 'network-only'});
   const [setBaseConfiguration, { loading: setBaseConfigurationLoading, error: setBaseConfigurationError }] = useMutation(mutations.SET_BASECONFIGURATION);
-  var [hasErrors, setHasErrors] = useState(false);
-  const [config, setConfig] = useState("Loading");
+  const [config, setConfig] = useState(null);
   useEffect(() => {
     if (!!data) {
       var prettyStr = JSON.stringify(JSON.parse(data.baseConfiguration),null,2);  
@@ -29,31 +27,41 @@ export default function ManageBaseConfiguration() {
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Base Configuration</h2>
     <div><Link to="/manage"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
-    <Form style={{margin:'10px 0px'}} onFinish={e => {
-            setBaseConfiguration({ variables: { baseConfiguration: config } }).then(d => {
-              var prettyStr = JSON.stringify(JSON.parse(d.data.setBaseConfiguration),null,2);  
-              setConfig(prettyStr);
-            });
-          }}>
-      <AceEditor
-              value={config}
-              onValidate={a => {
-                  const e = a.filter(a => a.type === 'error').length > 0;
-                  setHasErrors(e);
-              }}
-              mode="json"
-              theme="textmate"
-              onChange={newValue => setConfig(newValue)}
-              name="Base Configuration Editor"
-              width={'unset'}
-              style={{marginBottom: '10px', flexGrow: 1, border: "1px solid #ced4da", borderRadius: ".25rem"}}
-              setOptions={{ 
-                  showPrintMargin: false
-              }}
-          />
-      <Button type="primary" htmlType="submit" disabled={loading || hasErrors || setBaseConfigurationLoading}>Save</Button>
-      <ErrorPopupButton error={setBaseConfigurationError} />
-    </Form>
-    
+    { config ?
+        <div style={{ display: 'flex', justifyContent: 'center', flexGrow: 1 }}>
+            <Form 
+                labelCol={{ span: "8" }}
+                style={{ display: 'flex', flexDirection: 'column', flexBasis: '1000px', margin:'10px 0px' }}
+                onFinish={e => {
+                    setBaseConfiguration({ variables: { baseConfiguration: JSON.stringify(e) } }).then(d => {
+                        var prettyStr = JSON.stringify(JSON.parse(d.data.setBaseConfiguration),null,2);
+                        setConfig(prettyStr);
+                    });
+                }}
+                initialValues={JSON.parse(config)}
+            >
+                <Form.Item name="$type" label="$type" rules={[{ required: true }]}>
+                    <Input disabled />
+                </Form.Item>
+                <Form.Item name="ArchiveChangesetThreshold" label="Archive Changeset Threshold" rules={[{ required: true }]}>
+                    <Input />
+                </Form.Item>
+                <Form.Item name="CLBRunnerInterval" label="CLB Runner Interval" rules={[{ required: true }]}>
+                    <Input />
+                </Form.Item>
+                <Form.Item name="MarkedForDeletionRunnerInterval" label="Marked For Deletion Runner Interval" rules={[{ required: true }]}>
+                    <Input />
+                </Form.Item>
+                <Form.Item name="ExternalIDManagerRunnerInterval" label="External ID Manager Runner Interval" rules={[{ required: true }]}>
+                    <Input />
+                </Form.Item>
+                <Form.Item name="ArchiveOldDataRunnerInterval" label="Archive Old Data Runner Interval" rules={[{ required: true }]}>
+                    <Input />
+                </Form.Item>
+            <Button type="primary" htmlType="submit" disabled={loading || setBaseConfigurationLoading}>Save</Button>
+            <ErrorPopupButton error={setBaseConfigurationError} />
+            </Form>
+        </div>
+    : "Loading..." }
   </div>;
 }
