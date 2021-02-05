@@ -36,7 +36,7 @@ export default function ManageBaseConfiguration() {
                     setBaseConfiguration({ variables: { baseConfiguration: JSON.stringify(e) } }).then(d => {
                         var prettyStr = JSON.stringify(JSON.parse(d.data.setBaseConfiguration),null,2);
                         setConfig(prettyStr);
-                    });
+                    }).catch(e => {});
                 }}
                 initialValues={JSON.parse(config)}
             >
