@@ -18,10 +18,7 @@ export default function ManageBaseConfiguration() {
   const [setBaseConfiguration, { loading: setBaseConfigurationLoading, error: setBaseConfigurationError }] = useMutation(mutations.SET_BASECONFIGURATION);
   const [config, setConfig] = useState(null);
   useEffect(() => {
-    if (!!data) {
-      var prettyStr = JSON.stringify(JSON.parse(data.baseConfiguration),null,2);  
-      setConfig(prettyStr);
-    }
+    if (!!data) setConfig(data.baseConfiguration);
   }, [data]);
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
@@ -34,8 +31,7 @@ export default function ManageBaseConfiguration() {
                 style={{ display: 'flex', flexDirection: 'column', flexBasis: '1000px', margin:'10px 0px' }}
                 onFinish={e => {
                     setBaseConfiguration({ variables: { baseConfiguration: JSON.stringify(e) } }).then(d => {
-                        var prettyStr = JSON.stringify(JSON.parse(d.data.setBaseConfiguration),null,2);
-                        setConfig(prettyStr);
+                        setConfig(data.baseConfiguration);
                     }).catch(e => {});
                 }}
                 initialValues={JSON.parse(config)}
