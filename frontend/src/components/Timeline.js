@@ -34,9 +34,15 @@ function LoadingTimeline(props) {
   var to = "2022-01-01 00:00:00";
   var [limit, setLimit] = useState(10);
 
-  const { loading: loadingChangesets, error, data, refetch: refetchChangesets } = useQuery(queries.Changesets, {
+  const { loading: loadingChangesets, error, data: resultData, refetch: refetchChangesets } = useQuery(queries.Changesets, {
     variables: { from: from, to: to, ciids: [ciid], layers: props.layers.map(l => l.name), limit: limit } // TODO
   });
+  const [data, setData] = useState(undefined);
+  React.useEffect(() => {
+    if (resultData !== undefined) {
+      setData(resultData);
+    }
+  }, [resultData]);
 
   React.useEffect(() => { if (selectedTime.refreshNonceTimeline) refetchChangesets({fetchPolicy: 'network-only'}); }, [selectedTime, refetchChangesets]);
 
@@ -125,7 +131,7 @@ function LoadingTimeline(props) {
         </LoadingOverlay>
       </div>);
   } else if (loadingChangesets) return ( 
-        <div style={{ height: (limit-8)*24+1 + "px" }}>  {/* setting the height to a specific, limit-dependent value ensures, that it doesn't 'jump around' while loading */}
+        <div>
             <div className={"d-flex align-items-center"} style={{minHeight: "24px"}}>
                 <h5 className={"flex-grow-1 my-0"} style={{float: "left"}}>Timeline</h5>
             </div>
