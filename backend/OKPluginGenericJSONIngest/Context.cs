@@ -1,9 +1,6 @@
 ﻿using OKPluginGenericJSONIngest.Extract;
 using OKPluginGenericJSONIngest.Load;
 using OKPluginGenericJSONIngest.Transform;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace OKPluginGenericJSONIngest
 {
