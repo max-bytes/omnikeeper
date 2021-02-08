@@ -11,6 +11,7 @@ using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Formatter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -288,7 +289,11 @@ namespace Omnikeeper.Startup
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers();
+                var cv = endpoints.MapControllers();
+                // add AllowAnonymous Attribute when debugAllowAll is true
+                if (Configuration.GetSection("Authentication").GetValue("debugAllowAll", false))
+                    cv.WithMetadata(new AllowAnonymousAttribute());
+
                 // odata
                 var builder = new ODataConventionModelBuilder(app.ApplicationServices);
                 builder.EntitySet<Omnikeeper.Controllers.OData.AttributeDTO>("Attributes");
