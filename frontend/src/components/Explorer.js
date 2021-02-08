@@ -10,12 +10,12 @@ function Explorer() {
   return (
     <div style={{position: 'relative', height: '100%'}}>
       <div className="left-bar">
+        <div className={"timeline"}>
+          <Timeline ciid={ciid}></Timeline>
+        </div>
         <div className={"layers"}>
           <h4>Layers</h4>
           <ExplorerLayers />
-        </div>
-        <div className={"timeline"}>
-          <Timeline ciid={ciid}></Timeline>
         </div>
       </div>
       <div className="center">
