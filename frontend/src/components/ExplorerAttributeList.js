@@ -21,7 +21,7 @@ function ExplorerAttributeList(props) {
   const [toggleSegment, isSegmentActive, toggleExpandCollapseAll] = useAttributeSegmentsToggler(_.keys(nestedAttributes));
 
   const attributeAccordionItems = [];
-  const defaultActiveKeys = [];
+  const activeKeys = [];
   _.forEach(nestedAttributes, (na, key) => {
     var sortedAttributes = [...na];
     sortedAttributes.sort((a,b) => {
@@ -45,8 +45,8 @@ function ExplorerAttributeList(props) {
     );
 
     attributeAccordionItems[key] = ret;
-    const panelKey = (key === "") ? "0" : key; // AntDesign doesn't accept an empty string as a key for 'Panel', so it sets it as "0" instead -> Set defaultActiveKeys-entry also to "0", to make the 'defaultActiveKey'-prop work.
-    if (isSegmentActive(key)) defaultActiveKeys.push(panelKey);
+    const panelKey = (key === "") ? "0" : key; // AntDesign doesn't accept an empty string as a key for 'Panel', so it sets it as "0" instead -> Set activeKeys-entry also to "0", to make the 'activeKey'-prop work.
+    if (isSegmentActive(key)) activeKeys.push(panelKey);
   });
 
   // sort associative array
@@ -58,11 +58,11 @@ function ExplorerAttributeList(props) {
   return (
     <>
        <div className={"d-flex align-items-end flex-column"} style={{ position: "absolute", right: 0, top: "-38px" }}>
-            <Button size="small" onClick={() => toggleExpandCollapseAll()}> {/* TODO: Expand/Collapse doesn't work anymore */}
+            <Button size="small" onClick={() => toggleExpandCollapseAll()}>
                 Expand/Collapse All
             </Button>
         </div>
-        <Collapse defaultActiveKey={defaultActiveKeys}>
+        <Collapse activeKey={activeKeys}>
             {_.values(attributeAccordionItemsSorted)}
         </Collapse>
     </>

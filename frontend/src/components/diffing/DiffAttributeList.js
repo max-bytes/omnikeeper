@@ -26,7 +26,7 @@ function DiffAttributeList(props) {
     return EmptyLabel();
 
   const attributeAccordionItems = [];
-  const defaultActiveKeys = [];
+  const activeKeys = [];
   _.forEach(nestedAttributes, (na, key) => {
 
     var sortedAttributes = [...na];
@@ -75,8 +75,8 @@ function DiffAttributeList(props) {
     );
 
     attributeAccordionItems[key] = ret;
-    const panelKey = (key === "") ? "0" : key; // AntDesign doesn't accept an empty string as a key for 'Panel', so it sets it as "0" instead -> Set defaultActiveKeys-entry also to "0", to make the 'defaultActiveKey'-prop work.
-    if (isSegmentActive(key)) defaultActiveKeys.push(panelKey);
+    const panelKey = (key === "") ? "0" : key; // AntDesign doesn't accept an empty string as a key for 'Panel', so it sets it as "0" instead -> Set activeKeys-entry also to "0", to make the 'activeKey'-prop work.
+    if (isSegmentActive(key)) activeKeys.push(panelKey);
   });
 
   // sort associative array
@@ -86,19 +86,9 @@ function DiffAttributeList(props) {
   })
 
   return (
-    <>
-       {/* <div className={"d-flex align-items-end flex-column"} style={{ marginBottom: "0.5rem", position: "absolute", right: 0, top: "-38px" }}>
-            <Button
-                size={"tiny"}
-                onClick={() => toggleExpandCollapseAll()}
-            >
-                Expand/Collapse All
-            </Button>
-        </div> */}
-        <Collapse defaultActiveKey={defaultActiveKeys} style={{ marginTop: "10px" }}>
-            {_.values(attributeAccordionItemsSorted)}
-        </Collapse>
-    </>
+    <Collapse activeKey={activeKeys} style={{ marginTop: "10px" }}>
+        {_.values(attributeAccordionItemsSorted)}
+    </Collapse>
   );
 }
 
