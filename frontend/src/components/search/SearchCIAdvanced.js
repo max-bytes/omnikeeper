@@ -86,12 +86,8 @@ function SearchCIAdvanced(props) {
                 {/* left column - search */}
                 <div style={styles.searchRow}>
                     <div style={styles.searchRowEntry}>
-                        <h4>Layers</h4>
-                        <ExplorerLayers />
-                    </div>
-                    <div style={styles.searchRowEntry}>
                         <h4>Name or CI-ID</h4>
-                        <Form.Item initialValue={searchString ?? ""}>
+                        <Form.Item initialValue={searchString ?? ""} style={{ marginBottom: 0 }}>
                             <Input
                                 style={styles.searchField}
                                 icon="search"
@@ -105,6 +101,10 @@ function SearchCIAdvanced(props) {
                         {effectiveTraits && 
                             <EffectiveTraitList effectiveTraitList={effectiveTraits.activeTraits} checked={checkedTraits} setChecked={setCheckedTraits} />
                         }
+                    </div>
+                    <div style={styles.searchRowEntry}>
+                        <h4>Layers</h4>
+                        <ExplorerLayers />
                     </div>
                 </div>
                 {/* right column - results */}

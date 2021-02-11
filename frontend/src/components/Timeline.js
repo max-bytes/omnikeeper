@@ -15,6 +15,7 @@ import { useExplorerLayers } from 'utils/layers';
 import { useSelectedTime } from 'utils/useSelectedTime';
 import { Link } from 'react-router-dom';
 import { buildDiffingURLQueryBetweenChangesets } from 'components/diffing/Diffing'
+import _ from "lodash"
 
 function Timeline(props) {
   const { data: layers } = useExplorerLayers();
@@ -33,9 +34,10 @@ function LoadingTimeline(props) {
   var to = "2022-01-01 00:00:00";
   var [limit, setLimit] = useState(10);
 
-  const { loading: loadingChangesets, error, data, refetch: refetchChangesets } = useQuery(queries.Changesets, {
+  const { loading: loadingChangesets, error, data: resultData, previousData, refetch: refetchChangesets } = useQuery(queries.Changesets, {
     variables: { from: from, to: to, ciids: [ciid], layers: props.layers.map(l => l.name), limit: limit } // TODO
   });
+  const data = resultData ?? previousData;
 
   React.useEffect(() => { if (selectedTime.refreshNonceTimeline) refetchChangesets({fetchPolicy: 'network-only'}); }, [selectedTime, refetchChangesets]);
 
@@ -43,9 +45,9 @@ function LoadingTimeline(props) {
   
   var { data: layerSettingsData } = useQuery(queries.LayerSettings);
 
-  if (data && layerSettingsData) {
-    var changesets = [...data.changesets]; // TODO: why do we do a copy here?
+  if (error) return <ErrorView error={error}/>;
 
+    var changesets = data ? [...data.changesets] : []; // TODO: why do we do a copy here?
     let activeChangeset = (selectedTime.isLatest) ? changesets.find(e => true) : changesets.find(cs => cs.timestamp === selectedTime.time);
 
     if (!activeChangeset) {
@@ -97,35 +99,34 @@ function LoadingTimeline(props) {
             {refreshButton}
           </Form>
         </div>
-        <LoadingOverlay active={loadingChangesets} spinner>
-            
-          {changesets.map((cs) => {
-            const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.displayName}</span> : '';
-            const label = <span style={((activeChangeset === cs) ? {fontWeight: 'bold'} : {})}>{formatTimestamp(cs.timestamp)} - {userLabel}</span>;
-            if (activeChangeset === cs) {
-              return (<Button style={buttonStyle} type="link" size="small" disabled key={cs.id}>{label}</Button>);
-            }
-            const isLatest = latestChangeset === cs;
-            const diffQuery = buildDiffingURLQueryBetweenChangesets(layerSettingsData.layerSettings, ciid, (latestChangeset === activeChangeset) ? null : activeChangeset.timestamp, (isLatest) ? null : cs.timestamp);
-            return (<div style={lineStyle} key={cs.id}>
-                <Button style={buttonStyle} type="link" size="small" 
-                onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: (isLatest) ? null : cs.timestamp, isLatest: isLatest }})}>
-                  {label}
-                </Button>
-                <Link style={diffButtonStyle} 
-                  to={`/diffing?${diffQuery}`}><FontAwesomeIcon icon={faExchangeAlt} /></Link>
-              </div>);
-          })}
-          <Form layout="inline" style={{justifyContent: "center"}}>
-            <Button size='small' onClick={() => {
-              setLimit(l => l + 10);
-            }}><FontAwesomeIcon icon={loadingChangesets ? faSync : faArrowDown} spin={loadingChangesets} color={"grey"} style={{ padding: "2px"}} /></Button>
-          </Form>
-        </LoadingOverlay>
+        <div style={{ minHeight: "60px" }}>
+            <LoadingOverlay active={loadingChangesets} spinner>
+                
+            {changesets && changesets.map((cs) => {
+                const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.displayName}</span> : '';
+                const label = <span style={((activeChangeset === cs) ? {fontWeight: 'bold'} : {})}>{formatTimestamp(cs.timestamp)} - {userLabel}</span>;
+                if (activeChangeset === cs) {
+                return (<Button style={buttonStyle} type="link" size="small" disabled key={cs.id}>{label}</Button>);
+                }
+                const isLatest = latestChangeset === cs;
+                const diffQuery = buildDiffingURLQueryBetweenChangesets(layerSettingsData.layerSettings, ciid, (latestChangeset === activeChangeset) ? null : activeChangeset.timestamp, (isLatest) ? null : cs.timestamp);
+                return (<div style={lineStyle} key={cs.id}>
+                    <Button style={buttonStyle} type="link" size="small"
+                    onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: (isLatest) ? null : cs.timestamp, isLatest: isLatest }})}>
+                    {label}
+                    </Button>
+                    <Link style={diffButtonStyle}
+                    to={`/diffing?${diffQuery}`}><FontAwesomeIcon icon={faExchangeAlt} /></Link>
+                </div>);
+            })}
+            <Form layout="inline" style={{justifyContent: "center"}}>
+                {!(limit > _.size(changesets)) && <Button size='small' onClick={() => {
+                setLimit(l => l + 10);
+                }}><FontAwesomeIcon icon={loadingChangesets ? faSync : faArrowDown} spin={loadingChangesets} color={"grey"} style={{ padding: "2px"}} /></Button>}
+            </Form>
+            </LoadingOverlay>
+        </div>
       </div>);
-  } else if (loadingChangesets) return <p>Loading...</p>;
-  else if (error) return <ErrorView error={error}/>;
-  else return <p>?</p>;
 }
 
 Timeline.propTypes = {
