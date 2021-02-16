@@ -56,7 +56,8 @@ namespace Omnikeeper.Controllers.Ingest
         {
             try
             {
-                var ctx = contextModel.GetContextByName(context);
+                using var mc = modelContextBuilder.BuildImmediate();
+                var ctx = await contextModel.GetContextByName(context, mc);
                 if (ctx == null)
                     return BadRequest($"Context with name \"{context}\" not found");
                 if (!(ctx.ExtractConfig is ExtractConfigPassiveRESTFiles f))
@@ -70,7 +71,6 @@ namespace Omnikeeper.Controllers.Ingest
                    Path.GetFileName(f.FileName) // stripping path for security reasons: https://docs.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads?view=aspnetcore-3.1#upload-small-files-with-buffered-model-binding-to-physical-storage-1
                ));
 
-                using var mc = modelContextBuilder.BuildImmediate();
                 var searchLayers = new LayerSet(ctx.LoadConfig.SearchLayerIDs);
                 var writeLayer = await layerModel.GetLayer(ctx.LoadConfig.WriteLayerID, mc);
                 if (writeLayer == null)

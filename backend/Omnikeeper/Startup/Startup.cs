@@ -1,3 +1,4 @@
+using DBMigrations;
 using FluentValidation.AspNetCore;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
@@ -16,6 +17,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +29,7 @@ using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using Npgsql.Logging;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Service;
@@ -250,7 +253,7 @@ namespace Omnikeeper.Startup
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory serviceScopeFactory,
-            NpgsqlLoggingProvider npgsqlLoggingProvider, ILogger<Startup> logger)
+            NpgsqlLoggingProvider npgsqlLoggingProvider, ILogger<Startup> logger, IEnumerable<IPluginRegistration> plugins)
         {
             var version = VersionService.GetVersion();
             logger.LogInformation($"Running version: {version}");
@@ -347,6 +350,24 @@ namespace Omnikeeper.Startup
                     AppPath = null,
                     Authorization = new IDashboardAuthorizationFilter[] { new HangFireAuthorizationFilter() }
                 });
+            }
+
+            // plugins setup
+            foreach(var plugin in plugins)
+            {
+                if (plugin.DBMigration != null)
+                {
+                    var cs = Configuration.GetConnectionString("LandscapeDatabaseConnection");
+                    var result = plugin.DBMigration.Migrate(cs);
+                    if (!result.Successful)
+                    {
+                        logger.LogError(result.Error, $"Error performing plugin DB migration");
+                    }
+                    else
+                    {
+                        logger.LogInformation("Performed plugin DB migration");
+                    }
+                }
             }
         }
     }

@@ -201,6 +201,16 @@ export const queries = {
                 informationalVersion
             }
         }
-      }
+    }
+    `,
+    Plugins: gql`
+    query plugins {
+        plugins {
+            name
+            version
+            informationalVersion
+            managementEndpoint
+        }
+    }
     `
 };

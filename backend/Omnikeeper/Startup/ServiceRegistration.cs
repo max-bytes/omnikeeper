@@ -4,11 +4,11 @@ using GraphQL.Types;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
-using OKPluginGenericJSONIngest;
 using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -106,6 +106,7 @@ namespace Omnikeeper.Startup
                         .ToArray();
 
                     var pluginAssemblies = new List<string>();
+                    PluginLoadContext loadContext = new PluginLoadContext();
                     foreach (var e in dllEntries)
                     {
                         var finalDLLFile = Path.Combine(extractedFolder, e.Name);
@@ -114,26 +115,29 @@ namespace Omnikeeper.Startup
                         Assembly? assembly;
                         try
                         {
-                            PluginLoadContext loadContext = new PluginLoadContext(finalDLLFile);
+                            loadContext.AddResolverFromPath(finalDLLFile);
                             assembly = loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(finalDLLFile)));
-                            services.Scan(scan =>
+
+                            // we use a temporary service collection and service provider to extract the plugin registration, which then does the actual registration
+                            var tmpSC = new ServiceCollection();
+                            tmpSC.Scan(scan =>
                                 scan.FromAssemblies(assembly)
-                                    .AddClasses()
-                                    .AsSelfWithInterfaces() // see https://andrewlock.net/using-scrutor-to-automatically-register-your-services-with-the-asp-net-core-di-container/#registering-an-implementation-using-forwarded-services
+                                    .AddClasses(classes => classes.AssignableTo<IPluginRegistration>())
+                                    .AsSelfWithInterfaces()
                                     .WithSingletonLifetime()
                             );
-
-                            var assemblyName = assembly.GetName();
-                            if (assemblyName == null)
-                                throw new Exception("Assembly without name encountered");
-                            var informationalVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-                            var lp = new LoadedPlugin(
-                                    assemblyName.Name ?? "Unknown Plugin",
-                                    assemblyName.Version ?? new Version(0, 0, 0),
-                                    informationalVersion ?? "Unknown version");
-                            services.AddSingleton<ILoadedPlugin>(lp);
-
-                            Console.WriteLine($"Loaded OKPlugin {lp.Name}, Version {lp.Version}"); // TODO: better logging
+                            var tmpSP = tmpSC.BuildServiceProvider();
+                            var pr = tmpSP.GetService<IPluginRegistration>();
+                            if (pr != null)
+                            {
+                                // register plugin itself and its own services
+                                services.AddSingleton(pr);
+                                pr.RegisterServices(services);
+                                Console.WriteLine($"Loaded OKPlugin {pr.Name}, Version {pr.Version}"); // TODO: better logging
+                            } else
+                            {
+                                Console.WriteLine($"Encountered OKPlugin without IPluginRegistration! Assembly: {assembly.FullName}"); // TODO: better logging
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -191,8 +195,6 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IOIAContextModel, OIAContextModel>();
             services.AddSingleton<IGridViewContextModel, GridViewContextModel>();
             services.AddSingleton<IPartitionModel, PartitionModel>();
-
-            services.AddSingleton<IContextModel, ContextModel>(); // TODO: this is in a plugin -> move?
 
             // these aren't real models, but we keep them here because they are closely related to models
             services.AddSingleton<ITraitsProvider, TraitsProvider>();
