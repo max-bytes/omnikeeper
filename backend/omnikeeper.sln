@@ -40,9 +40,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginAnsibleInventorySca
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PerfTests", "PerfTests\PerfTests.csproj", "{887547A4-91E3-444D-B494-3AEA75691FB2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginGenericJSONIngest", "OKPluginGenericJSONIngest\OKPluginGenericJSONIngest.csproj", "{2D2F8E00-C340-47C9-9805-179934AD41C8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginGenericJSONIngest", "OKPluginGenericJSONIngest\OKPluginGenericJSONIngest.csproj", "{2D2F8E00-C340-47C9-9805-179934AD41C8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginGenericJSONIngest.Tests", "OKPluginGenericJSONIngest.Tests\OKPluginGenericJSONIngest.Tests.csproj", "{B240EFC7-6B36-47FA-8C01-90721E4C26B9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginGenericJSONIngest.Tests", "OKPluginGenericJSONIngest.Tests\OKPluginGenericJSONIngest.Tests.csproj", "{B240EFC7-6B36-47FA-8C01-90721E4C26B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

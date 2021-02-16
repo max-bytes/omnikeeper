@@ -1,4 +1,5 @@
 ﻿using GraphQL.Types;
+using Omnikeeper.Base.Plugins;
 using Omnikeeper.Utils;
 using System.Collections.Generic;
 
@@ -7,9 +8,9 @@ namespace Omnikeeper.GraphQL
     public class VersionDTO
     {
         public string CoreVersion;
-        public IEnumerable<ILoadedPlugin> LoadedPlugins;
+        public IEnumerable<IPluginRegistration> LoadedPlugins;
 
-        public VersionDTO(string coreVersion, IEnumerable<ILoadedPlugin> loadedPlugins)
+        public VersionDTO(string coreVersion, IEnumerable<IPluginRegistration> loadedPlugins)
         {
             CoreVersion = coreVersion;
             LoadedPlugins = loadedPlugins;
@@ -21,16 +22,17 @@ namespace Omnikeeper.GraphQL
         public VersionType()
         {
             Field(x => x.CoreVersion);
-            Field(x => x.LoadedPlugins, type: typeof(ListGraphType<LoadedPluginType>));
+            Field(x => x.LoadedPlugins, type: typeof(ListGraphType<PluginRegistrationType>));
         }
     }
-    public class LoadedPluginType : ObjectGraphType<ILoadedPlugin>
+    public class PluginRegistrationType : ObjectGraphType<IPluginRegistration>
     {
-        public LoadedPluginType()
+        public PluginRegistrationType()
         {
             Field(x => x.Name);
             Field("version", x => x.Version.ToString());
             Field(x => x.InformationalVersion);
+            Field("managementEndpoint", x => x.ManagementEndpoint, nullable: true);
         }
     }
 
