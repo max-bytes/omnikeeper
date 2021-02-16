@@ -1,0 +1,10 @@
+
+
+CREATE TABLE $SchemaName$.context
+(
+    name text NOT NULL,
+    extractConfig json NOT NULL,
+    transformConfig json NOT NULL,
+    loadConfig json NOT NULL,
+    CONSTRAINT context_pkey PRIMARY KEY (name)
+);
