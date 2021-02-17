@@ -5,6 +5,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -128,9 +129,16 @@ namespace Omnikeeper.GraphQL
             Field<VersionType>("version",
                 resolve: context =>
                 {
-                    var loadedPlugins = context.RequestServices.GetServices<ILoadedPlugin>();
+                    var loadedPlugins = context.RequestServices.GetServices<IPluginRegistration>();
                     var coreVersion = VersionService.GetVersion();
                     return new VersionDTO(coreVersion, loadedPlugins);
+                });
+
+            Field<ListGraphType<PluginRegistrationType>>("plugins",
+                resolve: context =>
+                {
+                    var plugins = context.RequestServices.GetServices<IPluginRegistration>();
+                    return plugins;
                 });
         }
     }

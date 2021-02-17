@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Loader;
 
@@ -6,19 +7,26 @@ namespace Omnikeeper.Utils
 {
     class PluginLoadContext : AssemblyLoadContext
     {
-        private AssemblyDependencyResolver _resolver;
+        private readonly List<AssemblyDependencyResolver> _resolvers = new List<AssemblyDependencyResolver>();
 
-        public PluginLoadContext(string pluginPath)
+        public PluginLoadContext()
         {
-            _resolver = new AssemblyDependencyResolver(pluginPath);
         }
 
+        public void AddResolverFromPath(string pluginPath)
+        {
+            _resolvers.Add(new AssemblyDependencyResolver(pluginPath));
+        }
+        
         protected override Assembly? Load(AssemblyName assemblyName)
         {
-            string? assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
-            if (assemblyPath != null)
+            foreach (var r in _resolvers)
             {
-                return LoadFromAssemblyPath(assemblyPath);
+                string? assemblyPath = r.ResolveAssemblyToPath(assemblyName);
+                if (assemblyPath != null)
+                {
+                    return LoadFromAssemblyPath(assemblyPath);
+                }
             }
 
             return null;
@@ -26,10 +34,13 @@ namespace Omnikeeper.Utils
 
         protected override IntPtr LoadUnmanagedDll(string unmanagedDllName)
         {
-            string? libraryPath = _resolver.ResolveUnmanagedDllToPath(unmanagedDllName);
-            if (libraryPath != null)
+            foreach (var r in _resolvers)
             {
-                return LoadUnmanagedDllFromPath(libraryPath);
+                string? libraryPath = r.ResolveUnmanagedDllToPath(unmanagedDllName);
+                if (libraryPath != null)
+                {
+                    return LoadUnmanagedDllFromPath(libraryPath);
+                }
             }
 
             return IntPtr.Zero;
