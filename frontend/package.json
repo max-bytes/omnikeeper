@@ -16,7 +16,7 @@
     "ace-builds": "^1.4.12",
     "ag-grid-community": "^23.2.1",
     "ag-grid-react": "^23.2.1",
-    "aggrid_copy_cut_paste": "^1.1.0",
+    "aggrid_copy_cut_paste": "^1.1.6",
     "antd": "^4.8.0",
     "build-url": "^6.0.1",
     "console-feed": "^3.1.10",
