@@ -1,0 +1,10 @@
+{
+  "name": "okplugin-plugintest1",
+  "version": "0.0.0-src",
+  "description": "",
+  "main": "src/test.js",
+  "scripts": {
+  },
+  "author": "",
+  "license": "ISC"
+}
