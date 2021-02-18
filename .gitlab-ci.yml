@@ -72,7 +72,7 @@ publish-backend-base:
   image: docker-registry.mhx.at/infra-docker/container-images/push-to-nexus-nuget:latest
   stage: publish
   when: on_success
-  needs: ["build-nuget-package-base"]
+  needs: ["build-backend-base"]
   variables:
     NEXUS_BASEURL: "https://repo.mhx.at"
     PACKAGE_NAME: "Omnikeeper.Base"
@@ -88,7 +88,7 @@ build-backend-okplugin-active-directory-xml-ingest:
     PLUGIN_NAME: "OKPluginActiveDirectoryXMLIngest"
 publish-backend-okplugin-active-directory-xml-ingest:
   extends: ".publish-backend-okplugin"
-  needs: ["build-nuget-package-okplugin-active-directory-xml-ingest"]
+  needs: ["build-backend-okplugin-active-directory-xml-ingest"]
   variables:
     PACKAGE_NAME: "OKPluginActiveDirectoryXMLIngest"
 
@@ -98,7 +98,7 @@ build-backend-okplugin-ansible-inventory-scan-ingest:
     PLUGIN_NAME: "OKPluginAnsibleInventoryScanIngest"
 publish-backend-okplugin-ansible-inventory-scan-ingest:
   extends: ".publish-backend-okplugin"
-  needs: ["build-nuget-package-okplugin-ansible-inventory-scan-ingest"]
+  needs: ["build-backend-okplugin-ansible-inventory-scan-ingest"]
   variables:
     PACKAGE_NAME: "OKPluginAnsibleInventoryScanIngest"
 
@@ -108,7 +108,7 @@ build-backend-okplugin-clb-monitoring:
     PLUGIN_NAME: "OKPluginCLBMonitoring"
 publish-backend-okplugin-clb-monitoring:
   extends: ".publish-backend-okplugin"
-  needs: ["build-nuget-package-okplugin-clb-monitoring"]
+  needs: ["build-backend-okplugin-clb-monitoring"]
   variables:
     PACKAGE_NAME: "OKPluginCLBMonitoring"
 
@@ -118,7 +118,7 @@ build-backend-okplugin-oia-keycloak:
     PLUGIN_NAME: "OKPluginOIAKeycloak"
 publish-backend-okplugin-oia-keycloak:
   extends: ".publish-backend-okplugin"
-  needs: ["build-nuget-package-okplugin-oia-keycloak"]
+  needs: ["build-backend-okplugin-oia-keycloak"]
   variables:
     PACKAGE_NAME: "OKPluginOIAKeycloak"
     
@@ -128,7 +128,7 @@ build-backend-okplugin-oia-omnikeeper:
     PLUGIN_NAME: "OKPluginOIAOmnikeeper"
 publish-backend-okplugin-oia-omnikeeper:
   extends: ".publish-backend-okplugin"
-  needs: ["build-nuget-package-okplugin-oia-omnikeeper"]
+  needs: ["build-backend-okplugin-oia-omnikeeper"]
   variables:
     PACKAGE_NAME: "OKPluginOIAOmnikeeper"
 
@@ -138,7 +138,7 @@ build-backend-okplugin-oia-sharepoint:
     PLUGIN_NAME: "OKPluginOIASharepoint"
 publish-backend-okplugin-oia-sharepoint:
   extends: ".publish-backend-okplugin"
-  needs: ["build-nuget-package-okplugin-oia-sharepoint"]
+  needs: ["build-backend-okplugin-oia-sharepoint"]
   variables:
     PACKAGE_NAME: "OKPluginOIASharepoint"
     
@@ -182,7 +182,7 @@ build-publish-frontend-okplugin-plugintest1:
   variables:
     PLUGIN_FOLDER: "okplugin-plugintest1"
 # TODO: split into build and publish?
- .build-publish-frontend-okplugin:
+.build-publish-frontend-okplugin:
   image: node:13.12.0-alpine
   stage: build
   when: on_success
