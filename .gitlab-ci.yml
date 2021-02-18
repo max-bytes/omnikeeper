@@ -41,7 +41,7 @@ build-frontend:
   before_script:
     - "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
   script:
-    - "cd frontend"
+    - "cd frontend/core"
     - "VERSION=$CI_COMMIT_TAG"
     - echo "Building frontend version $VERSION"
     - "docker build -t $CI_REGISTRY/landscape/omnikeeper/frontend:$VERSION -t $CI_REGISTRY/landscape/omnikeeper/frontend:latest --build-arg version=$VERSION --build-arg npm_repo_key=$NPM_REPO_KEY ."
