@@ -3,8 +3,7 @@
   "version": "0.0.0-src",
   "description": "",
   "main": "src/test.js",
-  "scripts": {
-  },
+  "scripts": {},
   "author": "",
   "license": "ISC"
 }
