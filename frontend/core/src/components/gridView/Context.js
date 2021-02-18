@@ -123,7 +123,24 @@ export function Context(props) {
     function initDefaultColDef() {
         return {
             sortable: true,
+            comparator: function (valueA, valueB) {
+                const vA = valueA.values?.[0];
+                const vB = valueB.values?.[0];
+                if (vA === vB) return 0;
+                return (vA > vB) ? 1 : -1;
+            },
             filter: true,
+            filterParams: {
+                textFormatter: function (gridValue) {
+                    if (gridValue == null) return null;
+                    if (typeof gridValue === "string") return gridValue; // gridValue is a simple string
+
+                    // gridValue is an object
+                    const gV = gridValue.values?.[0];
+                    if (gV === null || gV === undefined) return null;
+                    return gV;
+                },
+              },
             editable: true,
             resizable: true,
             cellClassRules: {
@@ -143,12 +160,6 @@ export function Context(props) {
                     if (params.data.status.id === rowStatus.deleted.id)
                         return true;
                 },
-            },
-            comparator: function (valueA, valueB) {
-                const vA = valueA.values?.[0];
-                const vB = valueB.values?.[0];
-                if (vA === vB) return 0;
-                return (vA > vB) ? 1 : -1;
             },
         };
     }
