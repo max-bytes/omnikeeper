@@ -144,7 +144,12 @@ export function Context(props) {
                         return true;
                 },
             },
-            
+            comparator: function (valueA, valueB) {
+                const vA = valueA.values?.[0];
+                const vB = valueB.values?.[0];
+                if (vA === vB) return 0;
+                return (vA > vB) ? 1 : -1;
+            },
         };
     }
 
