@@ -27,27 +27,37 @@ build-backend:
     - "docker build -t $CI_REGISTRY/landscape/omnikeeper/backend:$VERSION -t $CI_REGISTRY/landscape/omnikeeper/backend:latest -f ./Omnikeeper/Dockerfile --build-arg version=$VERSION ."
     - "docker push $CI_REGISTRY/landscape/omnikeeper/backend"
 
-# TODO: fully remove
-# build-frontend:
-  # image: docker:stable
-  # stage: build
-  # when: on_success
-  # tags:
-    # - dockerbuild
-  # services:
-    # - docker:19.03.1-dind
-  # only: 
-    # - tags
-  # before_script:
-    # - "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY"
-  # script:
-    # - "cd frontend/core"
-    # - "VERSION=$CI_COMMIT_TAG"
-    # - echo "Building frontend version $VERSION"
-    # - "docker build -t $CI_REGISTRY/landscape/omnikeeper/frontend:$VERSION -t $CI_REGISTRY/landscape/omnikeeper/frontend:latest --build-arg version=$VERSION --build-arg npm_repo_key=$NPM_REPO_KEY ."
-    # - "docker push $CI_REGISTRY/landscape/omnikeeper/frontend"
     
 
+build-publish-frontend-okplugin-plugintest1:
+  extends: .build-publish-frontend-okplugin
+  variables:
+    PLUGIN_FOLDER: "okplugin-plugintest1"
+# TODO: split into build and publish?
+.build-publish-frontend-okplugin:
+  image: node:13.12.0-alpine
+  stage: build
+  when: on_success
+  variables:  
+    NEXUS_REPOURL: "repo.mhx.at/repository/npm-stable-hosted/"
+  tags:
+    - dockerbuild
+  services:
+    - docker:19.03.1-dind
+  only: 
+    - tags
+  script:
+    - cd frontend/$PLUGIN_FOLDER
+    - npm ci
+    - |- 
+      cat <<'EOF' > .npmrc
+      //${NEXUS_REPOURL}:_authToken=${NPM_REPO_PUBLISH_TOKEN}
+      EOF
+    - npm version $CI_COMMIT_TAG # set version
+    - npm publish
+
+    
+    
 build-backend-base:
   image: mcr.microsoft.com/dotnet/core/sdk:3.1-buster
   stage: build
@@ -174,32 +184,3 @@ publish-backend-okplugin-oia-sharepoint:
     - sh /upload-nuget.sh $PACKAGE_NAME.nupkg
   only: 
     - tags
-    
-
-    
-build-publish-frontend-okplugin-plugintest1:
-  extends: .build-publish-frontend-okplugin
-  variables:
-    PLUGIN_FOLDER: "okplugin-plugintest1"
-# TODO: split into build and publish?
-.build-publish-frontend-okplugin:
-  image: node:13.12.0-alpine
-  stage: build
-  when: on_success
-  variables:  
-    NEXUS_REPOURL: "repo.mhx.at/repository/npm-stable-hosted/"
-  tags:
-    - dockerbuild
-  services:
-    - docker:19.03.1-dind
-  only: 
-    - tags
-  script:
-    - cd frontend/$PLUGIN_FOLDER
-    - npm ci
-    - |- 
-      cat <<'EOF' > .npmrc
-      //${NEXUS_REPOURL}:_authToken=${NPM_REPO_PUBLISH_TOKEN}
-      EOF
-    - npm version $CI_COMMIT_TAG # set version
-    - npm publish
