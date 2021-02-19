@@ -32,7 +32,7 @@ export default function Manage(props) {
     if (!pluginsData.plugins) return <div>No configurable plugins loaded</div>;
     return pluginsData.plugins.map(lp => {
       if (lp.managementEndpoint)
-        return <li key={lp.name}><a href="#" onClick={(e) => {
+        return <li key={lp.name}><a href="/#" onClick={(e) => {
           e.preventDefault();
           setPluginModalOpen({...pluginModalOpen, open: true, managementEndpoint: lp.managementEndpoint, name: lp.name});
         }}>{lp.name}</a></li>;
