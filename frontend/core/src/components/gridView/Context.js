@@ -124,20 +124,20 @@ export function Context(props) {
         return {
             sortable: true,
             comparator: function (valueA, valueB) {
-                const vA = valueA.values?.[0];
-                const vB = valueB.values?.[0];
+                const vA = typeof valueA === "string" ? valueA : valueA?.values?.[0];
+                const vB = typeof valueB === "string" ? valueB : valueB?.values?.[0];
+
                 if (vA === vB) return 0;
+                if (vA == null) return 1;
+                if (vB == null) return -1;
                 return (vA > vB) ? 1 : -1;
             },
             filter: true,
             filterParams: {
                 textFormatter: function (gridValue) {
-                    if (gridValue == null) return null;
-                    if (typeof gridValue === "string") return gridValue; // gridValue is a simple string
+                    const gV = typeof gridValue === "string" ? gridValue : gridValue?.values?.[0];
 
-                    // gridValue is an object
-                    const gV = gridValue.values?.[0];
-                    if (gV === null || gV === undefined) return null;
+                    if (gV == null) return "[not set]";
                     return gV;
                 },
               },
