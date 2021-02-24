@@ -21,6 +21,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using OKPluginGenericJSONIngest.Extract;
+using OKPluginGenericJSONIngest.Transform;
 
 namespace Omnikeeper.Controllers.Ingest
 {
@@ -48,6 +49,33 @@ namespace Omnikeeper.Controllers.Ingest
             var contexts = await contextModel.GetAllContexts(modelContextBuilder.BuildImmediate());
             return Ok(contexts);
         }
-        
+
+        [HttpGet()]
+        public async Task<IActionResult> GetContextByName([FromQuery, Required] string name)
+        {
+            // TODO: authorization
+
+            var context = await contextModel.GetContextByName(name, modelContextBuilder.BuildImmediate());
+            if (context != null)
+                return Ok(context);
+            else
+                return NotFound($"Could not find context with name {name}");
+        }
+
+        [HttpPost()]
+        public async Task<IActionResult> AddContext([FromBody, Required] string name, [FromBody, Required] IExtractConfig extractConfig, [FromBody, Required] ITransformConfig transformConfig, [FromBody, Required] ILoadConfig loadConfig)
+        {
+            try
+            {
+                // TODO: authorization
+
+                var context = await contextModel.Upsert(name, extractConfig, transformConfig, loadConfig, modelContextBuilder.BuildImmediate());
+                return Ok(context);
+            } catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+        }
+
     }
 }
