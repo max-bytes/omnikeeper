@@ -16,6 +16,7 @@ namespace OKPluginGenericJSONIngest
         {
             sc.AddSingleton<IContextModel, ContextModel>();
             sc.AddTransient<PassiveFilesController>();
+            sc.AddTransient<ManageContextController>();
         }
     }
 }
