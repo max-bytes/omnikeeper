@@ -1,4 +1,6 @@
-import React from 'react';
+import React
+    // ,{ useState, useEffect, useCallback } 
+    from "react";
 import './App.css';
 import Explorer from './components/Explorer';
 import Diffing from './components/diffing/Diffing';
@@ -29,6 +31,8 @@ import ShowVersion from './components/manage/ShowVersion';
 import { ReactKeycloakProvider } from '@react-keycloak/web'
 import LayerOperations from 'components/manage/LayerOperations';
 import { Menu } from 'antd';
+// import SwaggerClient from "swagger-client";
+// import FeedbackMsg from "./components/gridView/FeedbackMsg";
 
 const FRONTEND_PLUGINS = "okplugin-plugintest1@0.9.3 okplugin-plugintest2@0.9.9"; // Hardcoded fake ENV-var for frontend-plugins // TODO: use real one
 
@@ -58,6 +62,38 @@ function App() {
 
   const BR = () => {
 
+    // const swaggerDefUrl = `${env('BACKEND_URL')}/../swagger/v1/swagger.json`; // HACK: BACKEND_URL contains /graphql suffix, remove!
+    // const apiVersion = 1;
+
+    // const [swaggerMsg, setSwaggerMsg] = useState("");
+    // const [swaggerErrorJson, setSwaggerErrorJson] = useState(false);
+    // const [swaggerClient, setSwaggerClient] = useState(null);
+
+    // // get swagger JSON
+    // // NOTE: we use a useEffect to (re)load the client itself
+    // // to make the client usable for others, the getSwaggerClient() callback is used
+    // // the reason this callback exists is for setting the correct, updated access token
+    // useEffect(() => { 
+    //     try {
+    //         const token = localStorage.getItem('token');
+    //         new SwaggerClient(swaggerDefUrl, {
+    //             authorizations: {
+    //                 oauth2: { token: { access_token: token } },
+    //             }
+    //         }).then(d => {
+    //             setSwaggerClient(d);
+    //         });
+    //     } catch(e) {
+    //         setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
+    //         setSwaggerMsg(e.toString());//e.statusCode + ": " + e.response.statusText + " " + e.response.url);
+    //     }
+    // }, [swaggerDefUrl]);
+    // const getSwaggerClient = useCallback(() => {
+    //     // update token before returning the client
+    //     swaggerClient.authorizations.oauth2.token.access_token = localStorage.getItem('token');
+    //     return swaggerClient;
+    // }, [swaggerClient]);
+
   // ########## MODULE DEVELOPMENT #########
 
   const availableFrontenedPlugins = [];
@@ -84,7 +120,13 @@ function App() {
                     return null;
             }
             availableFrontenedPlugins.push(pluginName); // add to availableFrontenedPlugins
-            const PluginComponent = plugin.default(pluginVersion); // thows and error, if plugin doesn't have a default()
+            // create props
+            const pluginProps={
+                wantedVersion: pluginVersion,
+                // swaggerClient: getSwaggerClient,
+                // feedbackMsg: FeedbackMsg
+            }
+            const PluginComponent = plugin.default(pluginProps); // thows and error, if plugin doesn't have a default()
 
             return (
               <PrivateRoute path={"/manage/" + pluginName} key={pluginName}>
@@ -203,6 +245,9 @@ function App() {
                 <Redirect to="/explorer" />
               </Route>
             </Switch>
+            {/* <div style={{ height: "100%" }}>
+                {swaggerMsg && <FeedbackMsg alertProps={{message: swaggerMsg, type: swaggerErrorJson ? "error": "success", showIcon: true, banner: true}} swaggerErrorJson={swaggerErrorJson} />}
+            </div> */}
           </div>
         </BrowserRouter>
   }
