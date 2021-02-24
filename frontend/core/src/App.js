@@ -5,7 +5,7 @@ import Diffing from './components/diffing/Diffing';
 import 'antd/dist/antd.css';
 import Keycloak from 'keycloak-js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExchangeAlt, faPlus, faSearch, faWrench, faTh } from '@fortawesome/free-solid-svg-icons';
+import { faExchangeAlt, faPlus, faSearch, faWrench, faTh, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/AddNewCI'
@@ -29,6 +29,8 @@ import ShowVersion from './components/manage/ShowVersion';
 import { ReactKeycloakProvider } from '@react-keycloak/web'
 import LayerOperations from 'components/manage/LayerOperations';
 import { Menu } from 'antd';
+
+const FRONTEND_PLUGINS = "okplugin-plugintest1@0.9.3 okplugin-plugintest2@0.9.9"; // Hardcoded fake ENV-var for frontend-plugins // TODO: use real one
 
 const keycloak = new Keycloak({
   "realm": env("KEYCLOAK_REALM"),
@@ -55,6 +57,53 @@ const keycloakProviderInitOptions = {
 function App() {
 
   const BR = () => {
+
+  // ########## MODULE DEVELOPMENT #########
+
+  const availableFrontenedPlugins = [];
+  
+  const frontendPlugins = (() => {
+    const frontendPluginsStringArray = FRONTEND_PLUGINS.split(" ");
+
+    return frontendPluginsStringArray.map(s => {
+        try{
+            // parse FRONTEND_PLUGINS
+            const pluginName = s.split("@")[0];
+            const pluginVersion = s.split("@")[1];
+
+            let plugin;
+            switch (pluginName) {
+                case "okplugin-plugintest1":
+                    // plugin = require("./local_plugins_for_dev/okplugin-plugintest1/src"); // FOR DEPLOYMENT ONLY !! // TODO: don't use in prod!
+                    plugin = require("okplugin-plugintest1");
+                    break;
+                // case "okplugin-plugintest2":
+                //     plugin = require("okplugin-plugintest2");
+                //     break;
+                default:
+                    return null;
+            }
+            availableFrontenedPlugins.push(pluginName); // add to availableFrontenedPlugins
+            const PluginComponent = plugin.default(pluginVersion); // thows and error, if plugin doesn't have a default()
+
+            return (
+              <PrivateRoute path={"/manage/" + pluginName} key={pluginName}>
+                <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
+                  <h2>{pluginName}</h2>
+                  <div style={{marginBottom: '10px'}}><Link to="/manage"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+                  <PluginComponent/>
+                </div>
+              </PrivateRoute>
+            );
+
+        } catch(e) {
+            return null;
+        }
+    });
+  })();
+
+  // #######################################
+
     return <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
         <nav style={{
                     borderBottom: "solid 1px #e8e8e8",
@@ -145,8 +194,9 @@ function App() {
               <PrivateRoute path="/manage/logs">
                 <ShowLogs />
               </PrivateRoute>
+              {frontendPlugins}
               <PrivateRoute path="/manage">
-                <Manage />
+                <Manage availableFrontenedPlugins={availableFrontenedPlugins} />
               </PrivateRoute>
 
               <Route path="*">

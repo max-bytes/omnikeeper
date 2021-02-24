@@ -4,9 +4,6 @@ import { Modal } from 'antd';
 import { useQuery } from '@apollo/client';
 import { queries } from '../../graphql/queries'
 import env from "@beam-australia/react-env";
-import { Popover } from "antd";
-
-const FRONTEND_PLUGINS = "okplugin-plugintest1@0.9.3 okplugin-plugintest2@0.9.9"; // Hardcoded fake ENV-var for frontend-plugins // TODO: get real one
 
 export default function Manage(props) {
 
@@ -30,49 +27,11 @@ export default function Manage(props) {
       style={{border: '0px'}}/>
   </Modal>;
 
-  // ########## MODULE DEVELOPMENT #########
-
   const frontendPlugins = (() => {
-    const frontendPluginsStringArray = FRONTEND_PLUGINS.split(" ");
-
-    return frontendPluginsStringArray.map(s => {
-        try{
-            // parse FRONTEND_PLUGINS
-            const pluginName = s.split("@")[0];
-            const pluginVersion = s.split("@")[1];
-
-            let plugin;
-            switch (pluginName) {
-                case "okplugin-plugintest1":
-                    // plugin = require("./../../local_plugins_for_dev/okplugin-plugintest1/src/test.js"); // FOR DEPLOYMENT ONLY !! // TODO: don't use in prod!
-                    plugin = require("okplugin-plugintest1");
-                    break;
-                case "okplugin-plugintest2":
-                    plugin = require("okplugin-plugintest2");
-                    break;
-                default:
-                    return null;
-            }
-
-            // thows and error, if plugin doesn't have a default()
-            const PluginComponent = plugin.default(pluginVersion);
-
-            return (
-                <li key={pluginName}>
-                    <Popover placement="right" trigger="click" content={<PluginComponent/>}>
-                        <a href="/#" onClick={(e) => e.preventDefault()}>{pluginName}</a>
-                    </Popover>
-                </li>
-            );
-
-        } catch(e) {
-            // console.log(e);
-            return null;
-        }
+    return props.availableFrontenedPlugins?.map(pluginName => {
+        return <li key={pluginName}><Link to={"/manage/" + pluginName}>{pluginName}</Link></li>;
     });
   })();
-
-  // #######################################
 
   const plugins = (() => {
     if (!pluginsData) return <></>;
