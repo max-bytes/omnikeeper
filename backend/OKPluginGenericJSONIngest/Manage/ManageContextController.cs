@@ -1,33 +1,17 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.DotNet.PlatformAbstractions;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using OKPluginGenericJSONIngest;
-using OKPluginGenericJSONIngest.Transform.JMESPath;
-using OKPluginGenericJSONIngest.Load;
-using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using OKPluginGenericJSONIngest.Extract;
-using OKPluginGenericJSONIngest.Transform;
 
 namespace Omnikeeper.Controllers.Ingest
 {
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/ingest/genericJSON/manage")]
+    [Route("api/v{version:apiVersion}/ingest/genericJSON/manage/context")]
     [Authorize]
     [ApiExplorerSettings(GroupName = "OKPluginGenericJSONIngest")]
     public class ManageContextController : ControllerBase
@@ -50,8 +34,8 @@ namespace Omnikeeper.Controllers.Ingest
             return Ok(contexts);
         }
 
-        [HttpGet()]
-        public async Task<IActionResult> GetContextByName([FromQuery, Required] string name)
+        [HttpGet("{name}")]
+        public async Task<IActionResult> GetContextByName([FromRoute, Required] string name)
         {
             // TODO: authorization
 
@@ -63,15 +47,34 @@ namespace Omnikeeper.Controllers.Ingest
         }
 
         [HttpPost()]
-        public async Task<IActionResult> AddContext([FromBody, Required] string name, [FromBody, Required] IExtractConfig extractConfig, [FromBody, Required] ITransformConfig transformConfig, [FromBody, Required] ILoadConfig loadConfig)
+        public async Task<IActionResult> AddContext([FromBody, Required] Context contextCandidate)
         {
             try
             {
                 // TODO: authorization
-
-                var context = await contextModel.Upsert(name, extractConfig, transformConfig, loadConfig, modelContextBuilder.BuildImmediate());
+                var mc = modelContextBuilder.BuildDeferred();
+                var context = await contextModel.Upsert(contextCandidate.Name, contextCandidate.ExtractConfig, 
+                    contextCandidate.TransformConfig, contextCandidate.LoadConfig, mc);
+                mc.Commit();
                 return Ok(context);
             } catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+        }
+
+        [HttpDelete("{name}")]
+        public async Task<IActionResult> RemoveContext([FromRoute, Required] string name)
+        {
+            try
+            {
+                // TODO: authorization
+                var mc = modelContextBuilder.BuildDeferred();
+                var context = await contextModel.Delete(name, mc);
+                mc.Commit();
+                return Ok(context);
+            }
+            catch (Exception e)
             {
                 return BadRequest(e);
             }

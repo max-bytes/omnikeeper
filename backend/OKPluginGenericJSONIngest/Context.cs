@@ -9,8 +9,11 @@ namespace OKPluginGenericJSONIngest
     public class Context
     {
         public readonly string Name;
+        [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
         public readonly IExtractConfig ExtractConfig;
+        [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
         public readonly ITransformConfig TransformConfig;
+        [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
         public readonly ILoadConfig LoadConfig;
 
         public Context(string name, IExtractConfig extractConfig, ITransformConfig transformConfig, ILoadConfig loadConfig)
