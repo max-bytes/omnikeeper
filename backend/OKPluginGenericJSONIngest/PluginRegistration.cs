@@ -1,6 +1,7 @@
 ﻿using DBMigrations;
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Plugins;
+using Omnikeeper.Controllers.Ingest;
 using System;
 
 namespace OKPluginGenericJSONIngest
@@ -14,7 +15,7 @@ namespace OKPluginGenericJSONIngest
         public override void RegisterServices(IServiceCollection sc)
         {
             sc.AddSingleton<IContextModel, ContextModel>();
-            //sc.AddTransient<MainController>();
+            sc.AddTransient<PassiveFilesController>();
         }
     }
 }

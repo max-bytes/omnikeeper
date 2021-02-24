@@ -17,7 +17,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -166,6 +168,19 @@ namespace Omnikeeper.Startup
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Landscape omnikeeper REST API", Version = "v1" });
+                c.TagActionsBy(api =>
+                {
+                    if (api.ActionDescriptor is ControllerActionDescriptor controllerActionDescriptor)
+                    {
+                        var attribute = controllerActionDescriptor.EndpointMetadata.OfType<ApiExplorerSettingsAttribute>().FirstOrDefault();
+                        var tag = attribute?.GroupName ?? controllerActionDescriptor.ControllerName;
+                        return new[] { tag };
+                    }
+
+                    throw new InvalidOperationException("Unable to determine tag for endpoint.");
+                });
+                c.DocInclusionPredicate((name, api) => true);
+
                 var filePath = Path.Combine(AppContext.BaseDirectory, "omnikeeper.xml");
                 c.IncludeXmlComments(filePath);
                 c.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
