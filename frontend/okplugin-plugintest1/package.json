@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "./node_modules/.bin/babel src --out-dir . --copy-files"
+    "build": "./node_modules/.bin/babel src --out-dir . --copy-files",
 	"prepublishOnly": "./node_modules/.bin/babel src --out-dir . --copy-files"
   },
   "author": "Benjamin Kurz",
