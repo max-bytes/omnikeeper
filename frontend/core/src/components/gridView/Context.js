@@ -13,7 +13,6 @@ import MultilineTextCellEditor from './MultilineTextCellEditor';
 import IntegerCellEditor from './IntegerCellEditor';
 
 import { useParams, withRouter } from "react-router-dom";
-import FeedbackMsg from "./FeedbackMsg";
 
 const { Header, Content } = Layout;
 
@@ -24,6 +23,7 @@ const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
 );  
 
 export function Context(props) {
+    const FeedbackMsg = props.FeedbackMsg;
     const swaggerClient = props.swaggerClient;
     const apiVersion = props.apiVersion;
 

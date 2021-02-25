@@ -4,9 +4,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faSync } from "@fortawesome/free-solid-svg-icons";
 import { withRouter, Link } from "react-router-dom";
 import _ from "lodash";
-import FeedbackMsg from "./FeedbackMsg";
 
 function GridViewExplorer(props) {
+    const FeedbackMsg = props.FeedbackMsg;
     const swaggerClient = props.swaggerClient;
     const apiVersion = props.apiVersion;
 
