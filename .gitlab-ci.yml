@@ -48,7 +48,6 @@ build-publish-frontend-okplugin-plugintest1:
     - tags
   script:
     - cd frontend/$PLUGIN_FOLDER
-    - echo "unsafe-perm = true" >> ~/.npmrc
     - npm ci
     - |- 
       cat <<'EOF' > .npmrc
