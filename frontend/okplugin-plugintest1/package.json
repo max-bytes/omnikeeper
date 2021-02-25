@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "./node_modules/.bin/babel src --out-dir . --copy-files",
-    "prepublishOnly": "./node_modules/.bin/babel src --out-dir . --copy-files"
+    "prepublishOnly": "npm run build"
   },
   "author": "Benjamin Kurz",
   "peerDependencies": {
