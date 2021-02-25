@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "./node_modules/.bin/babel src --out-dir . --copy-files",
-	"prepublishOnly": "./node_modules/.bin/babel src --out-dir . --copy-files"
+    "prepublishOnly": "./node_modules/.bin/babel src --out-dir . --copy-files"
   },
   "author": "Benjamin Kurz",
   "peerDependencies": {
@@ -14,14 +14,13 @@
     "react-dom": "^16.6.3"
   },
   "devDependencies": {
-    "@babel/cli": "^7.12.0",
-    "@babel/core": "^7.12.0",
-    "@babel/preset-env": "^7.12.0",
-    "@babel/preset-react": "^7.10.4",
+    "@babel/cli": "^7.13.0",
+    "@babel/core": "^7.13.1",
+    "@babel/preset-env": "^7.13.5",
+    "@babel/preset-react": "^7.12.13",
     "react": "^16.14.0",
     "react-dom": "^16.14.0"
   },
-
   "publishConfig": {
     "registry": "https://repo.mhx.at/repository/npm-stable-hosted/"
   }
