@@ -3,6 +3,7 @@ FROM node:13.12.0-alpine AS build
 
 ARG version
 ARG npm_repo_key
+ARG plugins
 
 WORKDIR /app
 
@@ -17,6 +18,9 @@ RUN echo -e "registry=https://repo.mhx.at/repository/npm-stable/\n_auth=${npm_re
 
 # fetch dependencies
 RUN npm ci
+
+# install plugins, if any are defined
+RUN [[ ! -z "$plugins" ]] && npm install $plugins
 
 # add app
 COPY . ./

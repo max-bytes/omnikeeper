@@ -28,6 +28,7 @@ namespace Omnikeeper.Controllers.Ingest
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/ingest/genericJSON/files")]
     [Authorize]
+    [ApiExplorerSettings(GroupName = "OKPluginGenericJSONIngest")]
     public class PassiveFilesController : ControllerBase
     {
         private readonly IngestDataService ingestDataService;

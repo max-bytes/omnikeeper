@@ -152,6 +152,16 @@ publish-backend-okplugin-oia-sharepoint:
   needs: ["build-backend-okplugin-oia-sharepoint"]
   variables:
     PACKAGE_NAME: "OKPluginOIASharepoint"
+
+build-backend-okplugin-generic-json-ingest:
+  extends: .build-backend-okplugin
+  variables:
+    PLUGIN_NAME: "OKPluginGenericJSONIngest"
+publish-backend-okplugin-generic-json-ingest:
+  extends: ".publish-backend-okplugin"
+  needs: ["build-backend-okplugin-generic-json-ingest"]
+  variables:
+    PACKAGE_NAME: "OKPluginGenericJSONIngest"
     
 
 
