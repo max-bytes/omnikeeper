@@ -99,12 +99,12 @@ function App() {
         try{
             // parse FRONTEND_PLUGINS
             const pluginName = s.split("@")[0];
-            const pluginVersion = s.split("@")[1];
+            const wantedPluginVersion = s.split("@")[1];
 
             let plugin;
             switch (pluginName) {
                 case "okplugin-plugintest1":
-                    // plugin = require("./local_plugins_for_dev/okplugin-plugintest1/src"); // FOR DEPLOYMENT ONLY !! // TODO: don't use in prod!
+                    // plugin = require("./local_plugins_for_dev/okplugin-plugintest1/src"); // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
                     plugin = require("okplugin-plugintest1");
                     break;
                 // case "okplugin-plugintest2":
@@ -113,10 +113,13 @@ function App() {
                 default:
                     return null;
             }
-            availableFrontenedPlugins.push(pluginName); // add to availableFrontenedPlugins
+
+            const pluginVersion = plugin.version;
+
+            availableFrontenedPlugins.push({pluginName: pluginName, pluginVersion: pluginVersion}); // add to availableFrontenedPlugins
             // create props
             const pluginProps={
-                wantedVersion: pluginVersion,
+                wantedPluginVersion: wantedPluginVersion,
                 swaggerClient: getSwaggerClient,
                 apiVersion: apiVersion,
                 FeedbackMsg: FeedbackMsg,
@@ -232,7 +235,7 @@ function App() {
                 <ManageCurrentUser />
               </PrivateRoute>
               <PrivateRoute path="/manage/version">
-                <ShowVersion />
+                <ShowVersion availableFrontenedPlugins={availableFrontenedPlugins} />
               </PrivateRoute>
               <PrivateRoute path="/manage/logs">
                 <ShowLogs />

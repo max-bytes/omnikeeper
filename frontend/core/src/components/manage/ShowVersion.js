@@ -7,7 +7,7 @@ import { queries } from '../../graphql/queries'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
-export default function ShowVersion() {
+export default function ShowVersion(props) {
 
   const { data } = useQuery(queries.Version);
 
@@ -24,6 +24,12 @@ export default function ShowVersion() {
       <ul>
       {data.version.loadedPlugins.map(lp => {
         return <li key={lp.name}>{lp.name}: {lp.informationalVersion}</li>;
+      })}
+      </ul>
+      Loaded Frontend-Plugins:
+      <ul>
+      {props.availableFrontenedPlugins?.map(plugin => {
+        return <li key={plugin.pluginName}>{plugin.pluginName}: {plugin.pluginVersion}</li>;
       })}
       </ul>
   </div>

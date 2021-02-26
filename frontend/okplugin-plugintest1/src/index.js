@@ -2,6 +2,8 @@ import React, { Component, useState } from "react";
 import { Button } from "antd";
 import "antd/dist/antd.css";
 
+const pluginVersion = require('./../package.json').version;
+
 export default (props) => {
     const FeedbackMsg = props.FeedbackMsg;
     const swaggerClient = props.swaggerClient;
@@ -16,7 +18,7 @@ export default (props) => {
         render() {
             return (
                 <div>
-                    <p>Wanted version from Core: {props.wantedVersion ? props.wantedVersion : "/"}</p>
+                    <p>Version: {pluginVersion} (Wanted version: {props.wantedPluginVersion ? props.wantedPluginVersion : "/"})</p>
                     <Button onClick={() => alert("'Hello' back from plugin 1")}>Say 'Hello'</Button>
                     <Button onClick={() => refreshData()} style={{ marginLeft: "10px" }}>Try Swagger</Button>
                     <br/><br/>
@@ -45,3 +47,5 @@ export default (props) => {
         }
     }
 }
+
+export const version = pluginVersion;

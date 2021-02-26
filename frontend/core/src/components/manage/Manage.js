@@ -28,8 +28,8 @@ export default function Manage(props) {
   </Modal>;
 
   const frontendPlugins = (() => {
-    return props.availableFrontenedPlugins?.map(pluginName => {
-        return <li key={pluginName}><Link to={"/manage/" + pluginName}>{pluginName}</Link></li>;
+    return props.availableFrontenedPlugins?.map(plugin => {
+        return <li key={plugin.pluginName}><Link to={"/manage/" + plugin.pluginName}>{plugin.pluginName}</Link></li>;
     });
   })();
 
