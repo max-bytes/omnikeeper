@@ -1,6 +1,7 @@
 import React, { Component, useState } from "react";
 import { Button } from "antd";
 import "antd/dist/antd.css";
+import { version as pluginVersion } from './package.json';
 
 export default (props) => {
     const FeedbackMsg = props.FeedbackMsg;
@@ -16,7 +17,7 @@ export default (props) => {
         render() {
             return (
                 <div>
-                    <p>Version: {getPluginVersion()} (Wanted version: {props.wantedPluginVersion ? props.wantedPluginVersion : "/"})</p>
+                    <p>Version: {pluginVersion} (Wanted version: {props.wantedPluginVersion ? props.wantedPluginVersion : "/"})</p>
                     <Button onClick={() => alert("'Hello' back from plugin 1")}>Say 'Hello'</Button>
                     <Button onClick={() => refreshData()} style={{ marginLeft: "10px" }}>Try Swagger</Button>
                     <br/><br/>
@@ -46,16 +47,4 @@ export default (props) => {
     }
 }
 
-// babel simply copies the files with no respect to relative paths, so the converted file and the source file for development have different paths for package.json.
-// This function takes care of this. (It's quite ugly, though...)
-const getPluginVersion = () => {
-    try {
-        const pluginVersion = require('./package.json').version; // deployed path
-        return pluginVersion;
-    } catch(e) {
-        const pluginVersion = require('./../package.json').version; // development path
-        return pluginVersion;
-    }
-}
-
-export const version = getPluginVersion();
+export const version = pluginVersion;

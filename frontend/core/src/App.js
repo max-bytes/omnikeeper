@@ -104,7 +104,7 @@ function App() {
             let plugin;
             switch (pluginName) {
                 case "okplugin-plugintest1":
-                    // plugin = require("./local_plugins_for_dev/okplugin-plugintest1/src"); // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
+                    // plugin = require("./local_plugins_for_dev/okplugin-plugintest1"); // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
                     plugin = require("okplugin-plugintest1");
                     break;
                 // case "okplugin-plugintest2":
