@@ -32,8 +32,6 @@ import { Menu } from 'antd';
 import SwaggerClient from "swagger-client";
 import FeedbackMsg from "./components/FeedbackMsg";
 
-const FRONTEND_PLUGINS = "okplugin-plugintest1@0.9.3 okplugin-plugintest2@0.9.9"; // Hardcoded fake ENV-var for frontend-plugins // TODO: use real one
-
 const keycloak = new Keycloak({
   "realm": env("KEYCLOAK_REALM"),
   "url": env("KEYCLOAK_URL"),
@@ -93,11 +91,11 @@ function App() {
   const availableFrontenedPlugins = [];
   
   const frontendPlugins = (() => {
-    const frontendPluginsStringArray = FRONTEND_PLUGINS.split(" ");
+    const frontendPluginsStringArray = process.env.REACT_APP_FRONTEND_PLUGINS.split(" ");
 
     return frontendPluginsStringArray.map(s => {
         try{
-            // parse FRONTEND_PLUGINS
+            // parse process.env.REACT_APP_FRONTEND_PLUGINS
             const pluginName = s.split("@")[0];
             const wantedPluginVersion = s.split("@")[1];
 
