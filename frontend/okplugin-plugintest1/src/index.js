@@ -1,8 +1,7 @@
 import React, { Component, useState } from "react";
 import { Button } from "antd";
 import "antd/dist/antd.css";
-
-const pluginVersion = require('./../package.json').version;
+import { version as pluginVersion } from "./../package.json";
 
 export default (props) => {
     const FeedbackMsg = props.FeedbackMsg;
