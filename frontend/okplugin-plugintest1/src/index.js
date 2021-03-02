@@ -6,11 +6,27 @@ import { version as pluginVersion } from './package.json';
 const apiVersion = 1;
 
 export default (props) => {
-    const FeedbackMsg = props.FeedbackMsg;
+    // load components from Core
+    let FeedbackMsg;
+    try {
+        FeedbackMsg = require("components/FeedbackMsg.js").default;
+    } catch(e) {
+        console.error(e);
+        // return Component with error
+        return class extends Component {
+            render() {
+                return (
+                    <div>
+                        <h3>An error occurred:</h3>
+                        <p>{e.toString()}</p>
+                    </div>
+                );
+            }
+        }
+    }
+
     const swaggerClient = props.swaggerClient;
-
     const [context, setContext] = useState(null)
-
     const [swaggerMsg, setSwaggerMsg] = useState("");
     const [swaggerErrorJson, setSwaggerErrorJson] = useState(false);
     
@@ -29,8 +45,6 @@ export default (props) => {
                 </div>
             )
         }
-
-        
     }
 
     // READ / refresh context

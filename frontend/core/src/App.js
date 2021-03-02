@@ -30,7 +30,6 @@ import { ReactKeycloakProvider } from '@react-keycloak/web'
 import LayerOperations from 'components/manage/LayerOperations';
 import { Menu } from 'antd';
 import SwaggerClient from "swagger-client";
-import FeedbackMsg from "./components/FeedbackMsg";
 
 const keycloak = new Keycloak({
   "realm": env("KEYCLOAK_REALM"),
@@ -106,6 +105,7 @@ function App() {
             let plugin;
             switch (pluginName) {
                 case "okplugin-plugintest1":
+                    // plugin = require("./local_plugins_for_dev/okplugin-plugintest1"); // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
                     plugin = require("okplugin-plugintest1");
                     break;
                 default:
@@ -119,7 +119,6 @@ function App() {
             const pluginProps={
                 wantedPluginVersion: wantedPluginVersion,
                 swaggerClient: getSwaggerClient,
-                FeedbackMsg: FeedbackMsg,
             }
             const PluginComponent = plugin.default(pluginProps); // thows and error, if plugin doesn't have a default()
 
@@ -197,10 +196,7 @@ function App() {
                 <Redirect to="/grid-view/explorer" />
               </PrivateRoute>
               <PrivateRoute path="/grid-view">
-                <GridView 
-                    swaggerClient = {getSwaggerClient}
-                    FeedbackMsg = {FeedbackMsg}
-                />
+                <GridView swaggerClient = {getSwaggerClient} />
               </PrivateRoute>
               
               <PrivateRoute path="/manage/baseconfiguration">
