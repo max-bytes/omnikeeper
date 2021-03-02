@@ -19,7 +19,7 @@ export default function ShowVersion(props) {
     <div>
       Omnikeeper Core: {data.version.coreVersion ?? 'unknown'}<br />
       Technical Frontend: {process.env.REACT_APP_VERSION ?? 'unknown'}<br />
-      Loaded Plugins:
+      Loaded Backend-Plugins:
     </div>
       <ul>
       {data.version.loadedPlugins.map(lp => {
