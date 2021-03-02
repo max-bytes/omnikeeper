@@ -2,7 +2,7 @@ import React from "react";
 import { Menu } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
-import {PrivateRoute} from './../PrivateRoute'
+import {PrivateRoute} from 'components/PrivateRoute'
 import { Redirect, Route, Switch, BrowserRouter, Link } from 'react-router-dom'
 import env from "@beam-australia/react-env";
 import AddNewContext from "./AddNewContext";
@@ -12,21 +12,6 @@ import Context from "./Context";
 const apiVersion = 1;
 
 function GridView(props) {
-    // load component(s) from Core
-    let FeedbackMsg;
-    try {
-        FeedbackMsg = require("components/FeedbackMsg.js").default;
-    } catch(e) {
-        console.error(e);
-        // return Component with error
-        return (
-            <div style={{flexGrow: 1, overflowY: 'auto', margin: '10px', minWidth: '50%' }}>
-                <h3>An error occurred:</h3>
-                <p>{e.toString()}</p>
-            </div>
-        );
-    }
-
     // TODO: menu: set defaultSelectedKeys based on selected route
 
     return (
@@ -42,16 +27,16 @@ function GridView(props) {
                     />
                 <Switch>
                     <PrivateRoute path="/explorer/:contextName">
-                        <Context {...props} FeedbackMsg={FeedbackMsg} apiVersion={apiVersion} />
+                        <Context {...props} apiVersion={apiVersion} />
                     </PrivateRoute>
                     <PrivateRoute path="/edit-context/:contextName">
-                        <AddNewContext {...props} FeedbackMsg={FeedbackMsg} apiVersion={apiVersion} editMode />
+                        <AddNewContext {...props} apiVersion={apiVersion} editMode />
                     </PrivateRoute>
                     <PrivateRoute path="/create-context">
-                        <AddNewContext {...props} FeedbackMsg={FeedbackMsg} apiVersion={apiVersion} />
+                        <AddNewContext {...props} apiVersion={apiVersion} />
                     </PrivateRoute>
                     <PrivateRoute path="/explorer">
-                        <GridViewExplorer {...props} FeedbackMsg={FeedbackMsg} apiVersion={apiVersion} />
+                        <GridViewExplorer {...props} apiVersion={apiVersion} />
                     </PrivateRoute>
 
                     <PrivateRoute path="*">

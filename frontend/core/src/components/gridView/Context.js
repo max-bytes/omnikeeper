@@ -11,6 +11,7 @@ import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
 import { v4 as uuidv4 } from 'uuid';
 import MultilineTextCellEditor from './MultilineTextCellEditor';
 import IntegerCellEditor from './IntegerCellEditor';
+import FeedbackMsg from "components/FeedbackMsg.js";
 
 import { useParams, withRouter } from "react-router-dom";
 
@@ -23,7 +24,6 @@ const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
 );  
 
 export function Context(props) {
-    const FeedbackMsg = props.FeedbackMsg;
     const swaggerClient = props.swaggerClient;
     const apiVersion = props.apiVersion;
 

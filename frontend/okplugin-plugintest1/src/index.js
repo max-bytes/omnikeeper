@@ -1,30 +1,12 @@
 import React, { Component, useState } from "react";
 import { Button } from "antd";
 import "antd/dist/antd.css";
+import FeedbackMsg from "components/FeedbackMsg.js";
 import { version as pluginVersion } from './package.json';
 
 const apiVersion = 1;
 
 export default (props) => {
-    // load components from Core
-    let FeedbackMsg;
-    try {
-        FeedbackMsg = require("components/FeedbackMsg.js").default;
-    } catch(e) {
-        console.error(e);
-        // return Component with error
-        return class extends Component {
-            render() {
-                return (
-                    <div>
-                        <h3>An error occurred:</h3>
-                        <p>{e.toString()}</p>
-                    </div>
-                );
-            }
-        }
-    }
-
     const swaggerClient = props.swaggerClient;
     const [context, setContext] = useState(null)
     const [swaggerMsg, setSwaggerMsg] = useState("");

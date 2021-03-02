@@ -3,10 +3,10 @@ import { Input, Button, Popconfirm } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faSync } from "@fortawesome/free-solid-svg-icons";
 import { withRouter, Link } from "react-router-dom";
+import FeedbackMsg from "components/FeedbackMsg.js";
 import _ from "lodash";
 
 function GridViewExplorer(props) {
-    const FeedbackMsg = props.FeedbackMsg;
     const swaggerClient = props.swaggerClient;
     const apiVersion = props.apiVersion;
 

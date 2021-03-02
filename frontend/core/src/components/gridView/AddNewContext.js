@@ -2,9 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Button } from "antd";
 import { useParams, withRouter } from "react-router-dom";
 import AceEditor from "react-ace";
+import FeedbackMsg from "components/FeedbackMsg.js";
 
 function AddNewContext(props) {
-    const FeedbackMsg = props.FeedbackMsg;
     const swaggerClient = props.swaggerClient;
     const apiVersion = props.apiVersion;
     const editMode = props.editMode;
