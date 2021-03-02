@@ -48,7 +48,8 @@ build-publish-frontend-okplugin-plugintest1:
     - tags
   script:
     - cd frontend/$PLUGIN_FOLDER
-    - npm ci --unsafe-perm=true # unsafe-perm-flag needed, so 'prepublishOnly' runs properly (see https://tinyurl.com/npmUnsafePerm)
+    - npm config set unsafe-perm true # needed, so 'prepublishOnly' runs properly (see https://tinyurl.com/npmUnsafePerm)
+    - npm ci
     - |- 
       cat <<'EOF' > .npmrc
       //${NEXUS_REPOURL}:_authToken=${NPM_REPO_PUBLISH_TOKEN}
