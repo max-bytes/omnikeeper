@@ -88,14 +88,19 @@ function App() {
 
   // ########## MODULE DEVELOPMENT #########
 
+  // HACK: "It is not possible to use a fully dynamic import statement, such as import(foo).
+  // Because foo could potentially be any path to any file in your system or project."
+  // https://webpack.js.org/api/module-methods/#dynamic-expressions-in-import
+  // TODO: find a solution
+
   const availableFrontenedPlugins = [];
   
   const frontendPlugins = (() => {
-    const frontendPluginsStringArray = process.env.REACT_APP_FRONTEND_PLUGINS.split(" ");
+    const frontendPluginsStringArray = process.env.REACT_APP_PLUGINS_FRONTEND.split(" ");
 
     return frontendPluginsStringArray.map(s => {
         try{
-            // parse process.env.REACT_APP_FRONTEND_PLUGINS
+            // parse process.env.REACT_APP_PLUGINS_FRONTEND
             const pluginName = s.split("@")[0];
             const wantedPluginVersion = s.split("@")[1];
 
