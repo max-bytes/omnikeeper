@@ -3,10 +3,11 @@ import { Button } from "antd";
 import "antd/dist/antd.css";
 import { version as pluginVersion } from './package.json';
 
+const apiVersion = 1;
+
 export default (props) => {
     const FeedbackMsg = props.FeedbackMsg;
     const swaggerClient = props.swaggerClient;
-    const apiVersion = props.apiVersion;
 
     const [context, setContext] = useState(null)
 

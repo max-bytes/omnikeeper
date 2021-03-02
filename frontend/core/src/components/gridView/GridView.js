@@ -9,6 +9,8 @@ import AddNewContext from "./AddNewContext";
 import GridViewExplorer from "./GridViewExplorer";
 import Context from "./Context";
 
+const apiVersion = 1;
+
 function GridView(props) {
     // TODO: menu: set defaultSelectedKeys based on selected route
 
@@ -25,16 +27,16 @@ function GridView(props) {
                     />
                 <Switch>
                     <PrivateRoute path="/explorer/:contextName">
-                        <Context {...props} />
+                        <Context {...props} apiVersion={apiVersion} />
                     </PrivateRoute>
                     <PrivateRoute path="/edit-context/:contextName">
-                        <AddNewContext {...props} editMode />
+                        <AddNewContext {...props} apiVersion={apiVersion} editMode />
                     </PrivateRoute>
                     <PrivateRoute path="/create-context">
-                        <AddNewContext {...props} />
+                        <AddNewContext {...props} apiVersion={apiVersion} />
                     </PrivateRoute>
                     <PrivateRoute path="/explorer">
-                        <GridViewExplorer {...props} />
+                        <GridViewExplorer {...props} apiVersion={apiVersion} />
                     </PrivateRoute>
 
                     <PrivateRoute path="*">

@@ -59,7 +59,6 @@ function App() {
   const BR = () => {
 
     const swaggerDefUrl = `${env('BACKEND_URL')}/../swagger/v1/swagger.json`; // HACK: BACKEND_URL contains /graphql suffix, remove!
-    const apiVersion = 1;
     const [swaggerClient, setSwaggerClient] = useState(null);
 
     // get swagger JSON
@@ -107,12 +106,8 @@ function App() {
             let plugin;
             switch (pluginName) {
                 case "okplugin-plugintest1":
-                    // plugin = require("./local_plugins_for_dev/okplugin-plugintest1"); // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
                     plugin = require("okplugin-plugintest1");
                     break;
-                // case "okplugin-plugintest2":
-                //     plugin = require("okplugin-plugintest2");
-                //     break;
                 default:
                     return null;
             }
@@ -124,7 +119,6 @@ function App() {
             const pluginProps={
                 wantedPluginVersion: wantedPluginVersion,
                 swaggerClient: getSwaggerClient,
-                apiVersion: apiVersion,
                 FeedbackMsg: FeedbackMsg,
             }
             const PluginComponent = plugin.default(pluginProps); // thows and error, if plugin doesn't have a default()
@@ -205,7 +199,6 @@ function App() {
               <PrivateRoute path="/grid-view">
                 <GridView 
                     swaggerClient = {getSwaggerClient}
-                    apiVersion = {apiVersion}
                     FeedbackMsg = {FeedbackMsg}
                 />
               </PrivateRoute>
