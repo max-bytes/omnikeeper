@@ -29,10 +29,10 @@ build-backend:
 
     
 
-build-publish-frontend-okplugin-plugintest1:
+build-publish-frontend-okplugin-managecontexts:
   extends: .build-publish-frontend-okplugin
   variables:
-    PLUGIN_FOLDER: "okplugin-plugintest1"
+    PLUGIN_FOLDER: "okplugin-managecontexts"
 # TODO: split into build and publish?
 .build-publish-frontend-okplugin:
   image: node:13.12.0-alpine

@@ -29,7 +29,7 @@ export default function ShowVersion(props) {
       Loaded Frontend-Plugins:
       <ul>
       {props.availableFrontenedPlugins?.map(plugin => {
-        return <li key={plugin.pluginName}>{plugin.pluginName}: {plugin.pluginVersion}</li>;
+        return <li key={plugin.name}>{plugin.name}: {plugin.version}</li>;
       })}
       </ul>
   </div>

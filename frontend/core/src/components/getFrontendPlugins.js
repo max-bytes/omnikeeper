@@ -1,5 +1,5 @@
 // TODO:
-// For now this function only exports an Object with all frontendPlugins with { pluginName, pluginVersion, PluginComponent }
+// For now this function only exports an array frontendPlugins
 // Functionality will increase with future Use Cases.
 
 export default function getFrontendPlugins(props) {
@@ -16,20 +16,18 @@ export default function getFrontendPlugins(props) {
         return frontendPluginsStringArray.flatMap(s => {
             try{
                 // parse process.env.REACT_APP_PLUGINS_FRONTEND
-                const pluginName = s.split("@")[0];
+                const wantedPluginName = s.split("@")[0];
                 const wantedPluginVersion = s.split("@")[1];
 
                 let plugin;
-                switch (pluginName) {
-                    case "okplugin-plugintest1":
-                        // plugin = require("local_plugins_for_dev/okplugin-plugintest1"); // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
-                        plugin = require("okplugin-plugintest1");
+                switch (wantedPluginName) {
+                    case "okplugin-managecontexts":
+                        // plugin = require("local_plugins_for_dev/okplugin-managecontexts"); // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
+                        plugin = require("okplugin-managecontexts");
                         break;
                     default:
-                        throw new Error("Cannot find module '" + pluginName + "'"); // All available frontend-plugins should be listed in this switch. If not, throw error.
+                        throw new Error("Cannot find module '" + wantedPluginName + "'"); // All available frontend-plugins should be listed in this switch. If not, throw error.
                 }
-
-                const pluginVersion = plugin.version;
 
                 // create props
                 const pluginProps={
@@ -39,9 +37,11 @@ export default function getFrontendPlugins(props) {
                 const PluginComponent = plugin.default(pluginProps); // thows and error, if plugin doesn't have a default()
 
                 return {
-                    pluginName: pluginName,
-                    pluginVersion: pluginVersion,
-                    PluginComponent: PluginComponent
+                    name: plugin.name,
+                    title: plugin.title,
+                    version: plugin.version,
+                    description: plugin.description,
+                    component: PluginComponent
                 }
 
             } catch(e) {

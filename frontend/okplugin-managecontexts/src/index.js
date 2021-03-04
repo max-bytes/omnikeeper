@@ -2,8 +2,9 @@ import React, { Component, useState } from "react";
 import { Button } from "antd";
 import "antd/dist/antd.css";
 import FeedbackMsg from "components/FeedbackMsg.js";
-import { version as pluginVersion } from './package.json';
+import { name as pluginName, version as pluginVersion, description as pluginDescription } from './package.json';
 
+const pluginTitle = "Manage Contexts";
 const apiVersion = 1;
 
 export default (props) => {
@@ -44,4 +45,7 @@ export default (props) => {
     }
 }
 
+export const name = pluginName;
+export const title = pluginTitle;
 export const version = pluginVersion;
+export const description = pluginDescription;

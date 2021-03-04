@@ -59,11 +59,12 @@ export default function Manage(props) {
                         <ShowLogs />
                     </PrivateRoute>
                     {frontendPlugins?.map(plugin => (
-                            <PrivateRoute path={"/" + plugin.pluginName} key={plugin.pluginName}>
+                            <PrivateRoute path={"/" + plugin.name} key={plugin.name}>
                                 <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
-                                    <h2>{plugin.pluginName}</h2>
+                                    <h2 style={{ marginBottom: 0 }}>{plugin.title}</h2>
+                                    <p>{plugin.description}</p>
                                     <div style={{marginBottom: '10px'}}><Link to=""><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
-                                    <plugin.PluginComponent/>
+                                    <plugin.component/>
                                 </div>
                             </PrivateRoute>
                         )
@@ -93,7 +94,7 @@ export default function Manage(props) {
                             <ul>  
                             {
                                 frontendPlugins?.map(plugin => {
-                                    return <li key={plugin.pluginName}><Link to={"/" + plugin.pluginName}>{plugin.pluginName}</Link></li>;
+                                    return <li key={plugin.name}><Link to={"/" + plugin.name}>{plugin.title}</Link></li>;
                                 })
                             }
                             </ul>
