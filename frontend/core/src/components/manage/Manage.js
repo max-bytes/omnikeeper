@@ -15,66 +15,11 @@ import ManageCurrentUser from 'components/manage/ManageCurrentUser';
 import ShowLogs from 'components/manage/ShowLogs';
 import ShowVersion from 'components/manage/ShowVersion';
 import LayerOperations from 'components/manage/LayerOperations';
+import getFrontendPlugins from "components/getFrontendPlugins";
 
 export default function Manage(props) {
     const swaggerClient = props.swaggerClient;
-
-    // ########## FRONTEND-PLUGINS CODE #########
-    // TODO: outsource
-
-    // HACK: "It is not possible to use a fully dynamic import statement, such as import(foo).
-    // Because foo could potentially be any path to any file in your system or project."
-    // https://webpack.js.org/api/module-methods/#dynamic-expressions-in-import
-    // TODO: find a solution
-
-    const availableFrontenedPlugins = [];
-  
-    const frontendPlugins = (() => {
-        const frontendPluginsStringArray = process.env.REACT_APP_PLUGINS_FRONTEND.split(" ");
-
-        return frontendPluginsStringArray.map(s => {
-            try{
-                // parse process.env.REACT_APP_PLUGINS_FRONTEND
-                const pluginName = s.split("@")[0];
-                const wantedPluginVersion = s.split("@")[1];
-
-                let plugin;
-                switch (pluginName) {
-                    case "okplugin-plugintest1":
-                        // plugin = require("./local_plugins_for_dev/okplugin-plugintest1"); // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
-                        plugin = require("okplugin-plugintest1");
-                        break;
-                    default:
-                        return null;
-                }
-
-                const pluginVersion = plugin.version;
-                availableFrontenedPlugins.push({pluginName: pluginName, pluginVersion: pluginVersion}); // add to availableFrontenedPlugins
-
-                // create props
-                const pluginProps={
-                    wantedPluginVersion: wantedPluginVersion,
-                    swaggerClient: swaggerClient,
-                }
-                const PluginComponent = plugin.default(pluginProps); // thows and error, if plugin doesn't have a default()
-
-                return (
-                <PrivateRoute path={"/" + pluginName} key={pluginName}>
-                    <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
-                    <h2>{pluginName}</h2>
-                    <div style={{marginBottom: '10px'}}><Link to=""><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
-                    <PluginComponent/>
-                    </div>
-                </PrivateRoute>
-                );
-
-            } catch(e) {
-                return null;
-            }
-        });
-    })();
-
-    // #######################################
+    const frontendPlugins = getFrontendPlugins({swaggerClient: swaggerClient});
 
     return (
         <BrowserRouter basename={env("BASE_NAME") + "manage/"} forceRefresh={false}>
@@ -108,12 +53,22 @@ export default function Manage(props) {
                         <ManageCurrentUser />
                     </PrivateRoute>
                     <PrivateRoute path="/version">
-                        <ShowVersion availableFrontenedPlugins={availableFrontenedPlugins} />
+                        <ShowVersion availableFrontenedPlugins={frontendPlugins} />
                     </PrivateRoute>
                     <PrivateRoute path="/logs">
                         <ShowLogs />
                     </PrivateRoute>
-                    {frontendPlugins}
+                    {frontendPlugins?.map(plugin => (
+                            <PrivateRoute path={"/" + plugin.pluginName} key={plugin.pluginName}>
+                                <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
+                                    <h2>{plugin.pluginName}</h2>
+                                    <div style={{marginBottom: '10px'}}><Link to=""><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+                                    <plugin.PluginComponent/>
+                                </div>
+                            </PrivateRoute>
+                        )
+                    )}
+
                     <PrivateRoute path="*">
                         <div style={{ padding: '10px' }}><h2>Management</h2>
                             <h3>Core Management</h3>
@@ -137,7 +92,7 @@ export default function Manage(props) {
                             <h3>Plugin Management</h3>
                             <ul>  
                             {
-                                availableFrontenedPlugins?.map(plugin => {
+                                frontendPlugins?.map(plugin => {
                                     return <li key={plugin.pluginName}><Link to={"/" + plugin.pluginName}>{plugin.pluginName}</Link></li>;
                                 })
                             }
