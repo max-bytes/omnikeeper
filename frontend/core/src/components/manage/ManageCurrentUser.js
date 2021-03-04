@@ -15,7 +15,7 @@ export default function ManageCurrentUser() {
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Current User</h2>
-    <div style={{marginBottom: '10px'}}><Link to="/manage"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+    <div style={{marginBottom: '10px'}}><Link to="/"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
     <h3>DEBUG: Claims</h3>
     <ul>
       {data.debugCurrentUserClaims.map(k => (<li>{k}</li>))}

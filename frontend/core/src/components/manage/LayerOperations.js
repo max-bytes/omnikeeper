@@ -34,7 +34,7 @@ export default function LayerOperations(props) {
   if (data) {
     return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
       <h2>Layer Operations</h2>
-      <div style={{marginBottom: '10px'}}><Link to="/manage/layers"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+      <div style={{marginBottom: '10px'}}><Link to="/layers"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
         <div>Statistics for layer: {data.layerStatistics.layer.name}</div>
         <div>Note: showing statistics for stored data only, not showing data from online inbound adapters or generators</div>
         <div>

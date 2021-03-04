@@ -5,7 +5,7 @@ import Diffing from './components/diffing/Diffing';
 import 'antd/dist/antd.css';
 import Keycloak from 'keycloak-js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExchangeAlt, faPlus, faSearch, faWrench, faTh, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { faExchangeAlt, faPlus, faSearch, faWrench, faTh } from '@fortawesome/free-solid-svg-icons';
 import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/AddNewCI'
@@ -16,18 +16,7 @@ import UserBar from './components/UserBar';
 import { Redirect, Route, Switch, BrowserRouter, Link  } from 'react-router-dom'
 import ApolloWrapper from './components/ApolloWrapper';
 import env from "@beam-australia/react-env";
-import ManagePredicates from './components/manage/ManagePredicates';
-import ManageBaseConfiguration from './components/manage/ManageBaseConfiguration';
-import ManageLayers from './components/manage/ManageLayers';
-import ManageOIAContexts from './components/manage/ManageOIAContexts';
-import ManageODataAPIContexts from './components/manage/ManageODataAPIContexts';
-import ManageTraits from './components/manage/ManageTraits';
-import ManageCache from './components/manage/ManageCache';
-import ManageCurrentUser from './components/manage/ManageCurrentUser';
-import ShowLogs from './components/manage/ShowLogs';
-import ShowVersion from './components/manage/ShowVersion';
 import { ReactKeycloakProvider } from '@react-keycloak/web'
-import LayerOperations from 'components/manage/LayerOperations';
 import { Menu } from 'antd';
 import SwaggerClient from "swagger-client";
 
@@ -83,62 +72,6 @@ function App() {
         swaggerClient.authorizations.oauth2.token.access_token = localStorage.getItem('token');
         return swaggerClient;
     }, [swaggerClient]);
-
-  // ########## MODULE DEVELOPMENT #########
-
-  // HACK: "It is not possible to use a fully dynamic import statement, such as import(foo).
-  // Because foo could potentially be any path to any file in your system or project."
-  // https://webpack.js.org/api/module-methods/#dynamic-expressions-in-import
-  // TODO: find a solution
-
-  const availableFrontenedPlugins = [];
-  
-  const frontendPlugins = (() => {
-    const frontendPluginsStringArray = process.env.REACT_APP_PLUGINS_FRONTEND.split(" ");
-
-    return frontendPluginsStringArray.map(s => {
-        try{
-            // parse process.env.REACT_APP_PLUGINS_FRONTEND
-            const pluginName = s.split("@")[0];
-            const wantedPluginVersion = s.split("@")[1];
-
-            let plugin;
-            switch (pluginName) {
-                case "okplugin-plugintest1":
-                    // plugin = require("./local_plugins_for_dev/okplugin-plugintest1"); // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
-                    plugin = require("okplugin-plugintest1");
-                    break;
-                default:
-                    return null;
-            }
-
-            const pluginVersion = plugin.version;
-
-            availableFrontenedPlugins.push({pluginName: pluginName, pluginVersion: pluginVersion}); // add to availableFrontenedPlugins
-            // create props
-            const pluginProps={
-                wantedPluginVersion: wantedPluginVersion,
-                swaggerClient: getSwaggerClient,
-            }
-            const PluginComponent = plugin.default(pluginProps); // thows and error, if plugin doesn't have a default()
-
-            return (
-              <PrivateRoute path={"/manage/" + pluginName} key={pluginName}>
-                <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
-                  <h2>{pluginName}</h2>
-                  <div style={{marginBottom: '10px'}}><Link to="/manage"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
-                  <PluginComponent/>
-                </div>
-              </PrivateRoute>
-            );
-
-        } catch(e) {
-            return null;
-        }
-    });
-  })();
-
-  // #######################################
 
     if (!swaggerClient) return "Loading...";
 
@@ -198,43 +131,8 @@ function App() {
               <PrivateRoute path="/grid-view">
                 <GridView swaggerClient = {getSwaggerClient} />
               </PrivateRoute>
-              
-              <PrivateRoute path="/manage/baseconfiguration">
-                <ManageBaseConfiguration />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/predicates">
-                <ManagePredicates />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/layers/operations/:layerID">
-                <LayerOperations />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/layers">
-                <ManageLayers />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/oiacontexts">
-                <ManageOIAContexts />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/odataapicontexts">
-                <ManageODataAPIContexts />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/traits">
-                <ManageTraits />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/cache">
-                <ManageCache />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/current-user">
-                <ManageCurrentUser />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/version">
-                <ShowVersion availableFrontenedPlugins={availableFrontenedPlugins} />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/logs">
-                <ShowLogs />
-              </PrivateRoute>
-              {frontendPlugins}
               <PrivateRoute path="/manage">
-                <Manage availableFrontenedPlugins={availableFrontenedPlugins} />
+                <Manage swaggerClient = {getSwaggerClient} />
               </PrivateRoute>
 
               <Route path="*">

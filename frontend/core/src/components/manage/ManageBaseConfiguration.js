@@ -23,7 +23,7 @@ export default function ManageBaseConfiguration() {
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Base Configuration</h2>
-    <div><Link to="/manage"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+    <div><Link to="/"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
     { config ?
         <div style={{ display: 'flex', justifyContent: 'center', flexGrow: 1 }}>
             <Form 
