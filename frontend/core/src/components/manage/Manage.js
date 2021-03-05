@@ -19,7 +19,7 @@ import getFrontendPlugins from "components/getFrontendPlugins";
 
 export default function Manage(props) {
     const swaggerClient = props.swaggerClient;
-    const frontendPlugins = getFrontendPlugins({swaggerClient: swaggerClient});
+    const frontendPlugins = getFrontendPlugins(swaggerClient);
 
     return (
         <BrowserRouter basename={env("BASE_NAME") + "manage/"} forceRefresh={false}>

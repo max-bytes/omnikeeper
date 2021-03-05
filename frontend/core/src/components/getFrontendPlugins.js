@@ -2,9 +2,7 @@
 // For now this function only exports an array frontendPlugins
 // Functionality will increase with future Use Cases.
 
-export default function getFrontendPlugins(props) {
-    const swaggerClient = props.swaggerClient;
-
+export default function getFrontendPlugins(swaggerClient) {
     // HACK: "It is not possible to use a fully dynamic import statement, such as import(foo).
     // Because foo could potentially be any path to any file in your system or project."
     // https://webpack.js.org/api/module-methods/#dynamic-expressions-in-import
