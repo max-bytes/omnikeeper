@@ -61,11 +61,13 @@ export default function Manage(props) {
                     </PrivateRoute>
                     {frontendPlugins?.map(plugin => (
                             <PrivateRoute path={"/" + plugin.name} key={plugin.name}>
-                                <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
-                                    <h2 style={{ marginBottom: 0 }}>{plugin.title}</h2>
-                                    <p>{plugin.description}</p>
-                                    <div style={{marginBottom: '10px'}}><Link to=""><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
-                                    <plugin.component/>
+                                <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                    <div style={{ padding: "10px" }}>
+                                        <h2 style={{ marginBottom: 0 }}>{plugin.title}</h2>
+                                        <p>{plugin.description}</p>
+                                        <div style={{marginBottom: '10px'}}><Link to=""><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+                                    </div>
+                                    {plugin.component}
                                 </div>
                             </PrivateRoute>
                         )

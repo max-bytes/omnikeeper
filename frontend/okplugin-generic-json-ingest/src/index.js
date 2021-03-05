@@ -1,48 +1,49 @@
-import React, { Component, useState } from "react";
-import { Button } from "antd";
+import React from "react";
+import { Menu } from "antd";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
 import "antd/dist/antd.css";
-import FeedbackMsg from "components/FeedbackMsg.js";
+import {PrivateRoute} from 'components/PrivateRoute';
+import { Redirect, Route, Switch, BrowserRouter, Link } from 'react-router-dom'
+import env from "@beam-australia/react-env";
 import { name as pluginName, version as pluginVersion, description as pluginDescription } from './package.json';
+import Explorer from "./Explorer";
 
 const pluginTitle = "Manage Contexts";
 const apiVersion = 1;
 
-export default (props) => {
-    const swaggerClient = props.swaggerClient;
-    const [context, setContext] = useState(null)
-    const [swaggerMsg, setSwaggerMsg] = useState("");
-    const [swaggerErrorJson, setSwaggerErrorJson] = useState(false);
-    
-    return class extends Component {
-        render() {
-            return (
-                <div>
-                    <p>Version: {pluginVersion} (Wanted version: {props.wantedPluginVersion ? props.wantedPluginVersion : "/"})</p>
-                    <Button onClick={() => alert("'Hello' back from plugin 1")}>Say 'Hello'</Button>
-                    <Button onClick={() => refreshData()} style={{ marginLeft: "10px" }}>Try Swagger</Button>
-                    <br/><br/>
-                    {context ? JSON.stringify(context) : ""}
-                    <div style={{ height: "100%" }}>
-                        {swaggerMsg && <FeedbackMsg alertProps={{message: swaggerMsg, type: swaggerErrorJson ? "error": "success", showIcon: true, banner: true}} swaggerErrorJson={swaggerErrorJson} />}
-                    </div>
-                </div>
-            )
-        }
-    }
-
-    // READ / refresh context
-    async function refreshData() {
-        try {
-            const context = await swaggerClient().apis.OKPluginGenericJSONIngest.GetAllContexts({
-                    version: apiVersion,
-                })
-                .then((result) => result.body);
-            setContext(context);
-        } catch(e) {
-            setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
-            setSwaggerMsg(e.toString());
-        }
-    }
+export default function OKPluginGenericJSONIngest(props) {
+    return (
+        <BrowserRouter basename={env("BASE_NAME") + "manage/okplugin-generic-json-ingest"} forceRefresh={false}> {/* TODO: get rid of hardcoded manage in path */}
+            <div style={{display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <Route
+                    render={({ location, }) =>  (
+                        <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{display: 'flex', justifyContent: 'center', margin: "auto"}}>
+                            <Menu.Item key="explorer" ><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
+                            <Menu.Item key="create-context" ><Link to="/create-context"><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
+                        </Menu>
+                        )}
+                    />
+                <Switch>
+                    <PrivateRoute path="/explorer/:contextName">
+                        <div style={{ height: "100%", width: "100%", padding: "10px" }}>Context - not implemented yet</div> {/* TODO */}
+                    </PrivateRoute>
+                    <PrivateRoute path="/edit-context/:contextName">
+                        <div style={{ height: "100%", width: "100%", padding: "10px" }}>Edit  - not implemented yet</div> {/* TODO */}
+                    </PrivateRoute>
+                    <PrivateRoute path="/create-context">
+                        <div style={{ height: "100%", width: "100%", padding: "10px" }}>Create Context - not implemented yet</div> {/* TODO */}
+                    </PrivateRoute>
+                    <PrivateRoute path="/explorer">
+                        <Explorer {...props} apiVersion={apiVersion} />
+                    </PrivateRoute>
+                    <PrivateRoute path="*">
+                        <Redirect to="/explorer" />
+                    </PrivateRoute>
+                </Switch>
+            </div>
+        </BrowserRouter>
+    )
 }
 
 export const name = pluginName;
