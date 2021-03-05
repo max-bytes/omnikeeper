@@ -1,22 +1,19 @@
-// TODO:
-// For now this function only exports an array frontendPlugins
-// Functionality will increase with future Use Cases.
-
-export default function getFrontendPlugins(swaggerClient) {
-    // HACK: "It is not possible to use a fully dynamic import statement, such as import(foo).
-    // Because foo could potentially be any path to any file in your system or project."
-    // https://webpack.js.org/api/module-methods/#dynamic-expressions-in-import
-    // TODO: find a solution
-
-    const frontendPlugins = (() => {
+export default function FrontendPluginsManager(swaggerClient) {        
+    // loads all frontend plugins, specified in 'REACT_APP_PLUGINS_FRONTEND' and creates an array with plugin-Objects
+    // plugin-Objects consists of different attributes, like name, title or the component itself
+    const allFrontendPlugins = (() => {
         const frontendPluginsStringArray = process.env.REACT_APP_PLUGINS_FRONTEND.split(" ");
-
         return frontendPluginsStringArray.flatMap(s => {
             try{
                 // parse process.env.REACT_APP_PLUGINS_FRONTEND
                 const wantedPluginName = s.split("@")[0];
                 const wantedPluginVersion = s.split("@")[1];
 
+                // HACK: "It is not possible to use a fully dynamic import statement, such as import(foo).
+                // Because foo could potentially be any path to any file in your system or project."
+                // https://webpack.js.org/api/module-methods/#dynamic-expressions-in-import
+                // WORKAROUND: use this ugly hardcoded switch-statement
+                // TODO: find a solution
                 let plugin;
                 switch (wantedPluginName) {
                     case "okplugin-generic-json-ingest":
@@ -49,5 +46,19 @@ export default function getFrontendPlugins(swaggerClient) {
         });
     })();
 
-    return frontendPlugins;
+    return {
+    // ### Manager functions ###
+
+        // returns an Array with all plugin-Objects
+        getAllFrontendPlugins() {
+            return allFrontendPlugins;
+        },
+        
+        // returns a single plugin-Object by name
+        getFrontendPluginByName(name) {
+            return allFrontendPlugins.filter(fp => fp.name === name);
+        }
+
+    // #########################
+    }
 }
