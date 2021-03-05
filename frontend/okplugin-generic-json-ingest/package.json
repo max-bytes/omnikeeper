@@ -1,5 +1,5 @@
 {
-  "name": "okplugin-managecontexts",
+  "name": "okplugin-generic-json-ingest",
   "version": "0.0.0-src",
   "description": "Omnikeeper Plugin for managing contexts",
   "main": "index.js",
