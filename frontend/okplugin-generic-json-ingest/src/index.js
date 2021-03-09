@@ -7,6 +7,7 @@ import {PrivateRoute} from 'components/PrivateRoute';
 import { Redirect, Route, Switch, BrowserRouter, Link } from 'react-router-dom'
 import env from "@beam-australia/react-env";
 import { name as pluginName, version as pluginVersion, description as pluginDescription } from './package.json';
+import AddNewContext from "./AddNewContext";
 import Explorer from "./Explorer";
 
 const pluginTitle = "Manage Contexts";
@@ -25,14 +26,11 @@ export default function OKPluginGenericJSONIngest(props) {
                         )}
                     />
                 <Switch>
-                    <PrivateRoute path="/explorer/:contextName">
-                        <div style={{ height: "100%", width: "100%", padding: "10px" }}>Context - not implemented yet</div> {/* TODO */}
-                    </PrivateRoute>
                     <PrivateRoute path="/edit-context/:contextName">
-                        <div style={{ height: "100%", width: "100%", padding: "10px" }}>Edit  - not implemented yet</div> {/* TODO */}
+                        <AddNewContext {...props} apiVersion={apiVersion} editMode />
                     </PrivateRoute>
                     <PrivateRoute path="/create-context">
-                        <div style={{ height: "100%", width: "100%", padding: "10px" }}>Create Context - not implemented yet</div> {/* TODO */}
+                        <AddNewContext {...props} apiVersion={apiVersion} />
                     </PrivateRoute>
                     <PrivateRoute path="/explorer">
                         <Explorer {...props} apiVersion={apiVersion} />
