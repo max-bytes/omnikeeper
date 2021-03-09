@@ -5,41 +5,103 @@ import "ag-grid-community/dist/styles/ag-theme-balham.css";
 import { Layout, Button } from "antd";
 import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
 import FeedbackMsg from "components/FeedbackMsg.js";
+import EditRemoveButtonCellRenderer from "./EditRemoveButtonCellRenderer.js";
 
 import {  withRouter } from "react-router-dom";
 
 const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
     AgGridReact, // React-AgGrid component
     { className: "ag-theme-balham" }, // hocProps
-    true // logging off
+    true // logging
 );  
 
 const { Header, Content } = Layout;
 
 export function Explorer(props) {
     const swaggerClient = props.swaggerClient;
-    const [/*context*/, setContext] = useState(null)
-    
+
+    const [gridApi, setGridApi] = useState(null);
+    const [gridColumnApi, setGridColumnApi] = useState(null);
+
+    const [rowData, setRowData] = useState(null);
+    const defaultColDef = initDefaultColDef(); // Init defaultColDef
+
     const [swaggerMsg, setSwaggerMsg] = useState("");
     const [swaggerErrorJson, setSwaggerErrorJson] = useState(false);
 
-    // status objects
-    const rowStatus = {
-        new: { id: 0, name: "New" },
-        edited: { id: 1, name: "Edit" },
-        clean: { id: 2, name: "Clean" },
-        deleted: { id: 3, name: "Del" },
-        error: { id: 4, name: "Err" },
-    };
-    const defaultColDef = initDefaultColDef(); // Init defaultColDef
+    const columnDefs = [
+        { 
+            headerName: "Name",
+            field: "name", 
+            width: 200,
+        },
+        {
+            headerName: "extractConfig",
+            field: "extractConfig",
+            valueGetter: function (params) {
+                return JSON.stringify(params.data["extractConfig"]);
+            },
+        },
+        {
+            headerName: "loadConfig",
+            field: "loadConfig",
+            valueGetter: function (params) {
+                return JSON.stringify(params.data["loadConfig"]);
+            },
+        },
+        {
+            headerName: "transformConfig",
+            field: "transformConfig",
+            valueGetter: function (params) {
+                return JSON.stringify(params.data["transformConfig"]);
+            },
+        },
+        {
+            headerName: "",
+            field: "edit",
+            // set width = minWidth = maxWith, so fitting is suppressed in every possible way
+            width: 84,
+            minWidth: 84,
+            maxWidth: 84,
+            resizable: false,
+            pinned: "right", // pinn to the right
+            suppressSizeToFit: true, // suppress sizeToFit
+            sortable: false,
+            filter: false,
+            cellRenderer: "editRemoveButtonCellRenderer",
+            cellRendererParams: {
+                operation: "edit",
+                history: props.history,
+            },
+        },
+        {
+            headerName: "",
+            field: "remove",
+            // set width = minWidth = maxWith, so fitting is suppressed in every possible way
+            width: 104,
+            minWidth:104,
+            maxWidth: 104,
+            resizable: false,
+            pinned: "right", // pinn to the right
+            suppressSizeToFit: true, // suppress sizeToFit
+            sortable: false,
+            filter: false,
+            cellRenderer: "editRemoveButtonCellRenderer",
+            cellRendererParams: {
+                operation: "remove",
+                removeContext: removeContext,
+            },
+        },
+    ];
 
     return (
         <Layout style={{ height: "100%", maxHeight: "100%", width: "100%", maxWidth: "100%", padding: "10px", backgroundColor: "white" }} >
             <Header style={{ paddingLeft: "0px", background: "none", height: "auto", padding: "unset" }} >
                 {swaggerMsg && <FeedbackMsg alertProps={{message: swaggerMsg, type: swaggerErrorJson ? "error": "success", showIcon: true, banner: true}} swaggerErrorJson={swaggerErrorJson} />}
-                
-                {/* TODO: outsource as 'ButtonToolbar' */}
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px", marginBottom: "10px" }} >
+                    <div style={{ display: "flex" }}>
+                        <Button style={{ marginRight: "10px" }} onClick={autoSizeAll}>Fit</Button>
+                    </div>
                     <div style={{ display: "flex" }}>
                         <Button onClick={() => refreshData()}>Refresh</Button>
                     </div>
@@ -49,10 +111,17 @@ export function Explorer(props) {
                 <AgGridCopyCutPaste
                     stopEditingWhenGridLosesFocus={true}
                     onGridReady={onGridReady}
-                    rowData={[]}
+                    rowData={rowData}
+                    columnDefs={columnDefs}
                     defaultColDef={defaultColDef}
+                    frameworkComponents={{
+                        editRemoveButtonCellRenderer: EditRemoveButtonCellRenderer,
+                    }}
                     animateRows={true}
                     rowSelection="multiple"
+                    getRowNodeId={function (data) {
+                        return data.name;
+                    }}
                     overlayLoadingTemplate={
                         '<span class="ag-overlay-loading-center">Loading...</span>'
                     }
@@ -68,6 +137,8 @@ export function Explorer(props) {
 
     // grid ready
     function onGridReady(params) {
+        setGridApi(params.api);
+        setGridColumnApi(params.columnApi);
         refreshData();
     }
 
@@ -76,46 +147,72 @@ export function Explorer(props) {
         return {
             sortable: true,
             filter: true,
-            editable: true,
+            editable: false,
             resizable: true,
-            cellClassRules: {
-                // specified in css
-                new: function (params) {
-                    if (params.data.status.id === rowStatus.new.id) return true;
-                },
-                edited: function (params) {
-                    if (params.data.status.id === rowStatus.edited.id)
-                        return true;
-                },
-                clean: function (params) {
-                    if (params.data.status.id === rowStatus.clean.id)
-                        return true;
-                },
-                deleted: function (params) {
-                    if (params.data.status.id === rowStatus.deleted.id)
-                        return true;
-                },
-            },
+            width: 500,
+            cellStyle: { fontStyle: "italic" },
         };
     }
 
+    // ######################################## CRUD OPERATIONS ########################################
+
     // READ / refresh context
     async function refreshData() {
+        // important to re-create FeedbackMsg, after it has been closed!
+        setSwaggerMsg("");
+        setSwaggerErrorJson("");
+
+        // Tell AgGrid to reset rowData // important!
+        if (gridApi) {
+            gridApi.setRowData(null);
+            gridApi.showLoadingOverlay(); // trigger "Loading"-state (otherwise would be in "No Rows"-state instead)
+        }
         try {
-            const context = await swaggerClient().apis.OKPluginGenericJSONIngest.GetAllContexts({
+            const contexts = await swaggerClient().apis.OKPluginGenericJSONIngest.GetAllContexts({
                     version: props.apiVersion,
                 })
                 .then((result) => result.body);
-            console.log(context); // TODO: remove
 
-            // TODO: parse and pass to agGrid
+            setRowData(contexts); // set rowData
 
-            setContext(context);
+            // Tell AgGrid to set rowData
+            if (gridApi) {
+                gridApi.setRowData(contexts);
+            }
+
+        // INFO: don't show message on basic load
         } catch(e) {
             setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
             setSwaggerMsg(e.toString());
         }
     }
+
+    async function removeContext(contextName) {
+        try {
+            await swaggerClient().apis.OKPluginGenericJSONIngest.RemoveContext(
+                    {
+                        version: props.apiVersion,
+                        name: contextName,
+                    }
+                )
+                .then((result) => result.body);
+
+            setSwaggerErrorJson(false);
+            setSwaggerMsg("'" + contextName + "' has been removed.");
+            refreshData(); // reload
+        } catch(e) {
+            setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
+            setSwaggerMsg(e.toString());
+        }
+    }
+
+    // ######################################## AG GRID FORMATTING ########################################
+
+    // resize table and fit to column sizes
+    function autoSizeAll() {
+        gridColumnApi.autoSizeAllColumns();
+    }
+
 }
 
 export default withRouter(Explorer);
