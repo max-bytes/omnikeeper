@@ -1,10 +1,9 @@
 {
   "name": "okplugin-generic-json-ingest",
   "version": "0.0.0-src",
-  "description": "Omnikeeper Plugin for managing contexts",
+  "description": "Omnikeeper Plugin for handling generic JSON inbound data",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "./node_modules/.bin/babel src --out-dir . --copy-files",
     "prepublishOnly": "npm run build"
   },
