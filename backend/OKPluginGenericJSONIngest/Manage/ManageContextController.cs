@@ -47,7 +47,7 @@ namespace Omnikeeper.Controllers.Ingest
         }
 
         [HttpPost()]
-        public async Task<IActionResult> AddContext([FromBody, Required] Context contextCandidate)
+        public async Task<IActionResult> AddNewContext([FromBody, Required] Context contextCandidate)
         {
             try
             {

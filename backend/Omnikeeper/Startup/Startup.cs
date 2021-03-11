@@ -206,8 +206,30 @@ namespace Omnikeeper.Startup
                     }
                 });
                 c.OperationFilter<AuthenticationRequirementsOperationFilter>();
-                // Use method name as operationId
-                c.CustomOperationIds(apiDesc => apiDesc.TryGetMethodInfo(out MethodInfo methodInfo) ? methodInfo.Name : null);
+                // Use action name as operationId
+                /* NOTE: the swagger spec requires that the operationID is unique across the whole document. But Swashbuckle
+                 * itself does not enforce it. So we tried to enforce this uniqueness by checking for already used operationIDs.
+                 * If we encounter any, we throw an exception in the OperationFilter... but, the operationFilter runs more than once,
+                 * so it's impossible to distinguish between a duplicate operationId and a completely new set of operationIds.
+                 * And even if the check would work, this is not ideal, because it can lead to omnikeeper not being able to start when 
+                 * f.e. two plugins define the endpoints with the same operationId/action name.
+                 * But I believe it's better to be explicit here because if we allow duplicates in the operationIds,
+                 * frontend-code generators (such as swagger-js) trip over the duplicate operationIDs and behave weirdly or break.
+                 * 
+                 * A cleaner solution would involve splitting each plugin into their own swagger document, but that's a large
+                 * investment that we can't afford right now.
+                 */
+                //c.OperationFilter<DuplicateOperationIDOperationFilter>();
+                c.CustomOperationIds(apiDesc =>
+                {
+                    string? oid = null;
+                    if (apiDesc.ActionDescriptor is ControllerActionDescriptor ad)
+                        oid = ad.ActionName;
+                    else
+                        throw new Exception("Invalid API description encountered");
+
+                    return oid;
+                });
             });
             services.AddSwaggerGenNewtonsoftSupport();
 
@@ -384,6 +406,24 @@ namespace Omnikeeper.Startup
                     }
                 }
             }
+        }
+    }
+
+    internal class DuplicateOperationIDOperationFilter : IOperationFilter
+    {
+        private readonly ISet<string> usedOperationIds = new HashSet<string>();
+        public void Apply(OpenApiOperation operation, OperationFilterContext context)
+        {
+            string? oid;
+            if (context.ApiDescription.ActionDescriptor is ControllerActionDescriptor ad)
+                oid = ad.ActionName;
+            else
+                throw new Exception("Invalid API description encountered");
+
+            if (usedOperationIds.Contains(oid)) // operation ID is already in use, swagger actually does not support this, so we bail
+                throw new Exception($"Duplicate operation ID \"{oid}\" encountered");
+
+            usedOperationIds.Add(oid);
         }
     }
 }
