@@ -15,15 +15,11 @@ import ManageCurrentUser from 'components/manage/ManageCurrentUser';
 import ShowLogs from 'components/manage/ShowLogs';
 import ShowVersion from 'components/manage/ShowVersion';
 import LayerOperations from 'components/manage/LayerOperations';
-import FrontendPluginsManager from "components/FrontendPluginsManager";
-import useSwaggerClient from "utils/useSwaggerClient";
+import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
 
 export default function Manage(props) {
-    const swaggerClient = useSwaggerClient();
-    const frontendPluginsManager = new FrontendPluginsManager(swaggerClient);
-    const frontendPlugins = frontendPluginsManager.getAllFrontendPlugins();
-
-    if (!swaggerClient) return "Loading...";
+    const frontendPluginsManager = useFrontendPluginsManager();
+    const frontendPlugins = frontendPluginsManager?.getAllFrontendPlugins();
 
     return (
         <BrowserRouter basename={env("BASE_NAME") + "manage/"} forceRefresh={false}>
@@ -57,25 +53,28 @@ export default function Manage(props) {
                         <ManageCurrentUser />
                     </PrivateRoute>
                     <PrivateRoute path="/version">
-                        <ShowVersion availableFrontenedPlugins={frontendPlugins} />
+                        <ShowVersion/>
                     </PrivateRoute>
                     <PrivateRoute path="/logs">
                         <ShowLogs />
                     </PrivateRoute>
-                    {frontendPlugins?.map(plugin => (
-                            plugin.components.manageComponent && // only create PrivateRoute for plugins containing component 'manageComponent'
-                                <PrivateRoute path={"/" + plugin.name} key={plugin.name}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                        <div style={{ padding: "10px" }}>
-                                            <h2 style={{ marginBottom: 0 }}>{plugin.title}</h2>
-                                            <p>{plugin.description}</p>
-                                            <div style={{marginBottom: '10px'}}><Link to=""><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+                    {
+                        !frontendPlugins? <PrivateRoute path={"/:pluginName"} key="pluginLoading">"Loading..."</PrivateRoute> :
+                        frontendPlugins?.map(plugin => (
+                                plugin.components.manageComponent && // only create PrivateRoute for plugins containing component 'manageComponent'
+                                    <PrivateRoute path={"/" + plugin.name} key={plugin.name}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                            <div style={{ padding: "10px" }}>
+                                                <h2 style={{ marginBottom: 0 }}>{plugin.title}</h2>
+                                                <p>{plugin.description}</p>
+                                                <div style={{marginBottom: '10px'}}><Link to=""><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+                                            </div>
+                                            {plugin.components.manageComponent()}
                                         </div>
-                                        {plugin.components.manageComponent()}
-                                    </div>
-                                </PrivateRoute>
+                                    </PrivateRoute>
+                            )
                         )
-                    )}
+                    }
 
                     <PrivateRoute path="*">
                         <div style={{ padding: '10px' }}><h2>Management</h2>
@@ -100,7 +99,8 @@ export default function Manage(props) {
                             <h3>Plugin Management</h3>
                             <ul>  
                             {
-                                frontendPlugins?.map(plugin => {
+                                !frontendPlugins? "Loading..." :
+                                frontendPlugins.map(plugin => {
                                     // only create Link for plugins containing component 'manageComponent'
                                     if (plugin.components.manageComponent)
                                         return <li key={plugin.name}><Link to={"/" + plugin.name}>{plugin.title}</Link></li>;

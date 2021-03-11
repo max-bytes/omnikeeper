@@ -6,12 +6,16 @@ import { useQuery } from '@apollo/client';
 import { queries } from '../../graphql/queries'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
+import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
 
 export default function ShowVersion(props) {
 
   const { data } = useQuery(queries.Version);
 
-  if (!data) return "Loading";
+  const frontendPluginsManager = useFrontendPluginsManager();
+  const frontendPlugins = frontendPluginsManager?.getAllFrontendPlugins();
+
+  if (!data) return "Loading...";
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Version</h2>
@@ -28,9 +32,12 @@ export default function ShowVersion(props) {
       </ul>
       Loaded Frontend-Plugins:
       <ul>
-      {props.availableFrontenedPlugins?.map(plugin => {
-        return <li key={plugin.name}>{plugin.name}: {plugin.version}</li>;
-      })}
+      {
+        !frontendPlugins? "Loading..." :
+        frontendPlugins.map(plugin => {
+            return <li key={plugin.name}>{plugin.name}: {plugin.version}</li>;
+        })
+      }
       </ul>
   </div>
 }

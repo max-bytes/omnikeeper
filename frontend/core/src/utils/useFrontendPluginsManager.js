@@ -1,4 +1,8 @@
-export default function FrontendPluginsManager(swaggerClient) {        
+import useSwaggerClient from "utils/useSwaggerClient";
+
+export default function useFrontendPluginsManager() {
+    const swaggerClient = useSwaggerClient();
+
     // loads all frontend plugins, specified in 'REACT_APP_PLUGINS_FRONTEND' and creates an array with plugin-Objects
     // plugin-Objects consists of different attributes, like name, title or the component itself
     const allFrontendPlugins = (() => {
@@ -46,14 +50,12 @@ export default function FrontendPluginsManager(swaggerClient) {
         });
     })();
 
-    return {
-    // ### Manager functions ###
+    if (!swaggerClient) return null;
 
+    return {
         // returns an Array with all plugin-Objects
         getAllFrontendPlugins() {
             return allFrontendPlugins;
         },
-
-    // #########################
     }
 }
