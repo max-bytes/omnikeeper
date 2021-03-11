@@ -33,28 +33,7 @@ export function Explorer(props) {
         { 
             headerName: "Name",
             field: "name", 
-            width: 200,
-        },
-        {
-            headerName: "extractConfig",
-            field: "extractConfig",
-            valueGetter: function (params) {
-                return JSON.stringify(params.data["extractConfig"]);
-            },
-        },
-        {
-            headerName: "loadConfig",
-            field: "loadConfig",
-            valueGetter: function (params) {
-                return JSON.stringify(params.data["loadConfig"]);
-            },
-        },
-        {
-            headerName: "transformConfig",
-            field: "transformConfig",
-            valueGetter: function (params) {
-                return JSON.stringify(params.data["transformConfig"]);
-            },
+            width: 1000,
         },
         {
             headerName: "",
