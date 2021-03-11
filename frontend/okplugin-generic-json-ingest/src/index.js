@@ -10,11 +10,11 @@ import { name as pluginName, version as pluginVersion, description as pluginDesc
 import AddNewContext from "./AddNewContext";
 import Explorer from "./Explorer";
 
-const pluginTitle = "Manage Contexts";
+const pluginTitle = "Generic JSON Ingest";
 const apiVersion = 1;
 
 export default function OKPluginGenericJSONIngest(props) {
-    return (
+    const ManageComponent = (
         <BrowserRouter basename={env("BASE_NAME") + "manage/okplugin-generic-json-ingest"} forceRefresh={false}> {/* TODO: get rid of hardcoded manage in path */}
             <div style={{display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <Route
@@ -41,7 +41,11 @@ export default function OKPluginGenericJSONIngest(props) {
                 </Switch>
             </div>
         </BrowserRouter>
-    )
+    );
+
+    return {
+        manageComponent: ManageComponent,
+    }
 }
 
 export const name = pluginName;

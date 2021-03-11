@@ -29,14 +29,14 @@ export default function FrontendPluginsManager(swaggerClient) {
                     wantedPluginVersion: wantedPluginVersion,
                     swaggerClient: swaggerClient,
                 }
-                const PluginComponent = plugin.default(pluginProps); // thows and error, if plugin doesn't have a default()
+                const PluginComponents = plugin.default(pluginProps); // thows and error, if plugin doesn't have a default export
 
                 return {
                     name: plugin.name,
                     title: plugin.title,
                     version: plugin.version,
                     description: plugin.description,
-                    component: PluginComponent
+                    components: PluginComponents
                 }
 
             } catch(e) {
@@ -53,11 +53,6 @@ export default function FrontendPluginsManager(swaggerClient) {
         getAllFrontendPlugins() {
             return allFrontendPlugins;
         },
-        
-        // returns a single plugin-Object by name
-        getFrontendPluginByName(name) {
-            return allFrontendPlugins.filter(fp => fp.name === name);
-        }
 
     // #########################
     }

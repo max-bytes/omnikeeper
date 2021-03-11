@@ -60,16 +60,17 @@ export default function Manage(props) {
                         <ShowLogs />
                     </PrivateRoute>
                     {frontendPlugins?.map(plugin => (
-                            <PrivateRoute path={"/" + plugin.name} key={plugin.name}>
-                                <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                    <div style={{ padding: "10px" }}>
-                                        <h2 style={{ marginBottom: 0 }}>{plugin.title}</h2>
-                                        <p>{plugin.description}</p>
-                                        <div style={{marginBottom: '10px'}}><Link to=""><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+                            plugin.components.manageComponent && // only create PrivateRoute for plugins containing component 'manageComponent'
+                                <PrivateRoute path={"/" + plugin.name} key={plugin.name}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                                        <div style={{ padding: "10px" }}>
+                                            <h2 style={{ marginBottom: 0 }}>{plugin.title}</h2>
+                                            <p>{plugin.description}</p>
+                                            <div style={{marginBottom: '10px'}}><Link to=""><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+                                        </div>
+                                        {plugin.components.manageComponent}
                                     </div>
-                                    {plugin.component}
-                                </div>
-                            </PrivateRoute>
+                                </PrivateRoute>
                         )
                     )}
 
@@ -97,7 +98,11 @@ export default function Manage(props) {
                             <ul>  
                             {
                                 frontendPlugins?.map(plugin => {
-                                    return <li key={plugin.name}><Link to={"/" + plugin.name}>{plugin.title}</Link></li>;
+                                    // only create Link for plugins containing component 'manageComponent'
+                                    if (plugin.components.manageComponent)
+                                        return <li key={plugin.name}><Link to={"/" + plugin.name}>{plugin.title}</Link></li>;
+                                    else
+                                        return null;
                                 })
                             }
                             </ul>
