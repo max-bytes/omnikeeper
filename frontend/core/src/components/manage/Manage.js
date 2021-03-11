@@ -59,7 +59,7 @@ export default function Manage(props) {
                         <ShowLogs />
                     </PrivateRoute>
                     {
-                        !frontendPlugins? <PrivateRoute path={"/:pluginName"} key="pluginLoading">"Loading..."</PrivateRoute> :
+                        !frontendPlugins? <PrivateRoute path={"/:pluginName"} key="pluginLoading">Loading...</PrivateRoute> :
                         frontendPlugins?.map(plugin => (
                                 plugin.components.manageComponent && // only create PrivateRoute for plugins containing component 'manageComponent'
                                     <PrivateRoute path={"/" + plugin.name} key={plugin.name}>
