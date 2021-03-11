@@ -14,7 +14,7 @@ const pluginTitle = "Generic JSON Ingest";
 const apiVersion = 1;
 
 export default function OKPluginGenericJSONIngest(props) {
-    const ManageComponent = (
+    const ManageComponent = () =>  (
         <BrowserRouter basename={env("BASE_NAME") + "manage/okplugin-generic-json-ingest"} forceRefresh={false}> {/* TODO: get rid of hardcoded manage in path */}
             <div style={{display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <Route

@@ -68,7 +68,7 @@ export default function Manage(props) {
                                             <p>{plugin.description}</p>
                                             <div style={{marginBottom: '10px'}}><Link to=""><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
                                         </div>
-                                        {plugin.components.manageComponent}
+                                        {plugin.components.manageComponent()}
                                     </div>
                                 </PrivateRoute>
                         )
