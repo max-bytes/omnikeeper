@@ -8,10 +8,14 @@ import env from "@beam-australia/react-env";
 import AddNewContext from "./AddNewContext";
 import GridViewExplorer from "./GridViewExplorer";
 import Context from "./Context";
+import useSwaggerClient from "utils/useSwaggerClient";
 
 const apiVersion = 1;
 
 function GridView(props) {
+    const swaggerClient = useSwaggerClient();
+
+    if (!swaggerClient) return "Loading...";
     // TODO: menu: set defaultSelectedKeys based on selected route
 
     return (
@@ -27,16 +31,16 @@ function GridView(props) {
                     />
                 <Switch>
                     <PrivateRoute path="/explorer/:contextName">
-                        <Context {...props} apiVersion={apiVersion} />
+                        <Context swaggerClient={swaggerClient} apiVersion={apiVersion} />
                     </PrivateRoute>
                     <PrivateRoute path="/edit-context/:contextName">
-                        <AddNewContext {...props} apiVersion={apiVersion} editMode />
+                        <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} editMode />
                     </PrivateRoute>
                     <PrivateRoute path="/create-context">
-                        <AddNewContext {...props} apiVersion={apiVersion} />
+                        <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} />
                     </PrivateRoute>
                     <PrivateRoute path="/explorer">
-                        <GridViewExplorer {...props} apiVersion={apiVersion} />
+                        <GridViewExplorer swaggerClient={swaggerClient} apiVersion={apiVersion} />
                     </PrivateRoute>
 
                     <PrivateRoute path="*">

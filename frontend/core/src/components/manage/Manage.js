@@ -16,11 +16,14 @@ import ShowLogs from 'components/manage/ShowLogs';
 import ShowVersion from 'components/manage/ShowVersion';
 import LayerOperations from 'components/manage/LayerOperations';
 import FrontendPluginsManager from "components/FrontendPluginsManager";
+import useSwaggerClient from "utils/useSwaggerClient";
 
 export default function Manage(props) {
-    const swaggerClient = props.swaggerClient;
+    const swaggerClient = useSwaggerClient();
     const frontendPluginsManager = new FrontendPluginsManager(swaggerClient);
     const frontendPlugins = frontendPluginsManager.getAllFrontendPlugins();
+
+    if (!swaggerClient) return "Loading...";
 
     return (
         <BrowserRouter basename={env("BASE_NAME") + "manage/"} forceRefresh={false}>
