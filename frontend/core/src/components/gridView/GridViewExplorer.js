@@ -22,7 +22,7 @@ function GridViewExplorer(props) {
         try {
             setLoading(true);
             // reload
-            const context = await swaggerClient().apis.GridView.GetContexts({ version: apiVersion })
+            const context = await swaggerClient.apis.GridView.GetContexts({ version: apiVersion })
                 .then((result) => result.body);
             setContext(context); // set context
 
@@ -65,7 +65,7 @@ function GridViewExplorer(props) {
                                             title={`Are you sure to delete ${result.speakingName}?`}
                                             onConfirm={async () => {
                                                 try {
-                                                    await swaggerClient().apis.GridView.DeleteContext(
+                                                    await swaggerClient.apis.GridView.DeleteContext(
                                                             {
                                                                 version: apiVersion,
                                                                 name: result.name,

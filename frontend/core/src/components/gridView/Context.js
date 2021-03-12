@@ -326,7 +326,7 @@ export function Context(props) {
         try {
             if (_.size(changes.sparseRows)) {
                 // actually do the changes
-                const changeResults = await swaggerClient().apis.GridView.ChangeData(
+                const changeResults = await swaggerClient.apis.GridView.ChangeData(
                         {
                             version: apiVersion,
                             context: contextName,
@@ -366,12 +366,12 @@ export function Context(props) {
             gridApi.showLoadingOverlay(); // trigger "Loading"-state (otherwise would be in "No Rows"-state instead)
         }
         try {
-            const schema = await swaggerClient().apis.GridView.GetSchema({
+            const schema = await swaggerClient.apis.GridView.GetSchema({
                     version: apiVersion,
                     context: contextName,
                 })
                 .then((result) => result.body);
-            const data = await swaggerClient().apis.GridView.GetData({
+            const data = await swaggerClient.apis.GridView.GetData({
                     version: apiVersion,
                     context: contextName,
                 })

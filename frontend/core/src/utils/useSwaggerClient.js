@@ -21,7 +21,7 @@ export default function useSwaggerClient() {
                 setSwaggerClient(d);
             });
         } catch(e) {
-            console.error(e);
+            return { data: null, loading: false, error: e };
         }
     }, [swaggerDefUrl]);
     const getSwaggerClient = useCallback(() => {
@@ -30,7 +30,11 @@ export default function useSwaggerClient() {
         return swaggerClient;
     }, [swaggerClient]);
 
-    if (!swaggerClient) return null;
+    if (!swaggerClient) return { data: null, loading: true, error: null };
 
-    return getSwaggerClient;
+    try {
+        return { data: getSwaggerClient(), loading: false, error: null };
+    } catch(e) {
+        return { data: null, loading: false, error: e };
+    }
 }

@@ -12,9 +12,10 @@ export default function ShowVersion(props) {
 
   const { data } = useQuery(queries.Version);
 
-  const frontendPluginsManager = useFrontendPluginsManager();
+  const { data: frontendPluginsManager, loading: frontendPluginsmanagerLoading, error: frontendPluginsmanagerError } = useFrontendPluginsManager();
   const frontendPlugins = frontendPluginsManager?.getAllFrontendPlugins();
 
+  if (frontendPluginsmanagerError) return "Error:" + frontendPluginsmanagerError;
   if (!data) return "Loading...";
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
@@ -33,7 +34,7 @@ export default function ShowVersion(props) {
       Loaded Frontend-Plugins:
       <ul>
       {
-        !frontendPlugins? "Loading..." :
+        frontendPluginsmanagerLoading? "Loading..." :
         frontendPlugins.map(plugin => {
             return <li key={plugin.name}>{plugin.name}: {plugin.version}</li>;
         })

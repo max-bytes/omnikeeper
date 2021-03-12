@@ -18,8 +18,10 @@ import LayerOperations from 'components/manage/LayerOperations';
 import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
 
 export default function Manage(props) {
-    const frontendPluginsManager = useFrontendPluginsManager();
+    const { data: frontendPluginsManager, loading: frontendPluginsmanagerLoading, error: frontendPluginsmanagerError } = useFrontendPluginsManager();
     const frontendPlugins = frontendPluginsManager?.getAllFrontendPlugins();
+
+    if (frontendPluginsmanagerError) return "Error:" + frontendPluginsmanagerError;
 
     return (
         <BrowserRouter basename={env("BASE_NAME") + "manage/"} forceRefresh={false}>
@@ -62,7 +64,7 @@ export default function Manage(props) {
                         // 'pluginLoading'-PrivateRoute:
                         // Shows "Loading..." until frontend-plugin was loaded (if frontend-plugin doesn't exist after loading -> Shows Manage-main-component)
                         // Without it, it would show the Manage-main-component until frontend-plugin was loaded - then it would render the frontend-plugin-component (looks linke jumping around, not wanted!)
-                        !frontendPlugins? <PrivateRoute path={"/:pluginName"} key="pluginLoading">Loading...</PrivateRoute> :
+                        frontendPluginsmanagerLoading? <PrivateRoute path={"/:pluginName"} key="pluginLoading">Loading...</PrivateRoute> :
                         frontendPlugins?.map(plugin => (
                                 plugin.components.manageComponent && // only create PrivateRoute for plugins containing component 'manageComponent'
                                     <PrivateRoute path={"/" + plugin.name} key={plugin.name}>
@@ -102,7 +104,7 @@ export default function Manage(props) {
                             <h3>Plugin Management</h3>
                             <ul>  
                             {
-                                !frontendPlugins? "Loading..." :
+                                frontendPluginsmanagerLoading? "Loading..." :
                                 frontendPlugins.map(plugin => {
                                     // only create Link for plugins containing component 'manageComponent'
                                     if (plugin.components.manageComponent)

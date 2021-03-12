@@ -1,7 +1,7 @@
 import useSwaggerClient from "utils/useSwaggerClient";
 
 export default function useFrontendPluginsManager() {
-    const swaggerClient = useSwaggerClient();
+    const { data: swaggerClient, loading: swaggerClientLoading, error: swaggerClientError } = useSwaggerClient();
 
     // loads all frontend plugins, specified in 'REACT_APP_PLUGINS_FRONTEND' and creates an array with plugin-Objects
     // plugin-Objects consists of different attributes, like name, title or the component itself
@@ -21,8 +21,8 @@ export default function useFrontendPluginsManager() {
                 let plugin;
                 switch (wantedPluginName) {
                     case "okplugin-generic-json-ingest":
-                        // plugin = require("local_plugins_for_dev/okplugin-generic-json-ingest"); // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
-                        plugin = require("okplugin-generic-json-ingest");
+                        plugin = require("local_plugins_for_dev/okplugin-generic-json-ingest"); // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
+                        // plugin = require("okplugin-generic-json-ingest");
                         break;
                     default:
                         throw new Error("Cannot find module '" + wantedPluginName + "'"); // All available frontend-plugins should be listed in this switch. If not, throw error.
@@ -50,12 +50,13 @@ export default function useFrontendPluginsManager() {
         });
     })();
 
-    if (!swaggerClient) return null;
-
-    return {
+    const pluginObjects = {
         // returns an Array with all plugin-Objects
         getAllFrontendPlugins() {
             return allFrontendPlugins;
         },
     }
+
+    // 'loading' and 'error' get passed through from useSwaggerClient()
+    return { data: pluginObjects, loading: swaggerClientLoading, error: swaggerClientError };
 }

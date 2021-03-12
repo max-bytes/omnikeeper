@@ -19,7 +19,7 @@ function AddNewContext(props) {
         try {
             setLoading(true);
             if (editMode) {
-                    const contextJson = await swaggerClient().apis.OKPluginGenericJSONIngest.GetContextByName(
+                    const contextJson = await swaggerClient.apis.OKPluginGenericJSONIngest.GetContextByName(
                             {
                                 version: apiVersion,
                                 name: contextName
@@ -63,7 +63,7 @@ function AddNewContext(props) {
                         try {
                                 setLoading(true);
                                 // 'AddContext' will add a new context, if given context doesn't exist and edit the context, if it does
-                                const addContext = await swaggerClient().apis.OKPluginGenericJSONIngest.AddContext2(
+                                const addContext = await swaggerClient.apis.OKPluginGenericJSONIngest.AddContext2(
                                         {
                                             version: apiVersion,
                                         },

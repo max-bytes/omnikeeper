@@ -13,9 +13,11 @@ import useSwaggerClient from "utils/useSwaggerClient";
 const apiVersion = 1;
 
 function GridView(props) {
-    const swaggerClient = useSwaggerClient();
+    const { data: swaggerClient, loading, error } = useSwaggerClient();
 
-    if (!swaggerClient) return "Loading...";
+    if (error) return "Error:" + error;
+    if (loading) return "Loading...";
+
     // TODO: menu: set defaultSelectedKeys based on selected route
 
     return (
