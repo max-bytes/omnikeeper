@@ -9,11 +9,17 @@ import env from "@beam-australia/react-env";
 import { name as pluginName, version as pluginVersion, description as pluginDescription } from './package.json';
 import AddNewContext from "./AddNewContext";
 import Explorer from "./Explorer";
+import useSwaggerClient from "utils/useSwaggerClient";
 
 const pluginTitle = "Generic JSON Ingest";
 const apiVersion = 1;
 
 export default function OKPluginGenericJSONIngest(props) {
+    const { data: swaggerClient, loading, error } = useSwaggerClient();
+
+    if (error) return "Error:" + error;
+    if (loading) return "Loading...";
+
     const ManageComponent = () =>  (
         <BrowserRouter basename={env("BASE_NAME") + "manage/okplugin-generic-json-ingest"} forceRefresh={false}> {/* TODO: get rid of hardcoded manage in path */}
             <div style={{display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -27,13 +33,13 @@ export default function OKPluginGenericJSONIngest(props) {
                     />
                 <Switch>
                     <PrivateRoute path="/edit-context/:contextName">
-                        <AddNewContext {...props} apiVersion={apiVersion} editMode />
+                        <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} editMode />
                     </PrivateRoute>
                     <PrivateRoute path="/create-context">
-                        <AddNewContext {...props} apiVersion={apiVersion} />
+                        <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} />
                     </PrivateRoute>
                     <PrivateRoute path="/explorer">
-                        <Explorer {...props} apiVersion={apiVersion} />
+                        <Explorer swaggerClient={swaggerClient} apiVersion={apiVersion} />
                     </PrivateRoute>
                     <PrivateRoute path="*">
                         <Redirect to="/explorer" />
