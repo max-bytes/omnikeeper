@@ -21,8 +21,8 @@ export default function useFrontendPluginsManager() {
                 let plugin;
                 switch (wantedPluginName) {
                     case "okplugin-generic-json-ingest":
-                        plugin = require("local_plugins_for_dev/okplugin-generic-json-ingest"); // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
-                        // plugin = require("okplugin-generic-json-ingest");
+                        // plugin = require("local_plugins_for_dev/okplugin-generic-json-ingest"); // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
+                        plugin = require("okplugin-generic-json-ingest");
                         break;
                     default:
                         throw new Error("Cannot find module '" + wantedPluginName + "'"); // All available frontend-plugins should be listed in this switch. If not, throw error.
