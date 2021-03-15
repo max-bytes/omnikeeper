@@ -28,7 +28,6 @@ export default function Manage(props) {
     return (
         <div style={{display: 'flex', flexDirection: 'column', height: '100%', paddingTop: "15px"}}>
             <Switch>
-                <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} /> {/* Removes trailing slashes */}
                 <PrivateRoute path={`${path}/baseconfiguration`}>
                     <ManageBaseConfiguration />
                 </PrivateRoute>
@@ -66,7 +65,7 @@ export default function Manage(props) {
                     // 'pluginLoading'-PrivateRoute:
                     // Shows "Loading..." until frontend-plugin was loaded (if frontend-plugin doesn't exist after loading -> Shows Manage-main-component)
                     // Without it, it would show the Manage-main-component until frontend-plugin was loaded - then it would render the frontend-plugin-component (looks linke jumping around, not wanted!)
-                    frontendPluginsmanagerLoading? <PrivateRoute path={`${path}/:pluginName`} key="pluginLoading">Loading...</PrivateRoute> :
+                    frontendPluginsmanagerLoading? <PrivateRoute path="*" key="pluginLoading">Loading...</PrivateRoute> :
                     frontendPlugins?.map(plugin => (
                             plugin.components.manageComponent && // only create PrivateRoute for plugins containing component 'manageComponent'
                                 <PrivateRoute path={`${path}/${plugin.name}`} key={plugin.name}>
@@ -82,6 +81,7 @@ export default function Manage(props) {
                         )
                     )
                 }
+                <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} /> {/* Removes trailing slashes */}
 
                 <PrivateRoute path={path}>
                     <div style={{ padding: '10px' }}><h2>Management</h2>
