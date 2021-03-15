@@ -24,8 +24,9 @@ function GridView(props) {
         <div style={{display: 'flex', flexDirection: 'column', height: '100%', paddingTop: "15px"}}>
             <Route
                 render={({ location, }) => {
-                    const locPath = location.pathname.split("/")[2]?.toString();
-                    const selectedKey = locPath === "create-context" ? "create-context" : "explorer";
+                    const locPath = location.pathname.split("/");
+                    const locPathLast = locPath[locPath.length-1];
+                    const selectedKey = locPathLast === "create-context" ? "create-context" : "explorer";
                     return  (
                         <Menu mode="horizontal" selectedKeys={selectedKey} style={{display: 'flex', justifyContent: 'center', margin: "auto"}}>
                             <Menu.Item key="explorer" ><Link to={`${url}/explorer`}><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
