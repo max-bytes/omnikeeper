@@ -5,7 +5,7 @@ export default props => {
     if (props.operation === "edit")
         return (
             <span>
-                <Button size="small" style={{ width: "60px" }} type="primary" onClick={() => props.history.push(`/edit-context/${props.data.name}`)}>Edit</Button>
+                <Button size="small" style={{ width: "60px" }} type="primary" onClick={() => props.history.push(`edit-context/${props.data.name}`)}>Edit</Button>
             </span>
         );
     if (props.operation === "remove")
