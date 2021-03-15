@@ -3,7 +3,7 @@ import { Menu } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
 import {PrivateRoute} from 'components/PrivateRoute'
-import { Redirect, Route, Switch, Link, useRouteMatch } from 'react-router-dom'
+import { Redirect, Route, Switch, Link, useRouteMatch, useLocation } from 'react-router-dom'
 import AddNewContext from "./AddNewContext";
 import GridViewExplorer from "./GridViewExplorer";
 import Context from "./Context";
@@ -13,6 +13,7 @@ const apiVersion = 1;
 
 function GridView(props) {
     let { path, url } = useRouteMatch();
+    const { pathname } = useLocation();
 
     const { data: swaggerClient, loading, error } = useSwaggerClient();
 
@@ -34,6 +35,7 @@ function GridView(props) {
                 }}
             />
             <Switch>
+                <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} /> {/* Removes trailing slashes */}
                 <PrivateRoute path={`${path}/explorer/:contextName`}>
                     <Context swaggerClient={swaggerClient} apiVersion={apiVersion} />
                 </PrivateRoute>
@@ -47,7 +49,7 @@ function GridView(props) {
                     <GridViewExplorer swaggerClient={swaggerClient} apiVersion={apiVersion} />
                 </PrivateRoute>
 
-                <PrivateRoute exact path={path}>
+                <PrivateRoute path={path}>
                     <Redirect to={`${path}/explorer`} />
                 </PrivateRoute>
             </Switch>
