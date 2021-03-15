@@ -74,7 +74,7 @@ export default function Manage(props) {
                                         <div style={{ padding: "10px" }}>
                                             <h2 style={{ marginBottom: 0 }}>{plugin.title}</h2>
                                             <p>{plugin.description}</p>
-                                            <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+                                            <div style={{marginBottom: '10px'}}><Link to={path}><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
                                         </div>
                                         {plugin.components.manageComponent()}
                                     </div>
