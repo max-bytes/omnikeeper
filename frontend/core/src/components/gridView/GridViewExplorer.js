@@ -54,13 +54,13 @@ function GridViewExplorer(props) {
                     .map((result, index) => {
                         return (
                                 <div key={result.name} style={{display: 'flex', padding: '10px', backgroundColor: ((index % 2 === 0) ? '#eee' : '#fff')}}>
-                                    <Link to={`/explorer/${result.name}`} style={{display: "flex", flexGrow: '10', flexBasis: '0'}}>
+                                    <Link to={`explorer/${result.name}`} style={{display: "flex", flexGrow: '10', flexBasis: '0'}}>
                                         <div style={{flexGrow: '2', fontWeight: 'bold', flexBasis: '0'}}>{result.speakingName ?? result.name}</div>
                                         <div style={{flexGrow: '2', flexBasis: '0'}}>{result.name}</div>
                                         <div style={{flexGrow: '6', fontStyle: 'italic', flexBasis: '0', marginLeft: "0.5rem"}}>{result.description ?? 'No description.'}</div>
                                     </Link>
                                     <div style={{flexGrow: '4', flexBasis: '0', textAlign: "center", marginLeft: "0.5rem"}}>
-                                        <Button htmlType="submit" type="primary" onClick={() => props.history.push(`/edit-context/${result.name}`)}>Edit</Button>
+                                        <Button htmlType="submit" type="primary" onClick={() => props.history.push(`edit-context/${result.name}`)}>Edit</Button>
                                         <Popconfirm
                                             title={`Are you sure to delete ${result.speakingName}?`}
                                             onConfirm={async () => {

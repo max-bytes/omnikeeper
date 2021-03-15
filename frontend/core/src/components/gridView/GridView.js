@@ -3,8 +3,7 @@ import { Menu } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
 import {PrivateRoute} from 'components/PrivateRoute'
-import { Redirect, Route, Switch, BrowserRouter, Link } from 'react-router-dom'
-import env from "@beam-australia/react-env";
+import { Redirect, Route, Switch, Link, useRouteMatch } from 'react-router-dom'
 import AddNewContext from "./AddNewContext";
 import GridViewExplorer from "./GridViewExplorer";
 import Context from "./Context";
@@ -13,44 +12,46 @@ import useSwaggerClient from "utils/useSwaggerClient";
 const apiVersion = 1;
 
 function GridView(props) {
+    let { path, url } = useRouteMatch();
+
     const { data: swaggerClient, loading, error } = useSwaggerClient();
 
     if (error) return "Error:" + error;
     if (loading) return "Loading...";
 
-    // TODO: menu: set defaultSelectedKeys based on selected route
-
     return (
-        <BrowserRouter basename={env("BASE_NAME") + "grid-view/"} forceRefresh={false}>
-            <div style={{display: 'flex', flexDirection: 'column', height: '100%', paddingTop: "15px"}}>
-                <Route
-                    render={({ location, }) =>  (
-                        <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{display: 'flex', justifyContent: 'center', margin: "auto"}}>
-                            <Menu.Item key="explorer" ><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
-                            <Menu.Item key="create-context" ><Link to="/create-context"><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
+        <div style={{display: 'flex', flexDirection: 'column', height: '100%', paddingTop: "15px"}}>
+            <Route
+                render={({ location, }) => {
+                    const locPath = location.pathname.split("/")[2]?.toString();
+                    const selectedKey = locPath === "create-context" ? "create-context" : "explorer";
+                    return  (
+                        <Menu mode="horizontal" selectedKeys={selectedKey} style={{display: 'flex', justifyContent: 'center', margin: "auto"}}>
+                            <Menu.Item key="explorer" ><Link to={`${url}/explorer`}><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
+                            <Menu.Item key="create-context" ><Link to={`${url}/create-context`}><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
                         </Menu>
-                        )}
-                    />
-                <Switch>
-                    <PrivateRoute path="/explorer/:contextName">
-                        <Context swaggerClient={swaggerClient} apiVersion={apiVersion} />
-                    </PrivateRoute>
-                    <PrivateRoute path="/edit-context/:contextName">
-                        <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} editMode />
-                    </PrivateRoute>
-                    <PrivateRoute path="/create-context">
-                        <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} />
-                    </PrivateRoute>
-                    <PrivateRoute path="/explorer">
-                        <GridViewExplorer swaggerClient={swaggerClient} apiVersion={apiVersion} />
-                    </PrivateRoute>
+                    )
+                }}
+            />
+            <Switch>
+                <PrivateRoute path={`${path}/explorer/:contextName`}>
+                    <Context swaggerClient={swaggerClient} apiVersion={apiVersion} />
+                </PrivateRoute>
+                <PrivateRoute path={`${path}/edit-context/:contextName`}>
+                    <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} editMode />
+                </PrivateRoute>
+                <PrivateRoute path={`${path}/create-context`}>
+                    <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} />
+                </PrivateRoute>
+                <PrivateRoute path={`${path}/explorer`}>
+                    <GridViewExplorer swaggerClient={swaggerClient} apiVersion={apiVersion} />
+                </PrivateRoute>
 
-                    <PrivateRoute path="*">
-                        <Redirect to="/explorer" />
-                    </PrivateRoute>
-                </Switch>
-            </div>
-        </BrowserRouter>
+                <PrivateRoute exact path={path}>
+                    <Redirect to={`${path}/explorer`} />
+                </PrivateRoute>
+            </Switch>
+        </div>
     );
 }
 
