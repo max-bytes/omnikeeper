@@ -3,12 +3,12 @@ import useSwaggerClient from "utils/useSwaggerClient";
 export default function useFrontendPluginsManager() {
     const { data: swaggerClient, loading: swaggerClientLoading, error: swaggerClientError } = useSwaggerClient();
 
-    // loads all frontend plugins, specified in 'REACT_APP_PLUGINS_FRONTEND' and creates an array with plugin-Objects
-    // plugin-Objects consists of different attributes, like name, title or the component itself
-    const allFrontendPlugins = (() => {
-        const frontendPluginsStringArray = process.env.REACT_APP_PLUGINS_FRONTEND.split(" ");
-        return frontendPluginsStringArray.flatMap(s => {
-            try{
+    try {
+        // loads all frontend plugins, specified in 'REACT_APP_PLUGINS_FRONTEND' and creates an array with plugin-Objects
+        // plugin-Objects consists of different attributes, like name, title or the component itself
+        const allFrontendPlugins = (() => {
+            const frontendPluginsStringArray = process.env.REACT_APP_PLUGINS_FRONTEND.split(" ");
+            return frontendPluginsStringArray.flatMap(s => {
                 // parse process.env.REACT_APP_PLUGINS_FRONTEND
                 const wantedPluginName = s.split("@")[0];
                 const wantedPluginVersion = s.split("@")[1];
@@ -20,9 +20,10 @@ export default function useFrontendPluginsManager() {
                 // TODO: find a solution
                 let plugin;
                 switch (wantedPluginName) {
+                    // Try to 'require' frontend-plugins. -> No error-handling needed, if 'require' fails: It's okay, that some plugins cannot be found.
                     case "okplugin-generic-json-ingest":
-                        // plugin = require("local_plugins_for_dev/okplugin-generic-json-ingest"); // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
-                        plugin = require("okplugin-generic-json-ingest");
+                        // try { plugin = require("local_plugins_for_dev/okplugin-generic-json-ingest"); } catch(e) { return []; } // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
+                        try { plugin = require("okplugin-generic-json-ingest"); } catch(e) { return []; } 
                         break;
                     default:
                         throw new Error("Cannot find module '" + wantedPluginName + "'"); // All available frontend-plugins should be listed in this switch. If not, throw error.
@@ -42,21 +43,20 @@ export default function useFrontendPluginsManager() {
                     description: plugin.description,
                     components: PluginComponents
                 }
+            });
+        })();
 
-            } catch(e) {
-                console.error(e);
-                return [];
-            }
-        });
-    })();
+        const pluginObjects = {
+            // returns an Array with all plugin-Objects
+            getAllFrontendPlugins() {
+                return allFrontendPlugins;
+            },
+        }
 
-    const pluginObjects = {
-        // returns an Array with all plugin-Objects
-        getAllFrontendPlugins() {
-            return allFrontendPlugins;
-        },
+        // 'loading' and 'error' get passed through from useSwaggerClient()
+        return { data: pluginObjects, loading: swaggerClientLoading, error: swaggerClientError };
+
+    } catch(e) {
+        return { data: null, loading: false, error: e };
     }
-
-    // 'loading' and 'error' get passed through from useSwaggerClient()
-    return { data: pluginObjects, loading: swaggerClientLoading, error: swaggerClientError };
 }
