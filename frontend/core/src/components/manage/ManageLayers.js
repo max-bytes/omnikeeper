@@ -36,13 +36,13 @@ export default function ManageLayers(props) {
       },
     },
     { headerName: "Operations", cellRenderer: 'linkCellRenderer', editable: false,
-      cellRendererParams: { link: (props) => `/layers/operations/${props.node.id}`, content: (props) => 'Operations' }
+      cellRendererParams: { link: (props) => `layers/operations/${props.node.id}`, content: (props) => 'Operations' }
     }
   ];
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Layers</h2>
-    <div style={{marginBottom: '10px'}}><Link to="/"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+    <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
 
     <AgGridCrud idIsUserCreated={false} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
       saveRow={async row => {

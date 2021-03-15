@@ -20,7 +20,7 @@ export default function ShowVersion(props) {
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Version</h2>
-    <div style={{marginBottom: '10px'}}><Link to="/"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+    <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
     <div>
       Omnikeeper Core: {data.version.coreVersion ?? 'unknown'}<br />
       Technical Frontend: {process.env.REACT_APP_VERSION ?? 'unknown'}<br />
