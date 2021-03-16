@@ -64,7 +64,7 @@ export default function ShowVersion() {
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Logs</h2>
-    <div style={{marginBottom: '10px'}}><Link to="/manage"><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+    <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
     <div style={{backgroundColor: '#333333', overflow: 'scroll'}}>
       <Console logs={logs} variant="dark" />
     </div>

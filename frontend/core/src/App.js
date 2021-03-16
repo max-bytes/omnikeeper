@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import './App.css';
 import Explorer from './components/Explorer';
 import Diffing from './components/diffing/Diffing';
@@ -16,18 +16,7 @@ import UserBar from './components/UserBar';
 import { Redirect, Route, Switch, BrowserRouter, Link  } from 'react-router-dom'
 import ApolloWrapper from './components/ApolloWrapper';
 import env from "@beam-australia/react-env";
-import ManagePredicates from './components/manage/ManagePredicates';
-import ManageBaseConfiguration from './components/manage/ManageBaseConfiguration';
-import ManageLayers from './components/manage/ManageLayers';
-import ManageOIAContexts from './components/manage/ManageOIAContexts';
-import ManageODataAPIContexts from './components/manage/ManageODataAPIContexts';
-import ManageTraits from './components/manage/ManageTraits';
-import ManageCache from './components/manage/ManageCache';
-import ManageCurrentUser from './components/manage/ManageCurrentUser';
-import ShowLogs from './components/manage/ShowLogs';
-import ShowVersion from './components/manage/ShowVersion';
 import { ReactKeycloakProvider } from '@react-keycloak/web'
-import LayerOperations from 'components/manage/LayerOperations';
 import { Menu } from 'antd';
 
 const keycloak = new Keycloak({
@@ -105,48 +94,11 @@ function App() {
               <PrivateRoute path="/explorer">
                 <SearchCIAdvanced />
               </PrivateRoute>
-              <PrivateRoute exact path="/grid-view">
-                <Redirect to="/grid-view/explorer" />
-              </PrivateRoute>
               <PrivateRoute path="/grid-view">
-                <GridView />
-              </PrivateRoute>
-              
-              <PrivateRoute path="/manage/baseconfiguration">
-                <ManageBaseConfiguration />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/predicates">
-                <ManagePredicates />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/layers/operations/:layerID">
-                <LayerOperations />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/layers">
-                <ManageLayers />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/oiacontexts">
-                <ManageOIAContexts />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/odataapicontexts">
-                <ManageODataAPIContexts />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/traits">
-                <ManageTraits />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/cache">
-                <ManageCache />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/current-user">
-                <ManageCurrentUser />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/version">
-                <ShowVersion />
-              </PrivateRoute>
-              <PrivateRoute path="/manage/logs">
-                <ShowLogs />
+                <GridView/>
               </PrivateRoute>
               <PrivateRoute path="/manage">
-                <Manage />
+                <Manage/>
               </PrivateRoute>
 
               <Route path="*">
