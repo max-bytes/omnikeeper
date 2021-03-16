@@ -26,7 +26,7 @@ RUN [[ ! -z "$plugins" ]] && npm install $plugins
 COPY . ./
 
 # build
-RUN PUBLIC_URL=__PUBLIC_URL_PLACEHOLDER__ REACT_APP_VERSION="$version" npm run build
+RUN PUBLIC_URL=__PUBLIC_URL_PLACEHOLDER__ REACT_APP_VERSION="$version" REACT_APP_PLUGINS_FRONTEND="$plugins" npm run build
 
 # Create deployable image
 FROM docker-registry.mhx.at/infra-docker/container-images/react-frontend:latest

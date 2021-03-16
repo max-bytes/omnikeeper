@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Button } from "antd";
 import { useParams, withRouter } from "react-router-dom";
 import AceEditor from "react-ace";
-import FeedbackMsg from "./FeedbackMsg";
+import FeedbackMsg from "components/FeedbackMsg.js";
 
 function AddNewContext(props) {
     const swaggerClient = props.swaggerClient;
@@ -21,7 +21,7 @@ function AddNewContext(props) {
         try {
             setLoading(true);
             if (editMode) {
-                    const contextJson = await swaggerClient().apis.GridView.GetContext(
+                    const contextJson = await swaggerClient.apis.GridView.GetContext(
                             {
                                 version: apiVersion,
                                 name: contextName
@@ -62,7 +62,7 @@ function AddNewContext(props) {
                     try {
                         setLoading(true);
                         const addContext = editMode
-                            ? await swaggerClient().apis.GridView.EditContext(
+                            ? await swaggerClient.apis.GridView.EditContext(
                                 {
                                     version: apiVersion,
                                     name: contextName,
@@ -71,7 +71,7 @@ function AddNewContext(props) {
                                     requestBody: context,
                                 }
                             ).then((result) => result.body)
-                            : await swaggerClient().apis.GridView.AddContext(
+                            : await swaggerClient.apis.GridView.AddContext(
                                 {
                                     version: apiVersion,
                                 },
