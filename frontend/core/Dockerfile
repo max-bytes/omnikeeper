@@ -20,7 +20,7 @@ RUN echo -e "registry=https://repo.mhx.at/repository/npm-stable/\n_auth=${npm_re
 RUN npm ci
 
 # install plugins, if any are defined
-RUN [[ ! -z "$plugins" ]] && npm install $plugins
+RUN ([[ ! -z "$plugins" ]] && npm install $plugins) || true
 
 # add app
 COPY . ./
