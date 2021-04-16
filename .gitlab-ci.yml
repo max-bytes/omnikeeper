@@ -220,10 +220,12 @@ build-swagger-definition:
     expire_in: 2 days
 
 publish-client-library-go:
-  image: docker:stable
+  image: makocchi/alpine-git-curl-jq
   stage: publish
   when: on_success
   needs: ["build-swagger-definition"]
+  services:
+    - docker:19.03.1-dind
   script:
     - "cd clients/scripts/go"
     - "VERSION=$CI_COMMIT_TAG"

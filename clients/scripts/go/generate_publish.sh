@@ -40,9 +40,7 @@ cat $swagger_file \
     | jq 'del(.paths[] | select(.post.requestBody.content."multipart/form-data" != null))' \
     > build/omnikeeper_trimmed.json
 
-
 cd build/go
-
 
 # Clone the current repo
 if [ "$GIT_TOKEN" = "" ]; then
