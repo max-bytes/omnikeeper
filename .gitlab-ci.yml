@@ -213,7 +213,7 @@ build-swagger-definition:
     - dotnet build "Omnikeeper/Omnikeeper.csproj" -c Release
     - "cd Omnikeeper"
     - "dotnet tool restore"
-    - dotnet swagger tofile --output /omnikeeper.json .\bin\Release\netcoreapp3.1\Omnikeeper.dll v1
+    - dotnet swagger tofile --output /omnikeeper.json ./bin/Release/netcoreapp3.1/Omnikeeper.dll v1
   artifacts:
     paths:
       - /omnikeeper.json
