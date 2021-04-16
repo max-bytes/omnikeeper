@@ -220,7 +220,7 @@ build-swagger-definition:
     expire_in: 2 days
 
 publish-client-library-go:
-  image:  yobasystems/alpine-docker
+  image:  docker:stable
   stage: publish
   when: on_success
   needs: ["build-swagger-definition"]
