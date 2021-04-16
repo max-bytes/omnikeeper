@@ -209,14 +209,14 @@ build-swagger-definition:
 #    - tags
   script:
     - "cd backend"
-    - dotnet nuget remove source "MHX nuget Repository"  # HACK: we need to remove the internal repo, nuget is stupid
+    - dotnet nuget remove source "MHX nuget Repository"  # HACK: we need to remove the internal repo, nuget is stupid :(
     - dotnet build "Omnikeeper/Omnikeeper.csproj" -c Release
     - "cd Omnikeeper"
     - "dotnet tool restore"
-    - dotnet swagger tofile --output /omnikeeper.json ./bin/Release/netcoreapp3.1/Omnikeeper.dll v1
+    - dotnet swagger tofile --output ../../omnikeeper.json ./bin/Release/netcoreapp3.1/Omnikeeper.dll v1
   artifacts:
     paths:
-      - /omnikeeper.json
+      - omnikeeper.json
     expire_in: 2 days
 
 publish-client-library-go:
@@ -227,6 +227,6 @@ publish-client-library-go:
   script:
     - "cd clients/scripts/go"
     - "VERSION=$CI_COMMIT_TAG"
-    - sh generate_publish.sh landscape omnikeeper-client-go "Update to version $VERSION" www.mhx.at/gitlab /omnikeeper.json
+    - sh generate_publish.sh landscape omnikeeper-client-go "Update to version $VERSION" www.mhx.at/gitlab omnikeeper.json
 #  only: 
 #    - tags
