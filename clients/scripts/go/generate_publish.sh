@@ -43,11 +43,11 @@ cat $swagger_file \
 cd build/go
 
 # Clone the current repo
-if [ "$GIT_TOKEN" = "" ]; then
-    echo "[INFO] \$GIT_TOKEN (environment variable) is not set. Using the git credential in your environment."
+if [ "$CI_JOB_TOKEN" = "" ]; then
+    echo "[INFO] \$CI_JOB_TOKEN (environment variable) is not set. Using the git credential in your environment."
     git clone https://${git_host}/${git_user_id}/${git_repo_id}.git .
 else
-    git clone https://${git_user_id}:${GIT_TOKEN}@${git_host}/${git_user_id}/${git_repo_id}.git .
+    git clone https://${git_user_id}:${CI_JOB_TOKEN}@${git_host}/${git_user_id}/${git_repo_id}.git .
 fi
 
 # create updated library
