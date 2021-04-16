@@ -227,7 +227,7 @@ publish-client-library-go:
   services:
     - docker:19.03.1-dind
   script:
-    - "apk get git jq"
+    - "apk add git jq"
     - "cd clients/scripts/go"
     - "VERSION=$CI_COMMIT_TAG"
     - sh generate_publish.sh landscape omnikeeper-client-go "Update to version $VERSION" www.mhx.at/gitlab ../../../omnikeeper.json
