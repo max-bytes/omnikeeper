@@ -74,7 +74,7 @@ docker run --rm -v "${PWD}/..:/local" -u `id -u $USER`:`id -g $USER` openapitool
 # Flags --git-* are necessary so that the generated go.mod file contains the correct package definition
 
 ls -lah
- head README.md
+head README.md
 
 # Adds the files in the local repository and stages them for commit.
 git add .
