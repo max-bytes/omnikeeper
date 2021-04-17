@@ -1,29 +1,16 @@
 #!/bin/bash
 
-git_user_id=$1
-git_repo_id=$2
-release_note=$3
-git_host=$4
-swagger_file=$5
-version=$6
+   
+git_host=$1
+swagger_file=$2
+version=$3
+
+git_user_id="landscape"
+git_repo_id="omnikeeper-client-go"
+release_note="Update to version ${version}"
 
 if [ "$git_host" = "" ]; then
     echo "[INFO] No git_host provided."
-    exit -1
-fi
-
-if [ "$git_user_id" = "" ]; then
-    echo "[INFO] No git_user_id provided."
-    exit -1
-fi
-
-if [ "$git_repo_id" = "" ]; then
-    echo "[INFO] No git_repo_id provided."
-    exit -1
-fi
-
-if [ "$release_note" = "" ]; then
-    echo "[INFO] No release_note provided."
     exit -1
 fi
 
