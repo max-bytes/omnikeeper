@@ -5,6 +5,7 @@ git_repo_id=$2
 release_note=$3
 git_host=$4
 swagger_file=$5
+version=$6
 
 if [ "$git_host" = "" ]; then
     echo "[INFO] No git_host provided."
@@ -28,6 +29,11 @@ fi
 
 if [ "$swagger_file" = "" ]; then
     echo "[INFO] No swagger_file provided."
+    exit -1
+fi
+
+if [ "$version" = "" ]; then
+    echo "[INFO] No version provided."
     exit -1
 fi
 
@@ -55,7 +61,7 @@ fi
 
 
 # create updated library
-echo "Generating client version ${VERSION}"
+echo "Generating client version ${version}"
 docker run --rm -v "${PWD}/..:/local" -u `id -u $USER`:`id -g $USER` openapitools/openapi-generator-cli generate \
     -i /local/omnikeeper_trimmed.json \
     -g go \
@@ -63,7 +69,7 @@ docker run --rm -v "${PWD}/..:/local" -u `id -u $USER`:`id -g $USER` openapitool
     -p enumClassPrefix=true \
     --git-host "${git_host}" --git-user-id "${git_user_id}" --git-repo-id "${git_repo_id}.git" \
     --global-property=verbose=true \
-    --additional-properties=packageName=okclient,packageVersion="${VERSION}"
+    --additional-properties=packageName=okclient,packageVersion="${version}"
 # Flag -p enumClassPrefix=true is necessary to avoid enum name clashes
 # Flags --git-* are necessary so that the generated go.mod file contains the correct package definition
 

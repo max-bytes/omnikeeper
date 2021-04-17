@@ -229,6 +229,6 @@ publish-client-library-go:
   script:
     - "apk add git jq"
     - "cd clients/scripts/go"
-    - VERSION=$CI_COMMIT_TAG sh generate_publish.sh landscape omnikeeper-client-go "Update to version $VERSION" www.mhx.at/gitlab ../../../omnikeeper.json
+    - sh generate_publish.sh landscape omnikeeper-client-go "Update to version $CI_COMMIT_TAG" www.mhx.at/gitlab ../../../omnikeeper.json $CI_COMMIT_TAG
 #  only: 
 #    - tags
