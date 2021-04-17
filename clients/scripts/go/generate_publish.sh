@@ -42,12 +42,15 @@ cat $swagger_file \
 
 cd build/go
 
+# make git remember credentials
+git config --global credential.helper store
+
 # Clone the current repo
-if [ "$CI_JOB_TOKEN" = "" ]; then
-    echo "[INFO] \$CI_JOB_TOKEN (environment variable) is not set. Using the git credential in your environment."
+if [ "$ACCESS_TOKEN_REPO_CLIENT_GO" = "" ]; then
+    echo "[INFO] \$ACCESS_TOKEN_REPO_CLIENT_GO (environment variable) is not set. Using the git credential in your environment."
     git clone https://${git_host}/${git_user_id}/${git_repo_id}.git .
 else
-    git clone https://${git_user_id}:${CI_JOB_TOKEN}@${git_host}/${git_user_id}/${git_repo_id}.git .
+    git clone https://${git_user_id}:${ACCESS_TOKEN_REPO_CLIENT_GO}@${git_host}/${git_user_id}/${git_repo_id}.git .
 fi
 
 # create updated library
