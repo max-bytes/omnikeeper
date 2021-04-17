@@ -50,6 +50,8 @@ cd build/go
 
 # make git remember credentials
 git config --global credential.helper store
+git config --global user.email "generator@mhx.at"
+git config --global user.name "generator"
 
 # Clone the current repo
 if [ "$ACCESS_TOKEN_REPO_CLIENT_GO" = "" ]; then
@@ -72,9 +74,6 @@ docker run --rm -v "${PWD}/..:/local" -u `id -u $USER`:`id -g $USER` openapitool
     --additional-properties=packageName=okclient,packageVersion=${version}
 # Flag -p enumClassPrefix=true is necessary to avoid enum name clashes
 # Flags --git-* are necessary so that the generated go.mod file contains the correct package definition
-
-ls -lah
-head README.md
 
 # Adds the files in the local repository and stages them for commit.
 git add .
