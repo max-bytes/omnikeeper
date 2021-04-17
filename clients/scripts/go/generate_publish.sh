@@ -61,7 +61,7 @@ docker run --rm -v "${PWD}/..:/local" -u `id -u $USER`:`id -g $USER` openapitool
     -p enumClassPrefix=true \
     --git-host "${git_host}" --git-user-id "${git_user_id}" --git-repo-id "${git_repo_id}.git" \
     --global-property=verbose=true \
-    --additional-properties=packageName=okclient,packageVersion=1.0.0
+    --additional-properties=packageName=okclient,packageVersion=$VERSION
 # Flag -p enumClassPrefix=true is necessary to avoid enum name clashes
 # Flags --git-* are necessary so that the generated go.mod file contains the correct package definition
 
