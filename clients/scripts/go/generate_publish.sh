@@ -33,8 +33,8 @@ if [ "$swagger_file" = "" ]; then
 fi
 
 if [ "$version" = "" ]; then
-    echo "[INFO] No version provided."
-    exit -1
+    version="0.0.0"
+    echo "[INFO] No version provided, setting to ${version}"
 fi
 
 rm -rf build/go
@@ -69,9 +69,12 @@ docker run --rm -v "${PWD}/..:/local" -u `id -u $USER`:`id -g $USER` openapitool
     -p enumClassPrefix=true \
     --git-host "${git_host}" --git-user-id "${git_user_id}" --git-repo-id "${git_repo_id}.git" \
     --global-property=verbose=true \
-    --additional-properties=packageName=okclient,packageVersion="${version}"
+    --additional-properties=packageName=okclient,packageVersion=${version}
 # Flag -p enumClassPrefix=true is necessary to avoid enum name clashes
 # Flags --git-* are necessary so that the generated go.mod file contains the correct package definition
+
+ls -lah
+ head README.md
 
 # Adds the files in the local repository and stages them for commit.
 git add .

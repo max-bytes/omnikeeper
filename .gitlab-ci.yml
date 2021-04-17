@@ -205,8 +205,6 @@ build-swagger-definition:
     - dockerbuild
   services:
     - docker:19.03.1-dind
-  only: 
-    - tags
   script:
     - "cd backend"
     - dotnet nuget remove source "MHX nuget Repository"  # HACK: we need to remove the internal repo, nuget is stupid :(
@@ -218,6 +216,8 @@ build-swagger-definition:
     paths:
       - omnikeeper.json
     expire_in: 2 days
+#  only: 
+#    - tags
 
 publish-client-library-go:
   image:  docker:stable
@@ -230,5 +230,5 @@ publish-client-library-go:
     - "apk add git jq"
     - "cd clients/scripts/go"
     - sh generate_publish.sh landscape omnikeeper-client-go "Update to version $CI_COMMIT_TAG" www.mhx.at/gitlab ../../../omnikeeper.json $CI_COMMIT_TAG
-  only: 
-    - tags
+#  only: 
+#    - tags
