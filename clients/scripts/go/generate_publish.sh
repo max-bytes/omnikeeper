@@ -53,7 +53,9 @@ else
     git clone https://${git_user_id}:${ACCESS_TOKEN_REPO_CLIENT_GO}@${git_host}/${git_user_id}/${git_repo_id}.git .
 fi
 
+
 # create updated library
+echo "Generating client version ${VERSION}"
 docker run --rm -v "${PWD}/..:/local" -u `id -u $USER`:`id -g $USER` openapitools/openapi-generator-cli generate \
     -i /local/omnikeeper_trimmed.json \
     -g go \
@@ -61,7 +63,7 @@ docker run --rm -v "${PWD}/..:/local" -u `id -u $USER`:`id -g $USER` openapitool
     -p enumClassPrefix=true \
     --git-host "${git_host}" --git-user-id "${git_user_id}" --git-repo-id "${git_repo_id}.git" \
     --global-property=verbose=true \
-    --additional-properties=packageName=okclient,packageVersion=$VERSION
+    --additional-properties=packageName=okclient,packageVersion="${VERSION}"
 # Flag -p enumClassPrefix=true is necessary to avoid enum name clashes
 # Flags --git-* are necessary so that the generated go.mod file contains the correct package definition
 
