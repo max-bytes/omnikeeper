@@ -19,7 +19,6 @@ func main() {
 	oauth2cfg := &oauth2.Config{
 		ClientID: "landscape-omnikeeper",
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  "https://auth-dev.mhx.at/auth/realms/acme/protocol/openid-connect/auth",
 			TokenURL: "https://auth-dev.mhx.at/auth/realms/acme/protocol/openid-connect/token",
 		},
 	}
@@ -40,7 +39,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error when calling `CIApi.GetAllCIIDs``: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
 	}
-	// response from `GetAllCIIDs`: []string
 	fmt.Fprintf(os.Stdout, "Response from `CIApi.GetAllCIIDs`: %v\n", resp)
 }
 
