@@ -206,12 +206,15 @@ build-swagger-definition:
   services:
     - docker:19.03.1-dind
   script:
-    - "cd backend"
-    - dotnet nuget remove source "MHX nuget Repository"  # HACK: we need to remove the internal repo, nuget is stupid :(
-    - dotnet build "Omnikeeper/Omnikeeper.csproj" -c Release
-    - "cd Omnikeeper"
-    - "dotnet tool restore"
-    - dotnet swagger tofile --output ../../omnikeeper.json ./bin/Release/netcoreapp3.1/Omnikeeper.dll v1
+# TODO, HACK: we haven't found a good way to generate client APIs for plugin endpoints, so we fallback to a static swagger definition file
+    - cp clients/source/omnikeeper_static.json omnikeeper.json
+# HACK: commented out code for dynamically creating a swagger definition file
+#    - "cd backend"
+#    - dotnet nuget remove source "MHX nuget Repository"  # HACK: we need to remove the internal repo, nuget is stupid :(
+#    - dotnet build "Omnikeeper/Omnikeeper.csproj" -c Release
+#    - "cd Omnikeeper"
+#    - "dotnet tool restore"
+#    - dotnet swagger tofile --output ../../omnikeeper.json ./bin/Release/netcoreapp3.1/Omnikeeper.dll v1
   artifacts:
     paths:
       - omnikeeper.json
