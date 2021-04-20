@@ -246,3 +246,15 @@ publish-client-library-python:
     - sh clients/scripts/python/generate_publish.sh www.mhx.at/gitlab omnikeeper.json $CI_COMMIT_TAG
   only: 
     - tags
+publish-client-library-java:
+  image:  docker:stable
+  stage: publish
+  when: on_success
+  needs: ["build-swagger-definition"]
+  services:
+    - docker:19.03.1-dind
+  script:
+    - "apk add git"
+    - sh clients/scripts/java/generate_publish.sh www.mhx.at/gitlab omnikeeper.json $CI_COMMIT_TAG
+  only: 
+    - tags
