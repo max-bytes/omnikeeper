@@ -10,7 +10,7 @@
           "tags": [
             "ActiveDirectoryXMLIngest"
           ],
-          "operationId": "Ingest",
+          "operationId": "IngestXML",
           "parameters": [
             {
               "name": "version",
@@ -3682,7 +3682,7 @@
           "tags": [
             "OKPluginGenericJSONIngest"
           ],
-          "operationId": "AddContext",
+          "operationId": "AddNewContext",
           "parameters": [
             {
               "name": "version",
