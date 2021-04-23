@@ -25,6 +25,10 @@ export default function useFrontendPluginsManager() {
                         // try { plugin = require("local_plugins_for_dev/okplugin-generic-json-ingest"); } catch(e) { return []; } // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
                         try { plugin = require("okplugin-generic-json-ingest"); } catch(e) { return []; } 
                         break;
+                    case "okplugin-grid-view":
+                        // try { plugin = require("local_plugins_for_dev/okplugin-grid-view"); } catch(e) { return []; } // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
+                        try { plugin = require("okplugin-grid-view"); } catch(e) { return []; } 
+                        break;
                     default:
                         throw new Error("Cannot find module '" + wantedPluginName + "'"); // All available frontend-plugins should be listed in this switch. If not, throw error.
                 }
@@ -39,6 +43,7 @@ export default function useFrontendPluginsManager() {
                 return {
                     name: plugin.name,
                     title: plugin.title,
+                    icon: plugin.icon ? plugin.icon : <></>, // only frontend-plugins with a 'MainMenuComponent' must export 'icon'
                     version: plugin.version,
                     description: plugin.description,
                     components: PluginComponents

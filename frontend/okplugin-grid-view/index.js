@@ -1,26 +1,27 @@
 import React from "react";
 import { Menu } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
+import { faTh, faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
 import {PrivateRoute} from 'components/PrivateRoute'
-import { Redirect, Route, Switch, Link, useRouteMatch, useLocation } from 'react-router-dom'
+import { Redirect, Route, Switch, Link, } from 'react-router-dom'
+import { name as pluginName, version as pluginVersion, description as pluginDescription } from './package.json';
 import AddNewContext from "./AddNewContext";
 import GridViewExplorer from "./GridViewExplorer";
 import Context from "./Context";
 import useSwaggerClient from "utils/useSwaggerClient";
 
+const pluginTitle = "Grid View";
+const pluginIcon = <FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/>;
 const apiVersion = 1;
 
-function GridView(props) {
-    let { path, url } = useRouteMatch();
-    const { pathname } = useLocation();
-
+export default function OKPluginGridView(props) {
     const { data: swaggerClient, loading, error } = useSwaggerClient();
 
     if (error) return "Error:" + error;
     if (loading) return "Loading...";
 
-    return (
+    // INFO: Main Menu Components do not need attributes 'path', 'url' and 'pathname', since they are placed in root
+    const MainMenuComponent = () => (
         <div style={{display: 'flex', flexDirection: 'column', height: '100%', paddingTop: "15px"}}>
             <Route
                 render={({ location, }) => {
@@ -29,33 +30,41 @@ function GridView(props) {
                     const selectedKey = locPathLast === "create-context" ? "create-context" : "explorer";
                     return  (
                         <Menu mode="horizontal" selectedKeys={selectedKey} style={{display: 'flex', justifyContent: 'center', margin: "auto"}}>
-                            <Menu.Item key="explorer" ><Link to={`${url}/explorer`}><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
-                            <Menu.Item key="create-context" ><Link to={`${url}/create-context`}><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
+                            <Menu.Item key="explorer" ><Link to={`/${pluginName}/explorer`}><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
+                            <Menu.Item key="create-context" ><Link to={`/${pluginName}/create-context`}><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
                         </Menu>
                     )
                 }}
             />
             <Switch>
-                <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} /> {/* Removes trailing slashes */}
-                <PrivateRoute path={`${path}/explorer/:contextName`}>
+                {/* TODO: find way to get rid of trailing slashes - could cause problems */}
+                <PrivateRoute path={`/${pluginName}/explorer/:contextName`}>
                     <Context swaggerClient={swaggerClient} apiVersion={apiVersion} />
                 </PrivateRoute>
-                <PrivateRoute path={`${path}/edit-context/:contextName`}>
+                <PrivateRoute path={`/${pluginName}/edit-context/:contextName`}>
                     <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} editMode />
                 </PrivateRoute>
-                <PrivateRoute path={`${path}/create-context`}>
+                <PrivateRoute path={`/${pluginName}/create-context`}>
                     <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} />
                 </PrivateRoute>
-                <PrivateRoute path={`${path}/explorer`}>
+                <PrivateRoute path={`/${pluginName}/explorer`}>
                     <GridViewExplorer swaggerClient={swaggerClient} apiVersion={apiVersion} />
                 </PrivateRoute>
 
-                <PrivateRoute path={path}>
-                    <Redirect to={`${path}/explorer`} />
+                <PrivateRoute path={"/"}>
+                    <Redirect to={`/${pluginName}/explorer`} />
                 </PrivateRoute>
             </Switch>
         </div>
-    );
+    )
+
+    return {
+        mainMenuComponent: MainMenuComponent,
+    }
 }
 
-export default GridView;
+export const name = pluginName;
+export const title = pluginTitle;
+export const icon = pluginIcon;
+export const version = pluginVersion;
+export const description = pluginDescription;

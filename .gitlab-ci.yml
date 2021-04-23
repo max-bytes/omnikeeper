@@ -57,8 +57,38 @@ build-publish-frontend-okplugin-generic-json-ingest:
     - npm version $CI_COMMIT_TAG # set version
     - npm publish
 
-    
-    
+
+
+build-publish-frontend-okplugin-grid-view:
+  extends: .build-publish-frontend-okplugin
+  variables:
+    PLUGIN_FOLDER: "okplugin-grid-view"
+# TODO: split into build and publish?
+.build-publish-frontend-okplugin:
+  image: node:13.12.0-alpine
+  stage: build
+  when: on_success
+  variables:  
+    NEXUS_REPOURL: "repo.mhx.at/repository/npm-stable-hosted/"
+  tags:
+    - dockerbuild
+  services:
+    - docker:19.03.1-dind
+  only: 
+    - tags
+  script:
+    - cd frontend/$PLUGIN_FOLDER
+    - npm config set unsafe-perm true # needed, so 'prepublishOnly' runs properly (see https://tinyurl.com/npmUnsafePerm)
+    - npm ci
+    - |- 
+      cat <<'EOF' > .npmrc
+      //${NEXUS_REPOURL}:_authToken=${NPM_REPO_PUBLISH_TOKEN}
+      EOF
+    - npm version $CI_COMMIT_TAG # set version
+    - npm publish
+
+
+
 build-backend-base:
   image: mcr.microsoft.com/dotnet/core/sdk:3.1-buster
   stage: build

@@ -1,0 +1,26 @@
+{
+  "name": "okplugin-grid-view",
+  "version": "0.0.0-src",
+  "description": "Omnikeeper Plugin - Grid View",
+  "main": "index.js",
+  "scripts": {
+    "build": "./node_modules/.bin/babel src --out-dir . --copy-files",
+    "prepublishOnly": "npm run build"
+  },
+  "author": "Benjamin Kurz",
+  "peerDependencies": {
+    "react": "^16.6.1",
+    "react-dom": "^16.6.3"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.13.0",
+    "@babel/core": "^7.13.1",
+    "@babel/preset-env": "^7.13.5",
+    "@babel/preset-react": "^7.12.13",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0"
+  },
+  "publishConfig": {
+    "registry": "https://repo.mhx.at/repository/npm-stable-hosted/"
+  }
+}
