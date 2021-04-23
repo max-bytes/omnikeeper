@@ -14,47 +14,48 @@ const pluginTitle = "Generic JSON Ingest";
 const apiVersion = 1;
 
 export default function OKPluginGenericJSONIngest(props) {
-    let { path, url } = useRouteMatch();
-    const { pathname } = useLocation();
-
     const { data: swaggerClient, loading, error } = useSwaggerClient();
 
     if (error) return "Error:" + error;
     if (loading) return "Loading...";
 
-    const ManageComponent = () =>  (
-        <div style={{display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <Route
-                render={({ location, }) => {
-                    const locPath = location.pathname.split("/");
-                    const locPathLast = locPath[locPath.length-1];
-                    const selectedKey = locPathLast === "create-context" ? "create-context" : "explorer";
-                    return  (
-                        <Menu mode="horizontal" selectedKeys={selectedKey} style={{display: 'flex', justifyContent: 'center', margin: "auto"}}>
-                            <Menu.Item key="explorer" ><Link to={`${url}/${pluginName}/explorer`}><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
-                            <Menu.Item key="create-context" ><Link to={`${url}/${pluginName}/create-context`}><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
-                        </Menu>
-                    )
-                }}
-            />
-            <Switch>
-                <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} /> {/* Removes trailing slashes */}
-                <PrivateRoute path={`${path}/${pluginName}/edit-context/:contextName`}>
-                    <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} editMode />
-                </PrivateRoute>
-                <PrivateRoute path={`${path}/${pluginName}/create-context`}>
-                    <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} />
-                </PrivateRoute>
-                <PrivateRoute path={`${path}/${pluginName}/explorer`}>
-                    <Explorer swaggerClient={swaggerClient} apiVersion={apiVersion} />
-                </PrivateRoute>
+    const ManageComponent = () => {
+        let { path, url } = useRouteMatch();
+        const { pathname } = useLocation();
+        return (
+            <div style={{display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <Route
+                    render={({ location, }) => {
+                        const locPath = location.pathname.split("/");
+                        const locPathLast = locPath[locPath.length-1];
+                        const selectedKey = locPathLast === "create-context" ? "create-context" : "explorer";
+                        return  (
+                            <Menu mode="horizontal" selectedKeys={selectedKey} style={{display: 'flex', justifyContent: 'center', margin: "auto"}}>
+                                <Menu.Item key="explorer" ><Link to={`${url}/${pluginName}/explorer`}><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
+                                <Menu.Item key="create-context" ><Link to={`${url}/${pluginName}/create-context`}><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
+                            </Menu>
+                        )
+                    }}
+                />
+                <Switch>
+                    <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} /> {/* Removes trailing slashes */}
+                    <PrivateRoute path={`${path}/${pluginName}/edit-context/:contextName`}>
+                        <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} editMode />
+                    </PrivateRoute>
+                    <PrivateRoute path={`${path}/${pluginName}/create-context`}>
+                        <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} />
+                    </PrivateRoute>
+                    <PrivateRoute path={`${path}/${pluginName}/explorer`}>
+                        <Explorer swaggerClient={swaggerClient} apiVersion={apiVersion} />
+                    </PrivateRoute>
 
-                <PrivateRoute path={path}>
-                <Redirect to={`${path}/${pluginName}/explorer`} />
-            </PrivateRoute>
-            </Switch>
-        </div>
-    );
+                    <PrivateRoute path={path}>
+                    <Redirect to={`${path}/${pluginName}/explorer`} />
+                </PrivateRoute>
+                </Switch>
+            </div>
+        )
+    }
 
     return {
         manageComponent: ManageComponent,
