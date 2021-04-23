@@ -43,7 +43,7 @@ export default function useFrontendPluginsManager() {
                 return {
                     name: plugin.name,
                     title: plugin.title,
-                    icon: plugin.icon ? plugin.icon : <></>, // only frontend-plugins with a 'MainMenuComponent' must export 'icon'
+                    icon: plugin.icon ? plugin.icon : "", // only frontend-plugins with a 'MainMenuComponent' must export 'icon'
                     version: plugin.version,
                     description: plugin.description,
                     components: PluginComponents
