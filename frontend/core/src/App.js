@@ -130,13 +130,19 @@ function App() {
               <PrivateRoute path="/manage">
                 <Manage/>
               </PrivateRoute>
+              <Route exact path="/">
+                <Redirect to="/explorer" />
+              </Route>
 
-              {
+              {/* { 
+                // TODO: Catch all remaining routes and redirect to "/explorer" (or show '404').
+                // This approach doesn't work - It also captures nested links to frontend-plugins during loading, which is wrong!:
                     !frontendPluginsmanagerLoading &&
                     <Route path="*">
                         <Redirect to="/explorer" />
                     </Route>
-              }
+              } */}
+
             </Switch>
           </div>
         </BrowserRouter>
