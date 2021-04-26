@@ -112,13 +112,26 @@ function App() {
                     // Shows "Loading..." until frontend-plugin was loaded (if frontend-plugin doesn't exist after loading -> Shows Main-component)
                     // Without it, it would show the Main-component until frontend-plugin was loaded - then it would render the frontend-plugin-component (looks linke jumping around, not wanted!)
                     frontendPluginsmanagerLoading? <PrivateRoute path="*" key="pluginLoading">Loading...</PrivateRoute> :
-                    frontendPlugins?.map(plugin => (
-                            plugin.components.mainMenuComponent && // only create PrivateRoute for plugins containing component 'mainMenuComponent'
-                                <PrivateRoute path={`/${plugin.path}`} key={plugin.name}>
-                                    {plugin.components.mainMenuComponent()}
-                                </PrivateRoute>
-                        )
-                    )
+                    <>
+                        {frontendPlugins?.map(plugin => (
+                                plugin.components.mainMenuComponent && // only create PrivateRoute for plugins containing component 'mainMenuComponent'
+                                    <PrivateRoute path={`/${plugin.path}`} key={plugin.name}>
+                                        {plugin.components.mainMenuComponent()}
+                                    </PrivateRoute>
+                            )
+                        )}
+                        {/* {
+                            // FOR TESTING
+                            ["grid-view"].map(g => (
+                                <Route path={`/${g}`}>
+                                        {g}
+                                </Route>
+                            ))
+                        } */}
+                        {/* <Route path="*">
+                            <Redirect to="/explorer" />
+                        </Route>  */}
+                    </>
               }
               <PrivateRoute path="/manage">
                 <Manage/>
