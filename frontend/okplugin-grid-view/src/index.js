@@ -28,7 +28,7 @@ export default function OKPluginGridView(props) {
 
     // INFO: Main Menu Components do not need attributes 'path', 'url' and 'pathname', since they are placed in root
     const MainMenuComponent = () => (
-        <div style={{display: 'flex', flexDirection: 'column', height: '100%', paddingTop: "15px"}}>
+        <div style={{display: 'flex', flexDirection: 'column', height: '100%' }}>
             <Route
                 render={({ location, }) => {
                     const locPath = location.pathname.split("/");

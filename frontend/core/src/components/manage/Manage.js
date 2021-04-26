@@ -26,7 +26,7 @@ export default function Manage(props) {
     if (frontendPluginsmanagerError) return "Error:" + frontendPluginsmanagerError;
 
     return (
-        <div style={{display: 'flex', flexDirection: 'column', height: '100%', paddingTop: "15px"}}>
+        <div style={{display: 'flex', flexDirection: 'column', height: '100%' }}>
             <Switch>
                 <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} /> {/* Removes trailing slashes */}
                 <PrivateRoute path={`${path}/baseconfiguration`}>

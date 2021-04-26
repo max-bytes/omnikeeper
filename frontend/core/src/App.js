@@ -5,7 +5,7 @@ import Diffing from './components/diffing/Diffing';
 import 'antd/dist/antd.css';
 import Keycloak from 'keycloak-js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExchangeAlt, faPlus, faSearch, faWrench, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { faExchangeAlt, faPlus, faSearch, faWrench } from '@fortawesome/free-solid-svg-icons';
 import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/AddNewCI'
@@ -119,7 +119,6 @@ function App() {
                                         <div style={{ padding: "10px" }}>
                                             <h2 style={{ marginBottom: 0 }}>{plugin.title}</h2>
                                             <p>{plugin.description}</p>
-                                            <div style={{marginBottom: '10px'}}><Link to={"/"}><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
                                         </div>
                                         {plugin.components.mainMenuComponent()}
                                     </div>
