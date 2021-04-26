@@ -77,7 +77,7 @@ function App() {
                                 frontendPlugins.map(plugin => {
                                     // only create Link for plugins containing component 'mainMenuComponent'
                                     if (plugin.components.mainMenuComponent)
-                                        return <Menu.Item key={plugin.name} style={{ marginRight: "60px" }}><Link to={`/${plugin.name}`}>{plugin.icon} Grid View</Link></Menu.Item>;
+                                        return <Menu.Item key={plugin.name} style={{ marginRight: "60px" }}><Link to={`/${plugin.path}`}>{plugin.icon} {plugin.title}</Link></Menu.Item>;
                                     else
                                         return null;
                                 })
@@ -114,7 +114,7 @@ function App() {
                     frontendPluginsmanagerLoading? <PrivateRoute path="*" key="pluginLoading">Loading...</PrivateRoute> :
                     frontendPlugins?.map(plugin => (
                             plugin.components.mainMenuComponent && // only create PrivateRoute for plugins containing component 'mainMenuComponent'
-                                <PrivateRoute path={`/${plugin.name}`} key={plugin.name}>
+                                <PrivateRoute path={`/${plugin.path}`} key={plugin.name}>
                                     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                                         <div style={{ padding: "10px" }}>
                                             <h2 style={{ marginBottom: 0 }}>{plugin.title}</h2>

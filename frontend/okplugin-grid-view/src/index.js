@@ -10,9 +10,15 @@ import GridViewExplorer from "./GridViewExplorer";
 import Context from "./Context";
 import useSwaggerClient from "utils/useSwaggerClient";
 
-const pluginTitle = "Grid View";
-const pluginIcon = <FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/>;
 const apiVersion = 1;
+const pluginPath = "grid-view"
+
+export const name = pluginName;
+export const title = "Grid View";
+export const version = pluginVersion;
+export const description = pluginDescription;
+export const path = pluginPath;
+export const icon = <FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/>;
 
 export default function OKPluginGridView(props) {
     const { data: swaggerClient, loading, error } = useSwaggerClient();
@@ -30,29 +36,29 @@ export default function OKPluginGridView(props) {
                     const selectedKey = locPathLast === "create-context" ? "create-context" : "explorer";
                     return  (
                         <Menu mode="horizontal" selectedKeys={selectedKey} style={{display: 'flex', justifyContent: 'center', margin: "auto"}}>
-                            <Menu.Item key="explorer" ><Link to={`/${pluginName}/explorer`}><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
-                            <Menu.Item key="create-context" ><Link to={`/${pluginName}/create-context`}><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
+                            <Menu.Item key="explorer" ><Link to={`/${pluginPath}/explorer`}><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
+                            <Menu.Item key="create-context" ><Link to={`/${pluginPath}/create-context`}><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
                         </Menu>
                     )
                 }}
             />
             <Switch>
                 {/* TODO: find way to get rid of trailing slashes - could cause problems */}
-                <PrivateRoute path={`/${pluginName}/explorer/:contextName`}>
+                <PrivateRoute path={`/${pluginPath}/explorer/:contextName`}>
                     <Context swaggerClient={swaggerClient} apiVersion={apiVersion} />
                 </PrivateRoute>
-                <PrivateRoute path={`/${pluginName}/edit-context/:contextName`}>
+                <PrivateRoute path={`/${pluginPath}/edit-context/:contextName`}>
                     <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} editMode />
                 </PrivateRoute>
-                <PrivateRoute path={`/${pluginName}/create-context`}>
+                <PrivateRoute path={`/${pluginPath}/create-context`}>
                     <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} />
                 </PrivateRoute>
-                <PrivateRoute path={`/${pluginName}/explorer`}>
+                <PrivateRoute path={`/${pluginPath}/explorer`}>
                     <GridViewExplorer swaggerClient={swaggerClient} apiVersion={apiVersion} />
                 </PrivateRoute>
 
                 <PrivateRoute path={"/"}>
-                    <Redirect to={`/${pluginName}/explorer`} />
+                    <Redirect to={`/${pluginPath}/explorer`} />
                 </PrivateRoute>
             </Switch>
         </div>
@@ -62,9 +68,3 @@ export default function OKPluginGridView(props) {
         mainMenuComponent: MainMenuComponent,
     }
 }
-
-export const name = pluginName;
-export const title = pluginTitle;
-export const icon = pluginIcon;
-export const version = pluginVersion;
-export const description = pluginDescription;

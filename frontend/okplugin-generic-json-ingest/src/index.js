@@ -10,8 +10,14 @@ import AddNewContext from "./AddNewContext";
 import Explorer from "./Explorer";
 import useSwaggerClient from "utils/useSwaggerClient";
 
-const pluginTitle = "Generic JSON Ingest";
 const apiVersion = 1;
+const pluginPath = "generic-json-ingest"
+
+export const name = pluginName;
+export const title = "Generic JSON Ingest";
+export const version = pluginVersion;
+export const description = pluginDescription;
+export const path = pluginPath;
 
 export default function OKPluginGenericJSONIngest(props) {
     const { data: swaggerClient, loading, error } = useSwaggerClient();
@@ -31,26 +37,26 @@ export default function OKPluginGenericJSONIngest(props) {
                         const selectedKey = locPathLast === "create-context" ? "create-context" : "explorer";
                         return  (
                             <Menu mode="horizontal" selectedKeys={selectedKey} style={{display: 'flex', justifyContent: 'center', margin: "auto"}}>
-                                <Menu.Item key="explorer" ><Link to={`${url}/${pluginName}/explorer`}><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
-                                <Menu.Item key="create-context" ><Link to={`${url}/${pluginName}/create-context`}><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
+                                <Menu.Item key="explorer" ><Link to={`${url}/${pluginPath}/explorer`}><FontAwesomeIcon icon={faSearch} style={{marginRight: "10px"}}/>Contexts</Link></Menu.Item>
+                                <Menu.Item key="create-context" ><Link to={`${url}/${pluginPath}/create-context`}><FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>Create New Context</Link></Menu.Item>
                             </Menu>
                         )
                     }}
                 />
                 <Switch>
                     <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} /> {/* Removes trailing slashes */}
-                    <PrivateRoute path={`${path}/${pluginName}/edit-context/:contextName`}>
+                    <PrivateRoute path={`${path}/${pluginPath}/edit-context/:contextName`}>
                         <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} editMode />
                     </PrivateRoute>
-                    <PrivateRoute path={`${path}/${pluginName}/create-context`}>
+                    <PrivateRoute path={`${path}/${pluginPath}/create-context`}>
                         <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} />
                     </PrivateRoute>
-                    <PrivateRoute path={`${path}/${pluginName}/explorer`}>
+                    <PrivateRoute path={`${path}/${pluginPath}/explorer`}>
                         <Explorer swaggerClient={swaggerClient} apiVersion={apiVersion} />
                     </PrivateRoute>
 
                     <PrivateRoute path={path}>
-                    <Redirect to={`${path}/${pluginName}/explorer`} />
+                    <Redirect to={`${path}/${pluginPath}/explorer`} />
                 </PrivateRoute>
                 </Switch>
             </div>
@@ -61,8 +67,3 @@ export default function OKPluginGenericJSONIngest(props) {
         manageComponent: ManageComponent,
     }
 }
-
-export const name = pluginName;
-export const title = pluginTitle;
-export const version = pluginVersion;
-export const description = pluginDescription;
