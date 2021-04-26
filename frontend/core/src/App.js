@@ -115,13 +115,7 @@ function App() {
                     frontendPlugins?.map(plugin => (
                             plugin.components.mainMenuComponent && // only create PrivateRoute for plugins containing component 'mainMenuComponent'
                                 <PrivateRoute path={`/${plugin.path}`} key={plugin.name}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                        <div style={{ padding: "10px" }}>
-                                            <h2 style={{ marginBottom: 0 }}>{plugin.title}</h2>
-                                            <p>{plugin.description}</p>
-                                        </div>
-                                        {plugin.components.mainMenuComponent()}
-                                    </div>
+                                    {plugin.components.mainMenuComponent()}
                                 </PrivateRoute>
                         )
                     )
