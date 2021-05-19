@@ -30,7 +30,7 @@ namespace PerfTests
             DBSetup.Setup();
 
             var dbcb = new DBConnectionBuilder();
-            conn = dbcb.Build(DBSetup.dbName, false, true);
+            conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
 
             var services = InitServices(enableModelCaching);
             serviceProvider = services.BuildServiceProvider();
@@ -48,7 +48,7 @@ namespace PerfTests
         {
             var services = new ServiceCollection();
             ServiceRegistration.RegisterLogging(services);
-            ServiceRegistration.RegisterDB(services, DBSetup.dbName, false, true);
+            ServiceRegistration.RegisterDB(services, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
             ServiceRegistration.RegisterOIABase(services);
             ServiceRegistration.RegisterModels(services, enableModelCaching, false, false);
             ServiceRegistration.RegisterServices(services);

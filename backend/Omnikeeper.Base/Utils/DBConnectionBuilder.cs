@@ -4,6 +4,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Omnikeeper.Base.Utils
 {
@@ -11,28 +12,46 @@ namespace Omnikeeper.Base.Utils
     {
         private readonly ISet<int> connectorIDs = new HashSet<int>();
 
-        public NpgsqlConnection Build(IConfiguration configuration)
+        public NpgsqlConnection BuildFromConnectionString(string cs, bool reloadTypes)
         {
-            var cs = configuration.GetConnectionString("LandscapeDatabaseConnection"); // TODO: add Enlist=false to connection string
             NpgsqlConnection conn = new NpgsqlConnection(cs);
             conn.Open();
             connectorIDs.Add(conn.ProcessID);
-            conn.TypeMapper.UseJsonNet();
-            MapEnums(conn);
-            return conn;
-        }
-
-        public bool HasConnectorID(int id) => connectorIDs.Contains(id);
-
-        public NpgsqlConnection Build(string dbName, bool pooling = true, bool reloadTypes = false)
-        {
-            NpgsqlConnection conn = new NpgsqlConnection($"Server=127.0.0.1;User Id=postgres; Password=postgres;Database={dbName};Pooling={pooling};Enlist=false");
-            conn.Open();
             if (reloadTypes) conn.ReloadTypes(); // HACK, see https://github.com/npgsql/npgsql/issues/2366
             conn.TypeMapper.UseJsonNet();
             MapEnums(conn);
             return conn;
         }
+
+        public NpgsqlConnection BuildFromUserSecrets(Assembly rootAssembly, bool reloadTypes, string configName = "DatabaseConnection")
+        {
+            var cs = GetConnectionStringFromUserSecrets(rootAssembly, configName);
+            return BuildFromConnectionString(cs, reloadTypes);
+        }
+
+        public static string GetConnectionStringFromUserSecrets(Assembly rootAssembly, string configName = "DatabaseConnection")
+        {
+            ConfigurationBuilder cb = new ConfigurationBuilder();
+            cb.AddUserSecrets(rootAssembly);
+            var c = cb.Build();
+            var connectionString = c.GetConnectionString(configName);
+            return connectionString;
+        }
+
+        public bool HasConnectorID(int id) => connectorIDs.Contains(id);
+
+        //public NpgsqlConnection Build(string dbName)
+        //{
+        //    bool pooling = false;
+        //    bool reloadTypes = true;
+        //    NpgsqlConnection conn = new NpgsqlConnection($"Server=localhost;Port=15432;User Id=postgres; Password=postgres;Database={dbName};Pooling={pooling};Enlist=false");
+        //    conn.Open();
+        //    connectorIDs.Add(conn.ProcessID);
+        //    if (reloadTypes) conn.ReloadTypes(); // HACK, see https://github.com/npgsql/npgsql/issues/2366
+        //    conn.TypeMapper.UseJsonNet();
+        //    MapEnums(conn);
+        //    return conn;
+        //}
 
         private void MapEnums(NpgsqlConnection conn)
         {

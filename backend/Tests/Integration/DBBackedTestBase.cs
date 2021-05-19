@@ -20,7 +20,7 @@ namespace Tests.Integration
             DBSetup.Setup();
 
             var dbcb = new DBConnectionBuilder();
-            conn = dbcb.Build(DBSetup.dbName, false, true);
+            conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
             modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
         }
 
