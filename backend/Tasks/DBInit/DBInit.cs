@@ -28,7 +28,7 @@ namespace Tasks.DBInit
             DBSetup.Setup();
 
             var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build("landscape_prototype", false, true);
+            using var conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
 
             var partitionModel = new PartitionModel();
             var attributeModel = new AttributeModel(new BaseAttributeModel(partitionModel));

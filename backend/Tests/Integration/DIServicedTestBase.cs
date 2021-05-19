@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
@@ -52,7 +53,7 @@ namespace Tests.Integration
         {
             var services = new ServiceCollection();
             ServiceRegistration.RegisterLogging(services);
-            ServiceRegistration.RegisterDB(services, DBSetup.dbName, false, true);
+            ServiceRegistration.RegisterDB(services, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
             ServiceRegistration.RegisterOIABase(services);
             ServiceRegistration.RegisterModels(services, enableModelCaching, false, false);
             ServiceRegistration.RegisterServices(services);

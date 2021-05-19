@@ -54,7 +54,7 @@ namespace Tests.Ingest
             var userGUID = new Guid("7dc848b7-881d-4785-9f25-985e9b6f2715");
 
             var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            using var conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
             //using var conn = dbcb.Build("landscape_prototype", false, true);
             var partitionModel = new PartitionModel();
             var attributeModel = new AttributeModel(new BaseAttributeModel(partitionModel));

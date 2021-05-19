@@ -2,6 +2,7 @@
 using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Threading.Tasks;
@@ -10,25 +11,27 @@ namespace Tests.Integration
 {
     public class DBSetup
     {
-        public static readonly string dbName = "tmp";
+        //public static readonly string dbName = "tmp";
 
         public static void Setup()
         {
-            _Setup(dbName);
-        }
+            var connectionString = DBConnectionBuilder.GetConnectionStringFromUserSecrets(typeof(DBSetup).Assembly);
+            var connectionStringBuilder = new NpgsqlConnectionStringBuilder(connectionString);
+            connectionStringBuilder.Pooling = false;
+            var dbName = connectionStringBuilder.Database;
+            connectionStringBuilder.Database = null; // set database to null for the first connection to be able to drop it
 
-        private static void _Setup(string _dbName)
-        {
             // drop db
-            NpgsqlConnection conn = new NpgsqlConnection("Server=localhost;User Id=postgres; Password=postgres;Pooling=false");
+            NpgsqlConnection conn = new NpgsqlConnection(connectionStringBuilder.ToString());// "Server=localhost;User Id=postgres; Password=postgres;Pooling=false");
             conn.Open();
             // force disconnect other users
-            new NpgsqlCommand(@$"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE datname = '{_dbName}' AND pid <> pg_backend_pid();", conn).ExecuteNonQuery();
-            new NpgsqlCommand($"DROP DATABASE {_dbName};", conn).ExecuteNonQuery();
+            new NpgsqlCommand(@$"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE datname = '{dbName}' AND pid <> pg_backend_pid();", conn).ExecuteNonQuery();
+            new NpgsqlCommand($"DROP DATABASE {dbName};", conn).ExecuteNonQuery();
             conn.Close();
 
             // create db, setup schema and migrations
-            var migrationResult = DBMigration.Migrate($"Server=localhost;User Id=postgres; Password=postgres;Database={_dbName};Pooling=false", false);
+            connectionStringBuilder.Database = dbName;
+            var migrationResult = DBMigration.Migrate(connectionStringBuilder.ToString(), false);
 
             if (!migrationResult.Successful)
                 throw new Exception("Database migration failed!", migrationResult.Error);

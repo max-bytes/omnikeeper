@@ -24,7 +24,7 @@ namespace Tests.Integration.Model
         public async Task RelationStatisticsTest()
         {
             var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            using var conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
@@ -70,7 +70,7 @@ namespace Tests.Integration.Model
         public async Task GetLayerChangesetsHistoryTest()
         {
             var dbcb = new DBConnectionBuilder();
-            using var conn = dbcb.Build(DBSetup.dbName, false, true);
+            using var conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);

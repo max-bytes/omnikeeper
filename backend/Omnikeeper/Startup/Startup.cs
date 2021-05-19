@@ -77,7 +77,8 @@ namespace Omnikeeper.Startup
 
             var pluginFolder = Path.Combine(Directory.GetCurrentDirectory(), "OKPlugins");
             ServiceRegistration.RegisterLogging(services);
-            ServiceRegistration.RegisterDB(services, Configuration);
+            var cs = Configuration.GetConnectionString("LandscapeDatabaseConnection"); // TODO: add Enlist=false to connection string
+            ServiceRegistration.RegisterDB(services, cs, false);
             ServiceRegistration.RegisterOIABase(services);
             ServiceRegistration.RegisterModels(services, true, true, true);
             ServiceRegistration.RegisterServices(services);
