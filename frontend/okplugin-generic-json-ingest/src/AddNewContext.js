@@ -63,7 +63,7 @@ function AddNewContext(props) {
                         try {
                                 setLoading(true);
                                 // 'AddContext' will add a new context, if given context doesn't exist and edit the context, if it does
-                                const addContext = await swaggerClient.apis.OKPluginGenericJSONIngest.AddContext2(
+                                const addContext = await swaggerClient.apis.OKPluginGenericJSONIngest.AddNewContext(
                                         {
                                             version: apiVersion,
                                         },
