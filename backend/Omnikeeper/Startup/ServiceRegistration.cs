@@ -63,6 +63,15 @@ namespace Omnikeeper.Startup
 
         public static IEnumerable<Assembly> RegisterOKPlugins(IServiceCollection services, string pluginFolder)
         {
+            //services.AddSingleton<OKPluginGenericJSONIngest.IContextModel, OKPluginGenericJSONIngest.ContextModel>();
+            //services.AddTransient<Controllers.Ingest.PassiveFilesController>();
+            //services.AddTransient<Controllers.Ingest.ManageContextController>();
+            //var pr = new OKPluginGenericJSONIngest.PluginRegistration();
+            //pr.RegisterServices(services);
+            //var cs = Configuration.GetConnectionString("LandscapeDatabaseConnection");
+            //var result = plugin.DBMigration.Migrate(cs);
+
+
             var dotNetFramework = Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
             var frameworkNameProvider = new FrameworkNameProvider(
                 new[] { DefaultFrameworkMappings.Instance },

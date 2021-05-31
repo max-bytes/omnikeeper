@@ -48,9 +48,9 @@ namespace Tasks.DBInit
 
             await traitModel.SetRecursiveTraitSet(DefaultTraits.Get(), mc);
 
-            var numApplicationCIs = 1;
-            var numHostCIs = 50000;
-            var numRunsOnRelations = 1;
+            var numApplicationCIs = 0;
+            var numHostCIs = 0;
+            var numRunsOnRelations = 0;
             int numAttributesPerCIFrom = 20;
             int numAttributesPerCITo = 40;
             //var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
