@@ -42,16 +42,6 @@ namespace Omnikeeper.Startup
             });
             services.AddScoped<IModelContextBuilder, ModelContextBuilder>();
         }
-        //public static void RegisterDB(IServiceCollection services, string dbName, bool pooling, bool reloadTypes)
-        //{
-        //    services.AddSingleton<DBConnectionBuilder>();
-        //    services.AddScoped((sp) =>
-        //    {
-        //        var dbcb = sp.GetRequiredService<DBConnectionBuilder>();
-        //        return dbcb.Build(dbName, pooling, reloadTypes);
-        //    });
-        //    services.AddScoped<IModelContextBuilder, ModelContextBuilder>();
-        //}
 
         public static void RegisterOIABase(IServiceCollection services)
         {
