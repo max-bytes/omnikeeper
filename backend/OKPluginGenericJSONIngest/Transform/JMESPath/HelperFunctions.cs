@@ -35,13 +35,14 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
         {
             var name = args[0].Token.ToString();
             var value = args[1].Token;
-            if (value is JValue jv && jv.Value == null)
-            {
-                return null;
-            }
             var type = AttributeValueType.Text.ToString();
             if (args.Length >= 3)
                 type = Enum.Parse<AttributeValueType>(args[2].Token.ToString()).ToString();
+            // TODO: consider how to handle null values
+            //if (value is JValue jv && jv.Value == null)
+            //{
+            //    return JObject.FromObject(new { name, value, type });
+            //}
             return JObject.FromObject(new { name, value, type });
         }
     }

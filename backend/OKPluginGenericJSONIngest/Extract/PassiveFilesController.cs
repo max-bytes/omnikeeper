@@ -107,8 +107,23 @@ namespace Omnikeeper.Controllers.Ingest
                             documents.Add(fileStream.filename, json);
                         }
                         var inputJSON = transformer.Documents2JSON(documents);
-                        var genericInboundDataJson = transformer.TransformJSON(inputJSON, jmesPathConfig);
-                        genericInboundData = transformer.DeserializeJson(genericInboundDataJson);
+                        string genericInboundDataJson;
+                        try
+                        {
+                            genericInboundDataJson = transformer.TransformJSON(inputJSON, jmesPathConfig);
+                        }
+                        catch (Exception e)
+                        {
+                            throw new Exception($"Error transforming JSON: {e.Message}", e);
+                        }
+                        try
+                        {
+                            genericInboundData = transformer.DeserializeJson(genericInboundDataJson);
+                        }
+                        catch (Exception e)
+                        {
+                            throw new Exception($"Error deserializing JSON to GenericInboundData: {e.Message}", e);
+                        }
                         break;
                     default:
                         throw new Exception("Encountered unknown transform config");

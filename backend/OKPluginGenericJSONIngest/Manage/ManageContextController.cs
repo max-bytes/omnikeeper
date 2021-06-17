@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DevLab.JmesPath;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using OKPluginGenericJSONIngest;
+using OKPluginGenericJSONIngest.Transform.JMESPath;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -51,6 +53,18 @@ namespace Omnikeeper.Controllers.Ingest
         {
             try
             {
+                // validation
+                switch (contextCandidate.TransformConfig)
+                {
+                    case TransformConfigJMESPath jmesPathConfig:
+                        var transformer = new TransformerJMESPath();
+                        var validationException = transformer.ValidateConfig(jmesPathConfig);
+                        if (validationException != null)
+                            throw new Exception($"Invalid JMESPath configuration: {validationException.Message}", validationException);
+                        break;
+                    default:
+                        throw new Exception("Invalid transform config");
+                }
                 // TODO: authorization
                 var mc = modelContextBuilder.BuildDeferred();
                 var context = await contextModel.Upsert(contextCandidate.Name, contextCandidate.ExtractConfig, 

@@ -1,6 +1,7 @@
 ﻿using DevLab.JmesPath;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 
 namespace OKPluginGenericJSONIngest.Transform.JMESPath
@@ -37,7 +38,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             return input;
         }
 
-        public string TransformJSON(JArray input, TransformConfigJMESPath config)
+        private JmesPath CreateJMESPath()
         {
             var tmpValues = new Dictionary<string, string>();
 
@@ -54,6 +55,25 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             jmes.FunctionRepository.Register("retrieve", new RetrieveFunc(tmpValues));
             jmes.FunctionRepository.Register("filterHashKeys", new FilterHashKeys());
             jmes.FunctionRepository.Register("stringReplace", new StringReplaceFunc());
+            return jmes;
+        }
+
+        public Exception? ValidateConfig(TransformConfigJMESPath config)
+        {
+            try
+            {
+                var jmes = CreateJMESPath();
+                var parsed = jmes.Parse(config.Expression);
+            } catch (Exception e)
+            {
+                return e;
+            }
+            return null;
+        }
+
+        public string TransformJSON(JArray input, TransformConfigJMESPath config)
+        {
+            var jmes = CreateJMESPath();
             var resultJson = jmes.Transform(input.ToString(), config.Expression);
             return resultJson;
         }
