@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using YamlDotNet.RepresentationModel;
 
 namespace Omnikeeper.Base.AttributeValues
 {
@@ -18,28 +19,38 @@ namespace Omnikeeper.Base.AttributeValues
                 {
                     case AttributeValueType.Text:
                         {
-                            if (o.GetType().IsArray)
+                            if (o == null)
+                                return new AttributeScalarValueText("", false);
+                            else if (o.GetType().IsArray)
                                 return AttributeArrayValueText.BuildFromString((o as object[]).OfType<string>().ToArray(), false);
                             else
+                            {
                                 return new AttributeScalarValueText((o as string)!, false);
+                            }
                         }
                     case AttributeValueType.MultilineText:
                         {
-                            if (o.GetType().IsArray)
+                            if (o == null)
+                                return new AttributeScalarValueText("", true);
+                            else if (o.GetType().IsArray)
                                 return AttributeArrayValueText.BuildFromString((o as object[]).OfType<string>().ToArray(), true);
                             else
                                 return new AttributeScalarValueText((o as string)!, true);
                         }
                     case AttributeValueType.Integer:
                         {
-                            if (o.GetType().IsArray)
+                            if (o == null)
+                                return new AttributeScalarValueInteger(0);
+                            else if (o.GetType().IsArray)
                                 return AttributeArrayValueInteger.Build((o as object[]).OfType<long>().ToArray());
                             else
                                 return new AttributeScalarValueInteger((o as long?)!.Value);
                         }
                     case AttributeValueType.JSON:
                         {
-                            if (o is JArray a)
+                            if (o == null)
+                                return AttributeScalarValueJSON.Build(new JObject());
+                            else if (o is JArray a)
                                 return AttributeArrayValueJSON.Build(a.Children().ToArray());
                             else if (o is object[] oa)
                                 return AttributeArrayValueJSON.Build(oa.Select(t => t as JToken)!.ToArray()!);
@@ -48,7 +59,9 @@ namespace Omnikeeper.Base.AttributeValues
                         }
                     case AttributeValueType.YAML:
                         {
-                            if (o.GetType().IsArray)
+                            if (o == null)
+                                return AttributeScalarValueYAML.Build(new YamlDocument(""));
+                            else if (o.GetType().IsArray)
                                 return AttributeArrayValueYAML.BuildFromString((o as object[]).OfType<string>().ToArray());
                             else
                                 return AttributeScalarValueYAML.BuildFromString((o as string)!);
