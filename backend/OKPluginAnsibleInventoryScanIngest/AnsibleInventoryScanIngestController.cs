@@ -65,7 +65,7 @@ namespace Omnikeeper.Controllers.Ingest
                 // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
                 // TODO: think about this!
 
-                var transformer = new TransformerJMESPath();
+                var transformer = TransformerJMESPath.Build(new TransformConfigJMESPath(AnsibleInventoryScanJMESPathExpression.Expression));
 
                 var documents = new Dictionary<string, JToken>();
                 foreach(var kv in data.SetupFacts)
@@ -77,7 +77,7 @@ namespace Omnikeeper.Controllers.Ingest
                 foreach (var kv in data.YumUpdates)
                     documents.Add("yum_updates_" + kv.Key, kv.Value);
                 var inputJSON = transformer.Documents2JSON(documents);
-                var genericInboundDataJson = transformer.TransformJSON(inputJSON, new TransformConfigJMESPath(AnsibleInventoryScanJMESPathExpression.Expression));
+                var genericInboundDataJson = transformer.TransformJSON(inputJSON);
                 var genericInboundData = transformer.DeserializeJson(genericInboundDataJson);
 
 

@@ -43,6 +43,7 @@ namespace Omnikeeper.Base.Service
 
             var ciMappingContext = new CIMappingService.CIMappingContext(AttributeModel, TimeThreshold.BuildLatest());
             var attributeData = new Dictionary<Guid, CICandidateAttributeData>();
+            var cisToCreate = new List<Guid>();
             foreach (var cic in data.CICandidates)
             {
                 var attributes = cic.Attributes;
@@ -54,13 +55,22 @@ namespace Omnikeeper.Base.Service
                 Guid finalCIID;
                 if (!foundCIIDs.IsEmpty())
                 {
-                    finalCIID = foundCIIDs.First(); // TODO: how to deal with ambiguities? In other words: more than one CI fit, where to put the data?
+                    if (foundCIIDs.Count() == 1)
+                        finalCIID = foundCIIDs.First();
+                    else
+                    {
+                        // TODO: how to deal with ambiguities? In other words: more than one CI fit, where to put the data?
+                        // for now, we sort the guids and take the lowest, which at least makes the process repeatable/reliable
+                        var sortedCIIDs = foundCIIDs.ToList();
+                        sortedCIIDs.Sort();
+                        finalCIID = sortedCIIDs.First();
+                    }
                 }
                 else
                 {
-                    // CI is new, create it first
-                    // TODO: batch process CI creation
-                    finalCIID = await CIModel.CreateCI(trans); // use a totally new CIID, do NOT use the temporary CIID of the ciCandidate
+                    // CI is new, create a ciid for it (we'll later batch create all CIs)
+                    finalCIID = CIModel.CreateCIID(); // use a totally new CIID, do NOT use the temporary CIID of the ciCandidate
+                    cisToCreate.Add(finalCIID);
                 }
 
                 // add to mapping context
@@ -71,6 +81,9 @@ namespace Omnikeeper.Base.Service
                 else
                     attributeData.Add(finalCIID, attributes);
             }
+
+            // batch process CI creation
+            await CIModel.BulkCreateCIs(cisToCreate, trans);
 
             var bulkAttributeData = new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeData.SelectMany(ad =>
                 ad.Value.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, ad.Key))

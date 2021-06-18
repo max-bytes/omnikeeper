@@ -53,6 +53,8 @@ namespace Omnikeeper.Controllers.Ingest
         }
 
         [HttpPost("")]
+        [DisableRequestSizeLimit]
+        [RequestFormLimits(ValueLengthLimit = int.MaxValue, MultipartBodyLengthLimit = int.MaxValue)]
         public async Task<ActionResult> Ingest([FromQuery, Required]string context, [FromForm, Required] IEnumerable<IFormFile> files)
         {
             try
@@ -93,24 +95,17 @@ namespace Omnikeeper.Controllers.Ingest
                 switch (ctx.TransformConfig)
                 {
                     case TransformConfigJMESPath jmesPathConfig:
-                        var transformer = new TransformerJMESPath();
-                        var documents = new Dictionary<string, JToken>();
+                        var transformer = TransformerJMESPath.Build(jmesPathConfig);
+                        var documents = new Dictionary<string, Func<Stream>>();
                         foreach (var fileStream in fileStreams)
                         {
-                            using var stream = fileStream.stream();
-                            using var reader = new StreamReader(stream);
-                            using var jsonReader = new JsonTextReader(reader)
-                            {
-                                DateParseHandling = DateParseHandling.None // TODO: ensure that we always set this!
-                            };
-                            var json = JToken.ReadFrom(jsonReader);
-                            documents.Add(fileStream.filename, json);
+                            documents.Add(fileStream.filename, fileStream.stream);
                         }
                         var inputJSON = transformer.Documents2JSON(documents);
-                        string genericInboundDataJson;
+                        JToken genericInboundDataJson;
                         try
                         {
-                            genericInboundDataJson = transformer.TransformJSON(inputJSON, jmesPathConfig);
+                            genericInboundDataJson = transformer.TransformJSON(inputJSON);
                         }
                         catch (Exception e)
                         {

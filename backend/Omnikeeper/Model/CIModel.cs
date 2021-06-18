@@ -75,7 +75,7 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        private Guid CreateCIID() => Guid.NewGuid();
+        public Guid CreateCIID() => Guid.NewGuid();
 
         public async Task<Guid> CreateCI(IModelContext trans) => await CreateCI(CreateCIID(), trans);
         public async Task<Guid> CreateCI(Guid id, IModelContext trans)

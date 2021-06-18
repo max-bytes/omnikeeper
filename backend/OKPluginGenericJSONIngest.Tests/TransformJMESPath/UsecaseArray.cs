@@ -20,8 +20,9 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
             string expression = File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                 "data", "usecase_array", "expression.jmes"));
 
-            var transformer = new TransformerJMESPath();
-            var result = transformer.Transform(documents, new TransformConfigJMESPath(expression));
+
+            var transformer = TransformerJMESPath.Build(new TransformConfigJMESPath(expression));
+            var result = transformer.Transform(documents);
 
             // test that attribute values that are arrays are also properly deserialized 
             var expected = new GenericInboundData

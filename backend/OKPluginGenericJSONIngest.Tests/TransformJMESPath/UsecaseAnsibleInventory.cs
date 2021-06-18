@@ -48,9 +48,9 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
                 }
             };
 
-            var transformer = new TransformerJMESPath();
+            var transformer = TransformerJMESPath.Build(new TransformConfigJMESPath(AnsibleInventoryScanJMESPathExpression.Expression));
             var inputJSON = transformer.Documents2JSON(documents);
-            var genericInboundDataJson = transformer.TransformJSON(inputJSON, new TransformConfigJMESPath(AnsibleInventoryScanJMESPathExpression.Expression));
+            var genericInboundDataJson = transformer.TransformJSON(inputJSON);
 
             File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                 "data", "usecase_ansible_inventory", "output_intermediate.json"), genericInboundDataJson.ToString(Formatting.Indented));

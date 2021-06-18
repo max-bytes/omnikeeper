@@ -23,11 +23,11 @@ namespace Omnikeeper.Base.Service
                     var isFirst = true;
                     foreach (var f in d.IdentifiableFragments)
                     {
-                        var ma = await ciMappingContext.GetMergedAttributesByAttributeNameAndValue(f.Name, f.Value, d.SearchableLayers, trans);
+                        var ciids = await ciMappingContext.GetMergedCIIDsByAttributeNameAndValue(f.Name, f.Value, d.SearchableLayers, trans);
                         if (isFirst)
-                            candidateCIIDs = new List<Guid>(ma.Keys);
+                            candidateCIIDs.AddRange(ciids);
                         else
-                            candidateCIIDs = candidateCIIDs.Intersect(ma.Keys).ToList();
+                            candidateCIIDs = candidateCIIDs.Intersect(ciids).ToList();
                         isFirst = false;
                     }
 
@@ -54,7 +54,7 @@ namespace Omnikeeper.Base.Service
             private readonly IAttributeModel attributeModel;
             private readonly TimeThreshold atTime;
 
-            private readonly IDictionary<string, IDictionary<Guid, MergedCIAttribute>> attributeCache = new Dictionary<string, IDictionary<Guid, MergedCIAttribute>>();
+            private readonly IDictionary<string, ILookup<IAttributeValue, Guid>> attributeCache = new Dictionary<string, ILookup<IAttributeValue, Guid>>();
             private readonly IDictionary<Guid, Guid> temp2finalCIIDMapping = new Dictionary<Guid, Guid>();
 
 
@@ -64,15 +64,21 @@ namespace Omnikeeper.Base.Service
                 this.atTime = atTime;
             }
 
-            internal async Task<IDictionary<Guid, MergedCIAttribute>> GetMergedAttributesByAttributeNameAndValue(string name, IAttributeValue value, LayerSet searchableLayers, IModelContext trans)
+            internal async Task<IEnumerable<Guid>> GetMergedCIIDsByAttributeNameAndValue(string name, IAttributeValue value, LayerSet searchableLayers, IModelContext trans)
             {
                 if (!attributeCache.ContainsKey(name))
                 {
-                    attributeCache[name] = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsSelection(), searchableLayers, trans, atTime);
+                    var attributes = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsSelection(), searchableLayers, trans, atTime);
+                    attributeCache[name] = attributes.ToLookup(kv => kv.Value.Attribute.Value, kv => kv.Key);
                 }
-                // TODO: performance improvement: instead of doing a where() based linear search, use a lookup
-                var found = attributeCache[name].Where(kv => kv.Value.Attribute.Value.Equals(value)).ToDictionary(kv => kv.Key, kv => kv.Value);
-                return found;
+                var ac = attributeCache[name];
+                if (ac.Contains(value))
+                {
+                    return ac[value];
+                } else
+                {
+                    return new List<Guid>();
+                }
             }
 
             public bool TryGetMappedTemp2FinalCIID(Guid temp, out Guid final)

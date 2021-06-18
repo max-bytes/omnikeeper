@@ -57,10 +57,13 @@ namespace Omnikeeper.Controllers.Ingest
                 switch (contextCandidate.TransformConfig)
                 {
                     case TransformConfigJMESPath jmesPathConfig:
-                        var transformer = new TransformerJMESPath();
-                        var validationException = transformer.ValidateConfig(jmesPathConfig);
-                        if (validationException != null)
-                            throw new Exception($"Invalid JMESPath configuration: {validationException.Message}", validationException);
+                        try
+                        {
+                            TransformerJMESPath.Build(jmesPathConfig); // if building fails, assume expression could not be parsed
+                        } catch (Exception e)
+                        {
+                            throw new Exception($"Invalid JMESPath configuration: {e.Message}", e);
+                        }
                         break;
                     default:
                         throw new Exception("Invalid transform config");
