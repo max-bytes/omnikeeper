@@ -387,6 +387,11 @@
           "name": "type",
           "value": "loopback",
           "type": 0
+        },
+        {
+          "name": "macaddress",
+          "value": null,
+          "type": 0
         }
       ]
     },

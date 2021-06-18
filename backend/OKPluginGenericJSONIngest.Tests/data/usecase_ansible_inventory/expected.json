@@ -362,28 +362,33 @@
                     "__name"
                 ]
             },
-            "attributes": [
-                {
-                    "name": "__name",
-                    "value": "Network Interface lo@h1jmplx01.mhx.at",
-                    "type": 0
-                },
-                {
-                    "name": "device",
-                    "value": "lo",
-                    "type": 0
-                },
-                {
-                    "name": "active",
-                    "value": "true",
-                    "type": 0
-                },
-                {
-                    "name": "type",
-                    "value": "loopback",
-                    "type": 0
-                }
-            ]
+          "attributes": [
+            {
+              "name": "__name",
+              "value": "Network Interface lo@h1jmplx01.mhx.at",
+              "type": 0
+            },
+            {
+              "name": "device",
+              "value": "lo",
+              "type": 0
+            },
+            {
+              "name": "active",
+              "value": "true",
+              "type": 0
+            },
+            {
+              "name": "type",
+              "value": "loopback",
+              "type": 0
+            },
+            {
+              "name": "macaddress",
+              "value": null,
+              "type": 0
+            }
+          ]
         },
         {
             "tempID": "tempCIID>h1lscapet01.mhx.local",
