@@ -96,11 +96,20 @@ namespace Omnikeeper.Controllers.Ingest
                 {
                     case TransformConfigJMESPath jmesPathConfig:
                         var transformer = TransformerJMESPath.Build(jmesPathConfig);
-                        var documents = new Dictionary<string, Func<Stream>>();
-                        foreach (var fileStream in fileStreams)
+
+                        var documents = new Dictionary<string, JToken>();
+                        foreach(var (streamF, filename) in fileStreams)
                         {
-                            documents.Add(fileStream.filename, fileStream.stream);
+                            using var stream = streamF();
+                            using var reader = new StreamReader(stream);
+                            using var jsonReader = new JsonTextReader(reader)
+                            {
+                                DateParseHandling = DateParseHandling.None // TODO: ensure that we always set this!
+                            };
+                            var data = JToken.ReadFrom(jsonReader);
+                            documents.Add(filename, data);
                         }
+
                         var inputJSON = transformer.Documents2JSON(documents);
                         JToken genericInboundDataJson;
                         try

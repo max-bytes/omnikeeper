@@ -9,7 +9,6 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
 {
     public class TransformerJMESPath
     {
-        private readonly JmesPath jmes;
         private readonly JmesPath.Expression expression;
 
         public static TransformerJMESPath Build(TransformConfigJMESPath config)
@@ -32,12 +31,11 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
 
             var expression = jmes.Parse(config.Expression);
 
-            return new TransformerJMESPath(jmes, expression);
+            return new TransformerJMESPath(expression);
         }
 
-        private TransformerJMESPath(JmesPath jmes, JmesPath.Expression expression)
+        private TransformerJMESPath(JmesPath.Expression expression)
         {
-            this.jmes = jmes;
             this.expression = expression;
         }
 
@@ -61,27 +59,6 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             return r;
         }
 
-        public JArray Documents2JSON(IDictionary<string, Func<Stream>> documents)
-        {
-            var input = new JArray();
-            foreach (var kv in documents)
-            {
-                using var stream = kv.Value();
-                using var reader = new StreamReader(stream);
-                using var jsonReader = new JsonTextReader(reader)
-                {
-                    DateParseHandling = DateParseHandling.None // TODO: ensure that we always set this!
-                };
-                var data = JToken.ReadFrom(jsonReader);
-                input.Add(new JObject
-                {
-                    ["document"] = kv.Key,
-                    ["data"] = data
-                });
-            }
-            return input;
-        }
-
         public JArray Documents2JSON(IDictionary<string, JToken> documents)
         {
             var input = new JArray();
@@ -95,24 +72,6 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
             }
             return input;
         }
-
-        //public Exception? ValidateConfig(TransformConfigJMESPath config)
-        //{
-        //    try
-        //    {
-        //        var parsed = jmes.Parse(config.Expression);
-        //    } catch (Exception e)
-        //    {
-        //        return e;
-        //    }
-        //    return null;
-        //}
-
-        //public string TransformJSON(string input, TransformConfigJMESPath config)
-        //{
-        //    var resultJson = jmes.Transform(input, config.Expression);
-        //    return resultJson;
-        //}
 
         public JToken TransformJSON(JArray input)
         {
