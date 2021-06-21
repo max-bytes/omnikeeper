@@ -4,17 +4,15 @@ $Username = "omnikeeper-client-library-test"
 $Password = "omnikeeper-client-library-test"
 $APIVersion = "1"
 
+# Token Request
 $body = @{
     grant_type='password'
     username=$Username
     password=$Password
     client_id='landscape-omnikeeper'
 }
-
-# Token Request
 $tokenResponse = Invoke-WebRequest -Method POST -Uri $TokenURL -ContentType "application/x-www-form-urlencoded" -Body $body -Credential $credentials | ConvertFrom-Json
 $accessToken = $tokenResponse.access_token
-
 #Write-Host $accessToken
 
 $Configuration = Get-OKConfiguration
