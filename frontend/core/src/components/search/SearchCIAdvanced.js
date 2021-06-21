@@ -129,10 +129,12 @@ function stringifyURLQuery(searchString, checkedTraits) {
 function parseURLQuery(search) {
     const p = queryString.parse(search, {arrayFormat: 'comma'});
   
+    const rt = p.rt ?? [];
+    const dt = p.dt ?? [];
     return {
       searchString: p.searchString ?? "",
-      requiredTraits: p.rt ?? [],
-      disallowedTraits: p.dt ?? [],
+      requiredTraits: [].concat(rt),
+      disallowedTraits: [].concat(dt),
     };
   }
 
