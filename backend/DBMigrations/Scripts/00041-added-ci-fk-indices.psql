@@ -1,0 +1,13 @@
+-- adding indices so that CI(!) deletions are fast because they need to do foreign key constraint checks on attributes and relations
+
+CREATE INDEX
+    ON public.attribute USING btree
+    (ci_id ASC NULLS LAST);
+
+CREATE INDEX
+    ON public.relation USING btree
+    (from_ci_id ASC NULLS LAST);
+
+CREATE INDEX
+    ON public.relation USING btree
+    (to_ci_id ASC NULLS LAST);
