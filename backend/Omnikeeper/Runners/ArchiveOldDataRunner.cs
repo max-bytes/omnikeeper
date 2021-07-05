@@ -83,8 +83,8 @@ namespace Omnikeeper.Runners
 
         }
 
-        [DisableConcurrentExecution(timeoutInSeconds: 60)]
-        [AutomaticRetry(Attempts = 0)]
+        [MaximumConcurrentExecutions(1, timeoutInSeconds: 120)]
+        [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
         public void Run(PerformContext? context)
         {
             using (HangfireConsoleLogger.InContext(context))

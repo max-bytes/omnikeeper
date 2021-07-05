@@ -1,4 +1,5 @@
-﻿using Hangfire.Server;
+﻿using Hangfire;
+using Hangfire.Server;
 using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Model;
@@ -23,9 +24,8 @@ namespace Omnikeeper.Runners
             this.modelContextBuilder = modelContextBuilder;
         }
 
-        // TODO: enable and test disabling of concurrent execution
-        //[DisableConcurrentExecution(timeoutInSeconds: 60)]
-        //[AutomaticRetry(Attempts = 0)]
+        [MaximumConcurrentExecutions(1, timeoutInSeconds: 120)]
+        [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
         public void Run(PerformContext? context)
         {
             using (HangfireConsoleLogger.InContext(context))
