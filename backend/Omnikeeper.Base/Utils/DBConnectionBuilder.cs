@@ -3,6 +3,7 @@ using Npgsql;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Entity.AttributeValues;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -10,13 +11,14 @@ namespace Omnikeeper.Base.Utils
 {
     public class DBConnectionBuilder
     {
-        private readonly ISet<int> connectorIDs = new HashSet<int>();
+        // TODO: this grows forever... find a way to limit this!
+        private readonly ConcurrentDictionary<int, byte> connectorIDs = new ConcurrentDictionary<int, byte>();
 
         public NpgsqlConnection BuildFromConnectionString(string cs, bool reloadTypes)
         {
             NpgsqlConnection conn = new NpgsqlConnection(cs);
             conn.Open();
-            connectorIDs.Add(conn.ProcessID);
+            connectorIDs[conn.ProcessID] = 1;
             if (reloadTypes) conn.ReloadTypes(); // HACK, see https://github.com/npgsql/npgsql/issues/2366
             conn.TypeMapper.UseJsonNet();
             MapEnums(conn);
@@ -38,7 +40,7 @@ namespace Omnikeeper.Base.Utils
             return connectionString;
         }
 
-        public bool HasConnectorID(int id) => connectorIDs.Contains(id);
+        public bool HasConnectorID(int id) => connectorIDs.ContainsKey(id);
 
         //public NpgsqlConnection Build(string dbName)
         //{
