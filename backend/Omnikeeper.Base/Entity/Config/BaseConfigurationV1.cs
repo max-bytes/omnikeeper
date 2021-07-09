@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Utils;
 using ProtoBuf;
 using System;
+using System.Collections.Generic;
 
 namespace Omnikeeper.Base.Entity.Config
 {
@@ -15,6 +16,7 @@ namespace Omnikeeper.Base.Entity.Config
         [ProtoMember(3)] private readonly string markedForDeletionRunnerInterval;
         [ProtoMember(4)] private readonly string externalIDManagerRunnerInterval;
         [ProtoMember(5)] private readonly string archiveOldDataRunnerInterval;
+        [ProtoMember(6)] private readonly long[] configLayerset;
 
         [JsonProperty(Required = Required.Always)]
         public TimeSpan ArchiveChangesetThreshold => archiveChangesetThreshold;
@@ -26,6 +28,8 @@ namespace Omnikeeper.Base.Entity.Config
         public string ExternalIDManagerRunnerInterval => externalIDManagerRunnerInterval;
         [JsonProperty(Required = Required.Always)]
         public string ArchiveOldDataRunnerInterval => archiveOldDataRunnerInterval;
+        [JsonProperty(Required = Required.Always)]
+        public long[] ConfigLayerset => configLayerset;
 
         public static MyJSONSerializer<BaseConfigurationV1> Serializer = new MyJSONSerializer<BaseConfigurationV1>(new JsonSerializerSettings()
         {
@@ -33,13 +37,14 @@ namespace Omnikeeper.Base.Entity.Config
             MissingMemberHandling = MissingMemberHandling.Error
         });
 
-        public BaseConfigurationV1(TimeSpan archiveChangesetThreshold, string clbRunnerInterval, string markedForDeletionRunnerInterval, string externalIDManagerRunnerInterval, string archiveOldDataRunnerInterval)
+        public BaseConfigurationV1(TimeSpan archiveChangesetThreshold, string clbRunnerInterval, string markedForDeletionRunnerInterval, string externalIDManagerRunnerInterval, string archiveOldDataRunnerInterval, long[] configLayerset)
         {
             this.archiveChangesetThreshold = archiveChangesetThreshold;
             this.clbRunnerInterval = clbRunnerInterval;
             this.markedForDeletionRunnerInterval = markedForDeletionRunnerInterval;
             this.externalIDManagerRunnerInterval = externalIDManagerRunnerInterval;
             this.archiveOldDataRunnerInterval = archiveOldDataRunnerInterval;
+            this.configLayerset = configLayerset;
         }
     }
 }

@@ -28,7 +28,7 @@ export default function ManageCITypes() {
   }, [data]);
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
-    <h2>Traits</h2>
+    <h2>Traits (deprecated! Use data-traits instead)</h2>
     <div><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
     <Form style={{margin:'10px 0px'}} onFinish={e => {
             setTraitSet({ variables: { traitSet: config } }).then(d => {

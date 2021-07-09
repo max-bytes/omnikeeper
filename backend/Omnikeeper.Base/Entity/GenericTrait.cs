@@ -62,14 +62,4 @@ namespace Omnikeeper.Base.Entity
             return new TraitSet(traits.ToImmutableDictionary(t => t.Name));
         }
     }
-
-
-    public class TraitEmpty : ITrait
-    {
-        public string Name => "empty";
-
-        public IImmutableSet<string> AncestorTraits => ImmutableHashSet<string>.Empty;
-
-        public TraitOriginV1 Origin => new TraitOriginV1(TraitOriginType.Core);
-    }
 }

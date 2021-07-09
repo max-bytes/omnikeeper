@@ -77,10 +77,13 @@ namespace Omnikeeper.GraphQL
             resolve: async (context) =>
             {
                 var traitModel = context.RequestServices.GetRequiredService<IEffectiveTraitModel>();
+                var traitsProvider = context.RequestServices.GetRequiredService<ITraitsProvider>();
 
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                var et = await traitModel.CalculateEffectiveTraitsForCI(context.Source, userContext.Transaction, userContext.TimeThreshold);
+                var traits = (await traitsProvider.GetActiveTraitSet(userContext.Transaction, userContext.TimeThreshold)).Traits.Values;
+
+                var et = await traitModel.CalculateEffectiveTraitsForCI(traits, context.Source, userContext.Transaction, userContext.TimeThreshold);
                 return et;
             });
         }
