@@ -24,11 +24,12 @@ jobs:
           dotnet-version: '3.1.x' 
       - name: Set version
         run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Set plugin name
+        run: echo "PLUGIN_NAME=OKPluginGenericJSONIngest" >> $GITHUB_ENV
       - name: Build
         run: |
-          echo "PLUGIN_NAME=OKPluginGenericJSONIngest" >> $GITHUB_ENV
           echo "***${{ env.PLUGIN_NAME }}***${{ env.VERSION }}***"
-          dotnet nuget update source "Github nuget Repository" --username "USERNAME" --password "${{ secrets.GITHUB_TOKEN }}"" --store-password-in-clear-text --configfile backend/NuGet.Config
+          dotnet nuget update source "Github nuget Repository" --username "USERNAME" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text --configfile backend/NuGet.Config
           dotnet pack backend/${{ env.PLUGIN_NAME }}/${{ env.PLUGIN_NAME }}.csproj /p:Version=${{ env.VERSION }} -c Release
           dotnet nuget push "backend/${{ env.PLUGIN_NAME }}/bin/Release/${{ env.PLUGIN_NAME }}.${{ env.VERSION }}.nupkg" --source "Github nuget Repository"
 #          mv backend/${{ env.PLUGIN_NAME }}/bin/Release/${{ env.PLUGIN_NAME }}.${{ env.VERSION }}.nupkg ${{ env.PLUGIN_NAME }}.nupkg
