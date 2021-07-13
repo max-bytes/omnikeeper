@@ -1,5 +1,6 @@
 {
-  "name": "okplugin-generic-json-ingest",
+  "name": "@maximiliancsuk/okplugin-generic-json-ingest",
+  "repository": "https://github.com/maximiliancsuk/omnikeeper",
   "version": "0.0.0-src",
   "description": "Omnikeeper Plugin for handling generic JSON inbound data",
   "main": "index.js",
@@ -19,8 +20,5 @@
     "@babel/preset-react": "^7.12.13",
     "react": "^16.14.0",
     "react-dom": "^16.14.0"
-  },
-  "publishConfig": {
-    "registry": "https://repo.mhx.at/repository/npm-stable-hosted/"
   }
 }

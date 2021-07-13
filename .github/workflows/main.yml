@@ -13,7 +13,29 @@ on:
   workflow_dispatch:
 
 jobs:
+  build-publish-frontend-okplugin-generic-json-ingest:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set version
+        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Build and publish
+        run: |
+            export PLUGIN_FOLDER=okplugin-generic-json-ingest
+            export REPOURL=https://npm.pkg.github.com
+            export ACCESS_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            echo "***$PLUGIN_FOLDER***$REPOURL***$ACCESS_TOKEN***${{ env.VERSION }}***"
+            cd frontend/$PLUGIN_FOLDER
+            npm config set unsafe-perm true # needed, so 'prepublishOnly' runs properly (see https://tinyurl.com/npmUnsafePerm)
+            npm ci
+            cat <<'EOF' > .npmrc
+            //${REPOURL}:_authToken=${ACCESS_TOKEN}
+            EOF
+            npm version ${{ env.VERSION }} # set version
+            npm publish
   build-publish-backend-okplugins:
+    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -21,10 +43,10 @@ jobs:
       - name: Setup .NET 3.1.x
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '3.1.x' 
+          dotnet-version: '3.1.x'
       - name: Set version
         run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: Build
+      - name: Build and publish
         run: |
           cd backend
           dotnet nuget update source "Github nuget Repository" --username "${{ github.repository_owner }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
