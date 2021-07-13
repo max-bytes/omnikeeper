@@ -14,6 +14,7 @@ on:
 
 jobs:
   build-publish-frontend-okplugin-generic-json-ingest:
+    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -26,7 +27,6 @@ jobs:
           REPOURL: npm.pkg.github.com/
           PLUGIN_FOLDER: okplugin-generic-json-ingest
         run: |
-            echo "***$PLUGIN_FOLDER***$REPOURL***${#ACCESS_TOKEN}***${{ env.VERSION }}***"
             cd frontend/$PLUGIN_FOLDER
             npm config set unsafe-perm true # needed, so 'prepublishOnly' runs properly (see https://tinyurl.com/npmUnsafePerm)
             npm ci
@@ -34,7 +34,6 @@ jobs:
             //${REPOURL}:_authToken=${ACCESS_TOKEN}
             @maximiliancsuk:registry=https://npm.pkg.github.com
             EOF
-            cat .npmrc
             npm version ${{ env.VERSION }} # set version
             npm publish
 
@@ -100,3 +99,39 @@ jobs:
             version=${{ env.VERSION }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  build-swagger-definition:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+            # TODO, HACK: we haven't found a good way to generate client APIs for plugin endpoints, so we fallback to a static swagger definition file
+            #  HACK: commented out code for dynamically creating a swagger definition file
+            # cd backend
+            # dotnet nuget remove source "MHX nuget Repository"  # HACK: we need to remove the internal repo, nuget is stupid :(
+            # dotnet build "Omnikeeper/Omnikeeper.csproj" -c Release
+            # cd Omnikeeper
+            # dotnet tool restore
+            # dotnet swagger tofile --output ../../omnikeeper.json ./bin/Release/netcoreapp3.1/Omnikeeper.dll v1
+      - uses: actions/cache@v2
+        env:
+          cache-name: cache-omnikeeper-swagger-json
+        with:
+          key: omnikeeper-swagger-json
+          path: clients/source/omnikeeper_static.json
+  publish-client-library-go:
+    runs-on: ubuntu-20.04
+    needs: build-swagger-definition
+    env:
+      ACCESS_TOKEN_REPO_CLIENT_GO: fooToDo
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set version
+        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Build
+        run: |
+          # apk add git jq
+          sh clients/scripts/go/generate_publish.sh www.mhx.at/gitlab omnikeeper-swagger-json ${{ env.VERSION }}

@@ -5,7 +5,7 @@ git_host=$1
 swagger_file=$2
 version=$3
 
-git_user_id="landscape"
+git_user_id="maximiliancsuk"
 git_repo_id="omnikeeper-client-go"
 release_note="Update to version ${version}"
 
