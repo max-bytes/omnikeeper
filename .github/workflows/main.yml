@@ -30,7 +30,7 @@ jobs:
         run: |
           echo "***${{ env.PLUGIN_NAME }}***${{ env.VERSION }}***"
           dotnet nuget update source "Github nuget Repository" --username "USERNAME" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text --configfile backend/NuGet.Config
-          dotnet pack backend/${{ env.PLUGIN_NAME }}/${{ env.PLUGIN_NAME }}.csproj /p:Version=${{ env.VERSION }} -c Release -v diag
+          dotnet pack backend/${{ env.PLUGIN_NAME }}/${{ env.PLUGIN_NAME }}.csproj /p:Version=${{ env.VERSION }} -c Release -v detailed
           dotnet nuget push "backend/${{ env.PLUGIN_NAME }}/bin/Release/${{ env.PLUGIN_NAME }}.${{ env.VERSION }}.nupkg" --source "Github nuget Repository"
 #          mv backend/${{ env.PLUGIN_NAME }}/bin/Release/${{ env.PLUGIN_NAME }}.${{ env.VERSION }}.nupkg ${{ env.PLUGIN_NAME }}.nupkg
 
