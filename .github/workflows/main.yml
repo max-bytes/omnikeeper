@@ -31,6 +31,7 @@ jobs:
             npm ci
             cat <<'EOF' > .npmrc
             //${REPOURL}:_authToken=${ACCESS_TOKEN}
+            @maximiliancsuk:registry=https://npm.pkg.github.com
             EOF
             npm version ${{ env.VERSION }} # set version
             npm publish
