@@ -43,7 +43,8 @@ jobs:
         run: |
           cd backend
           echo "Building backend version $VERSION" 
-          echo ${{ steps.meta.outputs.tags }}
-          docker build -f ./Omnikeeper/Dockerfile --build-arg version=$VERSION .
+          echo "${{ steps.meta.outputs.tags }}"
+          echo "Building:"
+          docker build -t ${{ steps.meta.outputs.tags }} -f ./Omnikeeper/Dockerfile --build-arg version=$VERSION .
           #docker build -t $CI_REGISTRY/landscape/omnikeeper/backend:$VERSION -t $CI_REGISTRY/landscape/omnikeeper/backend:latest -f ./Omnikeeper/Dockerfile --build-arg version=$VERSION .
           #docker push $CI_REGISTRY/landscape/omnikeeper/backend
