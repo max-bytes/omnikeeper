@@ -52,9 +52,6 @@ ${git_ssh_file}
 EOF
 
     chmod 600 ~/id_rsa
-    echo "***"
-    cat ~/id_rsa
-    echo "***"
     GIT_SSH_COMMAND='ssh -i ~/id_rsa -o IdentitiesOnly=yes' git clone git@${git_host}:${git_user_id}/${git_repo_id}.git .
 fi
 
@@ -79,5 +76,9 @@ git add .
 git commit -m "$release_note"
 
 # Pushes the changes in the local repository up to the remote repository
+if [ "$git_ssh_file" = "" ]; then
 git push
+else
+GIT_SSH_COMMAND='ssh -i ~/id_rsa -o IdentitiesOnly=yes' git push
+fi
 
