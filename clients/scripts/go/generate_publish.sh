@@ -48,7 +48,7 @@ if [ "$git_ssh_file" = "" ]; then
 else
 
 cat <<'EOF' > ~/id_rsa
-$git_ssh_file
+${git_ssh_file}
 EOF
 
     chmod 600 ~/id_rsa
