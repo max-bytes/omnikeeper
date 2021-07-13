@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RepositoryUrl>https://nuget.pkg.github.com/maximiliancsuk/OKPluginGenericJSONIngest</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
