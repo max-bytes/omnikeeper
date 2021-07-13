@@ -47,7 +47,7 @@ if [ "$git_ssh_file" = "" ]; then
     git clone https://${git_host}/${git_user_id}/${git_repo_id}.git .
 else
 
-cat <<'EOF' > ~/id_rsa
+cat <<EOF > ~/id_rsa
 ${git_ssh_file}
 EOF
 
