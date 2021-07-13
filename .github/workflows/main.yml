@@ -46,7 +46,7 @@ jobs:
           file: "./backend/Omnikeeper/Dockerfile"
           push: true
           build-args: |
-            version=$VERSION
+            version=${{ github.VERSION }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
         
