@@ -5,6 +5,7 @@ git_host=$1
 swagger_file=$2
 version=$3
 git_user_id=$4
+git_ssh_file=$5
 
 git_repo_id="omnikeeper-client-go"
 release_note="Update to version ${version}"
@@ -41,11 +42,13 @@ git config --global user.email "generator@mhx.at"
 git config --global user.name "generator"
 
 # Clone the current repo
-if [ "$ACCESS_TOKEN_REPO_CLIENT_GO" = "" ]; then
-    echo "[INFO] \$ACCESS_TOKEN_REPO_CLIENT_GO (environment variable) is not set. Using the git credential in your environment."
+if [ "$git_ssh_file" = "" ]; then
+    echo "[INFO] \$git_password is not set. Using the git credential in your environment."
     git clone https://${git_host}/${git_user_id}/${git_repo_id}.git .
 else
-    git clone https://${git_user_id}:${ACCESS_TOKEN_REPO_CLIENT_GO}@${git_host}/${git_user_id}/${git_repo_id}.git .
+    echo "$git_ssh_file" > id_rsa
+    cat id_rsa
+    GIT_SSH_COMMAND='ssh -i id_rsa -o IdentitiesOnly=yes' git clone ${git_user_id}@${git_host}/${git_user_id}/${git_repo_id}.git .
 fi
 
 

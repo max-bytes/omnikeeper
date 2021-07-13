@@ -120,12 +120,6 @@ jobs:
         with:
           name: omnikeeper-swagger-json
           path: omnikeeper.json
-      # - uses: actions/cache@v2
-      #   env:
-      #     cache-name: cache-omnikeeper-swagger-json
-      #   with:
-      #     key: omnikeeper-swagger-json
-      #     path: clients/source/omnikeeper_static.json
   publish-client-library-go:
     runs-on: ubuntu-20.04
     needs: build-swagger-definition
@@ -141,4 +135,4 @@ jobs:
           name: omnikeeper-swagger-json
       - name: Build
         run: |
-          sh clients/scripts/go/generate_publish.sh www.github.com omnikeeper.json ${{ env.VERSION }} "maximiliancsuk"
+          sh clients/scripts/go/generate_publish.sh www.github.com omnikeeper.json ${{ env.VERSION }} "git" ${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN }}
