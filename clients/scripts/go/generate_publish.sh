@@ -46,9 +46,8 @@ if [ "$git_ssh_file" = "" ]; then
     echo "[INFO] \$git_password is not set. Using the git credential in your environment."
     git clone https://${git_host}/${git_user_id}/${git_repo_id}.git .
 else
-    echo "$git_ssh_file" > id_rsa
-    cat id_rsa
-    GIT_SSH_COMMAND='ssh -i id_rsa -o IdentitiesOnly=yes' git clone git@${git_host}:${git_user_id}/${git_repo_id}.git .
+    echo "$git_ssh_file" > ~/id_rsa
+    GIT_SSH_COMMAND='ssh -i ~/id_rsa -o IdentitiesOnly=yes' git clone git@${git_host}:${git_user_id}/${git_repo_id}.git .
 fi
 
 
