@@ -21,10 +21,11 @@ jobs:
       - name: Set version
         run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Build and publish
+        env:
+          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOURL: https://npm.pkg.github.com
+          PLUGIN_FOLDER: okplugin-generic-json-ingest
         run: |
-            export PLUGIN_FOLDER=okplugin-generic-json-ingest
-            export REPOURL=https://npm.pkg.github.com
-            export ACCESS_TOKEN=${{ secrets.GITHUB_TOKEN }}
             echo "***$PLUGIN_FOLDER***$REPOURL***$ACCESS_TOKEN***${{ env.VERSION }}***"
             cd frontend/$PLUGIN_FOLDER
             npm config set unsafe-perm true # needed, so 'prepublishOnly' runs properly (see https://tinyurl.com/npmUnsafePerm)
