@@ -135,4 +135,4 @@ jobs:
           name: omnikeeper-swagger-json
       - name: Build
         run: |
-          sh clients/scripts/go/generate_publish.sh www.github.com omnikeeper.json ${{ env.VERSION }} "git" ${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN }}
+          sh clients/scripts/go/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "maximiliancsuk" ${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN }}
