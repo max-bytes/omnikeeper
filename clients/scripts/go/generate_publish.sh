@@ -48,7 +48,9 @@ if [ "$git_ssh_file" = "" ]; then
 else
     echo "$git_ssh_file" > ~/id_rsa
     chmod 600 ~/id_rsa
+    echo "***"
     cat ~/id_rsa
+    echo "***"
     GIT_SSH_COMMAND='ssh -i ~/id_rsa -o IdentitiesOnly=yes' git clone git@${git_host}:${git_user_id}/${git_repo_id}.git .
 fi
 
