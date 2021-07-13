@@ -29,14 +29,12 @@ jobs:
       - name: Build
         run: |
           echo "***${{ env.PLUGIN_NAME }}***${{ env.VERSION }}***${{ github.repository_owner }}***"
-          dotnet nuget disable source "Github nuget Repository" --configfile backend/NuGet.Config
-          dotnet pack backend/${{ env.PLUGIN_NAME }}/${{ env.PLUGIN_NAME }}.csproj /p:Version=${{ env.VERSION }} -c Release -v detailed
-          dotnet nuget enable source "Github nuget Repository" --configfile backend/NuGet.Config
-          dotnet nuget update source "Github nuget Repository" --configfile backend/NuGet.Config --username "${{ github.repository_owner }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
           cd backend
+          dotnet nuget disable source "Github nuget Repository"
+          dotnet pack ${{ env.PLUGIN_NAME }}/${{ env.PLUGIN_NAME }}.csproj /p:Version=${{ env.VERSION }} -c Release -v detailed
+          dotnet nuget enable source "Github nuget Repository"
+          dotnet nuget update source "Github nuget Repository" --username "${{ github.repository_owner }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
           dotnet nuget push "${{ env.PLUGIN_NAME }}/bin/Release/${{ env.PLUGIN_NAME }}.${{ env.VERSION }}.nupkg" --source "Github nuget Repository"
-        #--source "https://nuget.pkg.github.com/maximiliancsuk"
-#          mv backend/${{ env.PLUGIN_NAME }}/bin/Release/${{ env.PLUGIN_NAME }}.${{ env.VERSION }}.nupkg ${{ env.PLUGIN_NAME }}.nupkg
 
   build-backend:
     if: ${{ false }}
