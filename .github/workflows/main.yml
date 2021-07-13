@@ -26,7 +26,7 @@ jobs:
           REPOURL: https://npm.pkg.github.com
           PLUGIN_FOLDER: okplugin-generic-json-ingest
         run: |
-            echo "***$PLUGIN_FOLDER***$REPOURL***$ACCESS_TOKEN***${{ env.VERSION }}***"
+            echo "***$PLUGIN_FOLDER***$REPOURL***${#ACCESS_TOKEN}***${{ env.VERSION }}***"
             cd frontend/$PLUGIN_FOLDER
             npm config set unsafe-perm true # needed, so 'prepublishOnly' runs properly (see https://tinyurl.com/npmUnsafePerm)
             npm ci
@@ -36,6 +36,7 @@ jobs:
             EOF
             npm version ${{ env.VERSION }} # set version
             npm publish
+
   build-publish-backend-okplugins:
     if: ${{ false }}
     runs-on: ubuntu-20.04
@@ -98,13 +99,3 @@ jobs:
             version=${{ env.VERSION }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-        
-#      - name: build backend
-#        run: |
-#          cd backend
-#          echo "Building backend version $VERSION" 
-#          echo "***${{ steps.meta.outputs.tags }}***"
-#          echo "Building:"
-#          docker build -t "${{ steps.meta.outputs.tags }}" -f ./Omnikeeper/Dockerfile --build-arg version=$VERSION .
-#          #docker build -t $CI_REGISTRY/landscape/omnikeeper/backend:$VERSION -t $CI_REGISTRY/landscape/omnikeeper/backend:latest -f ./Omnikeeper/Dockerfile --build-arg version=$VERSION .
-#          #docker push $CI_REGISTRY/landscape/omnikeeper/backend
