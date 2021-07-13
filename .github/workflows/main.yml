@@ -108,6 +108,7 @@ jobs:
       - name: Build
         run: |
             # TODO, HACK: we haven't found a good way to generate client APIs for plugin endpoints, so we fallback to a static swagger definition file
+            cp clients/source/omnikeeper_static.json omnikeeper.json
             #  HACK: commented out code for dynamically creating a swagger definition file
             # cd backend
             # dotnet nuget remove source "MHX nuget Repository"  # HACK: we need to remove the internal repo, nuget is stupid :(
@@ -115,12 +116,16 @@ jobs:
             # cd Omnikeeper
             # dotnet tool restore
             # dotnet swagger tofile --output ../../omnikeeper.json ./bin/Release/netcoreapp3.1/Omnikeeper.dll v1
-      - uses: actions/cache@v2
-        env:
-          cache-name: cache-omnikeeper-swagger-json
+      - uses: actions/upload-artifact@v2
         with:
-          key: omnikeeper-swagger-json
-          path: clients/source/omnikeeper_static.json
+          name: omnikeeper-swagger-json
+          path: omnikeeper.json
+      # - uses: actions/cache@v2
+      #   env:
+      #     cache-name: cache-omnikeeper-swagger-json
+      #   with:
+      #     key: omnikeeper-swagger-json
+      #     path: clients/source/omnikeeper_static.json
   publish-client-library-go:
     runs-on: ubuntu-20.04
     needs: build-swagger-definition
@@ -131,7 +136,10 @@ jobs:
         uses: actions/checkout@v2
       - name: Set version
         run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - uses: actions/download-artifact@v2
+        with:
+          name: omnikeeper-swagger-json
       - name: Build
         run: |
           # apk add git jq
-          sh clients/scripts/go/generate_publish.sh www.mhx.at/gitlab omnikeeper-swagger-json ${{ env.VERSION }}
+          sh clients/scripts/go/generate_publish.sh www.github.com omnikeeper.json ${{ env.VERSION }}
