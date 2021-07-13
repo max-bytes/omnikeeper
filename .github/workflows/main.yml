@@ -42,7 +42,8 @@ jobs:
       - name: Build and push Docker images
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
-          file: "./backend/Omnikeeper/Dockerfile"
+          context: "/backend"
+          file: "./Omnikeeper/Dockerfile"
           push: true
           build-args: |
             version=$VERSION
