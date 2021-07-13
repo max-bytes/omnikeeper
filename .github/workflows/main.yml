@@ -35,13 +35,13 @@ jobs:
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}{% raw %}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         
       - name: build backend
         run: |
           cd backend
           echo "Building backend version $VERSION"
-          echo {% raw %}${{ steps.meta.outputs.tags }}
+          echo ${{ steps.meta.outputs.tags }}
           docker build -f ./Omnikeeper/Dockerfile --build-arg version=$VERSION .
           #docker build -t $CI_REGISTRY/landscape/omnikeeper/backend:$VERSION -t $CI_REGISTRY/landscape/omnikeeper/backend:latest -f ./Omnikeeper/Dockerfile --build-arg version=$VERSION .
           #docker push $CI_REGISTRY/landscape/omnikeeper/backend
