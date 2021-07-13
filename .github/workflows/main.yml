@@ -23,7 +23,7 @@ jobs:
       - name: Build and publish
         env:
           ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPOURL: https://npm.pkg.github.com
+          REPOURL: npm.pkg.github.com/
           PLUGIN_FOLDER: okplugin-generic-json-ingest
         run: |
             echo "***$PLUGIN_FOLDER***$REPOURL***${#ACCESS_TOKEN}***${{ env.VERSION }}***"
@@ -34,6 +34,7 @@ jobs:
             //${REPOURL}:_authToken=${ACCESS_TOKEN}
             @maximiliancsuk:registry=https://npm.pkg.github.com
             EOF
+            cat .npmrc
             npm version ${{ env.VERSION }} # set version
             npm publish
 
