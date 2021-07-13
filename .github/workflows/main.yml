@@ -130,7 +130,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs: build-swagger-definition
     env:
-      ACCESS_TOKEN_REPO_CLIENT_GO: fooToDo
+      ACCESS_TOKEN_REPO_CLIENT_GO: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -141,5 +141,4 @@ jobs:
           name: omnikeeper-swagger-json
       - name: Build
         run: |
-          # apk add git jq
-          sh clients/scripts/go/generate_publish.sh www.github.com omnikeeper.json ${{ env.VERSION }}
+          sh clients/scripts/go/generate_publish.sh www.github.com omnikeeper.json ${{ env.VERSION }} "maximiliancsuk"
