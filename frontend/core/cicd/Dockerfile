@@ -30,13 +30,13 @@ COPY . ./
 RUN PUBLIC_URL=__PUBLIC_URL_PLACEHOLDER__ REACT_APP_VERSION="$version" REACT_APP_PLUGINS_FRONTEND="$plugins" npm run build
 
 # Create deployable image
-#FROM docker-registry.mhx.at/infra-docker/container-images/react-frontend:latest
 FROM nginx:1.15-alpine
 
 RUN apk add --no-cache nodejs yarn
 RUN yarn global add @beam-australia/react-env
 COPY cicd/nginx.conf /etc/nginx/nginx.conf
 COPY cicd/entrypoint.sh /var/entrypoint.sh
+RUN chmod +x /var/entrypoint.sh
 ENTRYPOINT ["/var/entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
 
