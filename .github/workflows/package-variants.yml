@@ -38,7 +38,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/variants/backend/${{ env.VARIANT_NAME }}
           tags: |
-            type=semver,pattern=${{ env.FINAL_VERSION_BACKEND }}
+            type=raw,value=${{ env.FINAL_VERSION_BACKEND }}
           flavor: |
             latest=true
       - name: Setup backend build
@@ -100,7 +100,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/variants/frontend/${{ env.VARIANT_NAME }}
           tags: |
-            type=semver,pattern=${{ env.FINAL_VERSION_FRONTEND }}
+            type=raw,value=${{ env.FINAL_VERSION_FRONTEND }}
           flavor: |
             latest=true
       - name: Build and push frontend Docker image
