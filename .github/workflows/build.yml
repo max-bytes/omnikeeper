@@ -11,7 +11,6 @@ on:
 
 jobs:
   build-publish-backend-base:
-    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -65,7 +64,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   build-publish-frontend-okplugin-generic-json-ingest:
-    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -89,7 +87,6 @@ jobs:
             npm publish
 
   build-publish-backend-okplugins:
-    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -117,7 +114,6 @@ jobs:
           buildPublish OKPluginActiveDirectoryXMLIngest
 
   build-swagger-definition:
-    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
