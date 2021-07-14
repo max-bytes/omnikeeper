@@ -195,7 +195,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: "./frontend/core"
-          file: "./frontend/core/Dockerfile"
+          file: "./frontend/core/cicd/Dockerfile"
           push: true
           build-args: |
             version=${{ env.FINAL_VERSION }}
