@@ -3,8 +3,9 @@
 git_host=$1
 swagger_file=$2
 version=$3
+git_user_id=$4
+git_ssh_file=$5
 
-git_user_id="landscape"
 git_repo_id="omnikeeper-client-python"
 release_note="Update to version ${version}"
 
@@ -31,16 +32,22 @@ cp $swagger_file build/omnikeeper.json
 cd build/python
 
 # make git remember credentials
-git config --global credential.helper store
-git config --global user.email "generator@mhx.at"
-git config --global user.name "generator"
+# git config --global credential.helper store
+# git config --global user.email "generator@mhx.at"
+# git config --global user.name "generator"
 
 # Clone the current repo
-if [ "$ACCESS_TOKEN_REPO_CLIENT_PYTHON" = "" ]; then
-    echo "[INFO] \$ACCESS_TOKEN_REPO_CLIENT_PYTHON (environment variable) is not set. Using the git credential in your environment."
+if [ "$git_ssh_file" = "" ]; then
+    echo "[INFO] \$git_ssh_file is not set. Using the git credential in your environment."
     git clone https://${git_host}/${git_user_id}/${git_repo_id}.git .
 else
-    git clone https://${git_user_id}:${ACCESS_TOKEN_REPO_CLIENT_PYTHON}@${git_host}/${git_user_id}/${git_repo_id}.git .
+    
+cat <<EOF > ~/id_rsa
+${git_ssh_file}
+EOF
+
+    chmod 600 ~/id_rsa
+    GIT_SSH_COMMAND='ssh -i ~/id_rsa -o IdentitiesOnly=yes' git clone git@${git_host}:${git_user_id}/${git_repo_id}.git .
 fi
 
 
@@ -60,5 +67,9 @@ git add .
 git commit -m "$release_note"
 
 # Pushes the changes in the local repository up to the remote repository
+if [ "$git_ssh_file" = "" ]; then
 git push
+else
+GIT_SSH_COMMAND='ssh -i ~/id_rsa -o IdentitiesOnly=yes' git push
+fi
 

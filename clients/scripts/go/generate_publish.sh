@@ -1,6 +1,5 @@
 #!/bin/bash
 
-   
 git_host=$1
 swagger_file=$2
 version=$3
@@ -37,13 +36,13 @@ cat $swagger_file \
 cd build/go
 
 # make git remember credentials
-git config --global credential.helper store
-git config --global user.email "generator@mhx.at"
-git config --global user.name "generator"
+# git config --global credential.helper store
+# git config --global user.email "generator@mhx.at"
+# git config --global user.name "generator"
 
 # Clone the current repo
 if [ "$git_ssh_file" = "" ]; then
-    echo "[INFO] \$git_password is not set. Using the git credential in your environment."
+    echo "[INFO] \$git_ssh_file is not set. Using the git credential in your environment."
     git clone https://${git_host}/${git_user_id}/${git_repo_id}.git .
 else
 
