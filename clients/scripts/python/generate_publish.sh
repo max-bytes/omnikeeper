@@ -33,8 +33,8 @@ cd build/python
 
 # make git remember credentials
 # git config --global credential.helper store
-# git config --global user.email "generator@mhx.at"
-# git config --global user.name "generator"
+git config --global user.email "generator@mhx.at"
+git config --global user.name "generator"
 
 # Clone the current repo
 if [ "$git_ssh_file" = "" ]; then
