@@ -13,8 +13,6 @@ on:
   workflow_dispatch:
 
 jobs:
-       
-
   build-publish-backend-base:
     if: ${{ false }}
     runs-on: ubuntu-20.04
@@ -53,7 +51,7 @@ jobs:
         
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/core/backend
           
@@ -161,7 +159,7 @@ jobs:
           bash clients/scripts/java/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "maximiliancsuk" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_JAVA }}"
           bash clients/scripts/powershell/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "maximiliancsuk" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_POWERSHELL }}"
 
-  build-publish-variant-frontend-mhx-internal:
+  build-publish-variant-mhx-internal:
     runs-on: ubuntu-20.04
     env:
       VARIANT_NAME: mhx-internal
@@ -178,12 +176,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract metadata (tags, labels) for docker backend
-        id: meta_backend
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/variants/backend/${{ env.VARIANT_NAME }}
-      - name: Set final version
+      - name: Set final version and plugin hash
         run: |
           # create plugin hash from plugins string
           PLUGIN_HASH=`echo $PLUGINS_FRONTEND | md5sum | cut -f1 -d" " | cut -c1-10`
@@ -191,6 +184,14 @@ jobs:
           # NOTE: according to semver, we should use a '+', followed by the plugin hash to specify the "build-metadata"
           # but docker image tags do not allow '+', so we use a '-' instead
           echo "FINAL_VERSION=${BASE_VERSION}-${PLUGIN_HASH}" >> $GITHUB_ENV
+          echo "PLUGIN_HASH=${PLUGIN_HASH}" >> $GITHUB_ENV
+      - name: Extract metadata (tags, labels) for docker backend
+        id: meta_backend
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/variants/backend/${{ env.VARIANT_NAME }}
+          tags: |
+            type=semver,pattern={{version}}-${{ env.PLUGIN_HASH }}
       - name: Setup backend build
         run: |
           mkdir -p build-backend
@@ -215,14 +216,13 @@ jobs:
           context: "./build-backend"
           file: "./build-backend/Dockerfile"
           push: true
-          # TODO: properly set base image
           build-args: |
-            base_image=ghcr.io/maximiliancsuk/omnikeeper/core/backend:${{ env.BASE_VERSION }}
+            base_image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/core/backend:${{ env.BASE_VERSION }}
           tags: ${{ steps.meta_backend.outputs.tags }}
           labels: ${{ steps.meta_backend.outputs.labels }}
       # - name: Extract metadata (tags, labels) for docker frontend
       #   id: meta_frontend
-      #   uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+      #   uses: docker/metadata-action@v3
       #   with:
       #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/variants/frontend/${{ env.VARIANT_NAME }}
       # - name: Build and push frontend Docker image
