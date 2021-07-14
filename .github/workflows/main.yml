@@ -198,7 +198,7 @@ jobs:
       - name: Download backend plugins
         run: |
           echo "Fetching plugins..."
-          mkdir -p backend-build/OKPlugins
+          mkdir -p build-backend/OKPlugins
           plugins=$(echo $PLUGINS_BACKEND | tr ";" "\n")
           for plugin in $plugins
           do
