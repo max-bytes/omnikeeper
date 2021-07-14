@@ -3,17 +3,20 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-balham.css";
 import { Layout, Button } from "antd";
-import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
+// import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
 import FeedbackMsg from "components/FeedbackMsg.js";
 import EditRemoveButtonCellRenderer from "./EditRemoveButtonCellRenderer.js";
 
 import {  withRouter } from "react-router-dom";
 
-const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
-    AgGridReact, // React-AgGrid component
-    { className: "ag-theme-balham" }, // hocProps
-    true // logging
-);  
+
+const AgGridCopyCutPaste = AgGridReact;
+
+// const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
+//     AgGridReact, // React-AgGrid component
+//     { className: "ag-theme-balham" }, // hocProps
+//     true // logging
+// );  
 
 const { Header, Content } = Layout;
 

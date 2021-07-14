@@ -7,7 +7,7 @@ import ContextButtonToolbar from "./ContextButtonToolbar";
 import "./Context.css";
 import GridViewDataParseModel from "./GridViewDataParseModel";
 import _ from "lodash";
-import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
+// import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
 import { v4 as uuidv4 } from 'uuid';
 import MultilineTextCellEditor from './MultilineTextCellEditor';
 import IntegerCellEditor from './IntegerCellEditor';
@@ -17,11 +17,13 @@ import { useParams, withRouter } from "react-router-dom";
 
 const { Header, Content } = Layout;
 
-const AgGridCopyCutPaste = AgGridCopyCutPasteHOC(
-    AgGridReact, // React-AgGrid component
-    { className: "ag-theme-balham" }, // hocProps
-    true // logging off
-);  
+const AgGridCopyCutPaste = AgGridReact;
+
+// AgGridCopyCutPasteHOC(
+//     , // React-AgGrid component
+//     { className: "ag-theme-balham" }, // hocProps
+//     true // logging off
+// );  
 
 export function Context(props) {
     const swaggerClient = props.swaggerClient;
