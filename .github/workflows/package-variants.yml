@@ -99,10 +99,10 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/variants/frontend/${{ env.VARIANT_NAME }}
-            tags: |
-              type=semver,pattern=${{ env.FINAL_VERSION_FRONTEND }}
-            flavor: |
-              latest=true
+          tags: |
+            type=semver,pattern=${{ env.FINAL_VERSION_FRONTEND }}
+          flavor: |
+            latest=true
       - name: Build and push frontend Docker image
         uses: docker/build-push-action@v2
         with:
