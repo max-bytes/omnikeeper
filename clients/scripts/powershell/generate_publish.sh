@@ -3,8 +3,9 @@
 git_host=$1
 swagger_file=$2
 version=$3
+git_user_id=$4
+git_ssh_file=$5
 
-git_user_id="landscape"
 git_repo_id="omnikeeper-client-powershell"
 release_note="Update to version ${version}"
 
@@ -31,16 +32,22 @@ cp $swagger_file build/omnikeeper.json
 cd build/powershell
 
 # make git remember credentials
-git config --global credential.helper store
+# git config --global credential.helper store
 git config --global user.email "generator@mhx.at"
 git config --global user.name "generator"
 
 # Clone the current repo
-if [ "$ACCESS_TOKEN_REPO_CLIENT_POWERSHELL" = "" ]; then
-    echo "[INFO] \$ACCESS_TOKEN_REPO_CLIENT_POWERSHELL (environment variable) is not set. Using the git credential in your environment."
+if [ "$git_ssh_file" = "" ]; then
+    echo "[INFO] \$git_ssh_file is not set. Using the git credential in your environment."
     git clone https://${git_host}/${git_user_id}/${git_repo_id}.git .
 else
-    git clone https://${git_user_id}:${ACCESS_TOKEN_REPO_CLIENT_POWERSHELL}@${git_host}/${git_user_id}/${git_repo_id}.git .
+
+cat <<EOF > ~/id_rsa
+${git_ssh_file}
+EOF
+
+    chmod 600 ~/id_rsa
+    GIT_SSH_COMMAND='ssh -i ~/id_rsa -o IdentitiesOnly=yes' git clone git@${git_host}:${git_user_id}/${git_repo_id}.git .
 fi
 
 
@@ -54,7 +61,7 @@ docker run --rm -v "${PWD}/..:/local" -u `id -u $USER`:`id -g $USER` openapitool
     --additional-properties=packageName=okclient,packageVersion=${version},apiNamePrefix=OK
 
 
-# HACK:
+# HACK: generated code has an issue here, we "patch" it manually
 find . -type f -name "*.ps1" -exec sed -r -i 's/\$AllProperties = \(\)/\$AllProperties = @\(\)/g' {} +
 
 # Adds the files in the local repository and stages them for commit.
@@ -64,5 +71,9 @@ git add .
 git commit -m "$release_note"
 
 # Pushes the changes in the local repository up to the remote repository
+if [ "$git_ssh_file" = "" ]; then
 git push
+else
+GIT_SSH_COMMAND='ssh -i ~/id_rsa -o IdentitiesOnly=yes' git push
+fi
 
