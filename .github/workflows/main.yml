@@ -166,8 +166,8 @@ jobs:
     env:
       VARIANT_NAME: mhx-internal
       # TODO: replace hardcoded version numbers by variables
-      BASE_VERSION: 0.14.39
-      PLUGINS_BACKEND: OKPluginGenericJSONIngest:0.12.0;OKPluginActiveDirectoryXMLIngest:0.12.0;OKPluginAnsibleInventoryScanIngest:0.12.0;OKPluginCLBMonitoring:0.12.0;OKPluginOIAKeycloak:0.12.0;OKPluginOIAOmnikeeper:0.12.0;OKPluginOIASharepoint:0.12.0;
+      BASE_VERSION: 0.14.17
+      PLUGINS_BACKEND: OKPluginGenericJSONIngest:0.14.34;OKPluginActiveDirectoryXMLIngest:0.14.34;OKPluginAnsibleInventoryScanIngest:0.14.34;OKPluginCLBMonitoring:0.14.34;OKPluginOIAKeycloak:0.14.34;OKPluginOIAOmnikeeper:0.14.34;OKPluginOIASharepoint:0.14.34;
       PLUGINS_FRONTEND: "okplugin-generic-json-ingest@0.14.39" # syntax: pluginA@version pluginB@version ...
     steps:
       - name: Checkout repository
