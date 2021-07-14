@@ -13,6 +13,61 @@ on:
   workflow_dispatch:
 
 jobs:
+       
+
+  build-publish-backend-base:
+    if: ${{ false }}
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup .NET 3.1.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.x'
+      - name: Set version
+        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Build and publish
+        run: |
+          cd backend
+          dotnet nuget update source "Github nuget Repository" --username "${{ github.repository_owner }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
+          dotnet pack Omnikeeper.Base/Omnikeeper.Base.csproj /p:Version=${{ env.VERSION }} -c Release
+          dotnet nuget push "Omnikeeper.Base/bin/Release/Omnikeeper.Base.${{ env.VERSION }}.nupkg" --source "Github nuget Repository"
+
+  build-backend-vanilla: # backend docker container without plugins
+    if: ${{ false }}
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set version
+        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+        
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/core/backend
+          
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v2
+        with:
+          context: "./backend"
+          file: "./backend/Omnikeeper/Dockerfile"
+          push: true
+          build-args: |
+            version=${{ env.VERSION }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
   build-publish-frontend-okplugin-generic-json-ingest:
     if: ${{ false }}
     runs-on: ubuntu-20.04
@@ -64,59 +119,6 @@ jobs:
           buildPublish OKPluginCLBMonitoring
           buildPublish OKPluginAnsibleInventoryScanIngest
           buildPublish OKPluginActiveDirectoryXMLIngest
-          
-
-  build-backend-base:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Setup .NET 3.1.x
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '3.1.x'
-      - name: Set version
-        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: Build and publish
-        run: |
-          cd backend
-          dotnet nuget update source "Github nuget Repository" --username "${{ github.repository_owner }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
-          dotnet pack Omnikeeper.Base/Omnikeeper.Base.csproj /p:Version=${{ env.VERSION }} -c Release
-          dotnet nuget push "Omnikeeper.Base/bin/Release/Omnikeeper.Base.${{ env.VERSION }}.nupkg" --source "Github nuget Repository"
-
-  build-backend:
-    if: ${{ false }}
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      
-      - name: Log in to the Container registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Set version
-        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-        
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/core/backend
-          
-      - name: Build and push Docker images
-        uses: docker/build-push-action@v2
-        with:
-          context: "./backend"
-          file: "./backend/Omnikeeper/Dockerfile"
-          push: true
-          build-args: |
-            version=${{ env.VERSION }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
 
   build-swagger-definition:
     if: ${{ false }}
@@ -158,3 +160,45 @@ jobs:
           bash clients/scripts/python/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "maximiliancsuk" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_PYTHON }}"
           bash clients/scripts/java/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "maximiliancsuk" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_JAVA }}"
           bash clients/scripts/powershell/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "maximiliancsuk" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_POWERSHELL }}"
+
+  build-publish-variant-frontend-mhx-internal:
+    env:
+      VARIANT_NAME: mhx-internal
+      # TODO: replace hardcoded version numbers by variables
+      BASE_VERSION: 0.14.39
+      #PLUGINS_BACKEND: OKPluginGenericJSONIngest:0.12.0;OKPluginActiveDirectoryXMLIngest:0.12.0;OKPluginAnsibleInventoryScanIngest:0.12.0;OKPluginCLBMonitoring:0.12.0;OKPluginOIAKeycloak:0.12.0;OKPluginOIAOmnikeeper:0.12.0;OKPluginOIASharepoint:0.12.0;
+      PLUGINS_FRONTEND: "okplugin-generic-json-ingest@0.14.39" # syntax: pluginA@version pluginB@version ...
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/variants/frontend/${VARIANT_NAME}
+      - name: Build
+        run: |
+          # create plugin hash from plugins string
+          PLUGIN_HASH=`echo $PLUGINS_FRONTEND | md5sum | cut -f1 -d" " | cut -c1-10`
+
+          # NOTE: according to semver, we should use a '+', followed by the plugin hash to specify the "build-metadata"
+          # but docker image tags do not allow '+', so we use a '-' instead
+          echo "FINAL_VERSION=${BASE_VERSION}-${PLUGIN_HASH}" >> $GITHUB_ENV
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v2
+        with:
+          context: "./frontend/core"
+          file: "./frontend/core/Dockerfile"
+          push: true
+          build-args: |
+            version=${{ env.FINAL_VERSION }}
+            plugins=${PLUGINS_FRONTEND}
+            npm_repo_key=${{ secrets.GITHUB_TOKEN }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

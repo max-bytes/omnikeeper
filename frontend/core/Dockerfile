@@ -14,7 +14,8 @@ COPY package.json ./
 COPY package-lock.json ./
 
 # add url and auth for private mhx npm repository
-RUN echo -e "registry=https://repo.mhx.at/repository/npm-stable/\n_auth=${npm_repo_key}" > .npmrc
+
+RUN echo -e "@maximiliancsuk:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_authToken=${npm_repo_key}" > .npmrc
 
 # fetch dependencies
 RUN npm ci
