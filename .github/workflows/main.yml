@@ -192,23 +192,23 @@ jobs:
           # but docker image tags do not allow '+', so we use a '-' instead
           echo "FINAL_VERSION=${BASE_VERSION}-${PLUGIN_HASH}" >> $GITHUB_ENV
       - name: Setup backend build
-          run: |
-            mkdir -p build-backend
-            cp backend/Omnikeeper/Dockerfile_AddedOKPlugins build-backend/Dockerfile
+        run: |
+          mkdir -p build-backend
+          cp backend/Omnikeeper/Dockerfile_AddedOKPlugins build-backend/Dockerfile
       - name: Download backend plugins
-          run: |
-            echo "Fetching plugins..."
-            mkdir -p backend-build/OKPlugins
-            plugins=$(echo $PLUGINS_BACKEND | tr ";" "\n")
-            for plugin in $plugins
-            do
-                pluginArray=(`echo $plugin | tr ":" "\n"`)
-                pluginName=${pluginArray[0]}
-                pluginVersion=${pluginArray[1]}
-                echo "Fetching plugin $pluginName version $pluginVersion"
-                curl --fail -L -u ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} https://nuget.pkg.github.com/maximiliancsuk/download/$pluginName/$pluginVersion/$pluginName.$pluginVersion.nupkg --output backend-build/OKPlugins/$pluginName-$pluginVersion.nupkg
-            done
-            echo "Done fetching plugins"
+        run: |
+          echo "Fetching plugins..."
+          mkdir -p backend-build/OKPlugins
+          plugins=$(echo $PLUGINS_BACKEND | tr ";" "\n")
+          for plugin in $plugins
+          do
+              pluginArray=(`echo $plugin | tr ":" "\n"`)
+              pluginName=${pluginArray[0]}
+              pluginVersion=${pluginArray[1]}
+              echo "Fetching plugin $pluginName version $pluginVersion"
+              curl --fail -L -u ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} https://nuget.pkg.github.com/maximiliancsuk/download/$pluginName/$pluginVersion/$pluginName.$pluginVersion.nupkg --output backend-build/OKPlugins/$pluginName-$pluginVersion.nupkg
+          done
+          echo "Done fetching plugins"
       - name: Build and push backend Docker image
         uses: docker/build-push-action@v2
         with:
