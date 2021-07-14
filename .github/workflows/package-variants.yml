@@ -10,19 +10,19 @@ on:
       variantName:
         description: 'Variant Name'     
         required: true
-        default: 'mhx-internal'
+        default: 'internal'
       baseVersion:
-        description: 'Version of Base Image and Repository Tag'
+        description: 'Version of Base Image and Repository Tag; example: 0.14.80'
         required: true
       pluginsBackend: 
-        description: ""
+        description: "Backend-Plugin spec; example: OKPluginGenericJSONIngest:0.14.80;OKPluginActiveDirectoryXMLIngest:0.14.80;"
         required: true
       pluginsFrontend: 
-        description: ""
+        description: "Frontend-Plugin spec; example: okplugin-generic-json-ingest@0.14.80 okplugin-plugin2@0.14.80"
         required: true
 
 jobs:
-  build-publish-variant-backend-mhx-internal:
+  build-publish-variant-backend:
     runs-on: ubuntu-20.04
     env:
       VARIANT_NAME: ${{ github.event.inputs.variantName }}
@@ -70,7 +70,7 @@ jobs:
               pluginArray=(`echo $plugin | tr ":" "\n"`)
               pluginName=${pluginArray[0]}
               pluginVersion=${pluginArray[1]}
-              echo "Fetching plugin $pluginName version $pluginVersion"
+              echo "Fetching plugin '$pluginName' version $pluginVersion"
               curl --fail -L -u ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} https://nuget.pkg.github.com/maximiliancsuk/download/$pluginName/$pluginVersion/$pluginName.$pluginVersion.nupkg --output build-backend/OKPlugins/$pluginName-$pluginVersion.nupkg
           done
           echo "Done fetching plugins"
@@ -85,7 +85,7 @@ jobs:
           tags: ${{ steps.meta_backend.outputs.tags }}
           labels: ${{ steps.meta_backend.outputs.labels }}
 
-  build-publish-variant-frontend-mhx-internal:
+  build-publish-variant-frontend:
     runs-on: ubuntu-20.04
     env:
       VARIANT_NAME: ${{ github.event.inputs.variantName }}

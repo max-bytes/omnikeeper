@@ -33,7 +33,7 @@
 
   <PropertyGroup>
     <Nullable>enable</Nullable>
-    <Copyright>MHx Innovations</Copyright>
+    <Copyright>maximiliancsuk</Copyright>
     <Description>Base package for Omnikeeper, required for building Omnikeeper plugins</Description>
   </PropertyGroup>
   
