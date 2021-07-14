@@ -6,19 +6,20 @@ env:
 
 on:
   workflow_dispatch:
-    variantName:
-      description: 'Variant Name'     
-      required: true
-      default: 'mhx-internal'
-    baseVersion:
-      description: 'Version of Base Image and Repository Tag'
-      required: true
-    pluginsBackend: 
-      description: ""
-      required: true
-    pluginsFrontend: 
-      description: ""
-      required: true
+    inputs:
+      variantName:
+        description: 'Variant Name'     
+        required: true
+        default: 'mhx-internal'
+      baseVersion:
+        description: 'Version of Base Image and Repository Tag'
+        required: true
+      pluginsBackend: 
+        description: ""
+        required: true
+      pluginsFrontend: 
+        description: ""
+        required: true
 
 jobs:
   build-publish-variant-backend-mhx-internal:
