@@ -7,14 +7,10 @@ env:
 on:
   push:
     tags:
-      - '**[0-9]+.[0-9]+.[0-9]+' 
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+      - '**[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   build-publish-backend-base:
-    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -33,7 +29,6 @@ jobs:
           dotnet nuget push "Omnikeeper.Base/bin/Release/Omnikeeper.Base.${{ env.VERSION }}.nupkg" --source "Github nuget Repository"
 
   build-backend-vanilla: # backend docker container without plugins
-    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -67,7 +62,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   build-publish-frontend-okplugin-generic-json-ingest:
-    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -91,7 +85,6 @@ jobs:
             npm publish
 
   build-publish-backend-okplugins:
-    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -119,7 +112,6 @@ jobs:
           buildPublish OKPluginActiveDirectoryXMLIngest
 
   build-swagger-definition:
-    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
