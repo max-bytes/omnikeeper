@@ -182,7 +182,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/variants/frontend/${VARIANT_NAME}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/variants/frontend/${{ env.VARIANT_NAME }}
       - name: Build
         run: |
           # create plugin hash from plugins string
@@ -199,7 +199,7 @@ jobs:
           push: true
           build-args: |
             version=${{ env.FINAL_VERSION }}
-            plugins=${PLUGINS_FRONTEND}
+            plugins=${{ env.PLUGINS_FRONTEND }}
             npm_repo_key=${{ secrets.GITHUB_TOKEN }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
