@@ -6,18 +6,32 @@ env:
 
 on:
   workflow_dispatch:
+    variantName:
+      description: 'Variant Name'     
+      required: true
+      default: 'mhx-internal'
+    baseVersion:
+      description: 'Version of Base Image and Repository Tag'
+      required: true
+    pluginsBackend: 
+      description: ""
+      required: true
+    pluginsFrontend: 
+      description: ""
+      required: true
 
 jobs:
   build-publish-variant-backend-mhx-internal:
     runs-on: ubuntu-20.04
     env:
-      VARIANT_NAME: mhx-internal
-      # TODO: replace hardcoded version numbers by variables
-      BASE_VERSION: 0.14.17
-      PLUGINS_BACKEND: OKPluginGenericJSONIngest:0.14.34;OKPluginActiveDirectoryXMLIngest:0.14.34;OKPluginAnsibleInventoryScanIngest:0.14.34;OKPluginCLBMonitoring:0.14.34;OKPluginOIAKeycloak:0.14.34;OKPluginOIAOmnikeeper:0.14.34;OKPluginOIASharepoint:0.14.34;  
+      VARIANT_NAME: ${{ github.event.inputs.variantName }}
+      BASE_VERSION: ${{ github.event.inputs.baseVersion }}
+      PLUGINS_BACKEND: ${{ github.event.inputs.pluginsBackend }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          ref: ${{ env.BASE_VERSION }}
       - name: Log in to the Container registry
         uses: docker/login-action@v1
         with:
@@ -73,13 +87,14 @@ jobs:
   build-publish-variant-frontend-mhx-internal:
     runs-on: ubuntu-20.04
     env:
-      VARIANT_NAME: mhx-internal
-      # TODO: replace hardcoded version numbers by variables
-      BASE_VERSION: 0.14.17
-      PLUGINS_FRONTEND: "okplugin-generic-json-ingest@0.14.39" # syntax: pluginA@version pluginB@version ...
+      VARIANT_NAME: ${{ github.event.inputs.variantName }}
+      BASE_VERSION: ${{ github.event.inputs.baseVersion }}
+      PLUGINS_FRONTEND: ${{ github.event.inputs.pluginsFrontend }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          ref: ${{ env.BASE_VERSION }}
       - name: Log in to the Container registry
         uses: docker/login-action@v1
         with:
