@@ -66,6 +66,24 @@ jobs:
           buildPublish OKPluginActiveDirectoryXMLIngest
           
 
+  build-backend-base:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup .NET 3.1.x
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.x'
+      - name: Set version
+        run: echo "VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Build and publish
+        run: |
+          cd backend
+          dotnet nuget update source "Github nuget Repository" --username "${{ github.repository_owner }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
+          dotnet pack Omnikeeper.Base/Omnikeeper.Base.csproj /p:Version=${{ env.VERSION }} -c Release
+          dotnet nuget push "Omnikeeper.Base/bin/Release/Omnikeeper.Base.${{ env.VERSION }}.nupkg" --source "Github nuget Repository"
+
   build-backend:
     if: ${{ false }}
     runs-on: ubuntu-20.04
@@ -101,6 +119,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   build-swagger-definition:
+    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
