@@ -162,6 +162,7 @@ jobs:
           bash clients/scripts/powershell/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "maximiliancsuk" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_POWERSHELL }}"
 
   build-publish-variant-frontend-mhx-internal:
+    runs-on: ubuntu-20.04
     env:
       VARIANT_NAME: mhx-internal
       # TODO: replace hardcoded version numbers by variables
