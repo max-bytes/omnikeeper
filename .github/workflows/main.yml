@@ -167,7 +167,7 @@ jobs:
       VARIANT_NAME: mhx-internal
       # TODO: replace hardcoded version numbers by variables
       BASE_VERSION: 0.14.39
-      #PLUGINS_BACKEND: OKPluginGenericJSONIngest:0.12.0;OKPluginActiveDirectoryXMLIngest:0.12.0;OKPluginAnsibleInventoryScanIngest:0.12.0;OKPluginCLBMonitoring:0.12.0;OKPluginOIAKeycloak:0.12.0;OKPluginOIAOmnikeeper:0.12.0;OKPluginOIASharepoint:0.12.0;
+      PLUGINS_BACKEND: OKPluginGenericJSONIngest:0.12.0;OKPluginActiveDirectoryXMLIngest:0.12.0;OKPluginAnsibleInventoryScanIngest:0.12.0;OKPluginCLBMonitoring:0.12.0;OKPluginOIAKeycloak:0.12.0;OKPluginOIAOmnikeeper:0.12.0;OKPluginOIASharepoint:0.12.0;
       PLUGINS_FRONTEND: "okplugin-generic-json-ingest@0.14.39" # syntax: pluginA@version pluginB@version ...
     steps:
       - name: Checkout repository
@@ -178,12 +178,12 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
+      - name: Extract metadata (tags, labels) for docker backend
+        id: meta_backend
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/variants/frontend/${{ env.VARIANT_NAME }}
-      - name: Build
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/variants/backend/${{ env.VARIANT_NAME }}
+      - name: Set final version
         run: |
           # create plugin hash from plugins string
           PLUGIN_HASH=`echo $PLUGINS_FRONTEND | md5sum | cut -f1 -d" " | cut -c1-10`
@@ -191,15 +191,49 @@ jobs:
           # NOTE: according to semver, we should use a '+', followed by the plugin hash to specify the "build-metadata"
           # but docker image tags do not allow '+', so we use a '-' instead
           echo "FINAL_VERSION=${BASE_VERSION}-${PLUGIN_HASH}" >> $GITHUB_ENV
-      - name: Build and push Docker images
+      - name: Setup backend build
+          run: |
+            mkdir -p build-backend
+            cp backend/Omnikeeper/Dockerfile_AddedOKPlugins build-backend/Dockerfile
+      - name: Download backend plugins
+          run: |
+            echo "Fetching plugins..."
+            mkdir -p backend-build/OKPlugins
+            plugins=$(echo $PLUGINS_BACKEND | tr ";" "\n")
+            for plugin in $plugins
+            do
+                pluginArray=(`echo $plugin | tr ":" "\n"`)
+                pluginName=${pluginArray[0]}
+                pluginVersion=${pluginArray[1]}
+                echo "Fetching plugin $pluginName version $pluginVersion"
+                curl --fail -L -u ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} https://nuget.pkg.github.com/maximiliancsuk/download/$pluginName/$pluginVersion/$pluginName.$pluginVersion.nupkg --output backend-build/OKPlugins/$pluginName-$pluginVersion.nupkg
+            done
+            echo "Done fetching plugins"
+      - name: Build and push backend Docker image
         uses: docker/build-push-action@v2
         with:
-          context: "./frontend/core"
-          file: "./frontend/core/cicd/Dockerfile"
+          context: "./build-backend"
+          file: "./build-backend/Dockerfile"
           push: true
+          # TODO: properly set base image
           build-args: |
-            version=${{ env.FINAL_VERSION }}
-            plugins=${{ env.PLUGINS_FRONTEND }}
-            npm_repo_key=${{ secrets.GITHUB_TOKEN }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+            base_image=ghcr.io/maximiliancsuk/omnikeeper/core/backend:${{ env.BASE_VERSION }}
+          tags: ${{ steps.meta_backend.outputs.tags }}
+          labels: ${{ steps.meta_backend.outputs.labels }}
+      # - name: Extract metadata (tags, labels) for docker frontend
+      #   id: meta_frontend
+      #   uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+      #   with:
+      #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/variants/frontend/${{ env.VARIANT_NAME }}
+      # - name: Build and push frontend Docker image
+      #   uses: docker/build-push-action@v2
+      #   with:
+      #     context: "./frontend/core"
+      #     file: "./frontend/core/cicd/Dockerfile"
+      #     push: true
+      #     build-args: |
+      #       version=${{ env.FINAL_VERSION }}
+      #       plugins=${{ env.PLUGINS_FRONTEND }}
+      #       npm_repo_key=${{ secrets.GITHUB_TOKEN }}
+      #     tags: ${{ steps.meta_frontend.outputs.tags }}
+      #     labels: ${{ steps.meta_frontend.outputs.labels }}
