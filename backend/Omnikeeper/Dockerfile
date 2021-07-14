@@ -14,6 +14,10 @@ RUN dotnet restore "Omnikeeper/Omnikeeper.csproj" /p:Version="${version}"
 COPY . .
 
 WORKDIR "/src/Omnikeeper"
+# login to private nuget repository
+ARG nugetRepoUser
+ARG nugetRepoPassword
+RUN dotnet nuget update source "Github nuget Repository" --username "${nugetRepoUser}" --password "${nugetRepoPassword}" --store-password-in-clear-text
 RUN dotnet build "Omnikeeper.csproj" /p:Version="${version}" -c Release -o /app/build
 
 WORKDIR /src

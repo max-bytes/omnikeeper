@@ -11,6 +11,7 @@ on:
 
 jobs:
   build-publish-backend-base:
+    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -24,7 +25,7 @@ jobs:
       - name: Build and publish
         run: |
           cd backend
-          dotnet nuget update source "Github nuget Repository" --username "${{ github.repository_owner }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
+          dotnet nuget update source "Github nuget Repository" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
           dotnet pack Omnikeeper.Base/Omnikeeper.Base.csproj /p:Version=${{ env.VERSION }} -c Release
           dotnet nuget push "Omnikeeper.Base/bin/Release/Omnikeeper.Base.${{ env.VERSION }}.nupkg" --source "Github nuget Repository"
 
@@ -58,10 +59,13 @@ jobs:
           push: true
           build-args: |
             version=${{ env.VERSION }}
+            nugetRepoUser=${{ github.actor }}
+            nugetRepoPassword=${{ secrets.GITHUB_TOKEN }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
   build-publish-frontend-okplugin-generic-json-ingest:
+    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -85,6 +89,7 @@ jobs:
             npm publish
 
   build-publish-backend-okplugins:
+    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -98,7 +103,7 @@ jobs:
       - name: Build and publish
         run: |
           cd backend
-          dotnet nuget update source "Github nuget Repository" --username "${{ github.repository_owner }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
+          dotnet nuget update source "Github nuget Repository" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
           function buildPublish () {
             dotnet pack $1/$1.csproj /p:Version=${{ env.VERSION }} -c Release
             dotnet nuget push "$1/bin/Release/$1.${{ env.VERSION }}.nupkg" --source "Github nuget Repository"
@@ -112,6 +117,7 @@ jobs:
           buildPublish OKPluginActiveDirectoryXMLIngest
 
   build-swagger-definition:
+    if: ${{ false }}
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
