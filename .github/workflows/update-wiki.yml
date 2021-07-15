@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-publish-variant-backend:
+  update-wiki:
     runs-on: ubuntu-20.04
     env:
       VARIANT_NAME: ${{ github.event.inputs.variantName }}
