@@ -11,7 +11,7 @@ jobs:
       BASE_VERSION: ${{ github.event.inputs.baseVersion }}
       PLUGINS_BACKEND: ${{ github.event.inputs.pluginsBackend }}
     steps:
-       - name: Checkout base code
+      - name: Checkout base code
         uses: actions/checkout@v2
         with:
           path: base
