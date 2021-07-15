@@ -59,6 +59,9 @@ docker run --rm -v "${PWD}/..:/local" -u `id -u $USER`:`id -g $USER` openapitool
     --global-property=verbose=true \
     --additional-properties=packageName=okclient,packageVersion=${version}
 
+# re-use license from main project, add it to client repository
+cp ../../LICENSE .
+
 # Adds the files in the local repository and stages them for commit.
 git add .
 

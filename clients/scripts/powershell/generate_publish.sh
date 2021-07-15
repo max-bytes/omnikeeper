@@ -63,6 +63,9 @@ docker run --rm -v "${PWD}/..:/local" -u `id -u $USER`:`id -g $USER` openapitool
 # HACK: generated code has an issue here, we "patch" it manually
 find . -type f -name "*.ps1" -exec sed -r -i 's/\$AllProperties = \(\)/\$AllProperties = @\(\)/g' {} +
 
+# re-use license from main project, add it to client repository
+cp ../../LICENSE .
+
 # Adds the files in the local repository and stages them for commit.
 git add .
 

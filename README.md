@@ -55,6 +55,6 @@ You could use [markdownlint-cli](https://github.com/igorshubovych/markdownlint-c
 
 ## License
 
-This project is licensed under the **Apache 2.0 license**. Feel free to edit and distribute this template as you like.
+This project is licensed under the **Apache 2.0 license**.
 
 See [LICENSE](LICENSE) for more information.
