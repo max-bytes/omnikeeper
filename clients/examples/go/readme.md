@@ -10,7 +10,7 @@ Should return a list of CIIDs from the acme-dev omnikeeper instance.
 
 ### get generated go client library
 ```bash
-GOPRIVATE=www.mhx.at go get -u www.mhx.at/gitlab/landscape/omnikeeper-client-go.git
+go get github.com/maximiliancsuk/omnikeeper-client-go
 ```
 
 ### Usage of client library
