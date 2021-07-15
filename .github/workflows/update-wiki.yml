@@ -1,0 +1,30 @@
+name: update-wiki
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-publish-variant-backend:
+    runs-on: ubuntu-20.04
+    env:
+      VARIANT_NAME: ${{ github.event.inputs.variantName }}
+      BASE_VERSION: ${{ github.event.inputs.baseVersion }}
+      PLUGINS_BACKEND: ${{ github.event.inputs.pluginsBackend }}
+    steps:
+       - name: Checkout base code
+        uses: actions/checkout@v2
+        with:
+          path: base
+      - name: Checkout wiki code
+        uses: actions/checkout@v2
+        with:
+          repository: ${{github.repository}}.wiki
+          path: wiki
+      - name: Push to wiki
+        run: |
+          cp -a base/docs/source/. wiki/
+          cd wiki
+          git config --local user.name "GitHub Action"
+          git config --local user.email "action@github.com"
+          git add .
+          git diff-index --quiet HEAD || git commit -m "Updates" && git push
