@@ -11,7 +11,7 @@ Should return a list of CIIDs from the acme-dev omnikeeper instance.
 
 ### get generated python client library
 ```bash
-python -m pip install git+https://www.mhx.at/gitlab/landscape/omnikeeper-client-python.git
+python -m pip install git+https://www.github.com/maximiliancsuk/omnikeeper-client-python.git
 ```
 
 ### Usage of client library
