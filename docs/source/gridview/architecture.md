@@ -101,8 +101,6 @@ Communication over the structure of the REST API interface should happen fully o
    :export-scale: 100
 ```
 
-DTO structures: see [https://www.mhx.at/gitlab/landscape/registry/snippets/1](https://www.mhx.at/gitlab/landscape/registry/snippets/1)
-
 ## (Additional) Technologies
 
 ### Frontend:
