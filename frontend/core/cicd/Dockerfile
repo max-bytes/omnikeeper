@@ -44,5 +44,5 @@ WORKDIR /var/www
 
 COPY --from=build /app/build /var/www
 
-# copy production environment file to set defaults that need to be overwritten
-COPY .env.production /var/www/
+# copy default environment file to set defaults that need to be overwritten
+COPY .env /var/www/

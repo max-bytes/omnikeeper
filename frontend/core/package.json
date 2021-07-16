@@ -45,13 +45,9 @@
     "uuid": "^8.3.2"
   },
   "scripts": {
-    "prestart": "react-env",
+    "prestart": "react-env --dest ./public --path .env.development --debug",
     "start": "react-scripts start --no-cache",
     "build": "react-scripts build",
-    "start:dev": "env-cmd -f .env.development react-scripts start --no-cache",
-    "build:dev": "env-cmd -f .env.development react-scripts build",
-    "start:test": "env-cmd -f .env.test react-scripts start --no-cache",
-    "build:test": "env-cmd -f .env.test react-scripts build",
     "test": "react-scripts test --no-cache",
     "eject": "react-scripts eject"
   },
@@ -71,6 +67,6 @@
     ]
   },
   "devDependencies": {
-    "@beam-australia/react-env": "^2.1.2"
+    "@beam-australia/react-env": "^3.1.1"
   }
 }
