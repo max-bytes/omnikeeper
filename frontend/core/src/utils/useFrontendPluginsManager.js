@@ -1,4 +1,5 @@
 import useSwaggerClient from "utils/useSwaggerClient";
+import env from "@beam-australia/react-env";
 
 export default function useFrontendPluginsManager() {
     const { data: swaggerClient, loading: swaggerClientLoading, error: swaggerClientError } = useSwaggerClient();
@@ -7,7 +8,7 @@ export default function useFrontendPluginsManager() {
         // loads all frontend plugins, specified in 'REACT_APP_PLUGINS_FRONTEND' and creates an array with plugin-Objects
         // plugin-Objects consists of different attributes, like name, title or the component itself
         const allFrontendPlugins = (() => {
-            const frontendPluginsStringArray = process.env.REACT_APP_PLUGINS_FRONTEND.split(" ");
+            const frontendPluginsStringArray = env('PLUGINS_FRONTEND').split(" ");
             return frontendPluginsStringArray.flatMap(s => {
                 // parse process.env.REACT_APP_PLUGINS_FRONTEND
                 const wantedPluginName = s.split("@")[0];

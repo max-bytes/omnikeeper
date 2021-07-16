@@ -27,10 +27,12 @@ RUN ([[ ! -z "$plugins" ]] && npm install $plugins) || true
 COPY . ./
 
 # build
-RUN PUBLIC_URL=__PUBLIC_URL_PLACEHOLDER__ REACT_APP_VERSION="$version" REACT_APP_PLUGINS_FRONTEND="$plugins" npm run build
+RUN PUBLIC_URL=__PUBLIC_URL_PLACEHOLDER__ npm run build
 
 # Create deployable image
 FROM nginx:1.15-alpine
+ARG version
+ARG plugins
 
 RUN apk add --no-cache nodejs yarn
 RUN yarn global add @beam-australia/react-env
@@ -46,3 +48,6 @@ COPY --from=build /app/build /var/www
 
 # copy default environment file to set defaults that need to be overwritten
 COPY .env /var/www/
+
+ENV REACT_APP_VERSION=$version
+ENV REACT_APP_PLUGINS_FRONTEND=$plugins

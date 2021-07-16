@@ -7,6 +7,7 @@ import { queries } from '../../graphql/queries'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
+import env from "@beam-australia/react-env";
 
 export default function ShowVersion(props) {
 
@@ -23,7 +24,7 @@ export default function ShowVersion(props) {
     <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
     <div>
       Omnikeeper Core: {data.version.coreVersion ?? 'unknown'}<br />
-      Technical Frontend: {process.env.REACT_APP_VERSION ?? 'unknown'}<br />
+      Technical Frontend: {env('VERSION') ?? 'unknown'}<br />
       Loaded Backend-Plugins:
     </div>
       <ul>
