@@ -10,9 +10,14 @@ export default function useFrontendPluginsManager() {
         const allFrontendPlugins = (() => {
             const frontendPluginsStringArray = env('PLUGINS_FRONTEND').split(" ");
             return frontendPluginsStringArray.flatMap(s => {
-                // parse process.env.REACT_APP_PLUGINS_FRONTEND
-                const wantedPluginName = s.split("@")[0];
-                const wantedPluginVersion = s.split("@")[1];
+                // parse env variable REACT_APP_PLUGINS_FRONTEND
+                const split = s.match(/(.*)@(.*)/);
+                if (split.length !== 3) {
+                    console.log("Cannot parse frontend plugin slug \"" + s + "\"");
+                    return [];
+                }
+                const wantedPluginName = split[1];
+                const wantedPluginVersion = split[2];
 
                 // HACK: "It is not possible to use a fully dynamic import statement, such as import(foo).
                 // Because foo could potentially be any path to any file in your system or project."
@@ -22,9 +27,9 @@ export default function useFrontendPluginsManager() {
                 let plugin;
                 switch (wantedPluginName) {
                     // Try to 'require' frontend-plugins. -> No error-handling needed, if 'require' fails: It's okay, that some plugins cannot be found.
-                    case "okplugin-generic-json-ingest":
-                        // try { plugin = require("local_plugins_for_dev/okplugin-generic-json-ingest"); } catch(e) { return []; } // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
-                        try { plugin = require("okplugin-generic-json-ingest"); } catch(e) { return []; } 
+                    case "@maximiliancsuk/okplugin-generic-json-ingest":
+                        // try { plugin = require("local_plugins_for_dev/@maximiliancsuk/okplugin-generic-json-ingest"); } catch(e) { return []; } // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
+                        try { plugin = require("@maximiliancsuk/okplugin-generic-json-ingest"); } catch(e) { return []; } 
                         break;
                     default:
                         throw new Error("Cannot find module '" + wantedPluginName + "'"); // All available frontend-plugins should be listed in this switch. If not, throw error.
