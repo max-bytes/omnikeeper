@@ -16,7 +16,7 @@ export default function ShowVersion() {
         const createHubConnection = async () => {
 
             const hubConnect = new HubConnectionBuilder()
-                .withUrl(`${env('BACKEND_URL')}/../api/signalr/logging`)
+                .withUrl(`${env('BACKEND_URL')}/api/signalr/logging`)
                 .build();
             try {
                 await hubConnect.start()

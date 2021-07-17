@@ -3,7 +3,7 @@ import env from "@beam-australia/react-env";
 import SwaggerClient from "swagger-client";
 
 export default function useSwaggerClient() {
-    const swaggerDefUrl = `${env('BACKEND_URL')}/../swagger/v1/swagger.json`; // HACK: BACKEND_URL contains /graphql suffix, remove!
+    const swaggerDefUrl = `${env('BACKEND_URL')}/swagger/v1/swagger.json`;
     const [swaggerClient, setSwaggerClient] = useState(null);
 
     const [loading, setLoading] = useState(false);

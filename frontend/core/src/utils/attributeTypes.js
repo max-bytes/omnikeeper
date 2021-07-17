@@ -47,9 +47,8 @@ function attributeType2InputProps(type) {
 };
 
 function generateImageURL(ciid, layers, attributeName, index) {
-    // TODO, HACK: BACKEND_URL contains /graphql suffix, remove!
     const url = buildUrl(env('BACKEND_URL'), {
-        path: '../api/v1/attributeValueImage',
+        path: '/api/v1/attributeValueImage',
         disableCSV: true,
         queryParams: {
             ciid: ciid,

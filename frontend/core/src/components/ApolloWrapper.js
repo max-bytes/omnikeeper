@@ -92,7 +92,7 @@ function ApolloWrapper({ component: Component, ...rest }) {
       });
 
     const httpLink = createHttpLink({
-      uri: env('BACKEND_URL'),
+      uri: env('BACKEND_URL') + "/graphql",
       credentials: 'include'
     });
 
