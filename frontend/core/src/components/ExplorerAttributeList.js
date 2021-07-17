@@ -14,11 +14,11 @@ function ExplorerAttributeList(props) {
   // TODO: does not work with nested groups yet
   const nestedAttributes = _.groupBy(props.mergedAttributes, (mergedAttribute) => {
     const splits = mergedAttribute.attribute.name.split('.');
-    if (splits.length <= 1) return "";
+    if (splits.length <= 1) return "__base";
     else return splits.slice(0, -1).join(".");
   });
 
-  const [toggleSegment, isSegmentActive, toggleExpandCollapseAll] = useAttributeSegmentsToggler(_.keys(nestedAttributes));
+  const [setOpenAttributeSegments, isSegmentActive, toggleExpandCollapseAll] = useAttributeSegmentsToggler(_.keys(nestedAttributes));
 
   const attributeAccordionItems = [];
   const activeKeys = [];
@@ -28,10 +28,10 @@ function ExplorerAttributeList(props) {
       return a.attribute.name.localeCompare(b.attribute.name);
     });
 
-    const title = (key === "") ? "__base" : key;
+    const title = key;
 
     const ret = (
-        <Panel header={<div key={key} onClick={() => toggleSegment(key)}>{title}</div>} key={key}>
+        <Panel header={title} key={key}>
           <Flipper flipKey={sortedAttributes.map(a => a.layerStackIDs).join(' ')}>
             {sortedAttributes.map((a, index) => {
               var isEditable = props.isEditable && props.visibleAndWritableLayers.some(l => l.id === a.layerStackIDs[a.layerStackIDs.length - 1]);
@@ -45,7 +45,7 @@ function ExplorerAttributeList(props) {
     );
 
     attributeAccordionItems[key] = ret;
-    const panelKey = (key === "") ? "0" : key; // AntDesign doesn't accept an empty string as a key for 'Panel', so it sets it as "0" instead -> Set activeKeys-entry also to "0", to make the 'activeKey'-prop work.
+    const panelKey = key;
     if (isSegmentActive(key)) activeKeys.push(panelKey);
   });
 
@@ -58,13 +58,13 @@ function ExplorerAttributeList(props) {
   return (
     <>
        <div className={"d-flex align-items-end flex-column"} style={{ position: "absolute", right: 0, top: "-38px" }}>
-            <Button size="small" onClick={() => toggleExpandCollapseAll()}>
-                Expand/Collapse All
-            </Button>
-        </div>
-        <Collapse activeKey={activeKeys}>
-            {_.values(attributeAccordionItemsSorted)}
-        </Collapse>
+        <Button size="small" onClick={() => toggleExpandCollapseAll()}>
+            Expand/Collapse All
+        </Button>
+      </div>
+      <Collapse activeKey={activeKeys} onChange={(keys) => setOpenAttributeSegments(keys)}>
+          {_.values(attributeAccordionItemsSorted)}
+      </Collapse>
     </>
   );
 }

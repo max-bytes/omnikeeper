@@ -16,11 +16,11 @@ function DiffAttributeList(props) {
   // TODO: does not work with nested groups yet
   const nestedAttributes = _.groupBy(_.map(props.attributes, (leftRight, name) => ({leftRight, name})), (t) => {
     const splits = t.name.split('.');
-    if (splits.length <= 1) return "";
+    if (splits.length <= 1) return "__base";
     else return splits.slice(0, -1).join(".");
   });
 
-  const [toggleSegment, isSegmentActive /*, toggleExpandCollapseAll*/] = useAttributeSegmentsToggler(_.keys(nestedAttributes));
+  const [setOpenAttributeSegments, isSegmentActive /*, toggleExpandCollapseAll*/] = useAttributeSegmentsToggler(_.keys(nestedAttributes));
 
   if (_.size(props.attributes) === 0)
     return EmptyLabel();
@@ -34,10 +34,10 @@ function DiffAttributeList(props) {
       return a.name.localeCompare(b.name);
     });
 
-    const title = (key === "") ? "__base" : key;
+    const title = key;
 
     const ret = (
-        <Panel header={<div key={key} onClick={() => toggleSegment(key)}>{title}</div>} key={key}>
+        <Panel header={title} key={key}>
           <Flipper flipKey={sortedAttributes.map(a => a.layerStackIDs).join(' ')}>
             {sortedAttributes.map((a, index) => {
                 const state = a.leftRight.compareResult.state;
@@ -75,7 +75,7 @@ function DiffAttributeList(props) {
     );
 
     attributeAccordionItems[key] = ret;
-    const panelKey = (key === "") ? "0" : key; // AntDesign doesn't accept an empty string as a key for 'Panel', so it sets it as "0" instead -> Set activeKeys-entry also to "0", to make the 'activeKey'-prop work.
+    const panelKey = key;
     if (isSegmentActive(key)) activeKeys.push(panelKey);
   });
 
@@ -86,7 +86,7 @@ function DiffAttributeList(props) {
   })
 
   return (
-    <Collapse activeKey={activeKeys} style={{ marginTop: "10px" }}>
+    <Collapse activeKey={activeKeys} style={{ marginTop: "10px" }} onChange={(keys) => setOpenAttributeSegments(keys)}>
         {_.values(attributeAccordionItemsSorted)}
     </Collapse>
   );

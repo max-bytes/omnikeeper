@@ -13,14 +13,8 @@ export function useAttributeSegmentsToggler(segmentNames) {
       setOpenAttributeSegments(newOpenAttributeSegments);
       setExpanded(!expanded);
     };
-    const toggleSegment = (index) => {
-      if (openAttributeSegments.indexOf(index) === -1)
-        setOpenAttributeSegments([...openAttributeSegments, index]);
-      else
-        setOpenAttributeSegments(openAttributeSegments.filter(i => i !== index));
-    };
     const isSegmentActive = (key) => openAttributeSegments.includes(key);
   
-    return [toggleSegment, isSegmentActive, toggleExpandCollapseAll];
+    return [setOpenAttributeSegments, isSegmentActive, toggleExpandCollapseAll];
   }
   

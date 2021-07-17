@@ -25,8 +25,8 @@ function UserBar(props) {
 
   } else {
     items = <>
-    {/* <Menu.Item className="ant-menu-item ant-menu-item" style={{ paddingLeft: "40px", borderLeft: "1px solid #f0f0f0" }}>Not logged in</Menu.Item> */}
-  </>;
+      <Menu.Item {...props} key="notLoggedIn">Not logged in</Menu.Item>
+    </>;
   }
   
   return items;
