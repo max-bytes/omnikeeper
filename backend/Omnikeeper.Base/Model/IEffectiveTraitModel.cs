@@ -9,7 +9,7 @@ namespace Omnikeeper.Base.Model
 {
     public interface IEffectiveTraitModel
     {
-        Task<IEnumerable<EffectiveTrait>> CalculateEffectiveTraitsForCI(MergedCI ci, IModelContext trans, TimeThreshold atTime);
+        Task<IEnumerable<EffectiveTrait>> CalculateEffectiveTraitsForCI(IEnumerable<ITrait> traits, MergedCI ci, IModelContext trans, TimeThreshold atTime);
 
         Task<EffectiveTrait?> CalculateEffectiveTraitForCI(MergedCI ci, ITrait trait, IModelContext trans, TimeThreshold atTime);
 

@@ -41,6 +41,7 @@ namespace Omnikeeper.Entity.AttributeValues
 
     public interface IAttributeArrayValue : IAttributeValue
     {
+        public int Length { get; }
     }
 
     public interface IAttributeArrayValue<S, T> : IAttributeArrayValue where S : IAttributeScalarValue<T>
@@ -70,6 +71,8 @@ namespace Omnikeeper.Entity.AttributeValues
 #pragma warning restore CS8618
 
         public abstract AttributeValueType Type { get; }
+
+        public int Length => Values.Length;
 
         public bool IsArray => true;
 

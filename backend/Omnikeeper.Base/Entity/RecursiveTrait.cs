@@ -41,7 +41,8 @@ namespace Omnikeeper.Base.Entity
     {
         Configuration,
         Plugin,
-        Core
+        Core,
+        Data
     }
 
     [ProtoContract(SkipConstructor = true)]

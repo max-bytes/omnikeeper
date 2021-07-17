@@ -19,19 +19,19 @@ function SearchCIAdvanced(props) {
     const [searchString, setSearchString] = useState(urlParams.searchString);
     
 
-    const [loadEffectiveTraits, { data: effectiveTraits, loading: loadingActiveTraits }] = useLazyQuery(queries.ActiveTraits);
+    const [loadActiveTraits, { data: activeTraits, loading: loadingActiveTraits }] = useLazyQuery(queries.ActiveTraits);
     useEffect(() => {
         if (visibleLayers) {
-            loadEffectiveTraits({});
+            loadActiveTraits({});
         }
-    }, [loadEffectiveTraits, visibleLayers]);
+    }, [loadActiveTraits, visibleLayers]);
     
     var [initialSetOfCheckedTraits, setIitialSetOfCheckedTraits] = useState(false); // HACK: shouldn't need this flag
     var [checkedTraits, setCheckedTraits] = useState([]);
     useEffect(() => {
-        if (!initialSetOfCheckedTraits && effectiveTraits) {
+        if (!initialSetOfCheckedTraits && activeTraits) {
             const newChecked = [];
-            for(const et of effectiveTraits.activeTraits) {
+            for(const et of activeTraits.activeTraits) {
                 if (urlParams.requiredTraits.includes(et.name))
                     newChecked[et.name] = 1;
                 else if (urlParams.disallowedTraits.includes(et.name))
@@ -42,7 +42,7 @@ function SearchCIAdvanced(props) {
             setCheckedTraits(newChecked);
             setIitialSetOfCheckedTraits(true);
         }
-    }, [effectiveTraits, checkedTraits, setCheckedTraits, urlParams, initialSetOfCheckedTraits, setIitialSetOfCheckedTraits]);
+    }, [activeTraits, checkedTraits, setCheckedTraits, urlParams, initialSetOfCheckedTraits, setIitialSetOfCheckedTraits]);
     
     useEffect(() => {
         if (_.keys(checkedTraits).length !== 0) // we only start updating the url/history once the checkedTraits are loaded
@@ -63,21 +63,21 @@ function SearchCIAdvanced(props) {
     const debouncedSearch = useCallback(_.debounce(search, 500), [search]);
 
     useEffect(() => {
-        if (effectiveTraits && visibleLayers) {
+        if (activeTraits && visibleLayers) {
             // TODO: cancel previous searches -> see: https://evilmartians.com/chronicles/aborting-queries-and-mutations-in-react-apollo
             // but... it seems like a clusterfuck :(
             debouncedSearch({
                 variables: {
                     searchString: searchString,
-                    withEffectiveTraits: effectiveTraits.activeTraits.map(et => et.name)
+                    withEffectiveTraits: activeTraits.activeTraits.map(et => et.name)
                         .filter((et) => checkedTraits[et] === 1),
-                    withoutEffectiveTraits: effectiveTraits.activeTraits.map(et => et.name)
+                    withoutEffectiveTraits: activeTraits.activeTraits.map(et => et.name)
                         .filter((et) => checkedTraits[et] === -1),
                     layers: visibleLayers.map((l) => l.name),
                 }
             });
         }
-    }, [searchString, debouncedSearch, effectiveTraits, visibleLayers, checkedTraits]);
+    }, [searchString, debouncedSearch, activeTraits, visibleLayers, checkedTraits]);
 
     return (
         <div style={styles.container}>
@@ -98,8 +98,8 @@ function SearchCIAdvanced(props) {
                         </Form.Item>
                     </div>
                     <div style={styles.searchRowEntry}>
-                        {effectiveTraits && 
-                            <EffectiveTraitList effectiveTraitList={effectiveTraits.activeTraits} checked={checkedTraits} setChecked={setCheckedTraits} />
+                        {activeTraits && 
+                            <EffectiveTraitList effectiveTraitList={activeTraits.activeTraits} checked={checkedTraits} setChecked={setCheckedTraits} />
                         }
                     </div>
                     <div style={styles.searchRowEntry}>

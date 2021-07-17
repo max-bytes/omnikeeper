@@ -90,7 +90,7 @@ export default function Manage(props) {
                             <li><Link to={`${url}/baseConfiguration`}>Base Configuration</Link></li>
                             <li><Link to={`${url}/predicates`}>Predicates</Link></li>
                             <li><Link to={`${url}/layers`}>Layers</Link></li>
-                            <li><Link to={`${url}/traits`}>Traits</Link></li>
+                            <li><Link to={`${url}/traits`}>Traits (deprecated!)</Link></li>
                             <li><Link to={`${url}/oiacontexts`}>Online Inbound Layer Contexts</Link></li>
                             <li><Link to={`${url}/odataapicontexts`}>OData API Contexts</Link></li>
                             </ul>

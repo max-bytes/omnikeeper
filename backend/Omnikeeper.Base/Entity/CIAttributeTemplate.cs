@@ -56,6 +56,46 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    [ProtoContract(SkipConstructor = true)]
+    public class CIAttributeValueConstraintArrayLength : ICIAttributeValueConstraint
+    {
+        [ProtoMember(1)] public readonly int? Minimum;
+        [ProtoMember(2)] public readonly int? Maximum;
+
+        public CIAttributeValueConstraintArrayLength(int? minimum, int? maximum)
+        {
+            Minimum = minimum;
+            Maximum = maximum;
+        }
+
+        [JsonIgnore]
+        public string type => "arrayLength";
+
+        public static CIAttributeValueConstraintArrayLength Build(int? min, int? max)
+        {
+            if (min > max) throw new Exception("Minimum value must not be larger than maximum value");
+            return new CIAttributeValueConstraintArrayLength(min, max);
+        }
+
+        public IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value)
+        {
+            if (value.IsArray)
+            {
+                var a = (value as IAttributeArrayValue);
+                if (a == null)
+                    yield return new TemplateErrorAttributeWrongMultiplicity();
+                else if (Maximum.HasValue && a.Length > Maximum)
+                    yield return new TemplateErrorAttributeGeneric("Array too long!");
+                else if (Minimum.HasValue && a.Length < Minimum)
+                    yield return new TemplateErrorAttributeGeneric("Array too short!");
+            }
+            else
+            {
+                yield return new TemplateErrorAttributeWrongMultiplicity();
+            }
+        }
+    }
+
     [ProtoContract(Serializer = typeof(Serializer))]
     public class CIAttributeValueConstraintTextRegex : ICIAttributeValueConstraint
     {

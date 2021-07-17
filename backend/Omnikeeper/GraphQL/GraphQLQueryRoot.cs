@@ -264,6 +264,7 @@ namespace Omnikeeper.GraphQL
                     var effectiveTraitModel = context.RequestServices.GetRequiredService<IEffectiveTraitModel>();
                     var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                    var traitsProvider = context.RequestServices.GetRequiredService<ITraitsProvider>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
@@ -280,7 +281,9 @@ namespace Omnikeeper.GraphQL
                     // filter predicates by constraints
                     var layers = await layerModel.BuildLayerSet(layersForEffectiveTraits, userContext.Transaction);
                     var ci = await ciModel.GetMergedCI(preferredForCI, layers, userContext.Transaction, userContext.TimeThreshold);
-                    var effectiveTraits = await effectiveTraitModel.CalculateEffectiveTraitsForCI(ci, userContext.Transaction, userContext.TimeThreshold);
+
+                    var traits = (await traitsProvider.GetActiveTraitSet(userContext.Transaction, userContext.TimeThreshold)).Traits.Values;
+                    var effectiveTraits = await effectiveTraitModel.CalculateEffectiveTraitsForCI(traits, ci, userContext.Transaction, userContext.TimeThreshold);
                     var effectiveTraitNames = effectiveTraits.Select(et => et.UnderlyingTrait.Name);
                     var directedPredicates = predicates.SelectMany(predicate =>
                     {

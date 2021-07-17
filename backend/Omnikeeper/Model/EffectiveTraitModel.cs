@@ -16,16 +16,14 @@ namespace Omnikeeper.Model
 {
     public class EffectiveTraitModel : IEffectiveTraitModel
     {
-        private readonly ITraitsProvider traitsProvider;
         private readonly IOnlineAccessProxy onlineAccessProxy;
         private readonly ICIModel ciModel;
         private readonly IAttributeModel attributeModel;
         private readonly IRelationModel relationModel;
         private readonly ILogger<EffectiveTraitModel> logger;
-        public EffectiveTraitModel(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ITraitsProvider traitsProvider, IOnlineAccessProxy onlineAccessProxy,
+        public EffectiveTraitModel(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, IOnlineAccessProxy onlineAccessProxy,
             ILogger<EffectiveTraitModel> logger)
         {
-            this.traitsProvider = traitsProvider;
             this.onlineAccessProxy = onlineAccessProxy;
             this.ciModel = ciModel;
             this.attributeModel = attributeModel;
@@ -33,12 +31,10 @@ namespace Omnikeeper.Model
             this.logger = logger;
         }
 
-        public async Task<IEnumerable<EffectiveTrait>> CalculateEffectiveTraitsForCI(MergedCI ci, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<EffectiveTrait>> CalculateEffectiveTraitsForCI(IEnumerable<ITrait> traits, MergedCI ci, IModelContext trans, TimeThreshold atTime)
         {
-            var traits = (await traitsProvider.GetActiveTraitSet(trans, atTime)).Traits;
-
             var resolved = new List<EffectiveTrait>();
-            foreach (var trait in traits.Values)
+            foreach (var trait in traits)
             {
                 var r = await Resolve(trait, ci, trans, atTime);
                 if (r != null)

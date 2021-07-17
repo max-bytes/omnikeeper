@@ -22,6 +22,11 @@ namespace Omnikeeper.Base.Service
             return flattened.Values;
         }
 
+        public static GenericTrait FlattenSingleRecursiveTrait(RecursiveTrait rt)
+        {
+            return FlattenDependentTraitsRec(rt, new Dictionary<string, GenericTrait>(), new Dictionary<string, RecursiveTrait>());
+        }
+
         private static GenericTrait FlattenDependentTraitsRec(RecursiveTrait trait, IDictionary<string, GenericTrait> flattened, IDictionary<string, RecursiveTrait> unflattened)
         {
             if (flattened.ContainsKey(trait.Name)) return flattened[trait.Name];

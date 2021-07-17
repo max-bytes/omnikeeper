@@ -15,11 +15,13 @@ namespace Omnikeeper.Model
     public class TraitsProvider : ITraitsProvider
     {
         private readonly IRecursiveTraitModel traitModel;
+        private readonly IRecursiveDataTraitModel dataTraitModel;
         private readonly IServiceProvider sp;
 
-        public TraitsProvider(IRecursiveTraitModel traitModel, IServiceProvider sp)
+        public TraitsProvider(IRecursiveTraitModel traitModel, IRecursiveDataTraitModel dataTraitModel, IServiceProvider sp)
         {
             this.traitModel = traitModel;
+            this.dataTraitModel = dataTraitModel;
             this.sp = sp;
         }
 
@@ -31,19 +33,13 @@ namespace Omnikeeper.Model
             foreach (var clb in computeLayerBrains)
                 clbTraitSets.Add($"CLB-{clb.Name}", clb.DefinedTraits);
 
-            var coreRecursiveTraitSet = RecursiveTraitSet.Build(
-                new RecursiveTrait("named", new TraitOriginV1(TraitOriginType.Core), new List<TraitAttribute>() {
-                    new TraitAttribute("name",
-                        CIAttributeTemplate.BuildFromParams("__name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-                    )
-                })
-            );
-
             // TODO, NOTE: this merges non-DB trait sets, that are not historic and DB traits sets that are... what should we do here?
             var configuredRecursiveTraitSet = await traitModel.GetRecursiveTraitSet(trans, timeThreshold);
+            var configuredRecursiveDataTraitSet = await dataTraitModel.GetRecursiveDataTraitSet(trans, timeThreshold);
             var allTraitSets = new Dictionary<string, RecursiveTraitSet>() {
-                { "core", coreRecursiveTraitSet },
-                { "configuration", configuredRecursiveTraitSet }
+                { "core", CoreTraits.Traits },
+                { "configuration", configuredRecursiveTraitSet },
+                { "data", configuredRecursiveDataTraitSet }
             };
             foreach (var kv in clbTraitSets)
                 allTraitSets.Add(kv.Key, kv.Value);

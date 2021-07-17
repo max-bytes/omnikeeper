@@ -30,6 +30,7 @@ export default function ManageBaseConfiguration() {
                 labelCol={{ span: "8" }}
                 style={{ display: 'flex', flexDirection: 'column', flexBasis: '1000px', margin:'10px 0px' }}
                 onFinish={e => {
+                    e.ConfigLayerset = e.ConfigLayerset.split(",");
                     setBaseConfiguration({ variables: { baseConfiguration: JSON.stringify(e) } }).then(d => {
                         setConfig(data.baseConfiguration);
                     }).catch(e => {});
@@ -37,6 +38,9 @@ export default function ManageBaseConfiguration() {
                 initialValues={JSON.parse(config)}
             >
                 <Form.Item name="$type" label="$type" rules={[{ required: true }]} hidden>
+                    <Input />
+                </Form.Item>
+                <Form.Item name="ConfigLayerset" label="Config Layerset" rules={[{ required: true }]}>
                     <Input />
                 </Form.Item>
                 <Form.Item name="ArchiveChangesetThreshold" label="Archive Changeset Threshold" rules={[{ required: true }]}>
