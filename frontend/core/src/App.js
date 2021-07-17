@@ -17,7 +17,7 @@ import { Redirect, Route, Switch, BrowserRouter, Link  } from 'react-router-dom'
 import ApolloWrapper from './components/ApolloWrapper';
 import env from "@beam-australia/react-env";
 import { ReactKeycloakProvider } from '@react-keycloak/web'
-import { Menu } from 'antd';
+import { Menu, Space } from 'antd';
 
 const keycloak = new Keycloak({
   "realm": env("KEYCLOAK_REALM"),
@@ -61,19 +61,23 @@ function App() {
                 </Link>
             </div>
             <div style={{ width: "calc(100% - 200px)", float: "left" }}>
-            <Route
-                render={({ location, history }) =>  (
-                        <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{ position: "relative", display: "flex", justifyContent: "flex-end", borderBottom: "none" }}>
-                            <Menu.Item key="manage"><Link to="/manage"><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/> Manage</Link></Menu.Item>
-                            <Menu.Item key="createCI"><Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link></Menu.Item>
-                            <Menu.Item key="explorer"><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{ marginRight: "0.5rem" }}/> Search CI</Link></Menu.Item>
-                            <Menu.Item key="diffing"><Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link></Menu.Item>
-                            <Menu.Item key="grid-view" style={{ marginRight: "60px" }}><Link to="/grid-view"><FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/> Grid View</Link></Menu.Item>
-                            <Menu.Divider/>
-                            <UserBar disabled={true} style={{ cursor: "unset" }} />
-                        </Menu>
-                    )}
-                />
+              <div style={{ position: "relative", display: "flex", justifyContent: "flex-end", borderBottom: "none", marginRight: '10px' }}>
+                
+                <Space>
+                  <Route
+                    render={({ location, history }) =>  (
+                              <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]}>
+                                <Menu.Item key="manage"><Link to="/manage"><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/> Manage</Link></Menu.Item>
+                                <Menu.Item key="createCI"><Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link></Menu.Item>
+                                <Menu.Item key="explorer"><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{ marginRight: "0.5rem" }}/> Search CI</Link></Menu.Item>
+                                <Menu.Item key="diffing"><Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link></Menu.Item>
+                                <Menu.Item key="grid-view"><Link to="/grid-view"><FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/> Grid View</Link></Menu.Item>
+                              </Menu>
+                        )}
+                  />
+                  <UserBar />
+                </Space>
+              </div>
             </div>
         </nav>
            
