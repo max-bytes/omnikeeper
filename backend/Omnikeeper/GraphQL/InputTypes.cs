@@ -155,7 +155,6 @@ namespace Omnikeeper.GraphQL
         public string ID { get; private set; }
         public string WordingFrom { get; private set; } = "";
         public string WordingTo { get; private set; }
-        public AnchorState State { get; private set; }
         public PredicateConstraints Constraints { get; private set; }
     }
     public class UpsertPredicateInputType : InputObjectGraphType<UpsertPredicateInput>
@@ -165,7 +164,6 @@ namespace Omnikeeper.GraphQL
             Field("id", x => x.ID);
             Field(x => x.WordingFrom);
             Field(x => x.WordingTo);
-            Field(x => x.State, type: typeof(AnchorStateType));
             Field(x => x.Constraints, type: typeof(PredicateConstraintsInputType));
         }
     }

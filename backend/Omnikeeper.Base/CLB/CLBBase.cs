@@ -65,7 +65,7 @@ namespace Omnikeeper.Base.CLB
                 var changesetProxy = new ChangesetProxy(user, timeThreshold, changesetModel);
 
                 // prerequisits
-                var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.ActiveOnly);
+                var predicates = await predicateModel.GetPredicates(trans, timeThreshold);
                 var nonExistingRequiredPredicates = RequiredPredicates.Where(rp => !predicates.ContainsKey(rp));
 
                 if (nonExistingRequiredPredicates.Count() > 0)

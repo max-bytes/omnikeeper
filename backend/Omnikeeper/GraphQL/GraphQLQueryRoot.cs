@@ -205,7 +205,7 @@ namespace Omnikeeper.GraphQL
                     userContext.LayerSet = ls;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var predicate = await predicateModel.GetPredicate(predicateID, userContext.TimeThreshold, AnchorStateFilter.ActiveOnly, userContext.Transaction);
+                    var predicate = await predicateModel.GetPredicate(predicateID, userContext.TimeThreshold, userContext.Transaction);
 
                     IEnumerable<CompactCI> cis;
                     // predicate has no target constraints -> makes it easy, return ALL CIs
@@ -269,14 +269,13 @@ namespace Omnikeeper.GraphQL
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
-                    var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
                     var preferredForCI = context.GetArgument<Guid>("preferredForCI");
                     var layersForEffectiveTraits = context.GetArgument<string[]>("layersForEffectiveTraits");
 
                     if (!ciBasedAuthorizationService.CanReadCI(preferredForCI))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read CI {preferredForCI}");
 
-                    var predicates = (await predicateModel.GetPredicates(userContext.Transaction, userContext.TimeThreshold, AnchorStateFilter.ActiveOnly)).Values;
+                    var predicates = (await predicateModel.GetPredicates(userContext.Transaction, userContext.TimeThreshold)).Values;
 
                     // filter predicates by constraints
                     var layers = await layerModel.BuildLayerSet(layersForEffectiveTraits, userContext.Transaction);
@@ -289,9 +288,9 @@ namespace Omnikeeper.GraphQL
                     {
                         var ret = new List<DirectedPredicate>();
                         if (!predicate.Constraints.HasPreferredTraitsFrom || predicate.Constraints.PreferredTraitsFrom.Any(pt => effectiveTraitNames.Contains(pt)))
-                            ret.Add(new DirectedPredicate(predicate.ID, predicate.State, predicate.WordingFrom, true));
+                            ret.Add(new DirectedPredicate(predicate.ID, predicate.WordingFrom, true));
                         if (!predicate.Constraints.HasPreferredTraitsTo || predicate.Constraints.PreferredTraitsTo.Any(pt => effectiveTraitNames.Contains(pt)))
-                            ret.Add(new DirectedPredicate(predicate.ID, predicate.State, predicate.WordingTo, false)); // TODO: switch wording
+                            ret.Add(new DirectedPredicate(predicate.ID, predicate.WordingTo, false)); // TODO: switch wording
                         return ret;
                     });
 
@@ -299,8 +298,7 @@ namespace Omnikeeper.GraphQL
                 });
 
             FieldAsync<ListGraphType<PredicateType>>("predicates",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AnchorStateFilterType>> { Name = "stateFilter" }),
+                arguments: new QueryArguments(),
                 resolve: async context =>
                 {
                     var predicateModel = context.RequestServices.GetRequiredService<IPredicateModel>();
@@ -309,9 +307,8 @@ namespace Omnikeeper.GraphQL
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
-                    var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
 
-                    var predicates = (await predicateModel.GetPredicates(userContext.Transaction, userContext.TimeThreshold, stateFilter)).Values;
+                    var predicates = (await predicateModel.GetPredicates(userContext.Transaction, userContext.TimeThreshold)).Values;
 
                     return predicates;
                 });

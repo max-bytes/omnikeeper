@@ -59,7 +59,8 @@ namespace Omnikeeper.Model
                     "*/5 * * * * *",
                     "* * * * *",
                     "*/5 * * * * *",
-                    new long[] { 1 }
+                    new long[] { 1L },
+                    1L
                 );
             }
         }

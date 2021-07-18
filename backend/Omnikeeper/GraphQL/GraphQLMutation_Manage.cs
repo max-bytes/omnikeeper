@@ -7,6 +7,7 @@ using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Model;
 using System;
@@ -336,8 +337,9 @@ namespace Omnikeeper.GraphQL
               ),
               resolve: async context =>
               {
-                  var predicateModel = context.RequestServices.GetRequiredService<IPredicateModel>();
+                  var predicateWriteService = context.RequestServices.GetRequiredService<IPredicateWriteService>();
                   var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                  var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
                   var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
 
                   var predicate = context.GetArgument<UpsertPredicateInput>("predicate");
@@ -349,12 +351,48 @@ namespace Omnikeeper.GraphQL
 
                   using var transaction = modelContextBuilder.BuildDeferred();
 
-                  var newPredicate = await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, predicate.State, predicate.Constraints, transaction);
+                  var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+
+                  var newPredicate = await predicateWriteService.InsertOrUpdate(
+                      predicate.ID, predicate.WordingFrom, predicate.WordingTo, 
+                      predicate.Constraints, changesetProxy, transaction, 
+                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual));
 
                   transaction.Commit();
                   userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
 
                   return newPredicate.predicate;
+              });
+
+
+            FieldAsync<BooleanGraphType>("removePredicate",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "predicateID" }
+              ),
+              resolve: async context =>
+              {
+                  var predicateWriteService = context.RequestServices.GetRequiredService<IPredicateWriteService>();
+                  var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                  var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+                  var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
+
+                  var predicateID = context.GetArgument<string>("predicateID");
+
+                  var userContext = (context.UserContext as OmnikeeperUserContext)!;
+
+                  if (!managementAuthorizationService.CanUserUpsertPredicate(userContext.User))
+                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to remove Predicates");
+
+                  using var transaction = modelContextBuilder.BuildDeferred();
+
+                  var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+
+                  var deleted = await predicateWriteService.TryToDelete(predicateID, changesetProxy, transaction);
+
+                  transaction.Commit();
+                  userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
+
+                  return deleted;
               });
         }
     }

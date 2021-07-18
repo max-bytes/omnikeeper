@@ -20,21 +20,7 @@ namespace Omnikeeper.Service
 
         public async Task<bool> Run(IModelContextBuilder modelContextBuilder, ILogger logger)
         {
-            // try to delete marked predicates
             var trans = modelContextBuilder.BuildImmediate();
-            var toDeletePredicates = await predicateModel.GetPredicates(trans, TimeThreshold.BuildLatest(), AnchorStateFilter.MarkedForDeletion);
-            foreach (var d in toDeletePredicates)
-            {
-                var wasDeleted = await predicateModel.TryToDelete(d.Key, trans);
-                if (wasDeleted)
-                {
-                    logger.LogInformation($"Deleted predicate {d.Key}");
-                }
-                else
-                {
-                    logger.LogDebug($"Could not delete predicate {d.Key}");
-                }
-            }
 
             // try to delete marked layers
             var toDeleteLayers = await layerModel.GetLayers(AnchorStateFilter.MarkedForDeletion, trans);

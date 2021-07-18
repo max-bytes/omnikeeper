@@ -13,13 +13,16 @@ import _ from 'lodash';
 export default function ManagePredicates(props) {
   var [rowData, setRowData] = useState([]);
 
+  // TODO: is the ManagePredicates interface not nothing else than a specific gridview?
+  // Consider re-use!
+
   // HACK: we need to manually remove __typename properties from the constraints because it causes errors
   // when sending the data back via a mutation
   // see https://github.com/apollographql/apollo-feature-requests/issues/6 why
   const removeTypename = (predicate) => ({...predicate, constraints: _.omit(predicate.constraints, ['__typename'])});
 
   const { loading, refetch } = useQuery(queries.PredicateList, { 
-    variables: {stateFilter: 'all'},
+    variables: {},
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
       const preparedData = _.map(data.predicates, (p) => removeTypename(p));
@@ -31,6 +34,8 @@ export default function ManagePredicates(props) {
     }
   });
   const [upsert] = useMutation(mutations.UPSERT_PREDICATE);
+  const [remove] = useMutation(mutations.REMOVE_PREDICATE);
+  
   const apolloClient = useApolloClient();
 
   const columnDefs = [
@@ -44,10 +49,6 @@ export default function ManagePredicates(props) {
         return `From Traits: [${value?.preferredTraitsFrom.join(',') ?? ''}],<br />To Traits: [${value?.preferredTraitsTo.join(',') ?? ''}]`;  
       },
       cellEditor: 'predicateConstraintsCellEditor' },
-    { headerName: "State", field: "state", cellEditor: 'agSelectCellEditor', cellEditorParams: {
-        values: ['ACTIVE', 'DEPRECATED', 'INACTIVE', 'MARKED_FOR_DELETION'],
-      },
-    }
   ];
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
@@ -57,11 +58,21 @@ export default function ManagePredicates(props) {
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
       saveRow={async row => {
         const constraints = row.constraints ?? { preferredTraitsFrom: [], preferredTraitsTo: [] };
-        const predicate = { id: row.id, wordingFrom: row.wordingFrom, wordingTo: row.wordingTo, state: row.state, constraints: constraints };
+        const predicate = { id: row.id, wordingFrom: row.wordingFrom, wordingTo: row.wordingTo, constraints: constraints };
         return upsert({ variables: { predicate: predicate } })
           .then(r => ({result: removeTypename(r.data.upsertPredicate), id: row.id}))
           .then(r => apolloClient.resetStore())
           .catch(e => ({result: e, id: row.id }));
+      }}
+      deletableRows={true}
+      deleteRow={async row => {
+        if (row.id === undefined) {
+          // TODO
+        } else {
+          return remove({variables: {predicateID: row.id}})
+          .then(r => ({result: r.removePredicate, id: row.id}))
+          .catch(e => ({result: e, id: row.id }));
+        }
       }} />
   </div>;
 }

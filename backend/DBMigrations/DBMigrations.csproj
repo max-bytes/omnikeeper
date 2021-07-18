@@ -50,6 +50,7 @@
     <None Remove="Scripts\00039-add-index-changeset-id.psql" />
     <None Remove="Scripts\00040-added-layer-indices.psql" />
     <None Remove="Scripts\00041-added-ci-fk-indices.psql" />
+    <None Remove="Scripts\00042-remove-predicate.psql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -86,6 +87,7 @@
     <EmbeddedResource Include="Scripts\00010-computerlayerbrain-rework.psql" />
     <EmbeddedResource Include="Scripts\00028-create-table-gridviewconfig.psql" />
     <EmbeddedResource Include="Scripts\00033-add-speakingName-description-columns.psql" />
+    <EmbeddedResource Include="Scripts\00042-remove-predicate.psql" />
     <EmbeddedResource Include="Scripts\00041-added-ci-fk-indices.psql" />
     <EmbeddedResource Include="Scripts\00040-added-layer-indices.psql" />
     <EmbeddedResource Include="Scripts\00039-add-index-changeset-id.psql" />

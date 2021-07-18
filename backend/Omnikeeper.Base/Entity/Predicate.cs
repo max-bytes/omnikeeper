@@ -7,19 +7,17 @@ namespace Omnikeeper.Base.Entity
     [ProtoContract(SkipConstructor = true)]
     public class Predicate : IEquatable<Predicate>
     {
-        public Predicate(string iD, string wordingFrom, string wordingTo, AnchorState state, PredicateConstraints constraints)
+        public Predicate(string iD, string wordingFrom, string wordingTo, PredicateConstraints constraints)
         {
             ID = iD;
             WordingFrom = wordingFrom;
             WordingTo = wordingTo;
-            State = state;
             Constraints = constraints;
         }
 
         [ProtoMember(1)] public readonly string ID;
         [ProtoMember(2)] public readonly string WordingFrom;
         [ProtoMember(3)] public readonly string WordingTo;
-        [ProtoMember(4)] public readonly AnchorState State;
         [ProtoMember(5)] public readonly PredicateConstraints Constraints;
 
         public override bool Equals(object? obj) => Equals(obj as Predicate);
@@ -28,24 +26,21 @@ namespace Omnikeeper.Base.Entity
             return other != null && ID == other.ID &&
                    WordingFrom == other.WordingFrom &&
                    WordingTo == other.WordingTo &&
-                   State == other.State &&
                    Constraints.Equals(other.Constraints);
         }
-        public override int GetHashCode() => HashCode.Combine(ID, WordingFrom, WordingTo, State);
+        public override int GetHashCode() => HashCode.Combine(ID, WordingFrom, WordingTo);
     }
 
     public class DirectedPredicate : IEquatable<DirectedPredicate>
     {
-        public DirectedPredicate(string predicateID, AnchorState predicateState, string wording, bool forward)
+        public DirectedPredicate(string predicateID, string wording, bool forward)
         {
             PredicateID = predicateID;
-            PredicateState = predicateState;
             Wording = wording;
             Forward = forward;
         }
 
         public readonly string PredicateID;
-        public readonly AnchorState PredicateState;
         public readonly string Wording;
         public readonly bool Forward;
 
@@ -54,10 +49,9 @@ namespace Omnikeeper.Base.Entity
         {
             return other != null && PredicateID == other.PredicateID &&
                    Wording == other.Wording &&
-                   PredicateState == other.PredicateState &&
                    Forward == other.Forward;
         }
-        public override int GetHashCode() => HashCode.Combine(PredicateID, Wording, PredicateState, Forward);
+        public override int GetHashCode() => HashCode.Combine(PredicateID, Wording, Forward);
     }
 
     [ProtoContract]

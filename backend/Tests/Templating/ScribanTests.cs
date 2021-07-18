@@ -21,7 +21,6 @@ namespace Tests.Templating
         public void Test()
         {
             {
-                var testPredicateA = new Predicate("p_a", "p_a_forward", "p_a_backwards", AnchorState.Active, PredicateModel.DefaultConstraits);
                 var atTime = TimeThreshold.BuildLatest();
 
                 var staticChangesetID = Guid.NewGuid();
@@ -40,7 +39,7 @@ namespace Tests.Templating
                 var relationModel = new Mock<IRelationModel>();
                 relationModel.Setup(x => x.GetMergedRelations(It.IsAny<IRelationSelection>(), It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
                     .ReturnsAsync(() => new MergedRelation[] {
-                        new MergedRelation(new Relation(Guid.NewGuid(), testCIA.ID, testCIB.ID, testPredicateA, RelationState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual)), new long[0])
+                        new MergedRelation(new Relation(Guid.NewGuid(), testCIA.ID, testCIB.ID, "p_a", RelationState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual)), new long[0])
                     });
 
                 var ciModel = new Mock<ICIModel>();

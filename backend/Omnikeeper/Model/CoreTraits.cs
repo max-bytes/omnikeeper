@@ -29,8 +29,21 @@ namespace Omnikeeper.Model
             }
         );
 
+        public static readonly RecursiveTrait Predicate = new RecursiveTrait("__meta.config.predicate", new TraitOriginV1(TraitOriginType.Core),
+            new List<TraitAttribute>() {
+                new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("predicate.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                new TraitAttribute("wordingFrom", CIAttributeTemplate.BuildFromParams("predicate.wordingFrom", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                new TraitAttribute("wordingTo", CIAttributeTemplate.BuildFromParams("predicate.wordingTo", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+            },
+            new List<TraitAttribute>()
+            {
+                new TraitAttribute("name", CIAttributeTemplate.BuildFromParams("__name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                // TODO: constraints
+            }
+        );
+
         public static readonly RecursiveTraitSet Traits = RecursiveTraitSet.Build(
-                Named, Trait
+                Named, Trait, Predicate
             );
     }
 

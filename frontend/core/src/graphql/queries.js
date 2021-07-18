@@ -19,8 +19,8 @@ export const queries = {
         ${Fragments.compactCI}
     `,
     PredicateList: gql`
-        query predicateList($stateFilter: AnchorStateFilter!) {
-            predicates(stateFilter: $stateFilter) {
+        query predicateList {
+            predicates {
                 ...FullPredicate
             }
         }

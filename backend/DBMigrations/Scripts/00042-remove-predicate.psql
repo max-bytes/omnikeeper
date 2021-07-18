@@ -1,0 +1,6 @@
+ALTER TABLE ONLY public.relation DROP CONSTRAINT f_predicate;
+
+DROP TABLE predicate_wording;
+DROP TABLE predicate_state;
+DROP TABLE predicate_constraints;
+DROP TABLE predicate;
