@@ -9,6 +9,8 @@ import { useExplorerLayers } from '../utils/layers';
 
 function RelatedCI(props) {
 
+  const predicateWording = props.predicateWording;
+
   const { data: visibleLayers } = useExplorerLayers(true);
   // TODO: loading
   const [removeRelation] = useMutation(mutations.REMOVE_RELATION, { 
@@ -28,7 +30,10 @@ function RelatedCI(props) {
   // const otherCIButton = <Button type="link" onClick={() => setSelectedCI({variables: { newSelectedCI: props.related.ci.identity }})}>{props.related.ci.identity}</Button>;
   const otherCIButton = <Link to={"/explorer/" + props.related.ci.id}>{props.related.ci.name ?? "[UNNAMED]"}</Link>;
 
-  const written = <span>{`This CI "${props.related.predicateWording}" `}{otherCIButton}</span>;
+  const written = (props.related.isForwardRelation) ?
+    <span>{`This CI `}{predicateWording}{` `}{otherCIButton}</span> :
+    <span>{otherCIButton}{` `}{predicateWording}{` this CI`}</span>
+    ;
 
   // move remove functionality into on-prop
   let removeButton;
@@ -42,7 +47,7 @@ function RelatedCI(props) {
 
   return (
     <div style={{margin: "5px", float: props.alignRight ? "right" : "unset" }}>
-      <Form layout="inline" style={{flexFlow: 'nowrap', alignItems: 'center'}} id={`value:${props.related.predicateID}`}>
+      <Form layout="inline" style={{flexFlow: 'nowrap', alignItems: 'center'}}>
         <LayerStackIcons layerStack={props.related.layerStack}></LayerStackIcons>
         <OriginPopup changesetID={props.related.changesetID} originType={props.related.origin.type} />
         <Form.Item style={{flexBasis: '600px', justifyContent: 'flex-start', paddingRight: "0.25rem"}}>{written}</Form.Item>

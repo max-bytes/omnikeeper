@@ -32,11 +32,11 @@ function parseURLQuery(search) {
   
   let lts = null;
   try {
-    lts = JSON.parse(p.leftTimeSettings);
+    lts = JSON.parse(atob(p.leftTimeSettings));
   } catch {}
   let rts = null;
   try {
-    rts = JSON.parse(p.rightTimeSettings);
+    rts = JSON.parse(atob(p.rightTimeSettings));
   } catch {}
 
   let leftCIIDs = p.leftCIIDs;
@@ -67,8 +67,8 @@ function stringifyURLQuery(leftLayerSettings, rightLayerSettings, leftCIIDs, rig
     rightLayerSettings: (rightLayerSettings) ? JSON.stringify(rightLayerSettings) : undefined,
     leftCIIDs: leftCIIDs,
     rightCIIDs: rightCIIDs,
-    leftTimeSettings: (leftTimeSettings) ? JSON.stringify(leftTimeSettings) : undefined, 
-    rightTimeSettings: (rightTimeSettings) ? JSON.stringify(rightTimeSettings) : undefined
+    leftTimeSettings: (leftTimeSettings) ? btoa(JSON.stringify(leftTimeSettings)) : undefined, 
+    rightTimeSettings: (rightTimeSettings) ? btoa(JSON.stringify(rightTimeSettings)) : undefined
   }, {arrayFormat: 'comma'});
 }
 

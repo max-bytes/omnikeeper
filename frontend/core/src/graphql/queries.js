@@ -10,14 +10,6 @@ export const queries = {
           }
         ${Fragments.compactCI}
     `,
-    ValidRelationTargetCIs: gql`
-        query validRelationTargetCIs($layers: [String]!, $predicateID: String!, $forward: Boolean!) {
-            validRelationTargetCIs(layers: $layers, predicateID: $predicateID, forward: $forward) {
-              ...CompactCI
-            }
-          }
-        ${Fragments.compactCI}
-    `,
     PredicateList: gql`
         query predicateList {
             predicates {
@@ -26,23 +18,15 @@ export const queries = {
         }
         ${Fragments.fullPredicate}
     `,
-    DirectedPredicateList: gql`
-        query predicateList($preferredForCI: Guid!, $layersForEffectiveTraits: [String]!) {
-            directedPredicates(preferredForCI: $preferredForCI, layersForEffectiveTraits: $layersForEffectiveTraits) {
-                ...DirectedPredicate
-            }
-        }
-        ${Fragments.directedPredicate}
-    `,
-
-    // SimpleSearchCIs: gql`
-    //     query simpleSearchCIs($searchString: String!) {
-    //         simpleSearchCIs(searchString: $searchString) {
-    //             ...CompactCI
+    // DirectedPredicateList: gql`
+    //     query predicateList($preferredForCI: Guid!, $layersForEffectiveTraits: [String]!) {
+    //         directedPredicates(preferredForCI: $preferredForCI, layersForEffectiveTraits: $layersForEffectiveTraits) {
+    //             ...DirectedPredicate
     //         }
     //     }
-    //     ${Fragments.compactCI}
+    //     ${Fragments.directedPredicate}
     // `,
+
     AdvancedSearchCIs: gql`
         query advancedSearchCIs($searchString: String!, $withEffectiveTraits: [String]!, $withoutEffectiveTraits: [String]!, $layers: [String]!) {
             advancedSearchCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits, withoutEffectiveTraits: $withoutEffectiveTraits, layers: $layers) {

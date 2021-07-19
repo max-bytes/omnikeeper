@@ -3,7 +3,7 @@ import LayerIcon from "./LayerIcon";
 import { Select } from "antd";
 
 function LayerDropdown(props) {
-    const {selectedLayer, layers, onSetSelectedLayer} = props;
+    const {selectedLayer, layers, onSetSelectedLayer, style} = props;
 
     // setting a selected item by default (=first), if none is selected
     useEffect(() => {
@@ -16,7 +16,6 @@ function LayerDropdown(props) {
         return (
             <Select
                 placeholder="No layer selectable"
-                style={{ width: "100%" }}
                 disabled
             />
         );
@@ -24,7 +23,6 @@ function LayerDropdown(props) {
     return (
         <Select
             placeholder="Select layer"
-            style={{ width: "100%" }}
             value={selectedLayer?.id}
             onChange={(e, data) => {
                 const newLayer = layers.find((l) => l.id === data.value);
@@ -42,6 +40,7 @@ function LayerDropdown(props) {
                     ),
                 };
             })}
+            style={style}
         />
     );
 }

@@ -23,13 +23,13 @@ namespace Omnikeeper.GraphQL
         }
     }
 
-    public class DirectedPredicateType : ObjectGraphType<DirectedPredicate>
-    {
-        public DirectedPredicateType()
-        {
-            Field(x => x.PredicateID);
-            Field(x => x.Wording);
-            Field(x => x.Forward);
-        }
-    }
+    //public class DirectedPredicateType : ObjectGraphType<DirectedPredicate>
+    //{
+    //    public DirectedPredicateType()
+    //    {
+    //        Field(x => x.PredicateID);
+    //        Field(x => x.Wording);
+    //        Field(x => x.Forward);
+    //    }
+    //}
 }
