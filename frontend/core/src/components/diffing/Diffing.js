@@ -146,6 +146,8 @@ function Diffing(props) {
             <Col span={4} style={{display: 'flex'}}>
               <LeftLabel>CIs:</LeftLabel>
             </Col>
+            {/* TODO: does having two separate ci settings even make sense? is there any usecase for this? The only thing I can think
+                of is comparing two (not more) different CIs with each other... but for this to work we need to change some things */}
             <Col span={8}>
               {visibleLeftLayerNames.length > 0 && 
                 <DiffCISettings alignment='right' layers={visibleLeftLayerNames} selectedCIIDs={leftCIIDs} setSelectedCIIDs={setLeftCIIDs} />}

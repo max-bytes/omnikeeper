@@ -61,7 +61,7 @@ export function DiffTimeSettings(props) {
 
 function DiffCISettingsSpecificCIs(props) {
 
-  return <Form.Item style={{flexGrow: 1}}>
+  return <Form.Item style={{flexGrow: 1, marginBottom: '0px'}}>
     <MultiCISelect layers={props.layers} selectedCIIDs={props.selectedCIIDs} setSelectedCIIDs={props.setSelectedCIIDs} />
   </Form.Item>;
   // const { data, loading } = useQuery(queries.CIList, {
