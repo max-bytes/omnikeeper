@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Base.Utils.Serialization;
@@ -43,13 +45,16 @@ namespace Tasks.DBInit
             var changesetModel = new ChangesetModel(userModel);
             var layerModel = new LayerModel();
             var traitModel = new RecursiveTraitModel(NullLogger<RecursiveTraitModel>.Instance);
-            var predicateWriteService = new PredicateWriteService(predicateModel, baseConfigurationModel, ciModel, baseAttributeModel);
+            var lbas = new Mock<ILayerBasedAuthorizationService>();
+            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
+            var predicateWriteService = new PredicateWriteService(predicateModel, baseConfigurationModel, ciModel, baseAttributeModel, lbas.Object);
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
 
             var random = new Random(3);
 
             var mc = modelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, mc, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
+            var authenticatedUser = new AuthenticatedUser(user, new List<Layer>());
 
             await traitModel.SetRecursiveTraitSet(DefaultTraits.Get(), mc);
 
@@ -190,7 +195,7 @@ namespace Tasks.DBInit
             {
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates).Concat(baseDataPredicates))
-                    await predicateWriteService.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, PredicateConstraints.Default, changeset, trans, new DataOriginV1(DataOriginType.Manual));
+                    await predicateWriteService.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, PredicateConstraints.Default, new DataOriginV1(DataOriginType.Manual), changeset, authenticatedUser, trans);
 
                 trans.Commit();
             }

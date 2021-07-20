@@ -17,23 +17,29 @@ namespace Omnikeeper.Service
     {
         private readonly ICIModel ciModel;
         private readonly IBaseAttributeModel baseAttributeModel;
+        private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly IPredicateModel predicateModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
 
-        public PredicateWriteService(IPredicateModel predicateModel, IBaseConfigurationModel baseConfigurationModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel)
+        public PredicateWriteService(IPredicateModel predicateModel, IBaseConfigurationModel baseConfigurationModel, ICIModel ciModel, 
+            IBaseAttributeModel baseAttributeModel, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.predicateModel = predicateModel;
             this.baseConfigurationModel = baseConfigurationModel;
             this.ciModel = ciModel;
             this.baseAttributeModel = baseAttributeModel;
+            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
         }
 
-        public async Task<(Predicate predicate, bool changed)> InsertOrUpdate(string id, string wordingFrom, string wordingTo, PredicateConstraints constraints, IChangesetProxy changesetProxy, IModelContext trans, DataOriginV1 dataOrigin)
+        public async Task<(Predicate predicate, bool changed)> InsertOrUpdate(string id, string wordingFrom, string wordingTo, PredicateConstraints constraints, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans)
         {
             var t = await predicateModel.TryToGetPredicate(id, changesetProxy.TimeThreshold, trans);
 
             var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
             var writeLayerID = baseConfiguration.ConfigWriteLayer;
+
+            if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, writeLayerID))
+                throw new Exception($"User \"{user.Username}\" does not have permission to write to layer {writeLayerID}");
 
             var changed = false;
             Guid ciid;
@@ -63,10 +69,13 @@ namespace Omnikeeper.Service
             return (predicate, changed);
         }
 
-        public async Task<bool> TryToDelete(string id, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<bool> TryToDelete(string id, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans)
         {
             var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
             var writeLayerID = baseConfiguration.ConfigWriteLayer;
+
+            if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, writeLayerID))
+                throw new Exception($"User \"{user.Username}\" does not have permission to write to layer {writeLayerID}");
 
             var t = await predicateModel.TryToGetPredicate(id, changesetProxy.TimeThreshold, trans);
             if (t.Equals(default))

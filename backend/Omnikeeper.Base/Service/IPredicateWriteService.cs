@@ -9,7 +9,7 @@ namespace Omnikeeper.Base.Service
 {
     public interface IPredicateWriteService
     {
-        Task<(Predicate predicate, bool changed)> InsertOrUpdate(string id, string wordingFrom, string wordingTo, PredicateConstraints constraints, IChangesetProxy changesetProxy, IModelContext trans, DataOriginV1 dataOrigin);
-        Task<bool> TryToDelete(string id, IChangesetProxy changesetProxy, IModelContext trans);
+        Task<(Predicate predicate, bool changed)> InsertOrUpdate(string id, string wordingFrom, string wordingTo, PredicateConstraints constraints, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans);
+        Task<bool> TryToDelete(string id, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans);
     }
 }

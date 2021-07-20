@@ -346,17 +346,14 @@ namespace Omnikeeper.GraphQL
 
                   var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                  if (!managementAuthorizationService.CanUserUpsertPredicate(userContext.User))
-                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update or insert Predicates");
-
                   using var transaction = modelContextBuilder.BuildDeferred();
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
                   var newPredicate = await predicateWriteService.InsertOrUpdate(
                       predicate.ID, predicate.WordingFrom, predicate.WordingTo, 
-                      predicate.Constraints, changesetProxy, transaction, 
-                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual));
+                      predicate.Constraints, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+                      changesetProxy, userContext.User, transaction);
 
                   transaction.Commit();
                   userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
@@ -374,20 +371,16 @@ namespace Omnikeeper.GraphQL
                   var predicateWriteService = context.RequestServices.GetRequiredService<IPredicateWriteService>();
                   var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
                   var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
-                  var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
 
                   var predicateID = context.GetArgument<string>("predicateID");
 
                   var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                  if (!managementAuthorizationService.CanUserUpsertPredicate(userContext.User))
-                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to remove Predicates");
-
                   using var transaction = modelContextBuilder.BuildDeferred();
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
-                  var deleted = await predicateWriteService.TryToDelete(predicateID, changesetProxy, transaction);
+                  var deleted = await predicateWriteService.TryToDelete(predicateID, changesetProxy, userContext.User, transaction);
 
                   transaction.Commit();
                   userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
