@@ -18,14 +18,6 @@ export const queries = {
         }
         ${Fragments.fullPredicate}
     `,
-    // DirectedPredicateList: gql`
-    //     query predicateList($preferredForCI: Guid!, $layersForEffectiveTraits: [String]!) {
-    //         directedPredicates(preferredForCI: $preferredForCI, layersForEffectiveTraits: $layersForEffectiveTraits) {
-    //             ...DirectedPredicate
-    //         }
-    //     }
-    //     ${Fragments.directedPredicate}
-    // `,
 
     AdvancedSearchCIs: gql`
         query advancedSearchCIs($searchString: String!, $withEffectiveTraits: [String]!, $withoutEffectiveTraits: [String]!, $layers: [String]!) {

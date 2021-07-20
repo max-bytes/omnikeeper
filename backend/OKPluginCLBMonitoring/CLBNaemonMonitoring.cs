@@ -25,8 +25,8 @@ namespace OKPluginCLBMonitoring
         private readonly IEffectiveTraitModel traitModel;
 
         public CLBNaemonMonitoring(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
-            IPredicateModel predicateModel, IChangesetModel changesetModel, IUserInDatabaseModel userModel)
-            : base(atributeModel, layerModel, predicateModel, changesetModel, userModel)
+            IChangesetModel changesetModel, IUserInDatabaseModel userModel)
+            : base(atributeModel, layerModel, changesetModel, userModel)
         {
             this.ciModel = ciModel;
             this.relationModel = relationModel;
@@ -36,12 +36,6 @@ namespace OKPluginCLBMonitoring
         private readonly string hasMonitoringModulePredicate = "has_monitoring_module";
         private readonly string isMonitoredByPredicate = "is_monitored_by";
         private readonly string belongsToNaemonContactgroup = "belongs_to_naemon_contactgroup";
-        public override string[] RequiredPredicates => new string[]
-        {
-            hasMonitoringModulePredicate,
-            isMonitoredByPredicate,
-            belongsToNaemonContactgroup
-        };
 
         private static readonly TraitOriginV1 traitOrigin = new TraitOriginV1(TraitOriginType.Plugin, "CLBNaemonMonitoring");
         private readonly RecursiveTrait moduleRecursiveTrait = new RecursiveTrait("naemon_service_module", traitOrigin, new List<TraitAttribute>() {

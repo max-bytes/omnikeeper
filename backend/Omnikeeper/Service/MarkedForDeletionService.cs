@@ -9,12 +9,10 @@ namespace Omnikeeper.Service
 {
     public class MarkedForDeletionService
     {
-        private readonly IPredicateModel predicateModel;
         private readonly ILayerModel layerModel;
 
-        public MarkedForDeletionService(IPredicateModel predicateModel, ILayerModel layerModel)
+        public MarkedForDeletionService(ILayerModel layerModel)
         {
-            this.predicateModel = predicateModel;
             this.layerModel = layerModel;
         }
 

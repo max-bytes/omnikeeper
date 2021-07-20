@@ -10,7 +10,6 @@ namespace Omnikeeper.Base.CLB
     {
         string Name { get; }
 
-        string[] RequiredPredicates { get; }
         RecursiveTraitSet DefinedTraits { get; }
 
         Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger);

@@ -22,14 +22,4 @@ namespace Omnikeeper.GraphQL
             Field(x => x.WordingTo);
         }
     }
-
-    //public class DirectedPredicateType : ObjectGraphType<DirectedPredicate>
-    //{
-    //    public DirectedPredicateType()
-    //    {
-    //        Field(x => x.PredicateID);
-    //        Field(x => x.Wording);
-    //        Field(x => x.Forward);
-    //    }
-    //}
 }
