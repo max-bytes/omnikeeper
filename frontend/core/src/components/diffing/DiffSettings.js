@@ -2,11 +2,9 @@ import React, {useEffect} from 'react';
 import { queries } from 'graphql/queries'
 import { useQuery } from '@apollo/client';
 import Layers from 'components/Layers';
-import { format2ShortGuid } from 'utils/shortGuid';
 import { mergeSettingsAndSortLayers } from 'utils/layers'; 
 import { Form, Radio, Select } from "antd";
 import MultiCISelect from 'components/MultiCISelect';
-const { Option } = Select;
 
 function ChangesetDropdown(props) {
   const { ciids, layers, timeSettings, setTimeSettings } = props;
