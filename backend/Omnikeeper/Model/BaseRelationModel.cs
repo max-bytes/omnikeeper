@@ -14,12 +14,10 @@ namespace Omnikeeper.Model
 {
     public class BaseRelationModel : IBaseRelationModel
     {
-        private readonly IPredicateModel predicateModel;
         private readonly IPartitionModel partitionModel;
 
-        public BaseRelationModel(IPredicateModel predicateModel, IPartitionModel partitionModel)
+        public BaseRelationModel(IPartitionModel partitionModel)
         {
-            this.predicateModel = predicateModel;
             this.partitionModel = partitionModel;
         }
 
@@ -68,7 +66,6 @@ namespace Omnikeeper.Model
 
         public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans, TimeThreshold atTime)
         {
-            var predicate = await predicateModel.GetPredicate(predicateID, atTime, AnchorStateFilter.All, trans);
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
             using var command = new NpgsqlCommand(@"select id, state, changeset_id, origin_type from relation where 
@@ -93,12 +90,11 @@ namespace Omnikeeper.Model
             var originType = dr.GetFieldValue<DataOriginType>(3);
             var origin = new DataOriginV1(originType);
 
-            return new Relation(id, fromCIID, toCIID, predicate, state, changesetID, origin);
+            return new Relation(id, fromCIID, toCIID, predicateID, state, changesetID, origin);
         }
 
         public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, long layerID, IModelContext trans, TimeThreshold atTime)
         {
-            var predicates = await predicateModel.GetPredicates(trans, atTime, AnchorStateFilter.All);
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
             var relations = new List<Relation>();
@@ -115,11 +111,10 @@ namespace Omnikeeper.Model
                     var state = dr.GetFieldValue<RelationState>(4);
                     var changesetID = dr.GetGuid(5);
 
-                    var predicate = predicates[predicateID];
                     var originType = dr.GetFieldValue<DataOriginType>(6);
                     var origin = new DataOriginV1(originType);
 
-                    var relation = new Relation(id, fromCIID, toCIID, predicate, state, changesetID, origin);
+                    var relation = new Relation(id, fromCIID, toCIID, predicateID, state, changesetID, origin);
 
                     if (state != RelationState.Removed)
                         relations.Add(relation);
@@ -144,7 +139,6 @@ namespace Omnikeeper.Model
                 return (currentRelation, false);
             }
 
-            var predicate = await predicateModel.GetPredicate(predicateID, changesetProxy.TimeThreshold, AnchorStateFilter.All, trans);
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
             using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp, origin_type, partition_index) 
@@ -166,13 +160,15 @@ namespace Omnikeeper.Model
 
 
             await command.ExecuteNonQueryAsync();
-            return (new Relation(id, fromCIID, toCIID, predicate, RelationState.Removed, changeset.ID, currentRelation.Origin), true);
+            return (new Relation(id, fromCIID, toCIID, predicateID, RelationState.Removed, changeset.ID, currentRelation.Origin), true);
         }
 
         public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             if (fromCIID == toCIID)
                 throw new Exception("From and To CIID must not be the same!");
+            if (predicateID.IsEmpty())
+                throw new Exception("PredicateID must not be empty");
 
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, changesetProxy.TimeThreshold);
 
@@ -188,7 +184,6 @@ namespace Omnikeeper.Model
                 }
             }
 
-            var predicate = await predicateModel.GetPredicate(predicateID, changesetProxy.TimeThreshold, AnchorStateFilter.ActiveOnly, trans);
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
             using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp, origin_type, partition_index) 
@@ -209,7 +204,7 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("partition_index", partitionIndex);
 
             await command.ExecuteNonQueryAsync();
-            return (new Relation(id, fromCIID, toCIID, predicate, state, changeset.ID, origin), true);
+            return (new Relation(id, fromCIID, toCIID, predicateID, state, changeset.ID, origin), true);
         }
 
 
@@ -231,8 +226,13 @@ namespace Omnikeeper.Model
                 var id = Guid.NewGuid();
                 var fromCIID = data.GetFromCIID(fragment);
                 var toCIID = data.GetToCIID(fragment);
+                if (fromCIID == toCIID)
+                    throw new Exception("From and To CIID must not be the same!");
 
                 var predicateID = data.GetPredicateID(fragment);
+                if (predicateID.IsEmpty())
+                    throw new Exception("PredicateID must not be empty");
+
                 var informationHash = Relation.CreateInformationHash(fromCIID, toCIID, predicateID);
                 // remove the current relation from the list of relations to remove
                 outdatedRelations.Remove(informationHash, out var currentRelation);
@@ -245,8 +245,6 @@ namespace Omnikeeper.Model
                     else
                         continue;
                 }
-
-                // TODO: check if predicates actually exist and are active
 
                 actualInserts.Add((fromCIID, toCIID, predicateID, state));
             }

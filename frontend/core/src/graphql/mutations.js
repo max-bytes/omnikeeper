@@ -186,7 +186,13 @@ CREATE_CI: gql`
     }
   }
   ${Fragments.fullPredicate}
-`,
+  `,
+
+  REMOVE_PREDICATE: gql`
+  mutation RemovePredicate($predicateID: String!) {
+    removePredicate(predicateID: $predicateID)
+  }
+  `,
 
   SET_LAYER_SETTINGS: gql`
     mutation SetLayerSettings($layerSettings: [LayerSettings]) {

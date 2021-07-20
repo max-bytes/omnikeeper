@@ -9,5 +9,6 @@ namespace Omnikeeper.Base.Model
     {
         Task<Changeset> GetChangeset(IModelContext trans);
         TimeThreshold TimeThreshold { get; }
+        UserInDatabase User { get; }
     }
 }

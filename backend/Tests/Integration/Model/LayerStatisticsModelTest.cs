@@ -28,8 +28,8 @@ namespace Tests.Integration.Model
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var predicateModel = new CachingPredicateModel(new PredicateModel());
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
+            //var predicateModel = new CachingPredicateModel(new PredicateModel());
+            var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var ciModel = new CIModel(attributeModel, new CIIDModel());
 
@@ -43,17 +43,19 @@ namespace Tests.Integration.Model
             var ciid2 = await ciModel.CreateCI(trans);
             var ciid3 = await ciModel.CreateCI(trans);
 
-            var (predicate, changed) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
+            var predicateID1 = "predicate_1";
+
+            //var (predicate, changed) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
 
             var layer = await layerModel.CreateLayer("test_layer", trans);
 
-            await relationModel.InsertRelation(ciid1, ciid2, predicate.ID, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
             var ch2 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
-            await relationModel.RemoveRelation(ciid1, ciid2, predicate.ID, layer.ID, ch2, trans);
+            await relationModel.RemoveRelation(ciid1, ciid2, predicateID1, layer.ID, ch2, trans);
 
-            await relationModel.InsertRelation(ciid1, ciid3, predicate.ID, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            await relationModel.InsertRelation(ciid1, ciid3, predicateID1, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
 
             // active relation test
@@ -74,8 +76,7 @@ namespace Tests.Integration.Model
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var predicateModel = new CachingPredicateModel(new PredicateModel());
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
+            var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var ciModel = new CIModel(attributeModel, new CIIDModel());
 
@@ -90,20 +91,21 @@ namespace Tests.Integration.Model
             var ciid2 = await ciModel.CreateCI(trans);
             var ciid3 = await ciModel.CreateCI(trans);
 
-            var (predicate, changed) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
+            //var (predicate, changed) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
+            var predicateID1 = "predicate_1";
 
             var layer = await layerModel.CreateLayer("test_layer", trans);
 
-            await relationModel.InsertRelation(ciid1, ciid2, predicate.ID, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-            await relationModel.InsertRelation(ciid1, ciid3, predicate.ID, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+            await relationModel.InsertRelation(ciid1, ciid3, predicateID1, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
             var ch2 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
-            await relationModel.RemoveRelation(ciid1, ciid2, predicate.ID, layer.ID, ch2, trans);
+            await relationModel.RemoveRelation(ciid1, ciid2, predicateID1, layer.ID, ch2, trans);
 
             var ch3 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
-            await relationModel.RemoveRelation(ciid1, ciid3, predicate.ID, layer.ID, ch3, trans);
+            await relationModel.RemoveRelation(ciid1, ciid3, predicateID1, layer.ID, ch3, trans);
 
             var layerChangesetsHistory = await layerStatisticsModel.GetLayerChangesetsHistory(layer, trans);
 

@@ -9,9 +9,5 @@ namespace Omnikeeper.Base.Service
         bool CanUserCreateLayer(AuthenticatedUser user);
 
         bool CanUserUpdateLayer(AuthenticatedUser user);
-
-        bool CanUserUpsertPredicate(AuthenticatedUser user);
-
-        bool CanUserUpsertCIType(AuthenticatedUser user);
     }
 }

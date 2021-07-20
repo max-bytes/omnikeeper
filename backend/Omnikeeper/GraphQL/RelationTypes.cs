@@ -12,7 +12,7 @@ namespace Omnikeeper.GraphQL
             Field("id", x => x.ID);
             Field(x => x.FromCIID);
             Field(x => x.ToCIID);
-            Field(x => x.Predicate, type: typeof(PredicateType));
+            Field(x => x.PredicateID);
             Field(x => x.State, type: typeof(RelationStateType));
             Field(x => x.ChangesetID);
             Field(x => x.Origin, type: typeof(DataOriginGQL));
@@ -32,7 +32,6 @@ namespace Omnikeeper.GraphQL
             Field(x => x.FromCIID);
             Field(x => x.ToCIID);
             Field(x => x.PredicateID);
-            Field(x => x.PredicateWording);
             Field(x => x.IsForwardRelation);
             Field(x => x.ChangesetID);
             Field(x => x.Origin, type: typeof(DataOriginGQL));

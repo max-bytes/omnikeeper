@@ -93,7 +93,6 @@ export const Fragments = {
         fromCIID
         toCIID
         predicateID
-        predicateWording
         layerID
         changesetID
         origin { type }
@@ -134,7 +133,6 @@ export const Fragments = {
     id,
     wordingFrom
     wordingTo,
-    state,
     constraints {
         preferredTraitsTo
         preferredTraitsFrom
@@ -143,12 +141,4 @@ export const Fragments = {
     labelWordingTo @client
   }
   `,
-  directedPredicate: gql`
-  fragment DirectedPredicate on DirectedPredicateType {
-    predicateID
-    wording
-    predicateState
-    forward
-  }
-  `
 };

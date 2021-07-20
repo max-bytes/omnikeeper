@@ -16,23 +16,21 @@ namespace Omnikeeper.Base.CLB
         protected readonly IUserInDatabaseModel userModel;
         protected readonly IChangesetModel changesetModel;
         protected readonly ILayerModel layerModel;
-        private readonly IPredicateModel predicateModel;
 
-        public CLBBase(IAttributeModel attributeModel, ILayerModel layerModel, IPredicateModel predicateModel,
+        public CLBBase(IAttributeModel attributeModel, ILayerModel layerModel,
             IChangesetModel changesetModel, IUserInDatabaseModel userModel)
         {
             this.attributeModel = attributeModel;
             this.userModel = userModel;
             this.changesetModel = changesetModel;
             this.layerModel = layerModel;
-            this.predicateModel = predicateModel;
         }
 
         protected CLBSettings? Settings { get; private set; }
 
         public string Name => GetType().FullName!;
 
-        public abstract string[] RequiredPredicates { get; }
+        // TODO: turn into data-traits that get created/updated whenever CLB runs?
         public abstract RecursiveTraitSet DefinedTraits { get; }
 
         private TraitSet? cachedTraitSet = null;
@@ -63,15 +61,6 @@ namespace Omnikeeper.Base.CLB
                 var guid = GuidUtility.Create(clbUserGuidNamespace, Name);
                 var user = await userModel.UpsertUser(username, displayName, guid, UserType.Robot, trans);
                 var changesetProxy = new ChangesetProxy(user, timeThreshold, changesetModel);
-
-                // prerequisits
-                var predicates = await predicateModel.GetPredicates(trans, timeThreshold, AnchorStateFilter.ActiveOnly);
-                var nonExistingRequiredPredicates = RequiredPredicates.Where(rp => !predicates.ContainsKey(rp));
-
-                if (nonExistingRequiredPredicates.Count() > 0)
-                {
-                    throw new Exception($"The following required predicates are not present: {string.Join(',', nonExistingRequiredPredicates)}");
-                }
 
                 var layerSet = await layerModel.BuildLayerSet(new[] { Settings.LayerName }, trans);
                 var layer = await layerModel.GetLayer(Settings.LayerName, trans);

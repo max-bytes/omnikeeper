@@ -1,14 +1,17 @@
 ﻿using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Decorators;
+using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -31,20 +34,27 @@ namespace Tasks.DBInit
             using var conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
 
             var partitionModel = new PartitionModel();
-            var attributeModel = new AttributeModel(new BaseAttributeModel(partitionModel));
+            var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
+            var baseAttributeModel = new BaseAttributeModel(partitionModel);
+            var attributeModel = new AttributeModel(baseAttributeModel);
             var ciModel = new CIModel(attributeModel, new CIIDModel());
+            var relationModel = new RelationModel(new BaseRelationModel(partitionModel));
+            var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);
+            var predicateModel = new PredicateModel(baseConfigurationModel, effectiveTraitModel);
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var layerModel = new LayerModel();
-            var predicateModel = new CachingPredicateModel(new PredicateModel());
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, partitionModel));
             var traitModel = new RecursiveTraitModel(NullLogger<RecursiveTraitModel>.Instance);
+            var lbas = new Mock<ILayerBasedAuthorizationService>();
+            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
+            var predicateWriteService = new PredicateWriteService(predicateModel, baseConfigurationModel, ciModel, baseAttributeModel, lbas.Object);
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
 
             var random = new Random(3);
 
             var mc = modelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, mc, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
+            var authenticatedUser = new AuthenticatedUser(user, new List<Layer>());
 
             await traitModel.SetRecursiveTraitSet(DefaultTraits.Get(), mc);
 
@@ -54,7 +64,7 @@ namespace Tasks.DBInit
             int numAttributesPerCIFrom = 20;
             int numAttributesPerCITo = 40;
             //var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
-            var predicateRunsOn = new Predicate("runs_on", "runs on", "is running", AnchorState.Active, PredicateModel.DefaultConstraits);
+            var predicateRunsOn = new Predicate("runs_on", "runs on", "is running", PredicateConstraints.Default);
 
             //var regularPredicates = new[] {
             //new Predicate("is_part_of", "is part of", "has part", AnchorState.Active),
@@ -99,14 +109,14 @@ namespace Tasks.DBInit
             }).ToList();
 
             var monitoringPredicates = new[] {
-                new Predicate("has_monitoring_module", "has monitoring module", "is assigned to", AnchorState.Active, PredicateModel.DefaultConstraits),
-                new Predicate("is_monitored_by", "is monitored by", "monitors", AnchorState.Active, PredicateModel.DefaultConstraits),
-                new Predicate("belongs_to_naemon_contactgroup", "belongs to naemon contactgroup", "has member", AnchorState.Active, PredicateModel.DefaultConstraits)
+                new Predicate("has_monitoring_module", "has monitoring module", "is assigned to", PredicateConstraints.Default),
+                new Predicate("is_monitored_by", "is monitored by", "monitors", PredicateConstraints.Default),
+                new Predicate("belongs_to_naemon_contactgroup", "belongs to naemon contactgroup", "has member", PredicateConstraints.Default)
             };
 
             var baseDataPredicates = new[] {
-                new Predicate("member_of_group", "is member of group", "has member", AnchorState.Active, PredicateModel.DefaultConstraits),
-                new Predicate("managed_by", "is managed by", "manages", AnchorState.Active, PredicateModel.DefaultConstraits)
+                new Predicate("member_of_group", "is member of group", "has member", PredicateConstraints.Default),
+                new Predicate("managed_by", "is managed by", "manages", PredicateConstraints.Default)
             };
 
             // create layers
@@ -115,6 +125,7 @@ namespace Tasks.DBInit
             long activeDirectoryLayerID;
             using (var trans = modelContextBuilder.BuildDeferred())
             {
+                var configWriteLayer = await layerModel.CreateLayer("Config", Color.Blue, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
                 var cmdbLayer = await layerModel.CreateLayer("CMDB", Color.Blue, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
                 cmdbLayerID = cmdbLayer.ID;
                 await layerModel.CreateLayer("Inventory Scan", Color.Violet, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
@@ -182,8 +193,9 @@ namespace Tasks.DBInit
             // create predicates
             using (var trans = modelContextBuilder.BuildDeferred())
             {
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates).Concat(baseDataPredicates))
-                    await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, AnchorState.Active, PredicateModel.DefaultConstraits, trans);
+                    await predicateWriteService.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, PredicateConstraints.Default, new DataOriginV1(DataOriginType.Manual), changeset, authenticatedUser, trans);
 
                 trans.Commit();
             }

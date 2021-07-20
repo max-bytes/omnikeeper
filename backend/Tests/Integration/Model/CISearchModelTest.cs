@@ -27,13 +27,12 @@ namespace Tests.Integration.Model
             oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<long>(), It.IsAny<IModelContext>())).ReturnsAsync(false);
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var ciModel = new CIModel(attributeModel, new CIIDModel());
-            var predicateModel = new PredicateModel();
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
+            var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var layerModel = new LayerModel();
             var traitsProvider = new MockedTraitsProvider();
-            var traitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, traitsProvider, oap.Object, NullLogger<EffectiveTraitModel>.Instance);
+            var traitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, oap.Object, NullLogger<EffectiveTraitModel>.Instance);
             var searchModel = new CISearchModel(attributeModel, ciModel, traitModel, traitsProvider, NullLogger<CISearchModel>.Instance);
             var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
             Guid ciid1;

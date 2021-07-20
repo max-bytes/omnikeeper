@@ -62,8 +62,7 @@ namespace Tests.Ingest
             var layerModel = new LayerModel();
             var userModel = new UserInDatabaseModel();
             var ciModel = new CIModel(attributeModel, new CIIDModel());
-            var predicateModel = new PredicateModel();
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, partitionModel));
+            var relationModel = new RelationModel(new BaseRelationModel(partitionModel));
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
             var ingestDataService = new IngestDataService(attributeModel, ciModel, new ChangesetModel(userModel), relationModel, new CIMappingService(), modelContextBuilder, NullLogger<IngestDataService>.Instance);
 
@@ -82,9 +81,6 @@ namespace Tests.Ingest
             var insertLayer = layer1;
             var hosts = new string[] { "h1jmplx01.mhx.at", "h1lscapet01.mhx.local" };
             var layerSet = await layerModel.BuildLayerSet(new string[] { layer1.Name }, mc);
-
-            await predicateModel.InsertOrUpdate("has_network_interface", "has network interface", "is network interface of host", AnchorState.Active, PredicateModel.DefaultConstraits, mc);
-            await predicateModel.InsertOrUpdate("has_mounted_device", "has mounted device", "is mounted at host", AnchorState.Active, PredicateModel.DefaultConstraits, mc);
 
             var controller = new AnsibleInventoryScanIngestController(ingestDataService, layerModel, mockCurrentUserService.Object, modelContextBuilder, mockAuthorizationService.Object, NullLogger<AnsibleInventoryScanIngestController>.Instance);
 

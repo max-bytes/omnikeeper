@@ -32,11 +32,11 @@ function parseURLQuery(search) {
   
   let lts = null;
   try {
-    lts = JSON.parse(p.leftTimeSettings);
+    lts = JSON.parse(atob(p.leftTimeSettings));
   } catch {}
   let rts = null;
   try {
-    rts = JSON.parse(p.rightTimeSettings);
+    rts = JSON.parse(atob(p.rightTimeSettings));
   } catch {}
 
   let leftCIIDs = p.leftCIIDs;
@@ -62,13 +62,14 @@ function parseURLQuery(search) {
 }
 
 function stringifyURLQuery(leftLayerSettings, rightLayerSettings, leftCIIDs, rightCIIDs, leftTimeSettings, rightTimeSettings) {
+  // NOTE: converting some parameters to base64 (btoa/atob) because they otherwise get modified when passing via URL ("+" gets transformed to " ")
   return queryString.stringify({
     leftLayerSettings: (leftLayerSettings) ? JSON.stringify(leftLayerSettings) : undefined,
     rightLayerSettings: (rightLayerSettings) ? JSON.stringify(rightLayerSettings) : undefined,
     leftCIIDs: leftCIIDs,
     rightCIIDs: rightCIIDs,
-    leftTimeSettings: (leftTimeSettings) ? JSON.stringify(leftTimeSettings) : undefined, 
-    rightTimeSettings: (rightTimeSettings) ? JSON.stringify(rightTimeSettings) : undefined
+    leftTimeSettings: (leftTimeSettings) ? btoa(JSON.stringify(leftTimeSettings)) : undefined, 
+    rightTimeSettings: (rightTimeSettings) ? btoa(JSON.stringify(rightTimeSettings)) : undefined
   }, {arrayFormat: 'comma'});
 }
 
@@ -146,6 +147,8 @@ function Diffing(props) {
             <Col span={4} style={{display: 'flex'}}>
               <LeftLabel>CIs:</LeftLabel>
             </Col>
+            {/* TODO: does having two separate ci settings even make sense? is there any usecase for this? The only thing I can think
+                of is comparing two (not more) different CIs with each other... but for this to work we need to change some things */}
             <Col span={8}>
               {visibleLeftLayerNames.length > 0 && 
                 <DiffCISettings alignment='right' layers={visibleLeftLayerNames} selectedCIIDs={leftCIIDs} setSelectedCIIDs={setLeftCIIDs} />}

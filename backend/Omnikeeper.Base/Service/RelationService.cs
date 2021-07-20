@@ -61,10 +61,9 @@ namespace Omnikeeper.Base.Service
                 foreach ((var relation, var relatedCIID, var isForwardRelation) in relationTuples)
                 {
                     var predicateID = relation.Relation.PredicateID;
-                    var predicateWording = (isForwardRelation) ? relation.Relation.Predicate.WordingFrom : relation.Relation.Predicate.WordingTo;
                     var changesetID = relation.Relation.ChangesetID;
                     if (relatedCompactCIs.TryGetValue(relatedCIID, out var ci)) // TODO: performance improvements
-                        relatedCIs.Add(new CompactRelatedCI(ci, relation.Relation.ID, relation.Relation.FromCIID, relation.Relation.ToCIID, changesetID, relation.Relation.Origin, predicateID, isForwardRelation, predicateWording, relation.LayerStackIDs));
+                        relatedCIs.Add(new CompactRelatedCI(ci, relation.Relation.ID, relation.Relation.FromCIID, relation.Relation.ToCIID, changesetID, relation.Relation.Origin, predicateID, isForwardRelation, relation.LayerStackIDs));
                 }
             }
 

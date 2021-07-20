@@ -95,10 +95,9 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var predicateModel = new PredicateModel();
-            var relationModel = new RelationModel(new BaseRelationModel(predicateModel, new PartitionModel()));
+            var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var layerModel = new LayerModel();
-            var traitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, traitsProvider, oap.Object, NullLogger<EffectiveTraitModel>.Instance);
+            var traitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, oap.Object, NullLogger<EffectiveTraitModel>.Instance);
 
             var transI = ModelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, transI);

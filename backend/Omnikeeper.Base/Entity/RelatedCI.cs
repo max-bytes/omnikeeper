@@ -10,7 +10,6 @@ namespace Omnikeeper.Base.Entity
         public Guid FromCIID { get; private set; }
         public Guid ToCIID { get; private set; }
         public string PredicateID { get; private set; }
-        public string PredicateWording { get; private set; }
         public Guid ChangesetID { get; private set; }
         public DataOriginV1 Origin { get; private set; }
         public long LayerID { get => LayerStackIDs[^1]; }
@@ -18,7 +17,7 @@ namespace Omnikeeper.Base.Entity
         public bool IsForwardRelation { get; private set; }
 
         public CompactRelatedCI(CompactCI ci, Guid relationID, Guid fromCIID, Guid toCIID, Guid changesetID, DataOriginV1 origin,
-            string predicateID, bool isForwardRelation, string predicateWording, long[] layerStackIDs)
+            string predicateID, bool isForwardRelation, long[] layerStackIDs)
         {
             RelationID = relationID;
             CI = ci;
@@ -27,7 +26,6 @@ namespace Omnikeeper.Base.Entity
             ChangesetID = changesetID;
             Origin = origin;
             PredicateID = predicateID;
-            PredicateWording = predicateWording;
             LayerStackIDs = layerStackIDs;
             IsForwardRelation = isForwardRelation;
         }

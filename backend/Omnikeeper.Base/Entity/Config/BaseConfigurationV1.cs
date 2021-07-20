@@ -17,6 +17,7 @@ namespace Omnikeeper.Base.Entity.Config
         [ProtoMember(4)] private readonly string externalIDManagerRunnerInterval;
         [ProtoMember(5)] private readonly string archiveOldDataRunnerInterval;
         [ProtoMember(6)] private readonly long[] configLayerset;
+        [ProtoMember(7)] private readonly long configWriteLayer;
 
         [JsonProperty(Required = Required.Always)]
         public TimeSpan ArchiveChangesetThreshold => archiveChangesetThreshold;
@@ -30,6 +31,8 @@ namespace Omnikeeper.Base.Entity.Config
         public string ArchiveOldDataRunnerInterval => archiveOldDataRunnerInterval;
         [JsonProperty(Required = Required.Always)]
         public long[] ConfigLayerset => configLayerset;
+        [JsonProperty(Required = Required.Always)]
+        public long ConfigWriteLayer => configWriteLayer;
 
         public static MyJSONSerializer<BaseConfigurationV1> Serializer = new MyJSONSerializer<BaseConfigurationV1>(new JsonSerializerSettings()
         {
@@ -37,7 +40,7 @@ namespace Omnikeeper.Base.Entity.Config
             MissingMemberHandling = MissingMemberHandling.Error
         });
 
-        public BaseConfigurationV1(TimeSpan archiveChangesetThreshold, string clbRunnerInterval, string markedForDeletionRunnerInterval, string externalIDManagerRunnerInterval, string archiveOldDataRunnerInterval, long[] configLayerset)
+        public BaseConfigurationV1(TimeSpan archiveChangesetThreshold, string clbRunnerInterval, string markedForDeletionRunnerInterval, string externalIDManagerRunnerInterval, string archiveOldDataRunnerInterval, long[] configLayerset, long configWriteLayer)
         {
             this.archiveChangesetThreshold = archiveChangesetThreshold;
             this.clbRunnerInterval = clbRunnerInterval;
@@ -45,6 +48,7 @@ namespace Omnikeeper.Base.Entity.Config
             this.externalIDManagerRunnerInterval = externalIDManagerRunnerInterval;
             this.archiveOldDataRunnerInterval = archiveOldDataRunnerInterval;
             this.configLayerset = configLayerset;
+            this.configWriteLayer = configWriteLayer;
         }
     }
 }

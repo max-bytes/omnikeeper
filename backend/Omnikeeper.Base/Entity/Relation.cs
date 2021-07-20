@@ -30,8 +30,7 @@ namespace Omnikeeper.Base.Entity
         [ProtoMember(1)] public readonly Guid ID;
         [ProtoMember(2)] public readonly Guid FromCIID;
         [ProtoMember(3)] public readonly Guid ToCIID;
-        public string PredicateID => Predicate.ID;
-        [ProtoMember(4)] public readonly Predicate Predicate;
+        [ProtoMember(4)] public readonly string PredicateID;
         [ProtoMember(5)] public readonly RelationState State;
         [ProtoMember(6)] public readonly Guid ChangesetID;
         [ProtoMember(7)] public readonly DataOriginV1 Origin;
@@ -40,12 +39,12 @@ namespace Omnikeeper.Base.Entity
         public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);
         public static string CreateInformationHash(Guid fromCIID, Guid toCIID, string predicateID) => fromCIID + "_" + toCIID + "_" + predicateID;
 
-        public Relation(Guid id, Guid fromCIID, Guid toCIID, Predicate predicate, RelationState state, Guid changesetID, DataOriginV1 origin)
+        public Relation(Guid id, Guid fromCIID, Guid toCIID, string predicateID, RelationState state, Guid changesetID, DataOriginV1 origin)
         {
             ID = id;
             FromCIID = fromCIID;
             ToCIID = toCIID;
-            Predicate = predicate;
+            PredicateID = predicateID;
             State = state;
             ChangesetID = changesetID;
             Origin = origin;

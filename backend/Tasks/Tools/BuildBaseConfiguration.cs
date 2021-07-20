@@ -10,7 +10,7 @@ namespace Tasks.Tools
         [Test]
         public void Build()
         {
-            var config = new BaseConfigurationV1(BaseConfigurationV1.InfiniteArchiveChangesetThreshold, "0 0 0 0 0", "0 0 0 0 0", "0 0 0 0 0", "0 0 0 0 0");
+            var config = new BaseConfigurationV1(BaseConfigurationV1.InfiniteArchiveChangesetThreshold, "0 0 0 0 0", "0 0 0 0 0", "0 0 0 0 0", "0 0 0 0 0", new long[] { 1L },1L);
             var json = BaseConfigurationV1.Serializer.SerializeToString(config);
 
             Console.WriteLine(json);

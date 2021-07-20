@@ -158,6 +158,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IDataPartitionService, DataPartitionService>();
             services.AddSingleton<MarkedForDeletionService>();
             services.AddScoped<IngestDataService>(); // TODO: make singleton
+            services.AddSingleton<IPredicateWriteService, PredicateWriteService>();
 
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 
@@ -209,7 +210,7 @@ namespace Omnikeeper.Startup
                 services.Decorate<ILayerModel, CachingLayerModel>();
                 services.Decorate<IBaseRelationModel, CachingBaseRelationModel>();
                 services.Decorate<IBaseRelationRevisionistModel, CachingBaseRelationRevisionistModel>();
-                services.Decorate<IPredicateModel, CachingPredicateModel>();
+                //services.Decorate<IPredicateModel, CachingPredicateModel>();
                 services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
                 services.Decorate<IRecursiveTraitModel, CachingRecursiveTraitModel>();
                 services.Decorate<IBaseConfigurationModel, CachingBaseConfigurationModel>();

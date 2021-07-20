@@ -21,21 +21,20 @@ function CIRelations(props) {
   const { loading: loadingCI, error: errorCI, data: dataCI, refetch: refetchCI } = useQuery(queries.FullCI, {
     variables: { ciid: props.ciIdentity, layers: visibleLayers.map(l => l.name), timeThreshold: props.timeThreshold, includeRelated: perPredicateLimit, includeAttributes: false }
   });
+
+  const { loading: loadingPredicates, error: errorPredicates, data: dataPredicates } = useQuery(queries.PredicateList, { variables: {} });
   
   // reload when nonce changes
   const selectedTime = useSelectedTime();
   React.useEffect(() => { if (selectedTime.refreshNonceCI) refetchCI({fetchPolicy: 'network-only'}); }, [selectedTime, refetchCI]);
 
 
-  if (dataCI) {
+  if (dataCI && dataPredicates) {
     var sortedRelatedCIs = [...dataCI.ci.related];
     sortedRelatedCIs.sort((a,b) => {
       const predicateCompare = a.predicateID?.localeCompare(b.predicateID) ?? 0;
       if (predicateCompare !== 0)
         return predicateCompare;
-      const predicateWordingCompare = a.predicateWording?.localeCompare(b.predicateWording) ?? 0;
-      if (predicateWordingCompare !== 0)
-        return predicateWordingCompare;
       const targetCINameCompare = a.ci.name?.localeCompare(b.ci.name) ?? 0;
       if (targetCINameCompare !== 0)
         return targetCINameCompare;
@@ -52,10 +51,16 @@ function CIRelations(props) {
       <Col span={24}>
         <Flipper flipKey={sortedRelatedCIs.map(r => r.layerStackIDs).join(' ')}>
           {sortedRelatedCIs.map(r => {
-            var isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.layerID);
+            const isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.layerID);
+
+            const predicate = _.find(dataPredicates.predicates, p => p.id === r.predicateID);
+            var predicateWording = <i style={{textDecorationStyle: 'dashed', textDecorationColor: 'red', textDecorationThickness: '1px', textDecorationLine: 'underline'}}>{r.predicateID}</i>;
+            if (predicate) {
+              predicateWording = <i>{predicate.wordingFrom}</i>;
+            }
 
             return (<Flipped key={r.predicateID + "_" + r.ci.id + "_" + r.isForwardRelation} flipId={r.predicateID} onAppear={onAppear} onExit={onExit}>
-                <RelatedCI related={r} perPredicateLimit={perPredicateLimit} isEditable={props.isEditable && isLayerWritable}></RelatedCI>
+                <RelatedCI related={r} predicateWording={predicateWording} perPredicateLimit={perPredicateLimit} isEditable={props.isEditable && isLayerWritable}></RelatedCI>
               </Flipped>);
           })}
         </Flipper>
@@ -64,8 +69,9 @@ function CIRelations(props) {
     </Row>
     </>);
   }
-  else if (loadingCI) return <p>Loading</p>;
+  else if (loadingCI || loadingPredicates) return <p>Loading</p>;
   else if (errorCI) return <ErrorView error={errorCI}/>;
+  else if (errorPredicates) return <ErrorView error={errorPredicates}/>;
   else return <p>?</p>;
 }
 

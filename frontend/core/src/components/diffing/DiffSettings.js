@@ -2,10 +2,9 @@ import React, {useEffect} from 'react';
 import { queries } from 'graphql/queries'
 import { useQuery } from '@apollo/client';
 import Layers from 'components/Layers';
-import { format2ShortGuid } from 'utils/shortGuid';
 import { mergeSettingsAndSortLayers } from 'utils/layers'; 
-import { Radio, Select } from "antd";
-const { Option } = Select;
+import { Form, Radio, Select } from "antd";
+import MultiCISelect from 'components/MultiCISelect';
 
 function ChangesetDropdown(props) {
   const { ciids, layers, timeSettings, setTimeSettings } = props;
@@ -45,7 +44,7 @@ export function DiffTimeSettings(props) {
   return (
     <div style={alignmentStyle(props.alignment)}>
       <div style={{display: 'flex', alignItems: 'center'}}>
-        <Radio.Group onChange={(e) => setTimeSettings((ts) => e.target.value === 0 ? { ...ts, type: 0, timeThreshold: undefined } : { ...ts, type: 1 })} defaultValue={0}>
+        <Radio.Group onChange={(e) => setTimeSettings((ts) => e.target.value === 0 ? { ...ts, type: 0, timeThreshold: undefined } : { ...ts, type: 1 })} defaultValue={type}>
           <Radio id={`time-range-select-latest-${alignment}`} value={0} checked={type === 0}>Now / Latest</Radio>
           <Radio id={`time-range-select-changeset-${alignment}`} value={1} checked={type === 1} disabled={ciids && ciids.length === 0}>Changeset</Radio>
         </Radio.Group>
@@ -59,29 +58,10 @@ export function DiffTimeSettings(props) {
 }
 
 function DiffCISettingsSpecificCIs(props) {
-  const { data, loading } = useQuery(queries.CIList, {
-    variables: { layers: props.layers }
-  });
 
-  var ciList = [];
-  if (data)
-    ciList = data.compactCIs.map(d => {
-      return <Option key={d.id} value={d.id}>{`${d.name ?? '[UNNAMED]'} - ${format2ShortGuid(d.id)}`}</Option>;
-    });
-    
-  return <Select
-    mode="multiple"
-    disabled={loading}
-    allowClear
-    filterOption={(input, option) => {
-      return option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0;
-    }}
-    style={{ width: '100%' }}
-    placeholder="Select CIs..."
-    value={props.selectedCIIDs ?? []}
-    onChange={(value) => { props.setSelectedCIIDs(value); }}
-  >{ciList}
-  </Select>;
+  return <Form.Item style={{flexGrow: 1, marginBottom: '0px'}}>
+    <MultiCISelect layers={props.layers} selectedCIIDs={props.selectedCIIDs} setSelectedCIIDs={props.setSelectedCIIDs} />
+  </Form.Item>;
 }
 
 export function DiffCISettings(props) {
@@ -92,7 +72,7 @@ export function DiffCISettings(props) {
 
   return <div style={alignmentStyle(alignment)}>
     <div style={{display: 'flex', alignItems: 'center'}}>
-      <Radio.Group onChange={(e) => setSelectedCIIDs((ts) => e.target.value === 0 ? null : [])} defaultValue={1}>
+      <Radio.Group onChange={(e) => setSelectedCIIDs((ts) => e.target.value === 0 ? null : [])} defaultValue={type}>
         <Radio id={`ci-select-all-${alignment}`} value={0} checked={type === 0}>All</Radio>
         <Radio id={`ci-select-specific-${alignment}`} value={1} checked={type === 1}>Specific</Radio>
       </Radio.Group>

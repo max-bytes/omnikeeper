@@ -130,27 +130,6 @@ namespace Omnikeeper.GraphQL
                     return cis;
                 });
 
-            //FieldAsync<ListGraphType<CompactCIType>>("simpleSearchCIs",
-            //    arguments: new QueryArguments(
-            //        new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "searchString" }),
-            //    resolve: async context =>
-            //    {
-            //        var ciSearchModel = context.RequestServices.GetRequiredService<ICISearchModel>();
-            //        var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
-            //        var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
-
-            //        var userContext = (context.UserContext as OmnikeeperUserContext)!;
-            //        userContext.Transaction = modelContextBuilder.BuildImmediate();
-            //        var searchString = context.GetArgument<string>("searchString");
-            //        var ciid = context.GetArgument<Guid>("identity");
-            //        userContext.TimeThreshold = TimeThreshold.BuildLatest();
-
-            //        var cis = await ciSearchModel.SimpleSearch(searchString, userContext.Transaction, userContext.TimeThreshold);
-            //        // reduce CIs to those that are allowed
-            //        cis = cis.Where(ci => ciBasedAuthorizationService.CanReadCI(ci.ID));
-            //        return cis;
-            //    });
-
             FieldAsync<ListGraphType<CompactCIType>>("advancedSearchCIs",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "searchString" },
@@ -181,126 +160,8 @@ namespace Omnikeeper.GraphQL
                     return cis;
                 });
 
-            FieldAsync<ListGraphType<CompactCIType>>("validRelationTargetCIs",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
-                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "predicateID" },
-                    new QueryArgument<NonNullGraphType<BooleanGraphType>> { Name = "forward" }),
-                resolve: async context =>
-                {
-                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
-                    var predicateModel = context.RequestServices.GetRequiredService<IPredicateModel>();
-                    var traitsProvider = context.RequestServices.GetRequiredService<ITraitsProvider>();
-                    var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
-                    var effectiveTraitModel = context.RequestServices.GetRequiredService<IEffectiveTraitModel>();
-                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
-                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
-
-                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                    userContext.Transaction = modelContextBuilder.BuildImmediate();
-                    var predicateID = context.GetArgument<string>("predicateID");
-                    var forward = context.GetArgument<bool>("forward");
-                    var layerStrings = context.GetArgument<string[]>("layers");
-                    var ls = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
-                    userContext.LayerSet = ls;
-                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
-
-                    var predicate = await predicateModel.GetPredicate(predicateID, userContext.TimeThreshold, AnchorStateFilter.ActiveOnly, userContext.Transaction);
-
-                    IEnumerable<CompactCI> cis;
-                    // predicate has no target constraints -> makes it easy, return ALL CIs
-                    if ((forward && !predicate.Constraints.HasPreferredTraitsTo) || (!forward && !predicate.Constraints.HasPreferredTraitsFrom))
-                        cis = await ciModel.GetCompactCIs(new AllCIIDsSelection(), userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
-                    else
-                    {
-                        var preferredTraits = (forward) ? predicate.Constraints.PreferredTraitsTo : predicate.Constraints.PreferredTraitsFrom;
-
-                        // TODO: this has abysmal performance! We fully query ALL CIs and then check the effective traits for each of them... :(
-                        // we definitely have to look into caching traits as best as we can and provide a better way to query cis with a (array of) effective trait(s) as input
-                        // we might alternatively need to rework this: limit the number of items this works on (with a limit parameter) and provide a search parameter
-                        var allCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), userContext.LayerSet, true, userContext.Transaction, userContext.TimeThreshold);
-                        //var effectiveTraitSets = await effectiveTraitModel.CalculateEffectiveTraitSetForCIs(allCIs, preferredTraits, userContext.Transaction, userContext.TimeThreshold);
-                        var traits = (await traitsProvider.GetActiveTraitSet(userContext.Transaction, userContext.TimeThreshold)).Traits;
-                        var selectedTraits = traits.Where(t => preferredTraits.Contains(t.Key)).Select(t => t.Value);
-
-
-                        //cis = effectiveTraitSets.Where(et =>
-                        var ret = new List<CompactCI>();
-                        foreach (var ci in allCIs)
-                        {
-                            var hasAtLeastOneTrait = false;
-                            foreach (var trait in selectedTraits)
-                            {
-                                if (await effectiveTraitModel.DoesCIHaveTrait(ci, trait, userContext.Transaction, userContext.TimeThreshold))
-                                {
-                                    hasAtLeastOneTrait = true;
-                                    break;
-                                }
-                            }
-                            // if CI has ANY of the preferred traits, keep it
-                            if (hasAtLeastOneTrait)
-                            {
-                                ret.Add(CompactCI.BuildFromMergedCI(ci));
-                            }
-                        }
-                        cis = ret;
-                    }
-
-                    // reduce CIs to those that are allowed
-                    cis = cis.Where(ci => ciBasedAuthorizationService.CanReadCI(ci.ID)); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
-
-                    return cis;
-                });
-
-            FieldAsync<ListGraphType<DirectedPredicateType>>("directedPredicates",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "preferredForCI" },
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layersForEffectiveTraits" }),
-                resolve: async context =>
-                {
-                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
-                    var predicateModel = context.RequestServices.GetRequiredService<IPredicateModel>();
-                    var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
-                    var effectiveTraitModel = context.RequestServices.GetRequiredService<IEffectiveTraitModel>();
-                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
-                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
-                    var traitsProvider = context.RequestServices.GetRequiredService<ITraitsProvider>();
-
-                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                    userContext.Transaction = modelContextBuilder.BuildImmediate();
-                    userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
-                    var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
-                    var preferredForCI = context.GetArgument<Guid>("preferredForCI");
-                    var layersForEffectiveTraits = context.GetArgument<string[]>("layersForEffectiveTraits");
-
-                    if (!ciBasedAuthorizationService.CanReadCI(preferredForCI))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read CI {preferredForCI}");
-
-                    var predicates = (await predicateModel.GetPredicates(userContext.Transaction, userContext.TimeThreshold, AnchorStateFilter.ActiveOnly)).Values;
-
-                    // filter predicates by constraints
-                    var layers = await layerModel.BuildLayerSet(layersForEffectiveTraits, userContext.Transaction);
-                    var ci = await ciModel.GetMergedCI(preferredForCI, layers, userContext.Transaction, userContext.TimeThreshold);
-
-                    var traits = (await traitsProvider.GetActiveTraitSet(userContext.Transaction, userContext.TimeThreshold)).Traits.Values;
-                    var effectiveTraits = await effectiveTraitModel.CalculateEffectiveTraitsForCI(traits, ci, userContext.Transaction, userContext.TimeThreshold);
-                    var effectiveTraitNames = effectiveTraits.Select(et => et.UnderlyingTrait.Name);
-                    var directedPredicates = predicates.SelectMany(predicate =>
-                    {
-                        var ret = new List<DirectedPredicate>();
-                        if (!predicate.Constraints.HasPreferredTraitsFrom || predicate.Constraints.PreferredTraitsFrom.Any(pt => effectiveTraitNames.Contains(pt)))
-                            ret.Add(new DirectedPredicate(predicate.ID, predicate.State, predicate.WordingFrom, true));
-                        if (!predicate.Constraints.HasPreferredTraitsTo || predicate.Constraints.PreferredTraitsTo.Any(pt => effectiveTraitNames.Contains(pt)))
-                            ret.Add(new DirectedPredicate(predicate.ID, predicate.State, predicate.WordingTo, false)); // TODO: switch wording
-                        return ret;
-                    });
-
-                    return directedPredicates;
-                });
-
             FieldAsync<ListGraphType<PredicateType>>("predicates",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<AnchorStateFilterType>> { Name = "stateFilter" }),
+                arguments: new QueryArguments(),
                 resolve: async context =>
                 {
                     var predicateModel = context.RequestServices.GetRequiredService<IPredicateModel>();
@@ -309,9 +170,8 @@ namespace Omnikeeper.GraphQL
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
-                    var stateFilter = context.GetArgument<AnchorStateFilter>("stateFilter");
 
-                    var predicates = (await predicateModel.GetPredicates(userContext.Transaction, userContext.TimeThreshold, stateFilter)).Values;
+                    var predicates = (await predicateModel.GetPredicates(userContext.Transaction, userContext.TimeThreshold)).Values;
 
                     return predicates;
                 });
