@@ -36,6 +36,6 @@ function DebounceSelect({ fetchOptions, onChange, debounceTimeout = 800, ...prop
       options={options}
     />
   );
-} // Usage of DebounceSelect
+}
 
 export default DebounceSelect;

@@ -87,6 +87,7 @@ namespace Omnikeeper.Service
             await baseAttributeModel.RemoveAttribute("predicate.wordingFrom", t.Item1, writeLayerID, changesetProxy, trans);
             await baseAttributeModel.RemoveAttribute("predicate.wordingTo", t.Item1, writeLayerID, changesetProxy, trans);
             await baseAttributeModel.RemoveAttribute("__name", t.Item1, writeLayerID, changesetProxy, trans);
+            // TODO: constraints
 
             var tAfterDeletion = await predicateModel.TryToGetPredicate(id, changesetProxy.TimeThreshold, trans);
             return tAfterDeletion.Equals(default); // return successfull if predicate does not exist anymore afterwards

@@ -64,29 +64,6 @@ function DiffCISettingsSpecificCIs(props) {
   return <Form.Item style={{flexGrow: 1, marginBottom: '0px'}}>
     <MultiCISelect layers={props.layers} selectedCIIDs={props.selectedCIIDs} setSelectedCIIDs={props.setSelectedCIIDs} />
   </Form.Item>;
-  // const { data, loading } = useQuery(queries.CIList, {
-  //   variables: { layers: props.layers }
-  // });
-
-  // var ciList = [];
-  // if (data)
-  //   ciList = data.compactCIs.map(d => {
-  //     return <Option key={d.id} value={d.id}>{`${d.name ?? '[UNNAMED]'} - ${format2ShortGuid(d.id)}`}</Option>;
-  //   });
-    
-  // return <Select
-  //   mode="multiple"
-  //   disabled={loading}
-  //   allowClear
-  //   filterOption={(input, option) => {
-  //     return option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0;
-  //   }}
-  //   style={{ width: '100%' }}
-  //   placeholder="Select CIs..."
-  //   value={props.selectedCIIDs ?? []}
-  //   onChange={(value) => { props.setSelectedCIIDs(value); }}
-  // >{ciList}
-  // </Select>;
 }
 
 export function DiffCISettings(props) {

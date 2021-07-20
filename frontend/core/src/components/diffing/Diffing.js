@@ -62,6 +62,7 @@ function parseURLQuery(search) {
 }
 
 function stringifyURLQuery(leftLayerSettings, rightLayerSettings, leftCIIDs, rightCIIDs, leftTimeSettings, rightTimeSettings) {
+  // NOTE: converting some parameters to base64 (btoa/atob) because they otherwise get modified when passing via URL ("+" gets transformed to " ")
   return queryString.stringify({
     leftLayerSettings: (leftLayerSettings) ? JSON.stringify(leftLayerSettings) : undefined,
     rightLayerSettings: (rightLayerSettings) ? JSON.stringify(rightLayerSettings) : undefined,

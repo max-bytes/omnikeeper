@@ -141,10 +141,4 @@ export const Fragments = {
     labelWordingTo @client
   }
   `,
-//   directedPredicate: gql`
-//   fragment DirectedPredicate on DirectedPredicateType {
-//     predicateID
-//     forward
-//   }
-//   `
 };
