@@ -190,7 +190,6 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IPredicateModel, PredicateModel>();
             services.AddSingleton<ICacheModel, CacheModel>();
             services.AddSingleton<IODataAPIContextModel, ODataAPIContextModel>();
-            //services.AddSingleton<IRecursiveTraitModel, RecursiveTraitModel>();
             services.AddSingleton<IRecursiveDataTraitModel, RecursiveDataTraitModel>();
             services.AddSingleton<IEffectiveTraitModel, EffectiveTraitModel>();
             services.AddSingleton<IBaseConfigurationModel, BaseConfigurationModel>();
@@ -211,7 +210,6 @@ namespace Omnikeeper.Startup
                 services.Decorate<ILayerModel, CachingLayerModel>();
                 services.Decorate<IBaseRelationModel, CachingBaseRelationModel>();
                 services.Decorate<IBaseRelationRevisionistModel, CachingBaseRelationRevisionistModel>();
-                //services.Decorate<IPredicateModel, CachingPredicateModel>();
                 services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
                 services.Decorate<IBaseConfigurationModel, CachingBaseConfigurationModel>();
                 services.Decorate<IPartitionModel, CachingPartitionModel>();
