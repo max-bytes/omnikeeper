@@ -14,7 +14,7 @@ namespace Tests.Integration.Serialization
         public void TestSerialization()
         {
             var dataSerializer = new ProtoBufDataSerializer();
-            var a = RecursiveTraitSet.Build(new RecursiveTrait("rt1", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>()
+            var a = RecursiveTraitSet.Build(new RecursiveTrait("rt1", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
             {
                 new TraitAttribute("at1", CIAttributeTemplate.BuildFromParams("name", AttributeValueType.JSON, true, 
                     new CIAttributeValueConstraintTextLength(2, null), 

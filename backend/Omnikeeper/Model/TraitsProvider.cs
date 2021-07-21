@@ -14,13 +14,11 @@ namespace Omnikeeper.Model
 {
     public class TraitsProvider : ITraitsProvider
     {
-        private readonly IRecursiveTraitModel traitModel;
         private readonly IRecursiveDataTraitModel dataTraitModel;
         private readonly IServiceProvider sp;
 
-        public TraitsProvider(IRecursiveTraitModel traitModel, IRecursiveDataTraitModel dataTraitModel, IServiceProvider sp)
+        public TraitsProvider(IRecursiveDataTraitModel dataTraitModel, IServiceProvider sp)
         {
-            this.traitModel = traitModel;
             this.dataTraitModel = dataTraitModel;
             this.sp = sp;
         }
@@ -34,11 +32,9 @@ namespace Omnikeeper.Model
                 clbTraitSets.Add($"CLB-{clb.Name}", clb.DefinedTraits);
 
             // TODO, NOTE: this merges non-DB trait sets, that are not historic and DB traits sets that are... what should we do here?
-            var configuredRecursiveTraitSet = await traitModel.GetRecursiveTraitSet(trans, timeThreshold);
-            var configuredRecursiveDataTraitSet = await dataTraitModel.GetRecursiveDataTraitSet(trans, timeThreshold);
+            var configuredRecursiveDataTraitSet = await dataTraitModel.GetRecursiveTraitSet(trans, timeThreshold);
             var allTraitSets = new Dictionary<string, RecursiveTraitSet>() {
                 { "core", CoreTraits.Traits },
-                { "configuration", configuredRecursiveTraitSet },
                 { "data", configuredRecursiveDataTraitSet }
             };
             foreach (var kv in clbTraitSets)

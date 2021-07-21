@@ -27,27 +27,41 @@ namespace Omnikeeper.Model
             this.baseConfigurationModel = baseConfigurationModel;
         }
 
-
-        private readonly MyJSONSerializer<TraitAttribute> TraitAttributeSerializer = new MyJSONSerializer<TraitAttribute>(() =>
+        public async Task<RecursiveTrait> GetRecursiveTrait(string id, TimeThreshold timeThreshold, IModelContext trans)
         {
-            var s = new JsonSerializerSettings()
+            var t = await TryToGetRecursiveTrait(id, timeThreshold, trans);
+            if (t.Equals(default))
             {
-                TypeNameHandling = TypeNameHandling.Objects
-            };
-            s.Converters.Add(new StringEnumConverter());
-            return s;
-        });
-        private readonly MyJSONSerializer<TraitRelation> TraitRelationSerializer = new MyJSONSerializer<TraitRelation>(() =>
-        {
-            var s = new JsonSerializerSettings()
+                throw new Exception($"Could not find recursive trait with ID {id}");
+            }
+            else
             {
-                TypeNameHandling = TypeNameHandling.Objects
-            };
-            s.Converters.Add(new StringEnumConverter());
-            return s;
-        });
+                return t.Item2;
+            }
+        }
 
-        public async Task<RecursiveTraitSet> GetRecursiveDataTraitSet(IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<(Guid, RecursiveTrait)> TryToGetRecursiveTrait(string id, TimeThreshold timeThreshold, IModelContext trans)
+        {
+            var traitForTraits = CoreTraits.Trait;
+            // NOTE: we need to flatten the core trait first... is this the best way? Could we maybe also keep core traits as flattened already?
+            var flattenedTraitForTraits = RecursiveTraitService.FlattenSingleRecursiveTrait(traitForTraits);
+
+            // derive config layerset from base config
+            var baseConfig = await baseConfigurationModel.GetConfigOrDefault(trans);
+            var configLayerset = new LayerSet(baseConfig.ConfigLayerset);
+
+            // TODO: better performance possible?
+            var traitCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(flattenedTraitForTraits, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
+
+            var foundTraitCI = traitCIs.FirstOrDefault(pci => pci.Value.et.TraitAttributes["id"].Attribute.Value.Value2String() == id);
+            if (!foundTraitCI.Equals(default(KeyValuePair<Guid, (MergedCI ci, EffectiveTrait et)>)))
+            {
+                return (foundTraitCI.Key, EffectiveTrait2RecursiveTrait(foundTraitCI.Value.et));
+            }
+            return default;
+        }
+
+        public async Task<RecursiveTraitSet> GetRecursiveTraitSet(IModelContext trans, TimeThreshold timeThreshold)
         {
             var traitForTraits = CoreTraits.Trait;
             // NOTE: we need to flatten the core trait first... is this the best way? Could we maybe also keep core traits as flattened already?
@@ -61,49 +75,56 @@ namespace Omnikeeper.Model
             var ret = new List<RecursiveTrait>();
             foreach(var (ci, trait) in traitCIs.Values)
             {
-                var nameA = trait.TraitAttributes["name"];
-                var traitName = nameA.Attribute.Value.Value2String();
-
-                IEnumerable<T> DeserializeJSONArrayAttribute<T>(MergedCIAttribute? a, MyJSONSerializer<T> serializer) where T : class
-                {
-                    if (a == null) // empty / no attribute
-                        return new List<T>();
-                    var raa = a.Attribute.Value as AttributeArrayValueJSON;
-                    if (raa == null)
-                    {
-                        throw new Exception("Invalid trait configuration");
-                    }
-                    return raa.Values.Select(v =>
-                    {
-                        var vo = v.Value as JObject;
-                        if (vo == null)
-                            throw new Exception("Invalid trait configuration");
-                        var s = serializer.Deserialize(vo);
-                        if (s == null)
-                            throw new Exception("Invalid trait configuration");
-                        return s;
-                    });
-                }
-                var requiredAttributes = DeserializeJSONArrayAttribute(trait.TraitAttributes.GetValueOrDefault("requiredAttributes"), TraitAttributeSerializer);
-                var optionalAttributes = DeserializeJSONArrayAttribute(trait.TraitAttributes.GetValueOrDefault("optionalAttributes"), TraitAttributeSerializer);
-                var requiredRelations = DeserializeJSONArrayAttribute(trait.TraitAttributes.GetValueOrDefault("requiredRelation"), TraitRelationSerializer);
-
-                IEnumerable<string> DeserializeTextArrayAttribute(MergedCIAttribute? a)
-                {
-                    if (a == null) // empty / no attribute
-                        return new List<string>();
-                    var raa = a?.Attribute?.Value as AttributeArrayValueText;
-                    if (raa == null)
-                    {
-                        throw new Exception("Invalid trait configuration");
-                    }
-                    return raa.Values.Select(v => v.Value);
-                }
-                var requiredTraits = DeserializeTextArrayAttribute(trait.TraitAttributes.GetValueOrDefault("requiredTraits"));
-
-                ret.Add(new RecursiveTrait(traitName, new TraitOriginV1(TraitOriginType.Data), requiredAttributes, optionalAttributes, requiredRelations, requiredTraits));
+                ret.Add(EffectiveTrait2RecursiveTrait(trait));
             }
             return RecursiveTraitSet.Build(ret);
+        }
+
+
+
+        private RecursiveTrait EffectiveTrait2RecursiveTrait(EffectiveTrait trait)
+        {
+            var idA = trait.TraitAttributes["id"];
+            var traitID = idA.Attribute.Value.Value2String();
+
+            IEnumerable<T> DeserializeJSONArrayAttribute<T>(MergedCIAttribute? a, MyJSONSerializer<T> serializer) where T : class
+            {
+                if (a == null) // empty / no attribute
+                    return new List<T>();
+                var raa = a.Attribute.Value as AttributeArrayValueJSON;
+                if (raa == null)
+                {
+                    throw new Exception("Invalid trait configuration");
+                }
+                return raa.Values.Select(v =>
+                {
+                    var vo = v.Value as JObject;
+                    if (vo == null)
+                        throw new Exception("Invalid trait configuration");
+                    var s = serializer.Deserialize(vo);
+                    if (s == null)
+                        throw new Exception("Invalid trait configuration");
+                    return s;
+                });
+            }
+            var requiredAttributes = DeserializeJSONArrayAttribute(trait.TraitAttributes.GetValueOrDefault("requiredAttributes"), TraitAttribute.Serializer);
+            var optionalAttributes = DeserializeJSONArrayAttribute(trait.TraitAttributes.GetValueOrDefault("optionalAttributes"), TraitAttribute.Serializer);
+            var requiredRelations = DeserializeJSONArrayAttribute(trait.TraitAttributes.GetValueOrDefault("requiredRelation"), TraitRelation.Serializer);
+
+            IEnumerable<string> DeserializeTextArrayAttribute(MergedCIAttribute? a)
+            {
+                if (a == null) // empty / no attribute
+                    return new List<string>();
+                var raa = a?.Attribute?.Value as AttributeArrayValueText;
+                if (raa == null)
+                {
+                    throw new Exception("Invalid trait configuration");
+                }
+                return raa.Values.Select(v => v.Value);
+            }
+            var requiredTraits = DeserializeTextArrayAttribute(trait.TraitAttributes.GetValueOrDefault("requiredTraits"));
+
+            return new RecursiveTrait(traitID, new TraitOriginV1(TraitOriginType.Data), requiredAttributes, optionalAttributes, requiredRelations, requiredTraits);
         }
     }
 }

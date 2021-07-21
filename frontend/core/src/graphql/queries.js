@@ -46,6 +46,14 @@ export const queries = {
             }
         }
     `,
+    RecursiveTraits: gql`
+        query recursiveTraits {
+            recursiveTraits {
+                ...RecursiveTrait
+            }
+        }
+        ${Fragments.recursiveTrait}
+    `,
 
     FullCI: gql`
         query ci($ciid: Guid!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
@@ -147,11 +155,6 @@ export const queries = {
             visible @client
         }
     }`,
-    TraitSet: gql`
-    query traitSet {
-        traitSet
-      }
-    `,
     BaseConfiguration: gql`
     query baseConfiguration {
         baseConfiguration

@@ -5,7 +5,7 @@ namespace Omnikeeper.Base.Entity
 {
     public interface ITrait
     {
-        public string Name { get; }
+        public string Name { get; }// TODO: rename to "id" because name is misleading
         public IImmutableSet<string> AncestorTraits { get; }
         public TraitOriginV1 Origin { get; }
     }
@@ -25,7 +25,7 @@ namespace Omnikeeper.Base.Entity
             AncestorTraits = ancestorTraits;
         }
 
-        public string Name { get; set; }
+        public string Name { get; set; } // TODO: rename to "id" because name is misleading
         public TraitOriginV1 Origin { get; set; }
 
         public IImmutableSet<string> AncestorTraits { get; set; }

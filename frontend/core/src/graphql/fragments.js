@@ -141,4 +141,13 @@ export const Fragments = {
     labelWordingTo @client
   }
   `,
+  recursiveTrait: gql`
+  fragment RecursiveTrait on RecursiveTraitType {
+    id,
+    requiredAttributes,
+    optionalAttributes,
+    requiredRelations,
+    requiredTraits
+  }
+  `,
 };

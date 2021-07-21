@@ -27,19 +27,19 @@ namespace Tasks.Tools
             var traits = new RecursiveTrait[]
                 {
                     // hosts
-                    new RecursiveTrait("host", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>() {
+                    new RecursiveTrait("host", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                         new TraitAttribute("hostname",
                             CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
                     }),
-                    //new RecursiveTrait("host_windows", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>() {
+                    //new RecursiveTrait("host_windows", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     //    new TraitAttribute("os_family",
                     //        CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                     //            new CIAttributeValueConstraintTextRegex(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                     //    )
                     //}, requiredTraits: new string[] { "host" }),
 
-                    //new RecursiveTrait("host_linux", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>() {
+                    //new RecursiveTrait("host_linux", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     //    new TraitAttribute("os_family",
                     //        CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                     //            new CIAttributeValueConstraintTextRegex(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
@@ -47,7 +47,7 @@ namespace Tasks.Tools
                     //}, requiredTraits: new string[] { "host" }),
 
                     // linux disk devices
-                    //new RecursiveTrait("linux_block_device", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>() {
+                    //new RecursiveTrait("linux_block_device", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     //    new TraitAttribute("device",
                     //        CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     //    ),
@@ -57,7 +57,7 @@ namespace Tasks.Tools
                     //}),
 
                     //// linux network_interface
-                    //new RecursiveTrait("linux_network_interface", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>() {
+                    //new RecursiveTrait("linux_network_interface", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     //    new TraitAttribute("device",
                     //        CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     //    ),
@@ -70,14 +70,14 @@ namespace Tasks.Tools
                     //}),
 
                     // applications
-                    //new RecursiveTrait("application", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>() {
+                    //new RecursiveTrait("application", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     //    new TraitAttribute("name",
                     //        CIAttributeTemplate.BuildFromParams("application_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     //    )
                     //}),
 
                     // automation / ansible
-                    //new RecursiveTrait("ansible_can_deploy_to_it", new TraitOriginV1(TraitOriginType.Configuration),
+                    //new RecursiveTrait("ansible_can_deploy_to_it", new TraitOriginV1(TraitOriginType.Data),
                     //    new List<TraitAttribute>() {
                     //        new TraitAttribute("hostname", // TODO: make this an anyOf[CIAttributeTemplate], or use dependent trait host
                     //            CIAttributeTemplate.BuildFromParams("ipAddress",    AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
@@ -97,21 +97,21 @@ namespace Tasks.Tools
 
 
                     // TSA CMDB
-                    new RecursiveTrait("tsa_cmdb_host", new TraitOriginV1(TraitOriginType.Configuration),
+                    new RecursiveTrait("tsa_cmdb_host", new TraitOriginV1(TraitOriginType.Data),
                         new List<TraitAttribute>() {
                             new TraitAttribute("hostid",
                                 CIAttributeTemplate.BuildFromParams("cmdb.hostid", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                             )
                         }
                     ),
-                    new RecursiveTrait("tsa_cmdb_service", new TraitOriginV1(TraitOriginType.Configuration),
+                    new RecursiveTrait("tsa_cmdb_service", new TraitOriginV1(TraitOriginType.Data),
                         new List<TraitAttribute>() {
                             new TraitAttribute("svcid",
                                 CIAttributeTemplate.BuildFromParams("cmdb.svcid", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                             )
                         }
                     ),
-                    new RecursiveTrait("tsa_cmdb_interface", new TraitOriginV1(TraitOriginType.Configuration),
+                    new RecursiveTrait("tsa_cmdb_interface", new TraitOriginV1(TraitOriginType.Data),
                         new List<TraitAttribute>() {
                             new TraitAttribute("ifid",
                                 CIAttributeTemplate.BuildFromParams("cmdb.ifid", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
@@ -120,7 +120,7 @@ namespace Tasks.Tools
                     ),
                     
                     // timecontrol-timerecord
-                    //new RecursiveTrait("timecontrol-timerecord", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>() {
+                    //new RecursiveTrait("timecontrol-timerecord", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     //    new TraitAttribute("date",
                     //        CIAttributeTemplate.BuildFromParams("date", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     //    ),

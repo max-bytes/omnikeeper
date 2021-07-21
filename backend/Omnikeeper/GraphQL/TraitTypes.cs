@@ -1,6 +1,7 @@
 ﻿using GraphQL.Types;
 using Omnikeeper.Base.Entity;
 using System;
+using System.Linq;
 
 namespace Omnikeeper.GraphQL
 {
@@ -40,4 +41,18 @@ namespace Omnikeeper.GraphQL
             Field("count", x => x.Item2);
         }
     }
+
+    public class RecursiveTraitType : ObjectGraphType<RecursiveTrait>
+    {
+        public RecursiveTraitType()
+        {
+            Field("id", x => x.Name);
+            Field("requiredAttributes", x => x.RequiredAttributes.Select(a => TraitAttribute.Serializer.SerializeToString(a)), type: typeof(ListGraphType<StringGraphType>));
+            Field("optionalAttributes", x => x.OptionalAttributes.Select(a => TraitAttribute.Serializer.SerializeToString(a)), type: typeof(ListGraphType<StringGraphType>));
+            Field("requiredRelations", x => x.RequiredRelations.Select(a => TraitRelation.Serializer.SerializeToString(a)), type: typeof(ListGraphType<StringGraphType>));
+            Field("requiredTraits", x => x.RequiredTraits, type: typeof(ListGraphType<StringGraphType>));
+        }
+    }
+
+    
 }

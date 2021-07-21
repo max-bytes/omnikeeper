@@ -21,6 +21,16 @@ namespace Omnikeeper.Base.Entity
             Identifier = identifier;
             RelationTemplate = relationTemplate;
         }
+
+        public static readonly MyJSONSerializer<TraitRelation> Serializer = new MyJSONSerializer<TraitRelation>(() =>
+        {
+            var s = new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Objects
+            };
+            s.Converters.Add(new StringEnumConverter());
+            return s;
+        });
     }
     [ProtoContract(SkipConstructor = true)]
     public class TraitAttribute
@@ -35,11 +45,20 @@ namespace Omnikeeper.Base.Entity
             Identifier = identifier;
             AttributeTemplate = attributeTemplate;
         }
+
+        public static readonly MyJSONSerializer<TraitAttribute> Serializer = new MyJSONSerializer<TraitAttribute>(() =>
+        {
+            var s = new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Objects
+            };
+            s.Converters.Add(new StringEnumConverter());
+            return s;
+        });
     }
 
     public enum TraitOriginType
     {
-        Configuration,
         Plugin,
         Core,
         Data
@@ -63,7 +82,7 @@ namespace Omnikeeper.Base.Entity
     [ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
     public class RecursiveTrait
     {
-        [ProtoMember(1)] public readonly string Name;
+        [ProtoMember(1)] public readonly string Name; // TODO: rename to "id" because name is misleading
         [ProtoMember(2)] public readonly TraitOriginV1 Origin;
         [ProtoMember(3)] public readonly TraitAttribute[] RequiredAttributes = Array.Empty<TraitAttribute>();
         [ProtoMember(4)] public readonly TraitAttribute[] OptionalAttributes = Array.Empty<TraitAttribute>();
@@ -82,7 +101,7 @@ namespace Omnikeeper.Base.Entity
             IEnumerable<string>? requiredTraits = null)
         {
             Name = name;
-            Origin = origin ?? new TraitOriginV1(TraitOriginType.Configuration);
+            Origin = origin ?? new TraitOriginV1(TraitOriginType.Data);
             RequiredAttributes = requiredAttributes?.ToArray() ?? new TraitAttribute[0];
             OptionalAttributes = optionalAttributes?.ToArray() ?? new TraitAttribute[0];
             RequiredRelations = requiredRelations?.ToArray() ?? new TraitRelation[0];
@@ -90,6 +109,7 @@ namespace Omnikeeper.Base.Entity
         }
     }
 
+    // TODO: needed? Its just a wrapper over a dictionary of RecursiveTraits after all...
     [ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
     public class RecursiveTraitSet
     {

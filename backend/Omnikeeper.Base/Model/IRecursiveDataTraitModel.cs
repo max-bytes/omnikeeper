@@ -10,6 +10,8 @@ namespace Omnikeeper.Base.Model
 {
     public interface IRecursiveDataTraitModel
     {
-        public Task<RecursiveTraitSet> GetRecursiveDataTraitSet(IModelContext trans, TimeThreshold timeThreshold);
+        Task<RecursiveTraitSet> GetRecursiveTraitSet(IModelContext trans, TimeThreshold timeThreshold);
+        Task<RecursiveTrait> GetRecursiveTrait(string id, TimeThreshold timeThreshold, IModelContext trans);
+        Task<(Guid, RecursiveTrait)> TryToGetRecursiveTrait(string name, TimeThreshold timeThreshold, IModelContext trans);
     }
 }
