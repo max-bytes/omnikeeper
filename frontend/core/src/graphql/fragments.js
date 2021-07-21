@@ -52,7 +52,7 @@ export const Fragments = {
             isLatest
         }
         effectiveTraits { 
-            underlyingTrait {name}
+            underlyingTrait {id}
             attributes { 
                 ...FullMergedAttribute
             }

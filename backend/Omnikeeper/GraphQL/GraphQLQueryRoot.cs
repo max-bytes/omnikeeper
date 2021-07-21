@@ -248,7 +248,7 @@ namespace Omnikeeper.GraphQL
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
                     var traits = await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.TimeThreshold);
-                    return traits.Values.OrderBy(t => t.Name);
+                    return traits.Values.OrderBy(t => t.ID);
                 });
 
             CreateManage();

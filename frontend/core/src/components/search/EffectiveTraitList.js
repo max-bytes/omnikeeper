@@ -15,7 +15,7 @@ function EffectiveTraitList(props) {
 
     function onChange(effectiveTrait, e) {
         var value = parseInt(e.target.value, 10);
-        props.setChecked({...props.checked, [effectiveTrait.name]: value});
+        props.setChecked({...props.checked, [effectiveTrait.id]: value});
     }
 
     return (
@@ -30,14 +30,12 @@ function EffectiveTraitList(props) {
 
                 const icon = (function(originType) {
                     switch(originType) {
-                    case 'CONFIGURATION':
-                        return faWrench;
                     case 'PLUGIN':
                         return faPlug;
                     case 'CORE':
                         return faArchive;
                     case 'DATA':
-                        return faDatabase;
+                        return faWrench;
                     default:
                         return '';
                     }
@@ -48,12 +46,12 @@ function EffectiveTraitList(props) {
                         <span style={styles.traitsIcon}>
                             <FontAwesomeIcon icon={icon} style={{ marginRight: "0.5rem" }}/>
                         </span>
-                        <span style={styles.traitsName}>
-                            {effectiveTrait.name}
+                        <span style={styles.traitsID}>
+                            {effectiveTrait.id}
                         </span>
                         <span>
                                 <Radio.Group buttonStyle="solid" size="small"
-                                    onChange={(e) => onChange(effectiveTrait, e)} value={props.checked[effectiveTrait.name]?.toString()}>
+                                    onChange={(e) => onChange(effectiveTrait, e)} value={props.checked[effectiveTrait.id]?.toString()}>
                                     <Radio.Button value="-1">No</Radio.Button>
                                     <Radio.Button value="0">May</Radio.Button>
                                     <Radio.Button value="1">Yes</Radio.Button>
@@ -80,7 +78,7 @@ const styles = {
     traitElement: { 
         display: "flex" 
     },
-    traitsName: {
+    traitsID: {
         flexGrow: 1
     },
 };

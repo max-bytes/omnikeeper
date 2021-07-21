@@ -8,7 +8,7 @@ namespace Omnikeeper.Base.Service
     {
         public static IDictionary<string, GenericTrait> FlattenRecursiveTraits(IEnumerable<RecursiveTrait> rts)
         {
-            var dict = rts.ToDictionary(rt => rt.Name);
+            var dict = rts.ToDictionary(rt => rt.ID);
             return FlattenRecursiveTraits(dict);
         }
 
@@ -30,9 +30,9 @@ namespace Omnikeeper.Base.Service
 
         private static GenericTrait FlattenDependentTraitsRec(RecursiveTrait trait, IDictionary<string, GenericTrait> flattened, IDictionary<string, RecursiveTrait> unflattened)
         {
-            if (flattened.ContainsKey(trait.Name)) return flattened[trait.Name];
+            if (flattened.ContainsKey(trait.ID)) return flattened[trait.ID];
 
-            unflattened.Remove(trait.Name);
+            unflattened.Remove(trait.ID);
 
             var flattenedDependencies = new List<GenericTrait>();
             foreach (var rts in trait.RequiredTraits)
@@ -56,9 +56,9 @@ namespace Omnikeeper.Base.Service
             var optionalAttributes = trait.OptionalAttributes.Concat(flattenedDependencies.SelectMany(d => d.OptionalAttributes));
             var requiredRelations = trait.RequiredRelations.Concat(flattenedDependencies.SelectMany(d => d.RequiredRelations));
             var ancestorTraits = trait.RequiredTraits.Concat(flattenedDependencies.SelectMany(d => d.AncestorTraits)).ToHashSet();
-            var flattenedTrait = GenericTrait.Build(trait.Name, trait.Origin, requiredAttributes, optionalAttributes, requiredRelations, ancestorTraits);
+            var flattenedTrait = GenericTrait.Build(trait.ID, trait.Origin, requiredAttributes, optionalAttributes, requiredRelations, ancestorTraits);
 
-            flattened.Add(trait.Name, flattenedTrait);
+            flattened.Add(trait.ID, flattenedTrait);
 
             return flattenedTrait;
         }

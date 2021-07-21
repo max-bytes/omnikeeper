@@ -73,7 +73,7 @@ namespace Tests
                 var rts = Traits.Get();
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var rt in rts)
-                    await traitWriteService.InsertOrUpdate(rt.Name, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.RequiredTraits,
+                    await traitWriteService.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.RequiredTraits,
                         new DataOriginV1(DataOriginType.Manual), changeset, new AuthenticatedUser(user, layers), mc);
                 mc.Commit();
             }

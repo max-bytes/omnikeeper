@@ -194,7 +194,7 @@ namespace Omnikeeper.GridView.Commands
                     if (!hasTrait)
                     {
                         trans.Rollback();
-                        return (null, new Exception($"Consistency validation for CI with id={mergedCI.ID} failed. CI doesn't have the configured trait {activeTrait.Name}!"));
+                        return (null, new Exception($"Consistency validation for CI with id={mergedCI.ID} failed. CI doesn't have the configured trait {activeTrait.ID}!"));
                     }
                 }
 

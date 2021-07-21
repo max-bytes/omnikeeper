@@ -27,18 +27,10 @@ export const queries = {
         }
         ${Fragments.compactCI}
     `,
-    EffectiveTraitList: gql`
-        query effectiveTraitList($layers: [String]!) {
-            effectiveTraitList(layers: $layers) {
-                name
-                count
-            }
-        }
-    `,
     ActiveTraits: gql`
         query activeTraits {
             activeTraits {
-                name
+                id
                 origin {
                     type
                     info

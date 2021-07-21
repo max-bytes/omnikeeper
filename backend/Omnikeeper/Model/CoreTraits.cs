@@ -49,7 +49,7 @@ namespace Omnikeeper.Model
 
     public class TraitEmpty : ITrait
     {
-        public string Name => "empty";
+        public string ID => "empty";
 
         public IImmutableSet<string> AncestorTraits => ImmutableHashSet<string>.Empty;
 

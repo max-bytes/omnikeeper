@@ -17,7 +17,7 @@ namespace Omnikeeper.GraphQL
     {
         public TraitType()
         {
-            Field(x => x.Name);
+            Field("id", x => x.ID);
             Field(x => x.Origin, type: typeof(TraitOriginV1Type));
         }
     }
@@ -33,20 +33,11 @@ namespace Omnikeeper.GraphQL
     {
     }
 
-    public class EffectiveTraitListItemType : ObjectGraphType<ValueTuple<string, int>>
-    {
-        public EffectiveTraitListItemType()
-        {
-            Field("name", x => x.Item1);
-            Field("count", x => x.Item2);
-        }
-    }
-
     public class RecursiveTraitType : ObjectGraphType<RecursiveTrait>
     {
         public RecursiveTraitType()
         {
-            Field("id", x => x.Name);
+            Field("id", x => x.ID);
             Field("requiredAttributes", x => x.RequiredAttributes.Select(a => TraitAttribute.Serializer.SerializeToString(a)), type: typeof(ListGraphType<StringGraphType>));
             Field("optionalAttributes", x => x.OptionalAttributes.Select(a => TraitAttribute.Serializer.SerializeToString(a)), type: typeof(ListGraphType<StringGraphType>));
             Field("requiredRelations", x => x.RequiredRelations.Select(a => TraitRelation.Serializer.SerializeToString(a)), type: typeof(ListGraphType<StringGraphType>));

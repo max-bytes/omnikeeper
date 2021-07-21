@@ -82,7 +82,7 @@ namespace Omnikeeper.Base.Entity
     [ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
     public class RecursiveTrait
     {
-        [ProtoMember(1)] public readonly string Name; // TODO: rename to "id" because name is misleading
+        [ProtoMember(1)] public readonly string ID;
         [ProtoMember(2)] public readonly TraitOriginV1 Origin;
         [ProtoMember(3)] public readonly TraitAttribute[] RequiredAttributes = Array.Empty<TraitAttribute>();
         [ProtoMember(4)] public readonly TraitAttribute[] OptionalAttributes = Array.Empty<TraitAttribute>();
@@ -94,13 +94,13 @@ namespace Omnikeeper.Base.Entity
         private RecursiveTrait() { }
 #pragma warning restore CS8618
 
-        public RecursiveTrait(string name, TraitOriginV1 origin,
+        public RecursiveTrait(string id, TraitOriginV1 origin,
             IEnumerable<TraitAttribute>? requiredAttributes = null,
             IEnumerable<TraitAttribute>? optionalAttributes = null,
             IEnumerable<TraitRelation>? requiredRelations = null,
             IEnumerable<string>? requiredTraits = null)
         {
-            Name = name;
+            ID = id;
             Origin = origin ?? new TraitOriginV1(TraitOriginType.Data);
             RequiredAttributes = requiredAttributes?.ToArray() ?? new TraitAttribute[0];
             OptionalAttributes = optionalAttributes?.ToArray() ?? new TraitAttribute[0];

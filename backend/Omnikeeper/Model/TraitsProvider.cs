@@ -46,7 +46,7 @@ namespace Omnikeeper.Model
             {
                 var source = kv.Key;
                 foreach (var rt in kv.Value)
-                    ret[rt.Name] = rt;
+                    ret[rt.ID] = rt;
             }
 
             var flattened = RecursiveTraitService.FlattenRecursiveTraits(ret);
@@ -55,7 +55,7 @@ namespace Omnikeeper.Model
             foreach (var kv in flattened)
                 finalTraits.Add(kv.Key, kv.Value);
             var traitEmpty = new TraitEmpty();
-            finalTraits.Add(traitEmpty.Name, traitEmpty); // mix in empty trait
+            finalTraits.Add(traitEmpty.ID, traitEmpty); // mix in empty trait
             return finalTraits;
         }
 

@@ -114,8 +114,8 @@ namespace OKPluginCLBMonitoring
                 var monitoringModuleET = await traitModel.CalculateEffectiveTraitForCI(monitoringModuleCI, moduleTrait, trans, changesetProxy.TimeThreshold);
                 if (monitoringModuleET == null)
                 {
-                    logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{moduleTrait.Name}\"");
-                    await errorHandler.LogError(monitoringModuleCI.ID, "error", $"Expected this CI to have trait \"{moduleTrait.Name}\"");
+                    logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{moduleTrait.ID}\"");
+                    await errorHandler.LogError(monitoringModuleCI.ID, "error", $"Expected this CI to have trait \"{moduleTrait.ID}\"");
                     continue;
                 }
                 logger.LogDebug("  Fetched effective traits");
@@ -325,8 +325,8 @@ namespace OKPluginCLBMonitoring
                         }
                         else
                         {
-                            logger.LogError($"Expected CI {ci.ID} to have trait \"{contactgroupTrait.Name}\"");
-                            await errorHandler.LogError(ci.ID, "error", $"Expected this CI to have trait \"{contactgroupTrait.Name}\"");
+                            logger.LogError($"Expected CI {ci.ID} to have trait \"{contactgroupTrait.ID}\"");
+                            await errorHandler.LogError(ci.ID, "error", $"Expected this CI to have trait \"{contactgroupTrait.ID}\"");
                         }
                     }
                 }
