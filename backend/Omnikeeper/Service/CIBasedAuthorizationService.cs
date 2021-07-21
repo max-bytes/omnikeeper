@@ -13,7 +13,7 @@ namespace Omnikeeper.Service
             return true; // TODO: implement
         }
 
-        // TODO: add to interface, test and use
+        // TODO: test
         public IEnumerable<T> FilterReadableCIs<T>(IEnumerable<T> t, Func<T, Guid> f)
         {
             var d = t.ToDictionary(tt => f(tt));

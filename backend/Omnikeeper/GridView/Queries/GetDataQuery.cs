@@ -69,7 +69,6 @@ namespace Omnikeeper.GridView.Queries
 
                 var config = await gridViewContextModel.GetConfiguration(request.Context, trans);
 
-                var result = new GetDataResponse(new List<Row>());
 
                 var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, TimeThreshold.BuildLatest());
 
@@ -85,17 +84,15 @@ namespace Omnikeeper.GridView.Queries
                     TimeThreshold.BuildLatest()
                     );
 
-                foreach (var item in res)
+
+                var resultRows = new Dictionary<Guid, Row>();
+
+                // filter readable CIs based on authorization
+                var filteredCIs = ciBasedAuthorizationService.FilterReadableCIs(res, (t) => t.ID);
+
+                foreach (var item in filteredCIs)
                 {
                     var ci_id = item.ID;
-
-                    // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
-                    var canRead = ciBasedAuthorizationService.CanReadCI(ci_id);
-
-                    if (!canRead)
-                    {
-                        continue;
-                    }
 
                     var filteredColumns = config.Columns.Select(column =>
                     {
@@ -132,14 +129,13 @@ namespace Omnikeeper.GridView.Queries
                                 column.WriteLayer == null ? true : (column.WriteLayer != -1) && changable
                             );
 
-                        var el = result.Rows.Find(el => el.Ciid == ci_id);
-                        if (el != null)
+                        if (resultRows.TryGetValue(ci_id, out var el))
                         {
                             el.Cells.Add(cell);
                         }
                         else
                         {
-                            result.Rows.Add(new Row
+                            resultRows.Add(ci_id, new Row
                             (
                                 ci_id,
                                 new List<Cell> { cell }
@@ -148,6 +144,7 @@ namespace Omnikeeper.GridView.Queries
                     }
                 }
 
+                var result = new GetDataResponse(resultRows.Values);
                 return (result, null);
             }
         }

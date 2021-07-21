@@ -6,9 +6,9 @@ namespace Omnikeeper.GridView.Response
 {
     public class GetDataResponse
     {
-        public List<Row> Rows { get; set; }
+        public IEnumerable<Row> Rows { get; set; }
 
-        public GetDataResponse(List<Row> Rows)
+        public GetDataResponse(IEnumerable<Row> Rows)
         {
             this.Rows = Rows;
         }
