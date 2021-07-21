@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using ProtoBuf;
 using ProtoBuf.Serializers;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -123,7 +124,7 @@ namespace Omnikeeper.Entity.AttributeValues
             return Build(jsonValues);
         }
 
-        public static AttributeArrayValueJSON Build(JToken[] values)
+        public static AttributeArrayValueJSON Build(IEnumerable<JToken> values)
         {
             var n = new AttributeArrayValueJSON(
                 values.Select(v => AttributeScalarValueJSON.Build(v)).ToArray()

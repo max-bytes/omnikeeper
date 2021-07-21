@@ -5,6 +5,7 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -31,16 +32,16 @@ namespace Omnikeeper.Base.CLB
         public string Name => GetType().FullName!;
 
         // TODO: turn into data-traits that get created/updated whenever CLB runs?
-        public abstract RecursiveTraitSet DefinedTraits { get; }
+        public abstract IEnumerable<RecursiveTrait> DefinedTraits { get; }
 
-        private TraitSet? cachedTraitSet = null;
-        protected TraitSet TraitSet
+        private IDictionary<string, GenericTrait> cachedTraits = new Dictionary<string, GenericTrait>();
+        protected IDictionary<string, GenericTrait> Traits
         {
             get
             {
-                if (cachedTraitSet == null)
-                    cachedTraitSet = RecursiveTraitService.FlattenRecursiveTraitSet(DefinedTraits);
-                return cachedTraitSet;
+                if (cachedTraits == null)
+                    cachedTraits = RecursiveTraitService.FlattenRecursiveTraits(DefinedTraits);
+                return cachedTraits;
             }
         }
 

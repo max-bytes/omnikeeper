@@ -12,6 +12,7 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Model;
 using System;
 using System.Drawing;
+using System.Linq;
 
 namespace Omnikeeper.GraphQL
 {
@@ -260,43 +261,6 @@ namespace Omnikeeper.GraphQL
                   return true;
               });
 
-
-            FieldAsync<StringGraphType>("setTraitSet",
-                arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "traitSet" }
-                ),
-                resolve: async context =>
-                {
-                    var traitModel = context.RequestServices.GetRequiredService<IRecursiveTraitModel>();
-                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
-
-                    var traitSetInput = context.GetArgument<string>("traitSet");
-                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
-
-                    // TODO: auth
-                    //if (!authorizationService.CanUserCreateLayer(userContext.User))
-                    //    throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create Layers");
-
-                    using var transaction = modelContextBuilder.BuildDeferred();
-
-                    try
-                    {
-                        var traitSet = RecursiveTraitSet.Serializer.Deserialize(traitSetInput);
-
-                        var created = await traitModel.SetRecursiveTraitSet(traitSet, transaction);
-
-                        transaction.Commit();
-                        userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
-
-                        return RecursiveTraitSet.Serializer.SerializeToString(created);
-                    }
-                    catch (Exception e)
-                    {
-                        throw new ExecutionError($"Could not parse traitSet", e);
-                    }
-                });
-
-
             FieldAsync<StringGraphType>("setBaseConfiguration",
                 arguments: new QueryArguments(
                 new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "baseConfiguration" }
@@ -381,6 +345,66 @@ namespace Omnikeeper.GraphQL
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
                   var deleted = await predicateWriteService.TryToDelete(predicateID, changesetProxy, userContext.User, transaction);
+
+                  transaction.Commit();
+                  userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
+
+                  return deleted;
+              });
+
+            FieldAsync<RecursiveTraitType>("upsertRecursiveTrait",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<UpsertRecursiveTraitInputType>> { Name = "trait" }
+              ),
+              resolve: async context =>
+              {
+                  var traitWriteService = context.RequestServices.GetRequiredService<IRecursiveTraitWriteService>();
+                  var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                  var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+                  var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
+
+                  var trait = context.GetArgument<UpsertRecursiveTraitInput>("trait");
+
+                  var requiredAttributes = trait.RequiredAttributes.Select(str => TraitAttribute.Serializer.Deserialize(str));
+                  var optionalAttributes = trait.OptionalAttributes?.Select(str => TraitAttribute.Serializer.Deserialize(str));
+                  var requiredRelations = trait.RequiredRelations?.Select(str => TraitRelation.Serializer.Deserialize(str));
+
+                  var userContext = (context.UserContext as OmnikeeperUserContext)!;
+
+                  using var transaction = modelContextBuilder.BuildDeferred();
+
+                  var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+
+                  var newTrait = await traitWriteService.InsertOrUpdate(
+                      trait.ID, requiredAttributes, optionalAttributes, requiredRelations, trait.RequiredTraits,
+                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+                      changesetProxy, userContext.User, transaction);
+
+                  transaction.Commit();
+                  userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
+
+                  return newTrait.trait;
+              });
+
+            FieldAsync<BooleanGraphType>("removeRecursiveTrait",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
+              ),
+              resolve: async context =>
+              {
+                  var traitWriteService = context.RequestServices.GetRequiredService<IRecursiveTraitWriteService>();
+                  var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                  var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+
+                  var traitID = context.GetArgument<string>("id");
+
+                  var userContext = (context.UserContext as OmnikeeperUserContext)!;
+
+                  using var transaction = modelContextBuilder.BuildDeferred();
+
+                  var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+
+                  var deleted = await traitWriteService.TryToDelete(traitID, changesetProxy, userContext.User, transaction);
 
                   transaction.Commit();
                   userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object

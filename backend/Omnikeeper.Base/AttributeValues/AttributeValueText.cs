@@ -74,7 +74,7 @@ namespace Omnikeeper.Entity.AttributeValues
 
         public override AttributeValueType Type => Values.Any(v => v.Multiline) ? AttributeValueType.MultilineText : AttributeValueType.Text;
 
-        public static AttributeArrayValueText BuildFromString(string[] values, bool multiline = false)
+        public static AttributeArrayValueText BuildFromString(IEnumerable<string> values, bool multiline = false)
         {
             return new AttributeArrayValueText
             (

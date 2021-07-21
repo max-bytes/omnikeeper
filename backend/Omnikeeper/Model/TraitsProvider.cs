@@ -14,31 +14,27 @@ namespace Omnikeeper.Model
 {
     public class TraitsProvider : ITraitsProvider
     {
-        private readonly IRecursiveTraitModel traitModel;
         private readonly IRecursiveDataTraitModel dataTraitModel;
         private readonly IServiceProvider sp;
 
-        public TraitsProvider(IRecursiveTraitModel traitModel, IRecursiveDataTraitModel dataTraitModel, IServiceProvider sp)
+        public TraitsProvider(IRecursiveDataTraitModel dataTraitModel, IServiceProvider sp)
         {
-            this.traitModel = traitModel;
             this.dataTraitModel = dataTraitModel;
             this.sp = sp;
         }
 
         // TODO: caching of active trait sets
-        public async Task<TraitSet> GetActiveTraitSet(IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<IDictionary<string, ITrait>> GetActiveTraits(IModelContext trans, TimeThreshold timeThreshold)
         {
             var computeLayerBrains = sp.GetServices<IComputeLayerBrain>(); // HACK: we get the CLBs here and not in the constructor because that would lead to a circular dependency
-            var clbTraitSets = new Dictionary<string, RecursiveTraitSet>();
+            var clbTraitSets = new Dictionary<string, IEnumerable<RecursiveTrait>>();
             foreach (var clb in computeLayerBrains)
                 clbTraitSets.Add($"CLB-{clb.Name}", clb.DefinedTraits);
 
             // TODO, NOTE: this merges non-DB trait sets, that are not historic and DB traits sets that are... what should we do here?
-            var configuredRecursiveTraitSet = await traitModel.GetRecursiveTraitSet(trans, timeThreshold);
-            var configuredRecursiveDataTraitSet = await dataTraitModel.GetRecursiveDataTraitSet(trans, timeThreshold);
-            var allTraitSets = new Dictionary<string, RecursiveTraitSet>() {
+            var configuredRecursiveDataTraitSet = await dataTraitModel.GetRecursiveTraits(trans, timeThreshold);
+            var allTraitSets = new Dictionary<string, IEnumerable<RecursiveTrait>>() {
                 { "core", CoreTraits.Traits },
-                { "configuration", configuredRecursiveTraitSet },
                 { "data", configuredRecursiveDataTraitSet }
             };
             foreach (var kv in clbTraitSets)
@@ -49,23 +45,26 @@ namespace Omnikeeper.Model
             foreach (var kv in allTraitSets)
             {
                 var source = kv.Key;
-                foreach (var kv2 in kv.Value.Traits)
-                    ret[kv2.Key] = kv2.Value;
+                foreach (var rt in kv.Value)
+                    ret[rt.ID] = rt;
             }
 
-            var flattened = RecursiveTraitService.FlattenDependentTraits(ret);
+            var flattened = RecursiveTraitService.FlattenRecursiveTraits(ret);
 
-            var finalTraits = new List<ITrait>(flattened);
-            finalTraits.Add(new TraitEmpty()); // mix in empty trait
-            return TraitSet.Build(finalTraits);
+            var finalTraits = new Dictionary<string, ITrait>();
+            foreach (var kv in flattened)
+                finalTraits.Add(kv.Key, kv.Value);
+            var traitEmpty = new TraitEmpty();
+            finalTraits.Add(traitEmpty.ID, traitEmpty); // mix in empty trait
+            return finalTraits;
         }
 
         public async Task<ITrait?> GetActiveTrait(string traitName, IModelContext trans, TimeThreshold timeThreshold)
         {
             // TODO: can be done more efficiently? here we get ALL traits, just to select a single one... but the flattening is necessary
-            var ts = await GetActiveTraitSet(trans, timeThreshold);
+            var ts = await GetActiveTraits(trans, timeThreshold);
 
-            if (ts.Traits.TryGetValue(traitName, out var trait))
+            if (ts.TryGetValue(traitName, out var trait))
                 return trait;
             return null;
         }

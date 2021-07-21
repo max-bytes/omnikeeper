@@ -21,6 +21,16 @@ namespace Omnikeeper.Base.Entity
             Identifier = identifier;
             RelationTemplate = relationTemplate;
         }
+
+        public static readonly MyJSONSerializer<TraitRelation> Serializer = new MyJSONSerializer<TraitRelation>(() =>
+        {
+            var s = new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Objects
+            };
+            s.Converters.Add(new StringEnumConverter());
+            return s;
+        });
     }
     [ProtoContract(SkipConstructor = true)]
     public class TraitAttribute
@@ -35,11 +45,20 @@ namespace Omnikeeper.Base.Entity
             Identifier = identifier;
             AttributeTemplate = attributeTemplate;
         }
+
+        public static readonly MyJSONSerializer<TraitAttribute> Serializer = new MyJSONSerializer<TraitAttribute>(() =>
+        {
+            var s = new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Objects
+            };
+            s.Converters.Add(new StringEnumConverter());
+            return s;
+        });
     }
 
     public enum TraitOriginType
     {
-        Configuration,
         Plugin,
         Core,
         Data
@@ -63,7 +82,7 @@ namespace Omnikeeper.Base.Entity
     [ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
     public class RecursiveTrait
     {
-        [ProtoMember(1)] public readonly string Name;
+        [ProtoMember(1)] public readonly string ID;
         [ProtoMember(2)] public readonly TraitOriginV1 Origin;
         [ProtoMember(3)] public readonly TraitAttribute[] RequiredAttributes = Array.Empty<TraitAttribute>();
         [ProtoMember(4)] public readonly TraitAttribute[] OptionalAttributes = Array.Empty<TraitAttribute>();
@@ -75,48 +94,21 @@ namespace Omnikeeper.Base.Entity
         private RecursiveTrait() { }
 #pragma warning restore CS8618
 
-        public RecursiveTrait(string name, TraitOriginV1 origin,
+        public RecursiveTrait(string id, TraitOriginV1 origin,
             IEnumerable<TraitAttribute>? requiredAttributes = null,
             IEnumerable<TraitAttribute>? optionalAttributes = null,
             IEnumerable<TraitRelation>? requiredRelations = null,
             IEnumerable<string>? requiredTraits = null)
         {
-            Name = name;
-            Origin = origin ?? new TraitOriginV1(TraitOriginType.Configuration);
+            ID = id;
+            Origin = origin ?? new TraitOriginV1(TraitOriginType.Data);
             RequiredAttributes = requiredAttributes?.ToArray() ?? new TraitAttribute[0];
             OptionalAttributes = optionalAttributes?.ToArray() ?? new TraitAttribute[0];
             RequiredRelations = requiredRelations?.ToArray() ?? new TraitRelation[0];
             RequiredTraits = requiredTraits?.ToArray() ?? new string[0];
         }
-    }
 
-    [ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
-    public class RecursiveTraitSet
-    {
-        [JsonConstructor]
-        private RecursiveTraitSet(IDictionary<string, RecursiveTrait> traits)
-        {
-            this.traits = traits;
-        }
-
-#pragma warning disable CS8618
-        private RecursiveTraitSet() { }
-#pragma warning restore CS8618
-
-        [ProtoMember(1)]
-        private readonly IDictionary<string, RecursiveTrait> traits = new Dictionary<string,RecursiveTrait>();
-        public IDictionary<string, RecursiveTrait> Traits => traits;
-
-        public static RecursiveTraitSet Build(IEnumerable<RecursiveTrait> traits)
-        {
-            return new RecursiveTraitSet(traits.ToDictionary(t => t.Name));
-        }
-        public static RecursiveTraitSet Build(params RecursiveTrait[] traits)
-        {
-            return new RecursiveTraitSet(traits.ToDictionary(t => t.Name));
-        }
-
-        public static MyJSONSerializer<RecursiveTraitSet> Serializer = new MyJSONSerializer<RecursiveTraitSet>(() =>
+        public static readonly MyJSONSerializer<RecursiveTrait> Serializer = new MyJSONSerializer<RecursiveTrait>(() =>
         {
             var s = new JsonSerializerSettings()
             {

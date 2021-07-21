@@ -12,26 +12,26 @@ namespace Tests.Integration.Model
         [Test]
         public void TestTraitSerialization()
         {
-            var traitset = RecursiveTraitSet.Build(
-                new RecursiveTrait("host", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>() {
+            var traits = new List<RecursiveTrait>() {
+                new RecursiveTrait("host", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     new TraitAttribute("hostname",
                         CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     )
                 }),
-                new RecursiveTrait("host_windows", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>() {
+                new RecursiveTrait("host_windows", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     new TraitAttribute("os_family",
                         CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                             new CIAttributeValueConstraintTextRegex(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                     )
                 }, requiredTraits: new string[] { "host" }),
 
-                new RecursiveTrait("host_linux", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>() {
+                new RecursiveTrait("host_linux", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     new TraitAttribute("os_family",
                         CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                             new CIAttributeValueConstraintTextRegex(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
                     )
                 }, requiredTraits: new string[] { "host" }),
-                new RecursiveTrait("linux_block_device", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>() {
+                new RecursiveTrait("linux_block_device", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     new TraitAttribute("device",
                         CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     ),
@@ -39,7 +39,7 @@ namespace Tests.Integration.Model
                         CIAttributeTemplate.BuildFromParams("mount", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     )
                 }),
-                new RecursiveTrait("linux_network_interface", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>() {
+                new RecursiveTrait("linux_network_interface", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     new TraitAttribute("device",
                         CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     ),
@@ -50,7 +50,7 @@ namespace Tests.Integration.Model
                         CIAttributeTemplate.BuildFromParams("active", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     )
                 }),
-                new RecursiveTrait("ansible_can_deploy_to_it", new TraitOriginV1(TraitOriginType.Configuration),
+                new RecursiveTrait("ansible_can_deploy_to_it", new TraitOriginV1(TraitOriginType.Data),
                     new List<TraitAttribute>() {
                         new TraitAttribute("hostname",
                             CIAttributeTemplate.BuildFromParams("ipAddress", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
@@ -67,13 +67,14 @@ namespace Tests.Integration.Model
                     //    )
                     //}
                 )
-            );
+            };
 
-            var json = RecursiveTraitSet.Serializer.SerializeToString(traitset);
-
-            var x = RecursiveTraitSet.Serializer.Deserialize(json);
-
-            x.Should().BeEquivalentTo(traitset);
+            foreach(var rt in traits)
+            {
+                var json = RecursiveTrait.Serializer.SerializeToString(rt);
+                var x = RecursiveTrait.Serializer.Deserialize(json);
+                x.Should().BeEquivalentTo(rt);
+            }
         }
     }
 }

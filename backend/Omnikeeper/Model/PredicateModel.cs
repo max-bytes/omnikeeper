@@ -42,7 +42,6 @@ namespace Omnikeeper.Model
 
         public async Task<(Guid,Predicate)> TryToGetPredicate(string id, TimeThreshold timeThreshold, IModelContext trans)
         {
-            // TODO: better performance?
 
             var traitForPredicates = CoreTraits.Predicate;
             // NOTE: we need to flatten the core trait first... is this the best way? Could we maybe also keep core traits as flattened already?
@@ -52,6 +51,7 @@ namespace Omnikeeper.Model
             var baseConfig = await baseConfigurationModel.GetConfigOrDefault(trans);
             var configLayerset = new LayerSet(baseConfig.ConfigLayerset);
 
+            // TODO: better performance possible?
             var predicateCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(flattenedTraitForPredicates, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
 
             var foundPredicateCI = predicateCIs.FirstOrDefault(pci => pci.Value.et.TraitAttributes["id"].Attribute.Value.Value2String() == id);

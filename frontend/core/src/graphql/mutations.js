@@ -173,12 +173,6 @@ CREATE_CI: gql`
   }
   `,
 
-  SET_TRAITSET: gql`
-  mutation SetTraitSet($traitSet: String!) {
-    setTraitSet(traitSet: $traitSet)
-  }
-  `,
-
   UPSERT_PREDICATE: gql`
   mutation UpsertPredicate($predicate: UpsertPredicateInputType!) {
     upsertPredicate(predicate: $predicate) {
@@ -191,6 +185,21 @@ CREATE_CI: gql`
   REMOVE_PREDICATE: gql`
   mutation RemovePredicate($predicateID: String!) {
     removePredicate(predicateID: $predicateID)
+  }
+  `,
+
+  UPSERT_RECURSIVE_TRAIT: gql`
+  mutation UpsertRecursiveTrait($trait: UpsertRecursiveTraitInputType!) {
+    upsertRecursiveTrait(trait: $trait) {
+        ...RecursiveTrait
+    }
+  }
+  ${Fragments.recursiveTrait}
+  `,
+
+  REMOVE_RECURSIVE_TRAIT: gql`
+  mutation RemoveRecursiveTrait($id: String!) {
+    removeRecursiveTrait(id: $id)
   }
   `,
 

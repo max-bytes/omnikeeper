@@ -32,12 +32,12 @@ function SearchCIAdvanced(props) {
         if (!initialSetOfCheckedTraits && activeTraits) {
             const newChecked = [];
             for(const et of activeTraits.activeTraits) {
-                if (urlParams.requiredTraits.includes(et.name))
-                    newChecked[et.name] = 1;
-                else if (urlParams.disallowedTraits.includes(et.name))
-                    newChecked[et.name] = -1;
+                if (urlParams.requiredTraits.includes(et.id))
+                    newChecked[et.id] = 1;
+                else if (urlParams.disallowedTraits.includes(et.id))
+                    newChecked[et.id] = -1;
                 else
-                    newChecked[et.name] = 0;
+                    newChecked[et.id] = 0;
             }
             setCheckedTraits(newChecked);
             setIitialSetOfCheckedTraits(true);
@@ -69,9 +69,9 @@ function SearchCIAdvanced(props) {
             debouncedSearch({
                 variables: {
                     searchString: searchString,
-                    withEffectiveTraits: activeTraits.activeTraits.map(et => et.name)
+                    withEffectiveTraits: activeTraits.activeTraits.map(et => et.id)
                         .filter((et) => checkedTraits[et] === 1),
-                    withoutEffectiveTraits: activeTraits.activeTraits.map(et => et.name)
+                    withoutEffectiveTraits: activeTraits.activeTraits.map(et => et.id)
                         .filter((et) => checkedTraits[et] === -1),
                     layers: visibleLayers.map((l) => l.name),
                 }

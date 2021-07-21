@@ -81,7 +81,7 @@ namespace Omnikeeper.GraphQL
 
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                var traits = (await traitsProvider.GetActiveTraitSet(userContext.Transaction, userContext.TimeThreshold)).Traits.Values;
+                var traits = (await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.TimeThreshold)).Values;
 
                 var et = await traitModel.CalculateEffectiveTraitsForCI(traits, context.Source, userContext.Transaction, userContext.TimeThreshold);
                 return et;

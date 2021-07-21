@@ -27,24 +27,24 @@ export const queries = {
         }
         ${Fragments.compactCI}
     `,
-    EffectiveTraitList: gql`
-        query effectiveTraitList($layers: [String]!) {
-            effectiveTraitList(layers: $layers) {
-                name
-                count
-            }
-        }
-    `,
     ActiveTraits: gql`
         query activeTraits {
             activeTraits {
-                name
+                id
                 origin {
                     type
                     info
                 }
             }
         }
+    `,
+    RecursiveTraits: gql`
+        query recursiveTraits {
+            recursiveTraits {
+                ...RecursiveTrait
+            }
+        }
+        ${Fragments.recursiveTrait}
     `,
 
     FullCI: gql`
@@ -147,11 +147,6 @@ export const queries = {
             visible @client
         }
     }`,
-    TraitSet: gql`
-    query traitSet {
-        traitSet
-      }
-    `,
     BaseConfiguration: gql`
     query baseConfiguration {
         baseConfiguration

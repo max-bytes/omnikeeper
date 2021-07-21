@@ -168,17 +168,23 @@ namespace Omnikeeper.GraphQL
         }
     }
 
-    public class UpsertCITypeInput
+    public class UpsertRecursiveTraitInput
     {
         public string ID { get; private set; }
-        public AnchorState State { get; private set; }
+        public string[] RequiredAttributes { get; private set; }
+        public string[] OptionalAttributes { get; private set; }
+        public string[] RequiredRelations { get; private set; }
+        public string[] RequiredTraits { get; private set; }
     }
-    public class UpsertCITypeInputType : InputObjectGraphType<UpsertCITypeInput>
+    public class UpsertRecursiveTraitInputType : InputObjectGraphType<UpsertRecursiveTraitInput>
     {
-        public UpsertCITypeInputType()
+        public UpsertRecursiveTraitInputType()
         {
             Field("id", x => x.ID);
-            Field(x => x.State, type: typeof(AnchorStateType));
+            Field(x => x.RequiredAttributes);
+            Field(x => x.OptionalAttributes);
+            Field(x => x.RequiredRelations);
+            Field(x => x.RequiredTraits);
         }
     }
 

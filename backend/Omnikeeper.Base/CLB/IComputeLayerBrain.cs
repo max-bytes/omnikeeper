@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.CLB
@@ -10,7 +11,7 @@ namespace Omnikeeper.Base.CLB
     {
         string Name { get; }
 
-        RecursiveTraitSet DefinedTraits { get; }
+        IEnumerable<RecursiveTrait> DefinedTraits { get; }
 
         Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger);
         Task<bool> Run(CLBSettings settings, IModelContextBuilder modelContextBuilder, ILogger logger);

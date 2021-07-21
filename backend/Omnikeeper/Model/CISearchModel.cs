@@ -125,9 +125,9 @@ namespace Omnikeeper.Model
 
         public async Task<IEnumerable<MergedCI>> SearchForMergedCIsByTraits(ICIIDSelection ciidSelection, string[] withEffectiveTraits, string[] withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
-            var activeTraitSet = await traitsProvider.GetActiveTraitSet(trans, atTime);
-            var requiredTraits = activeTraitSet.Traits.Values.Where(t => withEffectiveTraits.Contains(t.Name));
-            var requiredNonTraits = activeTraitSet.Traits.Values.Where(t => withoutEffectiveTraits.Contains(t.Name));
+            var activeTraits = await traitsProvider.GetActiveTraits(trans, atTime);
+            var requiredTraits = activeTraits.Values.Where(t => withEffectiveTraits.Contains(t.ID));
+            var requiredNonTraits = activeTraits.Values.Where(t => withoutEffectiveTraits.Contains(t.ID));
 
             // reduce/prefilter traits by their dependencies. For example: when trait host is forbidden, but trait host_linux is required, we can bail as that can not produce anything
             // second example: trait host is required AND trait host_linux is required, we can skip checking trait host because host_linux checks that anyway
@@ -137,11 +137,11 @@ namespace Omnikeeper.Model
             {
                 foreach (var pt in rt.AncestorTraits)
                 {
-                    if (requiredNonTraits.Any(rn2 => rn2.Name.Equals(pt))) // a parent trait is a non-required trait -> bail completely
+                    if (requiredNonTraits.Any(rn2 => rn2.ID.Equals(pt))) // a parent trait is a non-required trait -> bail completely
                     {
                         return ImmutableList<MergedCI>.Empty;
                     }
-                    if (requiredTraits.Any(rt2 => rt2.Name.Equals(pt))) // a parent trait is also a required trait, remove parent from requiredTraits
+                    if (requiredTraits.Any(rt2 => rt2.ID.Equals(pt))) // a parent trait is also a required trait, remove parent from requiredTraits
                     {
                         filteredRequiredTraits.Add(pt);
                     }
@@ -151,14 +151,14 @@ namespace Omnikeeper.Model
             {
                 foreach (var pt in rt.AncestorTraits)
                 {
-                    if (requiredNonTraits.Any(rt2 => rt2.Name.Equals(pt))) // a parent trait is also a non-required trait, remove from nonRequiredTraits
+                    if (requiredNonTraits.Any(rt2 => rt2.ID.Equals(pt))) // a parent trait is also a non-required trait, remove from nonRequiredTraits
                     {
                         filteredRequiredNonTraits.Add(pt);
                     }
                 }
             }
-            requiredTraits = requiredTraits.Where(rt => !filteredRequiredTraits.Contains(rt.Name));
-            requiredNonTraits = requiredNonTraits.Where(rt => !filteredRequiredNonTraits.Contains(rt.Name));
+            requiredTraits = requiredTraits.Where(rt => !filteredRequiredTraits.Contains(rt.ID));
+            requiredNonTraits = requiredNonTraits.Where(rt => !filteredRequiredNonTraits.Contains(rt.ID));
 
             var mergedCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, true, trans, atTime);
 

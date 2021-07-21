@@ -60,7 +60,7 @@ namespace Omnikeeper.Service
             (_, tmpChanged) = await baseAttributeModel.InsertAttribute("predicate.wordingTo", new AttributeScalarValueText(wordingTo), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
             changed = changed || tmpChanged;
             var name = $"Predicate - {id}";
-            (_, tmpChanged) = await baseAttributeModel.InsertAttribute("__name", new AttributeScalarValueText(name), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+            (_, tmpChanged) = await baseAttributeModel.InsertCINameAttribute(name, ciid, writeLayerID, changesetProxy, dataOrigin, trans);
             changed = changed || tmpChanged;
             // TODO: constraints
 

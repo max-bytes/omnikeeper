@@ -52,7 +52,7 @@ export const Fragments = {
             isLatest
         }
         effectiveTraits { 
-            underlyingTrait {name}
+            underlyingTrait {id}
             attributes { 
                 ...FullMergedAttribute
             }
@@ -139,6 +139,15 @@ export const Fragments = {
     },
     labelWordingFrom @client,
     labelWordingTo @client
+  }
+  `,
+  recursiveTrait: gql`
+  fragment RecursiveTrait on RecursiveTraitType {
+    id,
+    requiredAttributes,
+    optionalAttributes,
+    requiredRelations,
+    requiredTraits
   }
   `,
 };

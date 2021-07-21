@@ -14,15 +14,15 @@ namespace Tests.Integration.Serialization
         public void TestSerialization()
         {
             var dataSerializer = new ProtoBufDataSerializer();
-            var a = RecursiveTraitSet.Build(new RecursiveTrait("rt1", new TraitOriginV1(TraitOriginType.Configuration), new List<TraitAttribute>()
+            var a = new RecursiveTrait("rt1", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
             {
                 new TraitAttribute("at1", CIAttributeTemplate.BuildFromParams("name", AttributeValueType.JSON, true, 
                     new CIAttributeValueConstraintTextLength(2, null), 
                     new CIAttributeValueConstraintTextRegex(new Regex("(RedHat|Fedora)", RegexOptions.IgnoreCase | RegexOptions.Singleline)))
                 )
-            }));
+            });
             var b = dataSerializer.ToByteArray(a);
-            var c = dataSerializer.FromByteArray<RecursiveTraitSet>(b);
+            var c = dataSerializer.FromByteArray<RecursiveTrait>(b);
             c.Should().BeEquivalentTo(a);
         }
     }

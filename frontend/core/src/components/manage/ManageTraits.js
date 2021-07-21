@@ -1,61 +1,82 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link  } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
-import { Form, Button } from 'antd';
-import { queries } from 'graphql/queries'
-import { mutations } from 'graphql/mutations'
-import 'ace-builds';
 import { useQuery, useMutation, useApolloClient } from '@apollo/client';
-import 'ace-builds/webpack-resolver';
-import AceEditor from "react-ace";
-import { ErrorPopupButton } from "../ErrorPopupButton";
+import { queries } from '../../graphql/queries'
+import { mutations } from '../../graphql/mutations'
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-balham.css';
+import AgGridCrud from './AgGridCrud';
+import _ from 'lodash';
 
-import "ace-builds/src-noconflict/mode-json";
+export default function ManageTraits() {
+  var [rowData, setRowData] = useState([]);
 
-export default function ManageCITypes() {
+  // TODO: is the ManageTraits interface not nothing else than a specific gridview?
+  // Consider re-use!
 
-  const { data, loading } = useQuery(queries.TraitSet, {fetchPolicy: 'network-only'});
-  const [setTraitSet, { loading: setTraitSetLoading, error: setTraitSetError }] = useMutation(mutations.SET_TRAITSET);
-  const apolloClient = useApolloClient();
-  var [hasErrors, setHasErrors] = useState(false);
-  const [config, setConfig] = useState("Loading");
-  useEffect(() => {
-    if (!!data) {
-      var prettyStr = JSON.stringify(JSON.parse(data.traitSet),null,2);  
-      setConfig(prettyStr);
+  const { loading, refetch } = useQuery(queries.RecursiveTraits, { 
+    variables: {},
+    notifyOnNetworkStatusChange: true,
+    onCompleted: (data) => {
+
+      const finalData = data.recursiveTraits.map(rt => {
+        return {
+          id: rt.id,
+          requiredAttributes: JSON.stringify(rt.requiredAttributes.map(e => JSON.parse(e))), // TODO
+          optionalAttributes: JSON.stringify(rt.optionalAttributes.map(e => JSON.parse(e))), // TODO
+          requiredRelations: JSON.stringify(rt.requiredRelations.map(e => JSON.parse(e))), // TODO
+          requiredTraits: JSON.stringify(rt.requiredTraits),
+        };
+      })
+      setRowData(finalData);
+    },
+    onError: (e) => {
+      console.log("error"); // TODO
+      console.log(e);
     }
-  }, [data]);
+  });
+  const [upsert] = useMutation(mutations.UPSERT_RECURSIVE_TRAIT);
+  const [remove] = useMutation(mutations.REMOVE_RECURSIVE_TRAIT);
+  
+  const apolloClient = useApolloClient();
+
+  const columnDefs = [
+    { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
+    { headerName: "Required Attributes", field: "requiredAttributes" },
+    { headerName: "Optional Attributes", field: "optionalAttributes" },
+    { headerName: "Required Relations", field: "requiredRelations" },
+    { headerName: "Required Traits", field: "requiredTraits" },
+  ];
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
-    <h2>Traits (deprecated! Use data-traits instead)</h2>
-    <div><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
-    <Form style={{margin:'10px 0px'}} onFinish={e => {
-            setTraitSet({ variables: { traitSet: config } }).then(d => {
-              var prettyStr = JSON.stringify(JSON.parse(d.data.setTraitSet),null,2);  
-              setConfig(prettyStr);
-            })
-            .then(r => apolloClient.resetStore());
-          }}>
-      <AceEditor
-              value={config}
-              onValidate={a => {
-                  const e = a.filter(a => a.type === 'error').length > 0;
-                  setHasErrors(e);
-              }}
-              mode="json"
-              theme="textmate"
-              onChange={newValue => setConfig(newValue)}
-              name="TraitSet Editor"
-              width={'unset'}
-              style={{marginBottom: '10px', flexGrow: 1, border: "1px solid #ced4da", borderRadius: ".25rem"}}
-              setOptions={{ 
-                  showPrintMargin: false
-              }}
-          />
-      <Button type="primary" htmlType="submit" disabled={loading || hasErrors || setTraitSetLoading}>Save</Button>
-      <ErrorPopupButton error={setTraitSetError} />
-    </Form>
-    
+    <h2>Traits</h2>
+    <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
+
+    <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
+      saveRow={async row => {
+        const trait = {
+          id: row.id, 
+          requiredAttributes: JSON.parse(row.requiredAttributes).map(e => JSON.stringify(e)),
+          optionalAttributes: JSON.parse(row.optionalAttributes).map(e => JSON.stringify(e)),
+          requiredRelations: JSON.parse(row.requiredRelations).map(e => JSON.stringify(e)),
+          requiredTraits: JSON.parse(row.requiredTraits),
+        };
+        return upsert({ variables: { trait: trait } })
+          .then(r => ({result: r.data.upsertTrait, id: row.id}))
+          .then(r => apolloClient.resetStore())
+          .catch(e => ({result: e, id: row.id }));
+      }}
+      deletableRows={true}
+      deleteRow={async row => {
+        if (row.id === undefined) {
+          // TODO
+        } else {
+          return remove({variables: {id: row.id}})
+          .then(r => ({result: r.removeRecursiveTrait, id: row.id}))
+          .catch(e => ({result: e, id: row.id }));
+        }
+      }} />
   </div>;
 }

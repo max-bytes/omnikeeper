@@ -16,7 +16,7 @@ namespace Omnikeeper.Base.Entity
             CITypeID = ciTypeID;
             AttributeTemplates = attributes.ToImmutableDictionary(t => t.Name);
             RelationTemplates = relations.ToImmutableDictionary(t => t.PredicateID);
-            Traits = traits.ToImmutableDictionary(t => t.Name);
+            Traits = traits.ToImmutableDictionary(t => t.ID);
         }
     }
 }

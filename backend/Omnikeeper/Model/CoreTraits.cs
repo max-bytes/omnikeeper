@@ -18,14 +18,15 @@ namespace Omnikeeper.Model
 
         public static readonly RecursiveTrait Trait = new RecursiveTrait("__meta.config.trait", new TraitOriginV1(TraitOriginType.Core), 
             new List<TraitAttribute>() {
-                new TraitAttribute("name", CIAttributeTemplate.BuildFromParams("trait.name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("trait.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                 new TraitAttribute("requiredAttributes", CIAttributeTemplate.BuildFromParams("trait.requiredAttributes", AttributeValueType.JSON, true, new CIAttributeValueConstraintArrayLength(1, null)))
             },
             new List<TraitAttribute>()
             {
                 new TraitAttribute("requiredTraits", CIAttributeTemplate.BuildFromParams("trait.requiredTraits", AttributeValueType.Text, true)),
                 new TraitAttribute("optionalAttributes", CIAttributeTemplate.BuildFromParams("trait.optionalAttributes", AttributeValueType.JSON, true)),
-                new TraitAttribute("requiredRelations", CIAttributeTemplate.BuildFromParams("trait.requiredRelations", AttributeValueType.JSON, true))
+                new TraitAttribute("requiredRelations", CIAttributeTemplate.BuildFromParams("trait.requiredRelations", AttributeValueType.JSON, true)),
+                new TraitAttribute("name", CIAttributeTemplate.BuildFromParams("__name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
             }
         );
 
@@ -42,15 +43,13 @@ namespace Omnikeeper.Model
             }
         );
 
-        public static readonly RecursiveTraitSet Traits = RecursiveTraitSet.Build(
-                Named, Trait, Predicate
-            );
+        public static readonly IEnumerable<RecursiveTrait> Traits = new List<RecursiveTrait>() { Named, Trait, Predicate };
     }
 
 
     public class TraitEmpty : ITrait
     {
-        public string Name => "empty";
+        public string ID => "empty";
 
         public IImmutableSet<string> AncestorTraits => ImmutableHashSet<string>.Empty;
 

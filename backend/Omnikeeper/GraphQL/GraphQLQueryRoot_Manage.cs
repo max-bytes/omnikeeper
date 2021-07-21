@@ -94,19 +94,17 @@ namespace Omnikeeper.GraphQL
                     return BaseConfigurationV1.Serializer.SerializeToString(cfg);
                 });
 
-            FieldAsync<StringGraphType>("traitSet",
+            FieldAsync<ListGraphType<RecursiveTraitType>>("recursiveTraits",
                 resolve: async context =>
                 {
-                    var traitModel = context.RequestServices.GetRequiredService<IRecursiveTraitModel>();
+                    var traitModel = context.RequestServices.GetRequiredService<IRecursiveDataTraitModel>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
-                    // TODO: implement better, showing string as-is for now
                     // TODO: should we not deliver non-DB traits (f.e. from CLBs) here?
-                    var traitSet = await traitModel.GetRecursiveTraitSet(userContext.Transaction, TimeThreshold.BuildLatest());
-                    var str = RecursiveTraitSet.Serializer.SerializeToString(traitSet);
-                    return str;
+                    var traitSet = await traitModel.GetRecursiveTraits(userContext.Transaction, TimeThreshold.BuildLatest());
+                    return traitSet;
                 });
 
             Field<ListGraphType<StringGraphType>>("cacheKeys",
