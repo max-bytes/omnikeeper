@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-balham.css";
@@ -12,6 +12,8 @@ import { v4 as uuidv4 } from 'uuid';
 import MultilineTextCellEditor from './MultilineTextCellEditor';
 import IntegerCellEditor from './IntegerCellEditor';
 import FeedbackMsg from "components/FeedbackMsg.js";
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
 import { useParams, withRouter } from "react-router-dom";
 
@@ -25,6 +27,15 @@ const AgGridCopyCutPaste = AgGridReact;
 //     true // logging off
 // );  
 
+// status objects
+const rowStatus = {
+    new: { id: 0, name: "New" },
+    edited: { id: 1, name: "Edit" },
+    clean: { id: 2, name: "Clean" },
+    deleted: { id: 3, name: "Del" },
+    error: { id: 4, name: "Err" },
+};
+
 export function Context(props) {
     const swaggerClient = props.swaggerClient;
     const apiVersion = props.apiVersion;
@@ -36,24 +47,15 @@ export function Context(props) {
 
     const [columnDefs, setColumnDefs] = useState(null);
     const [schema, setSchema] = useState(null);
-    const [rowData, setRowData] = useState(null);
+    const [rowData, setRowData] = useState([]);
     const [rowDataSnapshot, setRowDataSnapshot] = useState(null);
-    const defaultColDef = initDefaultColDef(); // Init defaultColDef
+    const defaultColDef = useMemo(() => initDefaultColDef(), []); // Init defaultColDef
 
     const [swaggerMsg, setSwaggerMsg] = useState("");
     const [swaggerErrorJson, setSwaggerErrorJson] = useState(false);
-
-    // status objects
-    const rowStatus = {
-        new: { id: 0, name: "New" },
-        edited: { id: 1, name: "Edit" },
-        clean: { id: 2, name: "Clean" },
-        deleted: { id: 3, name: "Del" },
-        error: { id: 4, name: "Err" },
-    };
-
+    
     const gridViewDataParseModel = new GridViewDataParseModel(rowStatus);
-  
+
     return (
         <Layout
             style={{
@@ -81,33 +83,35 @@ export function Context(props) {
                     resetRow={resetRow}
                     autoSizeAll={autoSizeAll}
                     save={save}
-                    refreshData={refreshData}
+                    refreshData={() => refreshData(gridApi)}
                 />
             </Header>
             <Content>
-                <AgGridCopyCutPaste
-                    frameworkComponents={{
-                        multilineTextCellEditor: MultilineTextCellEditor,
-                        integerCellEditor: IntegerCellEditor
-                    }}
-                    stopEditingWhenGridLosesFocus={true}
-                    onGridReady={onGridReady}
-                    rowData={rowData}
-                    columnDefs={columnDefs}
-                    defaultColDef={defaultColDef}
-                    animateRows={true}
-                    rowSelection="multiple"
-                    onCellValueChanged={updateCellValue}
-                    getRowNodeId={function (data) {
-                        return data.ciid;
-                    }}
-                    overlayLoadingTemplate={
-                        '<span class="ag-overlay-loading-center">Loading...</span>'
-                    }
-                    overlayNoRowsTemplate={
-                        '<span class="ag-overlay-loading-center">No data.</span>'
-                    }
-                />
+                <div style={{height:'100%'}} className={"ag-theme-balham"}>
+                    <AgGridCopyCutPaste
+                        frameworkComponents={{
+                            multilineTextCellEditor: MultilineTextCellEditor,
+                            integerCellEditor: IntegerCellEditor
+                        }}
+                        stopEditingWhenGridLosesFocus={true}
+                        onGridReady={onGridReady}
+                        rowData={rowData}
+                        columnDefs={columnDefs}
+                        defaultColDef={defaultColDef}
+                        animateRows={true}
+                        rowSelection="multiple"
+                        onCellValueChanged={updateCellValue}
+                        getRowNodeId={function (data) {
+                            return data.ciid;
+                        }}
+                        overlayLoadingTemplate={
+                            '<span class="ag-overlay-loading-center">Loading...</span>'
+                        }
+                        overlayNoRowsTemplate={
+                            '<span class="ag-overlay-loading-center">No data.</span>'
+                        }
+                    />
+                </div>
             </Content>
         </Layout>
     );
@@ -118,7 +122,7 @@ export function Context(props) {
     function onGridReady(params) {
         setGridApi(params.api);
         setGridColumnApi(params.columnApi);
-        refreshData();
+        refreshData(params.api);
     }
 
     // Init defaultColDef
@@ -356,17 +360,14 @@ export function Context(props) {
     }
 
     // READ / refresh data
-    async function refreshData() {
+    async function refreshData(gridApi) {
+
         // important to re-create FeedbackMsg, after it has been closed!
         setSwaggerMsg("");
         setSwaggerErrorJson("");
 
-        // Tell AgGrid to reset columnDefs and rowData // important!
-        if (gridApi) {
-            gridApi.setColumnDefs(null);
-            gridApi.setRowData(null);
-            gridApi.showLoadingOverlay(); // trigger "Loading"-state (otherwise would be in "No Rows"-state instead)
-        }
+        gridApi.showLoadingOverlay();
+
         try {
             const schema = await swaggerClient.apis.GridView.GetSchema({
                     version: apiVersion,
@@ -389,12 +390,6 @@ export function Context(props) {
             setColumnDefs(parsedColumnDefs); // set columnDefs
             setRowData(parsedRowData); // set rowData
             setRowDataSnapshot(_.cloneDeep(parsedRowData)); // set rowData-snapshot
-
-            // Tell AgGrid to set columnDefs and rowData
-            if (gridApi) {
-                gridApi.setColumnDefs(parsedColumnDefs);
-                gridApi.setRowData(parsedRowData);
-            }
 
             // INFO: don't show message on basic load
         } catch(e) {

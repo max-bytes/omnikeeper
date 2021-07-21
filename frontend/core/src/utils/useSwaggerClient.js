@@ -6,7 +6,7 @@ export default function useSwaggerClient() {
     const swaggerDefUrl = `${env('BACKEND_URL')}/swagger/v1/swagger.json`;
     const [swaggerClient, setSwaggerClient] = useState(null);
 
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     // get swagger JSON

@@ -53,7 +53,7 @@ export default function GridViewDataParseModel(rowStatus) {
                     return {...params.oldValue, values: [params.newValue]};
                 },
                 valueFormatter: (params) => {
-                    const value = params.value.values?.[0];
+                    const value = params.value?.values?.[0];
 
                     // IMPORTANT INFO: Copying an undefined value with aggrid_copy_cut_paste-module is NOT possible, because this valueFormatter will return an empty string and therefore force the module to copy this empty string instead.
                     // valueFormatters don't allow returning undefined. Doing so would instead act like there simply is no valueFormatter at all.
@@ -63,7 +63,7 @@ export default function GridViewDataParseModel(rowStatus) {
                     return value;
                 },
                 cellRenderer: (params) => {
-                    const value = params.value.values?.[0];
+                    const value = params.value?.values?.[0];
                     if (value === undefined)
                         return "[not set]";
                     return value;
