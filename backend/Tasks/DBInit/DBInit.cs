@@ -61,7 +61,7 @@ namespace Tasks.DBInit
             using (var trans = modelContextBuilder.BuildDeferred())
             {
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                foreach (var rt in DefaultTraits.Get().Traits.Values)
+                foreach (var rt in DefaultTraits.Get())
                 {
                     await traitWriteService.InsertOrUpdate(rt.Name, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.RequiredTraits,
                         new DataOriginV1(DataOriginType.Manual), changeset, authenticatedUser, mc);
@@ -366,9 +366,9 @@ namespace Tasks.DBInit
 
     public static class DefaultTraits
     {
-        public static RecursiveTraitSet Get()
+        public static IEnumerable<RecursiveTrait> Get()
         {
-            return RecursiveTraitSet.Build(
+            return new List<RecursiveTrait>() {
                     // hosts
                     new RecursiveTrait("host", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                         new TraitAttribute("hostname",
@@ -437,7 +437,7 @@ namespace Tasks.DBInit
                         //    )
                         //}
                     )
-                );
+            };
         }
     }
 }

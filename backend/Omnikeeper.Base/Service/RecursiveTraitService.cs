@@ -6,9 +6,10 @@ namespace Omnikeeper.Base.Service
 {
     public static class RecursiveTraitService
     {
-        public static TraitSet FlattenRecursiveTraitSet(RecursiveTraitSet rts)
+        public static TraitSet FlattenRecursiveTraits(IEnumerable<RecursiveTrait> rts)
         {
-            return TraitSet.Build(FlattenDependentTraits(rts.Traits));
+            var dict = rts.ToDictionary(rt => rt.Name);
+            return TraitSet.Build(FlattenDependentTraits(dict));
         }
 
         public static IEnumerable<GenericTrait> FlattenDependentTraits(IDictionary<string, RecursiveTrait> input)

@@ -61,7 +61,7 @@ namespace Omnikeeper.Model
             return default;
         }
 
-        public async Task<RecursiveTraitSet> GetRecursiveTraitSet(IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<IEnumerable<RecursiveTrait>> GetRecursiveTraits(IModelContext trans, TimeThreshold timeThreshold)
         {
             var traitForTraits = CoreTraits.Trait;
             // NOTE: we need to flatten the core trait first... is this the best way? Could we maybe also keep core traits as flattened already?
@@ -77,7 +77,7 @@ namespace Omnikeeper.Model
             {
                 ret.Add(EffectiveTrait2RecursiveTrait(trait));
             }
-            return RecursiveTraitSet.Build(ret);
+            return ret;
         }
 
 

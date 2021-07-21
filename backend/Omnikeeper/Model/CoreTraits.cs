@@ -43,9 +43,7 @@ namespace Omnikeeper.Model
             }
         );
 
-        public static readonly RecursiveTraitSet Traits = RecursiveTraitSet.Build(
-                Named, Trait, Predicate
-            );
+        public static readonly IEnumerable<RecursiveTrait> Traits = new List<RecursiveTrait>() { Named, Trait, Predicate };
     }
 
 

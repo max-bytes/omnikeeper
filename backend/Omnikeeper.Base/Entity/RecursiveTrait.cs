@@ -107,36 +107,8 @@ namespace Omnikeeper.Base.Entity
             RequiredRelations = requiredRelations?.ToArray() ?? new TraitRelation[0];
             RequiredTraits = requiredTraits?.ToArray() ?? new string[0];
         }
-    }
 
-    // TODO: needed? Its just a wrapper over a dictionary of RecursiveTraits after all...
-    [ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
-    public class RecursiveTraitSet
-    {
-        [JsonConstructor]
-        private RecursiveTraitSet(IDictionary<string, RecursiveTrait> traits)
-        {
-            this.traits = traits;
-        }
-
-#pragma warning disable CS8618
-        private RecursiveTraitSet() { }
-#pragma warning restore CS8618
-
-        [ProtoMember(1)]
-        private readonly IDictionary<string, RecursiveTrait> traits = new Dictionary<string,RecursiveTrait>();
-        public IDictionary<string, RecursiveTrait> Traits => traits;
-
-        public static RecursiveTraitSet Build(IEnumerable<RecursiveTrait> traits)
-        {
-            return new RecursiveTraitSet(traits.ToDictionary(t => t.Name));
-        }
-        public static RecursiveTraitSet Build(params RecursiveTrait[] traits)
-        {
-            return new RecursiveTraitSet(traits.ToDictionary(t => t.Name));
-        }
-
-        public static MyJSONSerializer<RecursiveTraitSet> Serializer = new MyJSONSerializer<RecursiveTraitSet>(() =>
+        public static readonly MyJSONSerializer<RecursiveTrait> Serializer = new MyJSONSerializer<RecursiveTrait>(() =>
         {
             var s = new JsonSerializerSettings()
             {

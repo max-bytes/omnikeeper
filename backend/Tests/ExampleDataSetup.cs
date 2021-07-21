@@ -72,7 +72,7 @@ namespace Tests
 
                 var rts = Traits.Get();
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                foreach (var rt in rts.Traits.Values)
+                foreach (var rt in rts)
                     await traitWriteService.InsertOrUpdate(rt.Name, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.RequiredTraits,
                         new DataOriginV1(DataOriginType.Manual), changeset, new AuthenticatedUser(user, layers), mc);
                 mc.Commit();
@@ -128,7 +128,7 @@ namespace Tests
 
         public static class Traits
         {
-            public static RecursiveTraitSet Get()
+            public static IEnumerable<RecursiveTrait> Get()
             {
                 var traits = new RecursiveTrait[]
                     {
@@ -202,7 +202,7 @@ namespace Tests
                     ),
                     };
 
-                return RecursiveTraitSet.Build(traits);
+                return traits;
             }
         }
     }

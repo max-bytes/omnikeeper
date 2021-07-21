@@ -27,13 +27,13 @@ namespace Omnikeeper.Model
         public async Task<TraitSet> GetActiveTraitSet(IModelContext trans, TimeThreshold timeThreshold)
         {
             var computeLayerBrains = sp.GetServices<IComputeLayerBrain>(); // HACK: we get the CLBs here and not in the constructor because that would lead to a circular dependency
-            var clbTraitSets = new Dictionary<string, RecursiveTraitSet>();
+            var clbTraitSets = new Dictionary<string, IEnumerable<RecursiveTrait>>();
             foreach (var clb in computeLayerBrains)
                 clbTraitSets.Add($"CLB-{clb.Name}", clb.DefinedTraits);
 
             // TODO, NOTE: this merges non-DB trait sets, that are not historic and DB traits sets that are... what should we do here?
-            var configuredRecursiveDataTraitSet = await dataTraitModel.GetRecursiveTraitSet(trans, timeThreshold);
-            var allTraitSets = new Dictionary<string, RecursiveTraitSet>() {
+            var configuredRecursiveDataTraitSet = await dataTraitModel.GetRecursiveTraits(trans, timeThreshold);
+            var allTraitSets = new Dictionary<string, IEnumerable<RecursiveTrait>>() {
                 { "core", CoreTraits.Traits },
                 { "data", configuredRecursiveDataTraitSet }
             };
@@ -45,8 +45,8 @@ namespace Omnikeeper.Model
             foreach (var kv in allTraitSets)
             {
                 var source = kv.Key;
-                foreach (var kv2 in kv.Value.Traits)
-                    ret[kv2.Key] = kv2.Value;
+                foreach (var rt in kv.Value)
+                    ret[rt.Name] = rt;
             }
 
             var flattened = RecursiveTraitService.FlattenDependentTraits(ret);

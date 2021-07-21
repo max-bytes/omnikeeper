@@ -12,7 +12,7 @@ namespace Tests.Integration.Model
         [Test]
         public void TestTraitSerialization()
         {
-            var traitset = RecursiveTraitSet.Build(
+            var traits = new List<RecursiveTrait>() {
                 new RecursiveTrait("host", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     new TraitAttribute("hostname",
                         CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
@@ -67,13 +67,14 @@ namespace Tests.Integration.Model
                     //    )
                     //}
                 )
-            );
+            };
 
-            var json = RecursiveTraitSet.Serializer.SerializeToString(traitset);
-
-            var x = RecursiveTraitSet.Serializer.Deserialize(json);
-
-            x.Should().BeEquivalentTo(traitset);
+            foreach(var rt in traits)
+            {
+                var json = RecursiveTrait.Serializer.SerializeToString(rt);
+                var x = RecursiveTrait.Serializer.Deserialize(json);
+                x.Should().BeEquivalentTo(rt);
+            }
         }
     }
 }

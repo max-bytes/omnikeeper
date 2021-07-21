@@ -7,22 +7,9 @@ using System.Text.RegularExpressions;
 
 namespace Tasks.Tools
 {
-    [Explicit]
-    class BuildTraits
-    {
-        [Test]
-        public void Build()
-        {
-            var traits = DefaultTraits.Get();
-            var json = RecursiveTraitSet.Serializer.SerializeToString(traits);
-
-            Console.WriteLine(json);
-        }
-    }
-
     public static class DefaultTraits
     {
-        public static RecursiveTraitSet Get()
+        public static IEnumerable<RecursiveTrait> Get()
         {
             var traits = new RecursiveTrait[]
                 {
@@ -148,7 +135,7 @@ namespace Tasks.Tools
                     //}),
                 };
 
-            return RecursiveTraitSet.Build(traits);
+            return traits;
         }
     }
 }

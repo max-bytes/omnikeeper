@@ -103,8 +103,8 @@ namespace Omnikeeper.GraphQL
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
                     // TODO: should we not deliver non-DB traits (f.e. from CLBs) here?
-                    var traitSet = await traitModel.GetRecursiveTraitSet(userContext.Transaction, TimeThreshold.BuildLatest());
-                    return traitSet.Traits.Values;
+                    var traitSet = await traitModel.GetRecursiveTraits(userContext.Transaction, TimeThreshold.BuildLatest());
+                    return traitSet;
                 });
 
             Field<ListGraphType<StringGraphType>>("cacheKeys",

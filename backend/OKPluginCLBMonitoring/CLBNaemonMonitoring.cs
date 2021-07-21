@@ -67,7 +67,7 @@ namespace OKPluginCLBMonitoring
             )
         });
 
-        public override RecursiveTraitSet DefinedTraits => RecursiveTraitSet.Build(moduleRecursiveTrait, naemonInstanceRecursiveTrait, contactgroupRecursiveTrait);
+        public override IEnumerable<RecursiveTrait> DefinedTraits => new List<RecursiveTrait>() { moduleRecursiveTrait, naemonInstanceRecursiveTrait, contactgroupRecursiveTrait };
 
         public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
         {
