@@ -43,23 +43,4 @@ namespace Omnikeeper.Base.Entity
             return new GenericTrait(name, origin, requiredAttributes.ToImmutableList(), optionalAttributes.ToImmutableList(), requiredRelations.ToImmutableList(), ancestorTraits.ToImmutableHashSet());
         }
     }
-
-    public class TraitSet
-    {
-        private TraitSet(IImmutableDictionary<string, ITrait> traits)
-        {
-            Traits = traits;
-        }
-
-        public IImmutableDictionary<string, ITrait> Traits { get; set; }
-
-        public static TraitSet Build(IEnumerable<ITrait> traits)
-        {
-            return new TraitSet(traits.ToImmutableDictionary(t => t.Name));
-        }
-        public static TraitSet Build(params ITrait[] traits)
-        {
-            return new TraitSet(traits.ToImmutableDictionary(t => t.Name));
-        }
-    }
 }

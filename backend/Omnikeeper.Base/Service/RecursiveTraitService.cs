@@ -6,13 +6,13 @@ namespace Omnikeeper.Base.Service
 {
     public static class RecursiveTraitService
     {
-        public static TraitSet FlattenRecursiveTraits(IEnumerable<RecursiveTrait> rts)
+        public static IDictionary<string, GenericTrait> FlattenRecursiveTraits(IEnumerable<RecursiveTrait> rts)
         {
             var dict = rts.ToDictionary(rt => rt.Name);
-            return TraitSet.Build(FlattenDependentTraits(dict));
+            return FlattenRecursiveTraits(dict);
         }
 
-        public static IEnumerable<GenericTrait> FlattenDependentTraits(IDictionary<string, RecursiveTrait> input)
+        public static IDictionary<string, GenericTrait> FlattenRecursiveTraits(IDictionary<string, RecursiveTrait> input)
         {
             var flattened = new Dictionary<string, GenericTrait>();
             var unflattened = new Dictionary<string, RecursiveTrait>(input);
@@ -20,7 +20,7 @@ namespace Omnikeeper.Base.Service
             {
                 FlattenDependentTraitsRec(kvi.Value, flattened, unflattened);
             }
-            return flattened.Values;
+            return flattened;
         }
 
         public static GenericTrait FlattenSingleRecursiveTrait(RecursiveTrait rt)

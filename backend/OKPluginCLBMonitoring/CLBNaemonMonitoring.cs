@@ -78,9 +78,9 @@ namespace OKPluginCLBMonitoring
             // TODO: make configurable
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
 
-            var naemonInstanceTrait = TraitSet.Traits["naemon_instance"];
-            var contactgroupTrait = TraitSet.Traits["naemon_contactgroup"];
-            var moduleTrait = TraitSet.Traits["naemon_service_module"];
+            var naemonInstanceTrait = Traits["naemon_instance"];
+            var contactgroupTrait = Traits["naemon_contactgroup"];
+            var moduleTrait = Traits["naemon_service_module"];
 
             var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
 

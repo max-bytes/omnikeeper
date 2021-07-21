@@ -34,14 +34,14 @@ namespace Omnikeeper.Base.CLB
         // TODO: turn into data-traits that get created/updated whenever CLB runs?
         public abstract IEnumerable<RecursiveTrait> DefinedTraits { get; }
 
-        private TraitSet? cachedTraitSet = null;
-        protected TraitSet TraitSet
+        private IDictionary<string, GenericTrait> cachedTraits = new Dictionary<string, GenericTrait>();
+        protected IDictionary<string, GenericTrait> Traits
         {
             get
             {
-                if (cachedTraitSet == null)
-                    cachedTraitSet = RecursiveTraitService.FlattenRecursiveTraits(DefinedTraits);
-                return cachedTraitSet;
+                if (cachedTraits == null)
+                    cachedTraits = RecursiveTraitService.FlattenRecursiveTraits(DefinedTraits);
+                return cachedTraits;
             }
         }
 

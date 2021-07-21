@@ -24,7 +24,7 @@ namespace Omnikeeper.Model
         }
 
         // TODO: caching of active trait sets
-        public async Task<TraitSet> GetActiveTraitSet(IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<IDictionary<string, ITrait>> GetActiveTraits(IModelContext trans, TimeThreshold timeThreshold)
         {
             var computeLayerBrains = sp.GetServices<IComputeLayerBrain>(); // HACK: we get the CLBs here and not in the constructor because that would lead to a circular dependency
             var clbTraitSets = new Dictionary<string, IEnumerable<RecursiveTrait>>();
@@ -49,19 +49,22 @@ namespace Omnikeeper.Model
                     ret[rt.Name] = rt;
             }
 
-            var flattened = RecursiveTraitService.FlattenDependentTraits(ret);
+            var flattened = RecursiveTraitService.FlattenRecursiveTraits(ret);
 
-            var finalTraits = new List<ITrait>(flattened);
-            finalTraits.Add(new TraitEmpty()); // mix in empty trait
-            return TraitSet.Build(finalTraits);
+            var finalTraits = new Dictionary<string, ITrait>();
+            foreach (var kv in flattened)
+                finalTraits.Add(kv.Key, kv.Value);
+            var traitEmpty = new TraitEmpty();
+            finalTraits.Add(traitEmpty.Name, traitEmpty); // mix in empty trait
+            return finalTraits;
         }
 
         public async Task<ITrait?> GetActiveTrait(string traitName, IModelContext trans, TimeThreshold timeThreshold)
         {
             // TODO: can be done more efficiently? here we get ALL traits, just to select a single one... but the flattening is necessary
-            var ts = await GetActiveTraitSet(trans, timeThreshold);
+            var ts = await GetActiveTraits(trans, timeThreshold);
 
-            if (ts.Traits.TryGetValue(traitName, out var trait))
+            if (ts.TryGetValue(traitName, out var trait))
                 return trait;
             return null;
         }
