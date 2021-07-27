@@ -25,3 +25,4 @@ yarn-error.log*
 .npmrc
 
 public/__ENV.js
+.cert
