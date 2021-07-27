@@ -1,0 +1,62 @@
+omnikeeper-only-rbac-authz:
++ komplette authz innerhalb von omnikeeper verwaltbar
++ bei Rollen (inklusive Usern): zeitliche Sicht möglich, z.b. diffing zwischen zwei Zeitpunkten mit omnikeeper Boardmitteln
++ kein/wenig Sync zwischen omnikeeper und Keycloak notwendig und damit wenig duplizierte Daten -> einfach ist besser!
+
+- User muss sich anmelden um ihm Rechte geben zu können
+- komplette Permission und Rollen strukturen müssen implementiert werden, Policy Enforcer innerhalb omnikeeper wird komplex
+- Permission-Management GUIs müssen implementiert werden, damit Rollen verwaltbar sind
+- "Applikations-Silo" mit Berechtigungsstrukturen innerhalb der Applikation -> angeblich nicht best-practice: https://www.visual-guard.com/EN/net-powerbuilder-application-security-authentication-permission-access-control-rbac-articles/dotnet-security-article-ressources/iam-best-practices.html#silos
+
+
+
+omnikeeper-leading-rbac-claims:
++ teilweise bereits umgesetzt (derzeitiges layer-schreib Berechtigungs-Konzept ist vergleichbar)
++ vergleichsweise einfach umzusetzen (was aber nicht heißt dass es nicht viel Aufwand ist)
++ bei Rollen (nicht bei Usern): zeitliche Sicht möglich, z.b. diffing zwischen zwei Zeitpunkten mit omnikeeper Boardmitteln
+
+/ authz Verwaltung geteilt: User->Rollen Zuordnung: Keycloak; Rollen-Definition: omnikeeper
+
+- Sync von Rollen
+- weniger flexibel bzw. von applikations-umsetzung abhängig
+- user kann trotz entzogener rolle auf resource zugreifen, solange sein token gültig ist
+- Beispiel: User legt neuen Layer an. 
+  - Wunsch: User selbst darf automatisch eigenen Layer lesen und beschreiben
+  - Ähnlich schwer wie in kecloak-leading-resources
+
+
+keycloak-leading-resources:
++ zentrale verwaltung innerhalb von keycloak
++ sehr große flexiblität
++ Laut Security-Experten ist es best-practice; unified access vs. application silos: https://www.visual-guard.com/EN/net-powerbuilder-application-security-authentication-permission-access-control-rbac-articles/dotnet-security-article-ressources/iam-best-practices.html#silos
++ User Rechte immer up-to-date, da zu jedem Zeitpunkt überprüft
++ Folgt dem Prinzip "Security den Profi machen lassen" (Profi = Keycloak, ich = Security-Noob)
+
+/ sehr modularer Aufbau
+
+- komplex
+- in sync-halten von ressourcen (layer, cis, mgmt, ...) und scopes (read, write, access, ...) zwischen omnikeeper und keycloak
+- jeder request an omnikeeper -> mindestens ein request an keycloak für authz (alternative: komplexes caching)
+- für Rechte auf CI-Basis (oder andere sehr feingranulare Konzepte) voraussichtlich nicht performant: z.b. 100 000+ Ressourcen in keycloak? Management davon nicht handhabbar? Wie sonst?
+- bereits einfache beispiel-implementierungen müssen javascript policies verwenden, z.b https://github.com/keycloak/keycloak-quickstarts/blob/latest/app-authz-photoz/photoz-js-policies/src/main/resources/only-owner.js
+  - javascript policies müssen über ein jar (ja, ein Java jar) zur Startup-Zeit in den keycloak geladen werden
+  - javascript policies können nicht über das GUI verändert werden, Anpassungen erfordern einen eigenen Build Prozess und Keycloak restart
+- wenig - bis gar keine - dokumentation über best practices
+- Entscheidung über ACM muss dennoch irgendwann getroffen werden: RBAC? UBAC? Kombinationen?
+- Beispiel: User legt neuen Layer an. 
+  - Wunsch: User selbst darf automatisch eigenen Layer lesen und beschreiben
+  - Resource muss dynamisch im Keycloak angelegt werden und entsprechende Policies/Permissions/... gesetzt werden. 
+  - Je nachdem wie das Keycloak Setup gewählt ist (RBAC, ABAC, UBAC, ...) müssen Policies anders gesetzt werden...
+
+
+
+
+
+Offene Fragen:
+- 1 Resource pro 1 Layer/CI/...? Oder 1 Resource für ALLE Layer + "Claims Pushing"?: https://stackoverflow.com/questions/67473677/keycloak-authorization-services-for-dozens-of-resources-which-belong-to-dozens-o
+...
+
+TSA-usecases:
+- SCOPM/SDM Groups/Rollen mit unterschiedlichen Zugangsrechten
+- Schreibrechte nur auf einzelne CIs und Layer
+...
