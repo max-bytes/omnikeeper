@@ -60,6 +60,12 @@ namespace Omnikeeper.Service
             else
             {
                 var guidString = claims.FirstOrDefault(c => c.Type == "id")?.Value;
+                if (guidString == null)
+                {
+                    throw new Exception("Cannot parse user id inside user token: key \"id\" not present");
+                }
+                var guid = new Guid(guidString);
+
                 //var groups = claims.Where(c => c.Type == "groups").Select(c => c.Value).ToArray();
 
                 // cached list of writable layers
@@ -67,9 +73,22 @@ namespace Omnikeeper.Service
 
                 // extract client roles
                 var resourceAccessStr = claims.Where(c => c.Type == "resource_access").FirstOrDefault()?.Value;
-                var resourceAccess = resourceAccessStr != null ? JObject.Parse(resourceAccessStr) : null;
+                if (resourceAccessStr == null)
+                {
+                    throw new Exception("Cannot parse roles in user token: key \"resource_access\" not found");
+                }
+                var resourceAccess = JObject.Parse(resourceAccessStr);
+                if (resourceAccess == null)
+                {
+                    throw new Exception("Cannot parse roles in user token: Cannot parse resource_access JSON value");
+                }
                 var resourceName = Configuration.GetSection("Authentication")["Audience"];
-                var clientRoles = resourceAccess?[resourceName]?["roles"]?.Select(tt => tt.Value<string>()).ToArray() ?? new string[] { };
+                var claimRoles = resourceAccess[resourceName]?["roles"];
+                if (claimRoles == null)
+                {
+                    throw new Exception($"Cannot parse roles in user token: key-path \"{resourceName}\"->\"roles\" not found");
+                }
+                var clientRoles = claimRoles.Select(tt => tt.Value<string>()).ToArray() ?? new string[] { };
 
                 var usertype = UserType.Unknown;
                 if (clientRoles.Contains("human"))
@@ -85,7 +104,6 @@ namespace Omnikeeper.Service
                     _ => throw new Exception("Unknown UserType encountered")
                 };
 
-                var guid = new Guid(guidString!); // TODO: check for null, handle case
                 var userInDatabase = await UserModel.UpsertUser(username, displayName, guid, usertype, trans);
 
                 return new AuthenticatedUser(userInDatabase, writableLayers);
