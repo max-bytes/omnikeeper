@@ -39,6 +39,7 @@ using Omnikeeper.Utils;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -139,6 +140,8 @@ namespace Omnikeeper.Startup
                     {
                         var logger = c.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerChallengeContext>>();
                         var userService = c.HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
+                        //var tokenObject = c.SecurityToken as JwtSecurityToken;
+                        //var token = tokenObject.RawData;
                         logger.LogInformation($"Validated token for user {userService.GetUsernameFromClaims(c.Principal.Claims) ?? "Unknown User"}");
                         return Task.CompletedTask;
                     },

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
@@ -51,11 +52,13 @@ namespace Omnikeeper.Service
         {
             var username = GetUsernameFromClaims(claims);
 
+            var accessToken = await HttpContextAccessor.HttpContext.GetTokenAsync("access_token");
+
             if (username == null)
             {
                 var anonymousGuid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef2"); // TODO: ?
                 var userInDatabase = await UserModel.UpsertUser("anonymous", "anonymous", anonymousGuid, UserType.Unknown, trans);
-                return new AuthenticatedUser(userInDatabase, new List<Layer>());
+                return new AuthenticatedUser(userInDatabase, accessToken, new List<Layer>());
             }
             else
             {
@@ -88,7 +91,7 @@ namespace Omnikeeper.Service
                 var guid = new Guid(guidString!); // TODO: check for null, handle case
                 var userInDatabase = await UserModel.UpsertUser(username, displayName, guid, usertype, trans);
 
-                return new AuthenticatedUser(userInDatabase, writableLayers);
+                return new AuthenticatedUser(userInDatabase, accessToken, writableLayers);
             }
         }
     }

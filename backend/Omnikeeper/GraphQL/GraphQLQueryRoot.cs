@@ -6,6 +6,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -185,7 +186,8 @@ namespace Omnikeeper.GraphQL
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
 
-                    var layers = await layerModel.GetLayers(userContext.Transaction);
+                    var lbas = context.RequestServices.GetRequiredService<ILayerBasedAuthorizationService>();
+                    var layers = await lbas.GetReadableLayersForUser(userContext.User, layerModel, userContext.Transaction);
 
                     return layers;
                 });

@@ -18,11 +18,13 @@ namespace Omnikeeper.Service
         private static readonly string ROLE_NAME_LAYER_WRITE_ACCESS_PREFIX = "layer_writeaccess_";
         private readonly bool debugAllowAll;
         private readonly string audience;
+        private readonly IKeycloakAuthorizationService keycloakAuthorizationService;
 
-        public LayerBasedAuthorizationService(IConfiguration configuration)
+        public LayerBasedAuthorizationService(IConfiguration configuration, IKeycloakAuthorizationService keycloakAuthorizationService)
         {
             debugAllowAll = configuration.GetSection("Authorization").GetValue("debugAllowAll", false);
             audience = configuration.GetSection("Authentication")["Audience"];
+            this.keycloakAuthorizationService = keycloakAuthorizationService;
         }
 
         private string GetWriteAccessRoleNameFromLayerName(string layerName)
@@ -73,6 +75,15 @@ namespace Omnikeeper.Service
                 }
             }
             return writableLayers;
+        }
+
+        public async Task<IEnumerable<Layer>> GetReadableLayersForUser(AuthenticatedUser user, ILayerModel layerModel, IModelContext trans) 
+        {
+            var allLayers = await layerModel.GetLayers(trans);
+
+            var allowedLayers = await keycloakAuthorizationService.CheckPermissions(user, allLayers, (l) => $"ok:layer:{l.Name}#read_layer");
+
+            return allowedLayers;
         }
     }
 }

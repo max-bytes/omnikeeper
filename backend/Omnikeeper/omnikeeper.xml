@@ -149,6 +149,15 @@
             <param name="trans"></param>
             <returns></returns>
         </member>
+        <member name="M:Omnikeeper.Service.KeycloakAuthorizationService.CheckPermissions(Omnikeeper.Base.Entity.AuthenticatedUser,System.Collections.Generic.ISet{System.String})">
+            filter all allowed permission from the input list
+        </member>
+        <member name="M:Omnikeeper.Service.KeycloakAuthorizationService.HasPermission(Omnikeeper.Base.Entity.AuthenticatedUser,System.String)">
+            param name="permission" permission syntax: [resource#scope] e.g. layer_cmdb#write
+        </member>
+        <member name="M:Omnikeeper.Service.KeycloakAuthorizationService.HasPermissions(Omnikeeper.Base.Entity.AuthenticatedUser,System.Collections.Generic.ISet{System.String})">
+            param name="permission" permission syntax: [resource#scope] e.g. layer_cmdb#write
+        </member>
         <member name="M:LandscapeRegistry.GridView.GridViewController.GetContexts">
             <summary>
             Returns a list of contexts for grid view.
