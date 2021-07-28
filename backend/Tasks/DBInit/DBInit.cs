@@ -55,7 +55,7 @@ namespace Tasks.DBInit
 
             var mc = modelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, mc, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
-            var authenticatedUser = new AuthenticatedUser(user, new List<Layer>());
+            var authenticatedUser = new AuthenticatedUser(user, new string[] { });
 
 
             using (var trans = modelContextBuilder.BuildDeferred())

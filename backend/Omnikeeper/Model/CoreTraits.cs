@@ -43,7 +43,18 @@ namespace Omnikeeper.Model
             }
         );
 
-        public static readonly IEnumerable<RecursiveTrait> Traits = new List<RecursiveTrait>() { Named, Trait, Predicate };
+        public static readonly RecursiveTrait AuthRole = new RecursiveTrait("__meta.config.authRole", new TraitOriginV1(TraitOriginType.Core),
+            new List<TraitAttribute>() {
+                new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("authRole.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+            },
+            new List<TraitAttribute>()
+            {
+                new TraitAttribute("name", CIAttributeTemplate.BuildFromParams("__name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                new TraitAttribute("permissions", CIAttributeTemplate.BuildFromParams("authRole.permissions", AttributeValueType.Text, true)),
+            }
+        );
+
+        public static readonly IEnumerable<RecursiveTrait> Traits = new List<RecursiveTrait>() { Named, Trait, Predicate, AuthRole };
     }
 
 

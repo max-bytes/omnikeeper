@@ -74,7 +74,7 @@ namespace Tests
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var rt in rts)
                     await traitWriteService.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.RequiredTraits,
-                        new DataOriginV1(DataOriginType.Manual), changeset, new AuthenticatedUser(user, layers), mc);
+                        new DataOriginV1(DataOriginType.Manual), changeset, new AuthenticatedUser(user, layers.Select(l => PermissionUtils.GetLayerWritePermission(l))), mc);
                 mc.Commit();
             }
 

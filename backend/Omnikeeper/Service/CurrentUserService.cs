@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
@@ -15,21 +16,26 @@ namespace Omnikeeper.Service
 {
     public class CurrentUserService : ICurrentUserService
     {
+
         public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel,
-            ILayerModel layerModel, ILayerBasedAuthorizationService authorizationService, IConfiguration configuration)
+            IAuthRoleModel authRoleModel,
+            //ILayerModel layerModel, ILayerBasedAuthorizationService authorizationService, 
+            IConfiguration configuration)
         {
             HttpContextAccessor = httpContextAccessor;
             UserModel = userModel;
-            LayerModel = layerModel;
-            AuthorizationService = authorizationService;
+            AuthRoleModel = authRoleModel;
+            //LayerModel = layerModel;
+            //AuthorizationService = authorizationService;
             Configuration = configuration;
         }
 
+        private IAuthRoleModel AuthRoleModel { get; }
         private IConfiguration Configuration { get; }
-        private ILayerBasedAuthorizationService AuthorizationService { get; }
+        //private ILayerBasedAuthorizationService AuthorizationService { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
         private IUserInDatabaseModel UserModel { get; }
-        private ILayerModel LayerModel { get; }
+        //private ILayerModel LayerModel { get; }
 
         public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
@@ -55,7 +61,7 @@ namespace Omnikeeper.Service
             {
                 var anonymousGuid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef2"); // TODO: ?
                 var userInDatabase = await UserModel.UpsertUser("anonymous", "anonymous", anonymousGuid, UserType.Unknown, trans);
-                return new AuthenticatedUser(userInDatabase, new List<Layer>());
+                return new AuthenticatedUser(userInDatabase, new string[] { });
             }
             else
             {
@@ -67,9 +73,6 @@ namespace Omnikeeper.Service
                 var guid = new Guid(guidString);
 
                 //var groups = claims.Where(c => c.Type == "groups").Select(c => c.Value).ToArray();
-
-                // cached list of writable layers
-                var writableLayers = await AuthorizationService.GetWritableLayersForUser(claims, LayerModel, trans);
 
                 // extract client roles
                 var resourceAccessStr = claims.Where(c => c.Type == "resource_access").FirstOrDefault()?.Value;
@@ -106,7 +109,21 @@ namespace Omnikeeper.Service
 
                 var userInDatabase = await UserModel.UpsertUser(username, displayName, guid, usertype, trans);
 
-                return new AuthenticatedUser(userInDatabase, writableLayers);
+                var authRoles = await AuthRoleModel.GetAuthRoles(trans, TimeThreshold.BuildLatest());
+                var finalPermissions = new HashSet<string>();
+                foreach(var role in clientRoles)
+                {
+                    if (authRoles.TryGetValue(role, out var authRole))
+                    {
+                        foreach (var p in authRole.Permissions)
+                            finalPermissions.Add(p);
+                    }
+                }
+
+                // cached list of writable layers
+                //var writableLayers = await AuthorizationService.GetWritableLayersForUser(claims, LayerModel, trans);
+
+                return new AuthenticatedUser(userInDatabase, finalPermissions);
             }
         }
     }

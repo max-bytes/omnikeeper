@@ -1,7 +1,6 @@
 ﻿using GraphQL;
 using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
 using Omnikeeper.Base.Generator;
@@ -196,6 +195,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IOIAContextModel, OIAContextModel>();
             services.AddSingleton<IGridViewContextModel, GridViewContextModel>();
             services.AddSingleton<IPartitionModel, PartitionModel>();
+            services.AddSingleton<IAuthRoleModel, AuthRoleModel>();
 
             // these aren't real models, but we keep them here because they are closely related to models
             services.AddSingleton<ITraitsProvider, TraitsProvider>();
