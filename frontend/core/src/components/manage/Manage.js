@@ -88,22 +88,26 @@ export default function Manage(props) {
                         <h3>Core Management</h3>
                         <ul>
                             <li><Link to={`${url}/baseConfiguration`}>Base Configuration</Link></li>
-                            <li><Link to={`${url}/predicates`}>Predicates</Link></li>
                             <li><Link to={`${url}/layers`}>Layers</Link></li>
-                            <li><Link to={`${url}/traits`}>Traits</Link></li>
                             <li><Link to={`${url}/oiacontexts`}>Online Inbound Layer Contexts</Link></li>
                             <li><Link to={`${url}/odataapicontexts`}>OData API Contexts</Link></li>
-                            </ul>
+                        </ul>
 
-                            <h3>Debug</h3>
-                            <ul>
+                        <h3>Data-Config Management</h3>
+                        <ul>
+                            <li><Link to={`${url}/predicates`}>Predicates</Link></li>
+                            <li><Link to={`${url}/traits`}>Traits</Link></li>
+                        </ul>
+
+                        <h3>Debug</h3>
+                        <ul>
                             <li><Link to={`${url}/cache`}>Cache</Link></li>
                             <li><Link to={`${url}/version`}>Version</Link></li>
                             <li><Link to={`${url}/current-user`}>Current User Data</Link></li>
                             <li><Link to={`${url}/logs`}>Logs</Link></li>
-                            </ul>
+                        </ul>
 
-                            <h3>Plugin Management</h3>
+                        <h3>Plugin Management</h3>
                         <ul>
                         {
                             frontendPluginsmanagerLoading? "Loading..." :
