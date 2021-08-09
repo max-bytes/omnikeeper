@@ -17,11 +17,12 @@ namespace Omnikeeper.Service
     public class CurrentUserService : ICurrentUserService
     {
 
-        public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel,
+        public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel, ILayerModel layerModel,
             IAuthRoleModel authRoleModel, IConfiguration configuration)
         {
             HttpContextAccessor = httpContextAccessor;
             UserModel = userModel;
+            LayerModel = layerModel;
             AuthRoleModel = authRoleModel;
             Configuration = configuration;
         }
@@ -30,6 +31,7 @@ namespace Omnikeeper.Service
         private IConfiguration Configuration { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
         private IUserInDatabaseModel UserModel { get; }
+        public ILayerModel LayerModel { get; }
 
         public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
@@ -66,8 +68,6 @@ namespace Omnikeeper.Service
                 }
                 var guid = new Guid(guidString);
 
-                //var groups = claims.Where(c => c.Type == "groups").Select(c => c.Value).ToArray();
-
                 // extract client roles
                 var resourceAccessStr = claims.Where(c => c.Type == "resource_access").FirstOrDefault()?.Value;
                 if (resourceAccessStr == null)
@@ -103,16 +103,26 @@ namespace Omnikeeper.Service
 
                 var userInDatabase = await UserModel.UpsertUser(username, displayName, guid, usertype, trans);
 
-                var authRoles = await AuthRoleModel.GetAuthRoles(trans, TimeThreshold.BuildLatest());
                 var finalPermissions = new HashSet<string>();
-                foreach(var role in clientRoles)
+                if (clientRoles.Contains("__ok_superuser"))
                 {
-                    if (authRoles.TryGetValue(role, out var authRole))
+                    var allPermissions = await PermissionUtils.GetAllAvailablePermissions(LayerModel, trans);
+                    finalPermissions.UnionWith(allPermissions);
+                }
+                else
+                {
+                    var authRoles = await AuthRoleModel.GetAuthRoles(trans, TimeThreshold.BuildLatest());
+                    foreach (var role in clientRoles)
                     {
-                        foreach (var p in authRole.Permissions)
-                            finalPermissions.Add(p);
+                        if (authRoles.TryGetValue(role, out var authRole))
+                        {
+                            foreach (var p in authRole.Permissions)
+                                finalPermissions.Add(p);
+                        }
                     }
                 }
+
+
 
                 return new AuthenticatedUser(userInDatabase, finalPermissions);
             }

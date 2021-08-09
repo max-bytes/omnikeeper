@@ -1,8 +1,9 @@
 ﻿using Omnikeeper.Base.Entity;
-using System;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils.ModelContext;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Utils
 {
@@ -15,5 +16,14 @@ namespace Omnikeeper.Base.Utils
         public static string GetLayerWritePermission(long layerID) => $"ok.layer.{layerID}#write";
 
         public static string GetManagementPermission() => $"ok.management";
+
+        public static async Task<ISet<string>> GetAllAvailablePermissions(ILayerModel layerModel, IModelContext trans)
+        {
+            var allLayers = await layerModel.GetLayers(trans);
+            return new string[] { GetManagementPermission() }
+                .Concat(allLayers.SelectMany(l => new string[] { GetLayerReadPermission(l), GetLayerWritePermission(l) }))
+                .ToHashSet()
+            ;
+        }
     }
 }

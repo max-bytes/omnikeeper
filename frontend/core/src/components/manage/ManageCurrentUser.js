@@ -18,7 +18,7 @@ export default function ManageCurrentUser() {
     <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
     <h3>DEBUG: Claims</h3>
     <ul>
-      {data.manage_debugCurrentUserClaims.map(k => (<li>{k}</li>))}
+      {data.manage_debugCurrentUserClaims.map(k => (<li key={k}>{k}</li>))}
     </ul>
     
   </div>;
