@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RepositoryUrl>https://github.com/maximiliancsuk/omnikeeper</RepositoryUrl>
+    <RepositoryUrl>https://github.com/max-bytes/omnikeeper</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
@@ -33,7 +33,7 @@
 
   <PropertyGroup>
     <Nullable>enable</Nullable>
-    <Copyright>maximiliancsuk</Copyright>
+    <Copyright>max bytes</Copyright>
     <Description>Base package for Omnikeeper, required for building Omnikeeper plugins</Description>
   </PropertyGroup>
   

@@ -81,7 +81,7 @@ jobs:
             npm ci
             cat <<'EOF' > .npmrc
             //${REPOURL}:_authToken=${ACCESS_TOKEN}
-            @maximiliancsuk:registry=https://npm.pkg.github.com
+            @max-bytes:registry=https://npm.pkg.github.com
             EOF
             npm version ${{ env.VERSION }} # set version
             npm publish
@@ -148,7 +148,7 @@ jobs:
           name: omnikeeper-swagger-json
       - name: Build
         run: |
-          bash clients/scripts/go/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "maximiliancsuk" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_GO }}"
-          bash clients/scripts/python/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "maximiliancsuk" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_PYTHON }}"
-          bash clients/scripts/java/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "maximiliancsuk" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_JAVA }}"
-          bash clients/scripts/powershell/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "maximiliancsuk" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_POWERSHELL }}"
+          bash clients/scripts/go/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "max-bytes" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_GO }}"
+          bash clients/scripts/python/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "max-bytes" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_PYTHON }}"
+          bash clients/scripts/java/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "max-bytes" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_JAVA }}"
+          bash clients/scripts/powershell/generate_publish.sh github.com omnikeeper.json ${{ env.VERSION }} "max-bytes" "${{ secrets.CLIENT_LIBRARY_DEPLOY_TOKEN_POWERSHELL }}"

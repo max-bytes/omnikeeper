@@ -6,7 +6,7 @@
 ## setup/install
 To install from the source, run the following command to download, build and install the PowerShell module locally (cd to this directory first):
 ```powershell
-git clone https://www.github.com/maximiliancsuk/omnikeeper-client-powershell.git
+git clone https://www.github.com/max-bytes/omnikeeper-client-powershell.git
 cd omnikeeper-client-powershell
 .\Build.ps1
 Import-Module -Name '.\src\okclient' -Verbose

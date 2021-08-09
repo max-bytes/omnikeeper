@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"golang.org/x/oauth2"
-	okclient "github.com/maximiliancsuk/omnikeeper-client-go"
+	okclient "github.com/max-bytes/omnikeeper-client-go"
 )
 
 func main() {

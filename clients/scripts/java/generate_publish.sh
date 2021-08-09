@@ -32,7 +32,7 @@ cp $swagger_file build/omnikeeper.json
 cd build/java
 
 # make git remember credentials
-git config --global user.email "generator@maximiliancsuk.at"
+git config --global user.email "generator@max-bytes.com"
 git config --global user.name "generator"
 
 # Clone the current repo
