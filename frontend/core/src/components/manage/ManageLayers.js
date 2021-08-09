@@ -3,18 +3,19 @@ import { Link  } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { useQuery, useMutation, useApolloClient } from '@apollo/client';
-import { queries } from '../../graphql/queries'
-import { mutations } from '../../graphql/mutations'
+import { queries } from '../../graphql/queries_manage'
+import { mutations } from '../../graphql/mutations_manage'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import AgGridCrud from './AgGridCrud';
 
 export default function ManageLayers(props) {
   var [rowData, setRowData] = useState([]);
+  
   const { loading, refetch } = useQuery(queries.Layers, { 
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
-      setRowData(data.layers);
+      setRowData(data.manage_layers);
     },
     onError: (e) => {
       console.log("error"); // TODO

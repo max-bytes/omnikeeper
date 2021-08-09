@@ -20,7 +20,9 @@ export default function AgGridCrud(props) {
 
 
   const getRowNodeId = data => data.id;
-  const isFrontendRowNodeOnly = data => data.id === undefined && data.frontend_id !== undefined && !props.idIsUserCreated;
+  const isFrontendRowNodeOnly = data => {
+    return data.id === undefined && data.frontend_id !== undefined && !props.idIsUserCreated;
+  }
 
   // TODO: replace with uuidv4 from uuid package
   const uuidv4 = () => ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ ((crypto.getRandomValues(new Uint8Array(1))[0] & 15) >> c / 4)).toString(16));

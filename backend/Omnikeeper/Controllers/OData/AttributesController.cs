@@ -52,6 +52,7 @@ namespace Omnikeeper.Controllers.OData
     }
 
     // TODO: ci based authorization
+    // TODO: layer based authorization
     //[Authorize]
     //[ApiVersion("1.0")]
     public class AttributesController : ODataController

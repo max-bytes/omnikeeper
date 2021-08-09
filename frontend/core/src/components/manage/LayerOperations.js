@@ -2,8 +2,9 @@ import React, {useState} from 'react';
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation } from '@apollo/client';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';import { queries } from '../../graphql/queries'
-import { mutations } from '../../graphql/mutations'
+import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { queries } from '../../graphql/queries_manage'
+import { mutations } from '../../graphql/mutations_manage'
 import { Button } from "antd";
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
@@ -35,22 +36,22 @@ export default function LayerOperations(props) {
     return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
       <h2>Layer Operations</h2>
       <div style={{marginBottom: '10px'}}><Link to=".."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
-        <div>Statistics for layer: {data.layerStatistics.layer.name}</div>
+        <div>Statistics for layer: {data.manage_layerStatistics.layer.name}</div>
         <div>Note: showing statistics for stored data only, not showing data from online inbound adapters or generators</div>
         <div>
-          # active attributes: {data.layerStatistics.numActiveAttributes}
+          # active attributes: {data.manage_layerStatistics.numActiveAttributes}
         </div>
         <div>
-          # attribute changes: {data.layerStatistics.numAttributeChangesHistory}
+          # attribute changes: {data.manage_layerStatistics.numAttributeChangesHistory}
         </div>
         <div>
-          # active relations: {data.layerStatistics.numActiveRelations}
+          # active relations: {data.manage_layerStatistics.numActiveRelations}
         </div>
         <div>
-          # relation changes: {data.layerStatistics.numRelationChangesHistory}
+          # relation changes: {data.manage_layerStatistics.numRelationChangesHistory}
         </div>
         <div>
-          # layer changesets: {data.layerStatistics.numLayerChangesetsHistory}
+          # layer changesets: {data.manage_layerStatistics.numLayerChangesetsHistory}
         </div>
 
         <Button type="danger" onClick={truncateLayer} disabled={truncatingLayer || loadingStatistics}>{truncatingLayer ? 'Running...' : 'Truncate Layer!'}</Button>

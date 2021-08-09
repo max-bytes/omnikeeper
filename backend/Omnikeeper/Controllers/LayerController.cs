@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils.ModelContext;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -18,11 +19,16 @@ namespace Omnikeeper.Controllers
     {
         private readonly ILayerModel layerModel;
         private readonly IModelContextBuilder modelContextBuilder;
+        private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
+        private readonly ICurrentUserService currentUserService;
 
-        public LayerController(ILayerModel layerModel, IModelContextBuilder modelContextBuilder)
+        public LayerController(ILayerModel layerModel, IModelContextBuilder modelContextBuilder, 
+            ILayerBasedAuthorizationService layerBasedAuthorizationService, ICurrentUserService currentUserService)
         {
             this.layerModel = layerModel;
             this.modelContextBuilder = modelContextBuilder;
+            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
+            this.currentUserService = currentUserService;
         }
 
         /// <summary>
@@ -33,7 +39,11 @@ namespace Omnikeeper.Controllers
         public async Task<ActionResult<IEnumerable<LayerDTO>>> GetAllLayers()
         {
             var trans = modelContextBuilder.BuildImmediate();
-            return Ok((await layerModel.GetLayers(trans)).Select(l => LayerDTO.Build(l)));
+            var user = await currentUserService.GetCurrentUser(trans);
+
+            return Ok((await layerModel.GetLayers(trans))
+                .Where(l => layerBasedAuthorizationService.CanUserReadFromLayer(user, l)) // authz filter
+                .Select(l => LayerDTO.Build(l)));
         }
         /// <summary>
         /// get a layer by name
@@ -43,9 +53,13 @@ namespace Omnikeeper.Controllers
         public async Task<ActionResult<LayerDTO>> GetLayerByName([FromQuery, Required] string layerName)
         {
             var trans = modelContextBuilder.BuildImmediate();
+            var user = await currentUserService.GetCurrentUser(trans);
             var layer = await layerModel.GetLayer(layerName, trans);
+
             if (layer == null)
                 return NotFound($"Could not find layer with name {layerName}");
+            if (!layerBasedAuthorizationService.CanUserReadFromLayer(user, layer))
+                return Forbid($"User \"{user.Username}\" does not have permission to read from layer with ID {layer.ID}");
             return Ok(LayerDTO.Build(layer));
         }
 
@@ -57,6 +71,7 @@ namespace Omnikeeper.Controllers
         public async Task<ActionResult<IEnumerable<LayerDTO>>> GetLayersByName([FromQuery, Required] string[] layerNames)
         {
             var trans = modelContextBuilder.BuildImmediate();
+            var user = await currentUserService.GetCurrentUser(trans);
             var ret = new List<LayerDTO>();
             // TODO: better performance: use GetLayers()
             foreach (var layerName in layerNames)
@@ -64,6 +79,8 @@ namespace Omnikeeper.Controllers
                 var layer = await layerModel.GetLayer(layerName, trans);
                 if (layer == null)
                     return NotFound($"Could not find layer with name {layerName}");
+                if (!layerBasedAuthorizationService.CanUserReadFromLayer(user, layer))
+                    return Forbid($"User \"{user.Username}\" does not have permission to read from layer with ID {layer.ID}");
                 ret.Add(LayerDTO.Build(layer));
             }
             return Ok(ret);

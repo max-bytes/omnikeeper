@@ -29,12 +29,12 @@ namespace Omnikeeper.Controllers
         private readonly IModelContextBuilder modelContextBuilder;
 
         public AttributeController(IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserService currentUserService,
-            ILayerBasedAuthorizationService authorizationService, IModelContextBuilder modelContextBuilder, ICIBasedAuthorizationService ciBasedAuthorizationService)
+            ILayerBasedAuthorizationService layerBasedAuthorizationService, IModelContextBuilder modelContextBuilder, ICIBasedAuthorizationService ciBasedAuthorizationService)
         {
             this.modelContextBuilder = modelContextBuilder;
             this.changesetModel = changesetModel;
             this.attributeModel = attributeModel;
-            this.layerBasedAuthorizationService = authorizationService;
+            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.currentUserService = currentUserService;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
         }
@@ -50,6 +50,11 @@ namespace Omnikeeper.Controllers
         public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> GetMergedAttributesWithName([FromQuery, Required] string name, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var trans = modelContextBuilder.BuildImmediate();
+            var user = await currentUserService.GetCurrentUser(trans);
+
+            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
+                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
+
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
             var attributesDict = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsSelection(), layerset, trans, timeThreshold);
@@ -78,6 +83,8 @@ namespace Omnikeeper.Controllers
 
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
+            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
+                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
             if (!ciBasedAuthorizationService.CanReadAllCIs(ciidSet, out var notAllowedCI))
                 return Forbid($"User \"{user.Username}\" does not have permission to read from CI {notAllowedCI}");
 
@@ -100,6 +107,8 @@ namespace Omnikeeper.Controllers
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
+            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
+                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
             if (!ciBasedAuthorizationService.CanReadCI(ciid))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to CI {ciid}");
 
@@ -123,6 +132,8 @@ namespace Omnikeeper.Controllers
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
+            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
+                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
             ICIIDSelection selection;
             if (ciids == null)
                 selection = new AllCIIDsSelection();

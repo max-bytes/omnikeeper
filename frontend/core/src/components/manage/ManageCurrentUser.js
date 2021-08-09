@@ -3,7 +3,7 @@ import { Link  } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { useQuery } from '@apollo/client';
-import { queries } from '../../graphql/queries'
+import { queries } from '../../graphql/queries_manage'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
@@ -18,7 +18,7 @@ export default function ManageCurrentUser() {
     <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
     <h3>DEBUG: Claims</h3>
     <ul>
-      {data.debugCurrentUserClaims.map(k => (<li>{k}</li>))}
+      {data.manage_debugCurrentUserClaims.map(k => (<li>{k}</li>))}
     </ul>
     
   </div>;

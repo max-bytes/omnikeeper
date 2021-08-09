@@ -18,24 +18,18 @@ namespace Omnikeeper.Service
     {
 
         public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel,
-            IAuthRoleModel authRoleModel,
-            //ILayerModel layerModel, ILayerBasedAuthorizationService authorizationService, 
-            IConfiguration configuration)
+            IAuthRoleModel authRoleModel, IConfiguration configuration)
         {
             HttpContextAccessor = httpContextAccessor;
             UserModel = userModel;
             AuthRoleModel = authRoleModel;
-            //LayerModel = layerModel;
-            //AuthorizationService = authorizationService;
             Configuration = configuration;
         }
 
         private IAuthRoleModel AuthRoleModel { get; }
         private IConfiguration Configuration { get; }
-        //private ILayerBasedAuthorizationService AuthorizationService { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
         private IUserInDatabaseModel UserModel { get; }
-        //private ILayerModel LayerModel { get; }
 
         public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
@@ -61,7 +55,7 @@ namespace Omnikeeper.Service
             {
                 var anonymousGuid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef2"); // TODO: ?
                 var userInDatabase = await UserModel.UpsertUser("anonymous", "anonymous", anonymousGuid, UserType.Unknown, trans);
-                return new AuthenticatedUser(userInDatabase, new string[] { });
+                return new AuthenticatedUser(userInDatabase, new HashSet<string>() { });
             }
             else
             {
@@ -89,7 +83,7 @@ namespace Omnikeeper.Service
                 var claimRoles = resourceAccess[resourceName]?["roles"];
                 if (claimRoles == null)
                 {
-                    throw new Exception($"Cannot parse roles in user token: key-path \"{resourceName}\"->\"roles\" not found");
+                    throw new Exception($"Cannot parse roles in user token: key-path \"resource_access\"->\"{resourceName}\"->\"roles\" not found");
                 }
                 var clientRoles = claimRoles.Select(tt => tt.Value<string>()).ToArray() ?? new string[] { };
 
@@ -119,9 +113,6 @@ namespace Omnikeeper.Service
                             finalPermissions.Add(p);
                     }
                 }
-
-                // cached list of writable layers
-                //var writableLayers = await AuthorizationService.GetWritableLayersForUser(claims, LayerModel, trans);
 
                 return new AuthenticatedUser(userInDatabase, finalPermissions);
             }

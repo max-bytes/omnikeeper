@@ -1,35 +1,22 @@
-﻿using Omnikeeper.Base.Entity;
+﻿using Microsoft.Extensions.Configuration;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 
 namespace Omnikeeper.Service
 {
     public class ManagementAuthorizationService : IManagementAuthorizationService
     {
-        public bool CanUserCreateCI(AuthenticatedUser user)
+        private readonly bool debugAllowAll;
+
+        public ManagementAuthorizationService(IConfiguration configuration)
         {
-            return true; // TODO
+            debugAllowAll = configuration.GetSection("Authorization").GetValue("debugAllowAll", false);
         }
 
-        public bool CanUserCreateLayer(AuthenticatedUser user)
+        public bool HasManagementPermission(AuthenticatedUser user)
         {
-            return true; // TODO
+            return debugAllowAll || user.Permissions.Contains(PermissionUtils.GetManagementPermission());
         }
-
-        public bool CanUserUpdateLayer(AuthenticatedUser user)
-        {
-            return true; // TODO
-        }
-
-        public bool CanUserUpsertPredicate(AuthenticatedUser user)
-        {
-            return true; // TODO
-        }
-
-        public bool CanUserUpsertCIType(AuthenticatedUser user)
-        {
-            return true; // TODO
-        }
-
-        // TODO: add missing stubs for various management tasks (OIA, OData, ...)
     }
 }

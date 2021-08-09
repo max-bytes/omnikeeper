@@ -3,8 +3,8 @@ import { Link  } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { useQuery, useMutation } from '@apollo/client';
-import { queries } from '../../graphql/queries'
-import { mutations } from '../../graphql/mutations'
+import { queries } from '../../graphql/queries_manage'
+import { mutations } from '../../graphql/mutations_manage'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import AgGridCrud from './AgGridCrud';
@@ -14,7 +14,7 @@ export default function ManageODataAPIContexts(props) {
   const { loading, refetch } = useQuery(queries.ODataAPIContexts, { 
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
-      setRowData(data.odataapicontexts);
+      setRowData(data.manage_odataapicontexts);
     },
     onError: (e) => {
       console.log("error"); // TODO
@@ -48,7 +48,7 @@ export default function ManageODataAPIContexts(props) {
       }}
       saveRow={async row => {
         return upsertODataAPIContext({variables: { odataAPIContext: { id: row.id, config: row.config }}})
-          .then(r => ({result: r.data.upsertODataAPIContext, id: row.id}))
+          .then(r => ({result: r.data.manage_upsertODataAPIContext, id: row.id}))
           .catch(e => ({result: e, id: row.id }));
       }} />
   </div>;

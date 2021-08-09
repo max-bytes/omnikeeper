@@ -8,25 +8,12 @@ namespace Omnikeeper.Base.Utils
 {
     public static class PermissionUtils
     {
-        public static bool CanWriteToLayer(IEnumerable<string> permissions, Layer layer)
-        {
-            return CanWriteToLayer(permissions, layer.ID);
-        }
+        public static string GetLayerReadPermission(Layer layer) => GetLayerReadPermission(layer.ID);
+        public static string GetLayerWritePermission(Layer layer) => GetLayerWritePermission(layer.ID);
 
-        public static bool CanWriteToLayer(IEnumerable<string> permissions, long layerID)
-        {
-            var toCheck = GetLayerWritePermission(layerID);
-            return permissions.Contains(toCheck);
-        }
+        public static string GetLayerReadPermission(long layerID) => $"ok.layer.{layerID}#read";
+        public static string GetLayerWritePermission(long layerID) => $"ok.layer.{layerID}#write";
 
-        public static string GetLayerWritePermission(Layer layer)
-        {
-            return GetLayerWritePermission(layer.ID);
-        }
-
-        public static string GetLayerWritePermission(long layerID)
-        {
-            return $"ok.layer.{layerID}#write";
-        }
+        public static string GetManagementPermission() => $"ok.management";
     }
 }

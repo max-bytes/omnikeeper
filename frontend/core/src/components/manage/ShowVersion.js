@@ -3,7 +3,7 @@ import { Link  } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { useQuery } from '@apollo/client';
-import { queries } from '../../graphql/queries'
+import { queries } from '../../graphql/queries_manage'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
@@ -23,12 +23,12 @@ export default function ShowVersion(props) {
     <h2>Version</h2>
     <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
     <div>
-      Omnikeeper Core: {data.version.coreVersion ?? 'unknown'}<br />
+      Omnikeeper Core: {data.manage_version.coreVersion ?? 'unknown'}<br />
       Technical Frontend: {env('VERSION') ?? 'unknown'}<br />
       Loaded Backend-Plugins:
     </div>
       <ul>
-      {data.version.loadedPlugins.map(lp => {
+      {data.manage_version.loadedPlugins.map(lp => {
         return <li key={lp.name}>{lp.name}: {lp.informationalVersion}</li>;
       })}
       </ul>

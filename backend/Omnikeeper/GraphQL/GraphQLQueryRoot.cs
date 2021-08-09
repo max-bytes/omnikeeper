@@ -16,34 +16,44 @@ namespace Omnikeeper.GraphQL
     {
         public GraphQLQueryRoot()
         {
+            CreateMain();
+
+            CreateManage();
+        }
+
+        private void CreateMain()
+        {
             FieldAsync<MergedCIType>("ci",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "ciid" },
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
-                    new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
-                resolve: async context =>
-                {
-                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
-                    var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
-                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
-                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                   arguments: new QueryArguments(
+                       new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "ciid" },
+                       new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
+                       new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
+                   resolve: async context =>
+                   {
+                       var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                       var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
+                       var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
+                       var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                       var layerBasedAuthorizationService = context.RequestServices.GetRequiredService<ILayerBasedAuthorizationService>();
 
-                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                    userContext.Transaction = modelContextBuilder.BuildImmediate();
-                    var ciid = context.GetArgument<Guid>("ciid");
-                    var layerStrings = context.GetArgument<string[]>("layers");
-                    var ls = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
-                    userContext.LayerSet = ls;
-                    var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
-                    userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
+                       var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                       userContext.Transaction = modelContextBuilder.BuildImmediate();
+                       var ciid = context.GetArgument<Guid>("ciid");
+                       var layerStrings = context.GetArgument<string[]>("layers");
+                       var ls = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
+                       userContext.LayerSet = ls;
+                       var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
+                       userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
 
-                    if (!ciBasedAuthorizationService.CanReadCI(ciid))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read CI {ciid}");
+                       if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, ls))
+                           throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
+                       if (!ciBasedAuthorizationService.CanReadCI(ciid))
+                           throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read CI {ciid}");
 
-                    var ci = await ciModel.GetMergedCI(ciid, userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
+                       var ci = await ciModel.GetMergedCI(ciid, userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
 
-                    return ci;
-                });
+                       return ci;
+                   });
             FieldAsync<ListGraphType<MergedCIType>>("cis",
                 arguments: new QueryArguments(
                     new QueryArgument<ListGraphType<GuidGraphType>> { Name = "ciids" },
@@ -55,6 +65,7 @@ namespace Omnikeeper.GraphQL
                     var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
                     var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                    var layerBasedAuthorizationService = context.RequestServices.GetRequiredService<ILayerBasedAuthorizationService>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
@@ -66,6 +77,8 @@ namespace Omnikeeper.GraphQL
                     var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
                     userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
 
+                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, ls))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
                     ICIIDSelection ciidSelection = new AllCIIDsSelection();  // if null, query all CIs
                     if (ciids != null)
                     {
@@ -111,6 +124,7 @@ namespace Omnikeeper.GraphQL
                     var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
                     var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                    var layerBasedAuthorizationService = context.RequestServices.GetRequiredService<ILayerBasedAuthorizationService>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
@@ -120,6 +134,9 @@ namespace Omnikeeper.GraphQL
                     userContext.LayerSet = ls;
                     var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
                     userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
+
+                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, ls))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
 
                     var cis = await ciModel.GetCompactCIs(new AllCIIDsSelection(), userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
                     // reduce CIs to those that are allowed
@@ -142,6 +159,7 @@ namespace Omnikeeper.GraphQL
                     var ciSearchModel = context.RequestServices.GetRequiredService<ICISearchModel>();
                     var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                    var layerBasedAuthorizationService = context.RequestServices.GetRequiredService<ILayerBasedAuthorizationService>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
@@ -153,6 +171,9 @@ namespace Omnikeeper.GraphQL
                     var ls = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
                     userContext.LayerSet = ls;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
+
+                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, ls))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
 
                     var cis = await ciSearchModel.AdvancedSearchForCompactCIs(searchString, withEffectiveTraits, withoutEffectiveTraits, ls, userContext.Transaction, userContext.TimeThreshold);
                     // reduce CIs to those that are allowed
@@ -181,11 +202,15 @@ namespace Omnikeeper.GraphQL
                 {
                     var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                    var layerBasedAuthorizationService = context.RequestServices.GetRequiredService<ILayerBasedAuthorizationService>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
 
                     var layers = await layerModel.GetLayers(userContext.Transaction);
+
+                    // authz filter
+                    layers = layers.Where(l => layerBasedAuthorizationService.CanUserReadFromLayer(userContext.User, l));
 
                     return layers;
                 });
@@ -217,12 +242,16 @@ namespace Omnikeeper.GraphQL
                     var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
                     var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                    var layerBasedAuthorizationService = context.RequestServices.GetRequiredService<ILayerBasedAuthorizationService>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
                     var layerStrings = context.GetArgument<string[]>("layers");
                     userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
+
+                    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, userContext.LayerSet))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
 
                     var from = context.GetArgument<DateTimeOffset>("from");
                     var to = context.GetArgument<DateTimeOffset>("to");
@@ -250,8 +279,6 @@ namespace Omnikeeper.GraphQL
                     var traits = await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.TimeThreshold);
                     return traits.Values.OrderBy(t => t.ID);
                 });
-
-            CreateManage();
         }
     }
 }
