@@ -9,7 +9,7 @@
 <div align="center">
 <br />
 
-[![license](https://img.shields.io/github/license/maximiliancsuk/omnikeeper)](LICENSE)
+[![license](https://img.shields.io/github/license/max-bytes/omnikeeper)](LICENSE)
 
 </div>
 

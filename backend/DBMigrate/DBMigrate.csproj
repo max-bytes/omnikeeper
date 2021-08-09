@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RepositoryUrl>https://github.com/maximiliancsuk/omnikeeper</RepositoryUrl>
+    <RepositoryUrl>https://github.com/max-bytes/omnikeeper</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
