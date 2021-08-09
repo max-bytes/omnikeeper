@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Radio, Space } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWrench, faPlug, faArchive, faDatabase } from '@fortawesome/free-solid-svg-icons';
+import { faWrench, faPlug, faArchive } from '@fortawesome/free-solid-svg-icons';
 
 function EffectiveTraitList(props) {
 
