@@ -27,9 +27,9 @@ export default function useFrontendPluginsManager() {
                 let plugin;
                 switch (wantedPluginName) {
                     // Try to 'require' frontend-plugins. -> No error-handling needed, if 'require' fails: It's okay, that some plugins cannot be found.
-                    case "@maximiliancsuk/okplugin-generic-json-ingest":
-                        // try { plugin = require("local_plugins_for_dev/@maximiliancsuk/okplugin-generic-json-ingest"); } catch(e) { return []; } // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
-                        try { plugin = require("@maximiliancsuk/okplugin-generic-json-ingest"); } catch(e) { return []; } 
+                    case "@max-bytes/okplugin-generic-json-ingest":
+                        // try { plugin = require("local_plugins_for_dev/@max-bytes/okplugin-generic-json-ingest"); } catch(e) { return []; } // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
+                        try { plugin = require("@max-bytes/okplugin-generic-json-ingest"); } catch(e) { return []; } 
                         break;
                     default:
                         throw new Error("Cannot find module '" + wantedPluginName + "'"); // All available frontend-plugins should be listed in this switch. If not, throw error.

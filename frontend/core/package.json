@@ -1,6 +1,6 @@
 {
-  "name": "@maximiliancsuk/omnikeeper-frontend",
-  "repository": "https://github.com/maximiliancsuk/omnikeeper",
+  "name": "@max-bytes/omnikeeper-frontend",
+  "repository": "https://github.com/max-bytes/omnikeeper",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

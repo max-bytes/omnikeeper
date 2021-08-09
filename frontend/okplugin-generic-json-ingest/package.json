@@ -1,6 +1,6 @@
 {
-  "name": "@maximiliancsuk/okplugin-generic-json-ingest",
-  "repository": "https://github.com/maximiliancsuk/omnikeeper",
+  "name": "@max-bytes/okplugin-generic-json-ingest",
+  "repository": "https://github.com/max-bytes/omnikeeper",
   "version": "0.0.0-src",
   "description": "Omnikeeper Plugin for handling generic JSON inbound data",
   "main": "index.js",

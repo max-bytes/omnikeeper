@@ -71,7 +71,7 @@ jobs:
               pluginName=${pluginArray[0]}
               pluginVersion=${pluginArray[1]}
               echo "Fetching plugin '$pluginName' version $pluginVersion"
-              curl --fail -L -u ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} https://nuget.pkg.github.com/maximiliancsuk/download/$pluginName/$pluginVersion/$pluginName.$pluginVersion.nupkg --output build-backend/OKPlugins/$pluginName-$pluginVersion.nupkg
+              curl --fail -L -u ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} https://nuget.pkg.github.com/max-bytes/download/$pluginName/$pluginVersion/$pluginName.$pluginVersion.nupkg --output build-backend/OKPlugins/$pluginName-$pluginVersion.nupkg
           done
           echo "Done fetching plugins"
       - name: Build and push backend Docker image
