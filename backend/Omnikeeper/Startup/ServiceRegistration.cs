@@ -159,6 +159,7 @@ namespace Omnikeeper.Startup
             services.AddScoped<IngestDataService>(); // TODO: make singleton
             services.AddSingleton<IPredicateWriteService, PredicateWriteService>();
             services.AddSingleton<IRecursiveTraitWriteService, RecursiveTraitWriteService>();
+            services.AddSingleton<IAuthRoleWriteService, AuthRoleWriteService>();
 
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 

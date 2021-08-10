@@ -116,8 +116,7 @@ namespace Omnikeeper.Service
                     {
                         if (authRoles.TryGetValue(role, out var authRole))
                         {
-                            foreach (var p in authRole.Permissions)
-                                finalPermissions.Add(p);
+                            finalPermissions.UnionWith(authRole.Permissions);
                         }
                     }
                 }

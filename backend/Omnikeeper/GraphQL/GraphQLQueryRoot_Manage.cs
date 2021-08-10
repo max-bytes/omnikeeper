@@ -168,6 +168,41 @@ namespace Omnikeeper.GraphQL
                     return traitSet;
                 });
 
+            FieldAsync<ListGraphType<AuthRoleType>>("manage_authRoles",
+                resolve: async context =>
+                {
+                    var authRoleModel = context.RequestServices.GetRequiredService<IAuthRoleModel>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+
+                    var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
+                    if (!managementAuthorizationService.HasManagementPermission(userContext.User))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to access management");
+
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
+                    var authRoles = await authRoleModel.GetAuthRoles(userContext.Transaction, TimeThreshold.BuildLatest());
+                    return authRoles.Values;
+                });
+
+            FieldAsync<ListGraphType<StringGraphType>>("manage_availablePermissions",
+                resolve: async context =>
+                {
+                    var authRoleModel = context.RequestServices.GetRequiredService<IAuthRoleModel>();
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+
+                    var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
+                    if (!managementAuthorizationService.HasManagementPermission(userContext.User))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to access management");
+
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
+                    var allPermissions = await PermissionUtils.GetAllAvailablePermissions(layerModel, userContext.Transaction);
+                    return allPermissions;
+                });
+
             Field<ListGraphType<StringGraphType>>("manage_cacheKeys",
                 resolve: context =>
                 {
@@ -177,12 +212,18 @@ namespace Omnikeeper.GraphQL
                     return keys;
                 });
 
-            Field<ListGraphType<StringGraphType>>("manage_debugCurrentUserClaims",
-                resolve: context =>
+            FieldAsync<ListGraphType<StringGraphType>>("manage_debugCurrentUser",
+                resolve: async context =>
                 {
                     var currentUserService = context.RequestServices.GetRequiredService<ICurrentUserService>();
                     var claims = currentUserService.DebugGetAllClaims();
-                    return claims.Select(kv => $"{kv.type}: {kv.value}");
+
+                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                    var user = await currentUserService.GetCurrentUser(modelContextBuilder.BuildImmediate());
+                    return claims.Select(kv => $"{kv.type}: {kv.value}")
+                        .Concat($"Permissions: {string.Join(", ", user.Permissions)}")
+                        .Concat($"User-Type: {user.InDatabase.UserType}")
+                    ;
                 });
 
             Field<VersionType>("manage_version",

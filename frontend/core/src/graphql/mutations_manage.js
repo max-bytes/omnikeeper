@@ -100,4 +100,19 @@ export const mutations = {
     manage_removeRecursiveTrait(id: $id)
   }
   `,
+
+  UPSERT_AUTH_ROLE: gql`
+  mutation($authRole: UpsertAuthRoleInputType!) {
+    manage_upsertAuthRole(authRole: $authRole) {
+        ...AuthRole
+    }
+  }
+  ${Fragments.authRole}
+  `,
+
+  REMOVE_AUTH_ROLE: gql`
+  mutation($id: String!) {
+    manage_removeAuthRole(id: $id)
+  }
+  `,
 };

@@ -9,16 +9,16 @@ import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
 export default function ManageCurrentUser() {
 
-  const { data } = useQuery(queries.DebugCurrentUserClaims);
+  const { data } = useQuery(queries.DebugCurrentUser);
 
   if (!data) return "Loading";
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Current User</h2>
     <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
-    <h3>DEBUG: Claims</h3>
+    <h3>Debug-Infos</h3>
     <ul>
-      {data.manage_debugCurrentUserClaims.map(k => (<li key={k}>{k}</li>))}
+      {data.manage_debugCurrentUser.map(k => (<li key={k}>{k}</li>))}
     </ul>
     
   </div>;

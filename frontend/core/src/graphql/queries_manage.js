@@ -36,6 +36,19 @@ export const queries = {
         }
         ${Fragments.recursiveTrait}
     `,
+    AuthRoles: gql`
+        query {
+            manage_authRoles {
+                ...AuthRole
+            }
+        }
+        ${Fragments.authRole}
+    `,
+    AvailablePermissions: gql`
+        query {
+            manage_availablePermissions
+        }
+    `,
     Layers: gql`
         query {
             manage_layers {
@@ -69,9 +82,9 @@ export const queries = {
         manage_cacheKeys
       }
     `,
-    DebugCurrentUserClaims: gql`
+    DebugCurrentUser: gql`
     query {
-        manage_debugCurrentUserClaims
+        manage_debugCurrentUser
       }
     `,
     Version: gql`

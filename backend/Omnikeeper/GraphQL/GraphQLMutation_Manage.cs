@@ -424,6 +424,69 @@ namespace Omnikeeper.GraphQL
 
                   return deleted;
               });
+
+            FieldAsync<AuthRoleType>("manage_upsertAuthRole",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<UpsertAuthRoleInputType>> { Name = "authRole" }
+              ),
+              resolve: async context =>
+              {
+                  var authRoleWriteService = context.RequestServices.GetRequiredService<IAuthRoleWriteService>();
+                  var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                  var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+
+                  var authRole = context.GetArgument<UpsertAuthRoleInput>("authRole");
+
+                  var userContext = (context.UserContext as OmnikeeperUserContext)!;
+
+                  var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
+                  if (!managementAuthorizationService.HasManagementPermission(userContext.User))
+                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify auth roles");
+
+                  using var transaction = modelContextBuilder.BuildDeferred();
+
+                  var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+
+                  var newAuthRole = await authRoleWriteService.InsertOrUpdate(
+                      authRole.ID, authRole.Permissions, 
+                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+                      changesetProxy, userContext.User, transaction);
+
+                  transaction.Commit();
+                  userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
+
+                  return newAuthRole.authRole;
+              });
+
+            FieldAsync<BooleanGraphType>("manage_removeAuthRole",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
+              ),
+              resolve: async context =>
+              {
+                  var authRoleWriteService = context.RequestServices.GetRequiredService<IAuthRoleWriteService>();
+                  var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                  var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+
+                  var authRoleID = context.GetArgument<string>("id");
+
+                  var userContext = (context.UserContext as OmnikeeperUserContext)!;
+
+                  var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
+                  if (!managementAuthorizationService.HasManagementPermission(userContext.User))
+                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify auth roles");
+
+                  using var transaction = modelContextBuilder.BuildDeferred();
+
+                  var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+
+                  var deleted = await authRoleWriteService.TryToDelete(authRoleID, changesetProxy, userContext.User, transaction);
+
+                  transaction.Commit();
+                  userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
+
+                  return deleted;
+              });
         }
     }
 }
