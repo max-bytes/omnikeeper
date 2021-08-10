@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -15,6 +16,7 @@ using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
 using Omnikeeper.Service;
 using Omnikeeper.Startup;
+using System.Collections.Generic;
 
 namespace Tests.Integration
 {
@@ -92,7 +94,11 @@ namespace Tests.Integration
 
             // override authorization
             services.AddSingleton((sp) => new Mock<IManagementAuthorizationService>().Object);
-            services.AddSingleton((sp) => new Mock<ILayerBasedAuthorizationService>().Object);
+
+            var lbas = new Mock<ILayerBasedAuthorizationService>();
+            lbas.Setup(e => e.CanUserReadFromAllLayers(It.IsAny<AuthenticatedUser>(), It.IsAny<IEnumerable<long>>())).Returns(true);
+            services.AddSingleton((sp) => lbas.Object);
+
             services.AddSingleton((sp) => new Mock<ICIBasedAuthorizationService>().Object);
 
             return services;

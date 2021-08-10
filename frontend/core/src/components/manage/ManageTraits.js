@@ -3,12 +3,11 @@ import { Link  } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { useQuery, useMutation, useApolloClient } from '@apollo/client';
-import { queries } from '../../graphql/queries'
-import { mutations } from '../../graphql/mutations'
+import { queries } from '../../graphql/queries_manage'
+import { mutations } from '../../graphql/mutations_manage'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import AgGridCrud from './AgGridCrud';
-import _ from 'lodash';
 
 export default function ManageTraits() {
   var [rowData, setRowData] = useState([]);
@@ -21,7 +20,7 @@ export default function ManageTraits() {
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
 
-      const finalData = data.recursiveTraits.map(rt => {
+      const finalData = data.manage_recursiveTraits.map(rt => {
         return {
           id: rt.id,
           requiredAttributes: JSON.stringify(rt.requiredAttributes.map(e => JSON.parse(e))), // TODO

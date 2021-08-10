@@ -3,7 +3,7 @@ import { Fragments } from './fragments';
 
 export const queries = {
     CIList: gql`
-        query ciList($layers: [String]!) {
+        query($layers: [String]!) {
             compactCIs(layers: $layers) {
               ...CompactCI
             }
@@ -11,7 +11,7 @@ export const queries = {
         ${Fragments.compactCI}
     `,
     PredicateList: gql`
-        query predicateList {
+        query {
             predicates {
                 ...FullPredicate
             }
@@ -20,7 +20,7 @@ export const queries = {
     `,
 
     AdvancedSearchCIs: gql`
-        query advancedSearchCIs($searchString: String!, $withEffectiveTraits: [String]!, $withoutEffectiveTraits: [String]!, $layers: [String]!) {
+        query($searchString: String!, $withEffectiveTraits: [String]!, $withoutEffectiveTraits: [String]!, $layers: [String]!) {
             advancedSearchCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits, withoutEffectiveTraits: $withoutEffectiveTraits, layers: $layers) {
                 ...CompactCI
             }
@@ -28,7 +28,7 @@ export const queries = {
         ${Fragments.compactCI}
     `,
     ActiveTraits: gql`
-        query activeTraits {
+        query {
             activeTraits {
                 id
                 origin {
@@ -38,17 +38,9 @@ export const queries = {
             }
         }
     `,
-    RecursiveTraits: gql`
-        query recursiveTraits {
-            recursiveTraits {
-                ...RecursiveTrait
-            }
-        }
-        ${Fragments.recursiveTrait}
-    `,
 
     FullCI: gql`
-        query ci($ciid: Guid!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
+        query($ciid: Guid!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
             ci(ciid: $ciid, layers: $layers, timeThreshold: $timeThreshold) {
                 ...FullCI
             }
@@ -60,7 +52,7 @@ export const queries = {
         ${Fragments.attribute}
     `,
     FullCIs: gql`
-        query cis($ciids: [Guid], $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
+        query($ciids: [Guid], $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
             cis(ciids: $ciids, layers: $layers, timeThreshold: $timeThreshold) {
                 ...FullCI
             }
@@ -72,46 +64,15 @@ export const queries = {
         ${Fragments.attribute}
     `,
     Layers: gql`
-        query layers {
+        query {
             layers {
                 ...FullLayer
             }
         }
         ${Fragments.fullLayer}
     `,
-    OIAContexts: gql`
-        query oiacontexts {
-            oiacontexts {
-                id
-                name
-                config
-            }
-        }
-    `,
-    ODataAPIContexts: gql`
-        query odataapicontexts {
-            odataapicontexts {
-                id
-                config
-            }
-        }
-    `,
-    LayerStatistics: gql`
-        query layerStatistics($layerID: Long!) {
-            layerStatistics(layerID: $layerID) {
-                numActiveAttributes
-                numAttributeChangesHistory
-                numActiveRelations
-                numRelationChangesHistory
-                numLayerChangesetsHistory
-                layer {
-                    name
-                }
-            }
-        }
-    `,
     Changesets: gql`
-        query changesets($from: DateTimeOffset!, $to:DateTimeOffset!, $ciids: [Guid], $layers:[String]!, $limit: Int) {
+        query($from: DateTimeOffset!, $to:DateTimeOffset!, $ciids: [Guid], $layers:[String]!, $limit: Int) {
             changesets(from: $from, to: $to, ciids: $ciids, layers: $layers, limit: $limit) {
                 id
                 user {
@@ -123,7 +84,7 @@ export const queries = {
             }
         }`,
     Changeset: gql`
-        query changeset($id: Guid!) {
+        query($id: Guid!) {
             changeset(id: $id) {
                 id
                 timestamp
@@ -135,7 +96,7 @@ export const queries = {
             }
         }`,
     SelectedTimeThreshold: gql`
-        query SelectedTimeThreshold {
+        query {
             selectedTimeThreshold @client
           }
       `,
@@ -147,41 +108,4 @@ export const queries = {
             visible @client
         }
     }`,
-    BaseConfiguration: gql`
-    query baseConfiguration {
-        baseConfiguration
-      }
-    `,
-    CacheKeys: gql`
-    query cacheKeys {
-        cacheKeys
-      }
-    `,
-    DebugCurrentUserClaims: gql`
-    query debugCurrentUserClaims {
-        debugCurrentUserClaims
-      }
-    `,
-    Version: gql`
-    query version {
-        version {
-            coreVersion
-            loadedPlugins {
-                name
-                version
-                informationalVersion
-            }
-        }
-    }
-    `,
-    Plugins: gql`
-    query plugins {
-        plugins {
-            name
-            version
-            informationalVersion
-            managementEndpoint
-        }
-    }
-    `
 };

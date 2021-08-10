@@ -24,14 +24,16 @@ namespace Omnikeeper.Controllers
         private readonly ICurrentUserService currentUserService;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
+        private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public RelationController(IRelationModel relationModel, ICIBasedAuthorizationService ciBasedAuthorizationService,
-            ICurrentUserService currentUserService, IModelContextBuilder modelContextBuilder)
+            ICurrentUserService currentUserService, IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.relationModel = relationModel;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.currentUserService = currentUserService;
             this.modelContextBuilder = modelContextBuilder;
+            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
         }
 
         /// <summary>
@@ -50,6 +52,8 @@ namespace Omnikeeper.Controllers
             var user = await currentUserService.GetCurrentUser(trans);
             if (!ciBasedAuthorizationService.CanReadAllCIs(new Guid[] { fromCIID, toCIID }, out var notAllowedCI))
                 return Forbid($"User \"{user.Username}\" does not have permission to read from CI {notAllowedCI}");
+            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
+                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
 
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
@@ -69,8 +73,13 @@ namespace Omnikeeper.Controllers
         public async Task<ActionResult<IEnumerable<RelationDTO>>> GetMergedRelationsWithPredicate([FromQuery, Required] string predicateID, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var trans = modelContextBuilder.BuildImmediate();
+            var user = await currentUserService.GetCurrentUser(trans);
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
+
+            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
+                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
+
             var relations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(predicateID), layerset, trans, timeThreshold);
             relations = relations.Where(r => ciBasedAuthorizationService.CanReadAllCIs(new Guid[] { r.Relation.FromCIID, r.Relation.ToCIID }, out _));
             return Ok(relations.Select(r => RelationDTO.BuildFromMergedRelation(r)));
@@ -86,8 +95,13 @@ namespace Omnikeeper.Controllers
         public async Task<ActionResult<IEnumerable<RelationDTO>>> GetAllMergedRelations([FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var trans = modelContextBuilder.BuildImmediate();
+            var user = await currentUserService.GetCurrentUser(trans);
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
+
+            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
+                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
+
             var relations = await relationModel.GetMergedRelations(new RelationSelectionAll(), layerset, trans, timeThreshold);
             relations = relations.Where(r => ciBasedAuthorizationService.CanReadAllCIs(new Guid[] { r.Relation.FromCIID, r.Relation.ToCIID }, out _));
             return Ok(relations.Select(r => RelationDTO.BuildFromMergedRelation(r)));
@@ -105,6 +119,8 @@ namespace Omnikeeper.Controllers
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
+            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
+                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
             if (!ciBasedAuthorizationService.CanReadCI(fromCIID))
                 return Forbid($"User \"{user.Username}\" does not have permission to read from CI {fromCIID}");
 
@@ -127,6 +143,8 @@ namespace Omnikeeper.Controllers
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
+            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
+                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
             if (!ciBasedAuthorizationService.CanReadCI(ciid))
                 return Forbid($"User \"{user.Username}\" does not have permission to read from CI {ciid}");
 

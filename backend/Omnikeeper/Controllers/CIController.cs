@@ -24,13 +24,15 @@ namespace Omnikeeper.Controllers
         private readonly ICurrentUserService currentUserService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
+        private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
-        public CIController(ICIModel ciModel, ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserService currentUserService, IModelContextBuilder modelContextBuilder)
+        public CIController(ICIModel ciModel, ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserService currentUserService, IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.ciModel = ciModel;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.currentUserService = currentUserService;
             this.modelContextBuilder = modelContextBuilder;
+            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
         }
 
         /// <summary>
@@ -57,9 +59,11 @@ namespace Omnikeeper.Controllers
         public async Task<ActionResult<CIDTO>> GetCIByID([FromQuery, Required] long[] layerIDs, [FromQuery, Required] Guid CIID, [FromQuery] DateTimeOffset? atTime = null)
         {
             var trans = modelContextBuilder.BuildImmediate();
+            var user = await currentUserService.GetCurrentUser(trans);
+            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
+                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
             if (!ciBasedAuthorizationService.CanReadCI(CIID))
             {
-                var user = await currentUserService.GetCurrentUser(trans);
                 return Forbid($"User \"{user.Username}\" does not have permission to write to CI {CIID}");
             }
 
@@ -84,9 +88,11 @@ namespace Omnikeeper.Controllers
             if (CIIDs.IsEmpty())
                 return BadRequest("Empty CIID list");
             var trans = modelContextBuilder.BuildImmediate();
+            var user = await currentUserService.GetCurrentUser(trans);
+            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
+                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
             if (!ciBasedAuthorizationService.CanReadAllCIs(CIIDs, out var notAllowedCI))
             {
-                var user = await currentUserService.GetCurrentUser(trans);
                 return Forbid($"User \"{user.Username}\" does not have permission to read from CI {notAllowedCI}");
             }
 

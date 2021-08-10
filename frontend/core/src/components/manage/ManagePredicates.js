@@ -3,8 +3,8 @@ import { Link  } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { useQuery, useMutation, useApolloClient } from '@apollo/client';
-import { queries } from '../../graphql/queries'
-import { mutations } from '../../graphql/mutations'
+import { queries } from '../../graphql/queries_manage'
+import { mutations } from '../../graphql/mutations_manage'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import AgGridCrud from './AgGridCrud';
@@ -21,11 +21,11 @@ export default function ManagePredicates(props) {
   // see https://github.com/apollographql/apollo-feature-requests/issues/6 why
   const removeTypename = (predicate) => ({...predicate, constraints: _.omit(predicate.constraints, ['__typename'])});
 
-  const { loading, refetch } = useQuery(queries.PredicateList, { 
+  const { loading, refetch } = useQuery(queries.Predicates, { 
     variables: {},
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
-      const preparedData = _.map(data.predicates, (p) => removeTypename(p));
+      const preparedData = _.map(data.manage_predicates, (p) => removeTypename(p));
       setRowData(preparedData);
     },
     onError: (e) => {
@@ -60,7 +60,7 @@ export default function ManagePredicates(props) {
         const constraints = row.constraints ?? { preferredTraitsFrom: [], preferredTraitsTo: [] };
         const predicate = { id: row.id, wordingFrom: row.wordingFrom, wordingTo: row.wordingTo, constraints: constraints };
         return upsert({ variables: { predicate: predicate } })
-          .then(r => ({result: removeTypename(r.data.upsertPredicate), id: row.id}))
+          .then(r => ({result: removeTypename(r.data.manage_upsertPredicate), id: row.id}))
           .then(r => apolloClient.resetStore())
           .catch(e => ({result: e, id: row.id }));
       }}
@@ -70,7 +70,7 @@ export default function ManagePredicates(props) {
           // TODO
         } else {
           return remove({variables: {predicateID: row.id}})
-          .then(r => ({result: r.removePredicate, id: row.id}))
+          .then(r => ({result: r.manage_removePredicate, id: row.id}))
           .catch(e => ({result: e, id: row.id }));
         }
       }} />

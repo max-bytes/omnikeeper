@@ -3,76 +3,44 @@ using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Omnikeeper.Service
 {
     public class LayerBasedAuthorizationService : ILayerBasedAuthorizationService
     {
-        private static readonly string ROLE_NAME_LAYER_WRITE_ACCESS_PREFIX = "layer_writeaccess_";
         private readonly bool debugAllowAll;
-        private readonly string audience;
 
         public LayerBasedAuthorizationService(IConfiguration configuration)
         {
             debugAllowAll = configuration.GetSection("Authorization").GetValue("debugAllowAll", false);
-            audience = configuration.GetSection("Authentication")["Audience"];
         }
 
-        private string GetWriteAccessRoleNameFromLayerName(string layerName)
+
+        public bool CanUserReadFromLayer(AuthenticatedUser user, Layer layer) => CanUserReadFromLayer(user, layer.ID);
+        public bool CanUserReadFromLayer(AuthenticatedUser user, long layerID) => debugAllowAll || CanReadFromLayer(user.Permissions, layerID);
+        public bool CanUserReadFromAllLayers(AuthenticatedUser user, IEnumerable<long> layerIDs) =>
+            debugAllowAll || layerIDs.All(l => CanReadFromLayer(user.Permissions, l));
+
+        public bool CanUserWriteToLayer(AuthenticatedUser user, Layer layer) => CanUserWriteToLayer(user, layer.ID);
+        public bool CanUserWriteToLayer(AuthenticatedUser user, long layerID) => debugAllowAll || CanWriteToLayer(user.Permissions, layerID);
+
+        public bool CanUserWriteToAllLayers(AuthenticatedUser user, IEnumerable<long> layerIDs) =>
+            debugAllowAll || layerIDs.All(l => CanWriteToLayer(user.Permissions, l));
+
+
+        private bool CanReadFromLayer(ISet<string> permissions, long layerID)
         {
-            return $"{ROLE_NAME_LAYER_WRITE_ACCESS_PREFIX}{layerName}"; // TODO: define allowed characters
+            return permissions.Contains(PermissionUtils.GetLayerReadPermission(layerID));
         }
-
-        private string? ParseLayerNameFromWriteAccessRoleName(string roleName)
+        private bool CanWriteToLayer(ISet<string> permissions, long layerID)
         {
-            var match = Regex.Match(roleName, "^layer_writeaccess_(.*)");
-            if (!match.Success) return null;
-            var layerName = match.Groups[1];
-            return layerName.Value;
-        }
-
-        public bool CanUserWriteToLayer(AuthenticatedUser user, Layer layer)
-        {
-            return debugAllowAll || user.WritableLayers.Contains(layer);
-        }
-
-        public bool CanUserWriteToLayer(AuthenticatedUser user, long layerID)
-        {
-            return debugAllowAll || user.WritableLayers.Any(l => l.ID == layerID);
-        }
-
-        public bool CanUserWriteToLayers(AuthenticatedUser user, IEnumerable<long> writeLayerIDs)
-        {
-            // writeLayerIDs must be subset of writable layers, otherwise user can't write to all passed layers
-            return debugAllowAll || !writeLayerIDs.Except(user.WritableLayers.Select(l => l.ID)).Any();
-        }
-
-        public async Task<IEnumerable<Layer>> GetWritableLayersForUser(IEnumerable<Claim> claims, ILayerModel layerModel, IModelContext trans)
-        {
-            var resourceAccessStr = claims.Where(c => c.Type == "resource_access").FirstOrDefault()?.Value;
-            var resourceAccess = resourceAccessStr != null ? JObject.Parse(resourceAccessStr) : null;
-            var resourceName = audience;
-            var clientRoles = resourceAccess?[resourceName]?["roles"]?.Select(tt => tt.Value<string>()).ToArray() ?? new string[] { };
-
-            var writableLayers = new List<Layer>();
-            foreach (var role in clientRoles)
-            {
-                var layerName = ParseLayerNameFromWriteAccessRoleName(role);
-                if (layerName != null)
-                {
-                    var layer = await layerModel.GetLayer(layerName, trans);
-                    if (layer != null)
-                        writableLayers.Add(layer);
-                }
-            }
-            return writableLayers;
+            // writing to a layer also requires read permissions
+            return permissions.Contains(PermissionUtils.GetLayerReadPermission(layerID)) && permissions.Contains(PermissionUtils.GetLayerWritePermission(layerID));
         }
     }
 }

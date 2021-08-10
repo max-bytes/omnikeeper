@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { Form, Input, Button } from 'antd';
-import { queries } from 'graphql/queries'
-import { mutations } from 'graphql/mutations'
+import { queries } from 'graphql/queries_manage'
+import { mutations } from 'graphql/mutations_manage'
 import 'ace-builds';
 import { useQuery, useMutation } from '@apollo/client';
 import 'ace-builds/webpack-resolver';
@@ -18,7 +18,7 @@ export default function ManageBaseConfiguration() {
   const [setBaseConfiguration, { loading: setBaseConfigurationLoading, error: setBaseConfigurationError }] = useMutation(mutations.SET_BASECONFIGURATION);
   const [config, setConfig] = useState(null);
   useEffect(() => {
-    if (!!data) setConfig(data.baseConfiguration);
+    if (!!data) setConfig(data.manage_baseConfiguration);
   }, [data]);
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
@@ -32,7 +32,7 @@ export default function ManageBaseConfiguration() {
                 onFinish={e => {
                     e.ConfigLayerset = e.ConfigLayerset.split(",");
                     setBaseConfiguration({ variables: { baseConfiguration: JSON.stringify(e) } }).then(d => {
-                        setConfig(data.baseConfiguration);
+                        setConfig(data.manage_baseConfiguration);
                     }).catch(e => {});
                 }}
                 initialValues={JSON.parse(config)}

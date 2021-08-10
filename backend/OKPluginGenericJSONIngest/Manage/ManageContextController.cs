@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using OKPluginGenericJSONIngest;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -19,29 +20,42 @@ namespace Omnikeeper.Controllers.Ingest
     public class ManageContextController : ControllerBase
     {
         private readonly IContextModel contextModel;
+        private readonly ICurrentUserService currentUserService;
+        private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
 
-        public ManageContextController(IContextModel contextModel, IModelContextBuilder modelContextBuilder)
+        public ManageContextController(IContextModel contextModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService,
+            IModelContextBuilder modelContextBuilder)
         {
             this.contextModel = contextModel;
+            this.currentUserService = currentUserService;
+            this.managementAuthorizationService = managementAuthorizationService;
             this.modelContextBuilder = modelContextBuilder;
         }
 
         [HttpGet()]
         public async Task<IActionResult> GetAllContexts()
         {
-            // TODO: authorization
+            var trans = modelContextBuilder.BuildImmediate();
+            var user = await currentUserService.GetCurrentUser(trans);
 
-            var contexts = await contextModel.GetAllContexts(modelContextBuilder.BuildImmediate());
+            if (!managementAuthorizationService.HasManagementPermission(user))
+                return Forbid($"User \"{user.Username}\" does not have permission to access management");
+
+            var contexts = await contextModel.GetAllContexts(trans);
             return Ok(contexts);
         }
 
         [HttpGet("{name}")]
         public async Task<IActionResult> GetContextByName([FromRoute, Required] string name)
         {
-            // TODO: authorization
+            var trans = modelContextBuilder.BuildImmediate();
+            var user = await currentUserService.GetCurrentUser(trans);
 
-            var context = await contextModel.GetContextByName(name, modelContextBuilder.BuildImmediate());
+            if (!managementAuthorizationService.HasManagementPermission(user))
+                return Forbid($"User \"{user.Username}\" does not have permission to access management");
+
+            var context = await contextModel.GetContextByName(name, trans);
             if (context != null)
                 return Ok(context);
             else
@@ -53,6 +67,12 @@ namespace Omnikeeper.Controllers.Ingest
         {
             try
             {
+                var trans = modelContextBuilder.BuildImmediate();
+                var user = await currentUserService.GetCurrentUser(trans);
+
+                if (!managementAuthorizationService.HasManagementPermission(user))
+                    return Forbid($"User \"{user.Username}\" does not have permission to access management");
+
                 // validation
                 switch (contextCandidate.TransformConfig)
                 {
@@ -68,7 +88,6 @@ namespace Omnikeeper.Controllers.Ingest
                     default:
                         throw new Exception("Invalid transform config");
                 }
-                // TODO: authorization
                 var mc = modelContextBuilder.BuildDeferred();
                 var context = await contextModel.Upsert(contextCandidate.Name, contextCandidate.ExtractConfig, 
                     contextCandidate.TransformConfig, contextCandidate.LoadConfig, mc);
@@ -85,7 +104,12 @@ namespace Omnikeeper.Controllers.Ingest
         {
             try
             {
-                // TODO: authorization
+                var trans = modelContextBuilder.BuildImmediate();
+                var user = await currentUserService.GetCurrentUser(trans);
+
+                if (!managementAuthorizationService.HasManagementPermission(user))
+                    return Forbid($"User \"{user.Username}\" does not have permission to access management");
+
                 var mc = modelContextBuilder.BuildDeferred();
                 var context = await contextModel.Delete(name, mc);
                 mc.Commit();

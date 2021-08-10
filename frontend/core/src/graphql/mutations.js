@@ -2,8 +2,8 @@ import gql from 'graphql-tag';
 import { Fragments } from './fragments';
 
 export const mutations = {
-    INSERT_CI_ATTRIBUTE: gql`
-    mutation InsertCIAttribute($ciIdentity: Guid!, $name: String!, $layerID: Long!, $value: AttributeValueDTOInputType!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Int = 0) {
+  INSERT_CI_ATTRIBUTE: gql`
+    mutation($ciIdentity: Guid!, $name: String!, $layerID: Long!, $value: AttributeValueDTOInputType!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Int = 0) {
       mutateCIs(insertAttributes: [
         {
           ci: $ciIdentity,
@@ -25,7 +25,7 @@ export const mutations = {
     ${Fragments.compactCI}
   `,
   REMOVE_CI_ATTRIBUTE: gql`
-    mutation RemoveCIAttribute($ciIdentity: Guid!, $name: String!, $layerID: Long!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Int = 0) {
+    mutation($ciIdentity: Guid!, $name: String!, $layerID: Long!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Int = 0) {
       mutateCIs(removeAttributes: [
         {
           ci: $ciIdentity,
@@ -48,8 +48,30 @@ export const mutations = {
   // HACK, TODO: includeRelated makes no sense here, but its what we have for now
   // we should think about how a mutation can return all that has been updated, but does not need to return the FullCI
   INSERT_RELATION: gql`
-  mutation InsertRelation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: Long!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
-    mutateCIs(insertRelations: [
+    mutation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: Long!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
+      mutateCIs(insertRelations: [
+        {
+          fromCIID: $fromCIID,
+          toCIID: $toCIID,
+          predicateID: $predicateID,
+          layerID: $layerID
+        }
+      ], layers: $layers) {
+        affectedCIs {
+          ...FullCI
+        }
+      }
+    }
+    ${Fragments.relatedCI}
+    ${Fragments.mergedAttribute}
+    ${Fragments.attribute}
+    ${Fragments.compactCI}
+    ${Fragments.fullCI}
+  `,
+
+  REMOVE_RELATION: gql`
+  mutation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: Long!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
+    mutateCIs(removeRelations: [
       {
         fromCIID: $fromCIID,
         toCIID: $toCIID,
@@ -67,32 +89,10 @@ export const mutations = {
   ${Fragments.attribute}
   ${Fragments.compactCI}
   ${Fragments.fullCI}
-`,
+  `,
 
-REMOVE_RELATION: gql`
-mutation RemoveRelation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: Long!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
-  mutateCIs(removeRelations: [
-    {
-      fromCIID: $fromCIID,
-      toCIID: $toCIID,
-      predicateID: $predicateID,
-      layerID: $layerID
-    }
-  ], layers: $layers) {
-    affectedCIs {
-      ...FullCI
-    }
-  }
-}
-${Fragments.relatedCI}
-${Fragments.mergedAttribute}
-${Fragments.attribute}
-${Fragments.compactCI}
-${Fragments.fullCI}
-`,
-
-CREATE_CI: gql`
-    mutation CreateCI($name: String!, $layerIDForName: Long!) {
+  CREATE_CI: gql`
+    mutation($name: String!, $layerIDForName: Long!) {
       createCIs(cis: [
         {
           name: $name,
@@ -105,112 +105,14 @@ CREATE_CI: gql`
     }
   `,
 
-  CREATE_LAYER: gql`
-  mutation CreateLayer($layer: CreateLayerInputType!) {
-    createLayer(layer: $layer) {
-      ...FullLayer
-    }
-  }
-  ${Fragments.fullLayer}
-`,
-
-  UPDATE_LAYER: gql`
-  mutation UpdateLayer($layer: UpdateLayerInputType!) {
-    updateLayer(layer: $layer) {
-      ...FullLayer
-    }
-  }
-  ${Fragments.fullLayer}
-  `,
-
-  CREATE_OIACONTEXT: gql`
-    mutation CreateOIAContext($oiaContext: CreateOIAContextInputType!) {
-      createOIAContext(oiaContext: $oiaContext) {
-        id
-        name
-        config
-      }
-    }
-  `,
-  UPDATE_OIACONTEXT: gql`
-  mutation UpdateOIAContext($oiaContext: UpdateOIAContextInputType!) {
-    updateOIAContext(oiaContext: $oiaContext) {
-      id
-      name
-      config
-    }
-  }
-  `,
-  DELETE_OIACONTEXT: gql`
-  mutation DeleteOIAContext($oiaID: Long!) {
-    deleteOIAContext(oiaID: $oiaID)
-  }
-  `,
-  
-  TRUNCATE_LAYER: gql`
-  mutation TruncateLayer($id: Long!) {
-    truncateLayer(id: $id)
-  }
-  `,
-
-  UPSERT_ODATAAPICONTEXT: gql`
-    mutation UpsertODataAPIContext($odataAPIContext: UpsertODataAPIContextInputType!) {
-      upsertODataAPIContext(odataAPIContext: $odataAPIContext) {
-        id
-        config
-      }
-    }
-  `,
-  DELETE_ODATAAPICONTEXT: gql`
-  mutation DeleteODataAPIContext($id: String!) {
-    deleteODataAPIContext(id: $id)
-  }
-  `,
-  
-  SET_BASECONFIGURATION: gql`
-  mutation SetBaseConfiguration($baseConfiguration: String!) {
-    setBaseConfiguration(baseConfiguration: $baseConfiguration)
-  }
-  `,
-
-  UPSERT_PREDICATE: gql`
-  mutation UpsertPredicate($predicate: UpsertPredicateInputType!) {
-    upsertPredicate(predicate: $predicate) {
-        ...FullPredicate
-    }
-  }
-  ${Fragments.fullPredicate}
-  `,
-
-  REMOVE_PREDICATE: gql`
-  mutation RemovePredicate($predicateID: String!) {
-    removePredicate(predicateID: $predicateID)
-  }
-  `,
-
-  UPSERT_RECURSIVE_TRAIT: gql`
-  mutation UpsertRecursiveTrait($trait: UpsertRecursiveTraitInputType!) {
-    upsertRecursiveTrait(trait: $trait) {
-        ...RecursiveTrait
-    }
-  }
-  ${Fragments.recursiveTrait}
-  `,
-
-  REMOVE_RECURSIVE_TRAIT: gql`
-  mutation RemoveRecursiveTrait($id: String!) {
-    removeRecursiveTrait(id: $id)
-  }
-  `,
-
   SET_LAYER_SETTINGS: gql`
-    mutation SetLayerSettings($layerSettings: [LayerSettings]) {
+    mutation($layerSettings: [LayerSettings]) {
       setLayerSettings(layerSettings: $layerSettings) @client
     }
   `,
 
   SET_SELECTED_TIME_THRESHOLD: gql`
-  mutation SetSelectedTimeThreshold($newTimeThreshold: DateTimeOffset, $isLatest: Bool, $refreshTimeline: Bool = false, $refreshCI: bool = false) {
+  mutation($newTimeThreshold: DateTimeOffset, $isLatest: Bool, $refreshTimeline: Bool = false, $refreshCI: bool = false) {
     setSelectedTimeThreshold(newTimeThreshold: $newTimeThreshold, isLatest: $isLatest, refreshTimeline: $refreshTimeline, refreshCI: $refreshCI) @client
   }
   `

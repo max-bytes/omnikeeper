@@ -51,7 +51,7 @@ namespace Omnikeeper.GraphQL
                     .Concat(insertRelations.Select(a => a.LayerID))
                     .Concat(removeRelations.Select(a => a.LayerID))
                     .Distinct();
-                    if (!layerBasedAuthorizationService.CanUserWriteToLayers(userContext.User, writeLayerIDs))
+                    if (!layerBasedAuthorizationService.CanUserWriteToAllLayers(userContext.User, writeLayerIDs))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', writeLayerIDs)}");
 
                     var writeCIIDs = insertAttributes.Select(a => a.CI)
@@ -139,7 +139,6 @@ namespace Omnikeeper.GraphQL
                     var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
                     var attributeModel = context.RequestServices.GetRequiredService<IAttributeModel>();
                     var relationModel = context.RequestServices.GetRequiredService<IRelationModel>();
-                    var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
                     var layerBasedAuthorizationService = context.RequestServices.GetRequiredService<ILayerBasedAuthorizationService>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
@@ -147,9 +146,7 @@ namespace Omnikeeper.GraphQL
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                    if (!managementAuthorizationService.CanUserCreateCI(userContext.User))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to create CIs");
-                    if (!layerBasedAuthorizationService.CanUserWriteToLayers(userContext.User, createCIs.Select(ci => ci.LayerIDForName)))
+                    if (!layerBasedAuthorizationService.CanUserWriteToAllLayers(userContext.User, createCIs.Select(ci => ci.LayerIDForName)))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', createCIs.Select(ci => ci.LayerIDForName))}");
                     // NOTE: a newly created CI cannot be checked with CIBasedAuthorizationService yet. That's why we don't do a .CanWriteToCI() check here
 

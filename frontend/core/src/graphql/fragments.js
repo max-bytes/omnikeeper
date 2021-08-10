@@ -150,4 +150,10 @@ export const Fragments = {
     requiredTraits
   }
   `,
+  authRole: gql`
+  fragment AuthRole on AuthRoleType {
+    id,
+    permissions
+  }
+  `,
 };

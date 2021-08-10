@@ -46,11 +46,11 @@ namespace Omnikeeper.GridView.Queries
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
             private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
+            private readonly ICurrentUserService currentUserService;
 
             public GetDataQueryHandler(IGridViewContextModel gridViewContextModel, IEffectiveTraitModel effectiveTraitModel,
                 ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
-                ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService
-                )
+                ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserService currentUserService)
             {
                 this.gridViewContextModel = gridViewContextModel;
                 this.effectiveTraitModel = effectiveTraitModel;
@@ -58,6 +58,7 @@ namespace Omnikeeper.GridView.Queries
                 this.modelContextBuilder = modelContextBuilder;
                 this.layerBasedAuthorizationService = layerBasedAuthorizationService;
                 this.ciBasedAuthorizationService = ciBasedAuthorizationService;
+                this.currentUserService = currentUserService;
             }
 
             public async Task<(GetDataResponse?, Exception?)> Handle(Query request, CancellationToken cancellationToken)
@@ -66,6 +67,7 @@ namespace Omnikeeper.GridView.Queries
                 validator.ValidateAndThrow(request);
 
                 var trans = modelContextBuilder.BuildImmediate();
+                var user = await currentUserService.GetCurrentUser(trans);
 
                 var config = await gridViewContextModel.GetConfiguration(request.Context, trans);
 
@@ -76,6 +78,9 @@ namespace Omnikeeper.GridView.Queries
                 {
                     return (null, new Exception($"Active trait {config.Trait} was not found!"));
                 }
+
+                if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, config.ReadLayerset))
+                    return (null, new Exception($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', config.ReadLayerset)}"));
 
                 var res = await effectiveTraitModel.GetMergedCIsWithTrait(
                     activeTrait,

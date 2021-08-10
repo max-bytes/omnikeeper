@@ -188,6 +188,20 @@ namespace Omnikeeper.GraphQL
         }
     }
 
+    public class UpsertAuthRoleInput
+    {
+        public string ID { get; private set; }
+        public string[] Permissions { get; private set; }
+    }
+    public class UpsertAuthRoleInputType : InputObjectGraphType<UpsertAuthRoleInput>
+    {
+        public UpsertAuthRoleInputType()
+        {
+            Field("id", x => x.ID);
+            Field(x => x.Permissions);
+        }
+    }
+
     public class CreateOIAContextInput
     {
         public string Name { get; private set; }

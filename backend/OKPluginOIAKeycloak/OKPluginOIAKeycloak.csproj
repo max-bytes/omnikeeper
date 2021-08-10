@@ -14,4 +14,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <Target Name="CopyPackage" AfterTargets="Pack" Condition="'$(Configuration)' == 'Debug' ">
+    <Copy SourceFiles="$(OutputPath)\..\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="$(OutputPath)\..\..\..\..\Omnikeeper\OKPlugins" />
+  </Target>
+
 </Project>

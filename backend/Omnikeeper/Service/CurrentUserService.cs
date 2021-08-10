@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
@@ -15,21 +16,22 @@ namespace Omnikeeper.Service
 {
     public class CurrentUserService : ICurrentUserService
     {
-        public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel,
-            ILayerModel layerModel, ILayerBasedAuthorizationService authorizationService, IConfiguration configuration)
+
+        public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel, ILayerModel layerModel,
+            IAuthRoleModel authRoleModel, IConfiguration configuration)
         {
             HttpContextAccessor = httpContextAccessor;
             UserModel = userModel;
             LayerModel = layerModel;
-            AuthorizationService = authorizationService;
+            AuthRoleModel = authRoleModel;
             Configuration = configuration;
         }
 
+        private IAuthRoleModel AuthRoleModel { get; }
         private IConfiguration Configuration { get; }
-        private ILayerBasedAuthorizationService AuthorizationService { get; }
         private IHttpContextAccessor HttpContextAccessor { get; }
         private IUserInDatabaseModel UserModel { get; }
-        private ILayerModel LayerModel { get; }
+        public ILayerModel LayerModel { get; }
 
         public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
@@ -55,21 +57,35 @@ namespace Omnikeeper.Service
             {
                 var anonymousGuid = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef2"); // TODO: ?
                 var userInDatabase = await UserModel.UpsertUser("anonymous", "anonymous", anonymousGuid, UserType.Unknown, trans);
-                return new AuthenticatedUser(userInDatabase, new List<Layer>());
+                return new AuthenticatedUser(userInDatabase, new HashSet<string>() { });
             }
             else
             {
                 var guidString = claims.FirstOrDefault(c => c.Type == "id")?.Value;
-                //var groups = claims.Where(c => c.Type == "groups").Select(c => c.Value).ToArray();
-
-                // cached list of writable layers
-                var writableLayers = await AuthorizationService.GetWritableLayersForUser(claims, LayerModel, trans);
+                if (guidString == null)
+                {
+                    throw new Exception("Cannot parse user id inside user token: key \"id\" not present");
+                }
+                var guid = new Guid(guidString);
 
                 // extract client roles
                 var resourceAccessStr = claims.Where(c => c.Type == "resource_access").FirstOrDefault()?.Value;
-                var resourceAccess = resourceAccessStr != null ? JObject.Parse(resourceAccessStr) : null;
+                if (resourceAccessStr == null)
+                {
+                    throw new Exception("Cannot parse roles in user token: key \"resource_access\" not found");
+                }
+                var resourceAccess = JObject.Parse(resourceAccessStr);
+                if (resourceAccess == null)
+                {
+                    throw new Exception("Cannot parse roles in user token: Cannot parse resource_access JSON value");
+                }
                 var resourceName = Configuration.GetSection("Authentication")["Audience"];
-                var clientRoles = resourceAccess?[resourceName]?["roles"]?.Select(tt => tt.Value<string>()).ToArray() ?? new string[] { };
+                var claimRoles = resourceAccess[resourceName]?["roles"];
+                if (claimRoles == null)
+                {
+                    throw new Exception($"Cannot parse roles in user token: key-path \"resource_access\"->\"{resourceName}\"->\"roles\" not found");
+                }
+                var clientRoles = claimRoles.Select(tt => tt.Value<string>()).ToArray() ?? new string[] { };
 
                 var usertype = UserType.Unknown;
                 if (clientRoles.Contains("human"))
@@ -85,10 +101,29 @@ namespace Omnikeeper.Service
                     _ => throw new Exception("Unknown UserType encountered")
                 };
 
-                var guid = new Guid(guidString!); // TODO: check for null, handle case
                 var userInDatabase = await UserModel.UpsertUser(username, displayName, guid, usertype, trans);
 
-                return new AuthenticatedUser(userInDatabase, writableLayers);
+                var finalPermissions = new HashSet<string>();
+                if (clientRoles.Contains("__ok_superuser"))
+                {
+                    var allPermissions = await PermissionUtils.GetAllAvailablePermissions(LayerModel, trans);
+                    finalPermissions.UnionWith(allPermissions);
+                }
+                else
+                {
+                    var authRoles = await AuthRoleModel.GetAuthRoles(trans, TimeThreshold.BuildLatest());
+                    foreach (var role in clientRoles)
+                    {
+                        if (authRoles.TryGetValue(role, out var authRole))
+                        {
+                            finalPermissions.UnionWith(authRole.Permissions);
+                        }
+                    }
+                }
+
+
+
+                return new AuthenticatedUser(userInDatabase, finalPermissions);
             }
         }
     }

@@ -22,16 +22,20 @@ namespace Omnikeeper.Controllers
     {
         private readonly IEffectiveTraitModel traitModel;
         private readonly ITraitsProvider traitsProvider;
+        private readonly ICurrentUserService currentUserService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
+        private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public TraitController(IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, ICIBasedAuthorizationService ciBasedAuthorizationService,
-            IModelContextBuilder modelContextBuilder)
+            IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService layerBasedAuthorizationService, ICurrentUserService currentUserService)
         {
             this.traitModel = traitModel;
             this.traitsProvider = traitsProvider;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.modelContextBuilder = modelContextBuilder;
+            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
+            this.currentUserService = currentUserService;
         }
 
         [HttpGet("getEffectiveTraitsForTraitName")]
@@ -40,6 +44,10 @@ namespace Omnikeeper.Controllers
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
             var trans = modelContextBuilder.BuildImmediate();
+            var user = await currentUserService.GetCurrentUser(trans);
+
+            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
+                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
 
             var trait = await traitsProvider.GetActiveTrait(traitName, trans, timeThreshold);
             if (trait == null)

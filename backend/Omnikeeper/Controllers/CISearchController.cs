@@ -21,17 +21,17 @@ namespace Omnikeeper.Controllers
     public class CISearchController : ControllerBase
     {
         private readonly ICISearchModel ciSearchModel;
-        private readonly ITraitsProvider traitsProvider;
-        private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
+        private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
+        private readonly ICurrentUserService currentUserService;
 
-        public CISearchController(ICISearchModel ciSearchModel, ITraitsProvider traitsProvider, ICIBasedAuthorizationService ciBasedAuthorizationService,
-            IModelContextBuilder modelContextBuilder)
+        public CISearchController(ICISearchModel ciSearchModel,
+            IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService layerBasedAuthorizationService, ICurrentUserService currentUserService)
         {
             this.ciSearchModel = ciSearchModel;
-            this.traitsProvider = traitsProvider;
-            this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.modelContextBuilder = modelContextBuilder;
+            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
+            this.currentUserService = currentUserService;
         }
 
         [HttpGet("searchCIsByTraits")]
@@ -40,6 +40,11 @@ namespace Omnikeeper.Controllers
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
             var trans = modelContextBuilder.BuildImmediate();
+            var user = await currentUserService.GetCurrentUser(trans);
+
+            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
+                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
+            //TODO: ci-based authz
 
             var cis = await ciSearchModel.SearchForMergedCIsByTraits(new AllCIIDsSelection(), withTraits, withoutTraits, layerset, trans, timeThreshold);
 

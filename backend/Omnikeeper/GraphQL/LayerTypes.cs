@@ -1,5 +1,8 @@
 ﻿using GraphQL.Types;
+using GraphQL.Utilities;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using System.Linq;
 
 namespace Omnikeeper.GraphQL
@@ -18,7 +21,8 @@ namespace Omnikeeper.GraphQL
             resolve: (context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                var isWritable = userContext.User.WritableLayers.Any(l => l.ID == context.Source.ID);
+                var lbas = context.RequestServices.GetRequiredService<ILayerBasedAuthorizationService>();
+                var isWritable = lbas.CanUserWriteToLayer(userContext.User, context.Source.ID);
                 return isWritable;
             });
         }

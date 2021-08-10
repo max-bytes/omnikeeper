@@ -1,6 +1,5 @@
 ﻿using GraphQL.Types;
 using Omnikeeper.Base.Entity;
-using System;
 using System.Linq;
 
 namespace Omnikeeper.GraphQL
@@ -44,6 +43,4 @@ namespace Omnikeeper.GraphQL
             Field("requiredTraits", x => x.RequiredTraits, type: typeof(ListGraphType<StringGraphType>));
         }
     }
-
-    
 }

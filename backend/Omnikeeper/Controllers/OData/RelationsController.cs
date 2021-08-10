@@ -33,6 +33,7 @@ namespace Omnikeeper.Controllers.OData
     }
 
     // TODO: ci based authorization
+    // TODO: layer based authorization
     //[Authorize]
     public class RelationsController : ODataController
     {
@@ -60,7 +61,6 @@ namespace Omnikeeper.Controllers.OData
         {
             return new RelationDTO(r.Relation.FromCIID, r.Relation.ToCIID, r.Relation.PredicateID);
         }
-
 
         [EnableQuery]
         public async Task<RelationDTO> GetRelationDTO([FromODataUri, Required] Guid keyFromCIID, [FromODataUri, Required] Guid keyToCIID, [FromODataUri, Required] string keyPredicate, [FromRoute] string context)
