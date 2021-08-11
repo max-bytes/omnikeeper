@@ -104,11 +104,11 @@ function AddNewContext(props) {
                     </Form.Item>
 
                     <Form.Item label="loadConfig" style={{ margin: 0, fontStyle: "italic" }}/>
-                    <Form.Item name="searchLayerIDs" label="searchLayerIDs" tooltip="Array of numbers - e.g. '[1,2,3]'" rules={[{ required: true, pattern: /\[[0-9,]*[0-9]\]/ }]}>
+                    <Form.Item name="searchLayerIDs" label="searchLayerIDs" tooltip="Array of layerIDs - e.g. '[layer1,layer2]'" rules={[{ required: true, pattern: /\[[0-9a-z_,]*[0-9a-z_]\]/ }]}>
                         <Input />
                     </Form.Item>
                     <Form.Item name="writeLayerID" label="writeLayerID" rules={[{ required: true }]} style={{ margin: "0 0 50px 0"}}>
-                        <InputNumber />
+                        <Input />
                     </Form.Item>
 
 
