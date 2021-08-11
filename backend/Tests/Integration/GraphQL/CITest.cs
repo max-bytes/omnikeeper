@@ -45,8 +45,8 @@ namespace Tests.Integration.GraphQL
             var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
             using var trans = ModelContextBuilder.BuildDeferred();
             var ciid1 = await ciModel.CreateCI(trans);
-            var layer1 = await layerModel.CreateLayer("layer_1", trans);
-            var layerID2 = await layerModel.CreateLayer("layer_2", trans);
+            var layer1 = await layerModel.UpsertLayer("layer_1", trans);
+            var layerID2 = await layerModel.UpsertLayer("layer_2", trans);
             var user = new AuthenticatedUser(await userModel.UpsertUser(username, username, userGUID, UserType.Robot, trans), 
                 new HashSet<string>() { 
                     PermissionUtils.GetLayerReadPermission(layer1), PermissionUtils.GetLayerWritePermission(layer1),

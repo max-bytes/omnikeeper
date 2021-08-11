@@ -76,7 +76,7 @@ namespace PerfTests
 
             var layers = layerNames.Select(identity =>
             {
-                return layerModel.CreateLayer(identity, mc).GetAwaiter().GetResult();
+                return layerModel.UpsertLayer(identity, mc).GetAwaiter().GetResult();
             }).ToList();
 
             var attributeNames = Enumerable.Range(0, numAttributeNames).Select(i => "A" + RandomUtility.GenerateRandomString(32, random)).ToList();

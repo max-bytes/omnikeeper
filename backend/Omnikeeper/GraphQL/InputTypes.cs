@@ -42,25 +42,6 @@ namespace Omnikeeper.GraphQL
             Field(x => x.Color);
         }
     }
-    //public class UpdateLayerInput
-    //{
-    //    public string ID { get; private set; }
-    //    public AnchorState State { get; private set; }
-    //    public string BrainName { get; private set; }
-    //    public string OnlineInboundAdapterName { get; private set; }
-    //    public int Color { get; private set; }
-    //}
-    //public class UpdateLayerInputType : InputObjectGraphType<UpdateLayerInput>
-    //{
-    //    public UpdateLayerInputType()
-    //    {
-    //        Field("id", x => x.ID);
-    //        Field(x => x.State, type: typeof(AnchorStateType));
-    //        Field(x => x.BrainName);
-    //        Field(x => x.OnlineInboundAdapterName);
-    //        Field(x => x.Color);
-    //    }
-    //}
 
     public class InsertCIAttributeInput
     {

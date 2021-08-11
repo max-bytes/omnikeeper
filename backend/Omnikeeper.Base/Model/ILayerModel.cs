@@ -12,7 +12,6 @@ namespace Omnikeeper.Base.Model
 
         Task<Layer> UpsertLayer(string id, IModelContext trans);
         Task<Layer> UpsertLayer(string id, string description, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrain, OnlineInboundAdapterLink oilp, IModelContext trans);
-        //Task<Layer> Update(string id, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrain, OnlineInboundAdapterLink oilp, IModelContext trans);
         Task<bool> TryToDelete(string id, IModelContext trans);
 
         Task<Layer?> GetLayer(string layerID, IModelContext trans);

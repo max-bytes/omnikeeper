@@ -26,7 +26,7 @@ namespace Omnikeeper.Model.Decorators
 
         public async Task<LayerSet> BuildLayerSet(string[] ids, IModelContext trans)
         {
-            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByName(), async () => (await Model.GetLayers(trans)).ToDictionary(l => l.ID));
+            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByID(), async () => (await Model.GetLayers(trans)).ToDictionary(l => l.ID));
 
             var selectedLayerIDs = ids.Select(id =>
             {
@@ -88,7 +88,6 @@ namespace Omnikeeper.Model.Decorators
         {
             var succeeded = await Model.TryToDelete(id, trans);
             trans.EvictFromCache(CacheKeyService.AllLayersByID());
-            trans.EvictFromCache(CacheKeyService.AllLayersByName());
             return succeeded;
         }
 
@@ -96,7 +95,6 @@ namespace Omnikeeper.Model.Decorators
         {
             var layer = await Model.UpsertLayer(id, trans);
             trans.EvictFromCache(CacheKeyService.AllLayersByID());
-            trans.EvictFromCache(CacheKeyService.AllLayersByName());
             return layer;
         }
 
@@ -104,7 +102,6 @@ namespace Omnikeeper.Model.Decorators
         {
             var layer = await Model.UpsertLayer(id, description, color, state, computeLayerBrain, oilp, trans);
             trans.EvictFromCache(CacheKeyService.AllLayersByID());
-            trans.EvictFromCache(CacheKeyService.AllLayersByName());
             return layer;
         }
     }

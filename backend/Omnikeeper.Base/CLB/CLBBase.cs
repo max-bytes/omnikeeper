@@ -66,7 +66,7 @@ namespace Omnikeeper.Base.CLB
                 var layerSet = await layerModel.BuildLayerSet(new[] { Settings.LayerID }, trans);
                 var layer = await layerModel.GetLayer(Settings.LayerID, trans);
                 if (layer == null)
-                    throw new Exception($"Could not find layer with name {Settings.LayerID}");
+                    throw new Exception($"Could not find layer with ID {Settings.LayerID}");
 
                 var errorHandler = new CLBErrorHandler(trans, Name, layer.ID, changesetProxy, attributeModel);
 

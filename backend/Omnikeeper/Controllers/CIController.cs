@@ -40,7 +40,7 @@ namespace Omnikeeper.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("getAllCIIDs")]
-        public async Task<ActionResult<IEnumerable<string>>> GetAllCIIDs()
+        public async Task<ActionResult<IEnumerable<Guid>>> GetAllCIIDs()
         {
             var trans = modelContextBuilder.BuildImmediate();
             var ciids = await ciModel.GetCIIDs(trans);

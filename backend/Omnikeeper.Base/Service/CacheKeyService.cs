@@ -26,7 +26,6 @@ namespace Omnikeeper.Base.Service
         public static string Traits() => $"traits";
 
         public static string AllLayersByID() => $"layers_all_byid";
-        public static string AllLayersByName() => $"layers_all_byname";
 
         public static string CINames(string layerID) => $"cinames_{layerID}";
     }
