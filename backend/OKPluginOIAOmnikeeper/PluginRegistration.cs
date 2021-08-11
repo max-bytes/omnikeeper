@@ -8,11 +8,11 @@ namespace OKPluginOIAOmnikeeper
     {
         public override void RegisterServices(IServiceCollection sc)
         {
-            //sc.AddSingleton<IExternalIDManager, ExternalIDManager>();
-            //sc.AddSingleton<ILayerAccessProxy, LayerAccessProxy>();
-            //sc.AddSingleton<IScopedExternalIDMapper, ScopedExternalIDMapper>();
-            //sc.AddSingleton<IOnlineInboundAdapter, OnlineInboundAdapter>();
-            //sc.AddSingleton<IOnlineInboundAdapterBuilder, OnlineInboundAdapter.Builder>();
+            sc.AddSingleton<IExternalIDManager, ExternalIDManager>();
+            sc.AddSingleton<ILayerAccessProxy, LayerAccessProxy>();
+            sc.AddSingleton<IScopedExternalIDMapper, ScopedExternalIDMapper>();
+            sc.AddSingleton<IOnlineInboundAdapter, OnlineInboundAdapter>();
+            sc.AddSingleton<IOnlineInboundAdapterBuilder, OnlineInboundAdapter.Builder>();
         }
     }
 }
