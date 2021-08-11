@@ -17,7 +17,7 @@ namespace Omnikeeper.Service
                 _ => throw new Exception("Invalid OData API context config"),
             };
         }
-        public static async Task<long> GetWriteLayerIDFromContext(IODataAPIContextModel model, string contextID, IModelContext trans)
+        public static async Task<string> GetWriteLayerIDFromContext(IODataAPIContextModel model, string contextID, IModelContext trans)
         {
             var context = await model.GetContextByID(contextID, trans);
             return context.CConfig switch

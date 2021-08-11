@@ -24,22 +24,22 @@ namespace Omnikeeper.Model.Decorators
             this.logger = logger;
         }
 
-        public async Task<LayerSet> BuildLayerSet(string[] layerNames, IModelContext trans)
+        public async Task<LayerSet> BuildLayerSet(string[] ids, IModelContext trans)
         {
-            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByName(), async () => (await Model.GetLayers(trans)).ToDictionary(l => l.Name));
+            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByName(), async () => (await Model.GetLayers(trans)).ToDictionary(l => l.ID));
 
-            var selectedLayerIDs = layerNames.Select(name =>
+            var selectedLayerIDs = ids.Select(id =>
             {
-                if (allLayers.TryGetValue(name, out var l))
+                if (allLayers.TryGetValue(id, out var l))
                     return l.ID;
                 else
-                    throw new Exception(@$"Could not find layer with name ""{name}""");
+                    throw new Exception(@$"Could not find layer with name ""{id}""");
             });
 
             return new LayerSet(selectedLayerIDs);
         }
 
-        public async Task<Layer?> GetLayer(long layerID, IModelContext trans)
+        public async Task<Layer?> GetLayer(string layerID, IModelContext trans)
         {
             var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByID(), async () => (await Model.GetLayers(trans)).ToDictionary(l => l.ID));
 
@@ -49,17 +49,7 @@ namespace Omnikeeper.Model.Decorators
                 return null;
         }
 
-        public async Task<Layer?> GetLayer(string layerName, IModelContext trans)
-        {
-            var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByName(), async () => (await Model.GetLayers(trans)).ToDictionary(l => l.Name));
-
-            if (allLayers.TryGetValue(layerName, out var l))
-                return l;
-            else
-                return null;
-        }
-
-        public async Task<IEnumerable<Layer>> GetLayers(long[] layerIDs, IModelContext trans)
+        public async Task<IEnumerable<Layer>> GetLayers(string[] layerIDs, IModelContext trans)
         {
             var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByID(), async () => (await Model.GetLayers(trans)).ToDictionary(l => l.ID));
 
@@ -94,7 +84,7 @@ namespace Omnikeeper.Model.Decorators
             return selectedLayers;
         }
 
-        public async Task<bool> TryToDelete(long id, IModelContext trans)
+        public async Task<bool> TryToDelete(string id, IModelContext trans)
         {
             var succeeded = await Model.TryToDelete(id, trans);
             trans.EvictFromCache(CacheKeyService.AllLayersByID());
@@ -102,25 +92,17 @@ namespace Omnikeeper.Model.Decorators
             return succeeded;
         }
 
-        public async Task<Layer> CreateLayer(string name, IModelContext trans)
+        public async Task<Layer> UpsertLayer(string id, IModelContext trans)
         {
-            var layer = await Model.CreateLayer(name, trans);
+            var layer = await Model.UpsertLayer(id, trans);
             trans.EvictFromCache(CacheKeyService.AllLayersByID());
             trans.EvictFromCache(CacheKeyService.AllLayersByName());
             return layer;
         }
 
-        public async Task<Layer> CreateLayer(string name, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrain, OnlineInboundAdapterLink oilp, IModelContext trans)
+        public async Task<Layer> UpsertLayer(string id, string description, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrain, OnlineInboundAdapterLink oilp, IModelContext trans)
         {
-            var layer = await Model.CreateLayer(name, color, state, computeLayerBrain, oilp, trans);
-            trans.EvictFromCache(CacheKeyService.AllLayersByID());
-            trans.EvictFromCache(CacheKeyService.AllLayersByName());
-            return layer;
-        }
-
-        public async Task<Layer> Update(long id, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrain, OnlineInboundAdapterLink oilp, IModelContext trans)
-        {
-            var layer = await Model.Update(id, color, state, computeLayerBrain, oilp, trans);
+            var layer = await Model.UpsertLayer(id, description, color, state, computeLayerBrain, oilp, trans);
             trans.EvictFromCache(CacheKeyService.AllLayersByID());
             trans.EvictFromCache(CacheKeyService.AllLayersByName());
             return layer;

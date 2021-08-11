@@ -13,7 +13,7 @@ namespace Omnikeeper.Model.Decorators
             this.model = model;
         }
 
-        public async Task<int> DeleteAllRelations(long layerID, IModelContext trans)
+        public async Task<int> DeleteAllRelations(string layerID, IModelContext trans)
         {
             var numDeleted = await model.DeleteAllRelations(layerID, trans);
             if (numDeleted > 0)

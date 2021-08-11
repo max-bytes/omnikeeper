@@ -12,7 +12,7 @@ namespace Tests.Integration.Serialization
         public void TestSerialization()
         {
             var dataSerializer = new ProtoBufDataSerializer();
-            var a = new BaseConfigurationV1(new TimeSpan(97202), "clbRunnerInterval", "markedForDeletionRunnerInterval", "externalIDManagerRunnerInterval", "archiveOldDataRunnerInterval", new long[] { 1L,2L }, 1L);
+            var a = new BaseConfigurationV1(new TimeSpan(97202), "clbRunnerInterval", "markedForDeletionRunnerInterval", "externalIDManagerRunnerInterval", "archiveOldDataRunnerInterval", new string[] { "1", "2" }, "1");
             var b = dataSerializer.ToByteArray(a);
             dataSerializer.FromByteArray<BaseConfigurationV1>(b).Should().BeEquivalentTo(a);
         }

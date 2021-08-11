@@ -90,7 +90,7 @@ namespace Tests.Integration.Model
         private async Task<(EffectiveTraitModel traitModel, LayerSet layerset, Guid[])> BaseSetup(ITraitsProvider traitsProvider)
         {
             var oap = new Mock<IOnlineAccessProxy>();
-            oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<long>(), It.IsAny<IModelContext>())).ReturnsAsync(false);
+            oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<string>(), It.IsAny<IModelContext>())).ReturnsAsync(false);
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var userModel = new UserInDatabaseModel();
@@ -104,7 +104,7 @@ namespace Tests.Integration.Model
             var ciid1 = await ciModel.CreateCI(transI);
             var ciid2 = await ciModel.CreateCI(transI);
             var ciid3 = await ciModel.CreateCI(transI);
-            var layer1 = await layerModel.CreateLayer("l1", transI);
+            var layer1 = await layerModel.UpsertLayer("l1", transI);
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {

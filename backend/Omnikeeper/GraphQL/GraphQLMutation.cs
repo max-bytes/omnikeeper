@@ -66,7 +66,7 @@ namespace Omnikeeper.GraphQL
                     userContext.LayerSet = layers != null ? await layerModel.BuildLayerSet(layers, transaction) : null;
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel); //await changesetModel.CreateChangeset(userContext.User.InDatabase.ID, transaction, userContext.TimeThreshold.Time);
+                    var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
 
                     var groupedInsertAttributes = insertAttributes.GroupBy(a => a.CI);
                     var insertedAttributes = new List<CIAttribute>();

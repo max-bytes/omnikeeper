@@ -131,7 +131,7 @@ namespace Omnikeeper.GridView.Queries
                         var cell = new Cell(
                                 column.SourceAttributeName,
                                 value,
-                                column.WriteLayer == null ? true : (column.WriteLayer != -1) && changable
+                                column.WriteLayer == null ? true : (column.WriteLayer != "") && changable
                             );
 
                         if (resultRows.TryGetValue(ci_id, out var el))

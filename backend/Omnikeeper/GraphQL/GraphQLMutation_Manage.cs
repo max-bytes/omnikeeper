@@ -20,16 +20,16 @@ namespace Omnikeeper.GraphQL
     {
         public void CreateManage()
         {
-            FieldAsync<LayerType>("manage_createLayer",
+            FieldAsync<LayerType>("manage_upsertLayer",
                 arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<CreateLayerInputType>> { Name = "layer" }
+                new QueryArgument<NonNullGraphType<UpsertLayerInputType>> { Name = "layer" }
                 ),
                 resolve: async context =>
                 {
                     var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                    var createLayer = context.GetArgument<CreateLayerInput>("layer");
+                    var upsertLayer = context.GetArgument<UpsertLayerInput>("layer");
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
                     var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
@@ -39,44 +39,18 @@ namespace Omnikeeper.GraphQL
                     using var transaction = modelContextBuilder.BuildDeferred();
 
                     ComputeLayerBrainLink clb = LayerModel.DefaultCLB;
-                    if (createLayer.BrainName != null && createLayer.BrainName != "")
-                        clb = ComputeLayerBrainLink.Build(createLayer.BrainName);
+                    if (upsertLayer.BrainName != null && upsertLayer.BrainName != "")
+                        clb = ComputeLayerBrainLink.Build(upsertLayer.BrainName);
                     OnlineInboundAdapterLink oilp = LayerModel.DefaultOILP;
-                    if (createLayer.OnlineInboundAdapterName != null && createLayer.OnlineInboundAdapterName != "")
-                        oilp = OnlineInboundAdapterLink.Build(createLayer.OnlineInboundAdapterName);
-                    var createdLayer = await layerModel.CreateLayer(createLayer.Name, Color.FromArgb(createLayer.Color), createLayer.State, clb, oilp, transaction);
+                    if (upsertLayer.OnlineInboundAdapterName != null && upsertLayer.OnlineInboundAdapterName != "")
+                        oilp = OnlineInboundAdapterLink.Build(upsertLayer.OnlineInboundAdapterName);
+                    var updatedLayer = await layerModel.UpsertLayer(upsertLayer.ID, upsertLayer.Description, Color.FromArgb(upsertLayer.Color), upsertLayer.State, clb, oilp, transaction);
 
                     transaction.Commit();
                     userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
 
-                    return createdLayer;
+                    return updatedLayer;
                 });
-            FieldAsync<LayerType>("manage_updateLayer",
-              arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<UpdateLayerInputType>> { Name = "layer" }
-              ),
-              resolve: async context =>
-              {
-                  var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
-                  var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
-
-                  var layer = context.GetArgument<UpdateLayerInput>("layer");
-
-                  var userContext = (context.UserContext as OmnikeeperUserContext)!;
-
-                  var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
-                  if (!managementAuthorizationService.HasManagementPermission(userContext.User))
-                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to update Layers");
-
-                  using var transaction = modelContextBuilder.BuildDeferred();
-                  var clb = ComputeLayerBrainLink.Build(layer.BrainName);
-                  var oilp = OnlineInboundAdapterLink.Build(layer.OnlineInboundAdapterName);
-                  var updatedLayer = await layerModel.Update(layer.ID, Color.FromArgb(layer.Color), layer.State, clb, oilp, transaction);
-                  transaction.Commit();
-                  userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
-
-                  return updatedLayer;
-              });
 
 
             FieldAsync<OIAContextType>("manage_createOIAContext",
@@ -234,7 +208,7 @@ namespace Omnikeeper.GraphQL
 
             FieldAsync<BooleanGraphType>("manage_truncateLayer",
               arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<LongGraphType>> { Name = "id" }
+                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
               ),
               resolve: async context =>
               {
@@ -242,7 +216,7 @@ namespace Omnikeeper.GraphQL
                   var baseRelationRevisionistModel = context.RequestServices.GetRequiredService<IBaseRelationRevisionistModel>();
                   var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
-                  var id = context.GetArgument<long>("id");
+                  var id = context.GetArgument<string>("id");
 
                   var userContext = (context.UserContext as OmnikeeperUserContext)!;
 

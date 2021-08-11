@@ -1,4 +1,3 @@
-
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
@@ -18,9 +17,9 @@ namespace Omnikeeper.Base.Entity
     public class MergedCIAttribute
     {
         public CIAttribute Attribute { get; private set; }
-        public long[] LayerStackIDs { get; private set; }
+        public string[] LayerStackIDs { get; private set; }
 
-        public MergedCIAttribute(CIAttribute attribute, long[] layerStackIDs)
+        public MergedCIAttribute(CIAttribute attribute, string[] layerStackIDs)
         {
             Attribute = attribute;
             LayerStackIDs = layerStackIDs;
@@ -59,7 +58,7 @@ namespace Omnikeeper.Base.Entity
     {
         Guid GetCIID(F f);
         string NamePrefix { get; }
-        long LayerID { get; }
+        string LayerID { get; }
         public F[] Fragments { get; }
 
         string GetFullName(F fragment);
@@ -86,14 +85,14 @@ namespace Omnikeeper.Base.Entity
         }
 
         public string NamePrefix { get; private set; }
-        public long LayerID { get; private set; }
+        public string LayerID { get; private set; }
         public Fragment[] Fragments { get; private set; }
 
         public Guid GetCIID(Fragment f) => f.CIID;
         public string GetFullName(Fragment fragment) => $"{NamePrefix}{fragment.Name}";
         public IAttributeValue GetValue(Fragment f) => f.Value;
 
-        public BulkCIAttributeDataLayerScope(string namePrefix, long layerID, IEnumerable<Fragment> fragments)
+        public BulkCIAttributeDataLayerScope(string namePrefix, string layerID, IEnumerable<Fragment> fragments)
         {
             NamePrefix = namePrefix;
             LayerID = layerID;
@@ -125,7 +124,7 @@ namespace Omnikeeper.Base.Entity
         }
 
         public string NamePrefix { get; private set; }
-        public long LayerID { get; private set; }
+        public string LayerID { get; private set; }
         public Guid CIID { get; private set; }
         public Fragment[] Fragments { get; private set; }
 
@@ -133,7 +132,7 @@ namespace Omnikeeper.Base.Entity
         public string GetFullName(Fragment fragment) => $"{NamePrefix}{fragment.Name}";
         public IAttributeValue GetValue(Fragment f) => f.Value;
 
-        public BulkCIAttributeDataCIScope(string namePrefix, long layerID, Guid ciid, IEnumerable<Fragment> fragments)
+        public BulkCIAttributeDataCIScope(string namePrefix, string layerID, Guid ciid, IEnumerable<Fragment> fragments)
         {
             NamePrefix = namePrefix;
             LayerID = layerID;

@@ -35,7 +35,7 @@ function LayerDropdown(props) {
                     label: (
                         <>
                             <LayerIcon layer={at} />
-                            {at.name}
+                            {at.id}
                         </>
                     ),
                 };

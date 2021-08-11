@@ -47,31 +47,31 @@ namespace Omnikeeper.Base.Entity
     [ProtoContract(SkipConstructor = true)]
     public class Layer : IEquatable<Layer>
     {
-        private Layer(string name, long iD, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrainLink, OnlineInboundAdapterLink onlineInboundAdapterLink)
+        private Layer(string id, string description, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrainLink, OnlineInboundAdapterLink onlineInboundAdapterLink)
         {
-            Name = name;
-            ID = iD;
+            ID = id;
+            Description = description;
             Color = color;
             State = state;
             ComputeLayerBrainLink = computeLayerBrainLink;
             OnlineInboundAdapterLink = onlineInboundAdapterLink;
         }
 
-        [ProtoMember(1)] public readonly string Name;
-        [ProtoMember(2)] public readonly long ID;
+        [ProtoMember(1)] public readonly string ID;
+        [ProtoMember(2)] public readonly string Description;
         [ProtoMember(3)] public readonly AnchorState State;
         [ProtoMember(4)] public readonly Color Color;
         [ProtoMember(5)] public readonly ComputeLayerBrainLink ComputeLayerBrainLink;
         [ProtoMember(6)] public readonly OnlineInboundAdapterLink OnlineInboundAdapterLink;
 
-        public override int GetHashCode() => HashCode.Combine(Name, ID, State, Color, ComputeLayerBrainLink, OnlineInboundAdapterLink);
+        public override int GetHashCode() => HashCode.Combine(ID, Description, State, Color, ComputeLayerBrainLink, OnlineInboundAdapterLink);
         public override bool Equals(object? obj) => Equals(obj as Layer);
-        public bool Equals(Layer? other) => other != null && Name.Equals(other.Name)
-            && ID.Equals(other.ID) && State.Equals(other.State) && ComputeLayerBrainLink.Equals(other.ComputeLayerBrainLink) && OnlineInboundAdapterLink.Equals(other.OnlineInboundAdapterLink);
+        public bool Equals(Layer? other) => other != null && ID.Equals(other.ID) && Description.Equals(other.Description)
+            && State.Equals(other.State) && ComputeLayerBrainLink.Equals(other.ComputeLayerBrainLink) && OnlineInboundAdapterLink.Equals(other.OnlineInboundAdapterLink);
 
-        public static Layer Build(string name, long id, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrain, OnlineInboundAdapterLink onlineInboundAdapter)
+        public static Layer Build(string id, string description, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrain, OnlineInboundAdapterLink onlineInboundAdapter)
         {
-            return new Layer(name, id, color, state, computeLayerBrain, onlineInboundAdapter);
+            return new Layer(id, description, color, state, computeLayerBrain, onlineInboundAdapter);
         }
     }
 }

@@ -56,7 +56,7 @@ namespace Omnikeeper.Controllers
         /// <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
         /// <returns></returns>
         [HttpGet("getCIByID")]
-        public async Task<ActionResult<CIDTO>> GetCIByID([FromQuery, Required] long[] layerIDs, [FromQuery, Required] Guid CIID, [FromQuery] DateTimeOffset? atTime = null)
+        public async Task<ActionResult<CIDTO>> GetCIByID([FromQuery, Required] string[] layerIDs, [FromQuery, Required] Guid CIID, [FromQuery] DateTimeOffset? atTime = null)
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
@@ -83,7 +83,7 @@ namespace Omnikeeper.Controllers
         /// <param name="atTime">Specify datetime, for which point in time to get the data; leave empty to use current time (https://www.newtonsoft.com/json/help/html/DatesInJSON.htm)</param>
         /// <returns></returns>
         [HttpGet("getCIsByID")]
-        public async Task<ActionResult<IEnumerable<CIDTO>>> GetCIsByID([FromQuery, Required] long[] layerIDs, [FromQuery, Required] Guid[] CIIDs, [FromQuery] DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<CIDTO>>> GetCIsByID([FromQuery, Required] string[] layerIDs, [FromQuery, Required] Guid[] CIIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             if (CIIDs.IsEmpty())
                 return BadRequest("Empty CIID list");

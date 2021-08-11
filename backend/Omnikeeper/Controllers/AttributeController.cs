@@ -47,7 +47,7 @@ namespace Omnikeeper.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedAttributesWithName")]
-        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> GetMergedAttributesWithName([FromQuery, Required] string name, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> GetMergedAttributesWithName([FromQuery, Required] string name, [FromQuery, Required] string[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
@@ -74,7 +74,7 @@ namespace Omnikeeper.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedAttributes")]
-        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> GetMergedAttributes([FromQuery, Required] IEnumerable<Guid> ciids, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> GetMergedAttributes([FromQuery, Required] IEnumerable<Guid> ciids, [FromQuery, Required] string[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             if (ciids.IsEmpty())
                 return BadRequest("Empty CIID list");
@@ -103,7 +103,7 @@ namespace Omnikeeper.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedAttribute")]
-        public async Task<ActionResult<CIAttributeDTO>> GetMergedAttribute([FromQuery, Required] Guid ciid, [FromQuery, Required] string name, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
+        public async Task<ActionResult<CIAttributeDTO>> GetMergedAttribute([FromQuery, Required] Guid ciid, [FromQuery, Required] string name, [FromQuery, Required] string[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
@@ -128,7 +128,7 @@ namespace Omnikeeper.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("findMergedAttributesByName")]
-        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> FindMergedAttributesByName([FromQuery, Required] string regex, [FromQuery] IEnumerable<Guid> ciids, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> FindMergedAttributesByName([FromQuery, Required] string regex, [FromQuery] IEnumerable<Guid> ciids, [FromQuery, Required] string[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);

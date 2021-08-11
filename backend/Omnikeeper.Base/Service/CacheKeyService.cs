@@ -6,12 +6,12 @@ namespace Omnikeeper.Base.Service
 {
     public static class CacheKeyService
     {
-        public static string Attributes(Guid ciid, long layerID) => $"attributes_{ciid}_{layerID}";
-        public static string CIIDsWithAttributeName(string attributeName, long layerID) => $"ciids_with_attribute_name_{attributeName}_{layerID}";
+        public static string Attributes(Guid ciid, string layerID) => $"attributes_{ciid}_{layerID}";
+        public static string CIIDsWithAttributeName(string attributeName, string layerID) => $"ciids_with_attribute_name_{attributeName}_{layerID}";
 
         public static string BaseConfiguration() => $"baseConfiguration";
 
-        public static string Relations(IRelationSelection rs, long layerID) => $"relations_{rs.ToHashKey()}_{layerID}";
+        public static string Relations(IRelationSelection rs, string layerID) => $"relations_{rs.ToHashKey()}_{layerID}";
 
         public static string OIAConfig(string name) => $"oiaconfig_${name}";
 
@@ -28,6 +28,6 @@ namespace Omnikeeper.Base.Service
         public static string AllLayersByID() => $"layers_all_byid";
         public static string AllLayersByName() => $"layers_all_byname";
 
-        public static string CINames(long layerID) => $"cinames_{layerID}";
+        public static string CINames(string layerID) => $"cinames_{layerID}";
     }
 }

@@ -50,7 +50,7 @@ namespace Omnikeeper.Base.Entity.DTO
         }
 
         [Required] public string NamePrefix { get; set; } = "";
-        [Required] public long LayerID { get; set; } = default;
+        [Required] public string LayerID { get; set; } = default;
         [Required] public FragmentDTO[] Fragments { get; set; } = default;
 
         private BulkCIAttributeLayerScopeDTO() { }

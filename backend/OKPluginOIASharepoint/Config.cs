@@ -25,9 +25,9 @@ namespace OKPluginOIASharepoint
             public readonly Guid listID;
             public readonly ListColumnConfig[] columnConfigs;
             public readonly string[] identifiableAttributes;
-            public readonly long[] searchableLayerIDs;
+            public readonly string[] searchableLayerIDs;
 
-            public ListConfig(Guid listID, ListColumnConfig[] columnConfigs, string[] identifiableAttributes, long[] searchableLayerIDs)
+            public ListConfig(Guid listID, ListColumnConfig[] columnConfigs, string[] identifiableAttributes, string[] searchableLayerIDs)
             {
                 this.listID = listID;
                 this.columnConfigs = columnConfigs;

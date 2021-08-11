@@ -41,8 +41,8 @@ namespace Tests.Integration.Controller
 
             Guid ciid1;
             Guid ciid2;
-            long layerID1;
-            long layerID2;
+            string layerID1;
+            string layerID2;
             Guid attribute1ID;
             Guid attribute2ID;
             Guid changesetID;
@@ -50,8 +50,8 @@ namespace Tests.Integration.Controller
             {
                 ciid1 = await ciModel.CreateCI(trans);
                 ciid2 = await ciModel.CreateCI(trans);
-                var layer1 = await layerModel.CreateLayer("l1", trans);
-                var layer2 = await layerModel.CreateLayer("l2", trans);
+                var layer1 = await layerModel.UpsertLayer("l1", trans);
+                var layer2 = await layerModel.UpsertLayer("l2", trans);
                 layerID1 = layer1.ID;
                 layerID2 = layer2.ID;
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
@@ -63,28 +63,28 @@ namespace Tests.Integration.Controller
                 trans.Commit();
             }
 
-            var ma1 = await attributeController.GetMergedAttribute(ciid1, "a1", new long[] { layerID1 });
+            var ma1 = await attributeController.GetMergedAttribute(ciid1, "a1", new string[] { layerID1 });
 
             var expectedAttribute1 = CIAttributeDTO.Build(
                 new MergedCIAttribute(
                     new CIAttribute(attribute1ID, "a1", ciid1, new AttributeScalarValueText("text1"), AttributeState.New, changesetID, new DataOriginV1(DataOriginType.Manual)),
-                    new long[] { layerID1 }
+                    new string[] { layerID1 }
                 ));
             (ma1.Result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedAttribute1);
 
 
-            var ma2 = await attributeController.GetMergedAttributes(new Guid[] { ciid1, ciid2 }, new long[] { layerID1 });
+            var ma2 = await attributeController.GetMergedAttributes(new Guid[] { ciid1, ciid2 }, new string[] { layerID1 });
 
             var expectedAttribute2 = CIAttributeDTO.Build(
                 new MergedCIAttribute(
                     new CIAttribute(attribute2ID, "a2", ciid2, new AttributeScalarValueText("text2"), AttributeState.New, changesetID, new DataOriginV1(DataOriginType.Manual)),
-                    new long[] { layerID1 }
+                    new string[] { layerID1 }
                 ));
             var r = (ma2.Result as OkObjectResult)!.Value;
             r.Should().BeEquivalentTo(new CIAttributeDTO[] { expectedAttribute1, expectedAttribute2 });
 
 
-            var ma3 = await attributeController.GetMergedAttributesWithName("a2", new long[] { layerID1 });
+            var ma3 = await attributeController.GetMergedAttributesWithName("a2", new string[] { layerID1 });
             (ma3.Result as OkObjectResult)!.Value.Should().BeEquivalentTo(new CIAttributeDTO[] { expectedAttribute2 });
 
 

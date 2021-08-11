@@ -111,17 +111,17 @@ namespace Omnikeeper.GridView.Commands
                             return (null, new Exception($"Could not find the supplied column {cell.Name} in the configuration"));
                         }
 
-                        long writeLayer;
+                        string writeLayer;
 
                         if (configItem.WriteLayer == null)
                         {
                             writeLayer = config.WriteLayer;
-                        } else if (configItem.WriteLayer!.Value == -1)
+                        } else if (configItem.WriteLayer == "")
                         {
                             return (null, new Exception($"Provided column {cell.Name} is not writable!"));
                         } else
                         {
-                            writeLayer = configItem.WriteLayer.Value;
+                            writeLayer = configItem.WriteLayer;
                         }
 
                         //var writeLayer = configItem.WriteLayer != null ? configItem.WriteLayer.Value : config.WriteLayer;
@@ -253,7 +253,7 @@ namespace Omnikeeper.GridView.Commands
                         var cell = new Response.ChangeDataCell(
                                 column.SourceAttributeName,
                                 value,
-                                column.WriteLayer == null ? true : (column.WriteLayer != -1) && changable
+                                column.WriteLayer == null ? true : (column.WriteLayer != "") && changable
                             );
 
                         var el = result.Rows.Find(el => el.Ciid == ci_id);

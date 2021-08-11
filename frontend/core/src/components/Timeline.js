@@ -35,7 +35,7 @@ function LoadingTimeline(props) {
   var [limit, setLimit] = useState(10);
 
   const { loading: loadingChangesets, error, data: resultData, previousData, refetch: refetchChangesets } = useQuery(queries.Changesets, {
-    variables: { from: from, to: to, ciids: [ciid], layers: props.layers.map(l => l.name), limit: limit } // TODO
+    variables: { from: from, to: to, ciids: [ciid], layers: props.layers.map(l => l.id), limit: limit } // TODO
   });
   const data = resultData ?? previousData;
 

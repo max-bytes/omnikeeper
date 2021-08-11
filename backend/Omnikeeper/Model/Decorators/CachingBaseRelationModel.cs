@@ -29,7 +29,7 @@ namespace Omnikeeper.Model.Decorators
             return inserted;
         }
 
-        private void EvictFromCache(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans)
+        private void EvictFromCache(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans)
         {
             trans.EvictFromCache(CacheKeyService.Relations(new RelationSelectionAll(), layerID));
             trans.EvictFromCache(CacheKeyService.Relations(new RelationSelectionEitherFromOrTo(fromCIID), layerID));
@@ -38,13 +38,13 @@ namespace Omnikeeper.Model.Decorators
             trans.EvictFromCache(CacheKeyService.Relations(new RelationSelectionWithPredicate(predicateID), layerID));
         }
 
-        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             // TODO: caching
             return await model.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (atTime.IsLatest)
             {
@@ -58,7 +58,7 @@ namespace Omnikeeper.Model.Decorators
                 return await model.GetRelations(rl, layerID, trans, atTime);
         }
 
-        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var t = await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, origin, trans);
             if (t.changed)
@@ -66,7 +66,7 @@ namespace Omnikeeper.Model.Decorators
             return t;
         }
 
-        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var t = await model.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
             if (t.changed)

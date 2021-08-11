@@ -12,12 +12,12 @@ namespace Omnikeeper.Base.Entity
         public string PredicateID { get; private set; }
         public Guid ChangesetID { get; private set; }
         public DataOriginV1 Origin { get; private set; }
-        public long LayerID { get => LayerStackIDs[^1]; }
-        public long[] LayerStackIDs { get; private set; }
+        public string LayerID { get => LayerStackIDs[^1]; }
+        public string[] LayerStackIDs { get; private set; }
         public bool IsForwardRelation { get; private set; }
 
         public CompactRelatedCI(CompactCI ci, Guid relationID, Guid fromCIID, Guid toCIID, Guid changesetID, DataOriginV1 origin,
-            string predicateID, bool isForwardRelation, long[] layerStackIDs)
+            string predicateID, bool isForwardRelation, string[] layerStackIDs)
         {
             RelationID = relationID;
             CI = ci;

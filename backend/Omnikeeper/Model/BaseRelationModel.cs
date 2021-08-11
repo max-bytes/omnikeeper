@@ -21,7 +21,7 @@ namespace Omnikeeper.Model
             this.partitionModel = partitionModel;
         }
 
-        private NpgsqlCommand CreateRelationCommand(IRelationSelection rl, long layerID, DateTimeOffset partitionIndex, IModelContext trans, TimeThreshold atTime)
+        private NpgsqlCommand CreateRelationCommand(IRelationSelection rl, string layerID, DateTimeOffset partitionIndex, IModelContext trans, TimeThreshold atTime)
         {
             var innerWhereClauses = new List<string>();
             var parameters = new List<NpgsqlParameter>();
@@ -64,7 +64,7 @@ namespace Omnikeeper.Model
         }
 
 
-        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
@@ -93,7 +93,7 @@ namespace Omnikeeper.Model
             return new Relation(id, fromCIID, toCIID, predicateID, state, changesetID, origin);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
@@ -124,7 +124,7 @@ namespace Omnikeeper.Model
             return relations;
         }
 
-        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, changesetProxy.TimeThreshold);
 
@@ -163,7 +163,7 @@ namespace Omnikeeper.Model
             return (new Relation(id, fromCIID, toCIID, predicateID, RelationState.Removed, changeset.ID, currentRelation.Origin), true);
         }
 
-        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             if (fromCIID == toCIID)
                 throw new Exception("From and To CIID must not be the same!");

@@ -63,10 +63,10 @@ namespace Omnikeeper.Base.CLB
                 var user = await userModel.UpsertUser(username, displayName, guid, UserType.Robot, trans);
                 var changesetProxy = new ChangesetProxy(user, timeThreshold, changesetModel);
 
-                var layerSet = await layerModel.BuildLayerSet(new[] { Settings.LayerName }, trans);
-                var layer = await layerModel.GetLayer(Settings.LayerName, trans);
+                var layerSet = await layerModel.BuildLayerSet(new[] { Settings.LayerID }, trans);
+                var layer = await layerModel.GetLayer(Settings.LayerID, trans);
                 if (layer == null)
-                    throw new Exception($"Could not find layer with name {Settings.LayerName}");
+                    throw new Exception($"Could not find layer with name {Settings.LayerID}");
 
                 var errorHandler = new CLBErrorHandler(trans, Name, layer.ID, changesetProxy, attributeModel);
 

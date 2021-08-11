@@ -96,7 +96,7 @@ namespace Tests.Integration
             services.AddSingleton((sp) => new Mock<IManagementAuthorizationService>().Object);
 
             var lbas = new Mock<ILayerBasedAuthorizationService>();
-            lbas.Setup(e => e.CanUserReadFromAllLayers(It.IsAny<AuthenticatedUser>(), It.IsAny<IEnumerable<long>>())).Returns(true);
+            lbas.Setup(e => e.CanUserReadFromAllLayers(It.IsAny<AuthenticatedUser>(), It.IsAny<IEnumerable<string>>())).Returns(true);
             services.AddSingleton((sp) => lbas.Object);
 
             services.AddSingleton((sp) => new Mock<ICIBasedAuthorizationService>().Object);

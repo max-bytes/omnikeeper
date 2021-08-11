@@ -15,13 +15,13 @@ namespace Omnikeeper.Base.CLB
     {
         private readonly IModelContext trans;
         private readonly string clbName;
-        private readonly long clbLayerID;
+        private readonly string clbLayerID;
         private readonly IChangesetProxy changeset;
         private readonly IAttributeModel attributeModel;
 
         private readonly IList<CIAttribute> writtenErrors = new List<CIAttribute>();
 
-        public CLBErrorHandler(IModelContext trans, string clbName, long clbLayerID, IChangesetProxy changeset, IAttributeModel attributeModel)
+        public CLBErrorHandler(IModelContext trans, string clbName, string clbLayerID, IChangesetProxy changeset, IAttributeModel attributeModel)
         {
             this.trans = trans;
             this.clbName = clbName;

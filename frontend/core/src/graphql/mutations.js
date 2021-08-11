@@ -92,7 +92,7 @@ export const mutations = {
   `,
 
   CREATE_CI: gql`
-    mutation($name: String!, $layerIDForName: Long!) {
+    mutation($name: String!, $layerIDForName: String!) {
       createCIs(cis: [
         {
           name: $name,

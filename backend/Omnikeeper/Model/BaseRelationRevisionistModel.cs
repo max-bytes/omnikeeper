@@ -7,7 +7,7 @@ namespace Omnikeeper.Model
 {
     public class BaseRelationRevisionistModel : IBaseRelationRevisionistModel
     {
-        public async Task<int> DeleteAllRelations(long layerID, IModelContext trans)
+        public async Task<int> DeleteAllRelations(string layerID, IModelContext trans)
         {
             var query = @"delete from relation r where r.layer_id = @layer_id";
 

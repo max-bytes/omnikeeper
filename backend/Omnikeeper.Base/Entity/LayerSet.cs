@@ -6,31 +6,31 @@ using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
-    public class LayerSet : IEnumerable<long>
+    public class LayerSet : IEnumerable<string>
     {
         // can be unsorted
-        public long[] LayerIDs { get; private set; }
+        public string[] LayerIDs { get; private set; }
         public long LayerHash
         {
             get
             {
                 unchecked // we expect overflows
                 {
-                    return LayerIDs.Aggregate(2341L, (hash, item) => hash * 37L + item);
+                    return LayerIDs.Aggregate(2341L, (hash, item) => hash * 37L + item.GetHashCode());
                 }
             }
         }
 
-        public LayerSet(params long[] layerIDs)
+        public LayerSet(params string[] layerIDs)
         {
             LayerIDs = layerIDs;
         }
-        public LayerSet(IEnumerable<long> layerIDs)
+        public LayerSet(IEnumerable<string> layerIDs)
         {
             LayerIDs = layerIDs.ToArray();
         }
 
-        public IEnumerator<long> GetEnumerator() => ((IEnumerable<long>)LayerIDs).GetEnumerator();
+        public IEnumerator<string> GetEnumerator() => ((IEnumerable<string>)LayerIDs).GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => LayerIDs.GetEnumerator();
 
@@ -38,20 +38,7 @@ namespace Omnikeeper.Base.Entity
 
         public int Length => LayerIDs.Length;
 
-        public static string CreateLayerSetSQLValues(LayerSet layers)
-        {
-            if (layers.IsEmpty) throw new Exception("Cannot create valid SQL values from an empty layerset");
-
-            var order = 0;
-            var items = new List<string>();
-            foreach (var layerID in layers)
-            {
-                items.Add($"({layerID}, {order++})");
-            }
-            return $"VALUES{string.Join(',', items)}";
-        }
-
-        public int GetOrder(long layerID)
+        public int GetOrder(string layerID)
         {
             return LayerIDs.IndexOf(layerID);
         }

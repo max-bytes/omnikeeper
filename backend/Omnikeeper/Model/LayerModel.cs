@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model
@@ -19,123 +20,127 @@ namespace Omnikeeper.Model
         private static readonly AnchorState DefaultState = AnchorState.Active;
         private static readonly Color DefaultColor = Color.White;
 
-        public async Task<Layer> CreateLayer(string name, IModelContext trans)
+        private bool ValidateLayerID(string candidateID)
         {
-            return await CreateLayer(name, DefaultColor, DefaultState, DefaultCLB, DefaultOILP, trans);
+            var regex = new Regex("^[a-z0-9_]+$");
+            return regex.IsMatch(candidateID);
         }
-        public async Task<Layer> CreateLayer(string name, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrain, OnlineInboundAdapterLink oilp, IModelContext trans)
+
+        public async Task<Layer> UpsertLayer(string id, IModelContext trans)
+        {
+            return await UpsertLayer(id, "", DefaultColor, DefaultState, DefaultCLB, DefaultOILP, trans);
+        }
+        public async Task<Layer> UpsertLayer(string id, string description, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrain, OnlineInboundAdapterLink oilp, IModelContext trans)
         {
             Debug.Assert(computeLayerBrain != null);
             Debug.Assert(oilp != null);
 
-            // create layer
-            using var command = new NpgsqlCommand(@"INSERT INTO layer (name) VALUES (@name) returning id", trans.DBConnection, trans.DBTransaction);
-            command.Parameters.AddWithValue("name", name); // TODO: move layername into own table to make it mutable
-            var id = (long)await command.ExecuteScalarAsync();
-
-            // set color
-            using var commandColor = new NpgsqlCommand(@"INSERT INTO layer_color (layer_id, color, ""timestamp"")
-                    VALUES (@layer_id, @color, @timestamp)", trans.DBConnection, trans.DBTransaction);
-            commandColor.Parameters.AddWithValue("layer_id", id);
-            commandColor.Parameters.AddWithValue("color", color.ToArgb());
-            commandColor.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
-            await commandColor.ExecuteNonQueryAsync();
-
-            // set state
-            using var commandState = new NpgsqlCommand(@"INSERT INTO layer_state (layer_id, state, ""timestamp"")
-                    VALUES (@layer_id, @state, @timestamp)", trans.DBConnection, trans.DBTransaction);
-            commandState.Parameters.AddWithValue("layer_id", id);
-            commandState.Parameters.AddWithValue("state", state);
-            commandState.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
-            await commandState.ExecuteNonQueryAsync();
-
-            // set clb
-            using var commandCLB = new NpgsqlCommand(@"INSERT INTO layer_computelayerbrain (layer_id, brainname, ""timestamp"")
-                    VALUES (@layer_id, @brainname, @timestamp)", trans.DBConnection, trans.DBTransaction);
-            commandCLB.Parameters.AddWithValue("layer_id", id);
-            commandCLB.Parameters.AddWithValue("brainname", computeLayerBrain.Name);
-            commandCLB.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
-            await commandCLB.ExecuteNonQueryAsync();
-
-            // set oilp
-            using var commandOILP = new NpgsqlCommand(@"INSERT INTO layer_onlineinboundlayerplugin (layer_id, pluginname, ""timestamp"")
-                    VALUES (@layer_id, @pluginname, @timestamp)", trans.DBConnection, trans.DBTransaction);
-            commandOILP.Parameters.AddWithValue("layer_id", id);
-            commandOILP.Parameters.AddWithValue("pluginname", oilp.AdapterName);
-            commandOILP.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
-            await commandOILP.ExecuteNonQueryAsync();
-
-            return Layer.Build(name, id, color, state, computeLayerBrain, oilp);
-        }
-
-        public async Task<Layer> Update(long id, Color color, AnchorState state, ComputeLayerBrainLink computeLayerBrain, OnlineInboundAdapterLink oilp, IModelContext trans)
-        {
-            Debug.Assert(computeLayerBrain != null);
-            Debug.Assert(oilp != null);
+            if (!ValidateLayerID(id))
+                throw new Exception("Invalid layer id");
 
             var current = await GetLayer(id, trans);
 
             if (current == null)
             {
-                throw new Exception("Could not update layer with ID {id} because it could not be found");
-            }
 
-            Debug.Assert(current.ComputeLayerBrainLink != null);
-            Debug.Assert(current.OnlineInboundAdapterLink != null);
+                // create layer
+                using var command = new NpgsqlCommand(@"INSERT INTO layer (id, description) VALUES (@id, @description)", trans.DBConnection, trans.DBTransaction);
+                command.Parameters.AddWithValue("id", id);
+                command.Parameters.AddWithValue("description", description); // TODO: move description into own table to make it mutable?
+                await command.ExecuteNonQueryAsync();
 
-            // update color
-            if (!current.Color.Equals(color))
-            {
+                // set color
                 using var commandColor = new NpgsqlCommand(@"INSERT INTO layer_color (layer_id, color, ""timestamp"")
-                    VALUES (@layer_id, @color, @timestamp)", trans.DBConnection, trans.DBTransaction);
+                        VALUES (@layer_id, @color, @timestamp)", trans.DBConnection, trans.DBTransaction);
                 commandColor.Parameters.AddWithValue("layer_id", id);
                 commandColor.Parameters.AddWithValue("color", color.ToArgb());
                 commandColor.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandColor.ExecuteNonQueryAsync();
-                current = Layer.Build(current.Name, current.ID, color, current.State, current.ComputeLayerBrainLink, current.OnlineInboundAdapterLink);
-            }
 
-            // update state
-            if (current.State != state)
-            {
+                // set state
                 using var commandState = new NpgsqlCommand(@"INSERT INTO layer_state (layer_id, state, ""timestamp"")
-                    VALUES (@layer_id, @state, @timestamp)", trans.DBConnection, trans.DBTransaction);
+                        VALUES (@layer_id, @state, @timestamp)", trans.DBConnection, trans.DBTransaction);
                 commandState.Parameters.AddWithValue("layer_id", id);
                 commandState.Parameters.AddWithValue("state", state);
                 commandState.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandState.ExecuteNonQueryAsync();
-                current = Layer.Build(current.Name, current.ID, current.Color, state, current.ComputeLayerBrainLink, current.OnlineInboundAdapterLink);
-            }
 
-            // update clb
-            if (!current.ComputeLayerBrainLink.Equals(computeLayerBrain))
-            {
+                // set clb
                 using var commandCLB = new NpgsqlCommand(@"INSERT INTO layer_computelayerbrain (layer_id, brainname, ""timestamp"")
-                    VALUES (@layer_id, @brainname, @timestamp)", trans.DBConnection, trans.DBTransaction);
+                        VALUES (@layer_id, @brainname, @timestamp)", trans.DBConnection, trans.DBTransaction);
                 commandCLB.Parameters.AddWithValue("layer_id", id);
                 commandCLB.Parameters.AddWithValue("brainname", computeLayerBrain.Name);
                 commandCLB.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandCLB.ExecuteNonQueryAsync();
-                current = Layer.Build(current.Name, current.ID, current.Color, current.State, computeLayerBrain, current.OnlineInboundAdapterLink);
-            }
 
-            // update oilp
-            if (!current.OnlineInboundAdapterLink.Equals(oilp))
-            {
+                // set oilp
                 using var commandOILP = new NpgsqlCommand(@"INSERT INTO layer_onlineinboundlayerplugin (layer_id, pluginname, ""timestamp"")
-                    VALUES (@layer_id, @pluginname, @timestamp)", trans.DBConnection, trans.DBTransaction);
+                        VALUES (@layer_id, @pluginname, @timestamp)", trans.DBConnection, trans.DBTransaction);
                 commandOILP.Parameters.AddWithValue("layer_id", id);
                 commandOILP.Parameters.AddWithValue("pluginname", oilp.AdapterName);
                 commandOILP.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandOILP.ExecuteNonQueryAsync();
-                current = Layer.Build(current.Name, current.ID, current.Color, current.State, current.ComputeLayerBrainLink, oilp);
-            }
 
-            return current;
+                return Layer.Build(id, description, color, state, computeLayerBrain, oilp);
+            } else
+            {
+                // update color
+                if (!current.Color.Equals(color))
+                {
+                    using var commandColor = new NpgsqlCommand(@"INSERT INTO layer_color (layer_id, color, ""timestamp"")
+                    VALUES (@layer_id, @color, @timestamp)", trans.DBConnection, trans.DBTransaction);
+                    commandColor.Parameters.AddWithValue("layer_id", id);
+                    commandColor.Parameters.AddWithValue("color", color.ToArgb());
+                    commandColor.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
+                    await commandColor.ExecuteNonQueryAsync();
+                    current = Layer.Build(current.ID, current.Description, color, current.State, current.ComputeLayerBrainLink, current.OnlineInboundAdapterLink);
+                }
+
+                // update state
+                if (current.State != state)
+                {
+                    using var commandState = new NpgsqlCommand(@"INSERT INTO layer_state (layer_id, state, ""timestamp"")
+                    VALUES (@layer_id, @state, @timestamp)", trans.DBConnection, trans.DBTransaction);
+                    commandState.Parameters.AddWithValue("layer_id", id);
+                    commandState.Parameters.AddWithValue("state", state);
+                    commandState.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
+                    await commandState.ExecuteNonQueryAsync();
+                    current = Layer.Build(current.ID, current.Description, current.Color, state, current.ComputeLayerBrainLink, current.OnlineInboundAdapterLink);
+                }
+
+                // update clb
+                if (!current.ComputeLayerBrainLink.Equals(computeLayerBrain))
+                {
+                    using var commandCLB = new NpgsqlCommand(@"INSERT INTO layer_computelayerbrain (layer_id, brainname, ""timestamp"")
+                    VALUES (@layer_id, @brainname, @timestamp)", trans.DBConnection, trans.DBTransaction);
+                    commandCLB.Parameters.AddWithValue("layer_id", id);
+                    commandCLB.Parameters.AddWithValue("brainname", computeLayerBrain.Name);
+                    commandCLB.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
+                    await commandCLB.ExecuteNonQueryAsync();
+                    current = Layer.Build(current.ID, current.Description, current.Color, current.State, computeLayerBrain, current.OnlineInboundAdapterLink);
+                }
+
+                // update oilp
+                if (!current.OnlineInboundAdapterLink.Equals(oilp))
+                {
+                    using var commandOILP = new NpgsqlCommand(@"INSERT INTO layer_onlineinboundlayerplugin (layer_id, pluginname, ""timestamp"")
+                    VALUES (@layer_id, @pluginname, @timestamp)", trans.DBConnection, trans.DBTransaction);
+                    commandOILP.Parameters.AddWithValue("layer_id", id);
+                    commandOILP.Parameters.AddWithValue("pluginname", oilp.AdapterName);
+                    commandOILP.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
+                    await commandOILP.ExecuteNonQueryAsync();
+                    current = Layer.Build(current.ID, current.Description, current.Color, current.State, current.ComputeLayerBrainLink, oilp);
+                }
+
+                return current;
+            }
         }
 
-        public async Task<bool> TryToDelete(long id, IModelContext trans)
+        public async Task<bool> TryToDelete(string id, IModelContext trans)
         {
+            if (!ValidateLayerID(id))
+                throw new Exception("Invalid layer id");
+
             try
             {
                 using var command = new NpgsqlCommand(@"DELETE FROM layer WHERE id = @id", trans.DBConnection, trans.DBTransaction);
@@ -149,27 +154,28 @@ namespace Omnikeeper.Model
             }
         }
 
-        // TODO: performance improvements(?)
-        public async Task<LayerSet> BuildLayerSet(string[] layerNames, IModelContext trans)
+        // TODO: performance improvements!
+        public async Task<LayerSet> BuildLayerSet(string[] ids, IModelContext trans)
         {
-            var layerIDs = new List<long>();
-            foreach (var ln in layerNames)
+            foreach (var id in ids)
             {
-                using var command = new NpgsqlCommand(@"select id from layer where name = @name LIMIT 1", trans.DBConnection, trans.DBTransaction);
-                command.Parameters.AddWithValue("name", ln);
+                if (!ValidateLayerID(id))
+                    throw new Exception("Invalid layer id");
+
+                using var command = new NpgsqlCommand(@"select id from layer where id = @id LIMIT 1", trans.DBConnection, trans.DBTransaction);
+                command.Parameters.AddWithValue("id", id);
                 command.Prepare();
                 var s = await command.ExecuteScalarAsync();
                 if (s == null)
-                    throw new Exception(@$"Could not find layer with name ""{ln}""");
-                layerIDs.Add((long)s);
+                    throw new Exception(@$"Could not find layer with ID ""{id}""");
             }
-            return new LayerSet(layerIDs.ToArray());
+            return new LayerSet(ids);
         }
 
         private async Task<IEnumerable<Layer>> _GetLayers(string whereClause, Action<NpgsqlParameterCollection> addParameters, IModelContext trans)
         {
             var layers = new List<Layer>();
-            using var command = new NpgsqlCommand($@"SELECT l.id, l.name, ls.state, lclb.brainname, loilp.pluginname, lc.color FROM layer l
+            using var command = new NpgsqlCommand($@"SELECT l.id, l.description, ls.state, lclb.brainname, loilp.pluginname, lc.color FROM layer l
                 LEFT JOIN 
                     (SELECT DISTINCT ON (layer_id) layer_id, state FROM layer_state ORDER BY layer_id, timestamp DESC NULLS LAST) ls
                     ON ls.layer_id = l.id
@@ -188,33 +194,34 @@ namespace Omnikeeper.Model
             using var r = await command.ExecuteReaderAsync();
             while (await r.ReadAsync())
             {
-                var id = r.GetInt64(0);
-                var name = r.GetString(1);
+                var id = r.GetString(0);
+                var description = r.GetString(1);
                 var state = (r.IsDBNull(2)) ? DefaultState : r.GetFieldValue<AnchorState>(2);
                 var clb = (r.IsDBNull(3)) ? DefaultCLB : ComputeLayerBrainLink.Build(r.GetString(3));
                 var oilp = (r.IsDBNull(4)) ? DefaultOILP : OnlineInboundAdapterLink.Build(r.GetString(4));
                 var color = (r.IsDBNull(5)) ? DefaultColor : Color.FromArgb(r.GetInt32(5));
-                layers.Add(Layer.Build(name, id, color, state, clb, oilp));
+                layers.Add(Layer.Build(id, description, color, state, clb, oilp));
             }
             return layers;
         }
 
-        public async Task<Layer?> GetLayer(string layerName, IModelContext trans)
+        public async Task<Layer?> GetLayer(string id, IModelContext trans)
         {
-            var layers = await _GetLayers("l.name = @name LIMIT 1", (p) => p.AddWithValue("name", layerName), trans);
+            if (!ValidateLayerID(id))
+                throw new Exception("Invalid layer id");
+
+            var layers = await _GetLayers("l.id = @id LIMIT 1", (p) => p.AddWithValue("id", id), trans);
             return layers.FirstOrDefault();
         }
 
-        public async Task<Layer?> GetLayer(long layerID, IModelContext trans)
-        {
-            var layers = await _GetLayers("l.id = @id LIMIT 1", (p) => p.AddWithValue("id", layerID), trans);
-            return layers.FirstOrDefault();
-        }
 
-
-        public async Task<IEnumerable<Layer>> GetLayers(long[] layerIDs, IModelContext trans)
+        public async Task<IEnumerable<Layer>> GetLayers(string[] layerIDs, IModelContext trans)
         {
             if (layerIDs.Length == 0) return new List<Layer>();
+
+            foreach(var id in layerIDs)
+                if (!ValidateLayerID(id))
+                    throw new Exception("Invalid layer id");
 
             var layers = (await _GetLayers("l.id = ANY(@layer_ids)", (p) => p.AddWithValue("layer_ids", layerIDs), trans)).ToList();
 

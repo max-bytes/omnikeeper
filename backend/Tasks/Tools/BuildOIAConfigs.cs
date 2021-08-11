@@ -10,19 +10,19 @@ namespace Tasks.Tools
         [Test]
         public void BuildOmnikeeperOIAConfig()
         {
-            var config = new OKPluginOIAOmnikeeper.OnlineInboundAdapter.Config(
-                "https://mhx.registry-test.mhx.at/backend/api",
-                "https://auth-test.mhx.at/",
-                "mhx",
-                "landscape-omnikeeper-api",
-                "9c98eb5f-22f0-47d1-8123-810d7d96104f",
-                new string[] { "CMDB" },
-                new TimeSpan(0, 1, 0),
-                "omnikeeper_mhx"
-                );
-            var json = IOnlineInboundAdapter.IConfig.Serializer.SerializeToString(config);
+            //var config = new OKPluginOIAOmnikeeper.OnlineInboundAdapter.Config(
+            //    "https://mhx.registry-test.mhx.at/backend/api",
+            //    "https://auth-test.mhx.at/",
+            //    "mhx",
+            //    "landscape-omnikeeper-api",
+            //    "9c98eb5f-22f0-47d1-8123-810d7d96104f",
+            //    new string[] { "CMDB" },
+            //    new TimeSpan(0, 1, 0),
+            //    "omnikeeper_mhx"
+            //    );
+            //var json = IOnlineInboundAdapter.IConfig.Serializer.SerializeToString(config);
 
-            Console.WriteLine(json);
+            //Console.WriteLine(json);
         }
 
         [Test]
@@ -41,7 +41,7 @@ namespace Tasks.Tools
                         new OKPluginOIASharepoint.Config.ListColumnConfig("Company", "user.company"),
                         new OKPluginOIASharepoint.Config.ListColumnConfig("GivenName", "user.first_name"),
                         new OKPluginOIASharepoint.Config.ListColumnConfig("Surname", "user.last_name")
-                    }, new string[] { "user.first_name", "user.last_name" }, new long[] { 1L, 2L })
+                    }, new string[] { "user.first_name", "user.last_name" }, new string[] { "1", "2" })
                 });
             var json = IOnlineInboundAdapter.IConfig.Serializer.SerializeToString(config);
 

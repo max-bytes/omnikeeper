@@ -51,11 +51,11 @@ namespace Omnikeeper.Runners
                 }
                 else
                 {
-                    logger.LogInformation($"Running CLB {l.ComputeLayerBrainLink.Name} on layer {l.Name}");
+                    logger.LogInformation($"Running CLB {l.ComputeLayerBrainLink.Name} on layer {l.ID}");
 
                     Stopwatch stopWatch = new Stopwatch();
                     stopWatch.Start();
-                    await clb.Run(new CLBSettings(l.Name), modelContextBuilder, logger);
+                    await clb.Run(new CLBSettings(l.ID), modelContextBuilder, logger);
                     stopWatch.Stop();
                     TimeSpan ts = stopWatch.Elapsed;
                     string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);

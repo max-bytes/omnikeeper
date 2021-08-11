@@ -38,12 +38,12 @@ namespace OKPluginOIASharepoint.Tests
                         new Config.ListColumnConfig("Title", "title_attribute"),
                         new Config.ListColumnConfig("Surname", "last_name"),
                         new Config.ListColumnConfig("Surname", "__name")
-                    }, new string[] { "last_name" }, new long[] { 0L })
+                    }, new string[] { "last_name" }, new string[] { "0" })
                 });
             var oia = new OnlineInboundAdapter.Builder().Build(config, new Mock<IConfiguration>().Object, new Mock<IScopedExternalIDMapper>().Object, NullLoggerFactory.Instance);
 
             // TODO: mock instead?
-            var layer = Layer.Build("testlayer", 0, Color.White, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""));
+            var layer = Layer.Build("testlayer", "0", Color.White, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""));
 
             var lap = (oia.CreateLayerAccessProxy(layer) as LayerAccessProxy)!;
 
@@ -127,7 +127,7 @@ namespace OKPluginOIASharepoint.Tests
                         new Config.ListColumnConfig("Title", "title_attribute"),
                         new Config.ListColumnConfig("Surname", "last_name"),
                         new Config.ListColumnConfig("Surname", "__name")
-                    }, new string[] { "last_name" }, new long[] { 0L })});
+                    }, new string[] { "last_name" }, new string[] { "0" })});
             var accessTokenGetter = new AccessTokenGetter(config);
 
             var client = new SharepointClient(config.siteDomain, config.site, accessTokenGetter);
@@ -138,7 +138,7 @@ namespace OKPluginOIASharepoint.Tests
             var eIDs = await m.ExposeGetExternalIDs();
 
             var expected = listItems.Select(li => (new SharepointExternalListItemID(ExternalSharepointListID, li.itemGuid),
-                    CIIdentificationMethodByData.BuildFromFragments(new CICandidateAttributeData.Fragment[] { new CICandidateAttributeData.Fragment("last_name", new AttributeScalarValueText((li.data.Title as string)!)) }, new LayerSet(0))
+                    CIIdentificationMethodByData.BuildFromFragments(new CICandidateAttributeData.Fragment[] { new CICandidateAttributeData.Fragment("last_name", new AttributeScalarValueText((li.data.Title as string)!)) }, new LayerSet("0"))
                 )
             );
 
@@ -156,7 +156,7 @@ namespace OKPluginOIASharepoint.Tests
                         new Config.ListColumnConfig("Title", "title_attribute"),
                         new Config.ListColumnConfig("Surname", "last_name"),
                         new Config.ListColumnConfig("Surname", "__name")
-                    }, new string[] { "last_name" }, new long[] { 0L })});
+                    }, new string[] { "last_name" }, new string[] { "0" })});
             var accessTokenGetter = new AccessTokenGetter(config);
 
             var client = new SharepointClient(config.siteDomain, config.site, accessTokenGetter);

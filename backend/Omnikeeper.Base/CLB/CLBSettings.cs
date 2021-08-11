@@ -2,11 +2,11 @@
 {
     public class CLBSettings
     {
-        public CLBSettings(string layerName)
+        public CLBSettings(string layerID)
         {
-            LayerName = layerName;
+            LayerID = layerID;
         }
 
-        public string LayerName { get; }
+        public string LayerID { get; }
     }
 }
