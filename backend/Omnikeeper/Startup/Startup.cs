@@ -259,16 +259,8 @@ namespace Omnikeeper.Startup
                     var std = ODataInputFormatter.GetDefaultBaseAddress(m);
                     string newBaseURLPrefix;
                     string replaceStr;
-                    if (CurrentEnvironment.IsDevelopment())
-                    {
-                        newBaseURLPrefix = $"https://{m.Host.Host}:{m.Host.Port}{Configuration["BaseURL"]}";
-                        replaceStr = m.Scheme + "://" + m.Host.Host + ":" + m.Host.Port;
-                    }
-                    else
-                    {
-                        newBaseURLPrefix = $"https://{m.Host.Host}{Configuration["BaseURL"]}";
-                        replaceStr = m.Scheme + "://" + m.Host.Host;
-                    }
+                    replaceStr = $"{m.Scheme}://{m.Host.Host}:{m.Host.Port}";
+                    newBaseURLPrefix = $"{m.Scheme}://{m.Host.Host}:{m.Host.Port}{Configuration["BaseURL"]}";
                     var oldBaseURL = std.ToString();
                     var newBaseURL = oldBaseURL.Replace(replaceStr, newBaseURLPrefix, StringComparison.InvariantCultureIgnoreCase);
 
@@ -354,7 +346,7 @@ namespace Omnikeeper.Startup
                 c.RouteTemplate = "swagger/{documentName}/swagger.json";
                 c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
                 {
-                    swaggerDoc.Servers = new List<OpenApiServer> { new OpenApiServer { Url = $"https://{httpReq.Host.Value}{Configuration["BaseURL"]}" } };
+                    swaggerDoc.Servers = new List<OpenApiServer> { new OpenApiServer { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}{Configuration["BaseURL"]}" } };
                 });
             });
             app.UseSwaggerUI(c =>

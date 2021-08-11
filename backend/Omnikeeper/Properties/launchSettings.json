@@ -8,34 +8,34 @@
     }
   },
   "$schema": "http://json.schemastore.org/launchsettings.json",
-    "profiles": {
-        "GraphQL API": {
-            "commandName": "IISExpress",
-            "launchBrowser": true,
-            "launchUrl": "ui/playground",
-            "environmentVariables": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
-            }
-        },
-        "REST API": {
-            "commandName": "IISExpress",
-            "launchBrowser": true,
-            "launchUrl": "swagger",
-            "environmentVariables": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
-            }
-        },
-        "Docker": {
-            "commandName": "Docker",
-            "launchBrowser": true,
-            "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/ui/playground",
-            "environmentVariables": {
-                "ASPNETCORE_HTTPS_PORT": "44360",
-                "ASPNETCORE_ENVIRONMENT": "Development"
-            },
-            "publishAllPorts": true,
-            "useSSL": true,
-            "sslPort": 44360
-        }
+  "profiles": {
+    "GraphQL API": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "launchUrl": "ui/playground",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "REST API": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchBrowser": true,
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/ui/playground",
+      "environmentVariables": {
+        "ASPNETCORE_HTTPS_PORT": "44360",
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "publishAllPorts": true,
+      "useSSL": true,
+      "sslPort": 44360
     }
+  }
 }
