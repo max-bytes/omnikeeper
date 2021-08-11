@@ -23,6 +23,7 @@ jobs:
           path: wiki
       - name: Push to wiki
         run: |
+          find wiki/ ! -name '.git' -exec rm -f {} +
           cp -a base/docs/source/. wiki/
           cd wiki
           git config --local user.name "GitHub Action"
