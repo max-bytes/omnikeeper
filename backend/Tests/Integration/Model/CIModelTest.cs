@@ -35,12 +35,12 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
 
-            long layerID1;
-            long layerID2;
+            string layerID1;
+            string layerID2;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var layer1 = await layerModel.CreateLayer("l1", trans);
-                var layer2 = await layerModel.CreateLayer("l2", trans);
+                var layer1 = await layerModel.UpsertLayer("l1", trans);
+                var layer2 = await layerModel.UpsertLayer("l2", trans);
                 layerID1 = layer1.ID;
                 layerID2 = layer2.ID;
                 trans.Commit();
@@ -88,13 +88,13 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel, trans);
 
             var ciid1 = await model.CreateCI(trans);
-            var layer1 = await layerModel.CreateLayer("l1", trans);
-            var layer2 = await layerModel.CreateLayer("l2", trans);
+            var layer1 = await layerModel.UpsertLayer("l1", trans);
+            var layer2 = await layerModel.UpsertLayer("l2", trans);
 
-            var layerset1 = new LayerSet(new long[] { layer1.ID });
-            var layerset2 = new LayerSet(new long[] { layer2.ID });
-            var layerset3 = new LayerSet(new long[] { layer1.ID, layer2.ID });
-            var layerset4 = new LayerSet(new long[] { layer2.ID, layer1.ID });
+            var layerset1 = new LayerSet(new string[] { layer1.ID });
+            var layerset2 = new LayerSet(new string[] { layer2.ID });
+            var layerset3 = new LayerSet(new string[] { layer1.ID, layer2.ID });
+            var layerset4 = new LayerSet(new string[] { layer2.ID, layer1.ID });
 
             var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -129,9 +129,9 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel, transI);
 
             var ciid1 = await model.CreateCI(transI);
-            var layer1 = await layerModel.CreateLayer("l1", transI);
-            var layer2 = await layerModel.CreateLayer("l2", transI);
-            var layerset1 = new LayerSet(new long[] { layer2.ID, layer1.ID });
+            var layer1 = await layerModel.UpsertLayer("l1", transI);
+            var layer2 = await layerModel.UpsertLayer("l2", transI);
+            var layerset1 = new LayerSet(new string[] { layer2.ID, layer1.ID });
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {

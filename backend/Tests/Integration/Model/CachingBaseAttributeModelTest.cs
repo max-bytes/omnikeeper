@@ -31,7 +31,7 @@ namespace Tests.Integration.Model
         {
             public EmptyMockedBaseAttributeModel()
             {
-                Setup(_ => _.GetAttributes(It.IsAny<ICIIDSelection>(), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
+                Setup(_ => _.GetAttributes(It.IsAny<ICIIDSelection>(), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>();
                 });
@@ -63,19 +63,19 @@ namespace Tests.Integration.Model
             var memoryCache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
             var trans = new ModelContextImmediateMode(memoryCache, null!, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
 
-            var layerID = 1L;
+            var layerID = "1";
             var timeThreshold = TimeThreshold.BuildLatest();
             await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid1), layerID, trans, timeThreshold);
-            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => s.CIIDs.First() == ciid1), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once());
+            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => s.CIIDs.First() == ciid1), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once());
 
             await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid1), layerID, trans, timeThreshold);
-            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => s.CIIDs.First() == ciid1), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once()); // still one
+            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => s.CIIDs.First() == ciid1), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once()); // still one
 
             await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid2), layerID, trans, timeThreshold);
-            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => s.CIIDs.First() == ciid2), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once()); // different parameters
+            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => s.CIIDs.First() == ciid2), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once()); // different parameters
 
             await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid2), layerID, trans, TimeThreshold.BuildAtTime(DateTimeOffset.Now.AddDays(-1)));
-            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => s.CIIDs.First() == ciid2), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Exactly(2)); // not latest time
+            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => s.CIIDs.First() == ciid2), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Exactly(2)); // not latest time
         }
 
 
@@ -83,7 +83,7 @@ namespace Tests.Integration.Model
         public async Task IsCacheProperlyFilledAndEvicted()
         {
             var mocked = new FilledMockedBaseAttributeModel();
-            mocked.Setup(_ => _.RemoveAttribute(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<long>(), It.IsAny<IChangesetProxy>(), It.IsAny<IModelContext>())).ReturnsAsync(() =>
+            mocked.Setup(_ => _.RemoveAttribute(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<IChangesetProxy>(), It.IsAny<IModelContext>())).ReturnsAsync(() =>
             {
                 return (null!, true);
             });
@@ -92,7 +92,7 @@ namespace Tests.Integration.Model
             var memoryCache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
             var trans = new ModelContextImmediateMode(memoryCache, null!, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
 
-            var layerID = 1L;
+            var layerID = "1";
             var timeThreshold = TimeThreshold.BuildLatest();
             await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid1, ciid2), layerID, trans, timeThreshold);
 
@@ -151,7 +151,7 @@ namespace Tests.Integration.Model
             public FilledMockedBaseAttributeModel()
             {
                 Guid staticChangesetID = new Guid("6c1457d9-1807-453d-acab-68cd62726f1a");
-                Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
+                Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
@@ -159,14 +159,14 @@ namespace Tests.Integration.Model
                         new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual))
                     };
                 });
-                Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
+                Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
                         new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0740"), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual))
                     };
                 });
-                Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
+                Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid2 }, s.CIIDs)), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
@@ -185,12 +185,12 @@ namespace Tests.Integration.Model
                 var memoryCache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
                 var trans = new ModelContextImmediateMode(memoryCache, null!, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
 
-                var layerID = 1L;
+                var layerID = "1";
                 var timeThreshold = TimeThreshold.BuildLatest();
                 await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(new Guid[] { ciid1, ciid2 }), layerID, trans, timeThreshold);
-                mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once());
+                mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once());
                 await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(new Guid[] { ciid1, ciid2 }), layerID, trans, timeThreshold);
-                mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once()); // still one
+                mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once()); // still one
             }
 
             await TestBasic(new EmptyMockedBaseAttributeModel());
@@ -204,13 +204,13 @@ namespace Tests.Integration.Model
             var memoryCache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
             var trans = new ModelContextImmediateMode(memoryCache, null!, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
             var attributeModel = new CachingBaseAttributeModel(mocked.Object, mockedCIIDModel.Object, NullLogger<CachingBaseAttributeModel>.Instance);
-            var layerID = 1L;
+            var layerID = "1";
             var timeThreshold = TimeThreshold.BuildLatest();
             await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(new Guid[] { ciid1 }), layerID, trans, timeThreshold);
-            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once());
+            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once());
             await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(new Guid[] { ciid1, ciid2 }), layerID, trans, timeThreshold);
-            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Never());
-            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid2 }, s.CIIDs)), It.IsAny<long>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once());
+            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1, ciid2 }, s.CIIDs)), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Never());
+            mocked.Verify(mock => mock.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid2 }, s.CIIDs)), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()), Times.Once());
         }
     }
 }

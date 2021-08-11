@@ -22,13 +22,12 @@ export default function ManageLayers(props) {
       console.log(e);
     }
   });
-  const [createLayer] = useMutation(mutations.CREATE_LAYER);
-  const [updateLayer] = useMutation(mutations.UPDATE_LAYER);
+  const [upsertLayer] = useMutation(mutations.UPSERT_LAYER);
   const apolloClient = useApolloClient();
 
   const columnDefs = [
-    { headerName: "ID", field: "id", editable: false },
-    { headerName: "Name", field: "name", editable: (params) => params.data.isNew },
+    { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
+    { headerName: "Description", field: "description", editable: (params) => params.data.isNew },
     { headerName: "Color", field: "color", width: 70, cellEditor: 'ARGBColorCellEditor', cellRenderer: 'layerColorCellRenderer' },
     { headerName: "Compute Layer Brain", field: "brainName" },
     { headerName: "Online Inbound Adapter", field: "onlineInboundAdapterName" },
@@ -45,19 +44,12 @@ export default function ManageLayers(props) {
     <h2>Layers</h2>
     <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
 
-    <AgGridCrud idIsUserCreated={false} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
+    <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
       saveRow={async row => {
-        if (row.id === undefined && row.frontend_id !== undefined) {
-          return createLayer({variables: { layer: { name: row.name, state: row.state, brainName: row.brainName, onlineInboundAdapterName: row.onlineInboundAdapterName, color: row.color }}})
-            .then(r => ({result: r.data.createLayer, frontend_id: row.frontend_id}))
-            .then(r => apolloClient.resetStore())
-            .catch(e => ({result: e, frontend_id: row.frontend_id }));
-        } else {
-          return updateLayer({variables: { layer: { id: row.id, state: row.state, brainName: row.brainName, onlineInboundAdapterName: row.onlineInboundAdapterName, color: row.color }}})
-            .then(r => ({result: r.data.updateLayer, id: row.id}))
-            .then(r => apolloClient.resetStore())
+          return upsertLayer({variables: { layer: { id: row.id, description: row.description, state: row.state, brainName: row.brainName, onlineInboundAdapterName: row.onlineInboundAdapterName, color: row.color }}})
+            .then(r => { apolloClient.resetStore(); return r; })
+            .then(r => ({result: r.data.manage_upsertLayer, id: row.id}))
             .catch(e => ({result: e, id: row.id }));
-        }
       }} />
   </div>;
 }

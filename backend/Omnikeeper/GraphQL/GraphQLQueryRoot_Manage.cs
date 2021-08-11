@@ -38,7 +38,7 @@ namespace Omnikeeper.GraphQL
 
             FieldAsync<LayerStatisticsType>("manage_layerStatistics",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<LongGraphType>> { Name = "layerID" }),
+                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "layerID" }),
                 resolve: async context =>
                 {
                     var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
@@ -47,7 +47,7 @@ namespace Omnikeeper.GraphQL
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
-                    var layerID = context.GetArgument<long>("layerID");
+                    var layerID = context.GetArgument<string>("layerID");
 
                     var layer = await layerModel.GetLayer(layerID, userContext.Transaction);
                     if (layer == null)

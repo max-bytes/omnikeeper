@@ -19,7 +19,7 @@ function CIRelations(props) {
   const perPredicateLimit = 100;
 
   const { loading: loadingCI, error: errorCI, data: dataCI, refetch: refetchCI } = useQuery(queries.FullCI, {
-    variables: { ciid: props.ciIdentity, layers: visibleLayers.map(l => l.name), timeThreshold: props.timeThreshold, includeRelated: perPredicateLimit, includeAttributes: false }
+    variables: { ciid: props.ciIdentity, layers: visibleLayers.map(l => l.id), timeThreshold: props.timeThreshold, includeRelated: perPredicateLimit, includeAttributes: false }
   });
 
   const { loading: loadingPredicates, error: errorPredicates, data: dataPredicates } = useQuery(queries.PredicateList, { variables: {} });
@@ -44,7 +44,7 @@ function CIRelations(props) {
     return (<>
     <Row>
       <Col span={24}>
-        <AddNewRelation isEditable={props.isEditable} perPredicateLimit={perPredicateLimit} visibleLayers={visibleLayers.map(l => l.name)} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ciIdentity}></AddNewRelation>
+        <AddNewRelation isEditable={props.isEditable} perPredicateLimit={perPredicateLimit} visibleLayers={visibleLayers.map(l => l.id)} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ciIdentity}></AddNewRelation>
       </Col>
     </Row>
     <Row>

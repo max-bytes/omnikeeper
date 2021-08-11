@@ -22,7 +22,7 @@ namespace Tests.Integration.Model
 
             var layerNames = Enumerable.Range(0, 100).Select(i => $"l{i}");
             foreach (var ln in layerNames)
-                await layerModel.CreateLayer(ln, trans);
+                await layerModel.UpsertLayer(ln, trans);
 
             //layerModel.CreateLayer("l1");
             //layerModel.CreateLayer("l2");
@@ -50,9 +50,9 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel);
             using var trans = ModelContextBuilder.BuildImmediate();
 
-            var layerA = await layerModel.CreateLayer("a", trans);
-            var layerB = await layerModel.CreateLayer("b", ColorTranslator.FromHtml("#FF0000"), AnchorState.Deprecated, ComputeLayerBrainLink.Build("clbB"), OnlineInboundAdapterLink.Build("oilpX"), trans);
-            var layerC = await layerModel.CreateLayer("c", ColorTranslator.FromHtml("#00FF00"), AnchorState.Deprecated, ComputeLayerBrainLink.Build("clbC"), OnlineInboundAdapterLink.Build("oilpY"), trans);
+            var layerA = await layerModel.UpsertLayer("a", trans);
+            var layerB = await layerModel.UpsertLayer("b", "", ColorTranslator.FromHtml("#FF0000"), AnchorState.Deprecated, ComputeLayerBrainLink.Build("clbB"), OnlineInboundAdapterLink.Build("oilpX"), trans);
+            var layerC = await layerModel.UpsertLayer("c", "", ColorTranslator.FromHtml("#00FF00"), AnchorState.Deprecated, ComputeLayerBrainLink.Build("clbC"), OnlineInboundAdapterLink.Build("oilpY"), trans);
 
             var user = await userModel.UpsertUser("testuser", "testuser", Guid.NewGuid(), UserType.Human, trans);
 

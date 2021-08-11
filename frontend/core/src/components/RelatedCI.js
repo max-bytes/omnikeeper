@@ -40,7 +40,7 @@ function RelatedCI(props) {
   if (props.isEditable) {
     removeButton = <Button type="danger" size="small" onClick={e => {
       removeRelation({ variables: { fromCIID: props.related.fromCIID, toCIID: props.related.toCIID, includeRelated: props.perPredicateLimit,
-        predicateID: props.related.predicateID, layerID: props.related.layerID, layers: visibleLayers.map(l => l.name) } })
+        predicateID: props.related.predicateID, layerID: props.related.layerID, layers: visibleLayers.map(l => l.id) } })
       .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
     }}>Remove</Button>;
   }

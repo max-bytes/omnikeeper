@@ -13,7 +13,7 @@ namespace Tests.Integration.Serialization
         public void TestSerialization()
         {
             var dataSerializer = new ProtoBufDataSerializer();
-            var a = new ODataAPIContext("id", new ODataAPIContext.ConfigV3(123L, new long[] { 923L, 45L }));
+            var a = new ODataAPIContext("id", new ODataAPIContext.ConfigV3("123", new string[] { "923", "45" }));
             var b = dataSerializer.ToByteArray(a);
             dataSerializer.FromByteArray<ODataAPIContext>(b).Should().BeEquivalentTo(a);
         }

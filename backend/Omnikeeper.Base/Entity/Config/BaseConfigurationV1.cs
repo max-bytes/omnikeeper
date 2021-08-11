@@ -16,8 +16,8 @@ namespace Omnikeeper.Base.Entity.Config
         [ProtoMember(3)] private readonly string markedForDeletionRunnerInterval;
         [ProtoMember(4)] private readonly string externalIDManagerRunnerInterval;
         [ProtoMember(5)] private readonly string archiveOldDataRunnerInterval;
-        [ProtoMember(6)] private readonly long[] configLayerset;
-        [ProtoMember(7)] private readonly long configWriteLayer;
+        [ProtoMember(6)] private readonly string[] configLayerset;
+        [ProtoMember(7)] private readonly string configWriteLayer;
 
         [JsonProperty(Required = Required.Always)]
         public TimeSpan ArchiveChangesetThreshold => archiveChangesetThreshold;
@@ -30,9 +30,9 @@ namespace Omnikeeper.Base.Entity.Config
         [JsonProperty(Required = Required.Always)]
         public string ArchiveOldDataRunnerInterval => archiveOldDataRunnerInterval;
         [JsonProperty(Required = Required.Always)]
-        public long[] ConfigLayerset => configLayerset;
+        public string[] ConfigLayerset => configLayerset;
         [JsonProperty(Required = Required.Always)]
-        public long ConfigWriteLayer => configWriteLayer;
+        public string ConfigWriteLayer => configWriteLayer;
 
         public static MyJSONSerializer<BaseConfigurationV1> Serializer = new MyJSONSerializer<BaseConfigurationV1>(new JsonSerializerSettings()
         {
@@ -40,7 +40,7 @@ namespace Omnikeeper.Base.Entity.Config
             MissingMemberHandling = MissingMemberHandling.Error
         });
 
-        public BaseConfigurationV1(TimeSpan archiveChangesetThreshold, string clbRunnerInterval, string markedForDeletionRunnerInterval, string externalIDManagerRunnerInterval, string archiveOldDataRunnerInterval, long[] configLayerset, long configWriteLayer)
+        public BaseConfigurationV1(TimeSpan archiveChangesetThreshold, string clbRunnerInterval, string markedForDeletionRunnerInterval, string externalIDManagerRunnerInterval, string archiveOldDataRunnerInterval, string[] configLayerset, string configWriteLayer)
         {
             this.archiveChangesetThreshold = archiveChangesetThreshold;
             this.clbRunnerInterval = clbRunnerInterval;

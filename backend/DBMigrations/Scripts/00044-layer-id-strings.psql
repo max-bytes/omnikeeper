@@ -1,0 +1,87 @@
+-- drop foreign keys and rework layer-id columns in foreign tables
+ALTER TABLE public.layer_computelayerbrain DROP CONSTRAINT f_layer;
+ALTER TABLE public.layer_computelayerbrain ADD COLUMN new_layer_id text;
+UPDATE public.layer_computelayerbrain SET new_layer_id=layer_id::text;
+ALTER TABLE public.layer_computelayerbrain ALTER COLUMN new_layer_id SET NOT NULL;
+ALTER TABLE public.layer_computelayerbrain DROP COLUMN layer_id;
+ALTER TABLE public.layer_computelayerbrain RENAME COLUMN new_layer_id TO layer_id;
+
+ALTER TABLE public.layer_color DROP CONSTRAINT f_layer;
+ALTER TABLE public.layer_color ADD COLUMN new_layer_id text;
+UPDATE public.layer_color SET new_layer_id=layer_id::text;
+ALTER TABLE public.layer_color ALTER COLUMN new_layer_id SET NOT NULL;
+ALTER TABLE public.layer_color DROP COLUMN layer_id;
+ALTER TABLE public.layer_color RENAME COLUMN new_layer_id TO layer_id;
+
+ALTER TABLE public.layer_onlineinboundlayerplugin DROP CONSTRAINT f_layer;
+ALTER TABLE public.layer_onlineinboundlayerplugin ADD COLUMN new_layer_id text;
+UPDATE public.layer_onlineinboundlayerplugin SET new_layer_id=layer_id::text;
+ALTER TABLE public.layer_onlineinboundlayerplugin ALTER COLUMN new_layer_id SET NOT NULL;
+ALTER TABLE public.layer_onlineinboundlayerplugin DROP COLUMN layer_id;
+ALTER TABLE public.layer_onlineinboundlayerplugin RENAME COLUMN new_layer_id TO layer_id;
+
+ALTER TABLE public.attribute DROP CONSTRAINT f_layer;
+ALTER TABLE public.attribute ADD COLUMN new_layer_id text;
+UPDATE public.attribute SET new_layer_id=layer_id::text;
+ALTER TABLE public.attribute ALTER COLUMN new_layer_id SET NOT NULL;
+ALTER TABLE public.attribute DROP COLUMN layer_id;
+ALTER TABLE public.attribute RENAME COLUMN new_layer_id TO layer_id;
+
+ALTER TABLE public.relation DROP CONSTRAINT f_layer;
+ALTER TABLE public.relation ADD COLUMN new_layer_id text;
+UPDATE public.relation SET new_layer_id=layer_id::text;
+ALTER TABLE public.relation ALTER COLUMN new_layer_id SET NOT NULL;
+ALTER TABLE public.relation DROP COLUMN layer_id;
+ALTER TABLE public.relation RENAME COLUMN new_layer_id TO layer_id;
+
+ALTER TABLE public.layer_state DROP CONSTRAINT f_layer_state; -- NOTE: constraint is not named f_layer, but f_layer_state
+ALTER TABLE public.layer_state ADD COLUMN new_layer_id text;
+UPDATE public.layer_state SET new_layer_id=layer_id::text;
+ALTER TABLE public.layer_state ALTER COLUMN new_layer_id SET NOT NULL;
+ALTER TABLE public.layer_state DROP COLUMN layer_id;
+ALTER TABLE public.layer_state RENAME COLUMN new_layer_id TO layer_id;
+
+
+-- drop primary key in layer table and rework id field
+ALTER TABLE public.layer DROP CONSTRAINT layer_pkey;
+ALTER TABLE public.layer ADD COLUMN new_id text;
+UPDATE public.layer SET new_id=id::text;
+ALTER TABLE public.layer ALTER COLUMN new_id SET NOT NULL;
+ALTER TABLE public.layer DROP COLUMN id;
+ALTER TABLE public.layer RENAME COLUMN new_id TO id;
+
+
+-- re-add primary key
+ALTER TABLE public.layer ADD CONSTRAINT layer_pkey PRIMARY KEY (id);
+
+
+-- re-add foreign keys
+ALTER TABLE public.layer_computelayerbrain
+    ADD CONSTRAINT f_layer FOREIGN KEY (layer_id)
+    REFERENCES public.layer (id)
+    ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE public.layer_color
+    ADD CONSTRAINT f_layer FOREIGN KEY (layer_id)
+    REFERENCES public.layer (id)
+    ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE public.layer_onlineinboundlayerplugin
+    ADD CONSTRAINT f_layer FOREIGN KEY (layer_id)
+    REFERENCES public.layer (id)
+    ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE public.attribute
+    ADD CONSTRAINT f_layer FOREIGN KEY (layer_id)
+    REFERENCES public.layer (id)
+    ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE public.relation
+    ADD CONSTRAINT f_layer FOREIGN KEY (layer_id)
+    REFERENCES public.layer (id)
+    ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE public.layer_state
+    ADD CONSTRAINT f_layer FOREIGN KEY (layer_id)
+    REFERENCES public.layer (id)
+    ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+-- rename layer.name to layer.description
+ALTER TABLE public.layer RENAME COLUMN name TO description;
+ALTER TABLE public.layer DROP CONSTRAINT u_name;

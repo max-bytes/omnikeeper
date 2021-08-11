@@ -1,25 +1,21 @@
-﻿using Omnikeeper.Base.Entity;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿
 namespace OKPluginGenericJSONIngest.Load
 {
     public interface ILoadConfig
     {
-        long[] SearchLayerIDs { get; }
-        long WriteLayerID { get; }
+        string[] SearchLayerIDs { get; }
+        string WriteLayerID { get; }
     }
 
     public class LoadConfig : ILoadConfig
     {
-        public LoadConfig(long[] searchLayerIDs, long writeLayerID)
+        public LoadConfig(string[] searchLayerIDs, string writeLayerID)
         {
             SearchLayerIDs = searchLayerIDs;
             WriteLayerID = writeLayerID;
         }
 
-        public long[] SearchLayerIDs { get; }
-        public long WriteLayerID { get; }
+        public string[] SearchLayerIDs { get; }
+        public string WriteLayerID { get; }
     }
 }

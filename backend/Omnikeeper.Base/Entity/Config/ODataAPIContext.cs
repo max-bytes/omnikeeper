@@ -16,14 +16,14 @@ namespace Omnikeeper.Base.Entity
         [ProtoContract(SkipConstructor = true)]
         public class ConfigV3 : IConfig
         {
-            public ConfigV3(long writeLayerID, long[] readLayerset)
+            public ConfigV3(string writeLayerID, string[] readLayerset)
             {
                 WriteLayerID = writeLayerID;
                 ReadLayerset = readLayerset;
             }
 
-            [ProtoMember(1)] public long WriteLayerID { get; set; }
-            [ProtoMember(2)] public long[] ReadLayerset { get; set; }
+            [ProtoMember(1)] public string WriteLayerID { get; set; }
+            [ProtoMember(2)] public string[] ReadLayerset { get; set; }
         }
 
         [ProtoMember(1)] public string ID { get; set; }

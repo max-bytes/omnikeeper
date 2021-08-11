@@ -4,18 +4,18 @@ namespace Omnikeeper.Base.Entity.DTO
 {
     public class LayerDTO
     {
-        [Required] public string Name { get; set; }
-        [Required] public long ID { get; set; }
+        [Required] public string ID { get; set; }
+        [Required] public string Description { get; set; }
 
-        private LayerDTO(string name, long iD)
+        private LayerDTO(string id, string description)
         {
-            Name = name;
-            ID = iD;
+            ID = id;
+            Description = description;
         }
 
         public static LayerDTO Build(Layer l)
         {
-            return new LayerDTO(l.Name, l.ID);
+            return new LayerDTO(l.ID, l.Description);
         }
     }
 }

@@ -36,17 +36,14 @@ namespace Tests.Integration.Model
             // TODO: this shouldn't be tested here
             Assert.ThrowsAsync<PostgresException>(async () => await model.CreateCI(ciid1, transI)); // cannot add same identity twice
 
-            long layerID1;
+            string layerID1;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var layer1 = await layerModel.CreateLayer("l1", trans);
+                var layer1 = await layerModel.UpsertLayer("l1", trans);
                 layerID1 = layer1.ID;
-                Assert.AreEqual(1, layerID1);
+                Assert.AreEqual("l1", layerID1);
                 trans.Commit();
             }
-
-            // TODO: this shouldn't be tested here
-            Assert.ThrowsAsync<PostgresException>(async () => await layerModel.CreateLayer("l1", transI)); // cannot add same layer twice
 
             var layerset = await layerModel.BuildLayerSet(new string[] { "l1" }, transI);
 
@@ -124,9 +121,9 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel, transI);
 
             var ciid1 = await model.CreateCI(transI);
-            var layer1 = await layerModel.CreateLayer("l1", transI);
+            var layer1 = await layerModel.UpsertLayer("l1", transI);
 
-            var layerset1 = new LayerSet(new long[] { layer1.ID });
+            var layerset1 = new LayerSet(new string[] { layer1.ID });
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
@@ -169,9 +166,9 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel, transI);
 
             var ciid1 = await model.CreateCI(transI);
-            var layer1 = await layerModel.CreateLayer("l1", transI);
+            var layer1 = await layerModel.UpsertLayer("l1", transI);
 
-            var layerset1 = new LayerSet(new long[] { layer1.ID });
+            var layerset1 = new LayerSet(new string[] { layer1.ID });
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
@@ -204,9 +201,9 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel, transI);
 
             var ciid1 = await model.CreateCI(transI);
-            var layer1 = await layerModel.CreateLayer("l1", transI);
+            var layer1 = await layerModel.UpsertLayer("l1", transI);
 
-            var layerset1 = new LayerSet(new long[] { layer1.ID });
+            var layerset1 = new LayerSet(new string[] { layer1.ID });
 
             var avProxy1 = BinaryScalarAttributeValueProxy.BuildFromHashAndFullData(new byte[] {
                 0x00, 0x01, 0x03, 0x04, 0x04, 0x05, 0x06, 0x07,
@@ -280,9 +277,9 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel, trans);
 
             var ciid1 = await model.CreateCI(trans);
-            var layer1 = await layerModel.CreateLayer("l1", trans);
+            var layer1 = await layerModel.UpsertLayer("l1", trans);
 
-            var layerset1 = new LayerSet(new long[] { layer1.ID });
+            var layerset1 = new LayerSet(new string[] { layer1.ID });
 
             var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
             var (aa1, changed1) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);
@@ -310,10 +307,10 @@ namespace Tests.Integration.Model
 
             var ciid1 = await model.CreateCI(trans);
             var ciid2 = await model.CreateCI(trans);
-            var layer1 = await layerModel.CreateLayer("l1", trans);
-            var layer2 = await layerModel.CreateLayer("l2", trans);
+            var layer1 = await layerModel.UpsertLayer("l1", trans);
+            var layer2 = await layerModel.UpsertLayer("l2", trans);
 
-            var layerset1 = new LayerSet(new long[] { layer2.ID, layer1.ID });
+            var layerset1 = new LayerSet(new string[] { layer2.ID, layer1.ID });
 
             var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);
@@ -355,9 +352,9 @@ namespace Tests.Integration.Model
 
             var ciid1 = await model.CreateCI(trans);
             var ciid2 = await model.CreateCI(trans);
-            var layer1 = await layerModel.CreateLayer("l1", trans);
+            var layer1 = await layerModel.UpsertLayer("l1", trans);
 
-            var layerset1 = new LayerSet(new long[] { layer1.ID });
+            var layerset1 = new LayerSet(new string[] { layer1.ID });
 
             var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
             await attributeModel.InsertAttribute("prefix1.a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);

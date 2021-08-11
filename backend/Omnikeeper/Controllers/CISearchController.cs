@@ -35,7 +35,7 @@ namespace Omnikeeper.Controllers
         }
 
         [HttpGet("searchCIsByTraits")]
-        public async Task<ActionResult<IEnumerable<CIDTO>>> SearchCIsByTraits([FromQuery, Required] long[] layerIDs, [FromQuery, Required] string[] withTraits, [FromQuery, Required] string[] withoutTraits, [FromQuery] DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<CIDTO>>> SearchCIsByTraits([FromQuery, Required] string[] layerIDs, [FromQuery, Required] string[] withTraits, [FromQuery, Required] string[] withoutTraits, [FromQuery] DateTimeOffset? atTime = null)
         {
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);

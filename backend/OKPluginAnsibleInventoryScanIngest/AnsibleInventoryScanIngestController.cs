@@ -43,7 +43,7 @@ namespace Omnikeeper.Controllers.Ingest
         }
 
         [HttpPost("")]
-        public async Task<ActionResult> IngestAnsibleInventoryScan([FromQuery, Required] long writeLayerID, [FromQuery, Required] long[] searchLayerIDs, [FromBody, Required] AnsibleInventoryScanDTO data)
+        public async Task<ActionResult> IngestAnsibleInventoryScan([FromQuery, Required] string writeLayerID, [FromQuery, Required] string[] searchLayerIDs, [FromBody, Required] AnsibleInventoryScanDTO data)
         {
             try
             {

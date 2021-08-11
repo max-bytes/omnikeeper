@@ -10,7 +10,7 @@ namespace Omnikeeper.GraphQL
     public class CreateCIInput
     {
         public string Name { get; private set; }
-        public long LayerIDForName { get; private set; }
+        public string LayerIDForName { get; private set; }
     }
     public class CreateCIInputType : InputObjectGraphType<CreateCIInput>
     {
@@ -21,41 +21,24 @@ namespace Omnikeeper.GraphQL
         }
     }
 
-    public class CreateLayerInput
+    public class UpsertLayerInput
     {
-        public string Name { get; private set; }
+        public string ID { get; private set; }
+        public string Description { get; private set; }
         public AnchorState State { get; private set; }
         public string BrainName { get; private set; }
         public string OnlineInboundAdapterName { get; private set; }
         public int Color { get; private set; }
     }
-    public class CreateLayerInputType : InputObjectGraphType<CreateLayerInput>
+    public class UpsertLayerInputType : InputObjectGraphType<UpsertLayerInput>
     {
-        public CreateLayerInputType()
+        public UpsertLayerInputType()
         {
-            Field(x => x.Name);
+            Field("id", x => x.ID);
+            Field(x => x.Description);
             Field(x => x.State, type: typeof(AnchorStateType));
             Field(x => x.BrainName, nullable: true);
             Field(x => x.OnlineInboundAdapterName, nullable: true);
-            Field(x => x.Color);
-        }
-    }
-    public class UpdateLayerInput
-    {
-        public long ID { get; private set; }
-        public AnchorState State { get; private set; }
-        public string BrainName { get; private set; }
-        public string OnlineInboundAdapterName { get; private set; }
-        public int Color { get; private set; }
-    }
-    public class UpdateLayerInputType : InputObjectGraphType<UpdateLayerInput>
-    {
-        public UpdateLayerInputType()
-        {
-            Field("id", x => x.ID);
-            Field(x => x.State, type: typeof(AnchorStateType));
-            Field(x => x.BrainName);
-            Field(x => x.OnlineInboundAdapterName);
             Field(x => x.Color);
         }
     }
@@ -64,7 +47,7 @@ namespace Omnikeeper.GraphQL
     {
         public Guid CI { get; private set; }
         public string Name { get; private set; }
-        public long LayerID { get; private set; }
+        public string LayerID { get; private set; }
         public AttributeValueDTO Value { get; private set; }
     }
     public class InsertCIAttributeInputType : InputObjectGraphType<InsertCIAttributeInput>
@@ -82,7 +65,7 @@ namespace Omnikeeper.GraphQL
     {
         public Guid CI { get; private set; }
         public string Name { get; private set; }
-        public long LayerID { get; private set; }
+        public string LayerID { get; private set; }
     }
     public class RemoveCIAttributeInputType : InputObjectGraphType<RemoveCIAttributeInput>
     {
@@ -109,7 +92,7 @@ namespace Omnikeeper.GraphQL
         public Guid FromCIID { get; private set; }
         public Guid ToCIID { get; private set; }
         public string PredicateID { get; private set; }
-        public long LayerID { get; private set; }
+        public string LayerID { get; private set; }
     }
 
     public class InsertRelationInputType : InputObjectGraphType<InsertRelationInput>
@@ -128,7 +111,7 @@ namespace Omnikeeper.GraphQL
         public Guid FromCIID { get; private set; }
         public Guid ToCIID { get; private set; }
         public string PredicateID { get; private set; }
-        public long LayerID { get; private set; }
+        public string LayerID { get; private set; }
     }
     public class RemoveRelationInputType : InputObjectGraphType<RemoveRelationInput>
     {

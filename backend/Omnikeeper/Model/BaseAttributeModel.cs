@@ -22,16 +22,16 @@ namespace Omnikeeper.Model
             this.partitionModel = partitionModel;
         }
 
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await _GetAttribute(name, ciid, layerID, trans, atTime, false);
         }
-        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await _GetAttribute(name, ciid, layerID, trans, atTime, true);
         }
 
-        private async Task<CIAttribute?> _GetAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime, bool fullBinary)
+        private async Task<CIAttribute?> _GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime, bool fullBinary)
         {
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
@@ -94,7 +94,7 @@ namespace Omnikeeper.Model
             };
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
@@ -137,7 +137,7 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
@@ -181,7 +181,7 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
@@ -227,7 +227,7 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             // NOTE: re-using FindAttributesByFullName() because the custom implementation is not very different
             var attributes = await FindAttributesByFullName(ICIModel.NameAttribute, selection, layerID, trans, atTime);
@@ -235,7 +235,7 @@ namespace Omnikeeper.Model
         }
 
         // TODO: actually needed? check and remove if not
-        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 

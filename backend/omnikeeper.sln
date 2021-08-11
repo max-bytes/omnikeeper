@@ -20,8 +20,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBMigrate", "DBMigrate\DBMi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginOIAKeycloak", "OKPluginOIAKeycloak\OKPluginOIAKeycloak.csproj", "{5965EF78-3BE5-4387-8475-2936CBE14FFE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginOIAOmnikeeper", "OKPluginOIAOmnikeeper\OKPluginOIAOmnikeeper.csproj", "{C8259B95-73D9-492E-9196-75BD8497F66C}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tasks", "Tasks\Tasks.csproj", "{270B435A-F624-4740-9EEE-F847B210C447}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginOIASharepoint", "OKPluginOIASharepoint\OKPluginOIASharepoint.csproj", "{8AD1FA01-D4AD-4D04-9318-7CB0C78377B2}"
@@ -48,6 +46,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginGenericJSONIngest",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginGenericJSONIngest.Tests", "OKPluginGenericJSONIngest.Tests\OKPluginGenericJSONIngest.Tests.csproj", "{B240EFC7-6B36-47FA-8C01-90721E4C26B9}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginOIAOmnikeeper", "OKPluginOIAOmnikeeper\OKPluginOIAOmnikeeper.csproj", "{C4FAA89F-C2B6-487C-B123-4BC8E1C68B72}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,10 +70,6 @@ Global
 		{5965EF78-3BE5-4387-8475-2936CBE14FFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5965EF78-3BE5-4387-8475-2936CBE14FFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5965EF78-3BE5-4387-8475-2936CBE14FFE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C8259B95-73D9-492E-9196-75BD8497F66C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C8259B95-73D9-492E-9196-75BD8497F66C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C8259B95-73D9-492E-9196-75BD8497F66C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C8259B95-73D9-492E-9196-75BD8497F66C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{270B435A-F624-4740-9EEE-F847B210C447}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{270B435A-F624-4740-9EEE-F847B210C447}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{270B435A-F624-4740-9EEE-F847B210C447}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -126,6 +122,10 @@ Global
 		{B240EFC7-6B36-47FA-8C01-90721E4C26B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B240EFC7-6B36-47FA-8C01-90721E4C26B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B240EFC7-6B36-47FA-8C01-90721E4C26B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4FAA89F-C2B6-487C-B123-4BC8E1C68B72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4FAA89F-C2B6-487C-B123-4BC8E1C68B72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4FAA89F-C2B6-487C-B123-4BC8E1C68B72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4FAA89F-C2B6-487C-B123-4BC8E1C68B72}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

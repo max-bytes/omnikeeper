@@ -20,7 +20,7 @@ namespace Omnikeeper.Base.Inbound
             this.pluginManager = pluginManager;
         }
 
-        public async Task<bool> IsOnlineInboundLayer(long layerID, IModelContext trans)
+        public async Task<bool> IsOnlineInboundLayer(string layerID, IModelContext trans)
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             if (layer == null) return false;
@@ -40,7 +40,7 @@ namespace Omnikeeper.Base.Inbound
             }
         }
 
-        public async IAsyncEnumerable<(CIAttribute attribute, long layerID)> GetAttributes(ICIIDSelection selection, LayerSet layerset, IModelContext trans, TimeThreshold atTime)
+        public async IAsyncEnumerable<(CIAttribute attribute, string layerID)> GetAttributes(ICIIDSelection selection, LayerSet layerset, IModelContext trans, TimeThreshold atTime)
         {
             await foreach (var (proxy, layer) in GetAccessProxies(layerset, trans))
             {
@@ -49,7 +49,7 @@ namespace Omnikeeper.Base.Inbound
             }
         }
 
-        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             if (layer == null)
@@ -62,7 +62,7 @@ namespace Omnikeeper.Base.Inbound
                 yield return a;
         }
 
-        public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             if (layer == null)
@@ -75,7 +75,7 @@ namespace Omnikeeper.Base.Inbound
                 yield return a;
         }
 
-        public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             if (layer == null)
@@ -88,7 +88,7 @@ namespace Omnikeeper.Base.Inbound
                 yield return a;
         }
 
-        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             if (layer == null)
@@ -100,7 +100,7 @@ namespace Omnikeeper.Base.Inbound
             return await plugin.CreateLayerAccessProxy(layer).GetRelation(fromCIID, toCIID, predicateID, atTime);
         }
 
-        public async IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             if (layer == null)
@@ -113,7 +113,7 @@ namespace Omnikeeper.Base.Inbound
                 yield return relation;
         }
 
-        public async Task<CIAttribute?> GetAttribute(string name, long layerID, Guid ciid, IModelContext trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetAttribute(string name, string layerID, Guid ciid, IModelContext trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             if (layer == null)
@@ -124,7 +124,7 @@ namespace Omnikeeper.Base.Inbound
                 throw new Exception($"Could not load plugin instance {layer.OnlineInboundAdapterLink.AdapterName}");
             return await plugin.CreateLayerAccessProxy(layer).GetAttribute(name, ciid, atTime);
         }
-        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, long layerID, Guid ciid, IModelContext trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, string layerID, Guid ciid, IModelContext trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);
             if (layer == null)

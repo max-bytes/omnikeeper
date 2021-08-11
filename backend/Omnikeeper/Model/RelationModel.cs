@@ -20,26 +20,26 @@ namespace Omnikeeper.Model
             this.baseModel = baseModel;
         }
 
-        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await baseModel.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await baseModel.GetRelations(rs, layerID, trans, atTime);
         }
 
-        private IEnumerable<MergedRelation> MergeRelations(IEnumerable<(Relation relation, long layerID)> relations, LayerSet layers)
+        private IEnumerable<MergedRelation> MergeRelations(IEnumerable<(Relation relation, string layerID)> relations, LayerSet layers)
         {
-            var compound = new Dictionary<(Guid from_ciid, Guid to_ciid, string predicate_id), SortedList<int, (Relation relation, long layerID)>>();
+            var compound = new Dictionary<(Guid from_ciid, Guid to_ciid, string predicate_id), SortedList<int, (Relation relation, string layerID)>>();
 
             foreach (var (relation, layerID) in relations)
             {
                 var layerSortOrder = layers.GetOrder(layerID);
 
                 compound.AddOrUpdate((relation.FromCIID, relation.ToCIID, relation.PredicateID),
-                    () => new SortedList<int, (Relation relation, long layerID)>() { { layerSortOrder, (relation, layerID) } },
+                    () => new SortedList<int, (Relation relation, string layerID)>() { { layerSortOrder, (relation, layerID) } },
                     (old) => { old.Add(layerSortOrder, (relation, layerID)); return old; }
                 );
             }
@@ -51,7 +51,7 @@ namespace Omnikeeper.Model
             if (layerset.IsEmpty)
                 return ImmutableList<MergedRelation>.Empty; // return empty, an empty layer list can never produce any relations
 
-            var relations = new List<(Relation relation, long layerID)>();
+            var relations = new List<(Relation relation, string layerID)>();
 
             foreach (var layerID in layerset)
             {
@@ -68,7 +68,7 @@ namespace Omnikeeper.Model
             if (layerset.IsEmpty)
                 return null; // return empty, an empty layer list can never produce any relations
 
-            var relations = new List<(Relation relation, long layerID)>();
+            var relations = new List<(Relation relation, string layerID)>();
 
             foreach (var layerID in layerset)
             {
@@ -86,12 +86,12 @@ namespace Omnikeeper.Model
         }
 
 
-        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             return await baseModel.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
         }
 
-        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             return await baseModel.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, origin, trans);
         }

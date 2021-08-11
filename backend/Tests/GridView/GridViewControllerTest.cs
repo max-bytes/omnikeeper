@@ -53,15 +53,15 @@ namespace Tests.Integration.Controller
             Guid ciid1;
             Guid ciid2;
             Guid ciid3;
-            long layerID1;
-            long layerID2;
+            string layerID1;
+            string layerID2;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 ciid1 = await ciModel.CreateCI(trans);
                 ciid2 = await ciModel.CreateCI(trans);
                 ciid3 = await ciModel.CreateCI(trans);
-                var layer1 = await layerModel.CreateLayer("l1", trans);
-                var layer2 = await layerModel.CreateLayer("l2", trans);
+                var layer1 = await layerModel.UpsertLayer("l1", trans);
+                var layer2 = await layerModel.UpsertLayer("l2", trans);
                 layerID1 = layer1.ID;
                 layerID2 = layer2.ID;
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
@@ -76,11 +76,11 @@ namespace Tests.Integration.Controller
             var cfg1 = new GridViewConfiguration(
                             true,
                             layerID1,
-                            new List<long> { layerID1, layerID2 },
+                            new List<string> { layerID1, layerID2 },
                             new List<GridViewColumn>()
                             {
                                 new GridViewColumn("a1", "", layerID1, AttributeValueType.Text),
-                                new GridViewColumn("a2", "", 3, AttributeValueType.Text) // invalid write layer
+                                new GridViewColumn("a2", "", "invalid", AttributeValueType.Text) // invalid write layer
                             },
                             "test_trait_1"
                         );

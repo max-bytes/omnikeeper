@@ -14,10 +14,10 @@ namespace Omnikeeper.Base.Entity
     public class MergedRelation
     {
         public Relation Relation { get; private set; }
-        public long[] LayerStackIDs { get; private set; }
-        public long LayerID { get => LayerStackIDs[^1]; }
+        public string[] LayerStackIDs { get; private set; }
+        public string LayerID { get => LayerStackIDs[^1]; }
 
-        public MergedRelation(Relation relation, long[] layerStackIDs)
+        public MergedRelation(Relation relation, string[] layerStackIDs)
         {
             Relation = relation;
             LayerStackIDs = layerStackIDs;
@@ -53,7 +53,7 @@ namespace Omnikeeper.Base.Entity
 
     public interface IBulkRelationData<F>
     {
-        public long LayerID { get; }
+        public string LayerID { get; }
         public F[] Fragments { get; }
 
         string GetPredicateID(F fragment);
@@ -76,13 +76,13 @@ namespace Omnikeeper.Base.Entity
         }
 
         public string PredicateID { get; private set; }
-        public long LayerID { get; private set; }
+        public string LayerID { get; private set; }
         public Fragment[] Fragments { get; private set; }
         public string GetPredicateID(Fragment fragment) => PredicateID;
         public Guid GetFromCIID(Fragment fragment) => fragment.From;
         public Guid GetToCIID(Fragment fragment) => fragment.To;
 
-        public BulkRelationDataPredicateScope(string predicateID, long layerID, IEnumerable<Fragment> fragments)
+        public BulkRelationDataPredicateScope(string predicateID, string layerID, IEnumerable<Fragment> fragments)
         {
             PredicateID = predicateID;
             LayerID = layerID;
@@ -106,13 +106,13 @@ namespace Omnikeeper.Base.Entity
             }
         }
 
-        public long LayerID { get; private set; }
+        public string LayerID { get; private set; }
         public Fragment[] Fragments { get; private set; }
         public string GetPredicateID(Fragment fragment) => fragment.PredicateID;
         public Guid GetFromCIID(Fragment fragment) => fragment.From;
         public Guid GetToCIID(Fragment fragment) => fragment.To;
 
-        public BulkRelationDataLayerScope(long layerID, IEnumerable<Fragment> fragments)
+        public BulkRelationDataLayerScope(string layerID, IEnumerable<Fragment> fragments)
         {
             LayerID = layerID;
             Fragments = fragments.ToArray();

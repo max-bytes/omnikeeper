@@ -25,7 +25,7 @@ namespace Omnikeeper.Model.Decorators
             this.sp = sp;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var @base = await model.FindAttributesByName(regex, selection, layerID, trans, atTime);
             var generatorSelection = new GeneratorSelectionContainingRegexItemName(regex);
@@ -34,7 +34,7 @@ namespace Omnikeeper.Model.Decorators
             return @base;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var @base = await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
             var generatorSelection = new GeneratorSelectionContainingFullItemName(name);
@@ -43,19 +43,19 @@ namespace Omnikeeper.Model.Decorators
             return @base;
         }
 
-        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             // TODO: implement
             return await model.FindCIIDsWithAttribute(name, selection, layerID, trans, atTime);
         }
 
-        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             // TODO: implement
             return await model.GetCINames(selection, layerID, trans, atTime);
         }
 
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var @base = await model.GetAttribute(name, ciid, layerID, trans, atTime);
             if (@base != null)
@@ -68,13 +68,13 @@ namespace Omnikeeper.Model.Decorators
             }
         }
 
-        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             // NOTE: generating binary attributes is not supported, hence we just pass through here
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var @base = await model.GetAttributes(selection, layerID, trans, atTime);
             var generatorSelection = new GeneratorSelectionAll();
@@ -83,7 +83,7 @@ namespace Omnikeeper.Model.Decorators
             return @base;
         }
 
-        private async Task<IEnumerable<CIAttribute>> MergeInGeneratedAttributes(IEnumerable<CIAttribute> @base, ICIIDSelection ciidSelection, IGeneratorSelection generatorSelection, long layerID, IModelContext trans, TimeThreshold atTime)
+        private async Task<IEnumerable<CIAttribute>> MergeInGeneratedAttributes(IEnumerable<CIAttribute> @base, ICIIDSelection ciidSelection, IGeneratorSelection generatorSelection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             // NOTE: we use the service provider here to avoid a circular dependency in DI
             var effectiveGeneratorProvider = sp.GetRequiredService<IEffectiveGeneratorProvider>();
@@ -110,17 +110,17 @@ namespace Omnikeeper.Model.Decorators
             return @base;
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             return await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, origin, trans);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             return await model.InsertCINameAttribute(nameValue, ciid, layerID, changesetProxy, origin, trans);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             return await model.RemoveAttribute(name, ciid, layerID, changesetProxy, trans);
         }

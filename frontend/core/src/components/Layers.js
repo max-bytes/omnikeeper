@@ -1,12 +1,12 @@
 import React from 'react';
 import LayerIcon from './LayerIcon';
-import { Button, Radio } from 'antd'
+import { Button, Popover, Radio } from 'antd'
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import { queries } from 'graphql/queries'
 import { useQuery } from '@apollo/client';
 import { mergeSettingsAndSortLayers } from 'utils/layers'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faEyeSlash, faArrowAltCircleUp, faArrowAltCircleDown, faCogs, faPlug, faBan, faEdit } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faEyeSlash, faArrowAltCircleUp, faArrowAltCircleDown, faCogs, faPlug, faBan, faEdit, faInfo } from '@fortawesome/free-solid-svg-icons'
 import _ from 'lodash';
 
 function Layers(props) {
@@ -75,6 +75,16 @@ function Layers(props) {
           var nextLayer = layers[index + 1];
           var previousLayer = layers[index - 1];
 
+          const layerDescPopup = <Popover
+            placement="topRight"
+            trigger="click"
+            content={layer.description}
+            on='click'
+            position='top right'
+          >
+            <Button size='small'><FontAwesomeIcon icon={faInfo} color={"gray"} /></Button>
+          </Popover>
+
           return (
             <Flipped key={layer.id} flipId={layer.id}>
               <li style={{paddingBottom: '5px', display: 'flex'}}>
@@ -84,7 +94,7 @@ function Layers(props) {
                     {!layer.writable && (<FontAwesomeIcon icon={faBan} />)}
                     {layer.writable && (<FontAwesomeIcon icon={faEdit} />)}
                     &nbsp;
-                    <span style={((layer.visible) ? {} : {color: '#ccc'})}>[{layer.id}] {layer.name} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
+                    <span style={((layer.visible) ? {} : {color: '#ccc'})}>{layerDescPopup} {layer.id} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
                     {layer.brainName !== "" && (<FontAwesomeIcon icon={faCogs} />)}
                     {layer.onlineInboundAdapterName !== "" && (<FontAwesomeIcon icon={faPlug} />)}
                   </span>

@@ -22,22 +22,22 @@ namespace Omnikeeper.Service
 
 
         public bool CanUserReadFromLayer(AuthenticatedUser user, Layer layer) => CanUserReadFromLayer(user, layer.ID);
-        public bool CanUserReadFromLayer(AuthenticatedUser user, long layerID) => debugAllowAll || CanReadFromLayer(user.Permissions, layerID);
-        public bool CanUserReadFromAllLayers(AuthenticatedUser user, IEnumerable<long> layerIDs) =>
+        public bool CanUserReadFromLayer(AuthenticatedUser user, string layerID) => debugAllowAll || CanReadFromLayer(user.Permissions, layerID);
+        public bool CanUserReadFromAllLayers(AuthenticatedUser user, IEnumerable<string> layerIDs) =>
             debugAllowAll || layerIDs.All(l => CanReadFromLayer(user.Permissions, l));
 
         public bool CanUserWriteToLayer(AuthenticatedUser user, Layer layer) => CanUserWriteToLayer(user, layer.ID);
-        public bool CanUserWriteToLayer(AuthenticatedUser user, long layerID) => debugAllowAll || CanWriteToLayer(user.Permissions, layerID);
+        public bool CanUserWriteToLayer(AuthenticatedUser user, string layerID) => debugAllowAll || CanWriteToLayer(user.Permissions, layerID);
 
-        public bool CanUserWriteToAllLayers(AuthenticatedUser user, IEnumerable<long> layerIDs) =>
+        public bool CanUserWriteToAllLayers(AuthenticatedUser user, IEnumerable<string> layerIDs) =>
             debugAllowAll || layerIDs.All(l => CanWriteToLayer(user.Permissions, l));
 
 
-        private bool CanReadFromLayer(ISet<string> permissions, long layerID)
+        private bool CanReadFromLayer(ISet<string> permissions, string layerID)
         {
             return permissions.Contains(PermissionUtils.GetLayerReadPermission(layerID));
         }
-        private bool CanWriteToLayer(ISet<string> permissions, long layerID)
+        private bool CanWriteToLayer(ISet<string> permissions, string layerID)
         {
             // writing to a layer also requires read permissions
             return permissions.Contains(PermissionUtils.GetLayerReadPermission(layerID)) && permissions.Contains(PermissionUtils.GetLayerWritePermission(layerID));

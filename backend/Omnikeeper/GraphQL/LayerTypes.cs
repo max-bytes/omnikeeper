@@ -11,7 +11,7 @@ namespace Omnikeeper.GraphQL
     {
         public LayerType()
         {
-            Field(x => x.Name);
+            Field(x => x.Description);
             Field("brainName", x => x.ComputeLayerBrainLink.Name);
             Field("onlineInboundAdapterName", x => x.OnlineInboundAdapterLink.AdapterName);
             Field("id", x => x.ID);

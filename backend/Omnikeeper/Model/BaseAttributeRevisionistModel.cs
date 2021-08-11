@@ -7,7 +7,7 @@ namespace Omnikeeper.Model
 {
     public class BaseAttributeRevisionistModel : IBaseAttributeRevisionistModel
     {
-        public async Task<int> DeleteAllAttributes(long layerID, IModelContext trans)
+        public async Task<int> DeleteAllAttributes(string layerID, IModelContext trans)
         {
             var query = @"delete from attribute a where a.layer_id = @layer_id";
 

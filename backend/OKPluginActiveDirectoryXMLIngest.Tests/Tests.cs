@@ -23,7 +23,7 @@ namespace OKPluginActiveDirectoryXMLIngest.Tests
                 (() => File.OpenRead(FileUtils.GetFilepath("ADComputers.xml", Path.Combine("files"))), "ADComputers.xml"),
                 (() => File.OpenRead(FileUtils.GetFilepath("ADUsers.xml", Path.Combine( "files"))), "ADUsers.xml"),
                 (() => File.OpenRead(FileUtils.GetFilepath("ADGroups.xml", Path.Combine("files"))), "ADGroups.xml"),
-            }, new LayerSet(new long[] { 1, 2 }), logger);
+            }, new LayerSet(new string[] { "1", "2" }), logger);
 
             Assert.AreEqual(0, logger.GetCount(Microsoft.Extensions.Logging.LogLevel.Warning));
             Assert.AreEqual(0, logger.GetCount(Microsoft.Extensions.Logging.LogLevel.Error));

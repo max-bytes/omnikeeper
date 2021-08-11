@@ -132,7 +132,7 @@ namespace Omnikeeper.Base.Generator
 
     public interface IEffectiveGeneratorProvider
     {
-        Task<IEnumerable<(GeneratorItem generatorItem, MergedCI ci)>> GetEffectiveGeneratorItems(long layerID, ICIIDSelection selection, IGeneratorSelection generatorSelection, IModelContext mc, TimeThreshold timeThreshold);
+        Task<IEnumerable<(GeneratorItem generatorItem, MergedCI ci)>> GetEffectiveGeneratorItems(string layerID, ICIIDSelection selection, IGeneratorSelection generatorSelection, IModelContext mc, TimeThreshold timeThreshold);
     }
 
     public class EffectiveGeneratorProvider : IEffectiveGeneratorProvider
@@ -148,7 +148,7 @@ namespace Omnikeeper.Base.Generator
             this.ciModel = ciModel;
         }
 
-        public async Task<IEnumerable<(GeneratorItem generatorItem, MergedCI ci)>> GetEffectiveGeneratorItems(long layerID, ICIIDSelection selection, IGeneratorSelection generatorSelection, IModelContext mc, TimeThreshold timeThreshold)
+        public async Task<IEnumerable<(GeneratorItem generatorItem, MergedCI ci)>> GetEffectiveGeneratorItems(string layerID, ICIIDSelection selection, IGeneratorSelection generatorSelection, IModelContext mc, TimeThreshold timeThreshold)
         {
             // setup, TODO: move
             var generators = new Dictionary<string, Generator>()
@@ -162,7 +162,7 @@ namespace Omnikeeper.Base.Generator
 
             // TODO: make sure applied generators are valid and do not read from themselves
             // setup, TODO: move
-            var appliedGenerators = new Dictionary<long, List<Generator>>
+            var appliedGenerators = new Dictionary<string, List<Generator>>
             {
                 //{
                 //    2,
@@ -214,7 +214,7 @@ namespace Omnikeeper.Base.Generator
 
     public class GeneratorAttributeResolver
     {
-        public CIAttribute? Resolve(MergedCI mergedCI, long layerID, GeneratorItem item)
+        public CIAttribute? Resolve(MergedCI mergedCI, string layerID, GeneratorItem item)
         {
             try
             {

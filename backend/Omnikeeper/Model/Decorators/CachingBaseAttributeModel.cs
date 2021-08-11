@@ -26,14 +26,14 @@ namespace Omnikeeper.Model.Decorators
             this.logger = logger;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             // TODO: caching?
             logger.LogTrace("Cache Nope - FindAttributesByName");
             return await model.FindAttributesByName(regex, selection, layerID, trans, atTime);
         }
 
-        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (atTime.IsLatest)
             {
@@ -65,14 +65,14 @@ namespace Omnikeeper.Model.Decorators
             }
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             // TODO: caching?
             logger.LogTrace("Cache Nope - FindAttributesByFullName");
             return await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (atTime.IsLatest)
             {
@@ -93,7 +93,7 @@ namespace Omnikeeper.Model.Decorators
             return await model.FindCIIDsWithAttribute(name, selection, layerID, trans, atTime);
         }
 
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (atTime.IsLatest)
             {
@@ -114,7 +114,7 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             // no caching for binary attributes
             logger.LogTrace("Cache Nope - GetFullBinaryAttribute");
@@ -126,7 +126,7 @@ namespace Omnikeeper.Model.Decorators
         // you can change this member mid-run to enable performance testing
         public bool CachingEnabledForGetAttributes = true;
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (CachingEnabledForGetAttributes && atTime.IsLatest)
             {
@@ -181,7 +181,7 @@ namespace Omnikeeper.Model.Decorators
             }
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var t = await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, origin, trans);
             if (t.changed)
@@ -193,7 +193,7 @@ namespace Omnikeeper.Model.Decorators
             return t;
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var t = await model.InsertCINameAttribute(nameValue, ciid, layerID, changesetProxy, origin, trans);
             if (t.changed)
@@ -205,7 +205,7 @@ namespace Omnikeeper.Model.Decorators
             return t;
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var t = await model.RemoveAttribute(name, ciid, layerID, changesetProxy, trans);
             if (t.changed)

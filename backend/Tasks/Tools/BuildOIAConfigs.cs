@@ -41,7 +41,7 @@ namespace Tasks.Tools
                         new OKPluginOIASharepoint.Config.ListColumnConfig("Company", "user.company"),
                         new OKPluginOIASharepoint.Config.ListColumnConfig("GivenName", "user.first_name"),
                         new OKPluginOIASharepoint.Config.ListColumnConfig("Surname", "user.last_name")
-                    }, new string[] { "user.first_name", "user.last_name" }, new long[] { 1L, 2L })
+                    }, new string[] { "user.first_name", "user.last_name" }, new string[] { "1", "2" })
                 });
             var json = IOnlineInboundAdapter.IConfig.Serializer.SerializeToString(config);
 

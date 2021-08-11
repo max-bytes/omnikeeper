@@ -23,7 +23,7 @@ namespace Omnikeeper.Model.Decorators
             this.onlineAccessProxy = onlineAccessProxy;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
@@ -33,7 +33,7 @@ namespace Omnikeeper.Model.Decorators
             return await model.FindAttributesByName(regex, selection, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
@@ -43,13 +43,13 @@ namespace Omnikeeper.Model.Decorators
             return await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             // TODO: implement
             return await model.FindCIIDsWithAttribute(name, selection, layerID, trans, atTime);
         }
 
-        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
@@ -61,7 +61,7 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetCINames(selection, layerID, trans, atTime);
         }
 
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
@@ -71,7 +71,7 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
@@ -81,7 +81,7 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
@@ -91,21 +91,21 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetAttributes(selection, layerID, trans, atTime);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
 
             return await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, origin, trans);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
 
             return await model.InsertCINameAttribute(nameValue, ciid, layerID, changesetProxy, origin, trans);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
 

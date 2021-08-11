@@ -9,7 +9,7 @@ export const Fragments = {
         layerStackIDs
         layerStack {
             id
-            name
+            description
             color
         }
     }
@@ -99,7 +99,7 @@ export const Fragments = {
         layerStackIDs
         layerStack {
             id
-            name
+            description
             color
         }
         isForwardRelation
@@ -108,7 +108,7 @@ export const Fragments = {
   fullLayer: gql`
   fragment FullLayer on LayerType {
     id
-    name
+    description
     color
     state
     writable

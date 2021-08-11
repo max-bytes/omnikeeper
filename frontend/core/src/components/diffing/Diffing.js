@@ -115,15 +115,15 @@ function Diffing(props) {
     props.history.push({search: `?${search}`});
   }, [leftLayerSettings, rightLayerSettings, leftCIIDs, rightCIIDs, leftTimeSettings, rightTimeSettings, props.history]);
 
-  const visibleLeftLayerNames = leftLayers.filter(l => l.visible).map(l => l.name);
-  const visibleRightLayerNames = rightLayers.filter(l => l.visible).map(l => l.name);
+  const visibleLeftLayerIDs = leftLayers.filter(l => l.visible).map(l => l.id);
+  const visibleRightLayerIDs = rightLayers.filter(l => l.visible).map(l => l.id);
 
   function compare() {
     // if (leftCIIDs)
-      loadLeftCI({ variables: {layers: visibleLeftLayerNames, timeThreshold: leftTimeSettings?.timeThreshold, ciids: leftCIIDs},
+      loadLeftCI({ variables: {layers: visibleLeftLayerIDs, timeThreshold: leftTimeSettings?.timeThreshold, ciids: leftCIIDs},
         fetchPolicy: 'cache-and-network' });
     // if (rightCIIDs)
-      loadRightCI({ variables: {layers: visibleRightLayerNames, timeThreshold: rightTimeSettings?.timeThreshold, ciids: rightCIIDs},
+      loadRightCI({ variables: {layers: visibleRightLayerIDs, timeThreshold: rightTimeSettings?.timeThreshold, ciids: rightCIIDs},
         fetchPolicy: 'cache-and-network' });
   }
 
@@ -150,11 +150,11 @@ function Diffing(props) {
             {/* TODO: does having two separate ci settings even make sense? is there any usecase for this? The only thing I can think
                 of is comparing two (not more) different CIs with each other... but for this to work we need to change some things */}
             <Col span={8}>
-              {visibleLeftLayerNames.length > 0 && 
-                <DiffCISettings alignment='right' layers={visibleLeftLayerNames} selectedCIIDs={leftCIIDs} setSelectedCIIDs={setLeftCIIDs} />}
+              {visibleLeftLayerIDs.length > 0 && 
+                <DiffCISettings alignment='right' layers={visibleLeftLayerIDs} selectedCIIDs={leftCIIDs} setSelectedCIIDs={setLeftCIIDs} />}
             </Col><Col span={8}>
-              {visibleRightLayerNames.length > 0 && 
-                <DiffCISettings alignment='left' layers={visibleRightLayerNames} selectedCIIDs={rightCIIDs} setSelectedCIIDs={setRightCIIDs} />}
+              {visibleRightLayerIDs.length > 0 && 
+                <DiffCISettings alignment='left' layers={visibleRightLayerIDs} selectedCIIDs={rightCIIDs} setSelectedCIIDs={setRightCIIDs} />}
             </Col>
           </Row>
           <Divider />
@@ -163,11 +163,11 @@ function Diffing(props) {
               <LeftLabel>Time:</LeftLabel>
             </Col>
             <Col span={8}>
-              {visibleLeftLayerNames.length > 0 && 
-                <DiffTimeSettings alignment='right' layers={visibleLeftLayerNames} ciids={leftCIIDs} timeSettings={leftTimeSettings} setTimeSettings={setLeftTimeSettings} />}
+              {visibleLeftLayerIDs.length > 0 && 
+                <DiffTimeSettings alignment='right' layers={visibleLeftLayerIDs} ciids={leftCIIDs} timeSettings={leftTimeSettings} setTimeSettings={setLeftTimeSettings} />}
             </Col><Col span={8}>
-              {visibleRightLayerNames.length > 0 && 
-                <DiffTimeSettings alignment='left' layers={visibleRightLayerNames} ciids={rightCIIDs} timeSettings={rightTimeSettings} setTimeSettings={setRightTimeSettings} />}
+              {visibleRightLayerIDs.length > 0 && 
+                <DiffTimeSettings alignment='left' layers={visibleRightLayerIDs} ciids={rightCIIDs} timeSettings={rightTimeSettings} setTimeSettings={setRightTimeSettings} />}
             </Col>
           </Row>
           <Divider />

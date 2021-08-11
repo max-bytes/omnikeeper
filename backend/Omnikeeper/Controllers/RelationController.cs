@@ -46,7 +46,7 @@ namespace Omnikeeper.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedRelation")]
-        public async Task<ActionResult<RelationDTO>> GetMergedRelation([FromQuery, Required] Guid fromCIID, [FromQuery, Required] Guid toCIID, [FromQuery, Required] string predicateID, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
+        public async Task<ActionResult<RelationDTO>> GetMergedRelation([FromQuery, Required] Guid fromCIID, [FromQuery, Required] Guid toCIID, [FromQuery, Required] string predicateID, [FromQuery, Required] string[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
@@ -70,7 +70,7 @@ namespace Omnikeeper.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedRelationsWithPredicate")]
-        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetMergedRelationsWithPredicate([FromQuery, Required] string predicateID, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetMergedRelationsWithPredicate([FromQuery, Required] string predicateID, [FromQuery, Required] string[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
@@ -92,7 +92,7 @@ namespace Omnikeeper.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getAllMergedRelations")]
-        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetAllMergedRelations([FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetAllMergedRelations([FromQuery, Required] string[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
@@ -115,7 +115,7 @@ namespace Omnikeeper.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedRelationsOutgoingFromCI")]
-        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetMergedRelationsOutgoingFromCI([FromQuery, Required] Guid fromCIID, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetMergedRelationsOutgoingFromCI([FromQuery, Required] Guid fromCIID, [FromQuery, Required] string[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
@@ -139,7 +139,7 @@ namespace Omnikeeper.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedRelationsFromOrToCI")]
-        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetMergedRelationsFromOrToCI([FromQuery, Required] Guid ciid, [FromQuery, Required] long[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
+        public async Task<ActionResult<IEnumerable<RelationDTO>>> GetMergedRelationsFromOrToCI([FromQuery, Required] Guid ciid, [FromQuery, Required] string[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);

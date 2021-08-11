@@ -63,8 +63,8 @@ export default function ManageTraits() {
           requiredTraits: JSON.parse(row.requiredTraits),
         };
         return upsert({ variables: { trait: trait } })
-          .then(r => ({result: r.data.upsertTrait, id: row.id}))
-          .then(r => apolloClient.resetStore())
+          .then(r => { apolloClient.resetStore(); return r; })
+          .then(r => ({result: r.data.manage_upsertRecursiveTrait, id: row.id}))
           .catch(e => ({result: e, id: row.id }));
       }}
       deletableRows={true}

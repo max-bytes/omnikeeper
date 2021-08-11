@@ -24,7 +24,7 @@ namespace Tests.Integration.Model
         public async Task TestBasics()
         {
             var oap = new Mock<IOnlineAccessProxy>();
-            oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<long>(), It.IsAny<IModelContext>())).ReturnsAsync(false);
+            oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<string>(), It.IsAny<IModelContext>())).ReturnsAsync(false);
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
@@ -47,12 +47,12 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
 
-            long layerID1;
-            long layerID2;
+            string layerID1;
+            string layerID2;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var layer1 = await layerModel.CreateLayer("l1", trans);
-                var layer2 = await layerModel.CreateLayer("l2", trans);
+                var layer1 = await layerModel.UpsertLayer("l1", trans);
+                var layer2 = await layerModel.UpsertLayer("l2", trans);
                 layerID1 = layer1.ID;
                 layerID2 = layer2.ID;
                 trans.Commit();

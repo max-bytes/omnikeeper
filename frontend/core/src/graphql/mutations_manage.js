@@ -3,23 +3,14 @@ import { Fragments } from './fragments';
 
 export const mutations = {
 
-  CREATE_LAYER: gql`
-  mutation($layer: CreateLayerInputType!) {
-    manage_createLayer(layer: $layer) {
+  UPSERT_LAYER: gql`
+  mutation($layer: UpsertLayerInputType!) {
+    manage_upsertLayer(layer: $layer) {
       ...FullLayer
     }
   }
   ${Fragments.fullLayer}
 `,
-
-  UPDATE_LAYER: gql`
-  mutation($layer: UpdateLayerInputType!) {
-    manage_updateLayer(layer: $layer) {
-      ...FullLayer
-    }
-  }
-  ${Fragments.fullLayer}
-  `,
 
   CREATE_OIACONTEXT: gql`
     mutation($oiaContext: CreateOIAContextInputType!) {

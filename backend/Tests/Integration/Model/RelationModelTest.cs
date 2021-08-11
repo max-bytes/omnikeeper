@@ -27,7 +27,7 @@ namespace Tests.Integration.Model
 
             Guid ciid1;
             Guid ciid3;
-            long layerID1;
+            string layerID1;
             ChangesetProxy changeset;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
@@ -38,9 +38,9 @@ namespace Tests.Integration.Model
                 ciid3 = await ciModel.CreateCI(trans);
                 var predicateID1 = "predicate1";
 
-                var layer1 = await layerModel.CreateLayer("l1", trans);
+                var layer1 = await layerModel.UpsertLayer("l1", trans);
                 layerID1 = layer1.ID;
-                var layerset = new LayerSet(new long[] { layerID1 });
+                var layerset = new LayerSet(new string[] { layerID1 });
 
                 // test single relation
                 var (i1, c1) = await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -100,9 +100,9 @@ namespace Tests.Integration.Model
             //var (predicate1, changedP1) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
             var predicateID1 = "predicate1";
 
-            var layer1 = await layerModel.CreateLayer("l1", trans);
-            var layer2 = await layerModel.CreateLayer("l2", trans);
-            var layerset = new LayerSet(new long[] { layer2.ID, layer1.ID });
+            var layer1 = await layerModel.UpsertLayer("l1", trans);
+            var layer2 = await layerModel.UpsertLayer("l2", trans);
+            var layerset = new LayerSet(new string[] { layer2.ID, layer1.ID });
 
             var (i1, c1) = await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
             var (i2, c2) = await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -139,8 +139,8 @@ namespace Tests.Integration.Model
             var predicateID1 = "predicate1";
             var predicateID2 = "predicate2";
 
-            var layer1 = await layerModel.CreateLayer("l1", trans);
-            var layerset = new LayerSet(new long[] { layer1.ID });
+            var layer1 = await layerModel.UpsertLayer("l1", trans);
+            var layerset = new LayerSet(new string[] { layer1.ID });
 
             var i1 = await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
             var i2 = await relationModel.InsertRelation(ciid1, ciid2, predicateID2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -167,9 +167,9 @@ namespace Tests.Integration.Model
             var transI = ModelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, transI);
 
-            var layer1 = await layerModel.CreateLayer("l1", transI);
-            var layer2 = await layerModel.CreateLayer("l2", transI);
-            var layerset = new LayerSet(new long[] { layer2.ID, layer1.ID });
+            var layer1 = await layerModel.UpsertLayer("l1", transI);
+            var layer2 = await layerModel.UpsertLayer("l2", transI);
+            var layerset = new LayerSet(new string[] { layer2.ID, layer1.ID });
             var ciid1 = await ciModel.CreateCI(transI);
             var ciid2 = await ciModel.CreateCI(transI);
             //var (predicate1, changedP1) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, transI);
@@ -231,8 +231,8 @@ namespace Tests.Integration.Model
             //var (predicateID1, changedP1) = await predicateModel.InsertOrUpdate("predicate_1", "", "", AnchorState.Active, PredicateModel.DefaultConstraits, trans);
             var predicateID1 = "predicate1";
 
-            var layer1 = await layerModel.CreateLayer("l1", trans);
-            var layerset = new LayerSet(new long[] { layer1.ID });
+            var layer1 = await layerModel.UpsertLayer("l1", trans);
+            var layerset = new LayerSet(new string[] { layer1.ID });
 
             var i1 = await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
             var i2 = await relationModel.InsertRelation(ciid2, ciid3, predicateID1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);

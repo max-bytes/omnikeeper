@@ -29,7 +29,7 @@ namespace Omnikeeper.Model.Decorators
             return await model.BulkReplaceRelations(data, changesetProxy, origin, trans);
         }
 
-        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
@@ -39,7 +39,7 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, long layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
@@ -49,14 +49,14 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetRelations(rl, layerID, trans, atTime);
         }
 
-        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
 
             return await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, origin, trans);
         }
 
-        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, long layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
 

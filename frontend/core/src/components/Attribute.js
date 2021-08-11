@@ -56,14 +56,14 @@ function Attribute(props) {
     const removeButton = (
       <Button type="primary" danger onClick={e => {
         e.preventDefault();
-        removeCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, layers: visibleLayers.map(l => l.name) } })
+        removeCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, layers: visibleLayers.map(l => l.id) } })
         .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
       }} style={{ marginLeft: "0.5rem" }}>Remove</Button>
     );
 
     input = (
       <Form onFinish={e => {
-          insertCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, layers: visibleLayers.map(l => l.name), value: {
+          insertCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, layers: visibleLayers.map(l => l.id), value: {
             type: attribute.attribute.value.type,
             values: values,
             isArray: isArray

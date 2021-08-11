@@ -44,8 +44,8 @@ namespace Tests.Integration.Model
             var t1 = DateTimeOffset.Now;
 
             using var trans2 = ModelContextBuilder.BuildDeferred();
-            var layer1 = await layerModel.CreateLayer("l1", trans2);
-            var layerset = new LayerSet(new long[] { layer1.ID });
+            var layer1 = await layerModel.UpsertLayer("l1", trans2);
+            var layerset = new LayerSet(new string[] { layer1.ID });
             var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
             trans2.Commit();
@@ -117,8 +117,8 @@ namespace Tests.Integration.Model
             var t1 = DateTimeOffset.Now;
 
             using var trans2 = ModelContextBuilder.BuildDeferred();
-            var layer1 = await layerModel.CreateLayer("l1", trans2);
-            var layerset = new LayerSet(new long[] { layer1.ID });
+            var layer1 = await layerModel.UpsertLayer("l1", trans2);
+            var layerset = new LayerSet(new string[] { layer1.ID });
             var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
             await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
             trans2.Commit();
@@ -162,9 +162,9 @@ namespace Tests.Integration.Model
             var user = await DBSetup.SetupUser(userModel, trans1);
             var ciid1 = await ciModel.CreateCI(trans1);
             var ciid2 = await ciModel.CreateCI(trans1);
-            var layer1 = await layerModel.CreateLayer("l1", trans1);
-            var layer2 = await layerModel.CreateLayer("l2", trans1);
-            var layerset1 = new LayerSet(new long[] { layer1.ID });
+            var layer1 = await layerModel.UpsertLayer("l1", trans1);
+            var layer2 = await layerModel.UpsertLayer("l2", trans1);
+            var layerset1 = new LayerSet(new string[] { layer1.ID });
             var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(100)), changesetModel);
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("foo"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans1);
             trans1.Commit();
@@ -212,8 +212,8 @@ namespace Tests.Integration.Model
             trans.Commit();
 
             using var trans2 = ModelContextBuilder.BuildDeferred();
-            var layer1 = await layerModel.CreateLayer("l1", trans2);
-            var layerset1 = new LayerSet(new long[] { layer1.ID });
+            var layer1 = await layerModel.UpsertLayer("l1", trans2);
+            var layerset1 = new LayerSet(new string[] { layer1.ID });
             var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(100)), changesetModel);
             await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans2);
             trans2.Commit();

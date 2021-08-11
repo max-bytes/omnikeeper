@@ -67,7 +67,7 @@ namespace Tests
 
                 layers = layerNames.Select(identity =>
                 {
-                    return layerModel.CreateLayer(identity, mc).GetAwaiter().GetResult();
+                    return layerModel.UpsertLayer(identity, mc).GetAwaiter().GetResult();
                 }).ToList();
 
                 var rts = Traits.Get();

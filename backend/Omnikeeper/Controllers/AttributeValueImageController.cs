@@ -43,7 +43,7 @@ namespace Omnikeeper.Controllers
 
         [HttpGet("")]
         [AllowAnonymous] // TODO: implementing proper authentication for image loading is hard, see https://stackoverflow.com/questions/34096744/how-should-i-load-images-if-i-use-token-based-authentication
-        public async Task<IActionResult> Get([FromQuery, Required] Guid ciid, [FromQuery, Required] string attributeName, [FromQuery, Required] long[] layerIDs, [FromQuery] int index = 0, [FromQuery] DateTimeOffset? atTime = null)
+        public async Task<IActionResult> Get([FromQuery, Required] Guid ciid, [FromQuery, Required] string attributeName, [FromQuery, Required] string[] layerIDs, [FromQuery] int index = 0, [FromQuery] DateTimeOffset? atTime = null)
         {
             if (layerIDs.IsEmpty())
                 return BadRequest("No layer IDs specified");
@@ -87,7 +87,7 @@ namespace Omnikeeper.Controllers
         }
 
         [HttpPost("")]
-        public async Task<IActionResult> Post([FromQuery, Required] Guid ciid, [FromQuery, Required] string attributeName, [FromQuery, Required] long layerID, [FromForm, Required] IEnumerable<IFormFile> files, [FromQuery] bool forceArray = false)
+        public async Task<IActionResult> Post([FromQuery, Required] Guid ciid, [FromQuery, Required] string attributeName, [FromQuery, Required] string layerID, [FromForm, Required] IEnumerable<IFormFile> files, [FromQuery] bool forceArray = false)
         {
             if (files.IsEmpty())
                 return BadRequest("At least one image is required");

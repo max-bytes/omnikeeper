@@ -13,7 +13,7 @@ namespace Omnikeeper.Model.Decorators
             this.model = model;
         }
 
-        public async Task<int> DeleteAllAttributes(long layerID, IModelContext trans)
+        public async Task<int> DeleteAllAttributes(string layerID, IModelContext trans)
         {
             var numDeleted = await model.DeleteAllAttributes(layerID, trans);
             if (numDeleted > 0)

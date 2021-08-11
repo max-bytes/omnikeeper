@@ -73,7 +73,7 @@ function SearchCIAdvanced(props) {
                         .filter((et) => checkedTraits[et] === 1),
                     withoutEffectiveTraits: activeTraits.activeTraits.map(et => et.id)
                         .filter((et) => checkedTraits[et] === -1),
-                    layers: visibleLayers.map((l) => l.name),
+                    layers: visibleLayers.map((l) => l.id),
                 }
             });
         }

@@ -68,7 +68,7 @@ namespace Tests.Ingest
 
             var mc = modelContextBuilder.BuildImmediate();
 
-            Layer layer1 = await layerModel.CreateLayer("Inventory Scan", mc);
+            Layer layer1 = await layerModel.UpsertLayer("Inventory Scan", mc);
 
             // mock the current user service
             var mockCurrentUserService = new Mock<ICurrentUserService>();
@@ -80,7 +80,7 @@ namespace Tests.Ingest
 
             var insertLayer = layer1;
             var hosts = new string[] { "h1jmplx01.mhx.at", "h1lscapet01.mhx.local" };
-            var layerSet = await layerModel.BuildLayerSet(new string[] { layer1.Name }, mc);
+            var layerSet = await layerModel.BuildLayerSet(new string[] { layer1.ID }, mc);
 
             var controller = new AnsibleInventoryScanIngestController(ingestDataService, layerModel, mockCurrentUserService.Object, modelContextBuilder, mockAuthorizationService.Object, NullLogger<AnsibleInventoryScanIngestController>.Instance);
 
