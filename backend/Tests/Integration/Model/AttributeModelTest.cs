@@ -45,9 +45,6 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
 
-            // TODO: this shouldn't be tested here
-            Assert.ThrowsAsync<PostgresException>(async () => await layerModel.UpsertLayer("l1", transI)); // cannot add same layer twice
-
             var layerset = await layerModel.BuildLayerSet(new string[] { "l1" }, transI);
 
             using (var trans = ModelContextBuilder.BuildDeferred())
