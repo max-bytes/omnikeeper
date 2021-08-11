@@ -58,7 +58,7 @@ export const queries = {
         ${Fragments.fullLayer}
     `,
     LayerStatistics: gql`
-        query($layerID: Long!) {
+        query($layerID: String!) {
             manage_layerStatistics(layerID: $layerID) {
                 numActiveAttributes
                 numAttributeChangesHistory
@@ -66,7 +66,7 @@ export const queries = {
                 numRelationChangesHistory
                 numLayerChangesetsHistory
                 layer {
-                    name
+                    id
                 }
             }
         }

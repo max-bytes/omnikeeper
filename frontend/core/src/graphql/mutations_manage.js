@@ -37,7 +37,7 @@ export const mutations = {
   `,
   
   TRUNCATE_LAYER: gql`
-  mutation($id: Long!) {
+  mutation($id: String!) {
     manage_truncateLayer(id: $id)
   }
   `,
