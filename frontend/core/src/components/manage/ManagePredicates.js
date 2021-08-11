@@ -60,8 +60,8 @@ export default function ManagePredicates(props) {
         const constraints = row.constraints ?? { preferredTraitsFrom: [], preferredTraitsTo: [] };
         const predicate = { id: row.id, wordingFrom: row.wordingFrom, wordingTo: row.wordingTo, constraints: constraints };
         return upsert({ variables: { predicate: predicate } })
+          .then(r => { apolloClient.resetStore(); return r; })
           .then(r => ({result: removeTypename(r.data.manage_upsertPredicate), id: row.id}))
-          .then(r => apolloClient.resetStore())
           .catch(e => ({result: e, id: row.id }));
       }}
       deletableRows={true}
