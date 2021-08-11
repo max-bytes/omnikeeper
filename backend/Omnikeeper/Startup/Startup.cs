@@ -352,12 +352,7 @@ namespace Omnikeeper.Startup
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint($"{Configuration["BaseURL"]}/swagger/v1/swagger.json", "Landscape omnikeeper REST API V1");
-                //if (env.IsDevelopment() || env.IsStaging())
-                //{
-                c.OAuthClientId("landscape-omnikeeper");
-                //c.OAuthClientId("landscape-omnikeeper-api");
-                //c.OAuthClientSecret(Configuration.GetSection("SwaggerUI")["OAuthClientSecret"]);
-                //}
+                c.OAuthClientId("landscape-omnikeeper"); // TODO: make configurable?
             });
 
             // Configure hangfire to use the new JobActivator we defined.
