@@ -1,7 +1,4 @@
 # Build and Deployment
 
 ## Pipeline chart
-```eval_rst
-.. drawio-figure:: omnikeeper-build-deploy-pipeline.drawio
-   :export-scale: 100
-```
+ ![Authorization Overview](assets/drawio/build-deploy-pipeline-Seite-1.svg)
