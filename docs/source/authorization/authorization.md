@@ -1,7 +1,7 @@
 # Authorization
 
 TODO
- ![Authorization Overview](keycloak-authz-concepts-overview.svg)
+ ![Authorization Overview](authz-overview.svg)
 
 ## AuthRoles
 

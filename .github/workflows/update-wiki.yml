@@ -26,6 +26,7 @@ jobs:
           path: base/docs/source
           format: svg
           output: .
+          remove-page-suffix: true
       - name: Push to wiki
         run: |
           find wiki/* ! -name '.git' -exec rm -rf {} +
