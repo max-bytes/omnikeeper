@@ -70,4 +70,4 @@ TODO
 
 Example using Keycloak and layer access
 
- ![Authorization Overview](authorization/authz-overview-Seite-1.svg)
+ ![Authorization Overview](assets/drawio/authz-overview-Seite-1.svg)

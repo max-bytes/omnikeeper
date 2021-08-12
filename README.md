@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img src="docs/source/images/omnikeeper_logo_v1.0.png" alt="Logo" width="325">
+    <img src="docs/source/assets/images/omnikeeper_logo_v1.0.png" alt="Logo" width="325">
 </h1>
 
 <div align="center">
@@ -18,7 +18,6 @@
 
 - [About](#about)
 - [Getting Started](#getting-started)
-  - [Usage](#usage)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -32,11 +31,7 @@ To Do
 
 ## Getting Started
 
-To Do
-
-### Usage
-
-To Do
+[Follow me to the documentation](https://github.com/max-bytes/omnikeeper/wiki).
 
 ## Contributing
 
@@ -49,7 +44,7 @@ Please try to create bug reports that are:
 - _Unique._ Do not duplicate existing opened issues.
 - _Scoped to a Single Bug._ One bug per report.
 
-Please adhere to this project's [code of conduct](docs/source/CODE_OF_CONDUCT.md).
+Please adhere to this project's [code of conduct](https://github.com/max-bytes/omnikeeper/wiki/code-of-conduct).
 
 You could use [markdownlint-cli](https://github.com/igorshubovych/markdownlint-cli) to check for common markdown style inconsistency.
 
