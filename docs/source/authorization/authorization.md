@@ -1,7 +1,7 @@
 # Authorization
 
 TODO
- ![Authorization Overview](authz-overview.svg)
+ ![Authorization Overview](authz-overview-Seite-1.svg)
 
 ## AuthRoles
 
