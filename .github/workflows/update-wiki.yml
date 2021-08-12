@@ -6,7 +6,6 @@ on:
     paths:
       - 'docs/**'
 
-# TODO: build once repo is public
 jobs:
   update-wiki:
     runs-on: ubuntu-20.04

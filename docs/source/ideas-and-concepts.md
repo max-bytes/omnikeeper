@@ -1,77 +1,48 @@
 # Ideas and Concepts
 
-TODO: write about how the Landscape Omnikeeper differs from a regular CMDB, state its goals, ...
+TODO: write about how omnikeeper differs from a regular CMDB, state its goals, ...
 
 TODO: write about the more flexible approach, compared to regular CMDBs and how this is a better long-term plan in an ever-changing industry. Example: how well can regular CMDBs deal with new technologies like containerization or SaaS? Answer: badly -&gt; more flexibility is needed! Another example: how long does it take for structurally new information to enter a regular CMDB? Answer: forever! People start mis-using fields and relations to circumvent inflexible CMDB structures -&gt; more flexibility is needed!
 
-## Elements
+## Elements of omnikeeper
 
-### CIs - _anchor_
+### CIs
 
-CIs are the central element of the Omnikeeper. They are identified by an UUID (=GUID)-based ID called CI-ID or CIID.
+CIs are the central element of omnikeeper. They are identified by an UUID (=GUID)-based ID called CI-ID or CIID. CIs themselves contain nothing more than that. The way to add information to CIs is by adding attributes and relations.
 
-### CI Attributes
+### Attributes
 
-CI Attributes add data to CIs. Each attribute is assigned to a CI, is located on a layer, is part of a changeset and has a name (TODO: write about dot-notation for grouping). Every attribute also has a value with a type (text, integer, ...). Attributes of CIs are in flux: they can be removed or have their value overwritten (without deleting the previous value) as well as new attributes can be created.
+Attributes add data to CIs. Each attribute is assigned to a CI, is located on a layer, is part of a changeset and has a name. Every attribute also has a value with a type (text, integer, ...). Attributes of CIs are in flux: they can be removed or have their value overwritten (without deleting the previous value) as well as new attributes can be created.
+
+TODO: write about dot-notation for grouping
 
 ### Relations
 
-TODO
+Relations are used to relate exactly two CIs to each other. Relations are directed, that means a relation has a start and an end, or a "from" and a "to" half. You can think of a relation as a directed link from one CI to another.  
+A relation is further specified by a "predicate", which defines the nature of the relation. In a relation, you only specify the predicate-ID, which is a unique string referring to the predicate itself.  
+An example of a relation might be to define a parent-child relationship between two CIs. In that case, it might make sense to use the predicate-ID `is_child_of` and make it "go" from the child-CI to the parent-CI.
 
-### Predicates - _anchor_
+### Predicates
 
-TODO
+A relation itself only specifies a predicate-ID, but does not define the predicate itself further. To add additional information to a predicate, you may use the management interface in the technical frontend.
 
 ### Changesets - _anchor_
 
-TODO
+Every change to omnikeeper's attributes and relations is kept track of inside of changesets. A changeset is a collection of attribute- and relation-changes. A changeset also is linked to the user who made the change.
 
-### Layers - _anchor_
+### Layers
 
-TODO
+[[Link|layers]]
 
 ### Traits and Effective Traits
 
 TODO
 
-### Templates
-
-TODO
-
-## Groups
-
-TODO: talk about how to use CIs + &quot;is part of group&quot; relations/predicates as a grouping mechanism
-
-## Error Handling
-
-TODO: talk about how to use CI-attributes for error handling, meta-attribute-group &quot;\_\_error&quot;
-
-## Layer-based approach
-
-A key feature for organizing the data in Omnikeeper are layers. Layers have multiple functions, such as:
-
-*   **Separation of Concerns** - layers are used to split data into manageable chunks, for example via their source, their purpose, their governing team, human vs. process, ...
-*   **Visibility** - Not every human and every process must see every layer. Only the layers that are relevant need to be processed.
-*   **Priority** - when there is conflicting information regarding the same thing on different layers, a layer ordering ensures the correct resolution. Layers with a higher priority overshadow (but never overwrite!) information on the layers below. This is a similar concept to layers in image editing software, such as photoshop
-*   **Change-Management** - a layer can be used as a RFC, detailing and documenting a potential change. This is called a &quot;change layer&quot;. Change managers are able to review change layers, alter or reject them, and also merge them with other layers
-*   **What-if Analysis** - Create a personal layer, only visible to you, that contains changes you would like to explore. Use tools like diff, to see what would happen if applied
-*   **Authorization** - Not every human and every process must be able to modify every layer.
-
-### Types of Layers
-
-*   **Regular layer:** writable by humans (not by processes), readable by everyone (unless restricted)
-*   **Ingest layer (FMO):** only writable by a special ingest process which regularly puts data into the layer, readonly for everybody else
-*   **Compute layer:** only writable by a &quot;compute layer brain&quot;, readonly for everybody else. This compute layer brain (CLB) is a process that runs regularly, can access/read data from other layers and writes data into its associated compute layer. This is a powerful mechanism, useful for a lot of automation tasks
-*   **Change layer (FMO)**: like a regular layer, but its purpose is to specify and document potential changes, like in an RFC. Should be visible only to a small group of humans, and should be either merged with a regular layer or rejected and discarded.
-*   **Personal layer (FMO):** like a regular layer, but only visible to a single human. Used to perform what-if analysis and other tests.
-
-TODO: talk about sub-layers and layer-grouping, FMO
-
 ## Data Handling
 
 ### &quot;Immutable database&quot;
 
-Data is never\* overwritten, never\* changed, never\* deleted. (\*except for maintenance/archiving purposes). This ensures nothing gets lost and offers a full view of all changes that happened and how the landscape changes over time. Vital for root cause analysis and debugging, among other things. In general, the time dimension is an important axis of landscape.
+Data is never\* overwritten, never\* changed, never\* deleted. (\*except for maintenance/archiving purposes). This ensures nothing gets lost and offers a full view of all changes that happened and how the landscape changes over time. Vital for root cause analysis and debugging, among other things. In general, the time dimension is an important axis of omnikeeper.
 
 Apart from maintenance, the only database operations are SELECT and INSERT. No UPDATE or DELETE statements are ever issued.
 

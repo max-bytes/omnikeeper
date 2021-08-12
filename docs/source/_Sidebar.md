@@ -8,6 +8,7 @@
   * [ideas and concepts](./ideas-and-concepts)
   * inbound adapter
     * [generic json inbound adapter](./inbound-adapter_generic-json-inbound-adapter)
+  * [layers](./layers)
   * meta
     * [code of conduct](./meta_code-of-conduct)
 
