@@ -85,7 +85,7 @@ namespace Omnikeeper.Model
             var configLayerset = new LayerSet(baseConfig.ConfigLayerset);
 
             var AuthRoleCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(flattenedTraitForAuthRoles, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
-            var ret = new Dictionary<string, AuthRole>();
+            var ret = new Dictionary<string, AuthRole>(); // TODO: think about duplicates in ID
             foreach(var (_, AuthRoleET) in AuthRoleCIs.Values)
             {
                 var p = EffectiveTrait2AuthRole(AuthRoleET);
