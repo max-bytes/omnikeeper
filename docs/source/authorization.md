@@ -22,7 +22,7 @@ As an example, the roles within a token suitable for omnikeeper might look like 
   "...": "..."
 }
 ```
-The keys `resource_access` and `roles` are hardcoded (specified by Keycloak). The key `landscape-omnikeeper` is dynamic and must equal the audience specified in the omnikeeper [[application configuration|configuration_application-configuation]] (key `Authentication.Audience`).
+The keys `resource_access` and `roles` are hardcoded (specified by Keycloak). The key `landscape-omnikeeper` is dynamic and must equal the audience specified in the omnikeeper [[application configuration|configuration_application-configuration]] (key `Authentication.Audience`).
 
 Managing of user roles is outside the scope of omnikeeper itself. omnikeeper is merely using the defined user roles for authorization decisions. Role management must be done by the IDP.
 
@@ -62,9 +62,11 @@ You do not have to manually create an AuthRole with the ID `__ok_superuser` for 
 
 The super user role serves two primary purposes:
 - in a simple setup where you do not want to bother with AuthRoles or authorization in general (f.e. during development or in simple production environments)
-- to be able to bootstrap omnikeeper. Because omnikeeper keeps its own configuration within layers, there's a chicken-egg problem. See [[Configuration Layers|configuration_configuration-layers]] for an explanation.
+- to be able to bootstrap omnikeeper. Because omnikeeper keeps its own configuration within layers, there's a chicken-egg problem. See [[configuration layers|configuration_configuration-layers]] for an explanation.
 
 ## Keycloak
+
+omnikeeper works well together with Keycloak.
 
 TODO
 
