@@ -25,6 +25,7 @@ jobs:
         with:
           path: base/docs/source
           format: svg
+          output: .
       - name: Push to wiki
         run: |
           find wiki/* ! -name '.git' -exec rm -rf {} +
