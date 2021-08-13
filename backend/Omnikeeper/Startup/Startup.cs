@@ -77,7 +77,7 @@ namespace Omnikeeper.Startup
 
             var pluginFolder = Path.Combine(Directory.GetCurrentDirectory(), "OKPlugins");
             ServiceRegistration.RegisterLogging(services);
-            var cs = Configuration.GetConnectionString("LandscapeDatabaseConnection"); // TODO: add Enlist=false to connection string
+            var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection"); // TODO: add Enlist=false to connection string
             ServiceRegistration.RegisterDB(services, cs, false);
             ServiceRegistration.RegisterOIABase(services);
             var enableModelCaching = false; // TODO: model caching seems to have a grave bug that keeps old attributes in the cache, so we disable caching (for now)
@@ -385,7 +385,7 @@ namespace Omnikeeper.Startup
             {
                 if (plugin.DBMigration != null)
                 {
-                    var cs = Configuration.GetConnectionString("LandscapeDatabaseConnection");
+                    var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection");
                     var result = plugin.DBMigration.Migrate(cs);
                     if (!result.Successful)
                     {

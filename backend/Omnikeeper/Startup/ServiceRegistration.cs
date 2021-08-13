@@ -57,7 +57,7 @@ namespace Omnikeeper.Startup
             //services.AddTransient<Controllers.Ingest.ManageContextController>();
             //var pr = new OKPluginGenericJSONIngest.PluginRegistration();
             //pr.RegisterServices(services);
-            //var cs = Configuration.GetConnectionString("LandscapeDatabaseConnection");
+            //var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection");
             //var result = plugin.DBMigration.Migrate(cs);
 
 
