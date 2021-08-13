@@ -39,3 +39,5 @@ COPY --from=publish /app/publish .
 #ENTRYPOINT ["dotnet", "Omnikeeper.dll"]
 RUN chmod +x entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS=http://+:80
