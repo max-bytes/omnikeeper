@@ -1,10 +1,16 @@
-# Application Configuration
+# Application Stack Configuration
 
 Much of omnikeeper's configuration can be managed through the technical frontend. However, certain basic configuration settings, such as the database connection need to be setup before starting omnikeeper. The way this is done is through environment variables. Both the technical frontend and the backend/core use this approach to configure initial settings.
 
-## Backend/Core environment variables
+## Backend/Core
 
-- ConnectionStrings__LandscapeDatabaseConnection
+### Port
+
+The backend docker image exposes port 80, over which all communication is done.
+
+### Environment variables
+
+- ConnectionStrings__OmnikeeperDatabaseConnection
     - Connection string for connecting to postgres database
     - Example: `Server=db;User Id=db_username;Password=db_password;Database=omnikeeper;Pooling=true`
 - Authentication__Audience
@@ -21,7 +27,18 @@ Much of omnikeeper's configuration can be managed through the technical frontend
     - Default: ` ` (empty string)
     - Example: `/backend`
 
-## Technical Frontend environment variables:
+### Logs
+Backend application logs can be found inside the container at `/app/Logs`. You might want to map this directory to a directory on the docker host.
+
+
+## Technical Frontend
+
+### Port
+
+The frontend docker image exposes port 80, over which all communication is done.
+
+###  Environment variables
+
 - PUBLIC_URL_DYNAMIC: 
     - Full qualified URL where frontend is reachable
     - example: `https://omnikeeper-frontend-url.com`
@@ -42,5 +59,12 @@ Much of omnikeeper's configuration can be managed through the technical frontend
     - default: `/`
     - example: `/frontend`
 
+### Logs
+Frontend application logs can be found inside the container at `/var/log/nginx`. You might want to map this directory to a directory on the docker host.
 
-TODO: write about how to configure omnikeeper core docker container... environment variables, config files, mappings, ...
+
+## Database
+
+omnikeeper requires a recent (11+) postgres database to store its data and configuration. Use the backend environment variable `ConnectionStrings__OmnikeeperDatabaseConnection` to connect the omnikeeper backend to the database.
+
+Make sure the specified database is created beforehand because omnikeeper does not create it. On startup, omnikeeper performs its own database migrations and keeps it in sync with updates. Therefore the database user needs essentially ALL privileges (SELECT, INSERT, CREATE, ...) on the database (TODO: be more concrete).
