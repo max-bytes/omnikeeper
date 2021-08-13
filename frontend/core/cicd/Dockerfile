@@ -51,3 +51,4 @@ COPY .env /var/www/
 
 ENV REACT_APP_VERSION=$version
 ENV REACT_APP_PLUGINS_FRONTEND=$plugins
+ENV NODE_ENV=production

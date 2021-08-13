@@ -20,10 +20,9 @@ import { ReactKeycloakProvider } from '@react-keycloak/web'
 import { Menu, Space } from 'antd';
 
 const keycloak = new Keycloak({
+  "url": `${env("KEYCLOAK_URL")}/auth`,
   "realm": env("KEYCLOAK_REALM"),
-  "url": env("KEYCLOAK_URL"),
   "ssl-required": "none",
-  "resource": env("KEYCLOAK_RESOURCE"),
   "clientId": env("KEYCLOAK_CLIENT_ID"),
   "public-client": true,
   "verify-token-audience": true,
