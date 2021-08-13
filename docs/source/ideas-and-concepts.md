@@ -26,7 +26,9 @@ An example of a relation might be to define a parent-child relationship between 
 
 A relation itself only specifies a predicate-ID, but does not define the predicate itself further. To add additional information to a predicate, you may use the management interface in the technical frontend.
 
-### Changesets - _anchor_
+Predicate-IDs need to conform to a naming convention: predicate-IDs may only contain lowercase letters, digits and underscores.
+
+### Changesets
 
 Every change to omnikeeper's attributes and relations is kept track of inside of changesets. A changeset is a collection of attribute- and relation-changes. A changeset also is linked to the user who made the change.
 
