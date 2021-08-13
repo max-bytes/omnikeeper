@@ -161,7 +161,7 @@ namespace Omnikeeper.Startup
 
             services.AddHangfire(config =>
             {
-                var cs = Configuration.GetConnectionString("HangfireConnection");
+                //var cs = Configuration.GetConnectionString("HangfireConnection");
                 config.UseMemoryStorage();
                 config.UseFilter(new AutomaticRetryAttribute() { Attempts = 0 });
                 config.UseConsole(); //TODO
@@ -292,6 +292,8 @@ namespace Omnikeeper.Startup
             NpgsqlLogManager.Provider = npgsqlLoggingProvider;
 
             app.UseCors("DefaultCORSPolicy");
+
+            app.UsePathBase(Configuration.GetValue<string>("BaseURL"));
 
             // make application properly consider headers (and populate httprequest object) when behind reverse proxy
             app.UseForwardedHeaders(new ForwardedHeadersOptions
