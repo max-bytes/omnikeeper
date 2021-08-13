@@ -57,7 +57,7 @@ function AddNewContext(props) {
                         const newContext = context;
                         if (!editMode) newContext.name = e.name;
                         newContext.transformConfig.expression = e.expression ? e.expression : "";;
-                        newContext.loadConfig.searchLayerIDs = e.searchLayerIDs.substring(1, e.searchLayerIDs.length-1).split`,`.map(x=>+x); // convert into array
+                        newContext.loadConfig.searchLayerIDs = e.searchLayerIDs.substring(1, e.searchLayerIDs.length-1).split(`,`); // convert into array
                         newContext.loadConfig.writeLayerID = e.writeLayerID;
 
                         try {
@@ -84,7 +84,7 @@ function AddNewContext(props) {
                     }
                     initialValues={{
                         "expression": context.transformConfig.expression, // text
-                        "searchLayerIDs": "[" + context.loadConfig.searchLayerIDs.toString() + "]", // array with numbers (handled as text)
+                        "searchLayerIDs": "[" + context.loadConfig.searchLayerIDs.toString() + "]", // array (handled as text)
                         "writeLayerID": context.loadConfig.writeLayerID, // number
                     }}
                 >
