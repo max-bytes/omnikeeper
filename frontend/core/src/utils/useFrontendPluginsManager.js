@@ -1,9 +1,7 @@
-import useSwaggerClient from "utils/useSwaggerClient";
 import env from "@beam-australia/react-env";
 
 export default function useFrontendPluginsManager() {
-    const { data: swaggerClient, loading: swaggerClientLoading, error: swaggerClientError } = useSwaggerClient();
-
+    
     try {
         // loads all frontend plugins, specified in 'REACT_APP_PLUGINS_FRONTEND' and creates an array with plugin-Objects
         // plugin-Objects consists of different attributes, like name, title or the component itself
@@ -17,7 +15,7 @@ export default function useFrontendPluginsManager() {
                     return [];
                 }
                 const wantedPluginName = split[1];
-                const wantedPluginVersion = split[2];
+                // const wantedPluginVersion = split[2];
 
                 // HACK: "It is not possible to use a fully dynamic import statement, such as import(foo).
                 // Because foo could potentially be any path to any file in your system or project."
@@ -28,19 +26,14 @@ export default function useFrontendPluginsManager() {
                 switch (wantedPluginName) {
                     // Try to 'require' frontend-plugins. -> No error-handling needed, if 'require' fails: It's okay, that some plugins cannot be found.
                     case "@max-bytes/okplugin-generic-json-ingest":
-                        // try { plugin = require("local_plugins_for_dev/@max-bytes/okplugin-generic-json-ingest"); } catch(e) { return []; } // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
+                        // try { plugin = require("../../okplugin-generic-json-ingest"); } catch(e) { return []; } // FOR DEVELOPMENT ONLY !! // TODO: don't use in prod!
                         try { plugin = require("@max-bytes/okplugin-generic-json-ingest"); } catch(e) { return []; } 
                         break;
                     default:
                         throw new Error("Cannot find module '" + wantedPluginName + "'"); // All available frontend-plugins should be listed in this switch. If not, throw error.
                 }
 
-                // create props
-                const pluginProps={
-                    wantedPluginVersion: wantedPluginVersion,
-                    swaggerClient: swaggerClient,
-                }
-                const PluginComponents = plugin.default(pluginProps); // thows and error, if plugin doesn't have a default export
+                const PluginComponents = plugin.default(); // thows and error, if plugin doesn't have a default export
 
                 return {
                     name: plugin.name,
@@ -59,10 +52,9 @@ export default function useFrontendPluginsManager() {
             },
         }
 
-        // 'loading' and 'error' get passed through from useSwaggerClient()
-        return { data: pluginObjects, loading: swaggerClientLoading, error: swaggerClientError };
+        return { data: pluginObjects, error: null };
 
     } catch(e) {
-        return { data: null, loading: false, error: e };
+        return { data: null, error: e };
     }
 }
