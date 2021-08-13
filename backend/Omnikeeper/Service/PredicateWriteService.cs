@@ -54,7 +54,6 @@ namespace Omnikeeper.Service
                 ciid = t.Item1;
             }
 
-
             (_, var tmpChanged) = await baseAttributeModel.InsertAttribute("predicate.wordingFrom", new AttributeScalarValueText(wordingFrom), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
             changed = changed || tmpChanged;
             (_, tmpChanged) = await baseAttributeModel.InsertAttribute("predicate.wordingTo", new AttributeScalarValueText(wordingTo), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
@@ -64,9 +63,14 @@ namespace Omnikeeper.Service
             changed = changed || tmpChanged;
             // TODO: constraints
 
-            var predicate = await predicateModel.GetPredicate(id, changesetProxy.TimeThreshold, trans);
-
-            return (predicate, changed);
+            try
+            {
+                var predicate = await predicateModel.GetPredicate(id, changesetProxy.TimeThreshold, trans);
+                return (predicate, changed);
+            } catch (Exception)
+            {
+                throw new Exception("Predicate does not conform to trait requirements");
+            }
         }
 
         public async Task<bool> TryToDelete(string id, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans)
