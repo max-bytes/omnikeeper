@@ -2,7 +2,7 @@
 
 ## Overview / Introduction
 
-The goal of the GridView (sub-)project is to allow users of omnikeeper to view and edit the omnikeeper data in a more suitable and more efficient way than with the regular technical frontend. The general idea is that giving users an interface that is Excel datasheet-like allows for an efficient workflow. A gridview is a table-like user interface (implemented using ag-grid), where each row corresponds to a CI in omnikeeper and each column corresponds to an attribute-name. The individual cells contain the attribute-values of the attribute and CI that&#39;s defined by the row and column. A tiny example:
+The goal of the GridView (sub-)project is to allow users of omnikeeper to view and edit the omnikeeper data in a more suitable and more efficient way than with the regular technical frontend. The general idea is that giving users an interface that is Excel datasheet-like allows for an efficient workflow. A gridview is a table-like user interface (implemented using ag-grid), where each row corresponds to a CI in omnikeeper and each column corresponds to an attribute. The individual cells contain the attribute-values of the attribute and CI that's defined by the row and column. A tiny example:
 
 Consider the following CIs and their Attributes:
 
@@ -26,7 +26,7 @@ Attribute 4: Value C-4
 
 could result in the following GridView:
 
-<table class="docutils"><thead><tr><th>CI-Name</th><th>Attribute 1</th><th>Attribute 2</th><th>Attribute 3</th></tr></thead><tbody><tr><th>CI-A</th><td>Value A-1</td><td>Value A-2</td><td>Value A-3</td></tr><tr><th>CI-B</th><td>Value B-1</td><td>[not set]</td><td>Value B-3</td></tr><tr><th>CI-C</th><td>Value C-1</td><td>Value C-2</td><td>Value C-3</td></tr></tbody></table>
+<table class="docutils"><thead><tr><th>CI-ID</th><th>Attribute 1</th><th>Attribute 2</th><th>Attribute 3</th></tr></thead><tbody><tr><th>CI-A</th><td>Value A-1</td><td>Value A-2</td><td>Value A-3</td></tr><tr><th>CI-B</th><td>Value B-1</td><td>[not set]</td><td>Value B-3</td></tr><tr><th>CI-C</th><td>Value C-1</td><td>Value C-2</td><td>Value C-3</td></tr></tbody></table>
 
 Note how CI-B does not contain an Attribute 2, which results in it being shown as "\[not set\]" in the GridView. Also note that CI-C contains an Attribute with name &quot;Attribute-4&quot;, which is not shown in the GridView. This is because the configuration of this (examplary) GridView explicitly defined to show Attributes named Attribute 1-3, which implicitly means NOT Attribute 4.
 

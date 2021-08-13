@@ -1,13 +1,8 @@
 # Build and Packaging
 
-omnikeeper is built and distributed as two main docker images, one backend/core image and one technical frontend image. Additionally, omnikeeper supports [[plugins|plugins]] that enhance the featureset of omnikeeper. These plugins are built separately and then added to omnikeeper during buildtime. There are two types of plugins:
--  Plugins for extending the backend/core, written in .Net and distributed as nupkg packages
-- Plugins for extending the technical frontend, written in JavaScript and distributed as npm packages
+omnikeeper is built and distributed as two main docker images, one backend/core image and one technical frontend image. Additionally, omnikeeper supports [[plugins|plugins]] that enhance the featureset of omnikeeper. These plugins are built separately and then added to omnikeeper during buildtime. 
 
 All plugins are published in the [[omnikeeper github packages section|https://github.com/orgs/max-bytes/packages?repo_name=omnikeeper]].
-
-The reason for the split between frontend and backend is mainly technical. It's hard to include and distribute frontend code inside of backend packages and vice versa.
-Because of this split, a single omnikeeper enhancement is often spread into two plugins, one for the backend/core, one for the technical frontend.
 
 During the build process, client libraries for working with omnikeeper's REST API are generated as well. These client libraries are created for different languages/technologies such as:
 - Python
