@@ -72,13 +72,17 @@ export const queries = {
         ${Fragments.fullLayer}
     `,
     Changesets: gql`
-        query($from: DateTimeOffset!, $to:DateTimeOffset!, $ciids: [Guid], $layers:[String]!, $limit: Int) {
-            changesets(from: $from, to: $to, ciids: $ciids, layers: $layers, limit: $limit) {
+        query($from: DateTimeOffset!, $to:DateTimeOffset!, $layers:[String]!, $ciids: [Guid], $limit: Int) {
+            changesets(from: $from, to: $to, layers: $layers, ciids: $ciids, limit: $limit) {
                 id
                 user {
                     username
                     displayName
                     type
+                }
+                layer {
+                    id
+                    color
                 }
                 timestamp
             }

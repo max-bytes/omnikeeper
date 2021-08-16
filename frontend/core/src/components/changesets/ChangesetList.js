@@ -1,0 +1,183 @@
+import { useLazyQuery } from "@apollo/client";
+import React, {useCallback, useEffect, useState} from "react";
+import { Spin, DatePicker } from 'antd';
+import _ from 'lodash';
+import { queries } from "../../graphql/queries";
+import { AgGridReact } from "ag-grid-react";
+import UserTypeIcon from './../UserTypeIcon';
+import { formatTimestamp } from "utils/datetime";
+import LayerIcon from "components/LayerIcon";
+import "./ChangesetList.css";
+import moment from 'moment';
+import ExplorerLayers from "components/ExplorerLayers";
+import { useExplorerLayers } from "../../utils/layers";
+
+const { RangePicker } = DatePicker;
+
+export default function ChangesetList(props) {
+    
+    const { data: visibleLayers, loading: loadingLayers } = useExplorerLayers(true);
+
+    const [search, { loadingChangesets, data: dataChangesets }] = useLazyQuery(queries.Changesets, {fetchPolicy: "no-cache"});
+
+    // debounce search, so its not called too often
+    const debouncedSearch = useCallback(_.debounce(search, 500), [search]);
+
+    const [selectedTimeRange, setSelectedTimeRange] = useState([moment().startOf('day'), moment().endOf('day')]);
+
+    useEffect(() => {
+        if (visibleLayers && selectedTimeRange) {
+            debouncedSearch({
+                variables: {
+                    from: selectedTimeRange[0].toDate(),
+                    to: selectedTimeRange[1].toDate(),
+                    layers: visibleLayers.map((l) => l.id),
+                }
+            });
+        }
+    }, [debouncedSearch, selectedTimeRange, visibleLayers]);
+
+
+    const loading = loadingLayers;
+    
+    const layerCellRenderer = function(params) {
+        const layer = params.value;
+        return <span><LayerIcon color={layer.color} /> {layer.id}</span>;
+    };
+
+    const userCellRenderer = function(params) {
+        const user = params.value;
+        return <span><UserTypeIcon userType={user.type} /> {user.displayName}</span>;
+    };
+    
+    const timestampCellRenderer = function(params) {
+        return formatTimestamp(params.value);
+    }
+
+    const columnDefs = [
+        {
+            headerName: "Timestamp",
+            field: "timestamp",
+            sortable: true,
+            cellRenderer: "timestampCellRenderer",
+            width: 160,
+        },
+        {
+            headerName: "Layer",
+            field: "layer",
+            sortable: true,
+            cellRenderer: "layerCellRenderer",
+            resizable: true,
+            flex: 2,
+            filter: true,
+            filterParams: {
+                valueGetter: (params) => {
+                    return params.data.layer.id;
+                }
+            }
+        },
+        {
+            headerName: "User",
+            field: "user",
+            cellRenderer: "userCellRenderer",
+            comparator: (valueA, valueB, nodeA, nodeB, isInverted) => {
+                const va = valueA.displayName;
+                const vb = valueB.displayName;
+                const r = va.localeCompare(vb);
+                return r;
+            },
+            sortable: true,
+            resizable: true,
+            flex: 3,
+            filter: true,
+            filterParams: {
+                valueGetter: (params) => {
+                    return params.data.user.displayName;
+                }
+            }
+        },
+        {
+            headerName: "Changeset-ID",
+            field: "id",
+            width: 280,
+            filter: true,
+            cellClass: "monospaced",
+        },
+    ];
+
+    return <div style={styles.container}>
+            <Spin
+                spinning={loading}>
+                {/* left column - search */}
+                <div style={styles.filterRow}>
+                    <div style={styles.filterRowEntry}>
+                        <h4>Time-Range</h4>
+                        <RangePicker
+                            showTime={{ format: 'HH:mm:ss' }}
+                            format="YYYY-MM-DD HH:mm:ss"
+                            showNow={true}
+                            value={selectedTimeRange}
+                            onChange={(dates) => setSelectedTimeRange(dates)}
+                            ranges={{
+                                Today: [moment().startOf('day'), moment().endOf('day')],
+                                'This Week': [moment().startOf('week'), moment().endOf('week')],
+                                'This Month': [moment().startOf('month'), moment().endOf('month')],
+                              }}
+                            />
+                    </div>
+                    <div style={styles.filterRowEntry}>
+                        <h4>Layers</h4>
+                        <ExplorerLayers />
+                    </div>
+                </div>
+                {/* right column - results */}
+                <div style={styles.resultsRow}>
+                    {dataChangesets?.changesets && 
+                        <div style={{height:'100%'}} className={"ag-theme-balham"}>
+                            <AgGridReact
+                                frameworkComponents={{
+                                    userCellRenderer: userCellRenderer,
+                                    timestampCellRenderer: timestampCellRenderer,
+                                    layerCellRenderer: layerCellRenderer,
+                                }}
+                                rowData={dataChangesets.changesets}
+                                columnDefs={columnDefs}
+                                animateRows={true}
+                                getRowNodeId={function (data) {
+                                    return data.id;
+                                }}
+                            />
+                        </div>
+                    }
+                </div>
+            </Spin>
+        </div>;
+}
+
+const styles = {
+    container: {
+        display: "flex",
+        flexDirection: "row",
+        height: "100%",
+    },
+    // left column
+    filterRow: {
+        display: "flex",
+        flexDirection: "column",
+        padding: "10px",
+        overflowY: "auto",
+        width: "360px",
+        minWidth: "300px",
+    },
+    filterRowEntry: {
+        marginBottom: "20px",
+    },
+
+    // right column - results
+    resultsRow: {
+        display: "flex",
+        flexDirection: "column",
+        padding: "10px 0 0 10px",
+        flex: "1 1 auto",
+    },
+};

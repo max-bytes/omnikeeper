@@ -81,6 +81,8 @@ namespace Omnikeeper.Startup
             ServiceRegistration.RegisterDB(services, cs, false);
             ServiceRegistration.RegisterOIABase(services);
             var enableModelCaching = false; // TODO: model caching seems to have a grave bug that keeps old attributes in the cache, so we disable caching (for now)
+            // TODO: think about per-request caching... which would at least fix issues when f.e. calling LayerModel.GetLayer(someLayerID) lots of times during a single request
+            // TODO: also think about graphql DataLoaders
             ServiceRegistration.RegisterModels(services, enableModelCaching, true, true);
             ServiceRegistration.RegisterServices(services);
             ServiceRegistration.RegisterGraphQL(services);

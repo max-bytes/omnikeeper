@@ -1,5 +1,7 @@
 ﻿using GraphQL.Types;
+using GraphQL.Utilities;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 
 namespace Omnikeeper.GraphQL
 {
@@ -23,9 +25,18 @@ namespace Omnikeeper.GraphQL
     {
         public ChangesetType()
         {
+            Field("id", x => x.ID);
             Field(x => x.Timestamp);
             Field(x => x.User, type: typeof(UserInDatabaseType));
-            Field("id", x => x.ID);
+            Field(x => x.LayerID);
+            FieldAsync<LayerType>("layer",
+            resolve: async (context) =>
+            {
+                var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                var layerID = context.Source.LayerID;
+                return await layerModel.GetLayer(layerID, userContext.Transaction);
+            });
         }
     }
 

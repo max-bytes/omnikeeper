@@ -16,7 +16,6 @@ function LayerIcon(props) {
 
 LayerIcon.propTypes = {
   layer: PropTypes.shape({
-    id: PropTypes.string.isRequired,
     color: PropTypes.number.isRequired
   }),
   color: PropTypes.number
