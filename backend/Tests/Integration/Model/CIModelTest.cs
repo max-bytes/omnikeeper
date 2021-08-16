@@ -28,7 +28,6 @@ namespace Tests.Integration.Model
             Guid ciid3;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changesetID = await changesetModel.CreateChangeset(user.ID, trans);
                 ciid1 = await model.CreateCI(trans);
                 ciid2 = await model.CreateCI(trans);
                 ciid3 = await model.CreateCI(trans);
@@ -58,7 +57,6 @@ namespace Tests.Integration.Model
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 var cis1 = await model.GetMergedCIs(new AllCIIDsSelection(), new LayerSet(layerID1), false, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(2, cis1.Count());
                 Assert.AreEqual(1, cis1.Count(c => c.ID == ciid1 && c.MergedAttributes.ContainsKey("a1")));

@@ -42,7 +42,7 @@ namespace Omnikeeper.Base.Model
 
         }
 
-        Task<Changeset> CreateChangeset(long userID, IModelContext trans, DateTimeOffset? timestamp = null);
+        Task<Changeset> CreateChangeset(long userID, string layerID, IModelContext trans, DateTimeOffset? timestamp = null);
         Task<Changeset?> GetChangeset(Guid id, IModelContext trans);
         Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, IModelContext trans, int? limit = null);
 

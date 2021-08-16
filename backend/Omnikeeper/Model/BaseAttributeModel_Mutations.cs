@@ -32,7 +32,7 @@ namespace Omnikeeper.Model
                 return (currentAttribute, false);
             }
 
-            var changeset = await changesetProxy.GetChangeset(trans);
+            var changeset = await changesetProxy.GetChangeset(layerID, trans);
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, origin_type, partition_index) 
@@ -84,7 +84,7 @@ namespace Omnikeeper.Model
             if (currentAttribute != null && currentAttribute.State != AttributeState.Removed && currentAttribute.Value.Equals(value))
                 return (currentAttribute, false);
 
-            var changeset = await changesetProxy.GetChangeset(trans);
+            var changeset = await changesetProxy.GetChangeset(layerID, trans);
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
             using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, origin_type, partition_index) 
@@ -163,7 +163,7 @@ namespace Omnikeeper.Model
             // changeset is only created and copy mode is only entered when there is actually anything inserted
             if (!actualInserts.IsEmpty() || !outdatedAttributes.IsEmpty())
             {
-                Changeset changeset = await changesetProxy.GetChangeset(trans);
+                Changeset changeset = await changesetProxy.GetChangeset(data.LayerID, trans);
 
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 

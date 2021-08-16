@@ -144,7 +144,7 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp, origin_type, partition_index) 
                 VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp, @origin_type, @partition_index)", trans.DBConnection, trans.DBTransaction);
 
-            var changeset = await changesetProxy.GetChangeset(trans);
+            var changeset = await changesetProxy.GetChangeset(layerID, trans);
 
             var id = Guid.NewGuid();
             command.Parameters.AddWithValue("id", id);
@@ -191,7 +191,7 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp, origin_type, partition_index) 
                 VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp, @origin_type, @partition_index)", trans.DBConnection, trans.DBTransaction);
 
-            var changeset = await changesetProxy.GetChangeset(trans);
+            var changeset = await changesetProxy.GetChangeset(layerID, trans);
 
             var id = Guid.NewGuid();
             command.Parameters.AddWithValue("id", id);
@@ -256,7 +256,7 @@ namespace Omnikeeper.Model
             // changeset is only created and copy mode is only entered when there is actually anything inserted
             if (!actualInserts.IsEmpty() || !outdatedRelations.IsEmpty())
             {
-                Changeset changeset = await changesetProxy.GetChangeset(trans);
+                Changeset changeset = await changesetProxy.GetChangeset(data.LayerID, trans);
 
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 

@@ -7,12 +7,14 @@ namespace Omnikeeper.Base.Entity
     {
         public Guid ID { get; private set; }
         public DateTimeOffset Timestamp { get; private set; }
+        public string LayerID { get; private set; }
         public UserInDatabase User { get; private set; }
 
-        public Changeset(Guid id, UserInDatabase user, DateTimeOffset timestamp)
+        public Changeset(Guid id, UserInDatabase user, string layerID, DateTimeOffset timestamp)
         {
             ID = id;
             User = user;
+            LayerID = layerID;
             Timestamp = timestamp;
         }
     }

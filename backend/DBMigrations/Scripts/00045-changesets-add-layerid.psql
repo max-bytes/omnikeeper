@@ -1,0 +1,23 @@
+ALTER TABLE public.changeset
+    ADD COLUMN layer_id text NOT NULL DEFAULT '';
+
+-- set layer_id column of changesets to the first found matching relation or attribute
+-- NOTE: this is not particularly clean but it should work for virtually all cases
+-- only thing it should not catch is when there is an empty changeset... which should not exist
+UPDATE public.changeset c
+    SET layer_id = r.layer_id
+FROM public.relation r 
+WHERE c.id = r.changeset_id;
+
+UPDATE public.changeset c
+    SET layer_id = a.layer_id
+FROM public.attribute a 
+WHERE c.id = a.changeset_id;
+
+
+-- set foreign key
+ALTER TABLE public.changeset
+    ADD CONSTRAINT f_layer FOREIGN KEY (layer_id)
+    REFERENCES public.layer (id)
+    ON UPDATE RESTRICT
+    ON DELETE RESTRICT;

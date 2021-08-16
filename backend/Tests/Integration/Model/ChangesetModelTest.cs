@@ -75,7 +75,6 @@ namespace Tests.Integration.Model
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changeset = await changesetModel.CreateChangeset(user.ID, trans);
                 await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("textL1"), ciid2, layer1.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
                 trans.Commit();
             }
@@ -267,11 +266,11 @@ namespace Tests.Integration.Model
             // other changeset can be deleted, if threshold is large enough
             Assert.AreEqual(2, await changesetModel.ArchiveUnusedChangesetsOlderThan(DateTimeOffset.FromUnixTimeSeconds(9999), transI));
 
-            Assert.IsNull(await changesetModel.GetChangeset((await changeset1.GetChangeset(transI)).ID, transI));
-            Assert.IsNull(await changesetModel.GetChangeset((await changeset2.GetChangeset(transI)).ID, transI));
-            Assert.IsNull(await changesetModel.GetChangeset((await changeset3.GetChangeset(transI)).ID, transI));
-            Assert.IsNotNull(await changesetModel.GetChangeset((await changeset4.GetChangeset(transI)).ID, transI));
-            Assert.IsNull(await changesetModel.GetChangeset((await changeset5.GetChangeset(transI)).ID, transI));
+            Assert.IsNull(await changesetModel.GetChangeset((await changeset1.GetChangeset(layer1.ID, transI)).ID, transI));
+            Assert.IsNull(await changesetModel.GetChangeset((await changeset2.GetChangeset(layer1.ID, transI)).ID, transI));
+            Assert.IsNull(await changesetModel.GetChangeset((await changeset3.GetChangeset(layer1.ID, transI)).ID, transI));
+            Assert.IsNotNull(await changesetModel.GetChangeset((await changeset4.GetChangeset(layer1.ID, transI)).ID, transI));
+            Assert.IsNull(await changesetModel.GetChangeset((await changeset5.GetChangeset(layer1.ID, transI)).ID, transI));
         }
     }
 }

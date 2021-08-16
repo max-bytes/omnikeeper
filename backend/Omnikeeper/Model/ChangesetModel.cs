@@ -19,25 +19,26 @@ namespace Omnikeeper.Model
             this.userModel = userModel;
         }
 
-        public async Task<Changeset> CreateChangeset(long userID, IModelContext trans, DateTimeOffset? timestamp = null)
+        public async Task<Changeset> CreateChangeset(long userID, string layerID, IModelContext trans, DateTimeOffset? timestamp = null)
         {
             var user = await userModel.GetUser(userID, trans);
             if (user == null)
                 throw new Exception($"Could not find user with ID {userID}");
-            using var command = new NpgsqlCommand(@"INSERT INTO changeset (id, timestamp, user_id) VALUES (@id, @timestamp, @user_id) returning timestamp", trans.DBConnection, trans.DBTransaction);
+            using var command = new NpgsqlCommand(@"INSERT INTO changeset (id, timestamp, user_id, layer_id) VALUES (@id, @timestamp, @user_id, @layer_id) returning timestamp", trans.DBConnection, trans.DBTransaction);
             var id = Guid.NewGuid();
             command.Parameters.AddWithValue("id", id);
             command.Parameters.AddWithValue("user_id", userID);
+            command.Parameters.AddWithValue("layer_id", layerID);
             command.Parameters.AddWithValue("timestamp", timestamp.GetValueOrDefault(DateTimeOffset.Now));
             using var reader = await command.ExecuteReaderAsync();
             await reader.ReadAsync();
             var timestampR = reader.GetDateTime(0);
-            return new Changeset(id, user, timestampR);
+            return new Changeset(id, user, layerID, timestampR);
         }
 
         public async Task<Changeset?> GetChangeset(Guid id, IModelContext trans)
         {
-            using var command = new NpgsqlCommand(@"SELECT c.timestamp, c.user_id, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c
+            using var command = new NpgsqlCommand(@"SELECT c.timestamp, c.user_id, c.layer_id, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c
                 LEFT JOIN ""user"" u ON c.user_id = u.id
                 WHERE c.id = @id", trans.DBConnection, trans.DBTransaction);
 
@@ -50,14 +51,15 @@ namespace Omnikeeper.Model
 
             var timestamp = dr.GetTimeStamp(0).ToDateTime();
             var userID = dr.GetInt64(1);
-            var username = dr.GetString(2);
-            var displayName = dr.GetString(3);
-            var keycloakUUID = dr.GetGuid(4);
-            var userType = dr.GetFieldValue<UserType>(5);
-            var userTimestamp = dr.GetTimeStamp(6).ToDateTime();
+            var layerID = dr.GetString(2);
+            var username = dr.GetString(3);
+            var displayName = dr.GetString(4);
+            var keycloakUUID = dr.GetGuid(5);
+            var userType = dr.GetFieldValue<UserType>(6);
+            var userTimestamp = dr.GetTimeStamp(7).ToDateTime();
 
             var user = new UserInDatabase(userID, keycloakUUID, username, displayName, userType, userTimestamp);
-            return new Changeset(id, user, timestamp);
+            return new Changeset(id, user, layerID, timestamp);
         }
 
         // returns all changesets in the time range
@@ -77,7 +79,7 @@ namespace Omnikeeper.Model
         // sorted by timestamp
         private async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, Guid[] ciids, IModelContext trans, int? limit = null)
         {
-            var queryAttributes = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
+            var queryAttributes = @"SELECT distinct c.id, c.user_id, c.layer_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 INNER JOIN attribute a ON a.changeset_id = c.id 
                 INNER JOIN ci ci ON a.ci_id = ci.id
                 LEFT JOIN ""user"" u ON c.user_id = u.id
@@ -85,7 +87,7 @@ namespace Omnikeeper.Model
             queryAttributes += " AND ci.id = ANY(@ciids)";
 
             var irdClause = "r.from_ci_id = ci.id OR r.to_ci_id = ci.id";
-            var queryRelations = $@"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
+            var queryRelations = $@"SELECT distinct c.id, c.user_id, c.layer_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 INNER JOIN relation r ON r.changeset_id = c.id 
                 INNER JOIN ci ci ON ({irdClause})
                 LEFT JOIN ""user"" u ON c.user_id = u.id
@@ -111,15 +113,16 @@ namespace Omnikeeper.Model
             {
                 var id = dr.GetGuid(0);
                 var userID = dr.GetInt64(1);
-                var timestamp = dr.GetTimeStamp(2).ToDateTime();
-                var username = dr.GetString(3);
-                var displayName = dr.GetString(4);
-                var userUUID = dr.GetGuid(5);
-                var userType = dr.GetFieldValue<UserType>(6);
-                var userTimestamp = dr.GetTimeStamp(7).ToDateTime();
+                var layerID = dr.GetString(2);
+                var timestamp = dr.GetTimeStamp(3).ToDateTime();
+                var username = dr.GetString(4);
+                var displayName = dr.GetString(5);
+                var userUUID = dr.GetGuid(6);
+                var userType = dr.GetFieldValue<UserType>(7);
+                var userTimestamp = dr.GetTimeStamp(8).ToDateTime();
 
                 var user = new UserInDatabase(userID, userUUID, username, displayName, userType, userTimestamp);
-                var c = new Changeset(id, user, timestamp);
+                var c = new Changeset(id, user, layerID, timestamp);
                 ret.Add(c);
             }
             return ret;
@@ -127,7 +130,7 @@ namespace Omnikeeper.Model
 
         private async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IModelContext trans, int? limit = null)
         {
-            var query = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
+            var query = @"SELECT distinct c.id, c.user_id, c.layer_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 LEFT JOIN attribute a ON a.changeset_id = c.id 
                 LEFT JOIN relation r ON r.changeset_id = c.id
                 LEFT JOIN ""user"" u ON c.user_id = u.id
@@ -153,15 +156,16 @@ namespace Omnikeeper.Model
             {
                 var id = dr.GetGuid(0);
                 var userID = dr.GetInt64(1);
-                var timestamp = dr.GetTimeStamp(2).ToDateTime();
-                var username = dr.GetString(3);
-                var displayName = dr.GetString(4);
-                var userUUID = dr.GetGuid(5);
-                var userType = dr.GetFieldValue<UserType>(6);
-                var userTimestamp = dr.GetTimeStamp(7).ToDateTime();
+                var layerID = dr.GetString(2);
+                var timestamp = dr.GetTimeStamp(3).ToDateTime();
+                var username = dr.GetString(4);
+                var displayName = dr.GetString(5);
+                var userUUID = dr.GetGuid(6);
+                var userType = dr.GetFieldValue<UserType>(7);
+                var userTimestamp = dr.GetTimeStamp(8).ToDateTime();
 
                 var user = new UserInDatabase(userID, userUUID, username, displayName, userType, userTimestamp);
-                var c = new Changeset(id, user, timestamp);
+                var c = new Changeset(id, user, layerID, timestamp);
                 ret.Add(c);
             }
             return ret;
@@ -232,7 +236,7 @@ namespace Omnikeeper.Model
         [Obsolete]
         public async Task<IEnumerable<Changeset>> GetChangesetsOlderThan(DateTimeOffset threshold, IModelContext trans)
         {
-            var query = @"SELECT distinct c.id, c.user_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
+            var query = @"SELECT distinct c.id, c.user_id, c.layer_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
                 LEFT JOIN ""user"" u ON c.user_id = u.id
                 WHERE c.timestamp < @threshold
                 ORDER BY c.timestamp DESC NULLS LAST";
@@ -247,15 +251,16 @@ namespace Omnikeeper.Model
             {
                 var id = dr.GetGuid(0);
                 var userID = dr.GetInt64(1);
-                var timestamp = dr.GetTimeStamp(2).ToDateTime();
-                var username = dr.GetString(3);
-                var displayName = dr.GetString(4);
-                var userUUID = dr.GetGuid(5);
-                var userType = dr.GetFieldValue<UserType>(6);
-                var userTimestamp = dr.GetTimeStamp(7).ToDateTime();
+                var layerID = dr.GetString(2);
+                var timestamp = dr.GetTimeStamp(3).ToDateTime();
+                var username = dr.GetString(4);
+                var displayName = dr.GetString(5);
+                var userUUID = dr.GetGuid(6);
+                var userType = dr.GetFieldValue<UserType>(7);
+                var userTimestamp = dr.GetTimeStamp(8).ToDateTime();
 
                 var user = new UserInDatabase(userID, userUUID, username, displayName, userType, userTimestamp);
-                var c = new Changeset(id, user, timestamp);
+                var c = new Changeset(id, user, layerID, timestamp);
                 ret.Add(c);
             }
             return ret;

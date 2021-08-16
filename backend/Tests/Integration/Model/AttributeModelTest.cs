@@ -28,7 +28,6 @@ namespace Tests.Integration.Model
             Guid ciid1;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changesetID = await changesetModel.CreateChangeset(user.ID, trans);
                 ciid1 = await model.CreateCI(trans);
                 trans.Commit();
             }
@@ -70,7 +69,7 @@ namespace Tests.Integration.Model
                 Assert.AreEqual("a1", aa1.Attribute.Name);
                 Assert.AreEqual(AttributeState.Changed, aa1.Attribute.State);
                 Assert.AreEqual(new AttributeScalarValueText("text2"), aa1.Attribute.Value);
-                Assert.AreEqual((await changeset.GetChangeset(trans)).ID, aa1.Attribute.ChangesetID);
+                Assert.AreEqual((await changeset.GetChangeset(layerID1, trans)).ID, aa1.Attribute.ChangesetID);
                 trans.Commit();
             }
 
