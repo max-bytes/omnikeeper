@@ -1,4 +1,13 @@
-# Authorization - Configuration Layers
+# Configuration - Configuration is Data
+
+omnikeeper stores parts of its own configuration, such as Traits, Predicates and AuthRoles inside the regular data structures itself. That means that f.e. a defined Trait exists as its own CI whose attributes define the traits parameters (ID, requirements, ...).  
+While this approach may appear strange at first, it enables a lot of positive effects:
+- the configuration items are automatically versioned and a history of their changes is kept within omnikeeper's regular structures.
+- it becomes possible to apply other features, that work on the regular data structures, to the configuration items. For example, the diffing tool may be used to compare changes in configuration items over time.
+- configuration may be managed from outside of omnikeeper and possibly automated, through the regular REST or GraphQL APIs that work with omnikeeper data structures. 
+- making omnikeeper use its own data structures for its configuration forces a certain diligence for development and serves as a usecase for itself. In other words, it puts omnikeeper's developers into the same shoes as developers who use omnikeeper as their data store.
+
+In order to keep this self-configuration separate from the regular stored data, at least one separate configuration layer should be used. Normally, only one configuration layer is sufficient and its encouraged to give this layer the ID ``__okconfig``. While possible, avoid mixing omnikeeper config and regular data within a layer.
 
 TODO: write about omnikeeper's self-configuration layers
 

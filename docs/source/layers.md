@@ -11,6 +11,10 @@ A key feature for organizing the data in omnikeeper are layers. Layers have mul
 *   **Change-Management** - a layer can be used as a RFC, detailing and documenting a potential change. (TODO: This is called a &quot;change layer&quot;. Change managers are able to review change layers, alter or reject them, and also merge them with other layers)
 *   **What-if Analysis** - Create a personal layer, only visible to you, that contains changes you would like to explore. Use tools like diff, to see what would happen if applied
 
+## Layer Merging
+TODO: talk about how attributes and relations are merged when working with multiple layers: merging, layer priority, ...
+ ![Layer Merging](assets/drawio/overview-layer-ci-attributes-Seite-1.svg)
+
 ## Types of Layers
 
 TODO: outdated
