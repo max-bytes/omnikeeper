@@ -34,7 +34,7 @@ function LoadingTimeline(props) {
   var to = "2022-01-01 00:00:00";
   var [limit, setLimit] = useState(10);
 
-  const { loading: loadingChangesets, error, data: resultData, previousData, refetch: refetchChangesets } = useQuery(queries.Changesets, {
+  const { loading: loadingChangesets, error, data: resultData, previousData, refetch: refetchChangesets } = useQuery(queries.ChangesetsForCI, {
     variables: { from: from, to: to, ciids: [ciid], layers: props.layers.map(l => l.id), limit: limit } // TODO
   });
   const data = resultData ?? previousData;

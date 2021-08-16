@@ -37,6 +37,24 @@ namespace Omnikeeper.GraphQL
                 var layerID = context.Source.LayerID;
                 return await layerModel.GetLayer(layerID, userContext.Transaction);
             });
+            FieldAsync<ChangesetStatisticsType>("statistics",
+            resolve: async (context) =>
+            {
+                var statisticsModel = context.RequestServices.GetRequiredService<IChangesetStatisticsModel>();
+                var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                var changesetID = context.Source.ID;
+                return await statisticsModel.GetStatistics(changesetID, userContext.Transaction);
+            });
+        }
+    }
+
+    public class ChangesetStatisticsType : ObjectGraphType<ChangesetStatistics>
+    {
+        public ChangesetStatisticsType()
+        {
+            Field(x => x.NumAttributeChanges);
+            Field(x => x.NumRelationChanges);
+            Field("id", x => x.ChangesetID);
         }
     }
 

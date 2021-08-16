@@ -183,6 +183,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IUserInDatabaseModel, UserInDatabaseModel>();
             services.AddSingleton<ILayerModel, LayerModel>();
             services.AddSingleton<ILayerStatisticsModel, LayerStatisticsModel>();
+            services.AddSingleton<IChangesetStatisticsModel, ChangesetStatisticsModel>();
             services.AddSingleton<IRelationModel, RelationModel>();
             services.AddSingleton<IBaseRelationModel, BaseRelationModel>();
             services.AddSingleton<IChangesetModel, ChangesetModel>();

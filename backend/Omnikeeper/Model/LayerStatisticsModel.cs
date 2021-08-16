@@ -9,13 +9,6 @@ namespace Omnikeeper.Model
 {
     public class LayerStatisticsModel : ILayerStatisticsModel
     {
-        private readonly ILayerModel layerModel;
-
-        public LayerStatisticsModel(ILayerModel layerModel)
-        {
-            this.layerModel = layerModel;
-        }
-
         public async Task<long> GetActiveAttributes(Layer layer, IModelContext trans)
         {
             // return number of all active attributes

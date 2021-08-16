@@ -34,7 +34,7 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(attributeModel, new CIIDModel());
 
             var layerModel = new LayerModel();
-            var layerStatisticsModel = new LayerStatisticsModel(layerModel);
+            var layerStatisticsModel = new LayerStatisticsModel();
 
             using var trans = modelContextBuilder.BuildDeferred();
             var user = await DBSetup.SetupUser(userModel, trans);
@@ -81,7 +81,7 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(attributeModel, new CIIDModel());
 
             var layerModel = new LayerModel();
-            var layerStatisticsModel = new LayerStatisticsModel(layerModel);
+            var layerStatisticsModel = new LayerStatisticsModel();
 
 
             using var trans = modelContextBuilder.BuildDeferred();

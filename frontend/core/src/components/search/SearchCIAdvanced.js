@@ -84,8 +84,9 @@ function SearchCIAdvanced(props) {
             <Spin
                 spinning={loadingLayers || loadingActiveTraits}>
                 {/* left column - search */}
-                <div style={styles.searchRow}>
-                    <div style={styles.searchRowEntry}>
+                <div style={styles.searchColumn}>
+                    <h2>Search CIs</h2>
+                    <div style={styles.searchColumnEntry}>
                         <h4>Name or CI-ID</h4>
                         <Form.Item initialValue={searchString ?? ""} style={{ marginBottom: 0 }}>
                             <Input
@@ -97,18 +98,18 @@ function SearchCIAdvanced(props) {
                             />
                         </Form.Item>
                     </div>
-                    <div style={styles.searchRowEntry}>
+                    <div style={styles.searchColumnEntry}>
                         {activeTraits && 
                             <EffectiveTraitList effectiveTraitList={activeTraits.activeTraits} checked={checkedTraits} setChecked={setCheckedTraits} />
                         }
                     </div>
-                    <div style={styles.searchRowEntry}>
+                    <div style={styles.searchColumnEntry}>
                         <h4>Layers</h4>
                         <ExplorerLayers />
                     </div>
                 </div>
                 {/* right column - results */}
-                <div style={styles.resultsRow}>
+                <div style={styles.resultsColumn}>
                     <SearchResults advancedSearchCIs={dataCIs?.advancedSearchCIs} loading={loading} />
                 </div>
             </Spin>
@@ -145,7 +146,7 @@ const styles = {
         height: "100%",
     },
     // left column - search
-    searchRow: {
+    searchColumn: {
         display: "flex",
         flexDirection: "column",
         padding: "10px",
@@ -153,17 +154,17 @@ const styles = {
         width: "30%",
         minWidth: "300px",
     },
-    searchRowEntry: {
+    searchColumnEntry: {
         marginBottom: "20px",
     },
     searchField: {
         width: "100%",
     },
     // right column - results
-    resultsRow: {
+    resultsColumn: {
         display: "flex",
         flexDirection: "column",
-        padding: "10px 0 0 10px",
+        margin: "10px",
         flex: "1 1 auto",
     },
 };

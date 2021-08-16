@@ -1,6 +1,6 @@
 import { useLazyQuery } from "@apollo/client";
 import React, {useCallback, useEffect, useState} from "react";
-import { Spin, DatePicker } from 'antd';
+import { Spin, DatePicker, Button, Form, Row, Col } from 'antd';
 import _ from 'lodash';
 import { queries } from "../../graphql/queries";
 import { AgGridReact } from "ag-grid-react";
@@ -11,6 +11,9 @@ import "./ChangesetList.css";
 import moment from 'moment';
 import ExplorerLayers from "components/ExplorerLayers";
 import { useExplorerLayers } from "../../utils/layers";
+import {
+    SyncOutlined,
+  } from '@ant-design/icons';
 
 const { RangePicker } = DatePicker;
 
@@ -18,12 +21,14 @@ export default function ChangesetList(props) {
     
     const { data: visibleLayers, loading: loadingLayers } = useExplorerLayers(true);
 
-    const [search, { loadingChangesets, data: dataChangesets }] = useLazyQuery(queries.Changesets, {fetchPolicy: "no-cache"});
+    const [search, { loading: loadingChangesets, data: dataChangesets }] = useLazyQuery(queries.Changesets, {fetchPolicy: "no-cache"});
 
     // debounce search, so its not called too often
     const debouncedSearch = useCallback(_.debounce(search, 500), [search]);
 
     const [selectedTimeRange, setSelectedTimeRange] = useState([moment().startOf('day'), moment().endOf('day')]);
+
+    const [refreshNonce, setRefreshNonce] = useState(null);
 
     useEffect(() => {
         if (visibleLayers && selectedTimeRange) {
@@ -35,7 +40,7 @@ export default function ChangesetList(props) {
                 }
             });
         }
-    }, [debouncedSearch, selectedTimeRange, visibleLayers]);
+    }, [debouncedSearch, selectedTimeRange, visibleLayers, refreshNonce]);
 
 
     const loading = loadingLayers;
@@ -52,6 +57,18 @@ export default function ChangesetList(props) {
     
     const timestampCellRenderer = function(params) {
         return formatTimestamp(params.value);
+    }
+    
+    const statisticsCellRenderer = function(params) {
+        const numAttributeChanges = params.value.numAttributeChanges;
+        const numRelationChanges = params.value.numRelationChanges;
+        const tokens = [
+            `${numAttributeChanges} ${numAttributeChanges === 1 ? 'attribute' : 'attributes'}`,
+            `${numRelationChanges} ${numRelationChanges === 1 ? 'relation' : 'relations'}`
+            // ((numAttributeChanges > 0) ? `#attributes: ${numAttributeChanges}` : null),
+            // ((numRelationChanges > 0) ? `#relations: ${numRelationChanges}` : null)
+        ]
+        return tokens.filter(t => t).join(', ');
     }
 
     const columnDefs = [
@@ -97,6 +114,12 @@ export default function ChangesetList(props) {
             }
         },
         {
+            headerName: "Changes",
+            field: "statistics",
+            width: 160,
+            cellRenderer: "statisticsCellRenderer",
+        },
+        {
             headerName: "Changeset-ID",
             field: "id",
             width: 280,
@@ -109,8 +132,9 @@ export default function ChangesetList(props) {
             <Spin
                 spinning={loading}>
                 {/* left column - search */}
-                <div style={styles.filterRow}>
-                    <div style={styles.filterRowEntry}>
+                <div style={styles.filterColumn}>
+                    <h2>Changesets</h2>
+                    <div style={styles.filterColumnEntry}>
                         <h4>Time-Range</h4>
                         <RangePicker
                             showTime={{ format: 'HH:mm:ss' }}
@@ -122,20 +146,28 @@ export default function ChangesetList(props) {
                                 Today: [moment().startOf('day'), moment().endOf('day')],
                                 'This Week': [moment().startOf('week'), moment().endOf('week')],
                                 'This Month': [moment().startOf('month'), moment().endOf('month')],
-                              }}
+                            }}
                             />
                     </div>
-                    <div style={styles.filterRowEntry}>
+                    <div style={styles.filterColumnEntry}>
                         <h4>Layers</h4>
                         <ExplorerLayers />
                     </div>
+                    <div style={styles.filterColumnEntry}>
+                        <Row>
+                            <Col span={24} style={{textAlign: 'right'}}>
+                                <Button icon={<SyncOutlined />} type="primary" loading={loadingChangesets} onClick={() => setRefreshNonce(moment().toISOString())}>Refresh</Button>
+                            </Col>
+                        </Row>
+                    </div>
                 </div>
                 {/* right column - results */}
-                <div style={styles.resultsRow}>
+                <div style={styles.resultsColumn}>
                     {dataChangesets?.changesets && 
                         <div style={{height:'100%'}} className={"ag-theme-balham"}>
                             <AgGridReact
                                 frameworkComponents={{
+                                    statisticsCellRenderer: statisticsCellRenderer,
                                     userCellRenderer: userCellRenderer,
                                     timestampCellRenderer: timestampCellRenderer,
                                     layerCellRenderer: layerCellRenderer,
@@ -161,23 +193,23 @@ const styles = {
         height: "100%",
     },
     // left column
-    filterRow: {
+    filterColumn: {
         display: "flex",
         flexDirection: "column",
-        padding: "10px",
+        margin: "10px",
         overflowY: "auto",
         width: "360px",
         minWidth: "300px",
     },
-    filterRowEntry: {
+    filterColumnEntry: {
         marginBottom: "20px",
     },
 
     // right column - results
-    resultsRow: {
+    resultsColumn: {
         display: "flex",
         flexDirection: "column",
-        padding: "10px 0 0 10px",
+        margin: "10px",
         flex: "1 1 auto",
     },
 };

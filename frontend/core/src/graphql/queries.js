@@ -71,7 +71,7 @@ export const queries = {
         }
         ${Fragments.fullLayer}
     `,
-    Changesets: gql`
+    ChangesetsForCI: gql`
         query($from: DateTimeOffset!, $to:DateTimeOffset!, $layers:[String]!, $ciids: [Guid], $limit: Int) {
             changesets(from: $from, to: $to, layers: $layers, ciids: $ciids, limit: $limit) {
                 id
@@ -87,6 +87,26 @@ export const queries = {
                 timestamp
             }
         }`,
+    Changesets: gql`
+            query($from: DateTimeOffset!, $to:DateTimeOffset!, $layers:[String]!) {
+                changesets(from: $from, to: $to, layers: $layers) {
+                    id
+                    user {
+                        username
+                        displayName
+                        type
+                    }
+                    layer {
+                        id
+                        color
+                    }
+                    timestamp
+                    statistics {
+                        numAttributeChanges
+                        numRelationChanges
+                    }
+                }
+            }`,
     Changeset: gql`
         query($id: Guid!) {
             changeset(id: $id) {
