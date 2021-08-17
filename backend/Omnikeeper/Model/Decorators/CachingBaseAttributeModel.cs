@@ -205,9 +205,9 @@ namespace Omnikeeper.Model.Decorators
             return t;
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
-            var t = await model.RemoveAttribute(name, ciid, layerID, changesetProxy, trans);
+            var t = await model.RemoveAttribute(name, ciid, layerID, changesetProxy, origin, trans);
             if (t.changed)
             {
                 trans.EvictFromCache(CacheKeyService.Attributes(ciid, layerID));
@@ -229,6 +229,12 @@ namespace Omnikeeper.Model.Decorators
             }
             if (evictCINames) trans.EvictFromCache(CacheKeyService.CINames(data.LayerID));
             return inserted;
+        }
+
+        public Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, IModelContext trans)
+        {
+            // TODO: caching
+            return model.GetAttributesOfChangeset(changesetID, trans);
         }
     }
 }

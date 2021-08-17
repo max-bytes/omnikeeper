@@ -28,7 +28,6 @@ namespace Tests.Integration.Model
             Guid ciid1;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changesetID = await changesetModel.CreateChangeset(user.ID, trans);
                 ciid1 = await model.CreateCI(trans);
                 trans.Commit();
             }
@@ -70,14 +69,14 @@ namespace Tests.Integration.Model
                 Assert.AreEqual("a1", aa1.Attribute.Name);
                 Assert.AreEqual(AttributeState.Changed, aa1.Attribute.State);
                 Assert.AreEqual(new AttributeScalarValueText("text2"), aa1.Attribute.Value);
-                Assert.AreEqual((await changeset.GetChangeset(trans)).ID, aa1.Attribute.ChangesetID);
+                Assert.AreEqual((await changeset.GetChangeset(layerID1, new DataOriginV1(DataOriginType.Manual), trans)).ID, aa1.Attribute.ChangesetID);
                 trans.Commit();
             }
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                var r1 = await attributeModel.RemoveAttribute("a1", ciid1, layerID1, changeset, trans);
+                var r1 = await attributeModel.RemoveAttribute("a1", ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 Assert.AreEqual("a1", r1.attribute.Name);
                 Assert.AreEqual(AttributeState.Removed, r1.attribute.State);
 

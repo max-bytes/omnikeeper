@@ -22,14 +22,14 @@ function DiffRelationList(props) {
               <div style={{ width: "100%" }}>
                 <Row style={{ backgroundColor: stateBasedBackgroundColor(state), display: "flex", justifyContent: "space-evenly" }}>
                     <Col>
-                        {r.left && <RelatedCI related={r.left} isEditable={false} alignRight></RelatedCI>}
+                        {r.left && <RelatedCI related={r.left} alignRight></RelatedCI>}
                         {!r.left && <MissingLabel /> }
                     </Col>
                     <Col>
                         <CompareLabel state={state} />
                     </Col>
                     <Col>
-                        {r.right && <RelatedCI related={r.right} isEditable={false}></RelatedCI>}
+                        {r.right && <RelatedCI related={r.right}></RelatedCI>}
                         {!r.right && <MissingLabel /> }
                     </Col>
                 </Row>

@@ -1,6 +1,9 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model
@@ -10,13 +13,20 @@ namespace Omnikeeper.Base.Model
         public TimeThreshold TimeThreshold { get; private set; }
         public UserInDatabase User { get; private set; }
         public IChangesetModel Model { get; private set; }
-        private Changeset? Changeset { get; set; }
+        private IDictionary<string, Changeset> ActiveChangesets { get; set; }
 
-        public async Task<Changeset> GetChangeset(IModelContext trans)
+        public async Task<Changeset> GetChangeset(string layerID, DataOriginV1 dataOrigin, IModelContext trans)
         {
-            if (Changeset == null)
-                Changeset = await Model.CreateChangeset(User.ID, trans, TimeThreshold.Time);
-            return Changeset;
+            var key = $"{layerID}:{dataOrigin.Type}";
+            if (ActiveChangesets.TryGetValue(key, out var changeset))
+            {
+                return changeset;
+            } else
+            {
+                var newChangeset = await Model.CreateChangeset(User.ID, layerID, dataOrigin, trans, TimeThreshold.Time);
+                ActiveChangesets.Add(key, newChangeset);
+                return newChangeset;
+            }
         }
 
         public ChangesetProxy(UserInDatabase user, TimeThreshold timeThreshold, IChangesetModel model)
@@ -24,7 +34,7 @@ namespace Omnikeeper.Base.Model
             User = user;
             TimeThreshold = timeThreshold;
             Model = model;
-            Changeset = null;
+            ActiveChangesets = new Dictionary<string, Changeset>();
         }
     }
 

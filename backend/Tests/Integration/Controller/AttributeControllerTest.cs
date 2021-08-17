@@ -67,7 +67,7 @@ namespace Tests.Integration.Controller
 
             var expectedAttribute1 = CIAttributeDTO.Build(
                 new MergedCIAttribute(
-                    new CIAttribute(attribute1ID, "a1", ciid1, new AttributeScalarValueText("text1"), AttributeState.New, changesetID, new DataOriginV1(DataOriginType.Manual)),
+                    new CIAttribute(attribute1ID, "a1", ciid1, new AttributeScalarValueText("text1"), AttributeState.New, changesetID),
                     new string[] { layerID1 }
                 ));
             (ma1.Result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedAttribute1);
@@ -77,7 +77,7 @@ namespace Tests.Integration.Controller
 
             var expectedAttribute2 = CIAttributeDTO.Build(
                 new MergedCIAttribute(
-                    new CIAttribute(attribute2ID, "a2", ciid2, new AttributeScalarValueText("text2"), AttributeState.New, changesetID, new DataOriginV1(DataOriginType.Manual)),
+                    new CIAttribute(attribute2ID, "a2", ciid2, new AttributeScalarValueText("text2"), AttributeState.New, changesetID),
                     new string[] { layerID1 }
                 ));
             var r = (ma2.Result as OkObjectResult)!.Value;

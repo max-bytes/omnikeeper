@@ -19,11 +19,9 @@ export const Fragments = {
     fragment FullAttribute on CIAttributeType {
         id
         name
+        ciid
         changesetID
         state
-        origin {
-            type
-        }
         value {
             type
             isArray
@@ -95,7 +93,6 @@ export const Fragments = {
         predicateID
         layerID
         changesetID
-        origin { type }
         layerStackIDs
         layerStack {
             id
@@ -116,16 +113,14 @@ export const Fragments = {
     onlineInboundAdapterName
   }
   `,
-  // TODO: needed?
-  fullRelation: gql`
-    fragment FullRelation on RelationType {
+  relation: gql`
+    fragment Relation on RelationType {
         id
         fromCIID
         toCIID
-        predicate {
-            ...FullPredicate
-        }
+        predicateID
         changesetID
+        state
     }
   `,
   fullPredicate: gql`

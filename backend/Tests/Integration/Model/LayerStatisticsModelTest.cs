@@ -34,7 +34,7 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(attributeModel, new CIIDModel());
 
             var layerModel = new LayerModel();
-            var layerStatisticsModel = new LayerStatisticsModel(layerModel);
+            var layerStatisticsModel = new LayerStatisticsModel();
 
             using var trans = modelContextBuilder.BuildDeferred();
             var user = await DBSetup.SetupUser(userModel, trans);
@@ -53,7 +53,7 @@ namespace Tests.Integration.Model
 
             var ch2 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
-            await relationModel.RemoveRelation(ciid1, ciid2, predicateID1, layer.ID, ch2, trans);
+            await relationModel.RemoveRelation(ciid1, ciid2, predicateID1, layer.ID, ch2, new DataOriginV1(DataOriginType.Manual), trans);
 
             await relationModel.InsertRelation(ciid1, ciid3, predicateID1, layer.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
@@ -81,7 +81,7 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(attributeModel, new CIIDModel());
 
             var layerModel = new LayerModel();
-            var layerStatisticsModel = new LayerStatisticsModel(layerModel);
+            var layerStatisticsModel = new LayerStatisticsModel();
 
 
             using var trans = modelContextBuilder.BuildDeferred();
@@ -101,11 +101,11 @@ namespace Tests.Integration.Model
 
             var ch2 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
-            await relationModel.RemoveRelation(ciid1, ciid2, predicateID1, layer.ID, ch2, trans);
+            await relationModel.RemoveRelation(ciid1, ciid2, predicateID1, layer.ID, ch2, new DataOriginV1(DataOriginType.Manual), trans);
 
             var ch3 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
 
-            await relationModel.RemoveRelation(ciid1, ciid3, predicateID1, layer.ID, ch3, trans);
+            await relationModel.RemoveRelation(ciid1, ciid3, predicateID1, layer.ID, ch3, new DataOriginV1(DataOriginType.Manual), trans);
 
             var layerChangesetsHistory = await layerStatisticsModel.GetLayerChangesetsHistory(layer, trans);
 

@@ -83,7 +83,7 @@ namespace Tests.Integration.Model
         public async Task IsCacheProperlyFilledAndEvicted()
         {
             var mocked = new FilledMockedBaseAttributeModel();
-            mocked.Setup(_ => _.RemoveAttribute(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<IChangesetProxy>(), It.IsAny<IModelContext>())).ReturnsAsync(() =>
+            mocked.Setup(_ => _.RemoveAttribute(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<IChangesetProxy>(), It.IsAny<DataOriginV1>(), It.IsAny<IModelContext>())).ReturnsAsync(() =>
             {
                 return (null!, true);
             });
@@ -100,19 +100,19 @@ namespace Tests.Integration.Model
             cachedAttributes1.Should().BeEquivalentTo(
                 new List<CIAttribute>()
                     {
-                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0740"), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a"), new DataOriginV1(DataOriginType.Manual)),
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0740"), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a")),
                     }
                 );
             var cachedAttributes2 = trans.GetCachedValue<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid2, layerID));
             cachedAttributes2.Should().BeEquivalentTo(
                 new List<CIAttribute>()
                     {
-                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a"), new DataOriginV1(DataOriginType.Manual))
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a"))
                     }
                 );
 
             // remove one attribute
-            await attributeModel.RemoveAttribute("a1", ciid1, layerID, null!, trans);
+            await attributeModel.RemoveAttribute("a1", ciid1, layerID, null!, new DataOriginV1(DataOriginType.Manual), trans);
 
             // ensure this attribute is evicted from cache, the other on (in different ci) still exists in cache
             var cachedAttributes21 = trans.GetCachedValue<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid1, layerID));
@@ -121,7 +121,7 @@ namespace Tests.Integration.Model
             cachedAttributes22.Should().BeEquivalentTo(
                 new List<CIAttribute>()
                     {
-                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a"), new DataOriginV1(DataOriginType.Manual))
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a"))
                     }
                 );
 
@@ -132,14 +132,14 @@ namespace Tests.Integration.Model
             cachedAttributes31.Should().BeEquivalentTo(
                 new List<CIAttribute>()
                     {
-                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0740"), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a"), new DataOriginV1(DataOriginType.Manual)),
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0740"), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a")),
                     }
                 );
             var cachedAttributes32 = trans.GetCachedValue<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid2, layerID));
             cachedAttributes32.Should().BeEquivalentTo(
                 new List<CIAttribute>()
                     {
-                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a"), new DataOriginV1(DataOriginType.Manual))
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, new Guid("6c1457d9-1807-453d-acab-68cd62726f1a"))
                     }
                 );
 
@@ -155,22 +155,22 @@ namespace Tests.Integration.Model
                 {
                     return new List<CIAttribute>()
                     {
-                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0740"), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual)),
-                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual))
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0740"), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, staticChangesetID),
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, staticChangesetID)
                     };
                 });
                 Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid1 }, s.CIIDs)), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
-                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0740"), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual))
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0740"), "a1", ciid1, new AttributeScalarValueText("v1"), AttributeState.New, staticChangesetID)
                     };
                 });
                 Setup(_ => _.GetAttributes(It.Is<SpecificCIIDsSelection>(s => Enumerable.SequenceEqual(new Guid[] { ciid2 }, s.CIIDs)), It.IsAny<string>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>())).ReturnsAsync(() =>
                 {
                     return new List<CIAttribute>()
                     {
-                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual))
+                        new CIAttribute(new Guid("82b59560-3870-42b5-9c8f-5c646f9d0741"), "a2", ciid2, new AttributeScalarValueText("v2"), AttributeState.New, staticChangesetID)
                     };
                 });
             }

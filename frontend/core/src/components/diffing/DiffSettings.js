@@ -11,7 +11,7 @@ function ChangesetDropdown(props) {
 
   var from = "2010-01-01 00:00:00"; // TODO?
   var to = "2022-01-01 00:00:00";
-  const { loading, data } = useQuery(queries.Changesets, {
+  const { loading, data } = useQuery(queries.ChangesetsForCI, {
     variables: { from: from, to: to, ciids: ciids, layers: layers }
   });
 

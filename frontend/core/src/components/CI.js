@@ -8,6 +8,7 @@ import CIRelations from './CIRelations';
 import EffectiveTraits from './EffectiveTraits';
 import { Tabs } from 'antd'
 import { useExplorerLayers } from '../utils/layers';
+import { CIID } from 'utils/uuidRenderers';
 
 const { TabPane } = Tabs;
 
@@ -41,7 +42,7 @@ function CI(props) {
   </>)
 
   return (<div style={{margin: "10px 10px"}}>
-    <h2>CI "{props.ci.name ?? "[UNNAMED]"}" ({props.ci.id})</h2>
+    <h2>CI "{props.ci.name ?? "[UNNAMED]"}" <CIID id={props.ci.id} link={false} /></h2>
     <TemplateErrors templateErrors={props.ci.templateErrors} 
       onCreateNewAttribute={(attributeName, attributeType) => {
         setCreateNewAttribute({name: attributeName, type: attributeType, value: '', layer: visibleAndWritableLayers[0]}); // TODO: correct layer

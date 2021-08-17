@@ -88,28 +88,27 @@ function Layers(props) {
           return (
             <Flipped key={layer.id} flipId={layer.id}>
               <li style={{paddingBottom: '5px', display: 'flex'}}>
-                <LayerIcon layer={layer}></LayerIcon>
                 
-                  <span style={{flexGrow: 1}}>
-                    {!layer.writable && (<FontAwesomeIcon icon={faBan} />)}
-                    {layer.writable && (<FontAwesomeIcon icon={faEdit} />)}
-                    &nbsp;
-                    <span style={((layer.visible) ? {} : {color: '#ccc'})}>{layerDescPopup} {layer.id} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
-                    {layer.brainName !== "" && (<FontAwesomeIcon icon={faCogs} />)}
-                    {layer.onlineInboundAdapterName !== "" && (<FontAwesomeIcon icon={faPlug} />)}
-                  </span>
-                  &nbsp;&nbsp;
-                    <Button size='small' onClick={() => toggleLayerVisibility(layer.id, data.layers)} style={{ marginRight: "0.5rem" }}>
-                      <FontAwesomeIcon icon={((layer.visible) ? faEye : faEyeSlash)} color={"grey"} style={{ padding: "2px"}} />
-                    </Button>
-                  <Radio.Group size='small'>
-                    <Radio.Button disabled={!previousLayer} onClick={() => changeLayerSortOrder(layer.id, previousLayer.id, 1, data.layers)}>
-                      <FontAwesomeIcon icon={faArrowAltCircleUp} color={"grey"} style={{ padding: "2px"}} />
-                    </Radio.Button>
-                    <Radio.Button disabled={!nextLayer} onClick={() => changeLayerSortOrder(layer.id, nextLayer.id, -1, data.layers)}>
-                      <FontAwesomeIcon icon={faArrowAltCircleDown} color={"grey"} style={{ padding: "2px"}} />
-                    </Radio.Button>
-                  </Radio.Group>
+                <span style={{flexGrow: 1}}>
+                  {!layer.writable && (<FontAwesomeIcon icon={faBan} />)}
+                  {layer.writable && (<FontAwesomeIcon icon={faEdit} />)}
+                  &nbsp;
+                  <span style={((layer.visible) ? {} : {color: '#ccc'})}>{layerDescPopup} <LayerIcon layer={layer} /> {layer.id} {((layer.state !== 'ACTIVE') ? " (DEPRECATED)" : "")}</span>
+                  {layer.brainName !== "" && (<FontAwesomeIcon icon={faCogs} />)}
+                  {layer.onlineInboundAdapterName !== "" && (<FontAwesomeIcon icon={faPlug} />)}
+                </span>
+                &nbsp;&nbsp;
+                  <Button size='small' onClick={() => toggleLayerVisibility(layer.id, data.layers)} style={{ marginRight: "0.5rem" }}>
+                    <FontAwesomeIcon icon={((layer.visible) ? faEye : faEyeSlash)} color={"grey"} style={{ padding: "2px"}} />
+                  </Button>
+                <Radio.Group size='small'>
+                  <Radio.Button disabled={!previousLayer} onClick={() => changeLayerSortOrder(layer.id, previousLayer.id, 1, data.layers)}>
+                    <FontAwesomeIcon icon={faArrowAltCircleUp} color={"grey"} style={{ padding: "2px"}} />
+                  </Radio.Button>
+                  <Radio.Button disabled={!nextLayer} onClick={() => changeLayerSortOrder(layer.id, nextLayer.id, -1, data.layers)}>
+                    <FontAwesomeIcon icon={faArrowAltCircleDown} color={"grey"} style={{ padding: "2px"}} />
+                  </Radio.Button>
+                </Radio.Group>
               </li>
             </Flipped>)
           })}

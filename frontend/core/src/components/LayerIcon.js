@@ -8,7 +8,7 @@ function argbToRGB(color) {
 
 function LayerIcon(props) {
     const color = props.layer?.color ?? props.color;
-    return (<span style={{display: 'inline-block', position: 'relative', height: '16px', width: '16px', margin: "0px 5px"}}>
+    return (<span style={{display: 'inline-block', verticalAlign: 'text-bottom', position: 'relative', height: '16px', width: '16px', margin: "0px 5px"}}>
       <div style={{backgroundColor: argbToRGB(color), position: 'absolute', top: 0 + "px", left: 0 + "px", width: "16px", height: "16px", border: "1px solid black"}}></div>
     </span>
   );
@@ -16,7 +16,6 @@ function LayerIcon(props) {
 
 LayerIcon.propTypes = {
   layer: PropTypes.shape({
-    id: PropTypes.string.isRequired,
     color: PropTypes.number.isRequired
   }),
   color: PropTypes.number

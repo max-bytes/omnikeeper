@@ -37,7 +37,7 @@ function ExplorerAttributeList(props) {
               var isEditable = props.isEditable && props.visibleAndWritableLayers.some(l => l.id === a.layerStackIDs[a.layerStackIDs.length - 1]);
               return (<Flipped key={a.attribute.name} flipId={a.attribute.name} onAppear={onAppear} onExit={onExit}>
                 <Attribute visibleLayers={props.visibleLayers} style={{padding: '5px 0px', backgroundColor: ((index % 2 === 1) ? '#00000009' : '#00000000')}} 
-                  attribute={a} ciIdentity={props.ciIdentity} isEditable={isEditable} />
+                  attribute={a.attribute} layerStack={a.layerStack} isEditable={isEditable} />
               </Flipped>);
             })}
           </Flipper>

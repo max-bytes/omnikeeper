@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types'
 import { queries } from 'graphql/queries'
 import LoadingOverlay from 'react-loading-overlay' // TODO: switch to antd spin
-import { Form, Button } from "antd";
+import { Form, Button, Space } from "antd";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSync, faExchangeAlt, faArrowDown } from '@fortawesome/free-solid-svg-icons'
+import { faSync, faExchangeAlt, faArrowDown, faList } from '@fortawesome/free-solid-svg-icons'
 import { mutations } from 'graphql/mutations';
 import { useMutation } from '@apollo/client';
 import UserTypeIcon from './UserTypeIcon';
@@ -34,7 +34,7 @@ function LoadingTimeline(props) {
   var to = "2022-01-01 00:00:00";
   var [limit, setLimit] = useState(10);
 
-  const { loading: loadingChangesets, error, data: resultData, previousData, refetch: refetchChangesets } = useQuery(queries.Changesets, {
+  const { loading: loadingChangesets, error, data: resultData, previousData, refetch: refetchChangesets } = useQuery(queries.ChangesetsForCI, {
     variables: { from: from, to: to, ciids: [ciid], layers: props.layers.map(l => l.id), limit: limit } // TODO
   });
   const data = resultData ?? previousData;
@@ -83,8 +83,6 @@ function LoadingTimeline(props) {
       textOverflow: 'ellipsis',
       width: "100%",
     };
-    const diffButtonStyle = {
-    };
     const lineStyle = {
       display: 'flex',
       width: '100%',
@@ -105,19 +103,26 @@ function LoadingTimeline(props) {
             {changesets && changesets.map((cs) => {
                 const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.displayName}</span> : '';
                 const label = <span style={((activeChangeset === cs) ? {fontWeight: 'bold'} : {})}>{formatTimestamp(cs.timestamp)} - {userLabel}</span>;
+                const changesetLink = <Link to={`/changesets/${cs.id}`}><FontAwesomeIcon icon={faList} /></Link>;
                 if (activeChangeset === cs) {
-                return (<Button style={buttonStyle} type="link" size="small" disabled key={cs.id}>{label}</Button>);
+                  return (<div style={lineStyle} key={cs.id}>
+                    <Button style={buttonStyle} type="link" size="small" disabled>{label}</Button>
+                    {changesetLink}
+                  </div>);
+                } else {
+                  const isLatest = latestChangeset === cs;
+                  const diffQuery = buildDiffingURLQueryBetweenChangesets(layerSettingsData.layerSettings, ciid, (latestChangeset === activeChangeset) ? null : activeChangeset.timestamp, (isLatest) ? null : cs.timestamp);
+                  return (<div style={lineStyle} key={cs.id}>
+                      <Button style={buttonStyle} type="link" size="small"
+                      onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: (isLatest) ? null : cs.timestamp, isLatest: isLatest }})}>
+                      {label}
+                      </Button>
+                      <Space>
+                        <Link to={`/diffing?${diffQuery}`}><FontAwesomeIcon icon={faExchangeAlt} /></Link>
+                        {changesetLink}
+                      </Space>
+                  </div>);
                 }
-                const isLatest = latestChangeset === cs;
-                const diffQuery = buildDiffingURLQueryBetweenChangesets(layerSettingsData.layerSettings, ciid, (latestChangeset === activeChangeset) ? null : activeChangeset.timestamp, (isLatest) ? null : cs.timestamp);
-                return (<div style={lineStyle} key={cs.id}>
-                    <Button style={buttonStyle} type="link" size="small"
-                    onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: (isLatest) ? null : cs.timestamp, isLatest: isLatest }})}>
-                    {label}
-                    </Button>
-                    <Link style={diffButtonStyle}
-                    to={`/diffing?${diffQuery}`}><FontAwesomeIcon icon={faExchangeAlt} /></Link>
-                </div>);
             })}
             <Form layout="inline" style={{justifyContent: "center"}}>
                 {!(limit > _.size(changesets)) && <Button size='small' onClick={() => {

@@ -1,64 +1,34 @@
 import React from "react";
-import { mutations } from '../graphql/mutations';
-import { useMutation } from '@apollo/client';
 import LayerStackIcons from "./LayerStackIcons";
 import { Form, Button } from 'antd';
 import { Link  } from 'react-router-dom'
 import OriginPopup from "./OriginPopup";
-import { useExplorerLayers } from '../utils/layers';
+import _ from 'lodash';
 
-function RelatedCI(props) {
+export default function RelatedCI(props) {
 
-  const predicateWording = props.predicateWording;
+  const {predicates, related, onRemove, alignRight} = props;
 
-  const { data: visibleLayers } = useExplorerLayers(true);
-  // TODO: loading
-  const [removeRelation] = useMutation(mutations.REMOVE_RELATION, { 
-    update: (cache, data) => {
-      /* HACK: find a better way to deal with cache invalidation! We would like to invalidate the affected CIs, which 
-      translates to multiple entries in the cache, because each CI can be cached multiple times for each layerhash
-      */
-      // data.data.mutate.affectedCIs.forEach(ci => {
-      //   var id = props.client.cache.identify(ci);
-      //   console.log("Evicting: " + id);
-      //   cache.evict(id);
-      // });
-    }
-  });
-  const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
+  const predicate = _.find(predicates, p => p.id === related.predicateID);
+  const predicateWording = predicate ? 
+    <i>{predicate.wordingFrom}</i>
+  : <i style={{textDecorationStyle: 'dashed', textDecorationColor: 'red', textDecorationThickness: '1px', textDecorationLine: 'underline'}}>{related.predicateID}</i>;
 
-  // const otherCIButton = <Button type="link" onClick={() => setSelectedCI({variables: { newSelectedCI: props.related.ci.identity }})}>{props.related.ci.identity}</Button>;
-  const otherCIButton = <Link to={"/explorer/" + props.related.ci.id}>{props.related.ci.name ?? "[UNNAMED]"}</Link>;
+  const otherCIButton = <Link to={"/explorer/" + related.ci.id}>{related.ci.name ?? "[UNNAMED]"}</Link>;
 
-  const written = (props.related.isForwardRelation) ?
+  const written = (related.isForwardRelation) ?
     <span>{`This CI `}{predicateWording}{` `}{otherCIButton}</span> :
     <span>{otherCIButton}{` `}{predicateWording}{` this CI`}</span>
     ;
 
-  // move remove functionality into on-prop
-  let removeButton;
-  if (props.isEditable) {
-    removeButton = <Button type="danger" size="small" onClick={e => {
-      removeRelation({ variables: { fromCIID: props.related.fromCIID, toCIID: props.related.toCIID, includeRelated: props.perPredicateLimit,
-        predicateID: props.related.predicateID, layerID: props.related.layerID, layers: visibleLayers.map(l => l.id) } })
-      .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
-    }}>Remove</Button>;
-  }
-
   return (
-    <div style={{margin: "5px", float: props.alignRight ? "right" : "unset" }}>
+    <div style={{margin: "5px", float: alignRight ? "right" : "unset" }}>
       <Form layout="inline" style={{flexFlow: 'nowrap', alignItems: 'center'}}>
-        <LayerStackIcons layerStack={props.related.layerStack}></LayerStackIcons>
-        <OriginPopup changesetID={props.related.changesetID} originType={props.related.origin.type} />
+        <LayerStackIcons layerStack={related.layerStack}></LayerStackIcons>
+        <OriginPopup changesetID={related.changesetID} />
         <Form.Item style={{flexBasis: '600px', justifyContent: 'flex-start', paddingRight: "0.25rem"}}>{written}</Form.Item>
-        {removeButton}
+        {onRemove && <Button type="danger" size="small" onClick={e => onRemove()}>Remove</Button>}
       </Form>
     </div>
   );
 }
-
-RelatedCI.propTypes = {
-  // TODO
-}
-
-export default RelatedCI;

@@ -18,11 +18,11 @@ namespace Tests.Integration.Serialization
         public void TestAttributeSerialization()
         {
             var dataSerializer = new ProtoBufDataSerializer();
-            var aScalarText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueText("foo"), AttributeState.New, Guid.NewGuid(), new DataOriginV1(DataOriginType.Manual));
+            var aScalarText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueText("foo"), AttributeState.New, Guid.NewGuid());
             var sScalarText = dataSerializer.ToByteArray(aScalarText);
             dataSerializer.FromByteArray<CIAttribute>(sScalarText).Should().BeEquivalentTo(aScalarText);
 
-            var aArrayText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeArrayValueText.BuildFromString(new string[] { "foo", "bar" }), AttributeState.New, Guid.NewGuid(), new DataOriginV1(DataOriginType.Manual));
+            var aArrayText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeArrayValueText.BuildFromString(new string[] { "foo", "bar" }), AttributeState.New, Guid.NewGuid());
             var sArrayText = dataSerializer.ToByteArray(aArrayText);
             dataSerializer.FromByteArray<CIAttribute>(sArrayText).Should().BeEquivalentTo(aArrayText);
         }
@@ -49,23 +49,23 @@ namespace Tests.Integration.Serialization
 
             // TODO: test only value, not whole attribute
 
-            var aScalarText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueText("foo", true), AttributeState.New, Guid.NewGuid(), new DataOriginV1(DataOriginType.Manual));
+            var aScalarText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueText("foo", true), AttributeState.New, Guid.NewGuid());
             var sScalarText = dataSerializer.ToByteArray(aScalarText);
             dataSerializer.FromByteArray<CIAttribute>(sScalarText).Should().BeEquivalentTo(aScalarText);
 
-            var aScalarInteger = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueInteger(-12), AttributeState.New, Guid.NewGuid(), new DataOriginV1(DataOriginType.Manual));
+            var aScalarInteger = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueInteger(-12), AttributeState.New, Guid.NewGuid());
             var sScalarInteger = dataSerializer.ToByteArray(aScalarInteger);
             dataSerializer.FromByteArray<CIAttribute>(sScalarInteger).Should().BeEquivalentTo(aScalarInteger);
 
-            var aScalarYAML = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeScalarValueYAML.BuildFromString(testYAML), AttributeState.New, Guid.NewGuid(), new DataOriginV1(DataOriginType.Manual));
+            var aScalarYAML = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeScalarValueYAML.BuildFromString(testYAML), AttributeState.New, Guid.NewGuid());
             var sScalarYAML = dataSerializer.ToByteArray(aScalarYAML);
             dataSerializer.FromByteArray<CIAttribute>(sScalarYAML).Should().BeEquivalentTo(aScalarYAML);
 
-            var aScalarJSON = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeScalarValueJSON.BuildFromString(testJSON), AttributeState.New, Guid.NewGuid(), new DataOriginV1(DataOriginType.Manual));
+            var aScalarJSON = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeScalarValueJSON.BuildFromString(testJSON), AttributeState.New, Guid.NewGuid());
             var sScalarJSON = dataSerializer.ToByteArray(aScalarJSON);
             dataSerializer.FromByteArray<CIAttribute>(sScalarJSON).Should().BeEquivalentTo(aScalarJSON);
 
-            var aScalarImage = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueImage(bvp), AttributeState.New, Guid.NewGuid(), new DataOriginV1(DataOriginType.Manual));
+            var aScalarImage = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueImage(bvp), AttributeState.New, Guid.NewGuid());
             var sScalarImage = dataSerializer.ToByteArray(aScalarImage);
             dataSerializer.FromByteArray<CIAttribute>(sScalarImage).Should().BeEquivalentTo(aScalarImage);
         }

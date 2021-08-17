@@ -71,19 +71,43 @@ export const queries = {
         }
         ${Fragments.fullLayer}
     `,
-    Changesets: gql`
-        query($from: DateTimeOffset!, $to:DateTimeOffset!, $ciids: [Guid], $layers:[String]!, $limit: Int) {
-            changesets(from: $from, to: $to, ciids: $ciids, layers: $layers, limit: $limit) {
+    ChangesetsForCI: gql`
+        query($from: DateTimeOffset!, $to:DateTimeOffset!, $layers:[String]!, $ciids: [Guid], $limit: Int) {
+            changesets(from: $from, to: $to, layers: $layers, ciids: $ciids, limit: $limit) {
                 id
                 user {
                     username
                     displayName
                     type
                 }
+                layer {
+                    id
+                    color
+                }
                 timestamp
             }
         }`,
-    Changeset: gql`
+    Changesets: gql`
+            query($from: DateTimeOffset!, $to:DateTimeOffset!, $layers:[String]!) {
+                changesets(from: $from, to: $to, layers: $layers) {
+                    id
+                    user {
+                        username
+                        displayName
+                        type
+                    }
+                    layer {
+                        id
+                        color
+                    }
+                    timestamp
+                    statistics {
+                        numAttributeChanges
+                        numRelationChanges
+                    }
+                }
+            }`,
+    BasicChangeset: gql`
         query($id: Guid!) {
             changeset(id: $id) {
                 id
@@ -93,8 +117,36 @@ export const queries = {
                     displayName
                     type
                 }
+                dataOrigin {
+                    type
+                }
             }
         }`,
+    FullChangeset: gql`
+        query($id: Guid!) {
+            changeset(id: $id) {
+                id
+                timestamp
+                user {
+                    username
+                    displayName
+                    type
+                }
+                layer {
+                    id
+                    color
+                }
+                attributes {
+                    ...FullAttribute
+                }
+                relations {
+                    ...Relation
+                }
+            }
+        }
+        ${Fragments.attribute}
+        ${Fragments.relation}
+        `,
     SelectedTimeThreshold: gql`
         query {
             selectedTimeThreshold @client

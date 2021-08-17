@@ -141,6 +141,7 @@ namespace Omnikeeper.GridView.Commands
                                         row.Ciid,
                                         writeLayer,
                                         changesetProxy,
+                                        new DataOriginV1(DataOriginType.Manual),
                                         trans);
                                 }
                                 catch (Exception e)

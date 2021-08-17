@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FixedSizeList as List } from 'react-window';
 import AutoSizer from "react-virtualized-auto-sizer";
 import { Spin } from 'antd';
+import { CIID } from "utils/uuidRenderers";
 
 
 export function SearchResults(props) {
@@ -27,7 +28,7 @@ export function SearchResults(props) {
                     {result.name ?? "[UNNAMED]"}
                 </div>
                 <div style={{ flexGrow: "2", flexBasis: "0" }}>
-                    {result.id}
+                    <CIID id={result.id} link={false} />
                 </div>
             </div>
         </Link>;

@@ -53,7 +53,7 @@ namespace Tests.Integration.Model
                 Assert.AreEqual(ciid2, rr1.Relation.ToCIID);
                 Assert.AreEqual(layerID1, rr1.LayerID);
                 Assert.AreEqual(RelationState.New, rr1.Relation.State);
-                Assert.AreEqual((await changeset.GetChangeset(trans)).ID, rr1.Relation.ChangesetID);
+                Assert.AreEqual((await changeset.GetChangeset(layerID1, new DataOriginV1(DataOriginType.Manual), trans)).ID, rr1.Relation.ChangesetID);
 
                 // test repeated insertion
                 var (i2, c2) = await relationModel.InsertRelation(ciid1, ciid2, predicateID1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -75,7 +75,7 @@ namespace Tests.Integration.Model
                 Assert.IsNotNull(rr2);
                 Assert.AreEqual(layerID1, rr2.LayerID);
                 Assert.AreEqual(RelationState.New, rr2.Relation.State);
-                Assert.AreEqual((await changeset.GetChangeset(trans)).ID, rr2.Relation.ChangesetID);
+                Assert.AreEqual((await changeset.GetChangeset(layerID1, new DataOriginV1(DataOriginType.Manual), trans)).ID, rr2.Relation.ChangesetID);
 
                 trans.Commit();
             }
@@ -188,7 +188,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                var removedRelation = await relationModel.RemoveRelation(ciid1, ciid2, predicateID1, layer2.ID, changeset, trans);
+                var removedRelation = await relationModel.RemoveRelation(ciid1, ciid2, predicateID1, layer2.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 Assert.IsNotNull(removedRelation);
                 var r1 = await relationModel.GetMergedRelations(new RelationSelectionFrom(ciid1), layerset, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, r1.Count());

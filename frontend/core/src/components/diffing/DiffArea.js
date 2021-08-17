@@ -4,6 +4,7 @@ import DiffAttributeList from 'components/diffing/DiffAttributeList';
 import DiffRelationList from 'components/diffing/DiffRelationList';
 import DiffEffectiveTraitsList from './DiffEffectiveTraitsList';
 import { Tabs, Typography } from 'antd'
+import { CIID } from 'utils/uuidRenderers';
 
 const { TabPane } = Tabs;
 const { Title } = Typography;
@@ -81,7 +82,7 @@ export function DiffArea(props) {
           if (!props.showEqual && _.size(m.mergedAttributes) === 0)
             return <div key={ciid}></div>;
           return <div key={ciid} style={{marginTop: '1.5rem'}}>
-            <Title level={5} style={{marginBottom: 0}}>{m.name} - {ciid}</Title>
+            <Title level={5} style={{marginBottom: 0}}>{m.name} - <CIID id={ciid} link={true} /></Title>
             <DiffAttributeList attributes={m.mergedAttributes} />
           </div>;
         })}
@@ -91,7 +92,7 @@ export function DiffArea(props) {
           if (!props.showEqual && _.size(m.mergedRelations) === 0)
             return <div key={ciid}></div>;
           return <div key={ciid} style={{marginTop: '1.5rem'}}>
-            <Title level={5} style={{marginBottom: 0}}>{m.name} - {ciid}</Title>
+            <Title level={5} style={{marginBottom: 0}}>{m.name} - <CIID id={ciid} link={true} /></Title>
             <DiffRelationList relations={m.mergedRelations} />
           </div>;
         })}
@@ -101,7 +102,7 @@ export function DiffArea(props) {
           if (!props.showEqual && _.size(m.mergedETs) === 0)
             return <div key={ciid}></div>;
           return <div key={ciid} style={{marginTop: '1.5rem'}}>
-            <Title level={5} style={{marginBottom: 0}}>{m.name} - {ciid}</Title>
+            <Title level={5} style={{marginBottom: 0}}>{m.name} - <CIID id={ciid} link={true} /></Title>
             <DiffEffectiveTraitsList effectiveTraits={m.mergedETs} />
           </div>
         })}

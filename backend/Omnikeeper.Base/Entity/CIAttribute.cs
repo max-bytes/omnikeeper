@@ -35,13 +35,12 @@ namespace Omnikeeper.Base.Entity
         [ProtoMember(4)] public readonly IAttributeValue Value;
         [ProtoMember(5)] public readonly AttributeState State;
         [ProtoMember(6)] public readonly Guid ChangesetID;
-        [ProtoMember(7)] public readonly DataOriginV1 Origin;
 
         // information hash: 
         public string InformationHash => CreateInformationHash(Name, CIID);
         public static string CreateInformationHash(string name, Guid ciid) => name + "_" + ciid;
 
-        public CIAttribute(Guid id, string name, Guid CIID, IAttributeValue value, AttributeState state, Guid changesetID, DataOriginV1 origin)
+        public CIAttribute(Guid id, string name, Guid CIID, IAttributeValue value, AttributeState state, Guid changesetID)
         {
             ID = id;
             Name = name;
@@ -49,7 +48,6 @@ namespace Omnikeeper.Base.Entity
             Value = value;
             State = state;
             ChangesetID = changesetID;
-            Origin = origin;
         }
     }
 

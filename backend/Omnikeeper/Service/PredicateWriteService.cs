@@ -73,7 +73,7 @@ namespace Omnikeeper.Service
             }
         }
 
-        public async Task<bool> TryToDelete(string id, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans)
+        public async Task<bool> TryToDelete(string id, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans)
         {
             var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
             var writeLayerID = baseConfiguration.ConfigWriteLayer;
@@ -87,10 +87,10 @@ namespace Omnikeeper.Service
                 return false; // no predicate with this ID exists
             }
 
-            await baseAttributeModel.RemoveAttribute("predicate.id", t.Item1, writeLayerID, changesetProxy, trans);
-            await baseAttributeModel.RemoveAttribute("predicate.wordingFrom", t.Item1, writeLayerID, changesetProxy, trans);
-            await baseAttributeModel.RemoveAttribute("predicate.wordingTo", t.Item1, writeLayerID, changesetProxy, trans);
-            await baseAttributeModel.RemoveAttribute("__name", t.Item1, writeLayerID, changesetProxy, trans);
+            await baseAttributeModel.RemoveAttribute("predicate.id", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("predicate.wordingFrom", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("predicate.wordingTo", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("__name", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
             // TODO: constraints
 
             var tAfterDeletion = await predicateModel.TryToGetPredicate(id, changesetProxy.TimeThreshold, trans);

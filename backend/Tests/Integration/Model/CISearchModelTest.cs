@@ -40,7 +40,6 @@ namespace Tests.Integration.Model
             Guid ciid3;
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var changesetID = await changesetModel.CreateChangeset(user.ID, trans);
                 ciid1 = await ciModel.CreateCI(trans);
                 ciid2 = await ciModel.CreateCI(trans);
                 ciid3 = await ciModel.CreateCI(trans);

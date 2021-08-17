@@ -43,9 +43,9 @@ namespace PerfTests
   }
 }";
 
-            aScalarText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueText("foo"), AttributeState.New, Guid.NewGuid(), new DataOriginV1(DataOriginType.Manual));
-            aScalarYAML = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeScalarValueYAML.BuildFromString(testYAML), AttributeState.New, Guid.NewGuid(), new DataOriginV1(DataOriginType.Manual));
-            aScalarJSON = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeScalarValueYAML.BuildFromString(testJSON), AttributeState.New, Guid.NewGuid(), new DataOriginV1(DataOriginType.Manual));
+            aScalarText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueText("foo"), AttributeState.New, Guid.NewGuid());
+            aScalarYAML = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeScalarValueYAML.BuildFromString(testYAML), AttributeState.New, Guid.NewGuid());
+            aScalarJSON = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeScalarValueYAML.BuildFromString(testJSON), AttributeState.New, Guid.NewGuid());
             //aArrayText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeArrayValueText.BuildFromString(new string[] { "foo", "bar" }), AttributeState.New, Guid.NewGuid(), new DataOriginV1(DataOriginType.Manual));
 
             bAttributeScalarText = protoBufDS.ToByteArray(aScalarText);
