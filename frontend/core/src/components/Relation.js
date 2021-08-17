@@ -27,7 +27,7 @@ export default function Relation(props) {
     <div style={{margin: "5px"}}>
       <Form layout="inline" style={{flexFlow: 'nowrap', alignItems: 'center'}}>
         <LayerIcon layer={layer} />
-        <OriginPopup changesetID={relation.changesetID} originType={relation.origin.type} />
+        <OriginPopup changesetID={relation.changesetID} />
         <Form.Item style={{flexBasis: '600px', justifyContent: 'flex-start', paddingRight: "0.25rem"}}>{wrapped}</Form.Item>
       </Form>
     </div>

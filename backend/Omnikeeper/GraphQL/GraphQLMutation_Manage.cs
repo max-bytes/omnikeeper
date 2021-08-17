@@ -324,7 +324,7 @@ namespace Omnikeeper.GraphQL
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
-                  var deleted = await predicateWriteService.TryToDelete(predicateID, changesetProxy, userContext.User, transaction);
+                  var deleted = await predicateWriteService.TryToDelete(predicateID, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.User, transaction);
 
                   transaction.Commit();
                   userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
@@ -391,7 +391,7 @@ namespace Omnikeeper.GraphQL
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
-                  var deleted = await traitWriteService.TryToDelete(traitID, changesetProxy, userContext.User, transaction);
+                  var deleted = await traitWriteService.TryToDelete(traitID, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.User, transaction);
 
                   transaction.Commit();
                   userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
@@ -454,7 +454,7 @@ namespace Omnikeeper.GraphQL
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
-                  var deleted = await authRoleWriteService.TryToDelete(authRoleID, changesetProxy, userContext.User, transaction);
+                  var deleted = await authRoleWriteService.TryToDelete(authRoleID, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.User, transaction);
 
                   transaction.Commit();
                   userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object

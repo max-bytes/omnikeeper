@@ -11,6 +11,6 @@ namespace Omnikeeper.Base.Service
     public interface IAuthRoleWriteService
     {
         Task<(AuthRole authRole, bool changed)> InsertOrUpdate(string id, IEnumerable<string> permissions, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans);
-        Task<bool> TryToDelete(string id, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans);
+        Task<bool> TryToDelete(string id, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans);
     }
 }

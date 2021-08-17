@@ -72,9 +72,9 @@ namespace Omnikeeper.Model.Decorators
             return t;
         }
 
-        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
-            var t = await model.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
+            var t = await model.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, origin, trans);
             if (t.changed)
                 EvictFromCache(fromCIID, toCIID, predicateID, layerID, trans);
             return t;

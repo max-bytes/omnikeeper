@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -42,7 +43,7 @@ namespace Omnikeeper.Base.Model
 
         }
 
-        Task<Changeset> CreateChangeset(long userID, string layerID, IModelContext trans, DateTimeOffset? timestamp = null);
+        Task<Changeset> CreateChangeset(long userID, string layerID, DataOriginV1 dataOrigin, IModelContext trans, DateTimeOffset? timestamp = null);
         Task<Changeset?> GetChangeset(Guid id, IModelContext trans);
         Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IChangesetSelection cs, IModelContext trans, int? limit = null);
 

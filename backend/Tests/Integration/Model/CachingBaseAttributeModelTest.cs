@@ -83,7 +83,7 @@ namespace Tests.Integration.Model
         public async Task IsCacheProperlyFilledAndEvicted()
         {
             var mocked = new FilledMockedBaseAttributeModel();
-            mocked.Setup(_ => _.RemoveAttribute(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<IChangesetProxy>(), It.IsAny<IModelContext>())).ReturnsAsync(() =>
+            mocked.Setup(_ => _.RemoveAttribute(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<IChangesetProxy>(), It.IsAny<DataOriginV1>(), It.IsAny<IModelContext>())).ReturnsAsync(() =>
             {
                 return (null!, true);
             });
@@ -112,7 +112,7 @@ namespace Tests.Integration.Model
                 );
 
             // remove one attribute
-            await attributeModel.RemoveAttribute("a1", ciid1, layerID, null!, trans);
+            await attributeModel.RemoveAttribute("a1", ciid1, layerID, null!, new DataOriginV1(DataOriginType.Manual), trans);
 
             // ensure this attribute is evicted from cache, the other on (in different ci) still exists in cache
             var cachedAttributes21 = trans.GetCachedValue<IEnumerable<CIAttribute>>(CacheKeyService.Attributes(ciid1, layerID));

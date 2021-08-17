@@ -45,7 +45,7 @@ namespace Omnikeeper.Base.CLB
 
             foreach (var remove in attributesToRemove)
             {
-                await attributeModel.RemoveAttribute(remove.Name, remove.CIID, clbLayerID, changeset, trans);
+                await attributeModel.RemoveAttribute(remove.Name, remove.CIID, clbLayerID, changeset, new DataOriginV1(DataOriginType.ComputeLayer), trans);
             }
         }
 

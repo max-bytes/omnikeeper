@@ -87,7 +87,7 @@ namespace Omnikeeper.Service
             return (trait, changed);
         }
 
-        public async Task<bool> TryToDelete(string id, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans)
+        public async Task<bool> TryToDelete(string id, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans)
         {
             var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
             var writeLayerID = baseConfiguration.ConfigWriteLayer;
@@ -101,12 +101,12 @@ namespace Omnikeeper.Service
                 return false; // no trait with this ID exists
             }
 
-            await baseAttributeModel.RemoveAttribute("trait.id", t.Item1, writeLayerID, changesetProxy, trans);
-            await baseAttributeModel.RemoveAttribute("trait.requiredAttributes", t.Item1, writeLayerID, changesetProxy, trans);
-            await baseAttributeModel.RemoveAttribute("trait.optionalAttributes", t.Item1, writeLayerID, changesetProxy, trans);
-            await baseAttributeModel.RemoveAttribute("trait.requiredRelations", t.Item1, writeLayerID, changesetProxy, trans);
-            await baseAttributeModel.RemoveAttribute("trait.requiredTraits", t.Item1, writeLayerID, changesetProxy, trans);
-            await baseAttributeModel.RemoveAttribute("__name", t.Item1, writeLayerID, changesetProxy, trans);
+            await baseAttributeModel.RemoveAttribute("trait.id", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("trait.requiredAttributes", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("trait.optionalAttributes", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("trait.requiredRelations", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("trait.requiredTraits", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("__name", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
 
             var tAfterDeletion = await traitModel.TryToGetRecursiveTrait(id, changesetProxy.TimeThreshold, trans);
             return tAfterDeletion.Equals(default); // return successfull if trait does not exist anymore afterwards

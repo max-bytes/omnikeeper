@@ -231,7 +231,7 @@ namespace Omnikeeper.Controllers.OData
                     return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
                 var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
-                await attributeModel.RemoveAttribute(keyAttributeName, keyCIID, writeLayerID, changesetProxy, trans);
+                await attributeModel.RemoveAttribute(keyAttributeName, keyCIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
                 trans.Commit();
             }
             catch (Exception)

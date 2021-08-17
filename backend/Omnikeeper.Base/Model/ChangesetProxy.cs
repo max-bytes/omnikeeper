@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
@@ -14,16 +15,16 @@ namespace Omnikeeper.Base.Model
         public IChangesetModel Model { get; private set; }
         private IDictionary<string, Changeset> ActiveChangesets { get; set; }
 
-        // TODO: check if we can move DataOrigin into changeset as well, and even remove them from attributes/relations
-        public async Task<Changeset> GetChangeset(string layerID, IModelContext trans)
+        public async Task<Changeset> GetChangeset(string layerID, DataOriginV1 dataOrigin, IModelContext trans)
         {
-            if (ActiveChangesets.TryGetValue(layerID, out var changeset))
+            var key = $"{layerID}:{dataOrigin.Type}";
+            if (ActiveChangesets.TryGetValue(key, out var changeset))
             {
                 return changeset;
             } else
             {
-                var newChangeset = await Model.CreateChangeset(User.ID, layerID, trans, TimeThreshold.Time);
-                ActiveChangesets.Add(layerID, newChangeset);
+                var newChangeset = await Model.CreateChangeset(User.ID, layerID, dataOrigin, trans, TimeThreshold.Time);
+                ActiveChangesets.Add(key, newChangeset);
                 return newChangeset;
             }
         }

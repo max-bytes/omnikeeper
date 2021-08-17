@@ -25,7 +25,7 @@ export default function RelatedCI(props) {
     <div style={{margin: "5px", float: alignRight ? "right" : "unset" }}>
       <Form layout="inline" style={{flexFlow: 'nowrap', alignItems: 'center'}}>
         <LayerStackIcons layerStack={related.layerStack}></LayerStackIcons>
-        <OriginPopup changesetID={related.changesetID} originType={related.origin.type} />
+        <OriginPopup changesetID={related.changesetID} />
         <Form.Item style={{flexBasis: '600px', justifyContent: 'flex-start', paddingRight: "0.25rem"}}>{written}</Form.Item>
         {onRemove && <Button type="danger" size="small" onClick={e => onRemove()}>Remove</Button>}
       </Form>

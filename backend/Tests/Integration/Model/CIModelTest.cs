@@ -145,7 +145,7 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 var changeset3 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-                await attributeModel.RemoveAttribute("a1", ciid1, layer2.ID, changeset3, trans);
+                await attributeModel.RemoveAttribute("a1", ciid1, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
                 trans.Commit();
             }
 

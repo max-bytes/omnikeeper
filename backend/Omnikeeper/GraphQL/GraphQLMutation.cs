@@ -91,7 +91,7 @@ namespace Omnikeeper.GraphQL
                         var ciIdentity = attributeGroup.Key;
                         foreach (var attribute in attributeGroup)
                         {
-                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, attribute.LayerID, changeset, transaction);
+                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, attribute.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), transaction);
                             removedAttributes.Add(a);
                         }
                     }
@@ -106,7 +106,7 @@ namespace Omnikeeper.GraphQL
                     var removedRelations = new List<Relation>();
                     foreach (var removeRelation in removeRelations)
                     {
-                        var (r, changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, removeRelation.LayerID, changeset, transaction);
+                        var (r, changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, removeRelation.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), transaction);
                         removedRelations.Add(r);
                     }
 

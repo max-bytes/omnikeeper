@@ -53,7 +53,7 @@ function Attribute(props) {
 
   const rightPart = <div style={{minHeight: '38px', display: 'flex', alignItems: 'center'}}>
     <LayerStackIcons layerStack={layerStack} />
-    <OriginPopup changesetID={attribute.changesetID} originType={attribute.origin.type} />
+    <OriginPopup changesetID={attribute.changesetID} />
   </div>;
 
   if (isEditable) {

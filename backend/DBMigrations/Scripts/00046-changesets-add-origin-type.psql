@@ -1,0 +1,4 @@
+ALTER TABLE public.changeset
+    ADD COLUMN origin_type dataorigintype NOT NULL DEFAULT 'manual'::dataorigintype;
+
+-- NOTE: we do not move the origin_types of the underlying attributes and relations

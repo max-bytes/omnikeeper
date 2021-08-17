@@ -22,9 +22,6 @@ export const Fragments = {
         ciid
         changesetID
         state
-        origin {
-            type
-        }
         value {
             type
             isArray
@@ -96,7 +93,6 @@ export const Fragments = {
         predicateID
         layerID
         changesetID
-        origin { type }
         layerStackIDs
         layerStack {
             id
@@ -125,9 +121,6 @@ export const Fragments = {
         predicateID
         changesetID
         state
-        origin {
-            type
-        }
     }
   `,
   fullPredicate: gql`

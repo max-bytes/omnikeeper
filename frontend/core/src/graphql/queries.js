@@ -117,6 +117,9 @@ export const queries = {
                     displayName
                     type
                 }
+                dataOrigin {
+                    type
+                }
             }
         }`,
     FullChangeset: gql`

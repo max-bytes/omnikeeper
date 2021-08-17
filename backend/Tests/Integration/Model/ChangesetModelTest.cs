@@ -153,7 +153,6 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
             var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);
-            var predicateModel = new PredicateModel(baseConfigurationModel, effectiveTraitModel);
             var layerModel = new LayerModel();
             var baseAttributeRevisionistModel = new BaseAttributeRevisionistModel();
 
@@ -200,7 +199,6 @@ namespace Tests.Integration.Model
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
             var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);
-            var predicateModel = new PredicateModel(baseConfigurationModel, effectiveTraitModel);
             var layerModel = new LayerModel();
 
             using var trans = ModelContextBuilder.BuildDeferred();
@@ -237,7 +235,7 @@ namespace Tests.Integration.Model
             // delete relation again
             using var trans4 = ModelContextBuilder.BuildDeferred();
             var changeset3 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(200)), changesetModel);
-            await relationModel.RemoveRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset3, trans4);
+            await relationModel.RemoveRelation(ciid1, ciid2, predicateID1, layer1.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans4);
             trans4.Commit();
 
             // changeset1 is now old "enough", and can be deleted
@@ -256,7 +254,7 @@ namespace Tests.Integration.Model
             // delete attribute a2
             using var trans6 = ModelContextBuilder.BuildDeferred();
             var changeset5 = new ChangesetProxy(user, TimeThreshold.BuildAtTime(DateTimeOffset.FromUnixTimeSeconds(250)), changesetModel);
-            await attributeModel.RemoveAttribute("a2", ciid1, layer1.ID, changeset5, trans6);
+            await attributeModel.RemoveAttribute("a2", ciid1, layer1.ID, changeset5, new DataOriginV1(DataOriginType.Manual), trans6);
             trans6.Commit();
 
             // changeset2 is now old "enough", and can be deleted
@@ -266,11 +264,11 @@ namespace Tests.Integration.Model
             // other changeset can be deleted, if threshold is large enough
             Assert.AreEqual(2, await changesetModel.ArchiveUnusedChangesetsOlderThan(DateTimeOffset.FromUnixTimeSeconds(9999), transI));
 
-            Assert.IsNull(await changesetModel.GetChangeset((await changeset1.GetChangeset(layer1.ID, transI)).ID, transI));
-            Assert.IsNull(await changesetModel.GetChangeset((await changeset2.GetChangeset(layer1.ID, transI)).ID, transI));
-            Assert.IsNull(await changesetModel.GetChangeset((await changeset3.GetChangeset(layer1.ID, transI)).ID, transI));
-            Assert.IsNotNull(await changesetModel.GetChangeset((await changeset4.GetChangeset(layer1.ID, transI)).ID, transI));
-            Assert.IsNull(await changesetModel.GetChangeset((await changeset5.GetChangeset(layer1.ID, transI)).ID, transI));
+            Assert.IsNull(await changesetModel.GetChangeset((await changeset1.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI)).ID, transI));
+            Assert.IsNull(await changesetModel.GetChangeset((await changeset2.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI)).ID, transI));
+            Assert.IsNull(await changesetModel.GetChangeset((await changeset3.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI)).ID, transI));
+            Assert.IsNotNull(await changesetModel.GetChangeset((await changeset4.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI)).ID, transI));
+            Assert.IsNull(await changesetModel.GetChangeset((await changeset5.GetChangeset(layer1.ID, new DataOriginV1(DataOriginType.Manual), transI)).ID, transI));
         }
     }
 }

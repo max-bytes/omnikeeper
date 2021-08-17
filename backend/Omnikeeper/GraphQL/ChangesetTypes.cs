@@ -30,6 +30,7 @@ namespace Omnikeeper.GraphQL
             Field(x => x.Timestamp);
             Field(x => x.User, type: typeof(UserInDatabaseType));
             Field(x => x.LayerID);
+            Field(x => x.DataOrigin, type: typeof(DataOriginGQL));
             FieldAsync<LayerType>("layer",
             resolve: async (context) =>
             {
