@@ -193,6 +193,11 @@ namespace Omnikeeper.Model
             return await baseModel.GetAttributes(selection, layerID, trans, atTime);
         }
 
+        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, IModelContext trans)
+        {
+            return await baseModel.GetAttributesOfChangeset(changesetID, trans);
+        }
+
         public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await baseModel.GetAttribute(name, ciid, layerID, trans, atTime);

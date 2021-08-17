@@ -2,6 +2,7 @@
 using GraphQL.Utilities;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 
 namespace Omnikeeper.GraphQL
 {
@@ -44,6 +45,22 @@ namespace Omnikeeper.GraphQL
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var changesetID = context.Source.ID;
                 return await statisticsModel.GetStatistics(changesetID, userContext.Transaction);
+            });
+            FieldAsync<ListGraphType<CIAttributeType>>("attributes",
+            resolve: async (context) =>
+            {
+                var attributeModel = context.RequestServices.GetRequiredService<IAttributeModel>();
+                var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                var changesetID = context.Source.ID;
+                return await attributeModel.GetAttributesOfChangeset(changesetID, userContext.Transaction);
+            });
+            FieldAsync<ListGraphType<RelationType>>("relations",
+            resolve: async (context) =>
+            {
+                var relationModel = context.RequestServices.GetRequiredService<IRelationModel>();
+                var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                var changesetID = context.Source.ID;
+                return await relationModel.GetRelationsOfChangeset(changesetID, userContext.Transaction);
             });
         }
     }

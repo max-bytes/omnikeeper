@@ -85,6 +85,10 @@ namespace Omnikeeper.Model
             return mergedRelations.FirstOrDefault();
         }
 
+        public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, IModelContext trans)
+        {
+            return await baseModel.GetRelationsOfChangeset(changesetID, trans);
+        }
 
         public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {

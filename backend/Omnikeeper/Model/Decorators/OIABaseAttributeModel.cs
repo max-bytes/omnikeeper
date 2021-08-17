@@ -118,5 +118,11 @@ namespace Omnikeeper.Model.Decorators
 
             return await model.BulkReplaceAttributes(data, changesetProxy, origin, trans);
         }
+
+        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, IModelContext trans)
+        {
+            // NOTE: OIAs do not support changesets, so an OIA can never return any
+            return await model.GetAttributesOfChangeset(changesetID, trans);
+        }
     }
 }

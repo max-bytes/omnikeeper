@@ -44,6 +44,12 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
         }
 
+        public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, IModelContext trans)
+        {
+            // TODO: caching
+            return await model.GetRelationsOfChangeset(changesetID, trans);
+        }
+
         public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (atTime.IsLatest)

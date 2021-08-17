@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client';
 import React from 'react';
 import RelatedCI from './RelatedCI';
 import {Row, Col} from 'antd';
@@ -6,6 +6,7 @@ import AddNewRelation from './AddNewRelation';
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import { onAppear, onExit } from '../utils/animation';
 import { queries } from '../graphql/queries'
+import { mutations } from '../graphql/mutations'
 import { ErrorView } from './ErrorView';
 import { useExplorerLayers } from '../utils/layers';
 import { useSelectedTime } from '../utils/useSelectedTime';
@@ -27,6 +28,21 @@ function CIRelations(props) {
   // reload when nonce changes
   const selectedTime = useSelectedTime();
   React.useEffect(() => { if (selectedTime.refreshNonceCI) refetchCI({fetchPolicy: 'network-only'}); }, [selectedTime, refetchCI]);
+
+  // TODO: loading
+  const [removeRelation] = useMutation(mutations.REMOVE_RELATION, { 
+    update: (cache, data) => {
+      /* HACK: find a better way to deal with cache invalidation! We would like to invalidate the affected CIs, which 
+      translates to multiple entries in the cache, because each CI can be cached multiple times for each layerhash
+      */
+      // data.data.mutate.affectedCIs.forEach(ci => {
+      //   var id = props.client.cache.identify(ci);
+      //   console.log("Evicting: " + id);
+      //   cache.evict(id);
+      // });
+    }
+  });
+  const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
 
   if (dataCI && dataPredicates) {
@@ -53,14 +69,16 @@ function CIRelations(props) {
           {sortedRelatedCIs.map(r => {
             const isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.layerID);
 
-            const predicate = _.find(dataPredicates.predicates, p => p.id === r.predicateID);
-            var predicateWording = <i style={{textDecorationStyle: 'dashed', textDecorationColor: 'red', textDecorationThickness: '1px', textDecorationLine: 'underline'}}>{r.predicateID}</i>;
-            if (predicate) {
-              predicateWording = <i>{predicate.wordingFrom}</i>;
-            }
+            const onRemove = (props.isEditable && isLayerWritable) ? 
+            (() => {
+              removeRelation({ variables: { fromCIID: r.fromCIID, toCIID: r.toCIID, includeRelated: perPredicateLimit,
+                predicateID: r.predicateID, layerID: r.layerID, layers: visibleLayers.map(l => l.id) } })
+              .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
+            })
+            : null;
 
             return (<Flipped key={r.predicateID + "_" + r.ci.id + "_" + r.isForwardRelation} flipId={r.predicateID} onAppear={onAppear} onExit={onExit}>
-                <RelatedCI related={r} predicateWording={predicateWording} perPredicateLimit={perPredicateLimit} isEditable={props.isEditable && isLayerWritable}></RelatedCI>
+                <RelatedCI related={r} predicates={dataPredicates.predicates} onRemove={onRemove}></RelatedCI>
               </Flipped>);
           })}
         </Flipper>

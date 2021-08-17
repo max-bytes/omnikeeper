@@ -10,7 +10,7 @@ import { formatTimestamp } from 'utils/datetime.js';
 
 function InnerPopup(props) {
 
-  const { loading, error, data } = useQuery(queries.Changeset, {
+  const { loading, error, data } = useQuery(queries.BasicChangeset, {
     variables: { id: props.changesetID }
   });
 

@@ -1,6 +1,6 @@
 import { useLazyQuery } from "@apollo/client";
 import React, {useCallback, useEffect, useState} from "react";
-import { Spin, DatePicker, Button, Form, Row, Col } from 'antd';
+import { Spin, DatePicker, Button, Row, Col } from 'antd';
 import _ from 'lodash';
 import { queries } from "../../graphql/queries";
 import { AgGridReact } from "ag-grid-react";
@@ -11,9 +11,8 @@ import "./ChangesetList.css";
 import moment from 'moment';
 import ExplorerLayers from "components/ExplorerLayers";
 import { useExplorerLayers } from "../../utils/layers";
-import {
-    SyncOutlined,
-  } from '@ant-design/icons';
+import { SyncOutlined } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
 
 const { RangePicker } = DatePicker;
 
@@ -68,7 +67,7 @@ export default function ChangesetList(props) {
             // ((numAttributeChanges > 0) ? `#attributes: ${numAttributeChanges}` : null),
             // ((numRelationChanges > 0) ? `#relations: ${numRelationChanges}` : null)
         ]
-        return tokens.filter(t => t).join(', ');
+        return <Link to={"/changesets/" + params.data.id}>{tokens.filter(t => t).join(', ')}</Link>;
     }
 
     const columnDefs = [

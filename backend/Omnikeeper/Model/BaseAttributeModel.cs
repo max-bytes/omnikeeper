@@ -137,6 +137,40 @@ namespace Omnikeeper.Model
             return ret;
         }
 
+
+        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, IModelContext trans)
+        {
+            var ret = new List<CIAttribute>();
+            using var command = new NpgsqlCommand($@"
+            select state, id, name, ci_id, type, value_text, value_binary, value_control, origin_type FROM attribute 
+            where changeset_id = @changeset_id
+            ", trans.DBConnection, trans.DBTransaction);
+            command.Parameters.AddWithValue("changeset_id", changesetID);
+
+            command.Prepare();
+
+            using var dr = await command.ExecuteReaderAsync();
+
+            while (dr.Read())
+            {
+                var state = dr.GetFieldValue<AttributeState>(0);
+                var id = dr.GetGuid(1);
+                var name = dr.GetString(2);
+                var CIID = dr.GetGuid(3);
+                var type = dr.GetFieldValue<AttributeValueType>(4);
+                var valueText = dr.GetString(5);
+                var valueBinary = dr.GetFieldValue<byte[]>(6);
+                var valueControl = dr.GetFieldValue<byte[]>(7);
+                var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
+                var dataOriginType = dr.GetFieldValue<DataOriginType>(8);
+                var origin = new DataOriginV1(dataOriginType);
+
+                var att = new CIAttribute(id, name, CIID, av, state, changesetID, origin);
+                ret.Add(att);
+            }
+            return ret;
+        }
+
         public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);

@@ -13,6 +13,11 @@ namespace Omnikeeper.Base.Model
         Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime);
         Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime);
 
+        /**
+        * NOTE: GetRelationsOfChangeset() can also return removed attributes
+        */
+        Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, IModelContext trans);
+
         // mutations
         Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, IModelContext trans);
         Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans);

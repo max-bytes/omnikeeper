@@ -62,5 +62,11 @@ namespace Omnikeeper.Model.Decorators
 
             return await model.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, trans);
         }
+
+        public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, IModelContext trans)
+        {
+            // NOTE: OIAs do not support changesets, so an OIA can never return any
+            return await model.GetRelationsOfChangeset(changesetID, trans);
+        }
     }
 }

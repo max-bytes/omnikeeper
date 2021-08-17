@@ -14,6 +14,7 @@ namespace Omnikeeper.Base.Model
         public IChangesetModel Model { get; private set; }
         private IDictionary<string, Changeset> ActiveChangesets { get; set; }
 
+        // TODO: check if we can move DataOrigin into changeset as well, and even remove them from attributes/relations
         public async Task<Changeset> GetChangeset(string layerID, IModelContext trans)
         {
             if (ActiveChangesets.TryGetValue(layerID, out var changeset))

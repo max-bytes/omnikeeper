@@ -53,7 +53,7 @@ function DiffAttributeList(props) {
                     </Col>
                     
                     <Col xs={14} lg={9}>
-                      {a.leftRight.left && <Attribute controlIdSuffix={'left'} attribute={a.leftRight.left} hideNameLabel={true} isEditable={false} />}
+                      {a.leftRight.left && <Attribute controlIdSuffix={'left'} attribute={a.leftRight.left.attribute} layerStack={a.leftRight.left.layerStack} hideNameLabel={true} isEditable={false} />}
                       {!a.leftRight.left && <MissingLabel /> }
                     </Col>
                     
@@ -62,7 +62,7 @@ function DiffAttributeList(props) {
                     </Col>
 
                     <Col xs={14} lg={9}>
-                      {a.leftRight.right && <Attribute controlIdSuffix={'right'} attribute={a.leftRight.right} hideNameLabel={true} isEditable={false} />}
+                      {a.leftRight.right && <Attribute controlIdSuffix={'right'} attribute={a.leftRight.right.attribute} layerStack={a.leftRight.right.layerStack} hideNameLabel={true} isEditable={false} />}
                       {!a.leftRight.right && <MissingLabel /> }
                     </Col>      
                   </Row >

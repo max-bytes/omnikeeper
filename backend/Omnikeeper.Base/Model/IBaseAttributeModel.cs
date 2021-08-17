@@ -13,10 +13,11 @@ namespace Omnikeeper.Base.Model
     {
         Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime);
         /**
-         * NOTE: GetAttribute() and GetFullBinaryAttribute() can also return removed attributes
+         * NOTE: GetAttribute(), GetFullBinaryAttribute(),GetAttributesOfChangeset() can also return removed attributes
          */
         Task<CIAttribute?> GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime);
         Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime);
+        Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, IModelContext trans);
 
         Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime);
         Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime);

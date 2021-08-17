@@ -230,5 +230,11 @@ namespace Omnikeeper.Model.Decorators
             if (evictCINames) trans.EvictFromCache(CacheKeyService.CINames(data.LayerID));
             return inserted;
         }
+
+        public Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, IModelContext trans)
+        {
+            // TODO: caching
+            return model.GetAttributesOfChangeset(changesetID, trans);
+        }
     }
 }

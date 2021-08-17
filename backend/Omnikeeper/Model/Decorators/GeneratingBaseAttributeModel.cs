@@ -129,5 +129,11 @@ namespace Omnikeeper.Model.Decorators
         {
             return await model.BulkReplaceAttributes(data, changesetProxy, origin, trans);
         }
+
+        public Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, IModelContext trans)
+        {
+            // TODO: implement
+            return model.GetAttributesOfChangeset(changesetID, trans);
+        }
     }
 }

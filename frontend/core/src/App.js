@@ -11,6 +11,7 @@ import LoginPage from './components/LoginPage'
 import AddNewCI from './components/AddNewCI'
 import SearchCIAdvanced from './components/search/SearchCIAdvanced'
 import ChangesetList from "components/changesets/ChangesetList";
+import Changeset from "components/changesets/Changeset";
 import GridView from './components/gridView/GridView'
 import Manage from './components/manage/Manage'
 import UserBar from './components/UserBar';
@@ -87,17 +88,20 @@ function App() {
               <Route path="/login">
                 <LoginPage />
               </Route>
-              <PrivateRoute path="/explorer/:ciid">
-                <Explorer />
-              </PrivateRoute>
               <PrivateRoute path="/diffing">
                 <Diffing />
               </PrivateRoute>
               <PrivateRoute path="/createCI">
                 <AddNewCI />
               </PrivateRoute>
+              <PrivateRoute path="/explorer/:ciid">
+                <Explorer />
+              </PrivateRoute>
               <PrivateRoute path="/explorer">
                 <SearchCIAdvanced />
+              </PrivateRoute>
+              <PrivateRoute path="/changesets/:changesetID">
+                <Changeset />
               </PrivateRoute>
               <PrivateRoute path="/changesets">
                 <ChangesetList />

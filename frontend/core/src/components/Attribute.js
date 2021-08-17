@@ -1,21 +1,23 @@
 import React, { useState } from "react";
 import PropTypes from 'prop-types'
 import { useMutation } from '@apollo/client';
-import { Button, Form, Row, Col } from "antd";
+import { Button, Form, Row, Col, Typography } from "antd";
 import { mutations } from '../graphql/mutations'
 import LayerStackIcons from "./LayerStackIcons";
 import OriginPopup from "./OriginPopup";
 import EditableAttributeValue from "./EditableAttributeValue";
 
+const { Text } = Typography;
+
 function Attribute(props) {
 
-  var {ciIdentity, attribute, isEditable, visibleLayers, hideNameLabel, controlIdSuffix, ...rest} = props;
+  var {attribute, layerStack, isEditable, visibleLayers, hideNameLabel, controlIdSuffix, ...rest} = props;
   
-  const isArray = attribute.attribute.value.isArray;
+  const isArray = attribute.value.isArray;
 
   var [hasErrors, setHasErrors] = useState(false);
-  const [values, setValues] = useState(attribute.attribute.value.values);
-  React.useEffect(() => setValues(attribute.attribute.value.values), [attribute.attribute.value.values])
+  const [values, setValues] = useState(attribute.value.values);
+  React.useEffect(() => setValues(attribute.value.values), [attribute.value.values])
 
   // TODO: loading
   const [insertCIAttribute] = useMutation(mutations.INSERT_CI_ATTRIBUTE);
@@ -35,42 +37,44 @@ function Attribute(props) {
 
   let input;
 
-  const layerID = props.attribute.layerStackIDs[props.attribute.layerStackIDs.length - 1];
+  const layerStackIDs = layerStack.map(l => l.id);
+  const layerID = layerStackIDs[layerStackIDs.length - 1];
 
-  let valueInput = 
-    <EditableAttributeValue hideNameLabel={hideNameLabel} name={attribute.attribute.name} controlIdSuffix={controlIdSuffix} setHasErrors={setHasErrors} isEditable={isEditable} values={values} setValues={setValues} type={attribute.attribute.value.type} isArray={isArray} ciid={ciIdentity} />
-;
+  const removed = attribute.state === 'REMOVED';
+
+  const valueInput = <EditableAttributeValue hideNameLabel={hideNameLabel} name={attribute.name} controlIdSuffix={controlIdSuffix} setHasErrors={setHasErrors} isEditable={isEditable} values={values} setValues={setValues} type={attribute.value.type} isArray={isArray} ciid={attribute.ciid} />;
 
   const leftPart = (hideNameLabel) ? '' : <div style={{display: 'flex', minHeight: '38px', alignItems: 'center'}}>
     {/* TODO: according to ant design label should be part of control */}
-    <div className={"pr-1"} style={{whiteSpace: 'nowrap', flexGrow: 1, textAlign: 'right', paddingRight: '10px'}}>{attribute.attribute.name}</div>
+    <div className={"pr-1"} style={{whiteSpace: 'nowrap', flexGrow: 1, textAlign: 'right', paddingRight: '10px'}}>
+      {removed ? <Text delete>{attribute.name}</Text> : attribute.name}
+    </div>
   </div>;
 
-
   const rightPart = <div style={{minHeight: '38px', display: 'flex', alignItems: 'center'}}>
-    <LayerStackIcons layerStack={attribute.layerStack} />
-    <OriginPopup changesetID={attribute.attribute.changesetID} originType={attribute.attribute.origin.type} />
+    <LayerStackIcons layerStack={layerStack} />
+    <OriginPopup changesetID={attribute.changesetID} originType={attribute.origin.type} />
   </div>;
 
   if (isEditable) {
     const removeButton = (
       <Button type="primary" danger onClick={e => {
         e.preventDefault();
-        removeCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, layers: visibleLayers.map(l => l.id) } })
+        removeCIAttribute({ variables: { ciIdentity: attribute.ciid, name: attribute.name, layerID, layers: visibleLayers.map(l => l.id) } })
         .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
       }} style={{ marginLeft: "0.5rem" }}>Remove</Button>
     );
 
     input = (
       <Form onFinish={e => {
-          insertCIAttribute({ variables: { ciIdentity: props.ciIdentity, name: attribute.attribute.name, layerID, layers: visibleLayers.map(l => l.id), value: {
-            type: attribute.attribute.value.type,
+          insertCIAttribute({ variables: { ciIdentity: attribute.ciid, name: attribute.name, layerID, layers: visibleLayers.map(l => l.id), value: {
+            type: attribute.value.type,
             values: values,
             isArray: isArray
           } } })
           .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
         }}
-        id={`value:${attribute.attribute.name}:${controlIdSuffix}`}
+        id={`value:${attribute.name}:${controlIdSuffix}`}
         >
           <Row>
             {/* name */}
@@ -90,14 +94,14 @@ function Attribute(props) {
 
             {/* buttons */}
             <Col>
-              <Button htmlType="submit" type="primary" className={'mx-1'} disabled={attribute.attribute.value.values === values || hasErrors}>Update</Button>
+              <Button htmlType="submit" type="primary" className={'mx-1'} disabled={attribute.value.values === values || hasErrors}>Update</Button>
               {removeButton}
             </Col> 
           </Row>
       </Form>
     );
   } else {
-    input = (<Form id={`value:${attribute.attribute.name}:${controlIdSuffix}`}>
+    input = (<Form id={`value:${attribute.name}:${controlIdSuffix}`}>
       <Row>
         {/* name */}
         {hideNameLabel ? "" :
@@ -121,7 +125,7 @@ function Attribute(props) {
 
 
   return (
-    <div key={attribute.attribute.name} {...rest}>
+    <div key={attribute.name} {...rest}>
       {input}
     </div>
   );
@@ -129,18 +133,16 @@ function Attribute(props) {
 
 Attribute.propTypes = {
   isEditable: PropTypes.bool.isRequired,
-  ciIdentity: PropTypes.string,
   attribute: PropTypes.shape({
-      attribute: PropTypes.shape({
-        name: PropTypes.string.isRequired,
-        state: PropTypes.string.isRequired,
-        value: PropTypes.shape({
-          type: PropTypes.string.isRequired,
-          isArray: PropTypes.bool.isRequired,
-          values: PropTypes.arrayOf(PropTypes.string).isRequired
-      })
-      })
-    }).isRequired
+    name: PropTypes.string.isRequired,
+    state: PropTypes.string.isRequired,
+    value: PropTypes.shape({
+      type: PropTypes.string.isRequired,
+      isArray: PropTypes.bool.isRequired,
+      values: PropTypes.arrayOf(PropTypes.string).isRequired
+    }),
+  }).isRequired,
+  layerStackIDs: PropTypes.arrayOf(PropTypes.string).isRequired,
 }
 
 export default Attribute;

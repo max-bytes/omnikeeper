@@ -124,6 +124,37 @@ namespace Omnikeeper.Model
             return relations;
         }
 
+
+
+        public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, IModelContext trans)
+        {
+            var ret = new List<Relation>();
+            using var command = new NpgsqlCommand($@"
+            select id, from_ci_id, to_ci_id, predicate_id, state, origin_type FROM relation 
+            where changeset_id = @changeset_id
+            ", trans.DBConnection, trans.DBTransaction);
+            command.Parameters.AddWithValue("changeset_id", changesetID);
+
+            command.Prepare();
+
+            using var dr = await command.ExecuteReaderAsync();
+
+            while (dr.Read())
+            {
+                var id = dr.GetGuid(0);
+                var fromCIID = dr.GetGuid(1);
+                var toCIID = dr.GetGuid(2);
+                var predicateID = dr.GetString(3);
+                var state = dr.GetFieldValue<RelationState>(4);
+                var originType = dr.GetFieldValue<DataOriginType>(5);
+                var origin = new DataOriginV1(originType);
+
+                var relation = new Relation(id, fromCIID, toCIID, predicateID, state, changesetID, origin);
+                ret.Add(relation);
+            }
+            return ret;
+        }
+
         public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, IModelContext trans)
         {
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, changesetProxy.TimeThreshold);

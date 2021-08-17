@@ -30,23 +30,4 @@ namespace Omnikeeper.Base.Entity
             IsForwardRelation = isForwardRelation;
         }
     }
-
-
-    public class MergedRelatedCI
-    {
-        public MergedCI CI { get; private set; }
-        public Guid FromCIID { get; private set; }
-        public Guid ToCIID { get; private set; }
-        public string PredicateID { get; private set; }
-        public RelationState RelationState { get; private set; }
-
-        public MergedRelatedCI(Relation r, Guid fromCIID, MergedCI ci)
-        {
-            CI = ci;
-            FromCIID = fromCIID;
-            ToCIID = ci.ID;
-            PredicateID = r.PredicateID;
-            RelationState = r.State;
-        }
-    }
 }

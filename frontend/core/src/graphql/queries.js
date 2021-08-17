@@ -107,7 +107,7 @@ export const queries = {
                     }
                 }
             }`,
-    Changeset: gql`
+    BasicChangeset: gql`
         query($id: Guid!) {
             changeset(id: $id) {
                 id
@@ -119,6 +119,31 @@ export const queries = {
                 }
             }
         }`,
+    FullChangeset: gql`
+        query($id: Guid!) {
+            changeset(id: $id) {
+                id
+                timestamp
+                user {
+                    username
+                    displayName
+                    type
+                }
+                layer {
+                    id
+                    color
+                }
+                attributes {
+                    ...FullAttribute
+                }
+                relations {
+                    ...Relation
+                }
+            }
+        }
+        ${Fragments.attribute}
+        ${Fragments.relation}
+        `,
     SelectedTimeThreshold: gql`
         query {
             selectedTimeThreshold @client

@@ -11,16 +11,6 @@ namespace Omnikeeper.Base.Service
 {
     public class RelationService
     {
-        public static async Task<ILookup<string, MergedRelatedCI>> GetMergedRelatedCIs(
-            Guid ciid, LayerSet layers, ICIModel ciModel, IRelationModel relationModel, IModelContext trans, TimeThreshold atTime)
-        {
-            var relations = await relationModel.GetMergedRelations(new RelationSelectionEitherFromOrTo(ciid), layers, trans, atTime);
-            var relationsOtherCIIDs = relations.Select(r => (r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID).ToHashSet();
-            if (relationsOtherCIIDs.IsEmpty()) return new List<MergedRelatedCI>().ToLookup(x => "");
-            var relationsOtherCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(relationsOtherCIIDs), layers, true, trans, atTime)).ToDictionary(ci => ci.ID);
-            var relationsAndToCIs = relations.Select(r => new MergedRelatedCI(r.Relation, ciid, relationsOtherCIs[(r.Relation.FromCIID == ciid) ? r.Relation.ToCIID : r.Relation.FromCIID]));
-            return relationsAndToCIs.ToLookup(r => r.PredicateID);
-        }
 
         public static async Task<IEnumerable<CompactRelatedCI>> GetCompactRelatedCIs(Guid ciid, LayerSet layerset, ICIModel ciModel, IRelationModel relationModel, int? perPredicateLimit, IModelContext trans, TimeThreshold atTime)
         {
