@@ -7,12 +7,11 @@ import { AgGridReact } from "ag-grid-react";
 import UserTypeIcon from './../UserTypeIcon';
 import { formatTimestamp } from "utils/datetime";
 import LayerIcon from "components/LayerIcon";
-import "./ChangesetList.css";
 import moment from 'moment';
 import ExplorerLayers from "components/ExplorerLayers";
 import { useExplorerLayers } from "../../utils/layers";
 import { SyncOutlined } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
+import { ChangesetID } from "utils/uuidRenderers";
 
 const { RangePicker } = DatePicker;
 
@@ -58,6 +57,10 @@ export default function ChangesetList(props) {
         return formatTimestamp(params.value);
     }
     
+    const changesetIDCellRenderer = function(params) {
+        return <ChangesetID id={params.value} link={true} />;
+    }
+    
     const statisticsCellRenderer = function(params) {
         const numAttributeChanges = params.value.numAttributeChanges;
         const numRelationChanges = params.value.numRelationChanges;
@@ -67,7 +70,7 @@ export default function ChangesetList(props) {
             // ((numAttributeChanges > 0) ? `#attributes: ${numAttributeChanges}` : null),
             // ((numRelationChanges > 0) ? `#relations: ${numRelationChanges}` : null)
         ]
-        return <Link to={"/changesets/" + params.data.id}>{tokens.filter(t => t).join(', ')}</Link>;
+        return tokens.filter(t => t).join(', ');
     }
 
     const columnDefs = [
@@ -123,7 +126,8 @@ export default function ChangesetList(props) {
             field: "id",
             width: 280,
             filter: true,
-            cellClass: "monospaced",
+            cellRenderer: "changesetIDCellRenderer",
+            // cellClass: "monospaced",
         },
     ];
 
@@ -170,6 +174,7 @@ export default function ChangesetList(props) {
                                     userCellRenderer: userCellRenderer,
                                     timestampCellRenderer: timestampCellRenderer,
                                     layerCellRenderer: layerCellRenderer,
+                                    changesetIDCellRenderer: changesetIDCellRenderer,
                                 }}
                                 rowData={dataChangesets.changesets}
                                 columnDefs={columnDefs}

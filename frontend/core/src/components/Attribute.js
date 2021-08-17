@@ -142,7 +142,6 @@ Attribute.propTypes = {
       values: PropTypes.arrayOf(PropTypes.string).isRequired
     }),
   }).isRequired,
-  layerStackIDs: PropTypes.arrayOf(PropTypes.string).isRequired,
 }
 
 export default Attribute;

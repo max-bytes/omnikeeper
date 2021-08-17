@@ -2,7 +2,6 @@ import { useQuery } from "@apollo/client";
 import React from "react";
 import { Descriptions, Tabs, Typography } from 'antd';
 import { queries } from "../../graphql/queries";
-import "./ChangesetList.css";
 import { useExplorerLayers } from "../../utils/layers";
 import { useParams } from "react-router-dom";
 import Attribute from "components/Attribute";
@@ -11,6 +10,7 @@ import { formatTimestamp } from "utils/datetime";
 import UserTypeIcon from './../UserTypeIcon';
 import Relation from "components/Relation";
 import _ from 'lodash';
+import { ChangesetID, CIID } from "utils/uuidRenderers";
 
 const { TabPane } = Tabs;
 const { Title } = Typography;
@@ -46,13 +46,13 @@ export default function Changeset(props) {
                 <Descriptions.Item label="User"><UserTypeIcon userType={data.changeset.user.type} /> {data.changeset.user.displayName}</Descriptions.Item>
                 <Descriptions.Item label="Timestamp">{formatTimestamp(data.changeset.timestamp)}</Descriptions.Item>
                 <Descriptions.Item label="Layer"><LayerIcon layer={data.changeset.layer} /> {data.changeset.layer.id}</Descriptions.Item>
-                <Descriptions.Item label="Changeset-ID">{data.changeset.id}</Descriptions.Item>
+                <Descriptions.Item label="Changeset-ID"><ChangesetID id={data.changeset.id} link={false} /></Descriptions.Item>
             </Descriptions>
             <Tabs defaultActiveKey={(data.changeset.attributes.length === 0) ? "relations" : "attributes"} style={{padding: "1rem"}}>
                 <TabPane tab={`Attributes (${data.changeset.attributes.length})`} key="attributes" disabled={data.changeset.attributes.length === 0}>
                     {_.values(_.mapValues(groupedAttributesByCIID, (attributes, ciid) => {
                         return <div key={ciid} style={{marginTop: '1.5rem'}}>
-                            <Title level={5} style={{marginBottom: 0}}>CI {ciid}</Title>
+                            <Title level={5} style={{marginBottom: 0}}>CI <CIID id={ciid} link={true} /></Title>
                             {attributes.map(a => {
                                 return <Attribute attribute={a} layerStack={[data.changeset.layer]} isEditable={false} visibleLayers={visibleLayers} hideNameLabel={false} controlIdSuffix="" />;
                             })}

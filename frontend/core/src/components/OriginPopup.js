@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSync, faExclamationCircle, faUser, faArchive, faPlug, faCogs, faCalculator, faInfo } from '@fortawesome/free-solid-svg-icons';
 import UserTypeIcon from './UserTypeIcon';
 import { formatTimestamp } from 'utils/datetime.js';
+import { ChangesetID } from 'utils/uuidRenderers';
 
 function InnerPopup(props) {
 
@@ -28,8 +29,8 @@ function InnerPopup(props) {
       <dd>{changeset ? formatTimestamp(changeset.timestamp) : 'None'}</dd>
     </dl>
     <dl style={dls}>
-      <dt style={dts}>Changeset-ID:</dt>
-      <dd>{changeset ? changeset.id : 'None'}</dd>
+      <dt style={dts}>Changeset:</dt>
+      <dd>{changeset ? <ChangesetID id={changeset.id} link={true} /> : 'None'}</dd>
     </dl>
     </div>
   );

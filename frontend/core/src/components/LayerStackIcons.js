@@ -18,8 +18,7 @@ function LayerStackIcons(props) {
 LayerStackIcons.propTypes = {
   layerStack: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      name: PropTypes.string.isRequired,
+      id: PropTypes.string.isRequired,
       color: PropTypes.number.isRequired
     }).isRequired
   ).isRequired
