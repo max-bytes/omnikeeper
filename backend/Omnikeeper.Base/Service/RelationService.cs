@@ -53,7 +53,7 @@ namespace Omnikeeper.Base.Service
                     var predicateID = relation.Relation.PredicateID;
                     var changesetID = relation.Relation.ChangesetID;
                     if (relatedCompactCIs.TryGetValue(relatedCIID, out var ci)) // TODO: performance improvements
-                        relatedCIs.Add(new CompactRelatedCI(ci, relation.Relation.ID, relation.Relation.FromCIID, relation.Relation.ToCIID, changesetID, relation.Relation.Origin, predicateID, isForwardRelation, relation.LayerStackIDs));
+                        relatedCIs.Add(new CompactRelatedCI(ci, relation.Relation.ID, relation.Relation.FromCIID, relation.Relation.ToCIID, changesetID, predicateID, isForwardRelation, relation.LayerStackIDs));
                 }
             }
 

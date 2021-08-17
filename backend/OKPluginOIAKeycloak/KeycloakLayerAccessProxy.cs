@@ -44,7 +44,7 @@ namespace OKPluginOIAKeycloak
             {
                 // create a deterministic, dependent guid from the ciid + attribute name + value
                 var id = GuidUtility.Create(ciid, name + layer.ID.ToString() + value.Value2String()); // NOTE: id must change when the value changes
-                return new CIAttribute(id, name, ciid, value, AttributeState.New, changesetID, new DataOriginV1(DataOriginType.InboundOnline));
+                return new CIAttribute(id, name, ciid, value, AttributeState.New, changesetID);
             }
 
             yield return BuildAttribute(ICIModel.NameAttribute, ciid, new AttributeScalarValueText($"User {CIName}"), changesetID);

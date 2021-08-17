@@ -35,8 +35,8 @@ namespace Omnikeeper.Model
             var changeset = await changesetProxy.GetChangeset(layerID, origin, trans);
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
-            using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, origin_type, partition_index) 
-                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id, @origin_type, @partition_index)", trans.DBConnection, trans.DBTransaction);
+            using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, partition_index) 
+                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id, @partition_index)", trans.DBConnection, trans.DBTransaction);
 
             var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(currentAttribute.Value);
 
@@ -52,11 +52,10 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("state", AttributeState.Removed);
             command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
             command.Parameters.AddWithValue("changeset_id", changeset.ID);
-            command.Parameters.AddWithValue("origin_type", currentAttribute.Origin.Type);
             command.Parameters.AddWithValue("partition_index", partitionIndex);
 
             await command.ExecuteNonQueryAsync();
-            var ret = new CIAttribute(id, name, ciid, currentAttribute.Value, AttributeState.Removed, changeset.ID, currentAttribute.Origin);
+            var ret = new CIAttribute(id, name, ciid, currentAttribute.Value, AttributeState.Removed, changeset.ID);
 
             return (ret, true);
         }
@@ -87,8 +86,8 @@ namespace Omnikeeper.Model
             var changeset = await changesetProxy.GetChangeset(layerID, origin, trans);
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
-            using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, origin_type, partition_index) 
-                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id, @origin_type, @partition_index)", trans.DBConnection, trans.DBTransaction);
+            using var command = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, partition_index) 
+                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id, @partition_index)", trans.DBConnection, trans.DBTransaction);
 
             var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
 
@@ -104,11 +103,10 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("state", state);
             command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
             command.Parameters.AddWithValue("changeset_id", changeset.ID);
-            command.Parameters.AddWithValue("origin_type", origin.Type);
             command.Parameters.AddWithValue("partition_index", partitionIndex);
 
             await command.ExecuteNonQueryAsync();
-            return (new CIAttribute(id, name, ciid, value, state, changeset.ID, origin), true);
+            return (new CIAttribute(id, name, ciid, value, state, changeset.ID), true);
         }
 
         // NOTE: this bulk operation DOES check if the attributes that are inserted are "unique":
@@ -168,7 +166,7 @@ namespace Omnikeeper.Model
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
                 // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
-                using var writer = trans.DBConnection.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, origin_type, partition_index) FROM STDIN (FORMAT BINARY)");
+                using var writer = trans.DBConnection.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, partition_index) FROM STDIN (FORMAT BINARY)");
                 foreach (var (ciid, fullName, value, state) in actualInserts)
                 {
                     var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
@@ -185,7 +183,6 @@ namespace Omnikeeper.Model
                     writer.Write(state, "attributestate");
                     writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                     writer.Write(changeset.ID);
-                    writer.Write(origin.Type, "dataorigintype");
                     writer.Write(partitionIndex, NpgsqlDbType.TimestampTz);
                 }
 
@@ -206,7 +203,6 @@ namespace Omnikeeper.Model
                     writer.Write(AttributeState.Removed, "attributestate");
                     writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                     writer.Write(changeset.ID);
-                    writer.Write(outdatedAttribute.Origin.Type, "dataorigintype");
                     writer.Write(partitionIndex, NpgsqlDbType.TimestampTz);
                 }
                 writer.Complete();

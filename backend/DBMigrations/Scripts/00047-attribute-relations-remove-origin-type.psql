@@ -1,0 +1,3 @@
+ALTER TABLE public.attribute DROP COLUMN origin_type;
+
+ALTER TABLE public.relation DROP COLUMN origin_type;

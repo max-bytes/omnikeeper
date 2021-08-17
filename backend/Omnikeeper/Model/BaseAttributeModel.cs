@@ -36,7 +36,7 @@ namespace Omnikeeper.Model
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
             using var command = new NpgsqlCommand(@"
-            select id, ci_id, type, value_text, value_binary, value_control, state, changeset_id, origin_type FROM attribute 
+            select id, ci_id, type, value_text, value_binary, value_control, state, changeset_id FROM attribute 
             where timestamp <= @time_threshold and ci_id = @ci_id and layer_id = @layer_id and name = @name and partition_index >= @partition_index
             order by timestamp DESC NULLS LAST LIMIT 1
             ", trans.DBConnection, trans.DBTransaction);
@@ -62,9 +62,7 @@ namespace Omnikeeper.Model
             var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, fullBinary);
             var state = dr.GetFieldValue<AttributeState>(6);
             var changesetID = dr.GetGuid(7);
-            var dataOriginType = dr.GetFieldValue<DataOriginType>(8);
-            var origin = new DataOriginV1(dataOriginType);
-            var att = new CIAttribute(id, name, CIID, av, state, changesetID, origin);
+            var att = new CIAttribute(id, name, CIID, av, state, changesetID);
             return att;
         }
 
@@ -100,7 +98,7 @@ namespace Omnikeeper.Model
 
             var ret = new List<CIAttribute>();
             using var command = new NpgsqlCommand($@"
-            select distinct on(ci_id, name) state, id, name, ci_id, type, value_text, value_binary, value_control, changeset_id, origin_type FROM attribute 
+            select distinct on(ci_id, name) state, id, name, ci_id, type, value_text, value_binary, value_control, changeset_id FROM attribute 
             where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and layer_id = @layer_id and partition_index >= @partition_index
             order by ci_id, name, timestamp DESC NULLS LAST
             ", trans.DBConnection, trans.DBTransaction);
@@ -127,10 +125,8 @@ namespace Omnikeeper.Model
                     var valueControl = dr.GetFieldValue<byte[]>(7);
                     var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
                     var changesetID = dr.GetGuid(8);
-                    var dataOriginType = dr.GetFieldValue<DataOriginType>(9);
-                    var origin = new DataOriginV1(dataOriginType);
 
-                    var att = new CIAttribute(id, name, CIID, av, state, changesetID, origin);
+                    var att = new CIAttribute(id, name, CIID, av, state, changesetID);
                     ret.Add(att);
                 }
             }
@@ -142,7 +138,7 @@ namespace Omnikeeper.Model
         {
             var ret = new List<CIAttribute>();
             using var command = new NpgsqlCommand($@"
-            select state, id, name, ci_id, type, value_text, value_binary, value_control, origin_type FROM attribute 
+            select state, id, name, ci_id, type, value_text, value_binary, value_control FROM attribute 
             where changeset_id = @changeset_id
             ", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("changeset_id", changesetID);
@@ -162,10 +158,8 @@ namespace Omnikeeper.Model
                 var valueBinary = dr.GetFieldValue<byte[]>(6);
                 var valueControl = dr.GetFieldValue<byte[]>(7);
                 var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
-                var dataOriginType = dr.GetFieldValue<DataOriginType>(8);
-                var origin = new DataOriginV1(dataOriginType);
 
-                var att = new CIAttribute(id, name, CIID, av, state, changesetID, origin);
+                var att = new CIAttribute(id, name, CIID, av, state, changesetID);
                 ret.Add(att);
             }
             return ret;
@@ -177,7 +171,7 @@ namespace Omnikeeper.Model
 
             var ret = new List<CIAttribute>();
             using var command = new NpgsqlCommand($@"
-            select distinct on(ci_id, name) state, id, name, ci_id, type, value_text, value_binary, value_control, changeset_id, origin_type from
+            select distinct on(ci_id, name) state, id, name, ci_id, type, value_text, value_binary, value_control, changeset_id from
                 attribute where timestamp <= @time_threshold and layer_id = @layer_id and name ~ @regex and ({CIIDSelection2WhereClause(selection)}) 
                 and partition_index >= @partition_index
                 order by ci_id, name, timestamp DESC NULLS LAST
@@ -206,9 +200,7 @@ namespace Omnikeeper.Model
                     var valueControl = dr.GetFieldValue<byte[]>(7);
                     var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
                     var changesetID = dr.GetGuid(8);
-                    var dataOriginType = dr.GetFieldValue<DataOriginType>(9);
-                    var origin = new DataOriginV1(dataOriginType);
-                    var att = new CIAttribute(id, name, CIID, av, state, changesetID, origin);
+                    var att = new CIAttribute(id, name, CIID, av, state, changesetID);
                     ret.Add(att);
                 }
             }
@@ -221,7 +213,7 @@ namespace Omnikeeper.Model
 
             var ret = new List<CIAttribute>();
             using (var command = new NpgsqlCommand(@$"
-                select distinct on (ci_id) state, id, ci_id, type, value_text, value_binary, value_control, changeset_id, origin_type from
+                select distinct on (ci_id) state, id, ci_id, type, value_text, value_binary, value_control, changeset_id from
                     attribute where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id 
                     and partition_index >= @partition_index
                     order by ci_id, timestamp DESC NULLS LAST
@@ -250,10 +242,8 @@ namespace Omnikeeper.Model
                         var valueControl = dr.GetFieldValue<byte[]>(6);
                         var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
                         var changesetID = dr.GetGuid(7);
-                        var dataOriginType = dr.GetFieldValue<DataOriginType>(8);
-                        var origin = new DataOriginV1(dataOriginType);
 
-                        ret.Add(new CIAttribute(id, name, CIID, av, state, changesetID, origin));
+                        ret.Add(new CIAttribute(id, name, CIID, av, state, changesetID));
                     }
                 }
             }

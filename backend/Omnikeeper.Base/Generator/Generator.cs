@@ -227,7 +227,7 @@ namespace Omnikeeper.Base.Generator
                 // how do we get them? probably by parsing the template and extracting the accessed attributes?
                 var agGuid = GuidUtility.Create(mergedCI.ID, $"{item.Name}-{layerID}");
                 Guid staticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
-                var ag = new CIAttribute(agGuid, item.Name, mergedCI.ID, value, AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Generator));
+                var ag = new CIAttribute(agGuid, item.Name, mergedCI.ID, value, AttributeState.New, staticChangesetID);
                 return ag;
             }
             catch (Exception)

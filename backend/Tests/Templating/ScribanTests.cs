@@ -26,11 +26,11 @@ namespace Tests.Templating
                 var staticChangesetID = Guid.NewGuid();
                 var testCIA = new MergedCI(Guid.NewGuid(), "test-ci-a", new LayerSet(), atTime, new List<MergedCIAttribute>()
                 {
-                    new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a", Guid.NewGuid(), new AttributeScalarValueText("a-value"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual)), new string[0]),
-                    new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a.b", Guid.NewGuid(), new AttributeScalarValueText("b-value"), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual)), new string[0]),
-                    new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a.c", Guid.NewGuid(), AttributeArrayValueText.BuildFromString(new string[] { "c-value0", "c-value1" }), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual)), new string[0]),
+                    new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a", Guid.NewGuid(), new AttributeScalarValueText("a-value"), AttributeState.New, staticChangesetID), new string[0]),
+                    new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a.b", Guid.NewGuid(), new AttributeScalarValueText("b-value"), AttributeState.New, staticChangesetID), new string[0]),
+                    new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a.c", Guid.NewGuid(), AttributeArrayValueText.BuildFromString(new string[] { "c-value0", "c-value1" }), AttributeState.New, staticChangesetID), new string[0]),
                     new MergedCIAttribute(new CIAttribute(Guid.NewGuid(), "a.json", Guid.NewGuid(), AttributeArrayValueJSON.BuildFromString(
-                        new string[] { @"{ ""foo"": ""bar""}", @"{ ""second"": { ""yes"": true } }" }), AttributeState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual)), new string[0])
+                        new string[] { @"{ ""foo"": ""bar""}", @"{ ""second"": { ""yes"": true } }" }), AttributeState.New, staticChangesetID), new string[0])
                     //new MergedCIAttribute(new CIAttribute(0, "a.json", Guid.NewGuid(), AttributeValueJSONScalar.Build(
                     //    JObject.Parse(@"{ ""foo"": ""bar""}")), AttributeState.New, 0), new long[0])
                 });
@@ -39,7 +39,7 @@ namespace Tests.Templating
                 var relationModel = new Mock<IRelationModel>();
                 relationModel.Setup(x => x.GetMergedRelations(It.IsAny<IRelationSelection>(), It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
                     .ReturnsAsync(() => new MergedRelation[] {
-                        new MergedRelation(new Relation(Guid.NewGuid(), testCIA.ID, testCIB.ID, "p_a", RelationState.New, staticChangesetID, new DataOriginV1(DataOriginType.Manual)), new string[0])
+                        new MergedRelation(new Relation(Guid.NewGuid(), testCIA.ID, testCIB.ID, "p_a", RelationState.New, staticChangesetID), new string[0])
                     });
 
                 var ciModel = new Mock<ICIModel>();

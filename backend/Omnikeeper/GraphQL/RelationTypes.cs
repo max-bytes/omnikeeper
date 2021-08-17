@@ -15,7 +15,6 @@ namespace Omnikeeper.GraphQL
             Field(x => x.PredicateID);
             Field(x => x.State, type: typeof(RelationStateType));
             Field(x => x.ChangesetID);
-            Field(x => x.Origin, type: typeof(DataOriginGQL));
         }
     }
 
@@ -34,7 +33,6 @@ namespace Omnikeeper.GraphQL
             Field(x => x.PredicateID);
             Field(x => x.IsForwardRelation);
             Field(x => x.ChangesetID);
-            Field(x => x.Origin, type: typeof(DataOriginGQL));
             Field(x => x.LayerID);
             Field(x => x.LayerStackIDs);
             FieldAsync<ListGraphType<LayerType>>("layerStack",

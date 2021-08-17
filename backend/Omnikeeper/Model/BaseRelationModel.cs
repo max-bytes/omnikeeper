@@ -47,7 +47,7 @@ namespace Omnikeeper.Model
             var innerWhereClause = string.Join(" AND ", innerWhereClauses);
             if (innerWhereClause == "") innerWhereClause = "1=1";
             var query = $@"
-                select distinct on (from_ci_id, to_ci_id, predicate_id) id, from_ci_id, to_ci_id, predicate_id, state, changeset_id, origin_type from relation 
+                select distinct on (from_ci_id, to_ci_id, predicate_id) id, from_ci_id, to_ci_id, predicate_id, state, changeset_id from relation 
                     where timestamp <= @time_threshold and ({innerWhereClause}) and layer_id = @layer_id 
                     and partition_index >= @partition_index
                     order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC NULLS LAST
@@ -68,7 +68,7 @@ namespace Omnikeeper.Model
         {
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
-            using var command = new NpgsqlCommand(@"select id, state, changeset_id, origin_type from relation where 
+            using var command = new NpgsqlCommand(@"select id, state, changeset_id from relation where 
                 timestamp <= @time_threshold AND from_ci_id = @from_ci_id AND to_ci_id = @to_ci_id and layer_id = @layer_id and predicate_id = @predicate_id 
                 and partition_index >= @partition_index
                 order by timestamp DESC NULLS LAST
@@ -87,10 +87,8 @@ namespace Omnikeeper.Model
             var id = dr.GetGuid(0);
             var state = dr.GetFieldValue<RelationState>(1);
             var changesetID = dr.GetGuid(2);
-            var originType = dr.GetFieldValue<DataOriginType>(3);
-            var origin = new DataOriginV1(originType);
 
-            return new Relation(id, fromCIID, toCIID, predicateID, state, changesetID, origin);
+            return new Relation(id, fromCIID, toCIID, predicateID, state, changesetID);
         }
 
         public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, string layerID, IModelContext trans, TimeThreshold atTime)
@@ -111,10 +109,7 @@ namespace Omnikeeper.Model
                     var state = dr.GetFieldValue<RelationState>(4);
                     var changesetID = dr.GetGuid(5);
 
-                    var originType = dr.GetFieldValue<DataOriginType>(6);
-                    var origin = new DataOriginV1(originType);
-
-                    var relation = new Relation(id, fromCIID, toCIID, predicateID, state, changesetID, origin);
+                    var relation = new Relation(id, fromCIID, toCIID, predicateID, state, changesetID);
 
                     if (state != RelationState.Removed)
                         relations.Add(relation);
@@ -130,7 +125,7 @@ namespace Omnikeeper.Model
         {
             var ret = new List<Relation>();
             using var command = new NpgsqlCommand($@"
-            select id, from_ci_id, to_ci_id, predicate_id, state, origin_type FROM relation 
+            select id, from_ci_id, to_ci_id, predicate_id, state FROM relation 
             where changeset_id = @changeset_id
             ", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("changeset_id", changesetID);
@@ -146,10 +141,8 @@ namespace Omnikeeper.Model
                 var toCIID = dr.GetGuid(2);
                 var predicateID = dr.GetString(3);
                 var state = dr.GetFieldValue<RelationState>(4);
-                var originType = dr.GetFieldValue<DataOriginType>(5);
-                var origin = new DataOriginV1(originType);
 
-                var relation = new Relation(id, fromCIID, toCIID, predicateID, state, changesetID, origin);
+                var relation = new Relation(id, fromCIID, toCIID, predicateID, state, changesetID);
                 ret.Add(relation);
             }
             return ret;
@@ -172,8 +165,8 @@ namespace Omnikeeper.Model
 
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
-            using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp, origin_type, partition_index) 
-                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp, @origin_type, @partition_index)", trans.DBConnection, trans.DBTransaction);
+            using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp, partition_index) 
+                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp, @partition_index)", trans.DBConnection, trans.DBTransaction);
 
             var changeset = await changesetProxy.GetChangeset(layerID, origin, trans);
 
@@ -186,12 +179,11 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("state", RelationState.Removed);
             command.Parameters.AddWithValue("changeset_id", changeset.ID);
             command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
-            command.Parameters.AddWithValue("origin_type", currentRelation.Origin.Type);
             command.Parameters.AddWithValue("partition_index", partitionIndex);
 
 
             await command.ExecuteNonQueryAsync();
-            return (new Relation(id, fromCIID, toCIID, predicateID, RelationState.Removed, changeset.ID, currentRelation.Origin), true);
+            return (new Relation(id, fromCIID, toCIID, predicateID, RelationState.Removed, changeset.ID), true);
         }
 
         public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
@@ -219,8 +211,8 @@ namespace Omnikeeper.Model
 
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
-            using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp, origin_type, partition_index) 
-                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp, @origin_type, @partition_index)", trans.DBConnection, trans.DBTransaction);
+            using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp, partition_index) 
+                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp, @partition_index)", trans.DBConnection, trans.DBTransaction);
 
             var changeset = await changesetProxy.GetChangeset(layerID, origin, trans);
 
@@ -233,11 +225,10 @@ namespace Omnikeeper.Model
             command.Parameters.AddWithValue("state", state);
             command.Parameters.AddWithValue("changeset_id", changeset.ID);
             command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
-            command.Parameters.AddWithValue("origin_type", origin.Type);
             command.Parameters.AddWithValue("partition_index", partitionIndex);
 
             await command.ExecuteNonQueryAsync();
-            return (new Relation(id, fromCIID, toCIID, predicateID, state, changeset.ID, origin), true);
+            return (new Relation(id, fromCIID, toCIID, predicateID, state, changeset.ID), true);
         }
 
 
@@ -292,7 +283,7 @@ namespace Omnikeeper.Model
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
                 // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
-                using var writer = trans.DBConnection.BeginBinaryImport(@"COPY relation (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, state, ""timestamp"", origin_type, partition_index) FROM STDIN (FORMAT BINARY)");
+                using var writer = trans.DBConnection.BeginBinaryImport(@"COPY relation (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, state, ""timestamp"", partition_index) FROM STDIN (FORMAT BINARY)");
                 foreach (var (fromCIID, toCIID, predicateID, state) in actualInserts)
                 {
                     writer.StartRow();
@@ -304,7 +295,6 @@ namespace Omnikeeper.Model
                     writer.Write(data.LayerID);
                     writer.Write(state, "relationstate");
                     writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
-                    writer.Write(origin.Type, "dataorigintype");
                     writer.Write(partitionIndex, NpgsqlDbType.TimestampTz);
                 }
 
@@ -320,7 +310,6 @@ namespace Omnikeeper.Model
                     writer.Write(data.LayerID);
                     writer.Write(RelationState.Removed, "relationstate");
                     writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
-                    writer.Write(outdatedRelation.Origin.Type, "dataorigintype");
                     writer.Write(partitionIndex, NpgsqlDbType.TimestampTz);
                 }
                 writer.Complete();
