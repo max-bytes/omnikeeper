@@ -18,14 +18,15 @@ const { Title } = Typography;
 export default function Changeset(props) {
     const { changesetID } = useParams();
     
-    const { data: visibleLayers, loading: loadingLayers } = useExplorerLayers(true);
+    // TODO: loading, error-handling
 
-    const { loading, error, data } = useQuery(queries.FullChangeset, {
+    const { data: visibleLayers } = useExplorerLayers(true);
+
+    const { error, data } = useQuery(queries.FullChangeset, {
         variables: { id: changesetID }
     });
     
-    // TODO: loading, error
-    const { loading: loadingPredicates, error: errorPredicates, data: dataPredicates } = useQuery(queries.PredicateList, { variables: {} });
+    const { data: dataPredicates } = useQuery(queries.PredicateList, { variables: {} });
 
 
     if (error) {
