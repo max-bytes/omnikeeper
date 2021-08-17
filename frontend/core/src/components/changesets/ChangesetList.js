@@ -67,8 +67,6 @@ export default function ChangesetList(props) {
         const tokens = [
             `${numAttributeChanges} ${numAttributeChanges === 1 ? 'attribute' : 'attributes'}`,
             `${numRelationChanges} ${numRelationChanges === 1 ? 'relation' : 'relations'}`
-            // ((numAttributeChanges > 0) ? `#attributes: ${numAttributeChanges}` : null),
-            // ((numRelationChanges > 0) ? `#relations: ${numRelationChanges}` : null)
         ]
         return tokens.filter(t => t).join(', ');
     }
@@ -127,7 +125,6 @@ export default function ChangesetList(props) {
             width: 280,
             filter: true,
             cellRenderer: "changesetIDCellRenderer",
-            // cellClass: "monospaced",
         },
     ];
 
