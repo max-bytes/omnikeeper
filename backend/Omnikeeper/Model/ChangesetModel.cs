@@ -5,6 +5,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using static Omnikeeper.Base.Model.IChangesetModel;
 
@@ -125,7 +126,7 @@ namespace Omnikeeper.Model
                 var c = new Changeset(id, user, layerID, timestamp);
                 ret.Add(c);
             }
-            return ret;
+            return ret.OrderByDescending(o => o.Timestamp); // TODO: better sort performance
         }
 
         private async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IModelContext trans, int? limit = null)
@@ -168,7 +169,7 @@ namespace Omnikeeper.Model
                 var c = new Changeset(id, user, layerID, timestamp);
                 ret.Add(c);
             }
-            return ret;
+            return ret.OrderByDescending(o => o.Timestamp); // TODO: better sort performance
         }
 
         public async Task<int> DeleteEmptyChangesets(IModelContext trans)
@@ -231,39 +232,6 @@ namespace Omnikeeper.Model
             var numArchived = await command.ExecuteNonQueryAsync();
 
             return numArchived;
-        }
-
-        [Obsolete]
-        public async Task<IEnumerable<Changeset>> GetChangesetsOlderThan(DateTimeOffset threshold, IModelContext trans)
-        {
-            var query = @"SELECT distinct c.id, c.user_id, c.layer_id, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
-                LEFT JOIN ""user"" u ON c.user_id = u.id
-                WHERE c.timestamp < @threshold
-                ORDER BY c.timestamp DESC NULLS LAST";
-            using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
-
-            command.Parameters.AddWithValue("threshold", threshold);
-
-            using var dr = await command.ExecuteReaderAsync();
-
-            var ret = new List<Changeset>();
-            while (await dr.ReadAsync())
-            {
-                var id = dr.GetGuid(0);
-                var userID = dr.GetInt64(1);
-                var layerID = dr.GetString(2);
-                var timestamp = dr.GetTimeStamp(3).ToDateTime();
-                var username = dr.GetString(4);
-                var displayName = dr.GetString(5);
-                var userUUID = dr.GetGuid(6);
-                var userType = dr.GetFieldValue<UserType>(7);
-                var userTimestamp = dr.GetTimeStamp(8).ToDateTime();
-
-                var user = new UserInDatabase(userID, userUUID, username, displayName, userType, userTimestamp);
-                var c = new Changeset(id, user, layerID, timestamp);
-                ret.Add(c);
-            }
-            return ret;
         }
     }
 }
