@@ -1,6 +1,5 @@
 import React from "react";
 import { Form, Typography } from 'antd';
-import { Link  } from 'react-router-dom'
 import _ from 'lodash';
 import LayerIcon from "./LayerIcon";
 import OriginPopup from "./OriginPopup";

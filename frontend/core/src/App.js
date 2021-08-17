@@ -20,6 +20,7 @@ import ApolloWrapper from './components/ApolloWrapper';
 import env from "@beam-australia/react-env";
 import { ReactKeycloakProvider } from '@react-keycloak/web'
 import { Menu, Space } from 'antd';
+import { Content, Header } from "antd/lib/layout/layout";
 
 const keycloak = new Keycloak({
   "url": `${env("KEYCLOAK_URL")}/auth`,
@@ -46,79 +47,71 @@ function App() {
 
   const BR = () => {
     return <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
-        <nav style={{
-                    borderBottom: "solid 1px #e8e8e8",
-                    overflow: "hidden",
-                    boxShadow: "0 0 30px #f3f1f1",
-                }}>
-            <div style={{ width: "200px", float: "left" }}>
-                <Link to="/">
-                    <img
-                        src={process.env.PUBLIC_URL + '/omnikeeper_logo_v1.0.png'}
-                        alt="omnikeeper logo" 
-                        className="logo"
-                        style={{ height: "38px", margin: "4px 8px" }}
-                    />
-                </Link>
-            </div>
-            <div style={{ width: "calc(100% - 200px)", float: "left" }}>
-              <div style={{ position: "relative", display: "flex", justifyContent: "flex-end", borderBottom: "none", marginRight: '10px' }}>
-                
-                <Space>
-                  <Route
-                    render={({ location, history }) =>  (
-                              <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]}>
-                                <Menu.Item key="manage"><Link to="/manage"><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/> Manage</Link></Menu.Item>
-                                <Menu.Item key="createCI"><Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link></Menu.Item>
-                                <Menu.Item key="explorer"><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{ marginRight: "0.5rem" }}/> Explore CIs</Link></Menu.Item>
-                                <Menu.Item key="changesets"><Link to="/changesets"><FontAwesomeIcon icon={faList} style={{ marginRight: "0.5rem" }}/> Changesets</Link></Menu.Item>
-                                <Menu.Item key="diffing"><Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link></Menu.Item>
-                                <Menu.Item key="grid-view"><Link to="/grid-view"><FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/> Grid View</Link></Menu.Item>
-                              </Menu>
-                        )}
+        <Header style={{ position: 'fixed', zIndex: 10, width: '100%', top: '0px', 
+          borderBottom: "solid 1px #e8e8e8", boxShadow: "0 0 30px #f3f1f1", backgroundColor: 'white' }}>
+          <div style={{float: 'left', width: '200px'}}>
+              <Link to="/">
+                  <img
+                      src={process.env.PUBLIC_URL + '/omnikeeper_logo_v1.0.png'}
+                      alt="omnikeeper logo" 
+                      className="logo"
+                      style={{ height: "38px", margin: "4px 8px" }}
                   />
-                  <UserBar />
-                </Space>
-              </div>
-            </div>
-        </nav>
-           
-          <div style={{ height: 'calc(100% - 48px)' }}>
-            <Switch>
-              <Route path="/login">
-                <LoginPage />
-              </Route>
-              <PrivateRoute path="/diffing">
-                <Diffing />
-              </PrivateRoute>
-              <PrivateRoute path="/createCI">
-                <AddNewCI />
-              </PrivateRoute>
-              <PrivateRoute path="/explorer/:ciid">
-                <Explorer />
-              </PrivateRoute>
-              <PrivateRoute path="/explorer">
-                <SearchCIAdvanced />
-              </PrivateRoute>
-              <PrivateRoute path="/changesets/:changesetID">
-                <Changeset />
-              </PrivateRoute>
-              <PrivateRoute path="/changesets">
-                <ChangesetList />
-              </PrivateRoute>
-              <PrivateRoute path="/grid-view">
-                <GridView/>
-              </PrivateRoute>
-              <PrivateRoute path="/manage">
-                <Manage/>
-              </PrivateRoute>
-
-              <Route path="*">
-                <Redirect to="/explorer" />
-              </Route>
-            </Switch>
+              </Link>
           </div>
-        </BrowserRouter>
+          <div style={{float: 'right'}}>
+            <UserBar />
+          </div>
+          <Route
+            render={({ location, history }) =>  (
+                      <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{justifyContent: 'flex-end'}}>
+                        <Menu.Item key="manage"><Link to="/manage"><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/> Manage</Link></Menu.Item>
+                        <Menu.Item key="createCI"><Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link></Menu.Item>
+                        <Menu.Item key="explorer"><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{ marginRight: "0.5rem" }}/> Explore CIs</Link></Menu.Item>
+                        <Menu.Item key="changesets"><Link to="/changesets"><FontAwesomeIcon icon={faList} style={{ marginRight: "0.5rem" }}/> Changesets</Link></Menu.Item>
+                        <Menu.Item key="diffing"><Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link></Menu.Item>
+                        <Menu.Item key="grid-view"><Link to="/grid-view"><FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/> Grid View</Link></Menu.Item>
+                      </Menu>
+                )}
+          />
+        </Header>
+           
+        <Content className="site-layout" style={{ padding: '0 50px', marginTop: 64 }}>
+          <Switch>
+            <Route path="/login">
+              <LoginPage />
+            </Route>
+            <PrivateRoute path="/diffing">
+              <Diffing />
+            </PrivateRoute>
+            <PrivateRoute path="/createCI">
+              <AddNewCI />
+            </PrivateRoute>
+            <PrivateRoute path="/explorer/:ciid">
+              <Explorer />
+            </PrivateRoute>
+            <PrivateRoute path="/explorer">
+              <SearchCIAdvanced />
+            </PrivateRoute>
+            <PrivateRoute path="/changesets/:changesetID">
+              <Changeset />
+            </PrivateRoute>
+            <PrivateRoute path="/changesets">
+              <ChangesetList />
+            </PrivateRoute>
+            <PrivateRoute path="/grid-view">
+              <GridView/>
+            </PrivateRoute>
+            <PrivateRoute path="/manage">
+              <Manage/>
+            </PrivateRoute>
+
+            <Route path="*">
+              <Redirect to="/explorer" />
+            </Route>
+          </Switch>
+        </Content>
+      </BrowserRouter>
   }
   
 
