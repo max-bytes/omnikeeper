@@ -85,7 +85,7 @@ function AddNewContext(props) {
 
                         setSwaggerErrorJson(false);
                         if(editMode) setSwaggerMsg("'" + contextName + "' has been changed.");
-                        else setSwaggerMsg("'" + addContext.name + "' has been created.");
+                        else setSwaggerMsg("'" + addContext.id + "' has been created.");
                     } catch(e) {
                         setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
                         setSwaggerMsg(e.toString());
