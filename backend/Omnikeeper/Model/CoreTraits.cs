@@ -19,7 +19,7 @@ namespace Omnikeeper.Model
 
         public static readonly RecursiveTrait Trait = new RecursiveTrait("__meta.config.trait", new TraitOriginV1(TraitOriginType.Core), 
             new List<TraitAttribute>() {
-                new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("trait.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("trait.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null), new CIAttributeValueConstraintTextRegex(IDValidations.TraitIDRegex))),
                 new TraitAttribute("requiredAttributes", CIAttributeTemplate.BuildFromParams("trait.requiredAttributes", AttributeValueType.JSON, true, new CIAttributeValueConstraintArrayLength(1, null)))
             },
             new List<TraitAttribute>()
@@ -44,7 +44,7 @@ namespace Omnikeeper.Model
             }
         );
 
-        public static readonly RecursiveTrait AuthRole = new RecursiveTrait("__meta.config.authRole", new TraitOriginV1(TraitOriginType.Core),
+        public static readonly RecursiveTrait AuthRole = new RecursiveTrait("__meta.config.auth_role", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {
                 new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("authRole.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
             },

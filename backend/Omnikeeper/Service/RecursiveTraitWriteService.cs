@@ -4,6 +4,7 @@ using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
@@ -35,6 +36,8 @@ namespace Omnikeeper.Service
             string id, IEnumerable<TraitAttribute> requiredAttributes, IEnumerable<TraitAttribute>? optionalAttributes, IEnumerable<TraitRelation>? requiredRelations, IEnumerable<string>? requiredTraits,
             DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans)
         {
+            IDValidations.ValidateTraitIDThrow(id);
+
             var t = await traitModel.TryToGetRecursiveTrait(id, changesetProxy.TimeThreshold, trans);
 
             var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
@@ -89,6 +92,8 @@ namespace Omnikeeper.Service
 
         public async Task<bool> TryToDelete(string id, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans)
         {
+            IDValidations.ValidateTraitIDThrow(id);
+
             var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
             var writeLayerID = baseConfiguration.ConfigWriteLayer;
 
