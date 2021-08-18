@@ -136,6 +136,10 @@ export const queries = {
                     id
                     color
                 }
+                dataOrigin {
+                    type
+                }
+
                 attributes {
                     ...FullAttribute
                 }

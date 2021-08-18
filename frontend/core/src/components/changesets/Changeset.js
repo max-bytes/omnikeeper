@@ -47,7 +47,8 @@ export default function Changeset(props) {
                 <Descriptions.Item label="User"><UserTypeIcon userType={data.changeset.user.type} /> {data.changeset.user.displayName}</Descriptions.Item>
                 <Descriptions.Item label="Timestamp">{formatTimestamp(data.changeset.timestamp)}</Descriptions.Item>
                 <Descriptions.Item label="Layer"><LayerIcon layer={data.changeset.layer} /> {data.changeset.layer.id}</Descriptions.Item>
-                <Descriptions.Item label="Changeset-ID"><ChangesetID id={data.changeset.id} link={false} /></Descriptions.Item>
+                <Descriptions.Item label="Origin-Type">{data.changeset.dataOrigin.type}</Descriptions.Item>
+                <Descriptions.Item label="Changeset-ID" span={2}><ChangesetID id={data.changeset.id} link={false} /></Descriptions.Item>
             </Descriptions>
             <Tabs defaultActiveKey={(data.changeset.attributes.length === 0) ? "relations" : "attributes"} style={{padding: "1rem"}}>
                 <TabPane tab={`Attributes (${data.changeset.attributes.length})`} key="attributes" disabled={data.changeset.attributes.length === 0}>
@@ -55,7 +56,7 @@ export default function Changeset(props) {
                         return <div key={ciid} style={{marginTop: '1.5rem'}}>
                             <Title level={5} style={{marginBottom: 0}}>CI <CIID id={ciid} link={true} /></Title>
                             {attributes.map(a => {
-                                return <Attribute attribute={a} layerStack={[data.changeset.layer]} isEditable={false} visibleLayers={visibleLayers} hideNameLabel={false} controlIdSuffix="" />;
+                                return <Attribute attribute={a} layerStack={[data.changeset.layer]} isEditable={false} visibleLayers={visibleLayers} hideNameLabel={false} controlIdSuffix="" key={a.id} />;
                             })}
                         </div>;
                     }))}
