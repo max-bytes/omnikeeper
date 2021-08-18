@@ -99,7 +99,7 @@ namespace Omnikeeper.Model
                 WHERE c.timestamp >= @from AND c.timestamp <= @to AND r.layer_id = ANY(@layer_ids)";
             queryRelations += " AND ci.id = ANY(@ciids)";
 
-            var query = @$" {queryAttributes} UNION {queryRelations} ORDER BY 3 DESC";
+            var query = @$" {queryAttributes} UNION {queryRelations} ORDER BY 5 DESC";
             if (limit.HasValue)
                 query += " LIMIT @limit";
 
@@ -132,7 +132,7 @@ namespace Omnikeeper.Model
                 var c = new Changeset(id, user, layerID, origin, timestamp);
                 ret.Add(c);
             }
-            return ret.OrderByDescending(o => o.Timestamp); // TODO: better sort performance
+            return ret;
         }
 
         private async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IModelContext trans, int? limit = null)
@@ -177,7 +177,7 @@ namespace Omnikeeper.Model
                 var c = new Changeset(id, user, layerID, origin, timestamp);
                 ret.Add(c);
             }
-            return ret.OrderByDescending(o => o.Timestamp); // TODO: better sort performance
+            return ret;
         }
 
         public async Task<int> DeleteEmptyChangesets(IModelContext trans)
