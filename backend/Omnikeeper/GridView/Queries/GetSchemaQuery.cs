@@ -52,7 +52,8 @@ namespace Omnikeeper.GridView.Queries
 
                 var trans = modelContextBuilder.BuildImmediate();
 
-                var config = await gridViewContextModel.GetConfiguration(request.Context, trans);
+                var context = await gridViewContextModel.GetFullContextByName(request.Context, trans);
+                var config = context.Configuration;
 
                 var result = new GetSchemaResponse(config.ShowCIIDColumn, new List<Column>());
 

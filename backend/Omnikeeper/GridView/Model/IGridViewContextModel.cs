@@ -7,7 +7,7 @@ namespace Omnikeeper.GridView.Model
 {
     public interface IGridViewContextModel
     {
-        Task<GridViewConfiguration> GetConfiguration(string configName, IModelContext trans);
+        //Task<GridViewConfiguration> GetConfiguration(string configName, IModelContext trans);
         Task<List<Context>> GetContexts(IModelContext trans);
         Task<bool> AddContext(string name, string speakingName, string description, GridViewConfiguration configuration, IModelContext trans);
         Task<bool> EditContext(string name, string speakingName, string description, GridViewConfiguration configuration, IModelContext trans);

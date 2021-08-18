@@ -11,33 +11,6 @@ namespace Omnikeeper.GridView.Model
 {
     public class GridViewContextModel : IGridViewContextModel
     {
-        public async Task<GridViewConfiguration> GetConfiguration(string configName, IModelContext trans)
-        {
-            using var command = new NpgsqlCommand($@"
-                    SELECT gvc.config, gvc.name
-                    FROM config.gridview gvc
-                    WHERE gvc.name=@configName
-                    LIMIT 1
-                ", trans.DBConnection, trans.DBTransaction);
-
-            command.Parameters.AddWithValue("configName", configName);
-
-            using var dr = await command.ExecuteReaderAsync();
-
-            string configJson = "", name;
-
-            if (!dr.Read())
-                throw new Exception($"Could not find context named \"{configName}\"");
-
-            configJson = dr.GetString(0);
-            name = dr.GetString(1);
-
-
-            var config = JsonConvert.DeserializeObject<GridViewConfiguration>(configJson);
-
-            return config;
-        }
-
         public async Task<List<Context>> GetContexts(IModelContext trans)
         {
             var contexts = new List<Context>();
