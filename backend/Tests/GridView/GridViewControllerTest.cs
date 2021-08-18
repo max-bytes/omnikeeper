@@ -3,6 +3,7 @@ using LandscapeRegistry.GridView;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
@@ -46,9 +47,10 @@ namespace Tests.Integration.Controller
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
             var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
             var attributeModel = ServiceProvider.GetRequiredService<IAttributeModel>();
-            var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
-            var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
             var controller = ServiceProvider.GetRequiredService<GridViewController>();
+            var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
+
+            var userInDatabase = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
 
             Guid ciid1;
             Guid ciid2;
@@ -62,9 +64,10 @@ namespace Tests.Integration.Controller
                 ciid3 = await ciModel.CreateCI(trans);
                 var layer1 = await layerModel.UpsertLayer("l1", trans);
                 var layer2 = await layerModel.UpsertLayer("l2", trans);
+                var layerOKConfig = await layerModel.UpsertLayer("__okconfig", trans);
                 layerID1 = layer1.ID;
                 layerID2 = layer2.ID;
-                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                var changeset = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), changesetModel);
                 var (attribute1, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 var (attribute2, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 var (attribute3, _) = await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid2, layerID2, changeset, new DataOriginV1(DataOriginType.Manual), trans);
@@ -72,6 +75,10 @@ namespace Tests.Integration.Controller
 
                 trans.Commit();
             }
+
+            // setup user with all permissions
+            var user = new AuthenticatedUser(userInDatabase, await PermissionUtils.GetAllAvailablePermissions(layerModel, ModelContextBuilder.BuildImmediate()));
+            currentUserServiceMock.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 
             var cfg1 = new GridViewConfiguration(
                             true,

@@ -25,6 +25,7 @@ namespace Tests.Integration
         private ServiceProvider? serviceProvider;
 
         protected bool enableModelCaching;
+        protected Mock<ICurrentUserService> currentUserServiceMock;
 
         protected DIServicedTestBase(bool enableModelCaching)
         {
@@ -88,8 +89,8 @@ namespace Tests.Integration
             services.AddSingleton<IConfiguration>((sp) => new Mock<IConfiguration>().Object);
 
             // override user service
-            var currentUserService = new Mock<ICurrentUserService>();
-            services.AddSingleton<ICurrentUserService>((sp) => currentUserService.Object);
+            currentUserServiceMock = new Mock<ICurrentUserService>();
+            services.AddSingleton<ICurrentUserService>((sp) => currentUserServiceMock.Object);
             services.AddSingleton<ILogger<DataPartitionService>>((sp) => NullLogger<DataPartitionService>.Instance);
 
             // override authorization
