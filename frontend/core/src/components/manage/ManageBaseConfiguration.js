@@ -30,7 +30,8 @@ export default function ManageBaseConfiguration() {
                 labelCol={{ span: "8" }}
                 style={{ display: 'flex', flexDirection: 'column', flexBasis: '1000px', margin:'10px 0px' }}
                 onFinish={e => {
-                    e.ConfigLayerset = e.ConfigLayerset.split(",");
+                    if (typeof e.ConfigLayerset === 'string')
+                        e.ConfigLayerset = e.ConfigLayerset.split(",");
                     setBaseConfiguration({ variables: { baseConfiguration: JSON.stringify(e) } }).then(d => {
                         setConfig(data.manage_baseConfiguration);
                     }).catch(e => {});
