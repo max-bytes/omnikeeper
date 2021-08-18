@@ -9,8 +9,9 @@ import MultiCISelect from 'components/MultiCISelect';
 function ChangesetDropdown(props) {
   const { ciids, layers, timeSettings, setTimeSettings } = props;
 
-  var from = "2010-01-01 00:00:00"; // TODO?
-  var to = "2022-01-01 00:00:00";
+  // fix hardcodede timerange
+  var from = "2010-01-01T00:00:00Z";
+  var to = "2030-01-01T00:00:00Z";
   const { loading, data } = useQuery(queries.ChangesetsForCI, {
     variables: { from: from, to: to, ciids: ciids, layers: layers }
   });

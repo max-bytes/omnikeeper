@@ -30,12 +30,14 @@ function LoadingTimeline(props) {
   const selectedTime = useSelectedTime();
 
   var ciid = props.ciid;
-  var from = "2010-01-01 00:00:00";
-  var to = "2022-01-01 00:00:00";
+
+  // TODO: fix hardcoded timerange
+  var from = "2010-01-01T00:00:00Z"; 
+  var to = "2030-01-01T00:00:00Z";
   var [limit, setLimit] = useState(10);
 
   const { loading: loadingChangesets, error, data: resultData, previousData, refetch: refetchChangesets } = useQuery(queries.ChangesetsForCI, {
-    variables: { from: from, to: to, ciids: [ciid], layers: props.layers.map(l => l.id), limit: limit } // TODO
+    variables: { from: from, to: to, ciids: [ciid], layers: props.layers.map(l => l.id), limit: limit }
   });
   const data = resultData ?? previousData;
 
