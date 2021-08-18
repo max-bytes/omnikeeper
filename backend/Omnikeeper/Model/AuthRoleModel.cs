@@ -38,19 +38,18 @@ namespace Omnikeeper.Model
 
         public async Task<(Guid,AuthRole)> TryToGetAuthRole(string id, TimeThreshold timeThreshold, IModelContext trans)
         {
-
-            var traitForAuthRoles = CoreTraits.AuthRole;
-            // NOTE: we need to flatten the core trait first... is this the best way? Could we maybe also keep core traits as flattened already?
-            var flattenedTraitForAuthRoles = RecursiveTraitService.FlattenSingleRecursiveTrait(traitForAuthRoles);
-
             // derive config layerset from base config
             var baseConfig = await baseConfigurationModel.GetConfigOrDefault(trans);
             var configLayerset = new LayerSet(baseConfig.ConfigLayerset);
 
             // TODO: better performance possible?
-            var AuthRoleCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(flattenedTraitForAuthRoles, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var AuthRoleCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(CoreTraits.AuthRoleFlattened, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
 
-            var foundAuthRoleCI = AuthRoleCIs.FirstOrDefault(pci => pci.Value.et.TraitAttributes["id"].Attribute.Value.Value2String() == id);
+            var foundAuthRoleCIs = AuthRoleCIs
+                .Where(pci => pci.Value.et.TraitAttributes["id"].Attribute.Value.Value2String() == id)
+                .OrderBy(t => t.Key); // we order by GUID to stay consistent even when multiple CIs would match
+
+            var foundAuthRoleCI = foundAuthRoleCIs.FirstOrDefault();
             if (!foundAuthRoleCI.Equals(default(KeyValuePair<Guid, (MergedCI ci, EffectiveTrait et)>)))
             {
                 return (foundAuthRoleCI.Key, EffectiveTrait2AuthRole(foundAuthRoleCI.Value.et));
@@ -76,15 +75,11 @@ namespace Omnikeeper.Model
 
         public async Task<IDictionary<string, AuthRole>> GetAuthRoles(IModelContext trans, TimeThreshold timeThreshold)
         {
-            var traitForAuthRoles = CoreTraits.AuthRole;
-            // NOTE: we need to flatten the core trait first... is this the best way? Could we maybe also keep core traits as flattened already?
-            var flattenedTraitForAuthRoles = RecursiveTraitService.FlattenSingleRecursiveTrait(traitForAuthRoles);
-
             // derive config layerset from base config
             var baseConfig = await baseConfigurationModel.GetConfigOrDefault(trans);
             var configLayerset = new LayerSet(baseConfig.ConfigLayerset);
 
-            var AuthRoleCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(flattenedTraitForAuthRoles, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var AuthRoleCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(CoreTraits.AuthRoleFlattened, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
             var ret = new Dictionary<string, AuthRole>(); // TODO: think about duplicates in ID
             foreach(var (_, AuthRoleET) in AuthRoleCIs.Values)
             {

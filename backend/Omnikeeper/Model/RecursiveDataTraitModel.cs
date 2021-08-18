@@ -46,18 +46,18 @@ namespace Omnikeeper.Model
         {
             IDValidations.ValidateTraitIDThrow(id);
 
-            var traitForTraits = CoreTraits.Trait;
-            // NOTE: we need to flatten the core trait first... is this the best way? Could we maybe also keep core traits as flattened already?
-            var flattenedTraitForTraits = RecursiveTraitService.FlattenSingleRecursiveTrait(traitForTraits);
-
             // derive config layerset from base config
             var baseConfig = await baseConfigurationModel.GetConfigOrDefault(trans);
             var configLayerset = new LayerSet(baseConfig.ConfigLayerset);
 
             // TODO: better performance possible?
-            var traitCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(flattenedTraitForTraits, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var traitCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(CoreTraits.TraitFlattened, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
 
-            var foundTraitCI = traitCIs.FirstOrDefault(pci => pci.Value.et.TraitAttributes["id"].Attribute.Value.Value2String() == id);
+            var foundTraitCIs = traitCIs
+                .Where(pci => pci.Value.et.TraitAttributes["id"].Attribute.Value.Value2String() == id)
+                .OrderBy(t => t.Key); // we order by GUID to stay consistent even when multiple CIs would match
+
+            var foundTraitCI = foundTraitCIs.FirstOrDefault();
             if (!foundTraitCI.Equals(default(KeyValuePair<Guid, (MergedCI ci, EffectiveTrait et)>)))
             {
                 return (foundTraitCI.Key, EffectiveTrait2RecursiveTrait(foundTraitCI.Value.et));
@@ -67,15 +67,11 @@ namespace Omnikeeper.Model
 
         public async Task<IEnumerable<RecursiveTrait>> GetRecursiveTraits(IModelContext trans, TimeThreshold timeThreshold)
         {
-            var traitForTraits = CoreTraits.Trait;
-            // NOTE: we need to flatten the core trait first... is this the best way? Could we maybe also keep core traits as flattened already?
-            var flattenedTraitForTraits = RecursiveTraitService.FlattenSingleRecursiveTrait(traitForTraits);
-
             // derive config layerset from base config
             var baseConfig = await baseConfigurationModel.GetConfigOrDefault(trans);
             var configLayerset = new LayerSet(baseConfig.ConfigLayerset);
 
-            var traitCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(flattenedTraitForTraits, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var traitCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(CoreTraits.TraitFlattened, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
             var ret = new List<RecursiveTrait>();
             foreach(var (ci, trait) in traitCIs.Values)
             {

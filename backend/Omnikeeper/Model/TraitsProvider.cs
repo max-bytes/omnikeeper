@@ -33,7 +33,7 @@ namespace Omnikeeper.Model
             // TODO, NOTE: this merges non-DB trait sets, that are not historic and DB traits sets that are... what should we do here?
             var configuredRecursiveDataTraitSet = await dataTraitModel.GetRecursiveTraits(trans, timeThreshold);
             var allTraitSets = new Dictionary<string, IEnumerable<RecursiveTrait>>() {
-                { "core", CoreTraits.Traits },
+                { "core", CoreTraits.RecursiveTraits },
                 { "data", configuredRecursiveDataTraitSet }
             };
             foreach (var kv in clbTraitSets)

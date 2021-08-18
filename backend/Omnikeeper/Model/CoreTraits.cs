@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System;
@@ -30,6 +31,7 @@ namespace Omnikeeper.Model
                 new TraitAttribute("name", CIAttributeTemplate.BuildFromParams("__name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
             }
         );
+        public static readonly GenericTrait TraitFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(Trait);
 
         public static readonly RecursiveTrait Predicate = new RecursiveTrait("__meta.config.predicate", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {
@@ -43,6 +45,7 @@ namespace Omnikeeper.Model
                 // TODO: constraints
             }
         );
+        public static readonly GenericTrait PredicateFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(Predicate);
 
         public static readonly RecursiveTrait AuthRole = new RecursiveTrait("__meta.config.auth_role", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {
@@ -54,8 +57,9 @@ namespace Omnikeeper.Model
                 new TraitAttribute("permissions", CIAttributeTemplate.BuildFromParams("authRole.permissions", AttributeValueType.Text, true)),
             }
         );
+        public static readonly GenericTrait AuthRoleFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(AuthRole);
 
-        public static readonly IEnumerable<RecursiveTrait> Traits = new List<RecursiveTrait>() { Named, Trait, Predicate, AuthRole };
+        public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() { Named, Trait, Predicate, AuthRole };
     }
 
 

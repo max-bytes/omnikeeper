@@ -40,18 +40,17 @@ namespace Omnikeeper.Model
         {
             IDValidations.ValidatePredicateIDThrow(id);
 
-            var traitForPredicates = CoreTraits.Predicate;
-            // NOTE: we need to flatten the core trait first... is this the best way? Could we maybe also keep core traits as flattened already?
-            var flattenedTraitForPredicates = RecursiveTraitService.FlattenSingleRecursiveTrait(traitForPredicates);
-
             // derive config layerset from base config
             var baseConfig = await baseConfigurationModel.GetConfigOrDefault(trans);
             var configLayerset = new LayerSet(baseConfig.ConfigLayerset);
 
             // TODO: better performance possible?
-            var predicateCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(flattenedTraitForPredicates, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var predicateCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(CoreTraits.PredicateFlattened, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
 
-            var foundPredicateCI = predicateCIs.FirstOrDefault(pci => pci.Value.et.TraitAttributes["id"].Attribute.Value.Value2String() == id);
+            var foundPredicateCIs = predicateCIs.Where(pci => pci.Value.et.TraitAttributes["id"].Attribute.Value.Value2String() == id)
+                .OrderBy(t => t.Key); // we order by GUID to stay consistent even when multiple CIs would match
+
+            var foundPredicateCI = foundPredicateCIs.FirstOrDefault();
             if (!foundPredicateCI.Equals(default(KeyValuePair<Guid, (MergedCI ci, EffectiveTrait et)>)))
             {
                 return (foundPredicateCI.Key, EffectiveTrait2Predicate(foundPredicateCI.Value.et));
@@ -73,15 +72,11 @@ namespace Omnikeeper.Model
 
         public async Task<IDictionary<string, Predicate>> GetPredicates(IModelContext trans, TimeThreshold timeThreshold)
         {
-            var traitForPredicates = CoreTraits.Predicate;
-            // NOTE: we need to flatten the core trait first... is this the best way? Could we maybe also keep core traits as flattened already?
-            var flattenedTraitForPredicates = RecursiveTraitService.FlattenSingleRecursiveTrait(traitForPredicates);
-
             // derive config layerset from base config
             var baseConfig = await baseConfigurationModel.GetConfigOrDefault(trans);
             var configLayerset = new LayerSet(baseConfig.ConfigLayerset);
 
-            var predicateCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(flattenedTraitForPredicates, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var predicateCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(CoreTraits.PredicateFlattened, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
             var ret = new Dictionary<string, Predicate>();
             foreach(var (_, predicateET) in predicateCIs.Values)
             {
