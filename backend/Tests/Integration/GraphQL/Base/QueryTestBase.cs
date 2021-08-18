@@ -48,11 +48,10 @@ namespace Tests.Integration.GraphQL.Base
             IDictionary<string, object?>? userContext = null,
             CancellationToken cancellationToken = default,
             IEnumerable<IValidationRule>? rules = null,
-            INameConverter? fieldNameConverter = null,
             IDocumentWriter? writer = null)
         {
             var queryResult = CreateQueryResult(expected);
-            return AssertQuery(query, queryResult, inputs, root, userContext, cancellationToken, rules, null, fieldNameConverter, writer);
+            return AssertQuery(query, queryResult, inputs, root, userContext, cancellationToken, rules, null, writer);
         }
 
         public ExecutionResult AssertQueryWithErrors(
@@ -124,7 +123,6 @@ namespace Tests.Integration.GraphQL.Base
             CancellationToken cancellationToken = default,
             IEnumerable<IValidationRule>? rules = null,
             Action<UnhandledExceptionContext>? unhandledExceptionDelegate = null,
-            INameConverter? nameConverter = null,
             IDocumentWriter? writer = null)
         {
             var runResult = Executer.ExecuteAsync(options =>
@@ -137,7 +135,6 @@ namespace Tests.Integration.GraphQL.Base
                 options.CancellationToken = cancellationToken;
                 options.ValidationRules = rules;
                 options.UnhandledExceptionDelegate = unhandledExceptionDelegate ?? (ctx => { });
-                options.NameConverter = nameConverter ?? CamelCaseNameConverter.Instance;
                 options.RequestServices = ServiceProvider;
             }).GetAwaiter().GetResult();
 
@@ -165,7 +162,8 @@ namespace Tests.Integration.GraphQL.Base
             return new ExecutionResult
             {
                 Data = string.IsNullOrWhiteSpace(result) ? null : result.ToDictionary(),
-                Errors = errors
+                Errors = errors,
+                Executed = true
             };
         }
     }
