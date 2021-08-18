@@ -40,6 +40,8 @@ namespace Omnikeeper.Base.Entity.Config
             MissingMemberHandling = MissingMemberHandling.Error
         });
 
+
+
         public BaseConfigurationV1(TimeSpan archiveChangesetThreshold, string clbRunnerInterval, string markedForDeletionRunnerInterval, string externalIDManagerRunnerInterval, string archiveOldDataRunnerInterval, string[] configLayerset, string configWriteLayer)
         {
             this.archiveChangesetThreshold = archiveChangesetThreshold;

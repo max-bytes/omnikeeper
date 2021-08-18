@@ -24,13 +24,6 @@ namespace Omnikeeper.Model
             this.effectiveTraitModel = effectiveTraitModel;
         }
 
-        public static Regex PredicateIDRegex = new Regex("^[a-z0-9_]+$");
-
-        public static bool ValidatePredicateID(string candidateID)
-        {
-            return PredicateIDRegex.IsMatch(candidateID);
-        }
-
         public async Task<Predicate> GetPredicate(string id, TimeThreshold timeThreshold, IModelContext trans)
         {
             var t = await TryToGetPredicate(id, timeThreshold, trans);
@@ -45,8 +38,7 @@ namespace Omnikeeper.Model
 
         public async Task<(Guid,Predicate)> TryToGetPredicate(string id, TimeThreshold timeThreshold, IModelContext trans)
         {
-            if (!ValidatePredicateID(id))
-                throw new Exception("Invalid predicate id");
+            IDValidations.ValidatePredicateIDThrow(id);
 
             var traitForPredicates = CoreTraits.Predicate;
             // NOTE: we need to flatten the core trait first... is this the best way? Could we maybe also keep core traits as flattened already?

@@ -255,6 +255,10 @@ namespace Omnikeeper.GraphQL
                     try
                     {
                         var config = BaseConfigurationV1.Serializer.Deserialize(configStr);
+
+                        IDValidations.ValidateLayerIDThrow(config.ConfigWriteLayer);
+                        IDValidations.ValidateLayerIDsThrow(config.ConfigLayerset);
+
                         var created = await baseConfigurationModel.SetConfig(config, transaction);
 
                         transaction.Commit();

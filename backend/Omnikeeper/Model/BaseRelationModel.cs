@@ -192,8 +192,7 @@ namespace Omnikeeper.Model
                 throw new Exception("From and To CIID must not be the same!");
             if (predicateID.IsEmpty())
                 throw new Exception("PredicateID must not be empty");
-            if (!PredicateModel.ValidatePredicateID(predicateID))
-                throw new Exception("Invalid predicateID");
+            IDValidations.ValidatePredicateIDThrow(predicateID);
 
             var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, changesetProxy.TimeThreshold);
 
@@ -256,8 +255,7 @@ namespace Omnikeeper.Model
                 var predicateID = data.GetPredicateID(fragment);
                 if (predicateID.IsEmpty())
                     throw new Exception("PredicateID must not be empty");
-                if (!PredicateModel.ValidatePredicateID(predicateID))
-                    throw new Exception("Invalid predicateID");
+                IDValidations.ValidatePredicateIDThrow(predicateID);
 
                 var informationHash = Relation.CreateInformationHash(fromCIID, toCIID, predicateID);
                 // remove the current relation from the list of relations to remove

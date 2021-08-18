@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
@@ -32,7 +33,7 @@ namespace Omnikeeper.Model
 
         public static readonly RecursiveTrait Predicate = new RecursiveTrait("__meta.config.predicate", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {
-                new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("predicate.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null), new CIAttributeValueConstraintTextRegex(PredicateModel.PredicateIDRegex))),
+                new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("predicate.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null), new CIAttributeValueConstraintTextRegex(IDValidations.PredicateIDRegex))),
                 new TraitAttribute("wordingFrom", CIAttributeTemplate.BuildFromParams("predicate.wordingFrom", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                 new TraitAttribute("wordingTo", CIAttributeTemplate.BuildFromParams("predicate.wordingTo", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
             },

@@ -20,12 +20,6 @@ namespace Omnikeeper.Model
         private static readonly AnchorState DefaultState = AnchorState.Active;
         private static readonly Color DefaultColor = Color.White;
 
-        private bool ValidateLayerID(string candidateID)
-        {
-            var regex = new Regex("^[a-z0-9_]+$");
-            return regex.IsMatch(candidateID);
-        }
-
         public async Task<Layer> UpsertLayer(string id, IModelContext trans)
         {
             return await UpsertLayer(id, "", DefaultColor, DefaultState, DefaultCLB, DefaultOILP, trans);
@@ -35,8 +29,7 @@ namespace Omnikeeper.Model
             Debug.Assert(computeLayerBrain != null);
             Debug.Assert(oilp != null);
 
-            if (!ValidateLayerID(id))
-                throw new Exception("Invalid layer id");
+            IDValidations.ValidateLayerIDThrow(id);
 
             var current = await GetLayer(id, trans);
 
@@ -138,8 +131,7 @@ namespace Omnikeeper.Model
 
         public async Task<bool> TryToDelete(string id, IModelContext trans)
         {
-            if (!ValidateLayerID(id))
-                throw new Exception("Invalid layer id");
+            IDValidations.ValidateLayerIDThrow(id);
 
             try
             {
@@ -157,11 +149,10 @@ namespace Omnikeeper.Model
         // TODO: performance improvements!
         public async Task<LayerSet> BuildLayerSet(string[] ids, IModelContext trans)
         {
+            IDValidations.ValidateLayerIDsThrow(ids);
+
             foreach (var id in ids)
             {
-                if (!ValidateLayerID(id))
-                    throw new Exception("Invalid layer id");
-
                 using var command = new NpgsqlCommand(@"select id from layer where id = @id LIMIT 1", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("id", id);
                 command.Prepare();
@@ -207,8 +198,7 @@ namespace Omnikeeper.Model
 
         public async Task<Layer?> GetLayer(string id, IModelContext trans)
         {
-            if (!ValidateLayerID(id))
-                throw new Exception("Invalid layer id");
+            IDValidations.ValidateLayerIDThrow(id);
 
             var layers = await _GetLayers("l.id = @id LIMIT 1", (p) => p.AddWithValue("id", id), trans);
             return layers.FirstOrDefault();
@@ -219,9 +209,7 @@ namespace Omnikeeper.Model
         {
             if (layerIDs.Length == 0) return new List<Layer>();
 
-            foreach(var id in layerIDs)
-                if (!ValidateLayerID(id))
-                    throw new Exception("Invalid layer id");
+            IDValidations.ValidateLayerIDsThrow(layerIDs);
 
             var layers = (await _GetLayers("l.id = ANY(@layer_ids)", (p) => p.AddWithValue("layer_ids", layerIDs), trans)).ToList();
 

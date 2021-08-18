@@ -59,8 +59,8 @@ namespace Omnikeeper.Model
                     "*/5 * * * * *",
                     "* * * * *",
                     "*/5 * * * * *",
-                    new string[] { "setMe" },
-                    "setMe"
+                    new string[] { "__okconfig" },
+                    "__okconfig"
                 );
             }
         }
