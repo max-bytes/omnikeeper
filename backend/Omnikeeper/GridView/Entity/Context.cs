@@ -2,13 +2,13 @@
 {
     public class Context
     {
-        public string Name { get; set; }
-        public string? SpeakingName { get; set; }
-        public string? Description { get; set; }
+        public string ID { get; set; }
+        public string SpeakingName { get; set; }
+        public string Description { get; set; }
 
-        public Context(string Name, string? SpeakingName, string? Description)
+        public Context(string id, string SpeakingName, string Description)
         {
-            this.Name = Name;
+            this.ID = id;
             this.SpeakingName = SpeakingName;
             this.Description = Description;
         }

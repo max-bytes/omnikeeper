@@ -69,8 +69,8 @@ namespace Omnikeeper.GridView.Queries
                 var trans = modelContextBuilder.BuildImmediate();
                 var user = await currentUserService.GetCurrentUser(trans);
 
-                var config = await gridViewContextModel.GetConfiguration(request.Context, trans);
-
+                var context = await gridViewContextModel.GetFullContext(request.Context, TimeThreshold.BuildLatest(), trans);
+                var config = context.Configuration;
 
                 var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, TimeThreshold.BuildLatest());
 

@@ -1,9 +1,13 @@
 ﻿using FluentValidation;
 using MediatR;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GridView.Helper;
 using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Request;
+using Omnikeeper.GridView.Service;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,7 +30,7 @@ namespace Omnikeeper.GridView.Commands
         {
             public CommandValidator()
             {
-                RuleFor(x => x.Context.Name).NotEmpty().NotNull();
+                RuleFor(x => x.Context.ID).NotEmpty().NotNull();
                 RuleFor(x => x.Context.Configuration.ShowCIIDColumn).NotNull();
                 RuleFor(x => x.Context.Configuration.ReadLayerset).NotEmpty().WithMessage("ReadLayerset should contain at least one item");
                 RuleFor(x => x.Context.Configuration.Columns).NotEmpty().WithMessage("Columns should contain at least one item");
@@ -36,12 +40,16 @@ namespace Omnikeeper.GridView.Commands
 
         public class AddContextHandler : IRequestHandler<Command, Exception?>
         {
-            private readonly IGridViewContextModel gridViewContextModel;
+            private readonly IGridViewContextWriteService gridViewContextWriteService;
             private readonly IModelContextBuilder modelContextBuilder;
-            public AddContextHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder)
+            private readonly ICurrentUserService currentUserService;
+            private readonly IChangesetModel changesetModel;
+            public AddContextHandler(IGridViewContextWriteService gridViewContextWriteService, IModelContextBuilder modelContextBuilder, ICurrentUserService currentUserService, IChangesetModel changesetModel)
             {
-                this.gridViewContextModel = gridViewContextModel;
+                this.gridViewContextWriteService = gridViewContextWriteService;
                 this.modelContextBuilder = modelContextBuilder;
+                this.currentUserService = currentUserService;
+                this.changesetModel = changesetModel;
             }
 
             public async Task<Exception?> Handle(Command request, CancellationToken cancellationToken)
@@ -54,29 +62,29 @@ namespace Omnikeeper.GridView.Commands
                 {
                     return ValidationHelper.CreateException(validation);
                 }
-                var trans = modelContextBuilder.BuildDeferred();
+                var timeThreshold = TimeThreshold.BuildLatest();
+                using var trans = modelContextBuilder.BuildDeferred();
+                var user = await currentUserService.GetCurrentUser(trans);
+                var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
                 try
                 {
-                    var isSuccess = await gridViewContextModel.AddContext(
-                                            request.Context.Name,
-                                            request.Context.SpeakingName,
-                                            request.Context.Description,
-                                            request.Context.Configuration,
-                                            trans);
+                    await gridViewContextWriteService.InsertOrUpdate(
+                        request.Context.ID,
+                        request.Context.SpeakingName,
+                        request.Context.Description,
+                        request.Context.Configuration, 
+                        new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+                        changesetProxy, user,
+                        trans);
 
-                    if (isSuccess)
-                    {
-                        trans.Commit();
-                        return null;
-                    }
+                    trans.Commit();
+                    return null;
                 }
                 catch (Exception ex)
                 {
-                    return ex;
+                    return new Exception($"An error ocurred trying to add {request.Context.ID} context!", ex);
                 }
-
-                return new Exception($"An error ocurred trying to add {request.Context.Name} context!");
             }
         }
     }

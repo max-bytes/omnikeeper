@@ -70,7 +70,7 @@ namespace Omnikeeper.Service
             var writeLayerID = baseConfiguration.ConfigWriteLayer;
 
             if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, writeLayerID))
-                throw new Exception($"User \"{user.Username}\" does not have authRole to write to layer {writeLayerID}");
+                throw new Exception($"User \"{user.Username}\" does not have permission to write to layer {writeLayerID}");
 
             var t = await authRoleModel.TryToGetAuthRole(id, changesetProxy.TimeThreshold, trans);
             if (t.Equals(default))

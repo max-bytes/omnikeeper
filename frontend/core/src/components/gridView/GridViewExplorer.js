@@ -49,18 +49,18 @@ function GridViewExplorer(props) {
                 {(context && context.contexts && !loading) ?
                     _.filter(context.contexts, c => 
                         _.lowerCase(c.speakingName.toString()).includes(_.lowerCase(searchString)) || 
-                        _.lowerCase(c.name.toString()).includes(_.lowerCase(searchString)) || 
+                        _.lowerCase(c.id.toString()).includes(_.lowerCase(searchString)) || 
                         _.lowerCase(c.description.toString()).includes(_.lowerCase(searchString)))
                     .map((result, index) => {
                         return (
-                                <div key={result.name} style={{display: 'flex', padding: '10px', backgroundColor: ((index % 2 === 0) ? '#eee' : '#fff')}}>
-                                    <Link to={`explorer/${result.name}`} style={{display: "flex", flexGrow: '10', flexBasis: '0'}}>
-                                        <div style={{flexGrow: '2', fontWeight: 'bold', flexBasis: '0'}}>{result.speakingName ?? result.name}</div>
-                                        <div style={{flexGrow: '2', flexBasis: '0'}}>{result.name}</div>
+                                <div key={result.id} style={{display: 'flex', padding: '10px', backgroundColor: ((index % 2 === 0) ? '#eee' : '#fff')}}>
+                                    <Link to={`explorer/${result.id}`} style={{display: "flex", flexGrow: '10', flexBasis: '0'}}>
+                                        <div style={{flexGrow: '2', fontWeight: 'bold', flexBasis: '0'}}>{result.speakingName}</div>
+                                        <div style={{flexGrow: '2', flexBasis: '0'}}>{result.id}</div>
                                         <div style={{flexGrow: '6', fontStyle: 'italic', flexBasis: '0', marginLeft: "0.5rem"}}>{result.description ?? 'No description.'}</div>
                                     </Link>
                                     <div style={{flexGrow: '4', flexBasis: '0', textAlign: "center", marginLeft: "0.5rem"}}>
-                                        <Button htmlType="submit" type="primary" onClick={() => props.history.push(`edit-context/${result.name}`)}>Edit</Button>
+                                        <Button htmlType="submit" type="primary" onClick={() => props.history.push(`edit-context/${result.id}`)}>Edit</Button>
                                         <Popconfirm
                                             title={`Are you sure to delete ${result.speakingName}?`}
                                             onConfirm={async () => {
@@ -68,13 +68,13 @@ function GridViewExplorer(props) {
                                                     await swaggerClient.apis.GridView.DeleteContext(
                                                             {
                                                                 version: apiVersion,
-                                                                name: result.name,
+                                                                name: result.id,
                                                             }
                                                         )
                                                         .then((result) => result.body);
 
                                                     setSwaggerErrorJson(false);
-                                                    setSwaggerMsg("'" + result.name + "' has been removed.");
+                                                    setSwaggerMsg("'" + result.id + "' has been removed.");
                                                     refresh(); // reload
                                                 } catch(e) {
                                                     setSwaggerErrorJson(JSON.stringify(e.response, null, 2));

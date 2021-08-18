@@ -20,6 +20,7 @@ namespace Tests.Integration.Controller
             // mock authorization
             var lbas = new Mock<ILayerBasedAuthorizationService>();
             lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
+            lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<string>())).Returns(true);
             lbas.Setup(x => x.CanUserReadFromAllLayers(It.IsAny<AuthenticatedUser>(), It.IsAny<IEnumerable<string>>())).Returns(true);
             services.AddScoped((sp) => lbas.Object);
             var cbas = new Mock<ICIBasedAuthorizationService>();

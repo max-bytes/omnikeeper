@@ -67,7 +67,7 @@ namespace LandscapeRegistry.GridView
             if (exception != null)
                 return BadRequest(exception);
 
-            return CreatedAtAction(nameof(AddContext), new { context.Name });
+            return CreatedAtAction(nameof(AddContext), new { context.ID });
         }
 
         /// <summary>

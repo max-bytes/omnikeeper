@@ -90,7 +90,8 @@ namespace Omnikeeper.GridView.Commands
                 var user = await currentUserService.GetCurrentUser(trans);
                 var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
-                var config = await gridViewContextModel.GetConfiguration(request.Context, trans);
+                var context = await gridViewContextModel.GetFullContext(request.Context, TimeThreshold.BuildLatest(), trans);
+                var config = context.Configuration;
 
                 if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, config.WriteLayer))
                     return (null, new Exception($"User \"{user.Username}\" does not have permission to write to layer ID {config.WriteLayer}"));

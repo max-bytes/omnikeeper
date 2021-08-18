@@ -32,14 +32,17 @@ function AddNewContext(props) {
             } 
             else {
                 const initialNewContext = {
-                    name: "",
+                    id: "",
                     speakingName: "",
                     description: "",
                     configuration: {
                         showCIIDColumn: true,
-                        writeLayer: 0,
-                        readLayerset: [0],
-                        columns: [],
+                        writeLayer: "layer01",
+                        readLayerset: ["layer01"],
+                        columns: [{
+                            "sourceAttributeName": "__name",
+                            "columnDescription": "Name"
+                        }],
                         trait: "",
                     },
                 };
@@ -82,7 +85,7 @@ function AddNewContext(props) {
 
                         setSwaggerErrorJson(false);
                         if(editMode) setSwaggerMsg("'" + contextName + "' has been changed.");
-                        else setSwaggerMsg("'" + addContext.name + "' has been created.");
+                        else setSwaggerMsg("'" + addContext.id + "' has been created.");
                     } catch(e) {
                         setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
                         setSwaggerMsg(e.toString());

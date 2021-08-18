@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using MediatR;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GridView.Helper;
@@ -52,7 +53,8 @@ namespace Omnikeeper.GridView.Queries
 
                 var trans = modelContextBuilder.BuildImmediate();
 
-                var config = await gridViewContextModel.GetConfiguration(request.Context, trans);
+                var context = await gridViewContextModel.GetFullContext(request.Context, TimeThreshold.BuildLatest(), trans);
+                var config = context.Configuration;
 
                 var result = new GetSchemaResponse(config.ShowCIIDColumn, new List<Column>());
 
