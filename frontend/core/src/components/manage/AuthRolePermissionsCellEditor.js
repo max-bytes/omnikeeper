@@ -44,12 +44,7 @@ export default forwardRef((props, ref) => {
                     setSelectedPermissions(value);
                 }}
                 onBlur={() => {
-                    console.log("blur");
                     props.api.stopEditing();
-                }}
-                onFocus={() => {
-                    console.log("onFocus");
-                    // props.api.stopEditing();
                 }}
                 showSearch
                 mode="multiple"
