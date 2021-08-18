@@ -90,7 +90,7 @@ namespace Omnikeeper.GridView.Commands
                 var user = await currentUserService.GetCurrentUser(trans);
                 var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
-                var context = await gridViewContextModel.GetFullContextByName(request.Context, trans);
+                var context = await gridViewContextModel.GetFullContext(request.Context, TimeThreshold.BuildLatest(), trans);
                 var config = context.Configuration;
 
                 if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, config.WriteLayer))

@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Response;
@@ -34,7 +35,7 @@ namespace Omnikeeper.GridView.Queries
             {
                 try
                 {
-                    var context = await gridViewContextModel.GetFullContextByName(request.ContextName, modelContextBuilder.BuildImmediate());
+                    var context = await gridViewContextModel.GetFullContext(request.ContextName, TimeThreshold.BuildLatest(), modelContextBuilder.BuildImmediate());
                     var result = new GetContextResponse(context);
 
                     return (result, null);

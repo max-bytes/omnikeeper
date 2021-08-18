@@ -4,14 +4,14 @@ namespace Omnikeeper.GridView.Request
 {
     public class AddContextRequest
     {
-        public string Name { get; set; }
+        public string ID { get; set; }
         public string SpeakingName { get; set; }
         public string Description { get; set; }
         public GridViewConfiguration Configuration { get; set; }
 
-        public AddContextRequest(string Name, string SpeakingName, string Description, GridViewConfiguration Configuration)
+        public AddContextRequest(string id, string SpeakingName, string Description, GridViewConfiguration Configuration)
         {
-            this.Name = Name;
+            this.ID = id;
             this.SpeakingName = SpeakingName;
             this.Description = Description;
             this.Configuration = Configuration;

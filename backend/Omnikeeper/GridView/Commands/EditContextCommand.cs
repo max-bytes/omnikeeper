@@ -1,9 +1,12 @@
 ﻿using FluentValidation;
 using MediatR;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GridView.Entity;
 using Omnikeeper.GridView.Helper;
-using Omnikeeper.GridView.Model;
+using Omnikeeper.GridView.Service;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,14 +17,14 @@ namespace Omnikeeper.GridView.Commands
     {
         public class Command : IRequest<Exception?>
         {
-            public string Name { get; set; }
+            public string ID { get; set; }
             public string SpeakingName { get; set; }
             public string Description { get; set; }
             public GridViewConfiguration Configuration { get; set; }
 
-            public Command(string Name, string SpeakingName, string Description, GridViewConfiguration Configuration)
+            public Command(string id, string SpeakingName, string Description, GridViewConfiguration Configuration)
             {
-                this.Name = Name;
+                this.ID = id;
                 this.SpeakingName = SpeakingName;
                 this.Description = Description;
                 this.Configuration = Configuration;
@@ -32,7 +35,7 @@ namespace Omnikeeper.GridView.Commands
         {
             public CommandValidator()
             {
-                RuleFor(x => x.Name).NotEmpty().NotNull();
+                RuleFor(x => x.ID).NotEmpty().NotNull();
                 RuleFor(x => x.Configuration.ShowCIIDColumn).NotNull();
                 RuleFor(x => x.Configuration.ReadLayerset).NotEmpty().WithMessage("ReadLayerset should contain at least one item");
                 RuleFor(x => x.Configuration.Columns).NotEmpty().WithMessage("Columns should contain at least one item");
@@ -42,12 +45,16 @@ namespace Omnikeeper.GridView.Commands
 
         public class EditContextCommandHandler : IRequestHandler<Command, Exception?>
         {
-            private readonly IGridViewContextModel gridViewContextModel;
+            private readonly IGridViewContextWriteService gridViewContextWriteService;
             private readonly IModelContextBuilder modelContextBuilder;
-            public EditContextCommandHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder)
+            private readonly ICurrentUserService currentUserService;
+            private readonly IChangesetModel changesetModel;
+            public EditContextCommandHandler(IModelContextBuilder modelContextBuilder, IGridViewContextWriteService gridViewContextWriteService, ICurrentUserService currentUserService, IChangesetModel changesetModel)
             {
-                this.gridViewContextModel = gridViewContextModel;
                 this.modelContextBuilder = modelContextBuilder;
+                this.gridViewContextWriteService = gridViewContextWriteService;
+                this.currentUserService = currentUserService;
+                this.changesetModel = changesetModel;
             }
 
             public async Task<Exception?> Handle(Command request, CancellationToken cancellationToken)
@@ -61,24 +68,30 @@ namespace Omnikeeper.GridView.Commands
                     return ValidationHelper.CreateException(validation);
                 }
 
+                var timeThreshold = TimeThreshold.BuildLatest();
                 using var trans = modelContextBuilder.BuildDeferred();
+                var user = await currentUserService.GetCurrentUser(trans);
+                var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
                 try
                 {
-                    var isSuccess = await gridViewContextModel.EditContext(request.Name, request.SpeakingName, request.Description, request.Configuration, trans);
+                    await gridViewContextWriteService.InsertOrUpdate(
+                        request.ID,
+                        request.SpeakingName,
+                        request.Description,
+                        request.Configuration,
+                        new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+                        changesetProxy, user,
+                        trans);
 
-                    if (isSuccess)
-                    {
-                        trans.Commit();
-                        return null;
-                    }
+                    trans.Commit();
+                    return null;
                 }
                 catch (Exception ex)
                 {
-                    return ex;
+                    return new Exception($"An error ocurred trying to edit {request.ID} context!", ex);
                 }
 
-                return new Exception($"An error ocurred trying to edit {request.Name} context!");
             }
         }
     }

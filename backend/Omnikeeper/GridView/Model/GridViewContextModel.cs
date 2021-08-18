@@ -1,115 +1,95 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Npgsql;
 using NpgsqlTypes;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GridView.Entity;
+using Omnikeeper.Model;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.GridView.Model
 {
     public class GridViewContextModel : IGridViewContextModel
     {
-        public async Task<List<Context>> GetContexts(IModelContext trans)
+        private readonly IBaseConfigurationModel baseConfigurationModel;
+        private readonly IEffectiveTraitModel effectiveTraitModel;
+
+        public GridViewContextModel(IBaseConfigurationModel baseConfigurationModel, IEffectiveTraitModel effectiveTraitModel)
         {
-            var contexts = new List<Context>();
+            this.baseConfigurationModel = baseConfigurationModel;
+            this.effectiveTraitModel = effectiveTraitModel;
+        }
 
-            using var command = new NpgsqlCommand($@"
-                    SELECT name, speaking_name, description
-                    FROM config.gridview
-                ", trans.DBConnection, trans.DBTransaction);
+        public async Task<IDictionary<string, Context>> GetContexts(TimeThreshold timeThreshold, IModelContext trans)
+        {
+            // derive config layerset from base config
+            var baseConfig = await baseConfigurationModel.GetConfigOrDefault(trans);
+            var configLayerset = new LayerSet(baseConfig.ConfigLayerset);
 
-            using var dr = await command.ExecuteReaderAsync();
-
-            while (dr.Read())
+            var contextCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(CoreTraits.GridviewContextFlattened, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var ret = new Dictionary<string, Context>();
+            foreach (var (_, contextET) in contextCIs.Values)
             {
-                contexts.Add(new Context(dr.GetString(0), dr.GetString(1), dr.GetString(2)));
+                var p = EffectiveTrait2Context(contextET);
+                ret.Add(p.ID, p);
             }
-
-            return contexts;
+            return ret;
         }
 
-        public async Task<bool> AddContext(string name, string speakingName, string description, GridViewConfiguration configuration, IModelContext trans)
+        private Context EffectiveTrait2Context(EffectiveTrait et)
         {
-            using var command = new NpgsqlCommand($@"
-                    INSERT INTO config.gridview
-                    (config, name, timestamp, speaking_name, description)
-                    VALUES
-                    (@config, @name, @timestamp, @speaking_name, @description)
-                ", trans.DBConnection, trans.DBTransaction);
-
-            var config = JsonConvert.SerializeObject(configuration);
-
-            command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = config });
-            command.Parameters.AddWithValue("name", name);
-            command.Parameters.AddWithValue("speaking_name", speakingName);
-            command.Parameters.AddWithValue("description", description);
-            command.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
-
-            var result = await command.ExecuteNonQueryAsync();
-            return result > 0;
+            var contextID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
+            var speakingName = TraitConfigDataUtils.ExtractOptionalScalarTextAttribute(et, "speaking_name");
+            var description = TraitConfigDataUtils.ExtractOptionalScalarTextAttribute(et, "description");
+            return new Context(contextID, speakingName, description);
         }
 
-        public async Task<bool> EditContext(string name, string speakingName, string description, GridViewConfiguration configuration, IModelContext trans)
+        private FullContext EffectiveTrait2FullContext(EffectiveTrait et)
         {
-            using var command = new NpgsqlCommand($@"
-                    UPDATE config.gridview
-                    SET 
-                        name = @name,
-                        speaking_name = @speaking_name,
-                        description = @description,
-                        config = @config
-                    WHERE name = @name
-                ", trans.DBConnection, trans.DBTransaction);
+            var context = EffectiveTrait2Context(et);
+            var config = TraitConfigDataUtils.DeserializeMandatoryScalarJSONAttribute(et, "config", GridViewConfiguration.Serializer);
 
-            var config = JsonConvert.SerializeObject(configuration);
-
-            command.Parameters.Add(new NpgsqlParameter("config", NpgsqlDbType.Json) { Value = config });
-            command.Parameters.AddWithValue("name", name);
-            command.Parameters.AddWithValue("speaking_name", speakingName);
-            command.Parameters.AddWithValue("description", description);
-
-            var result = await command.ExecuteNonQueryAsync();
-            return result > 0;
+            return new FullContext(context.ID, context.SpeakingName, context.Description, config);
         }
 
-        public async Task<bool> DeleteContext(string name, IModelContext trans)
+        public async Task<FullContext> GetFullContext(string id, TimeThreshold timeThreshold, IModelContext trans)
         {
-            using var command = new NpgsqlCommand($@"
-                    DELETE FROM config.gridview
-                    WHERE name = @name
-                ", trans.DBConnection, trans.DBTransaction);
-
-            command.Parameters.AddWithValue("name", name);
-
-            var result = await command.ExecuteNonQueryAsync();
-            return result > 0;
+            var t = await TryToGetFullContext(id, timeThreshold, trans);
+            if (t.Equals(default))
+            {
+                throw new Exception($"Could not find context with ID {id}");
+            }
+            else
+            {
+                return t.Item2;
+            }
         }
 
-        public async Task<FullContext> GetFullContextByName(string contextName, IModelContext trans)
+        public async Task<(Guid, FullContext)> TryToGetFullContext(string id, TimeThreshold timeThreshold, IModelContext trans)
         {
-            using var command = new NpgsqlCommand($@"
-                    SELECT name, speaking_name, description, config
-                    FROM config.gridview
-                    WHERE name = @name
-                    LIMIT 1
-                ", trans.DBConnection, trans.DBTransaction);
+            // derive config layerset from base config
+            var baseConfig = await baseConfigurationModel.GetConfigOrDefault(trans);
+            var configLayerset = new LayerSet(baseConfig.ConfigLayerset);
 
-            command.Parameters.AddWithValue("name", contextName);
+            // TODO: better performance possible?
+            var contextCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(CoreTraits.GridviewContextFlattened, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
 
-            using var dr = await command.ExecuteReaderAsync();
+            var foundContextCIs = contextCIs.Where(pci => pci.Value.et.TraitAttributes["id"].Attribute.Value.Value2String() == id)
+                .OrderBy(t => t.Key); // we order by GUID to stay consistent even when multiple CIs would match
 
-            if (!dr.Read())
-                throw new Exception($"Could not find context named \"{contextName}\"");
-
-            var name = dr.GetString(0);
-            var speakingName = dr.GetString(1);
-            var description = dr.GetString(2);
-            var configJson = dr.GetString(3);
-            var config = JsonConvert.DeserializeObject<GridViewConfiguration>(configJson);
-
-            return new FullContext(name, speakingName, description, config);
+            var foundContextCI = foundContextCIs.FirstOrDefault();
+            if (!foundContextCI.Equals(default(KeyValuePair<Guid, (MergedCI ci, EffectiveTrait et)>)))
+            {
+                return (foundContextCI.Key, EffectiveTrait2FullContext(foundContextCI.Value.et));
+            }
+            return default;
         }
     }
 }

@@ -32,14 +32,17 @@ function AddNewContext(props) {
             } 
             else {
                 const initialNewContext = {
-                    name: "",
+                    id: "",
                     speakingName: "",
                     description: "",
                     configuration: {
                         showCIIDColumn: true,
-                        writeLayer: 0,
-                        readLayerset: [0],
-                        columns: [],
+                        writeLayer: "layer01",
+                        readLayerset: ["layer01"],
+                        columns: [{
+                            "sourceAttributeName": "__name",
+                            "columnDescription": "Name"
+                        }],
                         trait: "",
                     },
                 };
