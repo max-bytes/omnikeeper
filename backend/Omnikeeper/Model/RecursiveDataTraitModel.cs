@@ -29,6 +29,8 @@ namespace Omnikeeper.Model
 
         public async Task<RecursiveTrait> GetRecursiveTrait(string id, TimeThreshold timeThreshold, IModelContext trans)
         {
+            IDValidations.ValidateTraitIDThrow(id);
+
             var t = await TryToGetRecursiveTrait(id, timeThreshold, trans);
             if (t.Equals(default))
             {
@@ -42,6 +44,8 @@ namespace Omnikeeper.Model
 
         public async Task<(Guid, RecursiveTrait)> TryToGetRecursiveTrait(string id, TimeThreshold timeThreshold, IModelContext trans)
         {
+            IDValidations.ValidateTraitIDThrow(id);
+
             var traitForTraits = CoreTraits.Trait;
             // NOTE: we need to flatten the core trait first... is this the best way? Could we maybe also keep core traits as flattened already?
             var flattenedTraitForTraits = RecursiveTraitService.FlattenSingleRecursiveTrait(traitForTraits);

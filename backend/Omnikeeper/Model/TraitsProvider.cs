@@ -58,12 +58,12 @@ namespace Omnikeeper.Model
             return finalTraits;
         }
 
-        public async Task<ITrait?> GetActiveTrait(string traitName, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<ITrait?> GetActiveTrait(string traitID, IModelContext trans, TimeThreshold timeThreshold)
         {
             // TODO: can be done more efficiently? here we get ALL traits, just to select a single one... but the flattening is necessary
             var ts = await GetActiveTraits(trans, timeThreshold);
 
-            if (ts.TryGetValue(traitName, out var trait))
+            if (ts.TryGetValue(traitID, out var trait))
                 return trait;
             return null;
         }

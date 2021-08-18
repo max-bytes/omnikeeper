@@ -8,6 +8,7 @@ namespace Omnikeeper.Base.Utils
     {
         private static Regex LayerIDRegex =     new Regex("^[a-z0-9_]+$");
         public static Regex PredicateIDRegex =  new Regex("^[a-z0-9_]+$");
+        public static Regex TraitIDRegex =      new Regex("^[a-z0-9_.]+$");
 
         public static bool ValidateLayerID(string candidateID)
         {
@@ -17,6 +18,11 @@ namespace Omnikeeper.Base.Utils
         public static bool ValidatePredicateID(string candidateID)
         {
             return PredicateIDRegex.IsMatch(candidateID);
+        }
+
+        public static bool ValidateTraitID(string candidateID)
+        {
+            return TraitIDRegex.IsMatch(candidateID);
         }
 
         public static void ValidateLayerIDThrow(string candidateID)
@@ -34,6 +40,12 @@ namespace Omnikeeper.Base.Utils
         {
             if (!ValidatePredicateID(candidateID))
                 throw new Exception($"Invalid predicate ID \"{candidateID}\"");
+        }
+
+        public static void ValidateTraitIDThrow(string candidateID)
+        {
+            if (!ValidateTraitID(candidateID))
+                throw new Exception($"Invalid trait ID \"{candidateID}\"");
         }
     }
 }
