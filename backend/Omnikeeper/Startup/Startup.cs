@@ -1,4 +1,3 @@
-using DBMigrations;
 using FluentValidation.AspNetCore;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
@@ -18,7 +17,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
@@ -236,6 +234,10 @@ namespace Omnikeeper.Startup
                 });
             });
             services.AddSwaggerGenNewtonsoftSupport();
+
+            // whether or not to show personally identifiable information in exceptions
+            // see https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/wiki/PII
+            IdentityModelEventSource.ShowPII = Configuration.GetValue<bool>("ShowPII");
 
             //services.AddMemoryCache();
             services.AddDistributedMemoryCache();
