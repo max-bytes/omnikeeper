@@ -5,7 +5,6 @@ import { ErrorModalCellRenderer } from '../ErrorModalCellRenderer';
 import { RowStateCellRenderer } from '../RowStateCellRenderer';
 import { LayerColorCellRenderer } from '../LayerColorCellRenderer';
 import LinkCellRenderer from '../LinkCellRenderer';
-import PredicateConstraintsCellEditor from './PredicateConstraintsCellEditor';
 import AuthRolePermissionsCellEditor from './AuthRolePermissionsCellEditor';
 
 import DeleteRowCellRenderer from '../DeleteRowCellRenderer';
@@ -183,7 +182,7 @@ export default function AgGridCrud(props) {
           errorModalCellRenderer: ErrorModalCellRenderer, rowStateCellRenderer: RowStateCellRenderer,
           layerColorCellRenderer: LayerColorCellRenderer, deleteRowCellRenderer: DeleteRowCellRenderer,
           linkCellRenderer: LinkCellRenderer,
-          predicateConstraintsCellEditor: PredicateConstraintsCellEditor, authRolePermissionsCellEditor: AuthRolePermissionsCellEditor,
+          authRolePermissionsCellEditor: AuthRolePermissionsCellEditor,
           ARGBColorCellEditor: ARGBColorCellEditor }}
         columnDefs={columnDefs}
         defaultColDef={defaultColDef}

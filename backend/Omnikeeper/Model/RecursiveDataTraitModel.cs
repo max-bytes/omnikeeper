@@ -1,13 +1,8 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -80,49 +75,15 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-
-
         private RecursiveTrait EffectiveTrait2RecursiveTrait(EffectiveTrait trait)
         {
-            var idA = trait.TraitAttributes["id"];
-            var traitID = idA.Attribute.Value.Value2String();
+            var traitID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(trait, "id");
 
-            IEnumerable<T> DeserializeJSONArrayAttribute<T>(MergedCIAttribute? a, MyJSONSerializer<T> serializer) where T : class
-            {
-                if (a == null) // empty / no attribute
-                    return new List<T>();
-                var raa = a.Attribute.Value as AttributeArrayValueJSON;
-                if (raa == null)
-                {
-                    throw new Exception("Invalid trait configuration");
-                }
-                return raa.Values.Select(v =>
-                {
-                    var vo = v.Value as JObject;
-                    if (vo == null)
-                        throw new Exception("Invalid trait configuration");
-                    var s = serializer.Deserialize(vo);
-                    if (s == null)
-                        throw new Exception("Invalid trait configuration");
-                    return s;
-                });
-            }
-            var requiredAttributes = DeserializeJSONArrayAttribute(trait.TraitAttributes.GetValueOrDefault("requiredAttributes"), TraitAttribute.Serializer);
-            var optionalAttributes = DeserializeJSONArrayAttribute(trait.TraitAttributes.GetValueOrDefault("optionalAttributes"), TraitAttribute.Serializer);
-            var requiredRelations = DeserializeJSONArrayAttribute(trait.TraitAttributes.GetValueOrDefault("requiredRelation"), TraitRelation.Serializer);
+            var requiredAttributes = TraitConfigDataUtils.DeserializeMandatoryArrayJSONAttribute(trait, "requiredAttributes", TraitAttribute.Serializer);
+            var optionalAttributes = TraitConfigDataUtils.DeserializeOptionalArrayJSONAttribute(trait, "optionalAttributes", TraitAttribute.Serializer, new List<TraitAttribute>());
+            var requiredRelations = TraitConfigDataUtils.DeserializeOptionalArrayJSONAttribute(trait, "requiredRelation", TraitRelation.Serializer, new List<TraitRelation>());
 
-            IEnumerable<string> DeserializeTextArrayAttribute(MergedCIAttribute? a)
-            {
-                if (a == null) // empty / no attribute
-                    return new List<string>();
-                var raa = a?.Attribute?.Value as AttributeArrayValueText;
-                if (raa == null)
-                {
-                    throw new Exception("Invalid trait configuration");
-                }
-                return raa.Values.Select(v => v.Value);
-            }
-            var requiredTraits = DeserializeTextArrayAttribute(trait.TraitAttributes.GetValueOrDefault("requiredTraits"));
+            var requiredTraits = TraitConfigDataUtils.ExtractOptionalArrayTextAttribute(trait, "requiredTraits", new string[0]);
 
             return new RecursiveTrait(traitID, new TraitOriginV1(TraitOriginType.Data), requiredAttributes, optionalAttributes, requiredRelations, requiredTraits);
         }

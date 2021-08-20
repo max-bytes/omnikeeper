@@ -1,10 +1,8 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,18 +57,10 @@ namespace Omnikeeper.Model
 
         private AuthRole EffectiveTrait2AuthRole(EffectiveTrait et)
         {
-            var idA = et.TraitAttributes["id"];
-            var AuthRoleID = idA.Attribute.Value.Value2String();
-            var permissions = new string[] { };
-            if (et.TraitAttributes.ContainsKey("permissions"))
-            {
-                var permissionsA = et.TraitAttributes["permissions"];
-                if (permissionsA.Attribute.Value is AttributeArrayValueText aavt)
-                {
-                    permissions = aavt.Values.Select(v => v.Value).ToArray();
-                }
-            }
-            return new AuthRole(AuthRoleID, permissions);
+            var AuthRoleID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
+            var permissions = TraitConfigDataUtils.ExtractOptionalArrayTextAttribute(et, "permissions", new string[] { });
+            
+            return new AuthRole(AuthRoleID, permissions.ToArray());
         }
 
         public async Task<IDictionary<string, AuthRole>> GetAuthRoles(IModelContext trans, TimeThreshold timeThreshold)

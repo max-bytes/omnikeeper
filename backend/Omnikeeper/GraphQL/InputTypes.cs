@@ -123,22 +123,11 @@ namespace Omnikeeper.GraphQL
             Field(x => x.LayerID);
         }
     }
-
-    public class PredicateConstraintsInputType : InputObjectGraphType<PredicateConstraints>
-    {
-        public PredicateConstraintsInputType()
-        {
-            Field(x => x.PreferredTraitsFrom);
-            Field(x => x.PreferredTraitsTo);
-        }
-    }
-
     public class UpsertPredicateInput
     {
         public string ID { get; private set; }
         public string WordingFrom { get; private set; } = "";
         public string WordingTo { get; private set; }
-        public PredicateConstraints Constraints { get; private set; }
     }
     public class UpsertPredicateInputType : InputObjectGraphType<UpsertPredicateInput>
     {
@@ -147,7 +136,6 @@ namespace Omnikeeper.GraphQL
             Field("id", x => x.ID);
             Field(x => x.WordingFrom);
             Field(x => x.WordingTo);
-            Field(x => x.Constraints, type: typeof(PredicateConstraintsInputType));
         }
     }
 
