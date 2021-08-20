@@ -44,7 +44,7 @@ namespace Omnikeeper.Service
             if (t.Equals(default))
             {
                 ciid = await ciModel.CreateCI(trans);
-                await baseAttributeModel.InsertAttribute("authRole.id", new AttributeScalarValueText(id), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+                await baseAttributeModel.InsertAttribute("auth_role.id", new AttributeScalarValueText(id), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
                 changed = true;
             }
             else
@@ -53,7 +53,7 @@ namespace Omnikeeper.Service
             }
 
 
-            (_, var tmpChanged) = await baseAttributeModel.InsertAttribute("authRole.permissions", AttributeArrayValueText.BuildFromString(permissions), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+            (_, var tmpChanged) = await baseAttributeModel.InsertAttribute("auth_role.permissions", AttributeArrayValueText.BuildFromString(permissions), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
             changed = changed || tmpChanged;
             var name = $"AuthRole - {id}";
             (_, tmpChanged) = await baseAttributeModel.InsertCINameAttribute(name, ciid, writeLayerID, changesetProxy, dataOrigin, trans);
@@ -78,8 +78,8 @@ namespace Omnikeeper.Service
                 return false; // no authRole with this ID exists
             }
 
-            await baseAttributeModel.RemoveAttribute("authRole.id", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
-            await baseAttributeModel.RemoveAttribute("authRole.permissions", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("auth_role.id", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("auth_role.permissions", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
             await baseAttributeModel.RemoveAttribute("__name", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
 
             var tAfterDeletion = await authRoleModel.TryToGetAuthRole(id, changesetProxy.TimeThreshold, trans);

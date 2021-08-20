@@ -31,7 +31,7 @@ namespace Omnikeeper.Service
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
         }
 
-        public async Task<(Predicate predicate, bool changed)> InsertOrUpdate(string id, string wordingFrom, string wordingTo, PredicateConstraints constraints, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans)
+        public async Task<(Predicate predicate, bool changed)> InsertOrUpdate(string id, string wordingFrom, string wordingTo, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, AuthenticatedUser user, IModelContext trans)
         {
             var t = await predicateModel.TryToGetPredicate(id, changesetProxy.TimeThreshold, trans);
 
@@ -54,14 +54,13 @@ namespace Omnikeeper.Service
                 ciid = t.Item1;
             }
 
-            (_, var tmpChanged) = await baseAttributeModel.InsertAttribute("predicate.wordingFrom", new AttributeScalarValueText(wordingFrom), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+            (_, var tmpChanged) = await baseAttributeModel.InsertAttribute("predicate.wording_from", new AttributeScalarValueText(wordingFrom), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
             changed = changed || tmpChanged;
-            (_, tmpChanged) = await baseAttributeModel.InsertAttribute("predicate.wordingTo", new AttributeScalarValueText(wordingTo), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+            (_, tmpChanged) = await baseAttributeModel.InsertAttribute("predicate.wording_to", new AttributeScalarValueText(wordingTo), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
             changed = changed || tmpChanged;
             var name = $"Predicate - {id}";
             (_, tmpChanged) = await baseAttributeModel.InsertCINameAttribute(name, ciid, writeLayerID, changesetProxy, dataOrigin, trans);
             changed = changed || tmpChanged;
-            // TODO: constraints
 
             try
             {
@@ -88,10 +87,9 @@ namespace Omnikeeper.Service
             }
 
             await baseAttributeModel.RemoveAttribute("predicate.id", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
-            await baseAttributeModel.RemoveAttribute("predicate.wordingFrom", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
-            await baseAttributeModel.RemoveAttribute("predicate.wordingTo", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("predicate.wording_from", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("predicate.wording_to", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
             await baseAttributeModel.RemoveAttribute("__name", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
-            // TODO: constraints
 
             var tAfterDeletion = await predicateModel.TryToGetPredicate(id, changesetProxy.TimeThreshold, trans);
             return tAfterDeletion.Equals(default); // return successfull if predicate does not exist anymore afterwards

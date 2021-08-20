@@ -282,7 +282,7 @@ namespace Omnikeeper.GraphQL
                   var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
                   var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
 
-                  var predicate = context.GetArgument<UpsertPredicateInput>("predicate");
+                  var predicate = context.GetArgument<UpsertPredicateInput>("predicate")!;
 
                   var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
@@ -295,8 +295,7 @@ namespace Omnikeeper.GraphQL
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
                   var newPredicate = await predicateWriteService.InsertOrUpdate(
-                      predicate.ID, predicate.WordingFrom, predicate.WordingTo, 
-                      predicate.Constraints, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+                      predicate.ID, predicate.WordingFrom, predicate.WordingTo, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       changesetProxy, userContext.User, transaction);
 
                   transaction.Commit();

@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
@@ -38,8 +37,6 @@ namespace Omnikeeper.Service
         {
             IDValidations.ValidateTraitIDThrow(id);
 
-            var t = await traitModel.TryToGetRecursiveTrait(id, changesetProxy.TimeThreshold, trans);
-
             var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
             var writeLayerID = baseConfiguration.ConfigWriteLayer;
 
@@ -48,6 +45,8 @@ namespace Omnikeeper.Service
 
             if (requiredAttributes.Count() == 0)
                 throw new Exception($"Trait must have at least one required attribute");
+
+            var t = await traitModel.TryToGetRecursiveTrait(id, changesetProxy.TimeThreshold, trans);
 
             var changed = false;
             Guid ciid;
@@ -62,22 +61,22 @@ namespace Omnikeeper.Service
                 ciid = t.Item1;
             }
 
-            (_, var tmpChanged) = await baseAttributeModel.InsertAttribute("trait.requiredAttributes", AttributeArrayValueJSON.Build(requiredAttributes.Select(a => TraitAttribute.Serializer.SerializeToJObject(a))), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+            (_, var tmpChanged) = await baseAttributeModel.InsertAttribute("trait.required_attributes", AttributeArrayValueJSON.Build(requiredAttributes.Select(a => TraitAttribute.Serializer.SerializeToJObject(a))), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
             changed = changed || tmpChanged;
 
             if (optionalAttributes != null)
             {
-                (_, tmpChanged) = await baseAttributeModel.InsertAttribute("trait.optionalAttributes", AttributeArrayValueJSON.Build(optionalAttributes.Select(a => TraitAttribute.Serializer.SerializeToJObject(a))), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+                (_, tmpChanged) = await baseAttributeModel.InsertAttribute("trait.optional_attributes", AttributeArrayValueJSON.Build(optionalAttributes.Select(a => TraitAttribute.Serializer.SerializeToJObject(a))), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
                 changed = changed || tmpChanged;
             }
             if (requiredRelations != null)
             {
-                (_, tmpChanged) = await baseAttributeModel.InsertAttribute("trait.requiredRelations", AttributeArrayValueJSON.Build(requiredRelations.Select(a => TraitRelation.Serializer.SerializeToJObject(a))), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+                (_, tmpChanged) = await baseAttributeModel.InsertAttribute("trait.required_relations", AttributeArrayValueJSON.Build(requiredRelations.Select(a => TraitRelation.Serializer.SerializeToJObject(a))), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
                 changed = changed || tmpChanged;
             }
             if (requiredTraits != null)
             {
-                (_, tmpChanged) = await baseAttributeModel.InsertAttribute("trait.requiredTraits", AttributeArrayValueText.BuildFromString(requiredTraits), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+                (_, tmpChanged) = await baseAttributeModel.InsertAttribute("trait.required_traits", AttributeArrayValueText.BuildFromString(requiredTraits), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
                 changed = changed || tmpChanged;
             }
 
@@ -107,10 +106,10 @@ namespace Omnikeeper.Service
             }
 
             await baseAttributeModel.RemoveAttribute("trait.id", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
-            await baseAttributeModel.RemoveAttribute("trait.requiredAttributes", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
-            await baseAttributeModel.RemoveAttribute("trait.optionalAttributes", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
-            await baseAttributeModel.RemoveAttribute("trait.requiredRelations", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
-            await baseAttributeModel.RemoveAttribute("trait.requiredTraits", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("trait.required_attributes", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("trait.optional_attributes", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("trait.required_relations", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("trait.required_traits", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
             await baseAttributeModel.RemoveAttribute("__name", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
 
             var tAfterDeletion = await traitModel.TryToGetRecursiveTrait(id, changesetProxy.TimeThreshold, trans);

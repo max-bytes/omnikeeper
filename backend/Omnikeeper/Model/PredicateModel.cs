@@ -1,13 +1,11 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model
@@ -47,7 +45,7 @@ namespace Omnikeeper.Model
             // TODO: better performance possible?
             var predicateCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(CoreTraits.PredicateFlattened, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
 
-            var foundPredicateCIs = predicateCIs.Where(pci => pci.Value.et.TraitAttributes["id"].Attribute.Value.Value2String() == id)
+            var foundPredicateCIs = predicateCIs.Where(pci => TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(pci.Value.et, "id") == id)
                 .OrderBy(t => t.Key); // we order by GUID to stay consistent even when multiple CIs would match
 
             var foundPredicateCI = foundPredicateCIs.FirstOrDefault();
@@ -60,14 +58,10 @@ namespace Omnikeeper.Model
 
         private Predicate EffectiveTrait2Predicate(EffectiveTrait et)
         {
-            var idA = et.TraitAttributes["id"];
-            var predicateID = idA.Attribute.Value.Value2String();
-            var wordingFromA = et.TraitAttributes["wordingFrom"];
-            var wordingToA = et.TraitAttributes["wordingTo"];
-            var wordingFrom = wordingFromA.Attribute.Value.Value2String();
-            var wordingTo = wordingToA.Attribute.Value.Value2String();
-            var constraints = PredicateConstraints.Default; // TODO
-            return new Predicate(predicateID, wordingFrom, wordingTo, constraints);
+            var predicateID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
+            var wordingFrom = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "wording_from");
+            var wordingTo = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "wording_to");
+            return new Predicate(predicateID, wordingFrom, wordingTo);
         }
 
         public async Task<IDictionary<string, Predicate>> GetPredicates(IModelContext trans, TimeThreshold timeThreshold)

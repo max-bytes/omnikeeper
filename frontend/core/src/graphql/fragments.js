@@ -128,10 +128,6 @@ export const Fragments = {
     id,
     wordingFrom
     wordingTo,
-    constraints {
-        preferredTraitsTo
-        preferredTraitsFrom
-    },
     labelWordingFrom @client,
     labelWordingTo @client
   }
