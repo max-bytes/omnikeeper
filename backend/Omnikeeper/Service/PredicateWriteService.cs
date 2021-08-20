@@ -54,9 +54,9 @@ namespace Omnikeeper.Service
                 ciid = t.Item1;
             }
 
-            (_, var tmpChanged) = await baseAttributeModel.InsertAttribute("predicate.wordingFrom", new AttributeScalarValueText(wordingFrom), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+            (_, var tmpChanged) = await baseAttributeModel.InsertAttribute("predicate.wording_from", new AttributeScalarValueText(wordingFrom), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
             changed = changed || tmpChanged;
-            (_, tmpChanged) = await baseAttributeModel.InsertAttribute("predicate.wordingTo", new AttributeScalarValueText(wordingTo), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+            (_, tmpChanged) = await baseAttributeModel.InsertAttribute("predicate.wording_to", new AttributeScalarValueText(wordingTo), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
             changed = changed || tmpChanged;
             var name = $"Predicate - {id}";
             (_, tmpChanged) = await baseAttributeModel.InsertCINameAttribute(name, ciid, writeLayerID, changesetProxy, dataOrigin, trans);
@@ -87,8 +87,8 @@ namespace Omnikeeper.Service
             }
 
             await baseAttributeModel.RemoveAttribute("predicate.id", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
-            await baseAttributeModel.RemoveAttribute("predicate.wordingFrom", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
-            await baseAttributeModel.RemoveAttribute("predicate.wordingTo", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("predicate.wording_from", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
+            await baseAttributeModel.RemoveAttribute("predicate.wording_to", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
             await baseAttributeModel.RemoveAttribute("__name", t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
 
             var tAfterDeletion = await predicateModel.TryToGetPredicate(id, changesetProxy.TimeThreshold, trans);

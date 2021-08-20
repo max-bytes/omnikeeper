@@ -45,7 +45,7 @@ namespace Omnikeeper.Model
             // TODO: better performance possible?
             var predicateCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(CoreTraits.PredicateFlattened, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
 
-            var foundPredicateCIs = predicateCIs.Where(pci => pci.Value.et.TraitAttributes["id"].Attribute.Value.Value2String() == id)
+            var foundPredicateCIs = predicateCIs.Where(pci => TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(pci.Value.et, "id") == id)
                 .OrderBy(t => t.Key); // we order by GUID to stay consistent even when multiple CIs would match
 
             var foundPredicateCI = foundPredicateCIs.FirstOrDefault();
@@ -59,8 +59,8 @@ namespace Omnikeeper.Model
         private Predicate EffectiveTrait2Predicate(EffectiveTrait et)
         {
             var predicateID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
-            var wordingFrom = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "wordingFrom");
-            var wordingTo = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "wordingTo");
+            var wordingFrom = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "wording_from");
+            var wordingTo = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "wording_to");
             return new Predicate(predicateID, wordingFrom, wordingTo);
         }
 

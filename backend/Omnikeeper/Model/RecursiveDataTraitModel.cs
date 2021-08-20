@@ -49,7 +49,7 @@ namespace Omnikeeper.Model
             var traitCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(CoreTraits.TraitFlattened, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
 
             var foundTraitCIs = traitCIs
-                .Where(pci => pci.Value.et.TraitAttributes["id"].Attribute.Value.Value2String() == id)
+                .Where(pci => TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(pci.Value.et, "id") == id)
                 .OrderBy(t => t.Key); // we order by GUID to stay consistent even when multiple CIs would match
 
             var foundTraitCI = foundTraitCIs.FirstOrDefault();
@@ -79,11 +79,11 @@ namespace Omnikeeper.Model
         {
             var traitID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(trait, "id");
 
-            var requiredAttributes = TraitConfigDataUtils.DeserializeMandatoryArrayJSONAttribute(trait, "requiredAttributes", TraitAttribute.Serializer);
-            var optionalAttributes = TraitConfigDataUtils.DeserializeOptionalArrayJSONAttribute(trait, "optionalAttributes", TraitAttribute.Serializer, new List<TraitAttribute>());
-            var requiredRelations = TraitConfigDataUtils.DeserializeOptionalArrayJSONAttribute(trait, "requiredRelation", TraitRelation.Serializer, new List<TraitRelation>());
+            var requiredAttributes = TraitConfigDataUtils.DeserializeMandatoryArrayJSONAttribute(trait, "required_attributes", TraitAttribute.Serializer);
+            var optionalAttributes = TraitConfigDataUtils.DeserializeOptionalArrayJSONAttribute(trait, "optional_attributes", TraitAttribute.Serializer, new List<TraitAttribute>());
+            var requiredRelations = TraitConfigDataUtils.DeserializeOptionalArrayJSONAttribute(trait, "required_relation", TraitRelation.Serializer, new List<TraitRelation>());
 
-            var requiredTraits = TraitConfigDataUtils.ExtractOptionalArrayTextAttribute(trait, "requiredTraits", new string[0]);
+            var requiredTraits = TraitConfigDataUtils.ExtractOptionalArrayTextAttribute(trait, "required_traits", new string[0]);
 
             return new RecursiveTrait(traitID, new TraitOriginV1(TraitOriginType.Data), requiredAttributes, optionalAttributes, requiredRelations, requiredTraits);
         }

@@ -44,7 +44,7 @@ namespace Omnikeeper.Model
             var AuthRoleCIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(CoreTraits.AuthRoleFlattened, configLayerset, new AllCIIDsSelection(), trans, timeThreshold);
 
             var foundAuthRoleCIs = AuthRoleCIs
-                .Where(pci => pci.Value.et.TraitAttributes["id"].Attribute.Value.Value2String() == id)
+                .Where(pci => TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(pci.Value.et, "id") == id)
                 .OrderBy(t => t.Key); // we order by GUID to stay consistent even when multiple CIs would match
 
             var foundAuthRoleCI = foundAuthRoleCIs.FirstOrDefault();
