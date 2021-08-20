@@ -1,6 +1,6 @@
 # Layers
 
-TODO: improve
+DRAFT
 
 A key feature for organizing the data in omnikeeper are layers. Layers have multiple functions, such as:
 
