@@ -33,6 +33,10 @@ To Do
 
 [Follow me to the documentation](https://github.com/max-bytes/omnikeeper/wiki).
 
+### Sample Setup / Test Stack
+
+For a fully functional, self-contained and docker-powered omnikeeper stack that is ready to use, visit https://github.com/max-bytes/omnikeeper-stack
+
 ## Contributing
 
 First off, thanks for taking the time to contribute! Contributions are what makes the open-source community such an amazing place to learn, inspire, and create. Any contributions you make will benefit everybody else and are **greatly appreciated**.

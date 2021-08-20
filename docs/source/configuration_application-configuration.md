@@ -19,6 +19,9 @@ The backend docker image exposes port 80, over which all communication is done.
 - Authentication__Authority
     - URL to keycloak auth (including realm)
     - Example: `http://keycloak-url.com/auth/realms/acme`
+- Authentication__ValidateIssuer
+    - Boolean to set whether the backend should validate the issuer in the JWT token or not
+    - Default: true
 - CORS__AllowedHosts
     - CORS setting, defining what hosts may connect. Should typically be set to the frontend URL
     - Example: `https://omnikeeper-frontend-url.com`
@@ -26,6 +29,9 @@ The backend docker image exposes port 80, over which all communication is done.
     - Optional base URL, to run the backend in non-root URLs
     - Default: ` ` (empty string)
     - Example: `/backend`
+- ShowPII
+    - Boolean, whether or not to show personally identifiable information in exception messages, see https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/wiki/PII
+    - Default: false 
 
 ### Logs
 Backend application logs can be found inside the container at `/app/Logs`. You might want to map this directory to a directory on the docker host.

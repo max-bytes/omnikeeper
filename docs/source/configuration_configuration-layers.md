@@ -1,4 +1,6 @@
-# Configuration - Configuration is Data
+# Configuration is Data
+
+DRAFT
 
 omnikeeper stores parts of its own configuration, such as Traits, Predicates and AuthRoles inside the regular data structures itself. That means that f.e. a defined Trait exists as its own CI whose attributes define the traits parameters (ID, requirements, ...).  
 While this approach may appear strange at first, it enables a lot of positive effects:
