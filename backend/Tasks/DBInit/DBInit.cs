@@ -75,7 +75,7 @@ namespace Tasks.DBInit
             int numAttributesPerCIFrom = 20;
             int numAttributesPerCITo = 40;
             //var regularTypeIDs = new[] { "Host Linux", "Host Windows", "Application" };
-            var predicateRunsOn = new Predicate("runs_on", "runs on", "is running", PredicateConstraints.Default);
+            var predicateRunsOn = new Predicate("runs_on", "runs on", "is running");
 
             //var regularPredicates = new[] {
             //new Predicate("is_part_of", "is part of", "has part", AnchorState.Active),
@@ -120,14 +120,14 @@ namespace Tasks.DBInit
             }).ToList();
 
             var monitoringPredicates = new[] {
-                new Predicate("has_monitoring_module", "has monitoring module", "is assigned to", PredicateConstraints.Default),
-                new Predicate("is_monitored_by", "is monitored by", "monitors", PredicateConstraints.Default),
-                new Predicate("belongs_to_naemon_contactgroup", "belongs to naemon contactgroup", "has member", PredicateConstraints.Default)
+                new Predicate("has_monitoring_module", "has monitoring module", "is assigned to"),
+                new Predicate("is_monitored_by", "is monitored by", "monitors"),
+                new Predicate("belongs_to_naemon_contactgroup", "belongs to naemon contactgroup", "has member")
             };
 
             var baseDataPredicates = new[] {
-                new Predicate("member_of_group", "is member of group", "has member", PredicateConstraints.Default),
-                new Predicate("managed_by", "is managed by", "manages", PredicateConstraints.Default)
+                new Predicate("member_of_group", "is member of group", "has member"),
+                new Predicate("managed_by", "is managed by", "manages")
             };
 
             // create layers
@@ -206,7 +206,7 @@ namespace Tasks.DBInit
             {
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates).Concat(baseDataPredicates))
-                    await predicateWriteService.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, PredicateConstraints.Default, new DataOriginV1(DataOriginType.Manual), changeset, authenticatedUser, trans);
+                    await predicateWriteService.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, new DataOriginV1(DataOriginType.Manual), changeset, authenticatedUser, trans);
 
                 trans.Commit();
             }
