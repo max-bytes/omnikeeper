@@ -32,18 +32,18 @@ namespace Omnikeeper.Base.CLB
         public string Name => GetType().FullName!;
 
         // TODO: turn into data-traits that get created/updated whenever CLB runs?
-        public abstract IEnumerable<RecursiveTrait> DefinedTraits { get; }
+        //public abstract IEnumerable<RecursiveTrait> DefinedTraits { get; }
 
-        private IDictionary<string, GenericTrait> cachedTraits = new Dictionary<string, GenericTrait>();
-        protected IDictionary<string, GenericTrait> Traits
-        {
-            get
-            {
-                if (cachedTraits == null)
-                    cachedTraits = RecursiveTraitService.FlattenRecursiveTraits(DefinedTraits);
-                return cachedTraits;
-            }
-        }
+        //private IDictionary<string, GenericTrait> cachedTraits = new Dictionary<string, GenericTrait>();
+        //protected IDictionary<string, GenericTrait> Traits
+        //{
+        //    get
+        //    {
+        //        if (cachedTraits == null)
+        //            cachedTraits = RecursiveTraitService.FlattenRecursiveTraits(DefinedTraits);
+        //        return cachedTraits;
+        //    }
+        //}
 
         public async Task<bool> Run(CLBSettings settings, IModelContextBuilder modelContextBuilder, ILogger logger)
         {

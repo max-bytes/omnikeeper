@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Omnikeeper.Base.Entity;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -16,6 +17,8 @@ namespace Omnikeeper.Base.Plugins
         string Name { get; }
         Version Version { get; }
         string InformationalVersion { get; }
+
+        IEnumerable<RecursiveTrait> DefinedTraits { get; }
     }
 
     public abstract class PluginRegistrationBase : IPluginRegistration
@@ -39,5 +42,7 @@ namespace Omnikeeper.Base.Plugins
         public virtual string? ManagementEndpoint { get; } = null;
 
         public abstract void RegisterServices(IServiceCollection sc);
+
+        public virtual IEnumerable<RecursiveTrait> DefinedTraits { get; } = new RecursiveTrait[0];
     }
 }

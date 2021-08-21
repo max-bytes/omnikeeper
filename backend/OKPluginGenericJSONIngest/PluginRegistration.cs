@@ -1,8 +1,10 @@
 ﻿using DBMigrations;
 using Microsoft.Extensions.DependencyInjection;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Controllers.Ingest;
 using System;
+using System.Collections.Generic;
 
 namespace OKPluginGenericJSONIngest
 {
@@ -18,5 +20,7 @@ namespace OKPluginGenericJSONIngest
             sc.AddTransient<PassiveFilesController>();
             sc.AddTransient<ManageContextController>();
         }
+
+        //public override IEnumerable<RecursiveTrait> Traits = 
     }
 }
