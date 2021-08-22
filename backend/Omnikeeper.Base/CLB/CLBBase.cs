@@ -1,12 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.CLB
@@ -30,20 +27,6 @@ namespace Omnikeeper.Base.CLB
         protected CLBSettings? Settings { get; private set; }
 
         public string Name => GetType().FullName!;
-
-        // TODO: turn into data-traits that get created/updated whenever CLB runs?
-        //public abstract IEnumerable<RecursiveTrait> DefinedTraits { get; }
-
-        //private IDictionary<string, GenericTrait> cachedTraits = new Dictionary<string, GenericTrait>();
-        //protected IDictionary<string, GenericTrait> Traits
-        //{
-        //    get
-        //    {
-        //        if (cachedTraits == null)
-        //            cachedTraits = RecursiveTraitService.FlattenRecursiveTraits(DefinedTraits);
-        //        return cachedTraits;
-        //    }
-        //}
 
         public async Task<bool> Run(CLBSettings settings, IModelContextBuilder modelContextBuilder, ILogger logger)
         {
