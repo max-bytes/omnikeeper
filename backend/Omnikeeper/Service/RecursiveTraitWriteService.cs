@@ -48,41 +48,16 @@ namespace Omnikeeper.Service
 
             var t = await traitModel.TryToGetRecursiveTrait(id, changesetProxy.TimeThreshold, trans);
 
-            var changed = false;
-            Guid ciid;
-            if (t.Equals(default))
-            {
-                ciid = await ciModel.CreateCI(trans);
-                await baseAttributeModel.InsertAttribute("trait.id", new AttributeScalarValueText(id), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
-                changed = true;
-            }
-            else
-            {
-                ciid = t.Item1;
-            }
+            Guid ciid = (t.Equals(default)) ? await ciModel.CreateCI(trans) : t.Item1;
 
-            (_, var tmpChanged) = await baseAttributeModel.InsertAttribute("trait.required_attributes", AttributeArrayValueJSON.Build(requiredAttributes.Select(a => TraitAttribute.Serializer.SerializeToJObject(a))), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
-            changed = changed || tmpChanged;
-
-            if (optionalAttributes != null)
-            {
-                (_, tmpChanged) = await baseAttributeModel.InsertAttribute("trait.optional_attributes", AttributeArrayValueJSON.Build(optionalAttributes.Select(a => TraitAttribute.Serializer.SerializeToJObject(a))), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
-                changed = changed || tmpChanged;
-            }
-            if (requiredRelations != null)
-            {
-                (_, tmpChanged) = await baseAttributeModel.InsertAttribute("trait.required_relations", AttributeArrayValueJSON.Build(requiredRelations.Select(a => TraitRelation.Serializer.SerializeToJObject(a))), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
-                changed = changed || tmpChanged;
-            }
-            if (requiredTraits != null)
-            {
-                (_, tmpChanged) = await baseAttributeModel.InsertAttribute("trait.required_traits", AttributeArrayValueText.BuildFromString(requiredTraits), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
-                changed = changed || tmpChanged;
-            }
-
-            var name = $"Trait - {id}";
-            (_, tmpChanged) = await baseAttributeModel.InsertCINameAttribute(name, ciid, writeLayerID, changesetProxy, dataOrigin, trans);
-            changed = changed || tmpChanged;
+            var changed = await TraitConfigDataUtils.WriteAttributes(baseAttributeModel, ciid, writeLayerID, changesetProxy, dataOrigin, trans,
+                ("trait.id", new AttributeScalarValueText(id)),
+                ("trait.required_attributes", AttributeArrayValueJSON.Build(requiredAttributes.Select(a => TraitAttribute.Serializer.SerializeToJObject(a)))),
+                (optionalAttributes != null) ? ("trait.optional_attributes", AttributeArrayValueJSON.Build(optionalAttributes.Select(a => TraitAttribute.Serializer.SerializeToJObject(a)))) : default,
+                (requiredRelations != null) ? ("trait.required_relations", AttributeArrayValueJSON.Build(optionalAttributes.Select(a => TraitAttribute.Serializer.SerializeToJObject(a)))) : default,
+                (requiredTraits != null) ? ("trait.required_traits", AttributeArrayValueText.BuildFromString(requiredTraits)) : default,
+                (ICIModel.NameAttribute, new AttributeScalarValueText($"Trait - {id}"))
+            );
 
             var trait = await traitModel.GetRecursiveTrait(id, changesetProxy.TimeThreshold, trans);
 

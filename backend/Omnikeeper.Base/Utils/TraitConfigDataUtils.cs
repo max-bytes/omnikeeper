@@ -1,15 +1,19 @@
 ﻿using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Utils
 {
     public static class TraitConfigDataUtils
     {
-        public static T DeserializeMandatoryScalarJSONAttribute<T>(EffectiveTrait et, string traitAttributeName, MyJSONSerializer<T> serializer) where T : class
+        public static T ExtractMandatoryScalarJSONAttribute<T>(EffectiveTrait et, string traitAttributeName, MyJSONSerializer<T> serializer) where T : class
         {
             if (!et.TraitAttributes.TryGetValue(traitAttributeName, out var a))
                 throw new Exception("Invalid trait configuration");
@@ -27,7 +31,7 @@ namespace Omnikeeper.Base.Utils
             return s;
         }
 
-        public static IEnumerable<T> DeserializeMandatoryArrayJSONAttribute<T>(EffectiveTrait et, string traitAttributeName, MyJSONSerializer<T> serializer) where T : class
+        public static IEnumerable<T> ExtractMandatoryArrayJSONAttribute<T>(EffectiveTrait et, string traitAttributeName, MyJSONSerializer<T> serializer) where T : class
         {
             if (!et.TraitAttributes.TryGetValue(traitAttributeName, out var a)) // empty / no attribute
                 throw new Exception("Invalid trait configuration");
@@ -48,7 +52,7 @@ namespace Omnikeeper.Base.Utils
             });
         }
 
-        public static IEnumerable<T> DeserializeOptionalArrayJSONAttribute<T>(EffectiveTrait et, string traitAttributeName, MyJSONSerializer<T> serializer, IEnumerable<T> @default) where T : class
+        public static IEnumerable<T> ExtractOptionalArrayJSONAttribute<T>(EffectiveTrait et, string traitAttributeName, MyJSONSerializer<T> serializer, IEnumerable<T> @default) where T : class
         {
             if (!et.TraitAttributes.TryGetValue(traitAttributeName, out var a)) // empty / no attribute
                 return @default;
@@ -100,6 +104,20 @@ namespace Omnikeeper.Base.Utils
                 return aavt.Values.Select(v => v.Value);
 
             throw new Exception("Invalid trait configuration");
+        }
+
+        public static async Task<bool> WriteAttributes(IBaseAttributeModel baseAttributeModel, Guid ciid, string writeLayerID, IChangesetProxy changesetProxy, DataOriginV1 dataOrigin, IModelContext trans, params (string attributeName, IAttributeValue value)[] attributes)
+        {
+            var changed = false;
+            foreach (var (attributeName, value) in attributes)
+            {
+                if (value != null)
+                {
+                    (_, var tmpChanged) = await baseAttributeModel.InsertAttribute(attributeName, value, ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+                    changed = changed || tmpChanged;
+                }
+            }
+            return changed;
         }
     }
 }

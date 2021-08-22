@@ -52,7 +52,7 @@ namespace OKPluginCLBMonitoring
 
             // prepare contact groups
             var cgr = new ContactgroupResolver(relationModel, ciModel, traitModel, logger, errorHandler);
-            await cgr.Setup(layerSetAll, belongsToNaemonContactgroup, Traits.ContactgroupFlattenedTrait, trans, changesetProxy.TimeThreshold);
+            await cgr.Setup(layerSetAll, belongsToNaemonContactgroup, Traits.ContactgroupFlattened, trans, changesetProxy.TimeThreshold);
 
             // prepare list of all monitored cis
             var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).ToHashSet();
@@ -77,11 +77,11 @@ namespace OKPluginCLBMonitoring
 
                 var monitoringModuleCI = monitoringModuleCIs[p.Relation.ToCIID];
 
-                var monitoringModuleET = await traitModel.CalculateEffectiveTraitForCI(monitoringModuleCI, Traits.ModuleFlattenedTrait, trans, changesetProxy.TimeThreshold);
+                var monitoringModuleET = await traitModel.CalculateEffectiveTraitForCI(monitoringModuleCI, Traits.ModuleFlattened, trans, changesetProxy.TimeThreshold);
                 if (monitoringModuleET == null)
                 {
-                    logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{Traits.ModuleFlattenedTrait.ID}\"");
-                    await errorHandler.LogError(monitoringModuleCI.ID, "error", $"Expected this CI to have trait \"{Traits.ModuleFlattenedTrait.ID}\"");
+                    logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{Traits.ModuleFlattened.ID}\"");
+                    await errorHandler.LogError(monitoringModuleCI.ID, "error", $"Expected this CI to have trait \"{Traits.ModuleFlattened.ID}\"");
                     continue;
                 }
                 logger.LogDebug("  Fetched effective traits");
@@ -160,7 +160,7 @@ namespace OKPluginCLBMonitoring
 
             // assign monitored cis to naemon instances
             var monitoredByCIIDFragments = new List<BulkRelationDataPredicateScope.Fragment>();
-            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTrait(Traits.NaemonInstanceFlattenedTrait, layerSetAll, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, layerSetAll, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
             foreach (var naemonInstanceTS in naemonInstancesTS)
                 foreach (var monitoredCI in monitoredCIs.Values)
                     if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value.et))

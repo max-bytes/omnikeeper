@@ -17,10 +17,11 @@ namespace OKPluginGenericJSONIngest
         public override void RegisterServices(IServiceCollection sc)
         {
             sc.AddSingleton<IContextModel, ContextModel>();
+            sc.AddSingleton<IContextWriteService, ContextWriteService>();
             sc.AddTransient<PassiveFilesController>();
             sc.AddTransient<ManageContextController>();
         }
 
-        //public override IEnumerable<RecursiveTrait> Traits = 
+        public override IEnumerable<RecursiveTrait> DefinedTraits => Traits.RecursiveTraits;
     }
 }

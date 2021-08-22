@@ -60,7 +60,7 @@ namespace Omnikeeper.Controllers.Ingest
             try
             {
                 using var mc = modelContextBuilder.BuildImmediate();
-                var ctx = await contextModel.GetContextByName(context, mc);
+                var ctx = await contextModel.GetContext(context, TimeThreshold.BuildLatest(), mc);
                 if (ctx == null)
                     return BadRequest($"Context with name \"{context}\" not found");
                 if (!(ctx.ExtractConfig is ExtractConfigPassiveRESTFiles f))

@@ -1,0 +1,3 @@
+DROP TABLE $SchemaName$.context;
+
+-- NOTE: we do not do any data migration, not worth it

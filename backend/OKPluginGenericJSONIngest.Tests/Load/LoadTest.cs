@@ -78,7 +78,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
 
 
         [Test]
-        public void TestInvalidRelationID()
+        public void TestInvalidRelation()
         {
             var loader = new Preparer();
 

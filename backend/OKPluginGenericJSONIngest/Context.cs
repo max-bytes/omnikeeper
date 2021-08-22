@@ -3,12 +3,14 @@ using OKPluginGenericJSONIngest.Extract;
 using OKPluginGenericJSONIngest.Load;
 using OKPluginGenericJSONIngest.Transform;
 using Omnikeeper.Base.Utils;
+using System;
+using System.Text.RegularExpressions;
 
 namespace OKPluginGenericJSONIngest
 {
     public class Context
     {
-        public readonly string Name;
+        public readonly string ID;
         [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
         public readonly IExtractConfig ExtractConfig;
         [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
@@ -16,9 +18,9 @@ namespace OKPluginGenericJSONIngest
         [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
         public readonly ILoadConfig LoadConfig;
 
-        public Context(string name, IExtractConfig extractConfig, ITransformConfig transformConfig, ILoadConfig loadConfig)
+        public Context(string id, IExtractConfig extractConfig, ITransformConfig transformConfig, ILoadConfig loadConfig)
         {
-            Name = name;
+            ID = id;
             ExtractConfig = extractConfig;
             TransformConfig = transformConfig;
             LoadConfig = loadConfig;
@@ -36,5 +38,16 @@ namespace OKPluginGenericJSONIngest
         {
             TypeNameHandling = TypeNameHandling.Objects
         });
+
+        public static Regex ContextIDRegex = new Regex("^[a-z0-9_]+$");
+        public static void ValidateContextIDThrow(string candidateID)
+        {
+            if (!ValidateContextID(candidateID))
+                throw new Exception($"Invalid context ID \"{candidateID}\"");
+        }
+        public static bool ValidateContextID(string candidateID)
+        {
+            return ContextIDRegex.IsMatch(candidateID);
+        }
     }
 }

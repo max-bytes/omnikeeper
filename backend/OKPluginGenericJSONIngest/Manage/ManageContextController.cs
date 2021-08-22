@@ -1,12 +1,14 @@
-﻿using DevLab.JmesPath;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using OKPluginGenericJSONIngest;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
@@ -20,21 +22,25 @@ namespace Omnikeeper.Controllers.Ingest
     public class ManageContextController : ControllerBase
     {
         private readonly IContextModel contextModel;
+        private readonly IContextWriteService contextWriteService;
         private readonly ICurrentUserService currentUserService;
         private readonly IManagementAuthorizationService managementAuthorizationService;
+        private readonly IChangesetModel changesetModel;
         private readonly IModelContextBuilder modelContextBuilder;
 
-        public ManageContextController(IContextModel contextModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService,
-            IModelContextBuilder modelContextBuilder)
+        public ManageContextController(IContextModel contextModel, IContextWriteService contextWriteService, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService,
+            IChangesetModel changesetModel, IModelContextBuilder modelContextBuilder)
         {
             this.contextModel = contextModel;
+            this.contextWriteService = contextWriteService;
             this.currentUserService = currentUserService;
             this.managementAuthorizationService = managementAuthorizationService;
+            this.changesetModel = changesetModel;
             this.modelContextBuilder = modelContextBuilder;
         }
 
         [HttpGet()]
-        public async Task<IActionResult> GetAllContexts()
+        public async Task<ActionResult<IEnumerable<Context>>> GetAllContexts()
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
@@ -42,12 +48,12 @@ namespace Omnikeeper.Controllers.Ingest
             if (!managementAuthorizationService.HasManagementPermission(user))
                 return Forbid($"User \"{user.Username}\" does not have permission to access management");
 
-            var contexts = await contextModel.GetAllContexts(trans);
-            return Ok(contexts);
+            var contexts = await contextModel.GetContexts(TimeThreshold.BuildLatest(), trans);
+            return Ok(contexts.Values);
         }
 
-        [HttpGet("{name}")]
-        public async Task<IActionResult> GetContextByName([FromRoute, Required] string name)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Context>> GetContext([FromRoute, Required] string id)
         {
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
@@ -55,15 +61,15 @@ namespace Omnikeeper.Controllers.Ingest
             if (!managementAuthorizationService.HasManagementPermission(user))
                 return Forbid($"User \"{user.Username}\" does not have permission to access management");
 
-            var context = await contextModel.GetContextByName(name, trans);
+            var context = await contextModel.GetContext(id, TimeThreshold.BuildLatest(), trans);
             if (context != null)
                 return Ok(context);
             else
-                return NotFound($"Could not find context with name {name}");
+                return NotFound($"Could not find context with id {id}");
         }
 
         [HttpPost()]
-        public async Task<IActionResult> AddNewContext([FromBody, Required] Context contextCandidate)
+        public async Task<ActionResult<Context>> UpsertContext([FromBody, Required] Context contextCandidate)
         {
             try
             {
@@ -88,9 +94,12 @@ namespace Omnikeeper.Controllers.Ingest
                     default:
                         throw new Exception("Invalid transform config");
                 }
+                var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
                 var mc = modelContextBuilder.BuildDeferred();
-                var context = await contextModel.Upsert(contextCandidate.Name, contextCandidate.ExtractConfig, 
-                    contextCandidate.TransformConfig, contextCandidate.LoadConfig, mc);
+                var (context, _) = await contextWriteService.Upsert(contextCandidate.ID, 
+                    contextCandidate.ExtractConfig, contextCandidate.TransformConfig, contextCandidate.LoadConfig, 
+                    new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), 
+                    changesetProxy, user, mc);
                 mc.Commit();
                 return Ok(context);
             } catch (Exception e)
@@ -99,8 +108,8 @@ namespace Omnikeeper.Controllers.Ingest
             }
         }
 
-        [HttpDelete("{name}")]
-        public async Task<IActionResult> RemoveContext([FromRoute, Required] string name)
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<Context>> RemoveContext([FromRoute, Required] string id)
         {
             try
             {
@@ -110,8 +119,11 @@ namespace Omnikeeper.Controllers.Ingest
                 if (!managementAuthorizationService.HasManagementPermission(user))
                     return Forbid($"User \"{user.Username}\" does not have permission to access management");
 
+                var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
                 var mc = modelContextBuilder.BuildDeferred();
-                var context = await contextModel.Delete(name, mc);
+                var context = await contextWriteService.Delete(id, 
+                    new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), 
+                    changesetProxy, user,  mc);
                 mc.Commit();
                 return Ok(context);
             }

@@ -79,9 +79,9 @@ namespace Omnikeeper.Model
         {
             var traitID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(trait, "id");
 
-            var requiredAttributes = TraitConfigDataUtils.DeserializeMandatoryArrayJSONAttribute(trait, "required_attributes", TraitAttribute.Serializer);
-            var optionalAttributes = TraitConfigDataUtils.DeserializeOptionalArrayJSONAttribute(trait, "optional_attributes", TraitAttribute.Serializer, new List<TraitAttribute>());
-            var requiredRelations = TraitConfigDataUtils.DeserializeOptionalArrayJSONAttribute(trait, "required_relation", TraitRelation.Serializer, new List<TraitRelation>());
+            var requiredAttributes = TraitConfigDataUtils.ExtractMandatoryArrayJSONAttribute(trait, "required_attributes", TraitAttribute.Serializer);
+            var optionalAttributes = TraitConfigDataUtils.ExtractOptionalArrayJSONAttribute(trait, "optional_attributes", TraitAttribute.Serializer, new List<TraitAttribute>());
+            var requiredRelations = TraitConfigDataUtils.ExtractOptionalArrayJSONAttribute(trait, "required_relation", TraitRelation.Serializer, new List<TraitRelation>());
 
             var requiredTraits = TraitConfigDataUtils.ExtractOptionalArrayTextAttribute(trait, "required_traits", new string[0]);
 

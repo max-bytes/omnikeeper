@@ -54,7 +54,7 @@ namespace Omnikeeper.GridView.Model
         private FullContext EffectiveTrait2FullContext(EffectiveTrait et)
         {
             var context = EffectiveTrait2Context(et);
-            var config = TraitConfigDataUtils.DeserializeMandatoryScalarJSONAttribute(et, "config", GridViewConfiguration.Serializer);
+            var config = TraitConfigDataUtils.ExtractMandatoryScalarJSONAttribute(et, "config", GridViewConfiguration.Serializer);
 
             return new FullContext(context.ID, context.SpeakingName, context.Description, config);
         }
