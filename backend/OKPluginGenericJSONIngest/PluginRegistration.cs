@@ -1,8 +1,10 @@
 ﻿using DBMigrations;
 using Microsoft.Extensions.DependencyInjection;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Controllers.Ingest;
 using System;
+using System.Collections.Generic;
 
 namespace OKPluginGenericJSONIngest
 {
@@ -15,8 +17,11 @@ namespace OKPluginGenericJSONIngest
         public override void RegisterServices(IServiceCollection sc)
         {
             sc.AddSingleton<IContextModel, ContextModel>();
+            sc.AddSingleton<IContextWriteService, ContextWriteService>();
             sc.AddTransient<PassiveFilesController>();
             sc.AddTransient<ManageContextController>();
         }
+
+        public override IEnumerable<RecursiveTrait> DefinedTraits => Traits.RecursiveTraits;
     }
 }

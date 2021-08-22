@@ -1,11 +1,9 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
@@ -41,26 +39,14 @@ namespace Omnikeeper.Service
             if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, writeLayerID))
                 throw new Exception($"User \"{user.Username}\" does not have permission to write to layer {writeLayerID}");
 
-            var changed = false;
-            Guid ciid;
-            if (t.Equals(default))
-            {
-                ciid = await ciModel.CreateCI(trans);
-                await baseAttributeModel.InsertAttribute("predicate.id", new AttributeScalarValueText(id), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
-                changed = true;
-            }
-            else
-            {
-                ciid = t.Item1;
-            }
+            Guid ciid = (t.Equals(default)) ? await ciModel.CreateCI(trans) : t.Item1;
 
-            (_, var tmpChanged) = await baseAttributeModel.InsertAttribute("predicate.wording_from", new AttributeScalarValueText(wordingFrom), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
-            changed = changed || tmpChanged;
-            (_, tmpChanged) = await baseAttributeModel.InsertAttribute("predicate.wording_to", new AttributeScalarValueText(wordingTo), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
-            changed = changed || tmpChanged;
-            var name = $"Predicate - {id}";
-            (_, tmpChanged) = await baseAttributeModel.InsertCINameAttribute(name, ciid, writeLayerID, changesetProxy, dataOrigin, trans);
-            changed = changed || tmpChanged;
+            var changed = await TraitConfigDataUtils.WriteAttributes(baseAttributeModel, ciid, writeLayerID, changesetProxy, dataOrigin, trans,
+                ("predicate.id", new AttributeScalarValueText(id)),
+                ("predicate.wording_from", new AttributeScalarValueText(wordingFrom)),
+                ("predicate.wording_to", new AttributeScalarValueText(wordingTo)),
+                (ICIModel.NameAttribute, new AttributeScalarValueText($"Predicate - {id}"))
+            );
 
             try
             {

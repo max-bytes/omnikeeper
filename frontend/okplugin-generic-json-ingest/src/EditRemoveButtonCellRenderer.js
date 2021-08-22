@@ -5,15 +5,15 @@ export default props => {
     if (props.operation === "edit")
         return (
             <span>
-                <Button size="small" style={{ width: "60px" }} type="primary" onClick={() => props.history.push(`edit-context/${props.data.name}`)}>Edit</Button>
+                <Button size="small" style={{ width: "60px" }} type="primary" onClick={() => props.history.push(`edit-context/${props.data.id}`)}>Edit</Button>
             </span>
         );
     if (props.operation === "remove")
         return (
             <span>
                 <Popconfirm
-                    title={`Are you sure to delete ${props.data.name}?`}
-                    onConfirm={() => props.removeContext(props.data.name)}
+                    title={`Are you sure to delete ${props.data.id}?`}
+                    onConfirm={() => props.removeContext(props.data.id)}
                     okText="Yes"
                     okButtonProps={{type: "danger"}}
                     cancelText="No"

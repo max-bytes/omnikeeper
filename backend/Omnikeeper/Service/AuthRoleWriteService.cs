@@ -3,6 +3,7 @@ using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
@@ -39,25 +40,13 @@ namespace Omnikeeper.Service
             if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, writeLayerID))
                 throw new Exception($"User \"{user.Username}\" does not have permission to write to layer {writeLayerID}");
 
-            var changed = false;
-            Guid ciid;
-            if (t.Equals(default))
-            {
-                ciid = await ciModel.CreateCI(trans);
-                await baseAttributeModel.InsertAttribute("auth_role.id", new AttributeScalarValueText(id), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
-                changed = true;
-            }
-            else
-            {
-                ciid = t.Item1;
-            }
+            Guid ciid = (t.Equals(default)) ? await ciModel.CreateCI(trans) : t.Item1;
 
-
-            (_, var tmpChanged) = await baseAttributeModel.InsertAttribute("auth_role.permissions", AttributeArrayValueText.BuildFromString(permissions), ciid, writeLayerID, changesetProxy, dataOrigin, trans);
-            changed = changed || tmpChanged;
-            var name = $"AuthRole - {id}";
-            (_, tmpChanged) = await baseAttributeModel.InsertCINameAttribute(name, ciid, writeLayerID, changesetProxy, dataOrigin, trans);
-            changed = changed || tmpChanged;
+            var changed = await TraitConfigDataUtils.WriteAttributes(baseAttributeModel, ciid, writeLayerID, changesetProxy, dataOrigin, trans,
+                ("auth_role.id", new AttributeScalarValueText(id)),
+                ("auth_role.permissions", AttributeArrayValueText.BuildFromString(permissions)),
+                (ICIModel.NameAttribute, new AttributeScalarValueText($"AuthRole - {id}"))
+            );
 
             var authRole = await authRoleModel.GetAuthRole(id, changesetProxy.TimeThreshold, trans);
 

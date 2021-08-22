@@ -7,7 +7,7 @@ function AddNewContext(props) {
     const swaggerClient = props.swaggerClient;
     const apiVersion = props.apiVersion;
     const editMode = props.editMode;
-    const { contextName } = useParams(); // get contextName from path
+    const { contextID } = useParams(); // get contextID from path
 
     const [swaggerMsg, setSwaggerMsg] = useState("");
     const [swaggerErrorJson, setSwaggerErrorJson] = useState(false);
@@ -19,18 +19,18 @@ function AddNewContext(props) {
         try {
             setLoading(true);
             if (editMode) {
-                    const contextJson = await swaggerClient.apis.OKPluginGenericJSONIngest.GetContextByName(
+                    const contextJson = await swaggerClient.apis.OKPluginGenericJSONIngest.GetContext2(
                             {
                                 version: apiVersion,
-                                name: contextName
+                                id: contextID
                             }
                         )
                         .then((result) => result.body);
                     setContext(contextJson); // set context
-            } 
+            }
             else {
                 const initialNewContext = {
-                        name: "",
+                        id: "",
                         extractConfig: { $type: "OKPluginGenericJSONIngest.Extract.ExtractConfigPassiveRESTFiles, OKPluginGenericJSONIngest" },
                         transformConfig: { $type: "OKPluginGenericJSONIngest.Transform.JMESPath.TransformConfigJMESPath, OKPluginGenericJSONIngest", expression: "" }, 
                         loadConfig: { $type : "OKPluginGenericJSONIngest.Load.LoadConfig, OKPluginGenericJSONIngest", searchLayerIDs: [], writeLayerID: 0}
@@ -43,7 +43,7 @@ function AddNewContext(props) {
             setSwaggerMsg(e.toString());
         }
         setLoading(false);
-    }, [swaggerClient, apiVersion, contextName, editMode])
+    }, [swaggerClient, apiVersion, contextID, editMode])
 
     useEffect(() => {refresh();}, [refresh]);
 
@@ -55,7 +55,7 @@ function AddNewContext(props) {
                     style={{ display: 'flex', flexDirection: 'column', flexBasis: '1000px', margin:'10px 0px' }}
                     onFinish={async (e) => {
                         const newContext = context;
-                        if (!editMode) newContext.name = e.name;
+                        if (!editMode) newContext.id = e.id;
                         newContext.transformConfig.expression = e.expression ? e.expression : "";;
                         newContext.loadConfig.searchLayerIDs = e.searchLayerIDs.substring(1, e.searchLayerIDs.length-1).split(`,`); // convert into array
                         newContext.loadConfig.writeLayerID = e.writeLayerID;
@@ -63,7 +63,7 @@ function AddNewContext(props) {
                         try {
                                 setLoading(true);
                                 // 'AddContext' will add a new context, if given context doesn't exist and edit the context, if it does
-                                const addContext = await swaggerClient.apis.OKPluginGenericJSONIngest.AddNewContext(
+                                const addContext = await swaggerClient.apis.OKPluginGenericJSONIngest.UpsertContext(
                                         {
                                             version: apiVersion,
                                         },
@@ -73,8 +73,8 @@ function AddNewContext(props) {
                                     ).then((result) => result.body);
 
                                 setSwaggerErrorJson(false);
-                                if(editMode) setSwaggerMsg("'" + contextName + "' has been changed.");
-                                else setSwaggerMsg("'" + addContext.name + "' has been created.");
+                                if(editMode) setSwaggerMsg("'" + contextID + "' has been changed.");
+                                else setSwaggerMsg("'" + addContext.id + "' has been created.");
                             } catch(e) {
                                 setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
                                 setSwaggerMsg(e.toString());
@@ -85,15 +85,15 @@ function AddNewContext(props) {
                     initialValues={{
                         "expression": context.transformConfig.expression, // text
                         "searchLayerIDs": "[" + context.loadConfig.searchLayerIDs.toString() + "]", // array (handled as text)
-                        "writeLayerID": context.loadConfig.writeLayerID, // number
+                        "writeLayerID": context.loadConfig.writeLayerID, // text
                     }}
                 >
                     {swaggerMsg && <FeedbackMsg alertProps={{message: swaggerMsg, type: swaggerErrorJson ? "error": "success", showIcon: true, banner: true}} swaggerErrorJson={swaggerErrorJson} />}
                     <h2>{editMode ? "Edit" : "Add"} Context</h2>
-                    {editMode && <h4>{contextName}</h4>}
+                    {editMode && <h4>{contextID}</h4>}
 
                     {!editMode && 
-                        <Form.Item name="name" label="name" style={{ margin: "0 0 50px 0" }}>
+                        <Form.Item name="id" label="id" style={{ margin: "0 0 50px 0" }}>
                             <Input />
                         </Form.Item>
                     }

@@ -1,7 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Omnikeeper.Base.CLB;
-using Omnikeeper.Base.Entity;
+﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -14,21 +13,20 @@ namespace Omnikeeper.Model
     public class TraitsProvider : ITraitsProvider
     {
         private readonly IRecursiveDataTraitModel dataTraitModel;
-        private readonly IServiceProvider sp;
+        private readonly IEnumerable<IPluginRegistration> loadedPlugins;
 
-        public TraitsProvider(IRecursiveDataTraitModel dataTraitModel, IServiceProvider sp)
+        public TraitsProvider(IRecursiveDataTraitModel dataTraitModel, IEnumerable<IPluginRegistration> loadedPlugins)
         {
             this.dataTraitModel = dataTraitModel;
-            this.sp = sp;
+            this.loadedPlugins = loadedPlugins;
         }
 
         // TODO: caching of active trait sets
         public async Task<IDictionary<string, ITrait>> GetActiveTraits(IModelContext trans, TimeThreshold timeThreshold)
         {
-            var computeLayerBrains = sp.GetServices<IComputeLayerBrain>(); // HACK: we get the CLBs here and not in the constructor because that would lead to a circular dependency
-            var clbTraitSets = new Dictionary<string, IEnumerable<RecursiveTrait>>();
-            foreach (var clb in computeLayerBrains)
-                clbTraitSets.Add($"CLB-{clb.Name}", clb.DefinedTraits);
+            var pluginTraitSets = new Dictionary<string, IEnumerable<RecursiveTrait>>();
+            foreach (var plugin in loadedPlugins)
+                pluginTraitSets.Add($"okplugin-{plugin.Name}", plugin.DefinedTraits);
 
             // TODO, NOTE: this merges non-DB trait sets, that are not historic and DB traits sets that are... what should we do here?
             var configuredRecursiveDataTraitSet = await dataTraitModel.GetRecursiveTraits(trans, timeThreshold);
@@ -36,7 +34,7 @@ namespace Omnikeeper.Model
                 { "core", CoreTraits.RecursiveTraits },
                 { "data", configuredRecursiveDataTraitSet }
             };
-            foreach (var kv in clbTraitSets)
+            foreach (var kv in pluginTraitSets)
                 allTraitSets.Add(kv.Key, kv.Value);
 
             // TODO: this merges the traits from all sources/sets, but it does so non-deterministicly

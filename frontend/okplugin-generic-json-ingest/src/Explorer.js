@@ -34,8 +34,8 @@ export function Explorer(props) {
 
     const columnDefs = [
         { 
-            headerName: "Name",
-            field: "name", 
+            headerName: "ID",
+            field: "id", 
             width: 1000,
         },
         {
@@ -102,7 +102,7 @@ export function Explorer(props) {
                     animateRows={true}
                     rowSelection="multiple"
                     getRowNodeId={function (data) {
-                        return data.name;
+                        return data.id;
                     }}
                     overlayLoadingTemplate={
                         '<span class="ag-overlay-loading-center">Loading...</span>'
@@ -169,18 +169,18 @@ export function Explorer(props) {
         }
     }
 
-    async function removeContext(contextName) {
+    async function removeContext(contextID) {
         try {
             await swaggerClient.apis.OKPluginGenericJSONIngest.RemoveContext(
                     {
                         version: props.apiVersion,
-                        name: contextName,
+                        id: contextID,
                     }
                 )
                 .then((result) => result.body);
 
             setSwaggerErrorJson(false);
-            setSwaggerMsg("'" + contextName + "' has been removed.");
+            setSwaggerMsg("'" + contextID + "' has been removed.");
             refreshData(); // reload
         } catch(e) {
             setSwaggerErrorJson(JSON.stringify(e.response, null, 2));

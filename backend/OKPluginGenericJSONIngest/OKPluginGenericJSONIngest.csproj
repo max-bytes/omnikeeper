@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="DBMigrations\00002-delete-all.psql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="DBMigrations\00002-delete-all.psql" />
     <EmbeddedResource Include="DBMigrations\00001-generic-json-ingest-context.psql" />
   </ItemGroup>
 

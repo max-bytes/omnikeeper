@@ -8,7 +8,6 @@ import { mutations } from '../../graphql/mutations_manage'
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import AgGridCrud from './AgGridCrud';
-import _ from 'lodash';
 
 export default function ManagePredicates(props) {
   var [rowData, setRowData] = useState([]);

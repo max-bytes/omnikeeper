@@ -39,7 +39,7 @@ export default function OKPluginGenericJSONIngest(props) {
             />
             <Switch>
                 <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} /> {/* Removes trailing slashes */}
-                <PrivateRoute path={`${path}/${pluginName}/edit-context/:contextName`}>
+                <PrivateRoute path={`${path}/${pluginName}/edit-context/:contextID`}>
                     <AddNewContext swaggerClient={swaggerClient} apiVersion={apiVersion} editMode />
                 </PrivateRoute>
                 <PrivateRoute path={`${path}/${pluginName}/create-context`}>

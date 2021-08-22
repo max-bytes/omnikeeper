@@ -11,8 +11,6 @@ namespace Omnikeeper.Base.CLB
     {
         string Name { get; }
 
-        IEnumerable<RecursiveTrait> DefinedTraits { get; }
-
         Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger);
         Task<bool> Run(CLBSettings settings, IModelContextBuilder modelContextBuilder, ILogger logger);
     }

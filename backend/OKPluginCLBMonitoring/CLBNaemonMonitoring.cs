@@ -37,38 +37,7 @@ namespace OKPluginCLBMonitoring
         private readonly string isMonitoredByPredicate = "is_monitored_by";
         private readonly string belongsToNaemonContactgroup = "belongs_to_naemon_contactgroup";
 
-        private static readonly TraitOriginV1 traitOrigin = new TraitOriginV1(TraitOriginType.Plugin, "CLBNaemonMonitoring");
-        private readonly RecursiveTrait moduleRecursiveTrait = new RecursiveTrait("naemon_service_module", traitOrigin, new List<TraitAttribute>() {
-            new TraitAttribute("template",
-                CIAttributeTemplate.BuildFromParams("naemon.config_template", AttributeValueType.MultilineText, null, CIAttributeValueConstraintTextLength.Build(1, null))
-            )
-        });
-
-        private readonly RecursiveTrait naemonInstanceRecursiveTrait = new RecursiveTrait("naemon_instance", traitOrigin, new List<TraitAttribute>() {
-            new TraitAttribute("name",
-                CIAttributeTemplate.BuildFromParams("naemon.instance_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-            )
-        }, optionalAttributes: new List<TraitAttribute>()
-        {
-            new TraitAttribute("config",
-                CIAttributeTemplate.BuildFromParams("naemon.config", AttributeValueType.JSON, true)
-            ),
-            new TraitAttribute("requirements",
-                CIAttributeTemplate.BuildFromParams("naemon.requirements", AttributeValueType.Text, true, CIAttributeValueConstraintTextLength.Build(1, null))
-            ),
-            new TraitAttribute("capabilities",
-                CIAttributeTemplate.BuildFromParams("naemon.capabilities", AttributeValueType.Text, true, CIAttributeValueConstraintTextLength.Build(1, null))
-            )
-        });
-
-        private readonly RecursiveTrait contactgroupRecursiveTrait = new RecursiveTrait("naemon_contactgroup", traitOrigin, new List<TraitAttribute>() {
-            new TraitAttribute("name",
-                CIAttributeTemplate.BuildFromParams("naemon.contactgroup_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-            )
-        });
-
-        public override IEnumerable<RecursiveTrait> DefinedTraits => new List<RecursiveTrait>() { moduleRecursiveTrait, naemonInstanceRecursiveTrait, contactgroupRecursiveTrait };
-
+        
         public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start clbMonitoring");
@@ -78,15 +47,12 @@ namespace OKPluginCLBMonitoring
             // TODO: make configurable
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
 
-            var naemonInstanceTrait = Traits["naemon_instance"];
-            var contactgroupTrait = Traits["naemon_contactgroup"];
-            var moduleTrait = Traits["naemon_service_module"];
 
             var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
 
             // prepare contact groups
             var cgr = new ContactgroupResolver(relationModel, ciModel, traitModel, logger, errorHandler);
-            await cgr.Setup(layerSetAll, belongsToNaemonContactgroup, contactgroupTrait, trans, changesetProxy.TimeThreshold);
+            await cgr.Setup(layerSetAll, belongsToNaemonContactgroup, Traits.ContactgroupFlattened, trans, changesetProxy.TimeThreshold);
 
             // prepare list of all monitored cis
             var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).ToHashSet();
@@ -111,11 +77,11 @@ namespace OKPluginCLBMonitoring
 
                 var monitoringModuleCI = monitoringModuleCIs[p.Relation.ToCIID];
 
-                var monitoringModuleET = await traitModel.CalculateEffectiveTraitForCI(monitoringModuleCI, moduleTrait, trans, changesetProxy.TimeThreshold);
+                var monitoringModuleET = await traitModel.CalculateEffectiveTraitForCI(monitoringModuleCI, Traits.ModuleFlattened, trans, changesetProxy.TimeThreshold);
                 if (monitoringModuleET == null)
                 {
-                    logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{moduleTrait.ID}\"");
-                    await errorHandler.LogError(monitoringModuleCI.ID, "error", $"Expected this CI to have trait \"{moduleTrait.ID}\"");
+                    logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{Traits.ModuleFlattened.ID}\"");
+                    await errorHandler.LogError(monitoringModuleCI.ID, "error", $"Expected this CI to have trait \"{Traits.ModuleFlattened.ID}\"");
                     continue;
                 }
                 logger.LogDebug("  Fetched effective traits");
@@ -194,7 +160,7 @@ namespace OKPluginCLBMonitoring
 
             // assign monitored cis to naemon instances
             var monitoredByCIIDFragments = new List<BulkRelationDataPredicateScope.Fragment>();
-            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTrait(naemonInstanceTrait, layerSetAll, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, layerSetAll, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
             foreach (var naemonInstanceTS in naemonInstancesTS)
                 foreach (var monitoredCI in monitoredCIs.Values)
                     if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value.et))
