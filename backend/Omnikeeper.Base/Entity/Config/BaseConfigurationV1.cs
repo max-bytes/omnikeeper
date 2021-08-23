@@ -2,7 +2,6 @@
 using Omnikeeper.Base.Utils;
 using ProtoBuf;
 using System;
-using System.Collections.Generic;
 
 namespace Omnikeeper.Base.Entity.Config
 {

@@ -49,7 +49,7 @@ namespace Omnikeeper.Controllers
                 return BadRequest("No layer IDs specified");
 
             using var trans = modelContextBuilder.BuildImmediate();
-            var user = await currentUserService.GetCurrentUser(trans); 
+            var user = await currentUserService.GetCurrentUser(trans);
             if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
                 return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
             if (!ciBasedAuthorizationService.CanReadCI(ciid))

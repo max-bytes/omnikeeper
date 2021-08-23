@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using YamlDotNet.RepresentationModel;
-using YamlDotNet.Serialization;
 
 namespace Omnikeeper.Entity.AttributeValues
 {
@@ -63,9 +62,9 @@ namespace Omnikeeper.Entity.AttributeValues
     public class AttributeScalarValueYAMLSerializer : ISubTypeSerializer<AttributeScalarValueYAML>, ISerializer<AttributeScalarValueYAML>
     {
         SerializerFeatures ISerializer<AttributeScalarValueYAML>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
-        void ISerializer<AttributeScalarValueYAML>.Write(ref ProtoWriter.State state, AttributeScalarValueYAML value) 
+        void ISerializer<AttributeScalarValueYAML>.Write(ref ProtoWriter.State state, AttributeScalarValueYAML value)
             => ((ISubTypeSerializer<AttributeScalarValueYAML>)this).WriteSubType(ref state, value);
-        AttributeScalarValueYAML ISerializer<AttributeScalarValueYAML>.Read(ref ProtoReader.State state, AttributeScalarValueYAML value) 
+        AttributeScalarValueYAML ISerializer<AttributeScalarValueYAML>.Read(ref ProtoReader.State state, AttributeScalarValueYAML value)
             => ((ISubTypeSerializer<AttributeScalarValueYAML>)this).ReadSubType(ref state, SubTypeState<AttributeScalarValueYAML>.Create(state.Context, value));
 
         public void WriteSubType(ref ProtoWriter.State state, AttributeScalarValueYAML value)

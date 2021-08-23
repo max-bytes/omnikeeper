@@ -75,7 +75,8 @@ namespace Omnikeeper.Base.Service
                 if (ac.Contains(value))
                 {
                     return ac[value];
-                } else
+                }
+                else
                 {
                     return new List<Guid>();
                 }

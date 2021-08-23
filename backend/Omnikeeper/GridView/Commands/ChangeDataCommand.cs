@@ -125,10 +125,12 @@ namespace Omnikeeper.GridView.Commands
                         if (configItem.WriteLayer == null)
                         {
                             writeLayer = config.WriteLayer;
-                        } else if (configItem.WriteLayer == "")
+                        }
+                        else if (configItem.WriteLayer == "")
                         {
                             return (null, new Exception($"Provided column {cell.Name} is not writable!"));
-                        } else
+                        }
+                        else
                         {
                             writeLayer = configItem.WriteLayer;
                         }
@@ -137,7 +139,7 @@ namespace Omnikeeper.GridView.Commands
 
                         if (!ciBasedAuthorizationService.CanWriteToCI(row.Ciid))
                             return (null, new Exception($"User \"{user.Username}\" does not have permission to write to CI {row.Ciid}"));
-                        
+
                         if (cell.Value.Values.IsEmpty())
                         {
                             // we treat an empty values array as a request to remove the attribute, but only if the CI already exists

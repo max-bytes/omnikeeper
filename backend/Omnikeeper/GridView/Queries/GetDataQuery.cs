@@ -108,7 +108,8 @@ namespace Omnikeeper.GridView.Queries
                         if (item.MergedAttributes.TryGetValue(column.SourceAttributeName, out var attribute))
                         {
                             return ((GridViewColumn column, MergedCIAttribute? attr))(column, attribute);
-                        } else
+                        }
+                        else
                         {
                             return (column, null);
                         }
@@ -128,8 +129,8 @@ namespace Omnikeeper.GridView.Queries
                             }
                         }
 
-                        var value = (attr != null) 
-                            ? AttributeValueDTO.Build(attr.Attribute.Value) 
+                        var value = (attr != null)
+                            ? AttributeValueDTO.Build(attr.Attribute.Value)
                             : AttributeValueDTO.BuildEmpty(column.ValueType ?? AttributeValueType.Text, false);
 
                         var cell = new Cell(

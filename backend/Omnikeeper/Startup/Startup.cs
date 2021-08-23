@@ -386,7 +386,7 @@ namespace Omnikeeper.Startup
             }
 
             // plugins setup
-            foreach(var plugin in plugins)
+            foreach (var plugin in plugins)
             {
                 if (plugin.DBMigration != null)
                 {

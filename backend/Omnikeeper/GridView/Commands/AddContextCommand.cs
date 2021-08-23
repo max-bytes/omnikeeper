@@ -83,7 +83,7 @@ namespace Omnikeeper.GridView.Commands
                         request.Context.ID,
                         request.Context.SpeakingName,
                         request.Context.Description,
-                        request.Context.Configuration, 
+                        request.Context.Configuration,
                         new Base.Entity.LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
                         new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                         changesetProxy,

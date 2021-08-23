@@ -31,13 +31,14 @@ namespace Omnikeeper.Base.Model
             if (t.Equals(default))
             {
                 throw new Exception($"Could not find {typeof(T).Name} with ID {id}");
-            } else
+            }
+            else
             {
                 return t.Item2;
             }
         }
 
-        public async Task<(Guid,T)> TryToGet(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        public async Task<(Guid, T)> TryToGet(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             // TODO: better performance possible?
             var CIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(trait, layerSet, new AllCIIDsSelection(), trans, timeThreshold);
@@ -60,13 +61,14 @@ namespace Omnikeeper.Base.Model
         {
             var CIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(trait, layerSet, new AllCIIDsSelection(), trans, timeThreshold);
             var ret = new Dictionary<string, T>();
-            foreach(var (_, et) in CIs.Values.OrderBy(t => t.ci.ID)) // we order by GUID to stay consistent even when multiple CIs have the same ID
+            foreach (var (_, et) in CIs.Values.OrderBy(t => t.ci.ID)) // we order by GUID to stay consistent even when multiple CIs have the same ID
             {
                 var (dc, id) = EffectiveTrait2DC(et);
                 try
                 {
                     ret.Add(id, dc);
-                } catch (ArgumentException)
+                }
+                catch (ArgumentException)
                 { // duplicate detected, do not add
                     // TODO: better duplicate handling possible here?
                 }
@@ -101,7 +103,7 @@ namespace Omnikeeper.Base.Model
                 return false; // no dc with this ID exists
             }
 
-            foreach(var attribute in attributesToRemove)
+            foreach (var attribute in attributesToRemove)
                 await baseAttributeModel.RemoveAttribute(attribute, t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
 
             var tAfterDeletion = await TryToGet(id, layerSet, changesetProxy.TimeThreshold, trans);

@@ -1,11 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
-using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using System.Threading.Tasks;
 
 namespace Omnikeeper.Service
 {

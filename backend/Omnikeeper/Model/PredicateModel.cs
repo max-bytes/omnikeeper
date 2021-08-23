@@ -1,7 +1,6 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -16,7 +15,7 @@ namespace Omnikeeper.Model
     {
         public PredicateModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel)
             : base(CoreTraits.PredicateFlattened, effectiveTraitModel, ciModel, baseAttributeModel)
-        {}
+        { }
 
         public async Task<Predicate> GetPredicate(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
@@ -25,7 +24,7 @@ namespace Omnikeeper.Model
             return await Get(id, layerSet, timeThreshold, trans);
         }
 
-        public async Task<(Guid,Predicate)> TryToGetPredicate(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        public async Task<(Guid, Predicate)> TryToGetPredicate(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             IDValidations.ValidatePredicateIDThrow(id);
 

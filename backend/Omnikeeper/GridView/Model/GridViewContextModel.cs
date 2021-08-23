@@ -15,7 +15,7 @@ namespace Omnikeeper.GridView.Model
     public class GridViewContextModel : TraitDataConfigBaseModel<FullContext>, IGridViewContextModel
     {
         public GridViewContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel)
-            :base(CoreTraits.GridviewContextFlattened, effectiveTraitModel, ciModel, baseAttributeModel)
+            : base(CoreTraits.GridviewContextFlattened, effectiveTraitModel, ciModel, baseAttributeModel)
         {
         }
 

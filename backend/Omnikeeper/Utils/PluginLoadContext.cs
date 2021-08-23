@@ -17,7 +17,7 @@ namespace Omnikeeper.Utils
         {
             _resolvers.Add(new AssemblyDependencyResolver(pluginPath));
         }
-        
+
         protected override Assembly? Load(AssemblyName assemblyName)
         {
             foreach (var r in _resolvers)

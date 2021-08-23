@@ -132,7 +132,8 @@ namespace Omnikeeper.Startup
                                 services.AddSingleton(pr);
                                 pr.RegisterServices(services);
                                 Console.WriteLine($"Loaded OKPlugin {pr.Name}, Version {pr.Version}"); // TODO: better logging
-                            } else
+                            }
+                            else
                             {
                                 Console.WriteLine($"Encountered OKPlugin without IPluginRegistration! Assembly: {assembly.FullName}"); // TODO: better logging
                             }

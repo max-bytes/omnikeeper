@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Omnikeeper.Base.Utils.Serialization
+﻿namespace Omnikeeper.Base.Utils.Serialization
 {
     public interface IDataSerializer
     {

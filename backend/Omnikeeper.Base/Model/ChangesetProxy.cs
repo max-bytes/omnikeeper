@@ -2,7 +2,6 @@
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -21,7 +20,8 @@ namespace Omnikeeper.Base.Model
             if (ActiveChangesets.TryGetValue(key, out var changeset))
             {
                 return changeset;
-            } else
+            }
+            else
             {
                 var newChangeset = await Model.CreateChangeset(User.ID, layerID, dataOrigin, trans, TimeThreshold.Time);
                 ActiveChangesets.Add(key, newChangeset);

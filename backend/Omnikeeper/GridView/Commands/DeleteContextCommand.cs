@@ -57,14 +57,15 @@ namespace Omnikeeper.GridView.Commands
                 try
                 {
                     var isSuccess = await gridViewContextModel.TryToDelete(request.ID,
-                        new Base.Entity.LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer, 
+                        new Base.Entity.LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
                         new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, trans);
 
                     if (isSuccess)
                     {
                         trans.Commit();
                         return null;
-                    } else
+                    }
+                    else
                     {
                         return new Exception("An error occured deleting context");
                     }

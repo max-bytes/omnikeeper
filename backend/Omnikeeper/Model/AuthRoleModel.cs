@@ -1,7 +1,6 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -25,7 +24,7 @@ namespace Omnikeeper.Model
             return await Get(id, layerSet, timeThreshold, trans);
         }
 
-        public async Task<(Guid,AuthRole)> TryToGetAuthRole(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        public async Task<(Guid, AuthRole)> TryToGetAuthRole(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             return await TryToGet(id, layerSet, timeThreshold, trans);
         }
@@ -34,7 +33,7 @@ namespace Omnikeeper.Model
         {
             var AuthRoleID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
             var permissions = TraitConfigDataUtils.ExtractOptionalArrayTextAttribute(et, "permissions", new string[] { });
-            
+
             return (new AuthRole(AuthRoleID, permissions.ToArray()), AuthRoleID);
         }
 

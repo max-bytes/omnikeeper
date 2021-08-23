@@ -3,7 +3,6 @@ using Omnikeeper.Base.Entity;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 
 namespace Omnikeeper.Base.Plugins
 {
@@ -42,7 +41,7 @@ namespace Omnikeeper.Base.Plugins
         {
             var (name, _) = GetPluginNameAndVersionFromAssembly(assembly);
             return new TraitOriginV1(TraitOriginType.Plugin, $"CLB-{name}");
-    }
+        }
 
         public string Name { get; }
         public Version Version { get; }

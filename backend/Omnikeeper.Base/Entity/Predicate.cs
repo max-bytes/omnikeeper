@@ -1,6 +1,5 @@
 ﻿using ProtoBuf;
 using System;
-using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {

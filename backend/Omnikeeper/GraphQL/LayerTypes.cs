@@ -3,8 +3,6 @@ using GraphQL.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils;
-using System.Linq;
 
 namespace Omnikeeper.GraphQL
 {

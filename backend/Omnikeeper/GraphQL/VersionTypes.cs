@@ -1,6 +1,5 @@
 ﻿using GraphQL.Types;
 using Omnikeeper.Base.Plugins;
-using Omnikeeper.Utils;
 using System.Collections.Generic;
 
 namespace Omnikeeper.GraphQL

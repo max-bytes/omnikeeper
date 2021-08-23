@@ -1,5 +1,4 @@
 ﻿using ProtoBuf;
-using System;
 
 namespace Omnikeeper.Base.Entity
 {

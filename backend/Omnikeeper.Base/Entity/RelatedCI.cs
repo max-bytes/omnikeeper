@@ -1,5 +1,4 @@
-﻿using Omnikeeper.Base.Entity.DataOrigin;
-using System;
+﻿using System;
 
 namespace Omnikeeper.Base.Entity
 {

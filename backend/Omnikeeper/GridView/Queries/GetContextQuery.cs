@@ -32,7 +32,7 @@ namespace Omnikeeper.GridView.Queries
             private readonly ICurrentUserService currentUserService;
             private readonly IManagementAuthorizationService managementAuthorizationService;
 
-            public GetContextQueryHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder, 
+            public GetContextQueryHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder,
                 IBaseConfigurationModel baseConfigurationModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService)
             {
                 this.gridViewContextModel = gridViewContextModel;

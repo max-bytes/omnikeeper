@@ -1,13 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
-using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Model;
+﻿using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model.Decorators
@@ -20,7 +15,7 @@ namespace Omnikeeper.Model.Decorators
         {
             Model = model;
         }
-        
+
         public async Task<DateTimeOffset> GetLatestPartitionIndex(TimeThreshold timeThreshold, IModelContext trans)
         {
             // HACK: we are using a single-item tuple to get ref type semantics

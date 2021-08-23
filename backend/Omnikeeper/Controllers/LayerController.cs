@@ -22,7 +22,7 @@ namespace Omnikeeper.Controllers
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly ICurrentUserService currentUserService;
 
-        public LayerController(ILayerModel layerModel, IModelContextBuilder modelContextBuilder, 
+        public LayerController(ILayerModel layerModel, IModelContextBuilder modelContextBuilder,
             ILayerBasedAuthorizationService layerBasedAuthorizationService, ICurrentUserService currentUserService)
         {
             this.layerModel = layerModel;

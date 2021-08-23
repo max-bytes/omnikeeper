@@ -6,9 +6,9 @@ namespace Omnikeeper.Base.Utils
 {
     public static class IDValidations
     {
-        private static Regex LayerIDRegex =          new Regex("^[a-z0-9_]+$");
-        public static Regex PredicateIDRegex =       new Regex("^[a-z0-9_]+$");
-        public static Regex TraitIDRegex =           new Regex("^[a-z0-9_.]+$");
+        private static Regex LayerIDRegex = new Regex("^[a-z0-9_]+$");
+        public static Regex PredicateIDRegex = new Regex("^[a-z0-9_]+$");
+        public static Regex TraitIDRegex = new Regex("^[a-z0-9_.]+$");
         public static Regex GridViewContextIDRegex = new Regex("^[a-z0-9_]+$");
 
         public static bool ValidateLayerID(string candidateID)
@@ -41,7 +41,7 @@ namespace Omnikeeper.Base.Utils
             foreach (var candidateID in candidateIDs)
                 ValidateLayerIDThrow(candidateID);
         }
-        
+
         public static void ValidatePredicateIDThrow(string candidateID)
         {
             if (!ValidatePredicateID(candidateID))

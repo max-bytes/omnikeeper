@@ -74,7 +74,8 @@ namespace Omnikeeper.Model
                 await commandOILP.ExecuteNonQueryAsync();
 
                 return Layer.Build(id, description, color, state, computeLayerBrain, oilp);
-            } else
+            }
+            else
             {
                 // update color
                 if (!current.Color.Equals(color))
