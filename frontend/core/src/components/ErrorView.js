@@ -11,10 +11,19 @@ export function ErrorView({error, inPopup}) {
           {error.graphQLErrors.map((e, i) => {
             return <div key={`gql{i}`}>{e.message}</div>;
           })}
-          {error.networkError.result.errors.map((e, i) => {
-            return <div key={`nw{i}`}>{e.message}</div>;
-          })}
         </div>
+
+        <h3>Network error</h3>
+        <div>{error.networkError.message}</div>
+        
+        {error.networkError.result && <>
+          <h3>Inner network errors</h3>
+          <div style={{overflowY:'scroll', whiteSpace: 'pre-wrap'}}>
+            {error.networkError.result.errors.map((e, i) => {
+              return <div key={`nw{i}`}>{e.message}</div>;
+            })}
+          </div>
+        </>}
     </>;
   } else {
     inner = <><h3>{error.name}</h3>
