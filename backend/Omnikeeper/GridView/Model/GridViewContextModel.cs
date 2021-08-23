@@ -50,6 +50,8 @@ namespace Omnikeeper.GridView.Model
 
         public async Task<(FullContext fullContext, bool changed)> InsertOrUpdate(string id, string speakingName, string description, GridViewConfiguration configuration, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
+            IDValidations.ValidateGridViewContextIDThrow(id);
+
             return await InsertOrUpdate(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
                 ("gridview_context.id", new AttributeScalarValueText(id)),
                 ("gridview_context.config", AttributeScalarValueJSON.Build(GridViewConfiguration.Serializer.SerializeToJObject(configuration))),
@@ -61,6 +63,8 @@ namespace Omnikeeper.GridView.Model
 
         public async Task<bool> TryToDelete(string id, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
+            IDValidations.ValidateGridViewContextIDThrow(id);
+
             return await TryToDelete(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
                 "gridview_context.id",
                 "gridview_context.config",
