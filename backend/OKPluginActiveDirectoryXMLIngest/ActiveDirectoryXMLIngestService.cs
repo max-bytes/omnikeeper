@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Entity.AttributeValues;
 using System;
@@ -73,7 +74,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
                 }
                 var fragments = new List<CICandidateAttributeData.Fragment>();
                 fragments.Add(new CICandidateAttributeData.Fragment("ad.type", new AttributeScalarValueText("user")));
-                AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", "__name", "AD user: "));
+                AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", ICIModel.NameAttribute, "AD user: "));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", "ad.name"));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "EmailAddress", "user.email"));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "CanonicalName", "ad.canonicalName"));
@@ -109,7 +110,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
 
                 var fragments = new List<CICandidateAttributeData.Fragment>();
                 fragments.Add(new CICandidateAttributeData.Fragment("ad.type", new AttributeScalarValueText("computer")));
-                AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", "__name", "AD computer: "));
+                AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", ICIModel.NameAttribute, "AD computer: "));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", "ad.name"));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "CanonicalName", "ad.canonicalName"));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Description", "ad.description"));
@@ -161,7 +162,7 @@ namespace Omnikeeper.Ingest.ActiveDirectoryXML
 
                 var fragments = new List<CICandidateAttributeData.Fragment>();
                 fragments.Add(new CICandidateAttributeData.Fragment("ad.type", new AttributeScalarValueText("group")));
-                AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", "__name", "AD group: "));
+                AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", ICIModel.NameAttribute, "AD group: "));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Name", "ad.name"));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "CanonicalName", "ad.canonicalName"));
                 AddFragmentIfNotNull(fragments, ParseFragmentFromProps(SProps, "Description", "ad.description"));

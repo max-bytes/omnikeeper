@@ -32,7 +32,7 @@ namespace OKPluginActiveDirectoryXMLIngest.Tests
             {
                 //groups
                 new CICandidateAttributeData(new CICandidateAttributeData.Fragment[] {
-                    new CICandidateAttributeData.Fragment("__name", new AttributeScalarValueText("AD group: HR Team")),
+                    new CICandidateAttributeData.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText("AD group: HR Team")),
                     new CICandidateAttributeData.Fragment("ad.type", new AttributeScalarValueText("group")),
                     new CICandidateAttributeData.Fragment("ad.name", new AttributeScalarValueText("HR Team")),
                     new CICandidateAttributeData.Fragment("ad.distinguishedName", new AttributeScalarValueText("CN=HR Team,OU=ACME,DC=acme,DC=local")),
@@ -40,7 +40,7 @@ namespace OKPluginActiveDirectoryXMLIngest.Tests
                     new CICandidateAttributeData.Fragment("ad.description", new AttributeScalarValueText("all members of the HR department")),
                 }),
                 new CICandidateAttributeData(new CICandidateAttributeData.Fragment[] {
-                    new CICandidateAttributeData.Fragment("__name", new AttributeScalarValueText("AD group: IT Team")),
+                    new CICandidateAttributeData.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText("AD group: IT Team")),
                     new CICandidateAttributeData.Fragment("ad.type", new AttributeScalarValueText("group")),
                     new CICandidateAttributeData.Fragment("ad.name", new AttributeScalarValueText("IT Team")),
                     new CICandidateAttributeData.Fragment("ad.distinguishedName", new AttributeScalarValueText("CN=IT Team,OU=ACME,DC=acme,DC=local")),
@@ -50,7 +50,7 @@ namespace OKPluginActiveDirectoryXMLIngest.Tests
 
                 // users
                 new CICandidateAttributeData(new CICandidateAttributeData.Fragment[] {
-                    new CICandidateAttributeData.Fragment("__name", new AttributeScalarValueText("AD user: Dan Jump")),
+                    new CICandidateAttributeData.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText("AD user: Dan Jump")),
                     new CICandidateAttributeData.Fragment("ad.type", new AttributeScalarValueText("user")),
                     new CICandidateAttributeData.Fragment("ad.name", new AttributeScalarValueText("Dan Jump")),
                     new CICandidateAttributeData.Fragment("user.first_name", new AttributeScalarValueText("Dan")),
@@ -62,7 +62,7 @@ namespace OKPluginActiveDirectoryXMLIngest.Tests
                     new CICandidateAttributeData.Fragment("user.email", new AttributeScalarValueText("danj@contoso.com")),
                 }),
                 new CICandidateAttributeData(new CICandidateAttributeData.Fragment[] {
-                    new CICandidateAttributeData.Fragment("__name", new AttributeScalarValueText("AD user: Adam Barr")),
+                    new CICandidateAttributeData.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText("AD user: Adam Barr")),
                     new CICandidateAttributeData.Fragment("ad.type", new AttributeScalarValueText("user")),
                     new CICandidateAttributeData.Fragment("ad.name", new AttributeScalarValueText("Adam Barr")),
                     new CICandidateAttributeData.Fragment("user.first_name", new AttributeScalarValueText("Adam")),
@@ -74,7 +74,7 @@ namespace OKPluginActiveDirectoryXMLIngest.Tests
                     new CICandidateAttributeData.Fragment("user.email", new AttributeScalarValueText("adamb@contoso.com")),
                 }),
                 new CICandidateAttributeData(new CICandidateAttributeData.Fragment[] {
-                    new CICandidateAttributeData.Fragment("__name", new AttributeScalarValueText("AD user: Alan Steiner")),
+                    new CICandidateAttributeData.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText("AD user: Alan Steiner")),
                     new CICandidateAttributeData.Fragment("ad.type", new AttributeScalarValueText("user")),
                     new CICandidateAttributeData.Fragment("ad.name", new AttributeScalarValueText("Alan Steiner")),
                     new CICandidateAttributeData.Fragment("user.first_name", new AttributeScalarValueText("Alan")),
@@ -88,7 +88,7 @@ namespace OKPluginActiveDirectoryXMLIngest.Tests
 
                 // computers
                 new CICandidateAttributeData(new CICandidateAttributeData.Fragment[] {
-                    new CICandidateAttributeData.Fragment("__name", new AttributeScalarValueText("AD computer: PC-1")),
+                    new CICandidateAttributeData.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText("AD computer: PC-1")),
                     new CICandidateAttributeData.Fragment("ad.type", new AttributeScalarValueText("computer")),
                     new CICandidateAttributeData.Fragment("ad.name", new AttributeScalarValueText("PC-1")),
                     new CICandidateAttributeData.Fragment("ad.distinguishedName", new AttributeScalarValueText("CN=PC-1,OU=ACME,DC=acme,DC=local")),
@@ -96,7 +96,7 @@ namespace OKPluginActiveDirectoryXMLIngest.Tests
                     new CICandidateAttributeData.Fragment("ad.description", new AttributeScalarValueText("PC of Dan Jump")),
                 }),
                 new CICandidateAttributeData(new CICandidateAttributeData.Fragment[] {
-                    new CICandidateAttributeData.Fragment("__name", new AttributeScalarValueText("AD computer: PC-2")),
+                    new CICandidateAttributeData.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText("AD computer: PC-2")),
                     new CICandidateAttributeData.Fragment("ad.type", new AttributeScalarValueText("computer")),
                     new CICandidateAttributeData.Fragment("ad.name", new AttributeScalarValueText("PC-2")),
                     new CICandidateAttributeData.Fragment("ad.distinguishedName", new AttributeScalarValueText("CN=PC-2,OU=ACME,DC=acme,DC=local")),
@@ -104,7 +104,7 @@ namespace OKPluginActiveDirectoryXMLIngest.Tests
                     new CICandidateAttributeData.Fragment("ad.description", new AttributeScalarValueText("PC of Adam Barr")),
                 }),
                 new CICandidateAttributeData(new CICandidateAttributeData.Fragment[] {
-                    new CICandidateAttributeData.Fragment("__name", new AttributeScalarValueText("AD computer: PC-3")),
+                    new CICandidateAttributeData.Fragment(ICIModel.NameAttribute, new AttributeScalarValueText("AD computer: PC-3")),
                     new CICandidateAttributeData.Fragment("ad.type", new AttributeScalarValueText("computer")),
                     new CICandidateAttributeData.Fragment("ad.name", new AttributeScalarValueText("PC-3")),
                     new CICandidateAttributeData.Fragment("ad.distinguishedName", new AttributeScalarValueText("CN=PC-3,OU=ACME,DC=acme,DC=local")),

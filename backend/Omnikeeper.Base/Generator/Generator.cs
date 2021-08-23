@@ -155,7 +155,7 @@ namespace Omnikeeper.Base.Generator
             {
                 //{ "host_set_name_from_hostname", new Generator(new LayerSet(1), new GeneratorSelectorByTrait("host"), new List<GeneratorItem>()
                 //    {
-                //        new GeneratorItem("__name", GeneratorAttributeValue.Build("{{ a.hostname|string.upcase }}"))
+                //        new GeneratorItem(ICIModel.NameAttribute, GeneratorAttributeValue.Build("{{ a.hostname|string.upcase }}"))
                 //    }) 
                 //}
             };

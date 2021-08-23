@@ -6,6 +6,7 @@ using Moq;
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Inbound;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Entity.AttributeValues;
 using System;
@@ -37,7 +38,7 @@ namespace OKPluginOIASharepoint.Tests
                     new Config.ListColumnConfig[] {
                         new Config.ListColumnConfig("Title", "title_attribute"),
                         new Config.ListColumnConfig("Surname", "last_name"),
-                        new Config.ListColumnConfig("Surname", "__name")
+                        new Config.ListColumnConfig("Surname", ICIModel.NameAttribute)
                     }, new string[] { "last_name" }, new string[] { "0" })
                 });
             var oia = new OnlineInboundAdapter.Builder().Build(config, new Mock<IConfiguration>().Object, new Mock<IScopedExternalIDMapper>().Object, NullLoggerFactory.Instance);
@@ -65,10 +66,10 @@ namespace OKPluginOIASharepoint.Tests
 
             aa.Should().BeEquivalentTo(new List<CIAttribute>()
             {
-                lap.BuildAttributeFromValue("__name", "Steiner", fakeCIID1),
+                lap.BuildAttributeFromValue(ICIModel.NameAttribute, "Steiner", fakeCIID1),
                 lap.BuildAttributeFromValue("title_attribute", "3", fakeCIID1),
                 lap.BuildAttributeFromValue("last_name", "Steiner", fakeCIID1),
-                lap.BuildAttributeFromValue("__name", "Tibbot", fakeCIID2),
+                lap.BuildAttributeFromValue(ICIModel.NameAttribute, "Tibbot", fakeCIID2),
                 lap.BuildAttributeFromValue("title_attribute", "5", fakeCIID2),
                 lap.BuildAttributeFromValue("last_name", "Tibbot", fakeCIID2),
             });
@@ -126,7 +127,7 @@ namespace OKPluginOIASharepoint.Tests
                     new Config.ListColumnConfig[] {
                         new Config.ListColumnConfig("Title", "title_attribute"),
                         new Config.ListColumnConfig("Surname", "last_name"),
-                        new Config.ListColumnConfig("Surname", "__name")
+                        new Config.ListColumnConfig("Surname", ICIModel.NameAttribute)
                     }, new string[] { "last_name" }, new string[] { "0" })});
             var accessTokenGetter = new AccessTokenGetter(config);
 
@@ -155,7 +156,7 @@ namespace OKPluginOIASharepoint.Tests
                     new Config.ListColumnConfig[] {
                         new Config.ListColumnConfig("Title", "title_attribute"),
                         new Config.ListColumnConfig("Surname", "last_name"),
-                        new Config.ListColumnConfig("Surname", "__name")
+                        new Config.ListColumnConfig("Surname", ICIModel.NameAttribute)
                     }, new string[] { "last_name" }, new string[] { "0" })});
             var accessTokenGetter = new AccessTokenGetter(config);
 

@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Entity.AttributeValues;
@@ -19,7 +20,7 @@ namespace OKPluginGenericJSONIngest
             },
             new List<TraitAttribute>()
             {
-                new TraitAttribute("name", CIAttributeTemplate.BuildFromParams("__name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
             });
         public static readonly GenericTrait ContextFlattenedTrait = RecursiveTraitService.FlattenSingleRecursiveTrait(Context);
 
