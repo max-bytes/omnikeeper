@@ -47,8 +47,6 @@ namespace Tasks.DBInit
             var traitModel = new RecursiveDataTraitModel(effectiveTraitModel, ciModel, baseAttributeModel);
             var lbas = new Mock<ILayerBasedAuthorizationService>();
             lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
-            //var predicateWriteService = new PredicateWriteService(predicateModel, baseConfigurationModel, ciModel, baseAttributeModel, lbas.Object);
-            //var traitWriteService = new RecursiveTraitWriteService(traitModel, baseConfigurationModel, ciModel, baseAttributeModel, lbas.Object);
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
 
             var random = new Random(3);
