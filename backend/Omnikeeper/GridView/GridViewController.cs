@@ -31,6 +31,10 @@ namespace LandscapeRegistry.GridView
         public async Task<IActionResult> GetGridViewContexts()
         {
             var (result, exception) = await _mediatr.Send(new GetContextsQuery.Query());
+
+            if (exception != null)
+                return BadRequest(exception);
+
             return Ok(result);
         }
 
