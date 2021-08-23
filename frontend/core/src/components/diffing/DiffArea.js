@@ -61,8 +61,8 @@ export function DiffArea(props) {
 
     
     mergedCIs = _.mapValues(mergedCIs, m => {
-      var leftD = _.keyBy(m.left?.effectiveTraits, r => `${r.underlyingTrait.name}`);
-      var rightD = _.keyBy(m.right?.effectiveTraits, r => `${r.underlyingTrait.name}`);
+      var leftD = _.keyBy(m.left?.effectiveTraits, r => `${r.underlyingTrait.id}`);
+      var rightD = _.keyBy(m.right?.effectiveTraits, r => `${r.underlyingTrait.id}`);
 
       var keys = _.union(_.keys(leftD), _.keys(rightD));
 
@@ -151,6 +151,10 @@ function compareEffectiveTraits(etA, etB) {
   } else if (etA && !etB) {
     return {state: 'unequal'};
   } else {
-    return {state: 'equal'}; // TODO: treat different attributes/relations/... as being only similar, not equal
+    if (etA.underlyingTrait.id === etB.underlyingTrait.id) {
+      return {state: 'equal'}; // TODO: treat different attributes/relations/... as being only similar, not equal
+    } else {
+      return {state: 'unequal'};
+    }
   }
 }
