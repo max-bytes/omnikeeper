@@ -60,10 +60,16 @@ namespace Omnikeeper.Base.Model
         {
             var CIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(trait, layerSet, new AllCIIDsSelection(), trans, timeThreshold);
             var ret = new Dictionary<string, T>();
-            foreach(var (_, et) in CIs.Values)
+            foreach(var (_, et) in CIs.Values.OrderBy(t => t.ci.ID)) // we order by GUID to stay consistent even when multiple CIs have the same ID
             {
                 var (dc, id) = EffectiveTrait2DC(et);
-                ret.Add(id, dc);
+                try
+                {
+                    ret.Add(id, dc);
+                } catch (ArgumentException)
+                { // duplicate detected, do not add
+                    // TODO: better duplicate handling possible here?
+                }
             }
             return ret;
         }
