@@ -97,7 +97,7 @@ namespace Tests.Integration.Controller
             r.Should().BeOfType<CreatedAtActionResult>();
 
             // test fetching single context
-            var r2 = await controller.GetContext("ctx1");
+            var r2 = await controller.GetGridViewContext("ctx1");
             r2.Should().BeOfType<OkObjectResult>();
             var ctxData = ((r2 as OkObjectResult)!.Value as GetContextResponse);
             ctxData.Should().NotBeNull();

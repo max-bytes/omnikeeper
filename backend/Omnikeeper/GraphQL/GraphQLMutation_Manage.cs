@@ -278,25 +278,25 @@ namespace Omnikeeper.GraphQL
               ),
               resolve: async context =>
               {
-                  var predicateWriteService = context.RequestServices.GetRequiredService<IPredicateWriteService>();
+                  //var predicateWriteService = context.RequestServices.GetRequiredService<IPredicateWriteService>();
+                  var predicateModel = context.RequestServices.GetRequiredService<IPredicateModel>();
                   var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
                   var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+                  var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
 
                   var predicate = context.GetArgument<UpsertPredicateInput>("predicate")!;
 
                   var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                  var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
-                  if (!managementAuthorizationService.HasManagementPermission(userContext.User))
-                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify predicate");
-
                   using var transaction = modelContextBuilder.BuildDeferred();
 
-                  var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+                  var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(transaction);
+                  if (!context.RequestServices.GetRequiredService<IManagementAuthorizationService>().CanModifyManagement(userContext.User, baseConfiguration, out var message))
+                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify predicates: {message}");
 
-                  var newPredicate = await predicateWriteService.InsertOrUpdate(
-                      predicate.ID, predicate.WordingFrom, predicate.WordingTo, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
-                      changesetProxy, userContext.User, transaction);
+                  var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+                  var newPredicate = await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+                      changesetProxy, transaction);
 
                   transaction.Commit();
                   userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
@@ -311,23 +311,25 @@ namespace Omnikeeper.GraphQL
               ),
               resolve: async context =>
               {
-                  var predicateWriteService = context.RequestServices.GetRequiredService<IPredicateWriteService>();
+                  var predicateModel = context.RequestServices.GetRequiredService<IPredicateModel>();
                   var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
                   var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+                  var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
 
                   var predicateID = context.GetArgument<string>("predicateID");
 
                   var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                  var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
-                  if (!managementAuthorizationService.HasManagementPermission(userContext.User))
-                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to remove predicate");
-
                   using var transaction = modelContextBuilder.BuildDeferred();
+
+                  var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(transaction);
+                  if (!context.RequestServices.GetRequiredService<IManagementAuthorizationService>().CanModifyManagement(userContext.User, baseConfiguration, out var message))
+                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify predicates: {message}");
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
-                  var deleted = await predicateWriteService.TryToDelete(predicateID, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.User, transaction);
+                  var deleted = await predicateModel.TryToDelete(predicateID, new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, transaction);
 
                   transaction.Commit();
                   userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
@@ -341,9 +343,10 @@ namespace Omnikeeper.GraphQL
               ),
               resolve: async context =>
               {
-                  var traitWriteService = context.RequestServices.GetRequiredService<IRecursiveTraitWriteService>();
+                  var traitModel = context.RequestServices.GetRequiredService<IRecursiveDataTraitModel>();
                   var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
                   var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+                  var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
 
                   var trait = context.GetArgument<UpsertRecursiveTraitInput>("trait");
 
@@ -353,23 +356,24 @@ namespace Omnikeeper.GraphQL
 
                   var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                  var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
-                  if (!managementAuthorizationService.HasManagementPermission(userContext.User))
-                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify traits");
-
                   using var transaction = modelContextBuilder.BuildDeferred();
+
+                  var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(transaction);
+                  if (!context.RequestServices.GetRequiredService<IManagementAuthorizationService>().CanModifyManagement(userContext.User, baseConfiguration, out var message))
+                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify traits: {message}");
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
-                  var newTrait = await traitWriteService.InsertOrUpdate(
+                  var newTrait = await traitModel.InsertOrUpdate(
                       trait.ID, requiredAttributes, optionalAttributes, requiredRelations, trait.RequiredTraits,
+                      new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
-                      changesetProxy, userContext.User, transaction);
+                      changesetProxy, transaction);
 
                   transaction.Commit();
                   userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
 
-                  return newTrait.trait;
+                  return newTrait.recursiveTrait;
               });
 
             FieldAsync<BooleanGraphType>("manage_removeRecursiveTrait",
@@ -378,23 +382,25 @@ namespace Omnikeeper.GraphQL
               ),
               resolve: async context =>
               {
-                  var traitWriteService = context.RequestServices.GetRequiredService<IRecursiveTraitWriteService>();
+                  var traitModel = context.RequestServices.GetRequiredService<IRecursiveDataTraitModel>();
                   var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
                   var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+                  var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
 
                   var traitID = context.GetArgument<string>("id");
 
                   var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                  var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
-                  if (!managementAuthorizationService.HasManagementPermission(userContext.User))
-                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify traits");
-
                   using var transaction = modelContextBuilder.BuildDeferred();
+
+                  var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(transaction);
+                  if (!context.RequestServices.GetRequiredService<IManagementAuthorizationService>().CanModifyManagement(userContext.User, baseConfiguration, out var message))
+                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify traits: {message}");
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
-                  var deleted = await traitWriteService.TryToDelete(traitID, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.User, transaction);
+                  var deleted = await traitModel.TryToDelete(traitID, new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer, 
+                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, transaction);
 
                   transaction.Commit();
                   userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
@@ -408,26 +414,28 @@ namespace Omnikeeper.GraphQL
               ),
               resolve: async context =>
               {
-                  var authRoleWriteService = context.RequestServices.GetRequiredService<IAuthRoleWriteService>();
+                  var authRoleModel = context.RequestServices.GetRequiredService<IAuthRoleModel>();
                   var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
                   var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+                  var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
 
                   var authRole = context.GetArgument<UpsertAuthRoleInput>("authRole");
 
                   var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                  var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
-                  if (!managementAuthorizationService.HasManagementPermission(userContext.User))
-                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify auth roles");
-
                   using var transaction = modelContextBuilder.BuildDeferred();
+
+                  var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(transaction);
+                  if (!context.RequestServices.GetRequiredService<IManagementAuthorizationService>().CanModifyManagement(userContext.User, baseConfiguration, out var message))
+                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify auth roles: {message}");
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
-                  var newAuthRole = await authRoleWriteService.InsertOrUpdate(
-                      authRole.ID, authRole.Permissions, 
+                  var newAuthRole = await authRoleModel.InsertOrUpdate(
+                      authRole.ID, authRole.Permissions,
+                      new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
-                      changesetProxy, userContext.User, transaction);
+                      changesetProxy, transaction);
 
                   transaction.Commit();
                   userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
@@ -441,23 +449,26 @@ namespace Omnikeeper.GraphQL
               ),
               resolve: async context =>
               {
-                  var authRoleWriteService = context.RequestServices.GetRequiredService<IAuthRoleWriteService>();
+                  var authRoleModel = context.RequestServices.GetRequiredService<IAuthRoleModel>();
                   var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
                   var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
+                  var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
 
                   var authRoleID = context.GetArgument<string>("id");
 
                   var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                  var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
-                  if (!managementAuthorizationService.HasManagementPermission(userContext.User))
-                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify auth roles");
-
                   using var transaction = modelContextBuilder.BuildDeferred();
+
+                  var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(transaction);
+                  if (!context.RequestServices.GetRequiredService<IManagementAuthorizationService>().CanModifyManagement(userContext.User, baseConfiguration, out var message))
+                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify auth roles: {message}");
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
-                  var deleted = await authRoleWriteService.TryToDelete(authRoleID, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.User, transaction);
+                  var deleted = await authRoleModel.TryToDelete(authRoleID,
+                      new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, transaction);
 
                   transaction.Commit();
                   userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object

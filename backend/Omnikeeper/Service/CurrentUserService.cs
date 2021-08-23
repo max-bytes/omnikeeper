@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -19,11 +20,13 @@ namespace Omnikeeper.Service
     {
 
         public CurrentUserService(IHttpContextAccessor httpContextAccessor, IUserInDatabaseModel userModel, ILayerModel layerModel,
+            IBaseConfigurationModel baseConfigurationModel,
             IAuthRoleModel authRoleModel, IConfiguration configuration, ILogger<CurrentUserService> logger)
         {
             HttpContextAccessor = httpContextAccessor;
             UserModel = userModel;
             LayerModel = layerModel;
+            BaseConfigurationModel = baseConfigurationModel;
             AuthRoleModel = authRoleModel;
             Configuration = configuration;
             Logger = logger;
@@ -35,6 +38,7 @@ namespace Omnikeeper.Service
         private IHttpContextAccessor HttpContextAccessor { get; }
         private IUserInDatabaseModel UserModel { get; }
         public ILayerModel LayerModel { get; }
+        public IBaseConfigurationModel BaseConfigurationModel { get; }
 
         public async Task<AuthenticatedUser> GetCurrentUser(IModelContext trans)
         {
@@ -119,7 +123,9 @@ namespace Omnikeeper.Service
                 }
                 else
                 {
-                    var authRoles = await AuthRoleModel.GetAuthRoles(trans, TimeThreshold.BuildLatest());
+                    var baseConfiguration = await BaseConfigurationModel.GetConfigOrDefault(trans);
+
+                    var authRoles = await AuthRoleModel.GetAuthRoles(new LayerSet(baseConfiguration.ConfigLayerset), trans, TimeThreshold.BuildLatest());
                     foreach (var role in clientRoles)
                     {
                         if (authRoles.TryGetValue(role, out var authRole))

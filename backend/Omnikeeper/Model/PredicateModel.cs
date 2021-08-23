@@ -1,8 +1,10 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,22 +14,27 @@ namespace Omnikeeper.Model
     // TODO: think about caching?
     public class PredicateModel : TraitDataConfigBaseModel<Predicate>, IPredicateModel
     {
-        public PredicateModel(IBaseConfigurationModel baseConfigurationModel, IEffectiveTraitModel effectiveTraitModel)
-            : base(CoreTraits.PredicateFlattened, baseConfigurationModel, effectiveTraitModel)
+        public PredicateModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel)
+            : base(CoreTraits.PredicateFlattened, effectiveTraitModel, ciModel, baseAttributeModel)
         {}
 
-        public async Task<Predicate> GetPredicate(string id, TimeThreshold timeThreshold, IModelContext trans)
+        public async Task<Predicate> GetPredicate(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             IDValidations.ValidatePredicateIDThrow(id);
 
-            return await Get(id, timeThreshold, trans);
+            return await Get(id, layerSet, timeThreshold, trans);
         }
 
-        public async Task<(Guid,Predicate)> TryToGetPredicate(string id, TimeThreshold timeThreshold, IModelContext trans)
+        public async Task<(Guid,Predicate)> TryToGetPredicate(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             IDValidations.ValidatePredicateIDThrow(id);
 
-            return await TryToGet(id, timeThreshold, trans);
+            return await TryToGet(id, layerSet, timeThreshold, trans);
+        }
+
+        public async Task<IDictionary<string, Predicate>> GetPredicates(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            return await GetAll(layerSet, trans, timeThreshold);
         }
 
         protected override (Predicate, string) EffectiveTrait2DC(EffectiveTrait et)
@@ -38,9 +45,24 @@ namespace Omnikeeper.Model
             return (new Predicate(predicateID, wordingFrom, wordingTo), predicateID);
         }
 
-        public async Task<IDictionary<string, Predicate>> GetPredicates(IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<(Predicate predicate, bool changed)> InsertOrUpdate(string id, string wordingFrom, string wordingTo, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
-            return await GetAll(trans, timeThreshold);
+            return await InsertOrUpdate(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
+                ("predicate.id", new AttributeScalarValueText(id)),
+                ("predicate.wording_from", new AttributeScalarValueText(wordingFrom)),
+                ("predicate.wording_to", new AttributeScalarValueText(wordingTo)),
+                (ICIModel.NameAttribute, new AttributeScalarValueText($"Predicate - {id}"))
+            );
+        }
+
+        public async Task<bool> TryToDelete(string id, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        {
+            return await TryToDelete(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
+                "predicate.id",
+                "predicate.wording_from",
+                "predicate.wording_to",
+                ICIModel.NameAttribute
+            );
         }
     }
 }

@@ -44,7 +44,7 @@ namespace Omnikeeper.Controllers.Ingest
 
         // TODO: rework into a context based approach?
         [HttpPost("")]
-        public async Task<ActionResult> Ingest([FromForm, Required] string writeLayerID, [FromForm, Required] string[] searchLayerIDs, [FromForm, Required] IEnumerable<IFormFile> files)
+        public async Task<ActionResult> IngestXML([FromForm, Required] string writeLayerID, [FromForm, Required] string[] searchLayerIDs, [FromForm, Required] IEnumerable<IFormFile> files)
         {
             var mc = modelContextBuilder.BuildImmediate();
 

@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using OKPluginGenericJSONIngest;
 using OKPluginGenericJSONIngest.Transform.JMESPath;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -22,21 +24,21 @@ namespace Omnikeeper.Controllers.Ingest
     public class ManageContextController : ControllerBase
     {
         private readonly IContextModel contextModel;
-        private readonly IContextWriteService contextWriteService;
         private readonly ICurrentUserService currentUserService;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly IChangesetModel changesetModel;
         private readonly IModelContextBuilder modelContextBuilder;
+        private readonly IBaseConfigurationModel baseConfigurationModel;
 
-        public ManageContextController(IContextModel contextModel, IContextWriteService contextWriteService, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService,
-            IChangesetModel changesetModel, IModelContextBuilder modelContextBuilder)
+        public ManageContextController(IContextModel contextModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService,
+            IChangesetModel changesetModel, IModelContextBuilder modelContextBuilder, IBaseConfigurationModel baseConfigurationModel)
         {
             this.contextModel = contextModel;
-            this.contextWriteService = contextWriteService;
             this.currentUserService = currentUserService;
             this.managementAuthorizationService = managementAuthorizationService;
             this.changesetModel = changesetModel;
             this.modelContextBuilder = modelContextBuilder;
+            this.baseConfigurationModel = baseConfigurationModel;
         }
 
         [HttpGet()]
@@ -45,10 +47,11 @@ namespace Omnikeeper.Controllers.Ingest
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
 
-            if (!managementAuthorizationService.HasManagementPermission(user))
-                return Forbid($"User \"{user.Username}\" does not have permission to access management");
+            var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
+            if (!managementAuthorizationService.CanReadManagement(user, baseConfiguration, out var message))
+                return Forbid($"User \"{user.Username}\" does not have permission to read contexts: {message}");
 
-            var contexts = await contextModel.GetContexts(TimeThreshold.BuildLatest(), trans);
+            var contexts = await contextModel.GetContexts(new LayerSet(baseConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
             return Ok(contexts.Values);
         }
 
@@ -58,10 +61,11 @@ namespace Omnikeeper.Controllers.Ingest
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
 
-            if (!managementAuthorizationService.HasManagementPermission(user))
-                return Forbid($"User \"{user.Username}\" does not have permission to access management");
+            var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
+            if (!managementAuthorizationService.CanReadManagement(user, baseConfiguration, out var message))
+                return Forbid($"User \"{user.Username}\" does not have permission to read contexts: {message}");
 
-            var context = await contextModel.GetContext(id, TimeThreshold.BuildLatest(), trans);
+            var context = await contextModel.GetContext(id, new LayerSet(baseConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
             if (context != null)
                 return Ok(context);
             else
@@ -76,8 +80,9 @@ namespace Omnikeeper.Controllers.Ingest
                 var trans = modelContextBuilder.BuildImmediate();
                 var user = await currentUserService.GetCurrentUser(trans);
 
-                if (!managementAuthorizationService.HasManagementPermission(user))
-                    return Forbid($"User \"{user.Username}\" does not have permission to access management");
+                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
+                if (!managementAuthorizationService.CanModifyManagement(user, baseConfiguration, out var message))
+                    return Forbid($"User \"{user.Username}\" does not have permission to modify contexts: {message}");
 
                 // validation
                 switch (contextCandidate.TransformConfig)
@@ -96,10 +101,11 @@ namespace Omnikeeper.Controllers.Ingest
                 }
                 var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
                 var mc = modelContextBuilder.BuildDeferred();
-                var (context, _) = await contextWriteService.Upsert(contextCandidate.ID, 
+                var (context, _) = await contextModel.InsertOrUpdate(contextCandidate.ID, 
                     contextCandidate.ExtractConfig, contextCandidate.TransformConfig, contextCandidate.LoadConfig, 
+                    new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
                     new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), 
-                    changesetProxy, user, mc);
+                    changesetProxy, mc);
                 mc.Commit();
                 return Ok(context);
             } catch (Exception e)
@@ -109,23 +115,25 @@ namespace Omnikeeper.Controllers.Ingest
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Context>> RemoveContext([FromRoute, Required] string id)
+        public async Task<ActionResult<bool>> RemoveContext([FromRoute, Required] string id)
         {
             try
             {
                 var trans = modelContextBuilder.BuildImmediate();
                 var user = await currentUserService.GetCurrentUser(trans);
 
-                if (!managementAuthorizationService.HasManagementPermission(user))
-                    return Forbid($"User \"{user.Username}\" does not have permission to access management");
+                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
+                if (!managementAuthorizationService.CanModifyManagement(user, baseConfiguration, out var message))
+                    return Forbid($"User \"{user.Username}\" does not have permission to modify contexts: {message}");
 
                 var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
                 var mc = modelContextBuilder.BuildDeferred();
-                var context = await contextWriteService.Delete(id, 
+                var deleted = await contextModel.TryToDelete(id,
+                    new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
                     new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), 
-                    changesetProxy, user,  mc);
+                    changesetProxy,  mc);
                 mc.Commit();
-                return Ok(context);
+                return Ok(deleted);
             }
             catch (Exception e)
             {

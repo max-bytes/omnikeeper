@@ -5,6 +5,7 @@ using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -56,11 +57,13 @@ namespace Omnikeeper.GridView.Commands
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
             private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
+            private readonly IBaseConfigurationModel baseConfigurationModel;
 
             public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel,
                 IChangesetModel changesetModel, ICurrentUserService currentUserService, IGridViewContextModel gridViewContextModel,
                 IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
-                ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService)
+                ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService,
+                IBaseConfigurationModel baseConfigurationModel)
             {
                 this.ciModel = ciModel;
                 this.attributeModel = attributeModel;
@@ -72,6 +75,7 @@ namespace Omnikeeper.GridView.Commands
                 this.modelContextBuilder = modelContextBuilder;
                 this.layerBasedAuthorizationService = layerBasedAuthorizationService;
                 this.ciBasedAuthorizationService = ciBasedAuthorizationService;
+                this.baseConfigurationModel = baseConfigurationModel;
             }
             public async Task<(ChangeDataResponse?, Exception?)> Handle(Command request, CancellationToken cancellationToken)
             {
@@ -90,11 +94,15 @@ namespace Omnikeeper.GridView.Commands
                 var user = await currentUserService.GetCurrentUser(trans);
                 var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
-                var context = await gridViewContextModel.GetFullContext(request.Context, TimeThreshold.BuildLatest(), trans);
+                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
+
+                var context = await gridViewContextModel.GetFullContext(request.Context, new LayerSet(baseConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
                 var config = context.Configuration;
 
                 if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, config.WriteLayer))
                     return (null, new Exception($"User \"{user.Username}\" does not have permission to write to layer ID {config.WriteLayer}"));
+                if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, config.ReadLayerset))
+                    return (null, new Exception($"User \"{user.Username}\" does not have permission to read from at least one of the following layers: {string.Join(", ", config.ReadLayerset)}"));
 
                 foreach (var row in request.Changes.SparseRows)
                 {

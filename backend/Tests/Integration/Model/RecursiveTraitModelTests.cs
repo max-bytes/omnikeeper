@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -15,9 +16,9 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration.Service
 {
-    class RecursiveTraitWriteServiceTests : DIServicedTestBase
+    class RecursiveTraitModelTests : DIServicedTestBase
     {
-        public RecursiveTraitWriteServiceTests() : base(true)
+        public RecursiveTraitModelTests() : base(true)
         {
         }
 
@@ -33,10 +34,13 @@ namespace Tests.Integration.Service
                 });
             currentUserServiceMock.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 
-            var recursiveTraitWriteService = ServiceProvider.GetRequiredService<IRecursiveTraitWriteService>();
+            var baseConfigurationModel = ServiceProvider.GetRequiredService<IBaseConfigurationModel>();
+
+            var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(ModelContextBuilder.BuildImmediate());
+
             var recursiveTraitModel = ServiceProvider.GetRequiredService<IRecursiveDataTraitModel>();
 
-            var rt1 = await recursiveTraitModel.GetRecursiveTraits(ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            var rt1 = await recursiveTraitModel.GetRecursiveTraits(new LayerSet(baseConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.IsEmpty(rt1);
 
             var changesetProxy = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
@@ -45,12 +49,13 @@ namespace Tests.Integration.Service
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 bool changed;
-                (trait, changed) = await recursiveTraitWriteService.InsertOrUpdate("test_trait",
+                (trait, changed) = await recursiveTraitModel.InsertOrUpdate("test_trait",
                     new List<TraitAttribute>() { new TraitAttribute("test_ta", CIAttributeTemplate.BuildFromParams("test_a", Omnikeeper.Entity.AttributeValues.AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))) },
                     new List<TraitAttribute>() { },
                     new List<TraitRelation>() { },
                     new List<string>() { },
-                    new DataOriginV1(DataOriginType.Manual), changesetProxy, user, trans);
+                    new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                    new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
 
                 Assert.IsNotNull(trait);
                 Assert.IsTrue(changed);
@@ -58,17 +63,19 @@ namespace Tests.Integration.Service
                 trans.Commit();
             }
 
-            var rt2 = await recursiveTraitModel.GetRecursiveTraits(ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            var rt2 = await recursiveTraitModel.GetRecursiveTraits(new LayerSet(baseConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             rt2.Should().BeEquivalentTo(new List<RecursiveTrait>() { trait });
 
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                bool deleted = await recursiveTraitWriteService.TryToDelete(trait.ID, new DataOriginV1(DataOriginType.Manual), changesetProxy, user, trans);
+                bool deleted = await recursiveTraitModel.TryToDelete(trait.ID,
+                    new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer, 
+                    new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
                 Assert.IsTrue(deleted);
                 trans.Commit();
             }
 
-            var rt3 = await recursiveTraitModel.GetRecursiveTraits(ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            var rt3 = await recursiveTraitModel.GetRecursiveTraits(new LayerSet(baseConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.IsEmpty(rt3);
         }
     }

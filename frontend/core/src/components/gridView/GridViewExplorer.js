@@ -22,7 +22,7 @@ function GridViewExplorer(props) {
         try {
             setLoading(true);
             // reload
-            const context = await swaggerClient.apis.GridView.GetContexts({ version: apiVersion })
+            const context = await swaggerClient.apis.GridView.GetGridViewContexts({ version: apiVersion })
                 .then((result) => result.body);
             setContext(context); // set context
 
