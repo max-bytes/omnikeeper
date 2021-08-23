@@ -29,9 +29,9 @@ namespace Tests.Integration.Model
             var baseRelationModel = new BaseRelationModel(new PartitionModel());
             var relationModel = new RelationModel(baseRelationModel);
             var ciModel = new CIModel(attributeModel, new CIIDModel());
-            var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
-            var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);
-            var predicateModel = new PredicateModel(baseConfigurationModel, effectiveTraitModel);
+            //var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
+            //var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);
+            //var predicateModel = new PredicateModel(effectiveTraitModel, ciModel, baseAttributeModel);
             var layerModel = new LayerModel();
 
             using var trans1 = ModelContextBuilder.BuildDeferred();
@@ -100,9 +100,9 @@ namespace Tests.Integration.Model
             var baseRelationModel = new BaseRelationModel(new PartitionModel());
             var relationModel = new RelationModel(baseRelationModel);
             var ciModel = new CIModel(attributeModel, new CIIDModel());
-            var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
-            var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);
-            var predicateModel = new PredicateModel(baseConfigurationModel, effectiveTraitModel);
+            //var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
+            //var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);
+            //var predicateModel = new PredicateModel(baseConfigurationModel, effectiveTraitModel);
             var layerModel = new LayerModel();
 
             using var trans = ModelContextBuilder.BuildDeferred();

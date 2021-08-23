@@ -14,7 +14,6 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.GraphQL;
 using Omnikeeper.GridView.Model;
-using Omnikeeper.GridView.Service;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
@@ -158,10 +157,6 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IDataPartitionService, DataPartitionService>();
             services.AddSingleton<MarkedForDeletionService>();
             services.AddScoped<IngestDataService>(); // TODO: make singleton
-            services.AddSingleton<IPredicateWriteService, PredicateWriteService>();
-            services.AddSingleton<IRecursiveTraitWriteService, RecursiveTraitWriteService>();
-            services.AddSingleton<IAuthRoleWriteService, AuthRoleWriteService>();
-            services.AddSingleton<IGridViewContextWriteService, GridViewContextWriteService>();
 
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 

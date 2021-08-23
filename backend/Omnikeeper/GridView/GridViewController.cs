@@ -28,9 +28,9 @@ namespace LandscapeRegistry.GridView
         /// </summary>
         /// <returns>200</returns>
         [HttpGet("contexts")]
-        public async Task<IActionResult> GetContexts()
+        public async Task<IActionResult> GetGridViewContexts()
         {
-            var result = await _mediatr.Send(new GetContextsQuery.Query());
+            var (result, exception) = await _mediatr.Send(new GetContextsQuery.Query());
             return Ok(result);
         }
 
@@ -40,7 +40,7 @@ namespace LandscapeRegistry.GridView
         /// <returns>200</returns>
         /// <response code="400">If the name was not found or any other error occurred</response>  
         [HttpGet("context/{name}")]
-        public async Task<IActionResult> GetContext([FromRoute] string name)
+        public async Task<IActionResult> GetGridViewContext([FromRoute] string name)
         {
             var (result, exception) = await _mediatr.Send(new GetContextQuery.Query(name));
 

@@ -3,6 +3,7 @@ using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -185,6 +186,7 @@ namespace Omnikeeper.GraphQL
                 arguments: new QueryArguments(),
                 resolve: async context =>
                 {
+                    var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
                     var predicateModel = context.RequestServices.GetRequiredService<IPredicateModel>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
@@ -192,7 +194,8 @@ namespace Omnikeeper.GraphQL
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
                     userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
 
-                    var predicates = (await predicateModel.GetPredicates(userContext.Transaction, userContext.TimeThreshold)).Values;
+                    var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                    var predicates = (await predicateModel.GetPredicates(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, userContext.TimeThreshold)).Values;
 
                     return predicates;
                 });

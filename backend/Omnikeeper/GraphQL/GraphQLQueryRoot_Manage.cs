@@ -133,19 +133,20 @@ namespace Omnikeeper.GraphQL
                 arguments: new QueryArguments(),
                 resolve: async context =>
                 {
+                    var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
                     var predicateModel = context.RequestServices.GetRequiredService<IPredicateModel>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                    var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
-                    if (!managementAuthorizationService.HasManagementPermission(userContext.User))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to access management");
-
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
-                    userContext.TimeThreshold = context.GetArgument("timeThreshold", TimeThreshold.BuildLatest());
+                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
-                    var predicates = (await predicateModel.GetPredicates(userContext.Transaction, userContext.TimeThreshold)).Values;
+                    var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                    if (!context.RequestServices.GetRequiredService<IManagementAuthorizationService>().CanReadManagement(userContext.User, baseConfiguration, out var message))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read predicates: {message}");
+
+                    var predicates = (await predicateModel.GetPredicates(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, userContext.TimeThreshold)).Values;
 
                     return predicates;
                 });
@@ -153,35 +154,41 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<RecursiveTraitType>>("manage_recursiveTraits",
                 resolve: async context =>
                 {
+                    var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
                     var traitModel = context.RequestServices.GetRequiredService<IRecursiveDataTraitModel>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                    var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
-                    if (!managementAuthorizationService.HasManagementPermission(userContext.User))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to access management");
-
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
+                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
+
+                    var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                    if (!context.RequestServices.GetRequiredService<IManagementAuthorizationService>().CanReadManagement(userContext.User, baseConfiguration, out var message))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read traits: {message}");
+
                     // TODO: should we not deliver non-DB traits (f.e. from CLBs) here?
-                    var traitSet = await traitModel.GetRecursiveTraits(userContext.Transaction, TimeThreshold.BuildLatest());
+                    var traitSet = await traitModel.GetRecursiveTraits(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, TimeThreshold.BuildLatest());
                     return traitSet;
                 });
 
             FieldAsync<ListGraphType<AuthRoleType>>("manage_authRoles",
                 resolve: async context =>
                 {
+                    var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
                     var authRoleModel = context.RequestServices.GetRequiredService<IAuthRoleModel>();
                     var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                    var managementAuthorizationService = context.RequestServices.GetRequiredService<IManagementAuthorizationService>();
-                    if (!managementAuthorizationService.HasManagementPermission(userContext.User))
-                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to access management");
-
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
-                    var authRoles = await authRoleModel.GetAuthRoles(userContext.Transaction, TimeThreshold.BuildLatest());
+                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
+
+                    var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                    if (!context.RequestServices.GetRequiredService<IManagementAuthorizationService>().CanReadManagement(userContext.User, baseConfiguration, out var message))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read auth roles: {message}");
+
+                    var authRoles = await authRoleModel.GetAuthRoles(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, TimeThreshold.BuildLatest());
                     return authRoles.Values;
                 });
 

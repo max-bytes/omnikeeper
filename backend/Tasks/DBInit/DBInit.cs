@@ -40,31 +40,34 @@ namespace Tasks.DBInit
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(partitionModel));
             var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);
-            var predicateModel = new PredicateModel(baseConfigurationModel, effectiveTraitModel);
+            var predicateModel = new PredicateModel(effectiveTraitModel, ciModel, baseAttributeModel);
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var layerModel = new LayerModel();
-            var traitModel = new RecursiveDataTraitModel(effectiveTraitModel, baseConfigurationModel);
+            var traitModel = new RecursiveDataTraitModel(effectiveTraitModel, ciModel, baseAttributeModel);
             var lbas = new Mock<ILayerBasedAuthorizationService>();
             lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
-            var predicateWriteService = new PredicateWriteService(predicateModel, baseConfigurationModel, ciModel, baseAttributeModel, lbas.Object);
-            var traitWriteService = new RecursiveTraitWriteService(traitModel, baseConfigurationModel, ciModel, baseAttributeModel, lbas.Object);
+            //var predicateWriteService = new PredicateWriteService(predicateModel, baseConfigurationModel, ciModel, baseAttributeModel, lbas.Object);
+            //var traitWriteService = new RecursiveTraitWriteService(traitModel, baseConfigurationModel, ciModel, baseAttributeModel, lbas.Object);
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
 
             var random = new Random(3);
+
 
             var mc = modelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, mc, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
             var authenticatedUser = new AuthenticatedUser(user, new HashSet<string>() { });
 
+            var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(mc);
 
             using (var trans = modelContextBuilder.BuildDeferred())
             {
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var rt in DefaultTraits.Get())
                 {
-                    await traitWriteService.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.RequiredTraits,
-                        new DataOriginV1(DataOriginType.Manual), changeset, authenticatedUser, mc);
+                    await traitModel.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.RequiredTraits,
+                        new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                        new DataOriginV1(DataOriginType.Manual), changeset, mc);
                 }
                 trans.Commit();
             }
@@ -206,7 +209,11 @@ namespace Tasks.DBInit
             {
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates).Concat(baseDataPredicates))
-                    await predicateWriteService.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, new DataOriginV1(DataOriginType.Manual), changeset, authenticatedUser, trans);
+                {
+                    await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo,
+                        new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                        new DataOriginV1(DataOriginType.Manual), changeset, trans);
+                }
 
                 trans.Commit();
             }

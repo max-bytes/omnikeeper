@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -24,8 +25,9 @@ namespace Tests
             var attributeModel = serviceProvider.GetRequiredService<IAttributeModel>();
             var ciModel = serviceProvider.GetRequiredService<ICIModel>();
             var userModel = serviceProvider.GetRequiredService<IUserInDatabaseModel>();
-            var traitWriteService = serviceProvider.GetRequiredService<IRecursiveTraitWriteService>();
+            var traitModel = serviceProvider.GetRequiredService<IRecursiveDataTraitModel>();
             var user = await DBSetup.SetupUser(userModel, modelContextBuilder.BuildImmediate());
+            var baseConfigurationModel = serviceProvider.GetRequiredService<IBaseConfigurationModel>();
 
             var random = new Random(3);
 
@@ -60,6 +62,9 @@ namespace Tests
             }).ToList();
 
 
+            var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(modelContextBuilder.BuildImmediate());
+
+
             List<Layer> layers;
             using (var mc = modelContextBuilder.BuildDeferred())
             {
@@ -73,8 +78,9 @@ namespace Tests
                 var rts = Traits.Get();
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var rt in rts)
-                    await traitWriteService.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.RequiredTraits,
-                        new DataOriginV1(DataOriginType.Manual), changeset, new AuthenticatedUser(user, layers.Select(l => PermissionUtils.GetLayerWritePermission(l)).ToHashSet()), mc);
+                    await traitModel.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.RequiredTraits,
+                        new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                        new DataOriginV1(DataOriginType.Manual), changeset, mc);
                 mc.Commit();
             }
 

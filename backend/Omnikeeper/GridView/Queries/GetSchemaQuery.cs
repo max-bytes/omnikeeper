@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
 using MediatR;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -36,10 +38,13 @@ namespace Omnikeeper.GridView.Queries
         {
             private readonly IGridViewContextModel gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
-            public GetSchemaQueryHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder)
+            private readonly IBaseConfigurationModel baseConfigurationModel;
+
+            public GetSchemaQueryHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder, IBaseConfigurationModel baseConfigurationModel)
             {
                 this.gridViewContextModel = gridViewContextModel;
                 this.modelContextBuilder = modelContextBuilder;
+                this.baseConfigurationModel = baseConfigurationModel;
             }
             public async Task<(GetSchemaResponse?, Exception?)> Handle(Query request, CancellationToken cancellationToken)
             {
@@ -53,7 +58,8 @@ namespace Omnikeeper.GridView.Queries
 
                 var trans = modelContextBuilder.BuildImmediate();
 
-                var context = await gridViewContextModel.GetFullContext(request.Context, TimeThreshold.BuildLatest(), trans);
+                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
+                var context = await gridViewContextModel.GetFullContext(request.Context, new LayerSet(baseConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
                 var config = context.Configuration;
 
                 var result = new GetSchemaResponse(config.ShowCIIDColumn, new List<Column>());

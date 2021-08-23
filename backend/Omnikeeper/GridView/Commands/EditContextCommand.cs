@@ -1,12 +1,13 @@
 ﻿using FluentValidation;
 using MediatR;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GridView.Entity;
 using Omnikeeper.GridView.Helper;
-using Omnikeeper.GridView.Service;
+using Omnikeeper.GridView.Model;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,16 +46,22 @@ namespace Omnikeeper.GridView.Commands
 
         public class EditContextCommandHandler : IRequestHandler<Command, Exception?>
         {
-            private readonly IGridViewContextWriteService gridViewContextWriteService;
+            private readonly IGridViewContextModel gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly ICurrentUserService currentUserService;
+            private readonly IBaseConfigurationModel baseConfigurationModel;
             private readonly IChangesetModel changesetModel;
-            public EditContextCommandHandler(IModelContextBuilder modelContextBuilder, IGridViewContextWriteService gridViewContextWriteService, ICurrentUserService currentUserService, IChangesetModel changesetModel)
+            private readonly IManagementAuthorizationService managementAuthorizationService;
+
+            public EditContextCommandHandler(IModelContextBuilder modelContextBuilder, IGridViewContextModel gridViewContextModel, ICurrentUserService currentUserService,
+                IBaseConfigurationModel baseConfigurationModel, IChangesetModel changesetModel, IManagementAuthorizationService managementAuthorizationService)
             {
                 this.modelContextBuilder = modelContextBuilder;
-                this.gridViewContextWriteService = gridViewContextWriteService;
+                this.gridViewContextModel = gridViewContextModel;
                 this.currentUserService = currentUserService;
+                this.baseConfigurationModel = baseConfigurationModel;
                 this.changesetModel = changesetModel;
+                this.managementAuthorizationService = managementAuthorizationService;
             }
 
             public async Task<Exception?> Handle(Command request, CancellationToken cancellationToken)
@@ -73,15 +80,20 @@ namespace Omnikeeper.GridView.Commands
                 var user = await currentUserService.GetCurrentUser(trans);
                 var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
+                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
+                if (!managementAuthorizationService.CanModifyManagement(user, baseConfiguration, out var message))
+                    return new Exception($"User \"{user.Username}\" does not have permission to modify gridview contexts: {message}");
+
                 try
                 {
-                    await gridViewContextWriteService.InsertOrUpdate(
+                    await gridViewContextModel.InsertOrUpdate(
                         request.ID,
                         request.SpeakingName,
                         request.Description,
                         request.Configuration,
+                        new Base.Entity.LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
                         new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
-                        changesetProxy, user,
+                        changesetProxy,
                         trans);
 
                     trans.Commit();

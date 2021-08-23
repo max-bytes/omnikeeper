@@ -21,6 +21,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using OKPluginGenericJSONIngest.Extract;
+using Omnikeeper.Base.Model.Config;
 
 namespace Omnikeeper.Controllers.Ingest
 {
@@ -37,10 +38,11 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly ICurrentUserService currentUserService;
         private readonly IContextModel contextModel;
         private readonly IModelContextBuilder modelContextBuilder;
+        private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
         public PassiveFilesController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService,
-            IContextModel contextModel, IModelContextBuilder modelContextBuilder,
+            IContextModel contextModel, IModelContextBuilder modelContextBuilder, IBaseConfigurationModel baseConfigurationModel,
             ILayerBasedAuthorizationService authorizationService, ILogger<PassiveFilesController> logger)
         {
             this.ingestDataService = ingestDataService;
@@ -49,6 +51,7 @@ namespace Omnikeeper.Controllers.Ingest
             this.currentUserService = currentUserService;
             this.contextModel = contextModel;
             this.modelContextBuilder = modelContextBuilder;
+            this.baseConfigurationModel = baseConfigurationModel;
             this.authorizationService = authorizationService;
         }
 
@@ -60,7 +63,9 @@ namespace Omnikeeper.Controllers.Ingest
             try
             {
                 using var mc = modelContextBuilder.BuildImmediate();
-                var ctx = await contextModel.GetContext(context, TimeThreshold.BuildLatest(), mc);
+
+                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(mc);
+                var ctx = await contextModel.GetContext(context, new LayerSet(baseConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), mc);
                 if (ctx == null)
                     return BadRequest($"Context with name \"{context}\" not found");
                 if (!(ctx.ExtractConfig is ExtractConfigPassiveRESTFiles f))

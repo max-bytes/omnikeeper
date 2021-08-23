@@ -149,13 +149,13 @@
             <param name="trans"></param>
             <returns></returns>
         </member>
-        <member name="M:LandscapeRegistry.GridView.GridViewController.GetContexts">
+        <member name="M:LandscapeRegistry.GridView.GridViewController.GetGridViewContexts">
             <summary>
             Returns a list of contexts for grid view.
             </summary>
             <returns>200</returns>
         </member>
-        <member name="M:LandscapeRegistry.GridView.GridViewController.GetContext(System.String)">
+        <member name="M:LandscapeRegistry.GridView.GridViewController.GetGridViewContext(System.String)">
             <summary>
             Returns a single context in full
             </summary>

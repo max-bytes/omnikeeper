@@ -21,7 +21,7 @@ function AddNewContext(props) {
         try {
             setLoading(true);
             if (editMode) {
-                    const contextJson = await swaggerClient.apis.GridView.GetContext(
+                    const contextJson = await swaggerClient.apis.GridView.GetGridViewContext(
                             {
                                 version: apiVersion,
                                 name: contextName

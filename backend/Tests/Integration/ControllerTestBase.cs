@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Service;
 using System;
 using System.Collections.Generic;
@@ -32,6 +33,13 @@ namespace Tests.Integration.Controller
                 return i;
             });
             services.AddScoped((sp) => cbas.Object);
+
+
+            var mas = new Mock<IManagementAuthorizationService>();
+            string outMsg;
+            mas.Setup(x => x.CanModifyManagement(It.IsAny<AuthenticatedUser>(), It.IsAny<BaseConfigurationV1>(), out outMsg)).Returns(true);
+            mas.Setup(x => x.CanReadManagement(It.IsAny<AuthenticatedUser>(), It.IsAny<BaseConfigurationV1>(), out outMsg)).Returns(true);
+            services.AddScoped((sp) => mas.Object);
 
             return services;
         }

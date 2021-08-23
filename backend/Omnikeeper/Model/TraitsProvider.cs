@@ -1,5 +1,6 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -13,11 +14,13 @@ namespace Omnikeeper.Model
     public class TraitsProvider : ITraitsProvider
     {
         private readonly IRecursiveDataTraitModel dataTraitModel;
+        private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly IEnumerable<IPluginRegistration> loadedPlugins;
 
-        public TraitsProvider(IRecursiveDataTraitModel dataTraitModel, IEnumerable<IPluginRegistration> loadedPlugins)
+        public TraitsProvider(IRecursiveDataTraitModel dataTraitModel, IBaseConfigurationModel baseConfigurationModel, IEnumerable<IPluginRegistration> loadedPlugins)
         {
             this.dataTraitModel = dataTraitModel;
+            this.baseConfigurationModel = baseConfigurationModel;
             this.loadedPlugins = loadedPlugins;
         }
 
@@ -28,8 +31,10 @@ namespace Omnikeeper.Model
             foreach (var plugin in loadedPlugins)
                 pluginTraitSets.Add($"okplugin-{plugin.Name}", plugin.DefinedTraits);
 
+
             // TODO, NOTE: this merges non-DB trait sets, that are not historic and DB traits sets that are... what should we do here?
-            var configuredRecursiveDataTraitSet = await dataTraitModel.GetRecursiveTraits(trans, timeThreshold);
+            var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
+            var configuredRecursiveDataTraitSet = await dataTraitModel.GetRecursiveTraits(new LayerSet(baseConfiguration.ConfigLayerset), trans, timeThreshold);
             var allTraitSets = new Dictionary<string, IEnumerable<RecursiveTrait>>() {
                 { "core", CoreTraits.RecursiveTraits },
                 { "data", configuredRecursiveDataTraitSet }
