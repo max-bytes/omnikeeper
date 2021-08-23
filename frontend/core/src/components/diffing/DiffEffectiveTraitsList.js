@@ -7,7 +7,7 @@ import { MissingLabel, CompareLabel, EmptyLabel, stateBasedBackgroundColor } fro
 
 function EffectiveTrait(props) {
   return <div style={{minHeight: '38px', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-    {props.effectiveTrait.underlyingTrait.name}
+    {props.effectiveTrait?.underlyingTrait.id}
   </div>; // TODO: show attributes/dependent traits/...
 }
 

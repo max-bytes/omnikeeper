@@ -25,7 +25,7 @@ function ChangesetDropdown(props) {
       return b.text.localeCompare(a.text);
     });
   }
-  return <Select 
+  return <Select style={{flexGrow: '1'}}
     loading={loading}
     disabled={loading}
     value={timeSettings?.timeThreshold}
@@ -51,7 +51,7 @@ export function DiffTimeSettings(props) {
         </Radio.Group>
       </div>
       {type === 1 && 
-        <div style={{display: 'flex', flexBasis: '300px'}}>
+        <div style={{display: 'flex', marginTop: '10px'}}>
           <ChangesetDropdown layers={layers} ciids={ciids} timeSettings={timeSettings} setTimeSettings={setTimeSettings} />
         </div>}
     </div>
@@ -79,7 +79,7 @@ export function DiffCISettings(props) {
       </Radio.Group>
     </div>
     {type === 1 && 
-      <div style={{display: 'flex', flexBasis: '300px'}}>
+      <div style={{display: 'flex', marginTop: '10px'}}>
       <DiffCISettingsSpecificCIs layers={layers} selectedCIIDs={selectedCIIDs} setSelectedCIIDs={setSelectedCIIDs} />
       </div>}
   </div>
@@ -104,10 +104,10 @@ export function DiffLayerSettings(props) {
 function alignmentStyle(alignment) {
   switch (alignment) {
     case 'left':
-      return {display: 'flex', justifyContent: 'flex-start', marginLeft: '20px', minHeight: '38px'};
+      return {display: 'flex', marginLeft: '20px', flexDirection: 'column'};
     case 'right':
-      return {display: 'flex', justifyContent: 'flex-end', marginRight: '20px', minHeight: '38px'};
+      return {display: 'flex', marginRight: '20px', flexDirection: 'column'};
     default:
-      return {display: 'flex', justifyContent: 'center', minHeight: '38px'};
+      return {display: 'flex', flexDirection: 'column'};
   };
 }
