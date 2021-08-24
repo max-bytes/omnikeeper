@@ -4,6 +4,14 @@ import { Select } from "antd";
 
 function LayerDropdown(props) {
     const {selectedLayer, layers, onSetSelectedLayer, style} = props;
+    
+    // reset the selected item if a change in layers is detected and the currently selected layer is not available anymore
+    useEffect(() => {
+        if (selectedLayer && layers.length > 0) {
+            if (!layers.find((l) => l.id === selectedLayer.id))
+                onSetSelectedLayer(null);
+        }
+    }, [layers, selectedLayer, onSetSelectedLayer]);
 
     // setting a selected item by default (=first), if none is selected
     useEffect(() => {
@@ -11,6 +19,7 @@ function LayerDropdown(props) {
             onSetSelectedLayer(layers[0]);
         }
     }, [selectedLayer, layers, onSetSelectedLayer]);
+
 
     if (layers.length === 0)
         return (

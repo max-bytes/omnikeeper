@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import './App.css';
 import Explorer from './components/Explorer';
 import Diffing from './components/diffing/Diffing';
 import 'antd/dist/antd.css';
 import Keycloak from 'keycloak-js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExchangeAlt, faPlus, faSearch, faWrench, faTh, faList } from '@fortawesome/free-solid-svg-icons';
+import { faExchangeAlt, faPlus, faSearch, faWrench, faTh, faList, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
 import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/AddNewCI'
@@ -19,7 +19,8 @@ import { Redirect, Route, Switch, BrowserRouter, Link  } from 'react-router-dom'
 import ApolloWrapper from './components/ApolloWrapper';
 import env from "@beam-australia/react-env";
 import { ReactKeycloakProvider } from '@react-keycloak/web'
-import { Menu, Layout } from 'antd';
+import { Menu, Layout, Button, Drawer } from 'antd';
+import ExplorerLayers from "components/ExplorerLayers";
 const { Header, Content } = Layout;
 
 const keycloak = new Keycloak({
@@ -46,6 +47,8 @@ const keycloakProviderInitOptions = {
 function App() {
 
   const BR = () => {
+    const [layerDrawerVisible, setLayerDrawerVisible] = useState(false);
+  
     return <BrowserRouter basename={env("BASE_NAME")} forceRefresh={false}>
       <Layout style={{height: '100vh', backgroundColor: 'unset'}}>
           <Header style={{ position: 'fixed', zIndex: 10, width: '100%', top: '0px', 
@@ -60,20 +63,25 @@ function App() {
                     />
                 </Link>
             </div>
+            <div style={{float: 'left', paddingLeft: '20px'}}>
+              <Button onClick={e => setLayerDrawerVisible(true)} 
+                icon={<FontAwesomeIcon icon={faLayerGroup} style={{ marginRight: "0.5rem" }} />}
+                size="large">Layers</Button>
+            </div>
             <div style={{float: 'right'}}>
               <UserBar />
             </div>
             <Route
               render={({ location, history }) =>  (
-                        <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{justifyContent: 'flex-end'}}>
-                          <Menu.Item key="manage"><Link to="/manage"><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/> Manage</Link></Menu.Item>
-                          <Menu.Item key="createCI"><Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link></Menu.Item>
-                          <Menu.Item key="explorer"><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{ marginRight: "0.5rem" }}/> Explore CIs</Link></Menu.Item>
-                          <Menu.Item key="changesets"><Link to="/changesets"><FontAwesomeIcon icon={faList} style={{ marginRight: "0.5rem" }}/> Changesets</Link></Menu.Item>
-                          <Menu.Item key="diffing"><Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link></Menu.Item>
-                          <Menu.Item key="grid-view"><Link to="/grid-view"><FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/> Grid View</Link></Menu.Item>
-                        </Menu>
-                  )}
+                <Menu mode="horizontal" defaultSelectedKeys={location.pathname.split("/")[1]} style={{justifyContent: 'flex-end'}}>
+                  <Menu.Item key="manage"><Link to="/manage"><FontAwesomeIcon icon={faWrench} style={{ marginRight: "0.5rem" }}/> Manage</Link></Menu.Item>
+                  <Menu.Item key="createCI"><Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link></Menu.Item>
+                  <Menu.Item key="explorer"><Link to="/explorer"><FontAwesomeIcon icon={faSearch} style={{ marginRight: "0.5rem" }}/> Explore CIs</Link></Menu.Item>
+                  <Menu.Item key="changesets"><Link to="/changesets"><FontAwesomeIcon icon={faList} style={{ marginRight: "0.5rem" }}/> Changesets</Link></Menu.Item>
+                  <Menu.Item key="diffing"><Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link></Menu.Item>
+                  <Menu.Item key="grid-view"><Link to="/grid-view"><FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/> Grid View</Link></Menu.Item>
+                </Menu>
+              )}
             />
           </Header>
             
@@ -111,6 +119,18 @@ function App() {
                 <Redirect to="/explorer" />
               </Route>
             </Switch>
+
+            <Drawer 
+              width={440}
+              title="Layers"
+              placement={"left"}
+              closable={true}
+              onClose={() => setLayerDrawerVisible(false)}
+              visible={layerDrawerVisible}
+              key="explorerLayerDrawer"
+            >
+              <ExplorerLayers />
+            </Drawer>
           </Content>
         </Layout>
       </BrowserRouter>

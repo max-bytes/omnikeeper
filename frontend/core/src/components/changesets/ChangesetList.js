@@ -8,7 +8,6 @@ import UserTypeIcon from './../UserTypeIcon';
 import { formatTimestamp } from "utils/datetime";
 import LayerIcon from "components/LayerIcon";
 import moment from 'moment';
-import ExplorerLayers from "components/ExplorerLayers";
 import { useExplorerLayers } from "../../utils/layers";
 import { SyncOutlined } from '@ant-design/icons';
 import { ChangesetID } from "utils/uuidRenderers";
@@ -148,10 +147,6 @@ export default function ChangesetList(props) {
                                 'This Month': [moment().startOf('month'), moment().endOf('month')],
                             }}
                             />
-                    </div>
-                    <div style={styles.filterColumnEntry}>
-                        <h4>Layers</h4>
-                        <ExplorerLayers />
                     </div>
                     <div style={styles.filterColumnEntry}>
                         <Row>

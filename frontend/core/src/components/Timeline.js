@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types'
 import { queries } from 'graphql/queries'
 import LoadingOverlay from 'react-loading-overlay' // TODO: switch to antd spin
@@ -19,7 +19,7 @@ import _ from "lodash"
 import moment from 'moment';
 
 function Timeline(props) {
-  const { data: layers } = useExplorerLayers();
+  const { data: layers } = useExplorerLayers(true);
 
   if (layers) {
     return <LoadingTimeline layers={layers} ciid={props.ciid} />;
@@ -30,18 +30,24 @@ function LoadingTimeline(props) {
   
   const selectedTime = useSelectedTime();
 
+  const { layers } = props;
+
   var ciid = props.ciid;
 
-  var from = moment().subtract(5, 'years').format();
-  var to = moment().format();
+  var from = useMemo(() => moment().subtract(5, 'years').format(), [selectedTime, layers]);
+  var to = useMemo(() => moment().format(), [selectedTime, layers]);
   var [limit, setLimit] = useState(10);
 
   const { loading: loadingChangesets, error, data: resultData, previousData, refetch: refetchChangesets } = useQuery(queries.ChangesetsForCI, {
-    variables: { from: from, to: to, ciids: [ciid], layers: props.layers.map(l => l.id), limit: limit }
+    variables: { from: from, to: to, ciids: [ciid], layers: layers.map(l => l.id), limit: limit }
   });
   const data = resultData ?? previousData;
 
-  React.useEffect(() => { if (selectedTime.refreshNonceTimeline) refetchChangesets({fetchPolicy: 'network-only'}); }, [selectedTime, refetchChangesets]);
+  // refresh on nonce-changes
+  React.useEffect(() => { if (selectedTime.refreshNonceTimeline) { refetchChangesets(); } }, [selectedTime, refetchChangesets]);
+
+  // refresh on layer changes
+  React.useEffect(() => { refetchChangesets({variables: {layers: layers.map(l => l.id)}}); }, [layers, refetchChangesets]);
 
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
   
@@ -49,91 +55,91 @@ function LoadingTimeline(props) {
 
   if (error) return <ErrorView error={error}/>;
 
-    var changesets = data ? [...data.changesets] : []; // TODO: why do we do a copy here?
-    let activeChangeset = (selectedTime.isLatest) ? changesets.find(e => true) : changesets.find(cs => cs.timestamp === selectedTime.time);
+  var changesets = data ? [...data.changesets] : []; // TODO: why do we do a copy here?
+  let activeChangeset = (selectedTime.isLatest) ? changesets.find(e => true) : changesets.find(cs => cs.timestamp === selectedTime.time);
 
-    if (!activeChangeset) {
-      activeChangeset = {id: -1, timestamp: selectedTime.time};
+  if (!activeChangeset) {
+    activeChangeset = {id: -1, timestamp: selectedTime.time};
 
-      function addAndSort2(arr, val) {
-          arr.push(val);
-          let i = arr.length - 1;
-          const item = arr[i];
-          while (i > 0 && item.timestamp > arr[i-1].timestamp) {
-              arr[i] = arr[i-1];
-              i -= 1;
-          }
-          arr[i] = item;
-          return arr;
-      }
-
-      addAndSort2(changesets, activeChangeset);
+    function addAndSort2(arr, val) {
+        arr.push(val);
+        let i = arr.length - 1;
+        const item = arr[i];
+        while (i > 0 && item.timestamp > arr[i-1].timestamp) {
+            arr[i] = arr[i-1];
+            i -= 1;
+        }
+        arr[i] = item;
+        return arr;
     }
-    
-    const latestChangeset = changesets.find(e => true);
+
+    addAndSort2(changesets, activeChangeset);
+  }
   
-    const refreshButton = (<Button size='small' onClick={() => {
-        setSelectedTimeThreshold({variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true, refreshCI: true }});
-    }}><FontAwesomeIcon icon={faSync} spin={loadingChangesets} color={"grey"} style={{ padding: "2px"}} /></Button>)
+  const latestChangeset = changesets.find(e => true);
 
-          
-    const buttonStyle = {
-      textAlign: 'left',
-      flexGrow: 1,
-      overflow: 'hidden',
-      whiteSpace: 'nowrap',
-      textOverflow: 'ellipsis',
-      width: "100%",
-    };
-    const lineStyle = {
-      display: 'flex',
-      width: '100%',
-      paddingRight: '5px'
-    };
+  const refreshButton = (<Button size='small' onClick={() => {
+      setSelectedTimeThreshold({variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true, refreshCI: true }});
+  }}><FontAwesomeIcon icon={faSync} spin={loadingChangesets} color={"grey"} style={{ padding: "2px"}} /></Button>)
 
-    return (
-      <div>
-        <div className={"d-flex align-items-center"} style={{minHeight: "24px"}}>
-          <h4 className={"flex-grow-1 my-0"} style={{float: "left"}}>Timeline</h4>
-          <Form layout="inline" style={{float: "right"}}>
-            {refreshButton}
+        
+  const buttonStyle = {
+    textAlign: 'left',
+    flexGrow: 1,
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+    width: "100%",
+  };
+  const lineStyle = {
+    display: 'flex',
+    width: '100%',
+    paddingRight: '5px'
+  };
+
+  return (
+    <div>
+      <div className={"d-flex align-items-center"} style={{minHeight: "24px"}}>
+        <h4 className={"flex-grow-1 my-0"} style={{float: "left"}}>Timeline</h4>
+        <Form layout="inline" style={{float: "right"}}>
+          {refreshButton}
+        </Form>
+      </div>
+      <div style={{ minHeight: "60px" }}>
+          <LoadingOverlay active={loadingChangesets} spinner>
+              
+          {changesets && changesets.map((cs) => {
+              const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.displayName}</span> : '';
+              const label = <span style={((activeChangeset === cs) ? {fontWeight: 'bold'} : {})}>{formatTimestamp(cs.timestamp)} - {userLabel}</span>;
+              const changesetLink = <Link to={`/changesets/${cs.id}`}><FontAwesomeIcon icon={faList} /></Link>;
+              if (activeChangeset === cs) {
+                return (<div style={lineStyle} key={cs.id}>
+                  <Button style={buttonStyle} type="link" size="small" disabled>{label}</Button>
+                  {changesetLink}
+                </div>);
+              } else {
+                const isLatest = latestChangeset === cs;
+                const diffQuery = buildDiffingURLQueryBetweenChangesets(layerSettingsData.layerSettings, ciid, (latestChangeset === activeChangeset) ? null : activeChangeset.timestamp, (isLatest) ? null : cs.timestamp);
+                return (<div style={lineStyle} key={cs.id}>
+                    <Button style={buttonStyle} type="link" size="small"
+                    onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: (isLatest) ? null : cs.timestamp, isLatest: isLatest }})}>
+                    {label}
+                    </Button>
+                    <Space>
+                      <Link to={`/diffing?${diffQuery}`}><FontAwesomeIcon icon={faExchangeAlt} /></Link>
+                      {changesetLink}
+                    </Space>
+                </div>);
+              }
+          })}
+          <Form layout="inline" style={{justifyContent: "center"}}>
+              {!(limit > _.size(changesets)) && <Button size='small' onClick={() => {
+              setLimit(l => l + 10);
+              }}><FontAwesomeIcon icon={loadingChangesets ? faSync : faArrowDown} spin={loadingChangesets} color={"grey"} style={{ padding: "2px"}} /></Button>}
           </Form>
-        </div>
-        <div style={{ minHeight: "60px" }}>
-            <LoadingOverlay active={loadingChangesets} spinner>
-                
-            {changesets && changesets.map((cs) => {
-                const userLabel = (cs.user) ? <span><UserTypeIcon userType={cs.user.type} /> {cs.user.displayName}</span> : '';
-                const label = <span style={((activeChangeset === cs) ? {fontWeight: 'bold'} : {})}>{formatTimestamp(cs.timestamp)} - {userLabel}</span>;
-                const changesetLink = <Link to={`/changesets/${cs.id}`}><FontAwesomeIcon icon={faList} /></Link>;
-                if (activeChangeset === cs) {
-                  return (<div style={lineStyle} key={cs.id}>
-                    <Button style={buttonStyle} type="link" size="small" disabled>{label}</Button>
-                    {changesetLink}
-                  </div>);
-                } else {
-                  const isLatest = latestChangeset === cs;
-                  const diffQuery = buildDiffingURLQueryBetweenChangesets(layerSettingsData.layerSettings, ciid, (latestChangeset === activeChangeset) ? null : activeChangeset.timestamp, (isLatest) ? null : cs.timestamp);
-                  return (<div style={lineStyle} key={cs.id}>
-                      <Button style={buttonStyle} type="link" size="small"
-                      onClick={() => setSelectedTimeThreshold({variables: { newTimeThreshold: (isLatest) ? null : cs.timestamp, isLatest: isLatest }})}>
-                      {label}
-                      </Button>
-                      <Space>
-                        <Link to={`/diffing?${diffQuery}`}><FontAwesomeIcon icon={faExchangeAlt} /></Link>
-                        {changesetLink}
-                      </Space>
-                  </div>);
-                }
-            })}
-            <Form layout="inline" style={{justifyContent: "center"}}>
-                {!(limit > _.size(changesets)) && <Button size='small' onClick={() => {
-                setLimit(l => l + 10);
-                }}><FontAwesomeIcon icon={loadingChangesets ? faSync : faArrowDown} spin={loadingChangesets} color={"grey"} style={{ padding: "2px"}} /></Button>}
-            </Form>
-            </LoadingOverlay>
-        </div>
-      </div>);
+          </LoadingOverlay>
+      </div>
+    </div>);
 }
 
 Timeline.propTypes = {

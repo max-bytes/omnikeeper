@@ -1,7 +1,6 @@
 import { useLazyQuery } from "@apollo/client";
 import React, { useState, useEffect, useCallback } from "react";
 import { queries } from "../../graphql/queries";
-import ExplorerLayers from "../ExplorerLayers.js";
 import { SearchResults } from "./SearchResults.js";
 import { useExplorerLayers } from "../../utils/layers";
 import EffectiveTraitList from "./EffectiveTraitList.js";
@@ -108,10 +107,6 @@ function SearchCIAdvanced(props) {
                             showMetaTraits={showMetaTraits} setShowMetaTraits={setShowMetaTraits}
                             showEmptyTrait={showEmptyTrait} setShowEmptyTrait={setShowEmptyTrait} />
                         }
-                    </div>
-                    <div style={styles.searchColumnEntry}>
-                        <h4>Layers</h4>
-                        <ExplorerLayers />
                     </div>
                 </div>
                 {/* right column - results */}
