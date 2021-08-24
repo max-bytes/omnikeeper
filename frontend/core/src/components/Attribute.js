@@ -78,7 +78,7 @@ function Attribute(props) {
         >
           <Row>
             {/* name */}
-            <Col span={5}>
+            <Col span={6}>
               {leftPart}
             </Col>
 
@@ -105,7 +105,7 @@ function Attribute(props) {
       <Row>
         {/* name */}
         {hideNameLabel ? "" :
-        <Col span={5}>
+        <Col span={6}>
           {leftPart}
         </Col>
         }

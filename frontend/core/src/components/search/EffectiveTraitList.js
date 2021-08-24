@@ -1,32 +1,79 @@
-import React from "react";
-import { Button, Radio, Space } from 'antd';
+import React, { useCallback, useEffect } from "react";
+import { Button, Radio, Space, Checkbox } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWrench, faPlug, faArchive } from '@fortawesome/free-solid-svg-icons';
+import _ from 'lodash';
 
 function EffectiveTraitList(props) {
 
+    const {checked, setChecked, showMetaTraits, setShowMetaTraits, showEmptyTrait, setShowEmptyTrait, effectiveTraitList} = props;
+
     function onReset() {
-        var newChecked = [];
-        for(const et in props.checked) {
+        var newChecked = {};
+        for(const et in checked) {
             newChecked[et] = 0;
         }
-        props.setChecked(newChecked);
+        setChecked(newChecked);
+        setShowMetaTraits(false);
+        setShowEmptyTrait(false);
     }
 
     function onChange(effectiveTrait, e) {
-        var value = parseInt(e.target.value, 10);
-        props.setChecked({...props.checked, [effectiveTrait.id]: value});
+        var value = parseInt(e, 10);
+        setChecked({...checked, [effectiveTrait.id]: value});
     }
+
+    const isMetaTraitID = useCallback((id) => {
+        return id.startsWith("__meta");
+    }, []);
+
+    const emptyTraitID = "empty";
+    const isEmptyTraitID = useCallback((id) => {
+        return id === emptyTraitID;
+    }, [emptyTraitID]); 
+
+    // reset meta traits when the show-meta-traits checkbox is unchecked
+    useEffect(() => {
+        if (!showMetaTraits) {
+            var newUnchecked = {};
+            for(const et in checked) {
+                if (checked[et] !== 0 && isMetaTraitID(et))
+                    newUnchecked[et] = 0;
+            }
+            if (!_.isEmpty(newUnchecked)) {
+                setChecked(oldChecked => {return {...oldChecked, ...newUnchecked}});
+            }
+        }
+    }, [showMetaTraits, isMetaTraitID, setChecked, checked]);
+
+    // reset empty trait to "must not"/-1 when the show-empty-trait checkbox is unchecked
+    useEffect(() => {
+        if (!showEmptyTrait) {
+            if (checked[emptyTraitID] !== -1) {
+                setChecked(oldChecked => {return {...oldChecked, [emptyTraitID]: -1}});
+            }
+        }
+    }, [showEmptyTrait, emptyTraitID, setChecked, checked]);
 
     return (
             <Space direction="vertical" style={styles.container}>
                 <div key={-1} style={styles.traitElement}>
                     <h4 style={styles.title}>Effective Traits</h4>
                     <span style={styles.reset}>
+                        <Checkbox
+                            checked={showEmptyTrait}
+                            onChange={(e) => setShowEmptyTrait(e.target.checked)}
+                        >Show empty</Checkbox>
+                        <Checkbox
+                            checked={showMetaTraits}
+                            onChange={(e) => setShowMetaTraits(e.target.checked)}
+                        >Show meta</Checkbox>
                         <Button onClick={onReset} size="small">Reset</Button>
                     </span>
                 </div>
-            {props.effectiveTraitList.map((effectiveTrait, index) => {
+            {effectiveTraitList
+                .filter(effectiveTrait => (showMetaTraits || !isMetaTraitID(effectiveTrait.id)) && (showEmptyTrait || !isEmptyTraitID(effectiveTrait.id)))
+                .map((effectiveTrait, index) => {
 
                 const icon = (function(originType) {
                     switch(originType) {
@@ -51,7 +98,7 @@ function EffectiveTraitList(props) {
                         </span>
                         <span>
                                 <Radio.Group buttonStyle="solid" size="small"
-                                    onChange={(e) => onChange(effectiveTrait, e)} value={props.checked[effectiveTrait.id]?.toString()}>
+                                    onChange={(e) => onChange(effectiveTrait, e.target.value)} value={checked[effectiveTrait.id]?.toString()}>
                                     <Radio.Button value="-1">No</Radio.Button>
                                     <Radio.Button value="0">May</Radio.Button>
                                     <Radio.Button value="1">Yes</Radio.Button>

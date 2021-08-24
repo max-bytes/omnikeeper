@@ -9,7 +9,7 @@ function ExplorerLayers() {
   const [setLayerSettings] = useMutation(mutations.SET_LAYER_SETTINGS);
 
   if (loading) return "Loading";
-  
+
   return <Layers layerSettings={layerSettings} 
     setLayerSettings={ newLS => setLayerSettings({variables: {layerSettings: newLS}})} />
 }
