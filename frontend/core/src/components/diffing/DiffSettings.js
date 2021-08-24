@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo} from 'react';
+import React, {useEffect, useState} from 'react';
 import { queries } from 'graphql/queries'
 import { useQuery } from '@apollo/client';
 import Layers from 'components/Layers';
@@ -10,11 +10,12 @@ import moment from 'moment';
 function ChangesetDropdown(props) {
   const { ciids, layers, timeSettings, setTimeSettings } = props;
 
-  var from = useMemo(() => moment().subtract(5, 'years').format(), []);
-  var to = useMemo(() => moment().format(), []);
+  const [timerange] = useState({ from: moment().subtract(5, 'years').format(), to: moment().format() });
+
+  // TODO: we should update the timerange and requery on layer- and ci-changes
 
   const { loading, data } = useQuery(queries.ChangesetsForCI, {
-    variables: { from: from, to: to, ciids: ciids, layers: layers }
+    variables: { ...timerange, ciids: ciids, layers: layers }
   });
 
   let list = [];

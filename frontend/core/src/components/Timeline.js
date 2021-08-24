@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types'
 import { queries } from 'graphql/queries'
 import LoadingOverlay from 'react-loading-overlay' // TODO: switch to antd spin
@@ -34,20 +34,29 @@ function LoadingTimeline(props) {
 
   var ciid = props.ciid;
 
-  var from = useMemo(() => moment().subtract(5, 'years').format(), [selectedTime, layers]);
-  var to = useMemo(() => moment().format(), [selectedTime, layers]);
+  const [timerange, setTimerange] = useState({ from: moment().subtract(5, 'years').format(), to: moment().format() });
   var [limit, setLimit] = useState(10);
 
   const { loading: loadingChangesets, error, data: resultData, previousData, refetch: refetchChangesets } = useQuery(queries.ChangesetsForCI, {
-    variables: { from: from, to: to, ciids: [ciid], layers: layers.map(l => l.id), limit: limit }
+    variables: { ...timerange, ciids: [ciid], layers: layers.map(l => l.id), limit: limit }
   });
   const data = resultData ?? previousData;
 
   // refresh on nonce-changes
-  React.useEffect(() => { if (selectedTime.refreshNonceTimeline) { refetchChangesets(); } }, [selectedTime, refetchChangesets]);
+  React.useEffect(() => {
+    if (selectedTime.refreshNonceTimeline) { 
+      const tr = { from: moment().subtract(5, 'years').format(), to: moment().format() };
+      setTimerange(tr);
+      refetchChangesets({variables: {...tr}}); 
+    } 
+  }, [selectedTime, refetchChangesets, setTimerange]);
 
   // refresh on layer changes
-  React.useEffect(() => { refetchChangesets({variables: {layers: layers.map(l => l.id)}}); }, [layers, refetchChangesets]);
+  React.useEffect(() => { 
+    const tr = { from: moment().subtract(5, 'years').format(), to: moment().format() };
+    setTimerange(tr);
+    refetchChangesets({variables: {layers: layers.map(l => l.id), ...tr}}); 
+  }, [layers, refetchChangesets, setTimerange]);
 
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
   
