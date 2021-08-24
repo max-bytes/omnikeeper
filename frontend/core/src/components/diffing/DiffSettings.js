@@ -5,13 +5,13 @@ import Layers from 'components/Layers';
 import { mergeSettingsAndSortLayers } from 'utils/layers'; 
 import { Form, Radio, Select } from "antd";
 import MultiCISelect from 'components/MultiCISelect';
+import moment from 'moment';
 
 function ChangesetDropdown(props) {
   const { ciids, layers, timeSettings, setTimeSettings } = props;
 
-  // fix hardcodede timerange
-  var from = "2010-01-01T00:00:00Z";
-  var to = "2030-01-01T00:00:00Z";
+  var from = moment().subtract(5, 'years').format();
+  var to = moment().format();
   const { loading, data } = useQuery(queries.ChangesetsForCI, {
     variables: { from: from, to: to, ciids: ciids, layers: layers }
   });

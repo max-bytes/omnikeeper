@@ -16,6 +16,7 @@ import { useSelectedTime } from 'utils/useSelectedTime';
 import { Link } from 'react-router-dom';
 import { buildDiffingURLQueryBetweenChangesets } from 'components/diffing/Diffing'
 import _ from "lodash"
+import moment from 'moment';
 
 function Timeline(props) {
   const { data: layers } = useExplorerLayers();
@@ -31,9 +32,8 @@ function LoadingTimeline(props) {
 
   var ciid = props.ciid;
 
-  // TODO: fix hardcoded timerange
-  var from = "2010-01-01T00:00:00Z"; 
-  var to = "2030-01-01T00:00:00Z";
+  var from = moment().subtract(5, 'years').format();
+  var to = moment().format();
   var [limit, setLimit] = useState(10);
 
   const { loading: loadingChangesets, error, data: resultData, previousData, refetch: refetchChangesets } = useQuery(queries.ChangesetsForCI, {
