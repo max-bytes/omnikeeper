@@ -2,6 +2,7 @@
 using GraphQL.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 
 namespace Omnikeeper.GraphQL
@@ -24,6 +25,23 @@ namespace Omnikeeper.GraphQL
                 var isWritable = lbas.CanUserWriteToLayer(userContext.User, context.Source.ID);
                 return isWritable;
             });
+            FieldAsync<BooleanGraphType>("isBaseConfigurationLayer",
+            resolve: async (context) =>
+            {
+                var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
+
+                var userContext = (context.UserContext as OmnikeeperUserContext)!;
+
+                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+
+                if (baseConfiguration.ConfigWriteLayer == context.Source.ID)
+                    return true;
+                foreach (var l in baseConfiguration.ConfigLayerset)
+                    if (l == context.Source.ID)
+                        return true;
+                return false;
+            });
+
         }
     }
 
