@@ -4,8 +4,8 @@ import { queries } from 'graphql/queries';
 import _ from 'lodash';
 
 export function useExplorerLayers(skipInvisible = false, skipReadonly = false) {
-    const { error, data, loading } = useQuery(queries.Layers);
-    var { data: layerSettingsData } = useQuery(queries.LayerSettings);
+    const { error, data, loading } = useQuery(queries.Layers, {fetchPolicy: 'cache-first'});
+    var { data: layerSettingsData } = useQuery(queries.LayerSettings, {fetchPolicy: 'cache-only'});
 
     const [explorerLayers, setExplorerLayers] = useState({error: undefined, data: [], loading: undefined});
 

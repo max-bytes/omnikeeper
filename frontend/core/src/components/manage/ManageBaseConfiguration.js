@@ -14,7 +14,7 @@ import "ace-builds/src-noconflict/mode-json";
 
 export default function ManageBaseConfiguration() {
 
-  const { data, loading } = useQuery(queries.BaseConfiguration, {fetchPolicy: 'network-only'});
+  const { data, loading } = useQuery(queries.BaseConfiguration);
   const [setBaseConfiguration, { loading: setBaseConfigurationLoading, error: setBaseConfigurationError }] = useMutation(mutations.SET_BASECONFIGURATION);
   const [config, setConfig] = useState(null);
   useEffect(() => {

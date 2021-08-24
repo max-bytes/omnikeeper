@@ -34,7 +34,7 @@ function CI(props) {
     </TabPane>
 
     <TabPane tab="Relations" key="relations">
-      <CIRelations timeThreshold={props.timeThreshold} isEditable={props.isEditable} ciIdentity={props.ci.id} />
+      <CIRelations relatedCIs={props.ci.related} isEditable={props.isEditable} ciIdentity={props.ci.id} />
     </TabPane>
     <TabPane tab="Effective Traits" key="effectiveTraits">
       <EffectiveTraits timeThreshold={props.timeThreshold} traits={props.ci.effectiveTraits} ciIdentity={props.ci.id} />

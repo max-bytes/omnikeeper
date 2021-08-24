@@ -18,7 +18,7 @@ export default function ChangesetList(props) {
     
     const { data: visibleLayers, loading: loadingLayers } = useExplorerLayers(true);
 
-    const [search, { loading: loadingChangesets, data: dataChangesets }] = useLazyQuery(queries.Changesets, {fetchPolicy: "no-cache"});
+    const [search, { loading: loadingChangesets, data: dataChangesets }] = useLazyQuery(queries.Changesets);
 
     // debounce search, so its not called too often
     const debouncedSearch = useCallback(_.debounce(search, 500), [search]);

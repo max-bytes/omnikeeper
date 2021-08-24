@@ -5,7 +5,7 @@ import { queries } from 'graphql/queries'
 import { useMutation, useQuery } from '@apollo/client';
 
 function ExplorerLayers() {
-  var { data: { layerSettings }, loading } = useQuery(queries.LayerSettings);
+  var { data: { layerSettings }, loading } = useQuery(queries.LayerSettings, {fetchPolicy: 'cache-only'});
   const [setLayerSettings] = useMutation(mutations.SET_LAYER_SETTINGS);
 
   if (loading) return "Loading";

@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from '@apollo/client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import RelatedCI from './RelatedCI';
 import {Row, Col} from 'antd';
 import AddNewRelation from './AddNewRelation';
@@ -9,26 +9,16 @@ import { queries } from '../graphql/queries'
 import { mutations } from '../graphql/mutations'
 import { ErrorView } from './ErrorView';
 import { useExplorerLayers } from '../utils/layers';
-import { useSelectedTime } from '../utils/useSelectedTime';
-import _ from 'lodash';
 
 function CIRelations(props) {
+
+  const {relatedCIs, ciIdentity, isEditable} = props;
 
   const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
   const { data: visibleLayers } = useExplorerLayers(true);
 
-  const perPredicateLimit = 100;
-
-  const { loading: loadingCI, error: errorCI, data: dataCI, refetch: refetchCI } = useQuery(queries.FullCI, {
-    variables: { ciid: props.ciIdentity, layers: visibleLayers.map(l => l.id), timeThreshold: props.timeThreshold, includeRelated: perPredicateLimit, includeAttributes: false }
-  });
-
   const { loading: loadingPredicates, error: errorPredicates, data: dataPredicates } = useQuery(queries.PredicateList, { variables: {} });
   
-  // reload when nonce changes
-  const selectedTime = useSelectedTime();
-  React.useEffect(() => { if (selectedTime.refreshNonceCI) refetchCI({fetchPolicy: 'network-only'}); }, [selectedTime, refetchCI]);
-
   // TODO: loading
   const [removeRelation] = useMutation(mutations.REMOVE_RELATION, { 
     update: (cache, data) => {
@@ -44,23 +34,30 @@ function CIRelations(props) {
   });
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
+  const [sortedRelatedCIs, setSortedRelatedCIs] = useState(null);
+  useEffect(() => {
+    if (relatedCIs && dataPredicates) {
+      const tmp = [...relatedCIs];
+      tmp.sort((a,b) => {
+        const predicateCompare = a.predicateID?.localeCompare(b.predicateID) ?? 0;
+        if (predicateCompare !== 0)
+          return predicateCompare;
+        const targetCINameCompare = a.ci.name?.localeCompare(b.ci.name) ?? 0;
+        if (targetCINameCompare !== 0)
+          return targetCINameCompare;
+        return a.ci.id.localeCompare(b.ci.id);
+      });
+      setSortedRelatedCIs(tmp);
+    }
+  }, [relatedCIs, dataPredicates, setSortedRelatedCIs]);
 
-  if (dataCI && dataPredicates) {
-    var sortedRelatedCIs = [...dataCI.ci.related];
-    sortedRelatedCIs.sort((a,b) => {
-      const predicateCompare = a.predicateID?.localeCompare(b.predicateID) ?? 0;
-      if (predicateCompare !== 0)
-        return predicateCompare;
-      const targetCINameCompare = a.ci.name?.localeCompare(b.ci.name) ?? 0;
-      if (targetCINameCompare !== 0)
-        return targetCINameCompare;
-      return a.ci.id.localeCompare(b.ci.id);
-    });
 
+  
+  if (sortedRelatedCIs) {
     return (<>
     <Row>
       <Col span={24}>
-        <AddNewRelation isEditable={props.isEditable} perPredicateLimit={perPredicateLimit} visibleLayers={visibleLayers.map(l => l.id)} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={props.ciIdentity}></AddNewRelation>
+        <AddNewRelation isEditable={isEditable} visibleLayers={visibleLayers.map(l => l.id)} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={ciIdentity}></AddNewRelation>
       </Col>
     </Row>
     <Row>
@@ -69,11 +66,11 @@ function CIRelations(props) {
           {sortedRelatedCIs.map(r => {
             const isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.layerID);
 
-            const onRemove = (props.isEditable && isLayerWritable) ? 
+            const onRemove = (isEditable && isLayerWritable) ? 
             (() => {
-              removeRelation({ variables: { fromCIID: r.fromCIID, toCIID: r.toCIID, includeRelated: perPredicateLimit,
+              removeRelation({ variables: { fromCIID: r.fromCIID, toCIID: r.toCIID,
                 predicateID: r.predicateID, layerID: r.layerID, layers: visibleLayers.map(l => l.id) } })
-              .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
+              .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true, refreshCI: true }}));
             })
             : null;
 
@@ -82,13 +79,11 @@ function CIRelations(props) {
               </Flipped>);
           })}
         </Flipper>
-        { _.size(sortedRelatedCIs) >= 100 && <>(Showing first {perPredicateLimit} relations per predicate")</>}
       </Col>
     </Row>
     </>);
   }
-  else if (loadingCI || loadingPredicates) return <p>Loading</p>;
-  else if (errorCI) return <ErrorView error={errorCI}/>;
+  else if (loadingPredicates) return <p>Loading</p>;
   else if (errorPredicates) return <ErrorView error={errorPredicates}/>;
   else return <p>?</p>;
 }

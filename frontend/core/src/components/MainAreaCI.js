@@ -20,14 +20,13 @@ function LoadingCI(props) {
 
   const selectedTime = useSelectedTime();
 
-  // TODO: move into CI
-  const timeThreshold = selectedTime.time;//(selectedTime.isLatest) ? null : selectedTime.time;
+  const timeThreshold = selectedTime.time;
   const isEditable = selectedTime.isLatest;
   const { loading: loadingCI, error: errorCI, data: dataCI, refetch: refetchCI } = useQuery(queries.FullCI, {
-    variables: { ciid: props.ciid, layers: props.visibleLayers.map(l => l.id), timeThreshold, includeRelated: 0 }
+    variables: { ciid: props.ciid, layers: props.visibleLayers.map(l => l.id), timeThreshold, includeRelated: 100 }
   });
   
-  React.useEffect(() => { if (selectedTime.refreshNonceCI) refetchCI({fetchPolicy: 'network-only'}); }, [selectedTime, refetchCI]);
+  React.useEffect(() => { if (selectedTime.refreshNonceCI) refetchCI(); }, [selectedTime, refetchCI]);
 
   if (dataCI) return (<LoadingOverlay active={loadingCI} spinner>
       <div style={{ width: "100%", padding: "0 15px" }}>

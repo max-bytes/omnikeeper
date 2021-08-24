@@ -52,7 +52,7 @@ function AddNewAttribute(props) {
             } } }).then(d => {
               setOpen(false);
               setNewAttribute(initialAttribute);
-              setSelectedTimeThreshold({ variables:{ newTimeThreshold: null, isLatest: true, refreshTimeline: true }});
+              setSelectedTimeThreshold({ variables:{ newTimeThreshold: null, isLatest: true, refreshTimeline: true, refreshCI: true }});
             }).catch(e => {
               setInsertError(e);
             });

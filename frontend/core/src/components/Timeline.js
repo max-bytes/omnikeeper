@@ -34,37 +34,35 @@ function LoadingTimeline(props) {
 
   var ciid = props.ciid;
 
-  const [timerange, setTimerange] = useState({ from: moment().subtract(5, 'years').format(), to: moment().format() });
+  const [timerange, setTimerange] = useState({ from: moment().subtract(5, 'years').format(), to: moment().add(10, 'minutes').format() });
   var [limit, setLimit] = useState(10);
 
-  const { loading: loadingChangesets, error, data: resultData, previousData, refetch: refetchChangesets } = useQuery(queries.ChangesetsForCI, {
+  const { loading: loadingChangesets, error, data: resultData, previousData } = useQuery(queries.ChangesetsForCI, {
     variables: { ...timerange, ciids: [ciid], layers: layers.map(l => l.id), limit: limit }
   });
   const data = resultData ?? previousData;
 
   // refresh on nonce-changes
   React.useEffect(() => {
-    if (selectedTime.refreshNonceTimeline) { 
-      const tr = { from: moment().subtract(5, 'years').format(), to: moment().format() };
+    if (selectedTime.refreshNonceTimeline) {
+      const tr = { from: moment().subtract(5, 'years').format(), to: moment().add(10, 'minutes').format() };
       setTimerange(tr);
-      refetchChangesets({variables: {...tr}}); 
     } 
-  }, [selectedTime, refetchChangesets, setTimerange]);
+  }, [selectedTime, setTimerange]);
 
   // refresh on layer changes
-  React.useEffect(() => { 
-    const tr = { from: moment().subtract(5, 'years').format(), to: moment().format() };
+  React.useEffect(() => {
+    const tr = { from: moment().subtract(5, 'years').format(), to: moment().add(10, 'minutes').format() };
     setTimerange(tr);
-    refetchChangesets({variables: {layers: layers.map(l => l.id), ...tr}}); 
-  }, [layers, refetchChangesets, setTimerange]);
+  }, [layers, setTimerange]);
 
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
   
-  var { data: layerSettingsData } = useQuery(queries.LayerSettings);
+  var { data: layerSettingsData } = useQuery(queries.LayerSettings, {fetchPolicy: 'cache-only'});
 
   if (error) return <ErrorView error={error}/>;
 
-  var changesets = data ? [...data.changesets] : []; // TODO: why do we do a copy here?
+  var changesets = data ? [...data.changesets] : []; // we do a copy here because we are sorting the array in-place later
   let activeChangeset = (selectedTime.isLatest) ? changesets.find(e => true) : changesets.find(cs => cs.timestamp === selectedTime.time);
 
   if (!activeChangeset) {

@@ -130,11 +130,16 @@ function ApolloWrapper({ component: Component, ...rest }) {
       link: authLink.concat(httpLink),
       typeDefs: typeDefs,
       resolvers: resolvers,
-    //   defaultOptions: {
-    //     watchQuery: {
-    //       fetchPolicy: 'no-cache',
-    //     },
-    //   },
+      defaultOptions: {
+        watchQuery: {
+          fetchPolicy: 'no-cache',
+        //   nextFetchPolicy: 'cache-first',
+        },
+        query: {
+          fetchPolicy: 'no-cache',
+        //   nextFetchPolicy: 'cache-first',
+        },
+      },
     });
 
     setInitialState();

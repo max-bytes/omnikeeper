@@ -61,7 +61,7 @@ function Attribute(props) {
       <Button type="primary" danger onClick={e => {
         e.preventDefault();
         removeCIAttribute({ variables: { ciIdentity: attribute.ciid, name: attribute.name, layerID, layers: visibleLayers.map(l => l.id) } })
-        .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
+        .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true, refreshCI: true }}));
       }} style={{ marginLeft: "0.5rem" }}>Remove</Button>
     );
 
@@ -72,7 +72,7 @@ function Attribute(props) {
             values: values,
             isArray: isArray
           } } })
-          .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }}));
+          .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true, refreshCI: true }}));
         }}
         id={`value:${attribute.name}:${controlIdSuffix}`}
         >

@@ -10,7 +10,7 @@ import moment from 'moment';
 function ChangesetDropdown(props) {
   const { ciids, layers, timeSettings, setTimeSettings } = props;
 
-  const [timerange] = useState({ from: moment().subtract(5, 'years').format(), to: moment().format() });
+  const [timerange] = useState({ from: moment().subtract(5, 'years').format(), to: moment().add(10, 'minutes').format() });
 
   // TODO: we should update the timerange and requery on layer- and ci-changes
 

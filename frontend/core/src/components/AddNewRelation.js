@@ -67,12 +67,11 @@ function AddNewRelation(props) {
               ? { fromCIID: props.ciIdentity, toCIID: newRelation.targetCIID } 
               : { fromCIID: newRelation.targetCIID, toCIID: props.ciIdentity };
 
-            insertRelation({ variables: { ...fromTo, predicateID: newRelation.predicateID, 
-              includeRelated: props.perPredicateLimit, layerID: newRelation.layer.id, layers: props.visibleLayers} })
+            insertRelation({ variables: { ...fromTo, predicateID: newRelation.predicateID, layerID: newRelation.layer.id, layers: props.visibleLayers} })
               .then(d => {
                 setOpen(false);
                 setNewRelation(initialRelation);
-                setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true }});
+                setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true, refreshCI: true }});
               }).catch(e => {
                 setInsertError(e);
               });

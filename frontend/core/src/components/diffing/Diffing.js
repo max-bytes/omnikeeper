@@ -120,11 +120,9 @@ function Diffing(props) {
 
   function compare() {
     // if (leftCIIDs)
-      loadLeftCI({ variables: {layers: visibleLeftLayerIDs, timeThreshold: leftTimeSettings?.timeThreshold, ciids: leftCIIDs},
-        fetchPolicy: 'cache-and-network' });
+      loadLeftCI({ variables: {layers: visibleLeftLayerIDs, timeThreshold: leftTimeSettings?.timeThreshold, ciids: leftCIIDs}});
     // if (rightCIIDs)
-      loadRightCI({ variables: {layers: visibleRightLayerIDs, timeThreshold: rightTimeSettings?.timeThreshold, ciids: rightCIIDs},
-        fetchPolicy: 'cache-and-network' });
+      loadRightCI({ variables: {layers: visibleRightLayerIDs, timeThreshold: rightTimeSettings?.timeThreshold, ciids: rightCIIDs}});
   }
 
   if (layerData) {

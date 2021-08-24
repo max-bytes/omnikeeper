@@ -24,7 +24,7 @@ export default function LayerOperations(props) {
     setTruncatingLayer(true);
     truncateLayerMutation({ variables: { id: layerID } })
     .then(d => {
-      return refetchStatistics({fetchPolicy: 'network-only'});
+      return refetchStatistics();
     }).catch(e => {
       console.log(e);
     }).finally(() => {
