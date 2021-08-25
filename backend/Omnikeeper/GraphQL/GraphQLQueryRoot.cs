@@ -92,7 +92,7 @@ namespace Omnikeeper.GraphQL
                     if (ciidSelection is AllCIIDsSelection)
                     {
                         // reduce CIs to those that are allowed
-                        cis = cis.Where(ci => ciBasedAuthorizationService.CanReadCI(ci.ID)); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
+                        cis = ciBasedAuthorizationService.FilterReadableCIs(cis, (ci) => ci.ID);
                     }
 
                     return cis;
@@ -110,7 +110,7 @@ namespace Omnikeeper.GraphQL
 
                     var ciids = await ciidModel.GetCIIDs(userContext.Transaction);
                     // reduce CIs to those that are allowed
-                    ciids = ciids.Where(ciid => ciBasedAuthorizationService.CanReadCI(ciid)); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
+                    ciids = ciBasedAuthorizationService.FilterReadableCIs(ciids);
                     return ciids;
                 });
 
@@ -140,7 +140,7 @@ namespace Omnikeeper.GraphQL
 
                     var cis = await ciModel.GetCompactCIs(new AllCIIDsSelection(), userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
                     // reduce CIs to those that are allowed
-                    cis = cis.Where(ci => ciBasedAuthorizationService.CanReadCI(ci.ID)); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
+                    cis = ciBasedAuthorizationService.FilterReadableCIs(cis, (ci) => ci.ID);
 
                     cis = cis.OrderBy(ci => ci.Name ?? "ZZZZZZZZZZZ"); // order by name
 
@@ -177,7 +177,7 @@ namespace Omnikeeper.GraphQL
 
                     var cis = await ciSearchModel.AdvancedSearchForCompactCIs(searchString, withEffectiveTraits, withoutEffectiveTraits, ls, userContext.Transaction, userContext.TimeThreshold);
                     // reduce CIs to those that are allowed
-                    cis = cis.Where(ci => ciBasedAuthorizationService.CanReadCI(ci.ID)); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
+                    cis = ciBasedAuthorizationService.FilterReadableCIs(cis, (ci) => ci.ID);
                     return cis;
                 });
 
