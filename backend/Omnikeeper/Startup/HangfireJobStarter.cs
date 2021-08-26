@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Runners;
+using Omnikeeper.Validation;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,6 +29,7 @@ namespace Omnikeeper.Startup
             RecurringJob.AddOrUpdate<MarkedForDeletionRunner>(s => s.Run(null), config.MarkedForDeletionRunnerInterval);
             RecurringJob.AddOrUpdate<ExternalIDManagerRunner>(s => s.Run(null), config.ExternalIDManagerRunnerInterval);
             RecurringJob.AddOrUpdate<ArchiveOldDataRunner>(s => s.Run(null), config.ArchiveOldDataRunnerInterval);
+            RecurringJob.AddOrUpdate<ValidationEngineRunner>(s => s.Run(null), "*/5 * * * * *"); // TODO: proper configurable time interval
         }
     }
 }

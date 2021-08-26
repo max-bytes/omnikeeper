@@ -3,6 +3,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.Validation;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
@@ -10,7 +11,7 @@ namespace Omnikeeper.Model
 {
     public static class CoreTraits
     {
-        private static readonly RecursiveTrait Named = new RecursiveTrait("named", new TraitOriginV1(TraitOriginType.Core), new List<TraitAttribute>() {
+        public static readonly RecursiveTrait Named = new RecursiveTrait("named", new TraitOriginV1(TraitOriginType.Core), new List<TraitAttribute>() {
             new TraitAttribute("name",
                 CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
@@ -72,13 +73,19 @@ namespace Omnikeeper.Model
         );
         public static readonly GenericTrait GridviewContextFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(GridviewContext);
 
-        public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() { Named, Trait, Predicate, AuthRole, GridviewContext };
+        public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() { 
+            Named, 
+            Trait, Predicate, AuthRole, GridviewContext,
+            ValidationTraits.ValidationIssue, ValidationTraits.Validation,
+        };
     }
 
 
     public class TraitEmpty : ITrait
     {
-        public string ID => "empty";
+        public static string StaticID => "empty";
+
+        public string ID => StaticID;
 
         public IImmutableSet<string> AncestorTraits => ImmutableHashSet<string>.Empty;
 
