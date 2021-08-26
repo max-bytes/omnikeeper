@@ -14,9 +14,9 @@ namespace Tests.Integration.Controller
         {
         }
 
-        protected override IServiceCollection InitServices()
+        protected override void InitServices(IServiceCollection services)
         {
-            var services = base.InitServices();
+            base.InitServices(services);
 
             // mock authorization
             var lbas = new Mock<ILayerBasedAuthorizationService>();
@@ -40,8 +40,6 @@ namespace Tests.Integration.Controller
             mas.Setup(x => x.CanModifyManagement(It.IsAny<AuthenticatedUser>(), It.IsAny<BaseConfigurationV1>(), out outMsg)).Returns(true);
             mas.Setup(x => x.CanReadManagement(It.IsAny<AuthenticatedUser>(), It.IsAny<BaseConfigurationV1>(), out outMsg)).Returns(true);
             services.AddScoped((sp) => mas.Object);
-
-            return services;
         }
     }
 }

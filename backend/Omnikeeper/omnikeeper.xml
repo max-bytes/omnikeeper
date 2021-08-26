@@ -149,6 +149,13 @@
             <param name="trans"></param>
             <returns></returns>
         </member>
+        <member name="M:Omnikeeper.Program.AddAssemblyResolver">
+            <summary>
+            NOTE: this method hooks into assembly resolving and provides hangfire with already loaded assemblies
+            this is required so that hangfire jobs can be loaded via plugins.
+            See https://stackoverflow.com/questions/47828704/how-to-use-hangfire-when-using-mef-to-load-plugins for further explanation
+            </summary>
+        </member>
         <member name="M:LandscapeRegistry.GridView.GridViewController.GetGridViewContexts">
             <summary>
             Returns a list of contexts for grid view.

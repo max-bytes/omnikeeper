@@ -19,17 +19,15 @@ namespace Tests.Integration.GraphQL
 {
     class CITest : QueryTestBase
     {
-        protected override IServiceCollection InitServices()
+        protected override void InitServices(IServiceCollection services)
         {
-            var services = base.InitServices();
+            base.InitServices(services);
 
             var cbas = new Mock<ICIBasedAuthorizationService>();
             cbas.Setup(x => x.CanReadCI(It.IsAny<Guid>())).Returns(true);
             Guid? tmp;
             cbas.Setup(x => x.CanReadAllCIs(It.IsAny<IEnumerable<Guid>>(), out tmp)).Returns(true);
             services.AddScoped((sp) => cbas.Object);
-
-            return services;
         }
 
         [Test]

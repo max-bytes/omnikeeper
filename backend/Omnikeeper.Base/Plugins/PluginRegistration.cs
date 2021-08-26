@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Hangfire.Server;
+using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,8 @@ namespace Omnikeeper.Base.Plugins
     {
         IPluginDBMigrator? DBMigration { get; }
         void RegisterServices(IServiceCollection sc);
+
+        void RegisterHangfireJobRunners();
 
         string? ManagementEndpoint { get; }
 
@@ -51,6 +54,8 @@ namespace Omnikeeper.Base.Plugins
         public virtual string? ManagementEndpoint { get; } = null;
 
         public abstract void RegisterServices(IServiceCollection sc);
+
+        public virtual void RegisterHangfireJobRunners() { }
 
         public virtual IEnumerable<RecursiveTrait> DefinedTraits { get; } = new RecursiveTrait[0];
     }

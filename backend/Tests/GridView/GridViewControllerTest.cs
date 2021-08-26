@@ -26,17 +26,15 @@ namespace Tests.Integration.Controller
 {
     class GridViewControllerTest : ControllerTestBase
     {
-        protected override IServiceCollection InitServices()
+        protected override void InitServices(IServiceCollection services)
         {
-            var services = base.InitServices();
+            base.InitServices(services);
 
             // add controller
             services.AddScoped<GridViewController>();
             services.AddMediatR(typeof(Startup));
 
             services.AddScoped<ITraitsProvider, MockedTraitsProvider>();
-
-            return services;
         }
 
         [Test]

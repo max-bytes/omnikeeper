@@ -5,7 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace Omnikeeper.Utils
+namespace Omnikeeper.Base.Utils
 {
     public class HangfireConsoleLogger : ILogger
     {

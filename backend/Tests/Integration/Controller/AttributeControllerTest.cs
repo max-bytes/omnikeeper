@@ -17,14 +17,12 @@ namespace Tests.Integration.Controller
 {
     class AttributeControllerTest : ControllerTestBase
     {
-        protected override IServiceCollection InitServices()
+        protected override void InitServices(IServiceCollection services)
         {
-            var services = base.InitServices();
+            base.InitServices(services);
 
             // add controller
             services.AddScoped<AttributeController>();
-
-            return services;
         }
 
         [Test]

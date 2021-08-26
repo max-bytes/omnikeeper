@@ -7,7 +7,7 @@ using Omnikeeper.Base.Utils.Serialization;
 
 namespace Tests.Integration
 {
-    class DBBackedTestBase
+    public class DBBackedTestBase
     {
         private NpgsqlConnection? conn;
         private ModelContextBuilder? modelContextBuilder;

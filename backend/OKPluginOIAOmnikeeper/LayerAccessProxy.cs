@@ -158,6 +158,7 @@ namespace OKPluginOIAOmnikeeper
             var relationsDTO = rl switch
             {
                 RelationSelectionFrom f => await client.GetMergedRelationsOutgoingFromCIAsync(f.fromCIID, remoteLayerIDs, time, ClientVersion),
+                RelationSelectionTo f => throw new NotImplementedException(), // TODO
                 RelationSelectionWithPredicate p => await client.GetMergedRelationsWithPredicateAsync(p.predicateID, remoteLayerIDs, time, ClientVersion),
                 RelationSelectionEitherFromOrTo fot => await client.GetMergedRelationsFromOrToCIAsync(fot.ciid, remoteLayerIDs, time, ClientVersion),
                 RelationSelectionAll a => await client.GetAllMergedRelationsAsync(remoteLayerIDs, time, ClientVersion),

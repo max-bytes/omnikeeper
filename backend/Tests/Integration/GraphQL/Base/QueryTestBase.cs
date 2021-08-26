@@ -28,13 +28,11 @@ namespace Tests.Integration.GraphQL.Base
             DBSetup.Setup();
         }
 
-        protected override IServiceCollection InitServices()
+        protected override void InitServices(IServiceCollection services)
         {
-            var services = base.InitServices();
+            base.InitServices(services);
 
             services.AddGraphQL().AddGraphTypes(typeof(GraphQLSchema));
-
-            return services;
         }
 
         protected IDocumentExecuter Executer { get; private set; }

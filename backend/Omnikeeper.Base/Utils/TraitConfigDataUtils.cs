@@ -15,6 +15,15 @@ namespace Omnikeeper.Base.Utils
     {
         public static T ExtractMandatoryScalarJSONAttribute<T>(EffectiveTrait et, string traitAttributeName, MyJSONSerializer<T> serializer) where T : class
         {
+            var vo = ExtractMandatoryScalarJSONAttribute(et, traitAttributeName);
+            var s = serializer.Deserialize(vo);
+            if (s == null)
+                throw new Exception("Invalid trait configuration");
+            return s;
+        }
+
+        public static JObject ExtractMandatoryScalarJSONAttribute(EffectiveTrait et, string traitAttributeName)
+        {
             if (!et.TraitAttributes.TryGetValue(traitAttributeName, out var a))
                 throw new Exception("Invalid trait configuration");
             var raa = a.Attribute.Value as AttributeScalarValueJSON;
@@ -25,10 +34,7 @@ namespace Omnikeeper.Base.Utils
             var vo = raa.Value as JObject;
             if (vo == null)
                 throw new Exception("Invalid trait configuration");
-            var s = serializer.Deserialize(vo);
-            if (s == null)
-                throw new Exception("Invalid trait configuration");
-            return s;
+            return vo;
         }
 
         public static IEnumerable<T> ExtractMandatoryArrayJSONAttribute<T>(EffectiveTrait et, string traitAttributeName, MyJSONSerializer<T> serializer) where T : class
@@ -106,18 +112,13 @@ namespace Omnikeeper.Base.Utils
             throw new Exception("Invalid trait configuration");
         }
 
-        public static async Task<bool> WriteAttributes(IBaseAttributeModel baseAttributeModel, Guid ciid, string writeLayerID, IChangesetProxy changesetProxy, DataOriginV1 dataOrigin, IModelContext trans, params (string attributeName, IAttributeValue value)[] attributes)
+
+        public static IEnumerable<CompactRelatedCI> ExtractMandatoryRelations(EffectiveTrait et, string traitRelationName)
         {
-            var changed = false;
-            foreach (var (attributeName, value) in attributes)
-            {
-                if (value != null)
-                {
-                    (_, var tmpChanged) = await baseAttributeModel.InsertAttribute(attributeName, value, ciid, writeLayerID, changesetProxy, dataOrigin, trans);
-                    changed = changed || tmpChanged;
-                }
-            }
-            return changed;
+            if (!et.TraitRelations.TryGetValue(traitRelationName, out var relatedCIs))
+                throw new Exception("Invalid trait configuration");
+
+            return relatedCIs;
         }
     }
 }

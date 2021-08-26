@@ -42,5 +42,10 @@ namespace Omnikeeper.Base.Entity
         {
             return LayerIDs.IndexOf(layerID);
         }
+
+        public override string ToString()
+        {
+            return string.Join(",", LayerIDs);
+        }
     }
 }
