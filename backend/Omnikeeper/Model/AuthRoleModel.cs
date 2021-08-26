@@ -12,10 +12,10 @@ using System.Threading.Tasks;
 namespace Omnikeeper.Model
 {
     // TODO: think about caching?
-    public class AuthRoleModel : TraitDataConfigBaseModel<AuthRole>, IAuthRoleModel
+    public class AuthRoleModel : TraitDataConfigBaseModel<AuthRole, string>, IAuthRoleModel
     {
-        public AuthRoleModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel)
-            : base(CoreTraits.AuthRoleFlattened, effectiveTraitModel, ciModel, baseAttributeModel)
+        public AuthRoleModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
+            : base(CoreTraits.AuthRoleFlattened, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
         {
         }
 
@@ -29,12 +29,17 @@ namespace Omnikeeper.Model
             return await TryToGet(id, layerSet, timeThreshold, trans);
         }
 
-        protected override (AuthRole dc, string id) EffectiveTrait2DC(EffectiveTrait et)
+        protected override (AuthRole dc, string id) EffectiveTrait2DC(EffectiveTrait et, MergedCI ci)
         {
             var AuthRoleID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
             var permissions = TraitConfigDataUtils.ExtractOptionalArrayTextAttribute(et, "permissions", new string[] { });
 
             return (new AuthRole(AuthRoleID, permissions.ToArray()), AuthRoleID);
+        }
+
+        protected override string EffectiveTrait2ID(EffectiveTrait et, MergedCI ci)
+        {
+            return TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
         }
 
         public async Task<IDictionary<string, AuthRole>> GetAuthRoles(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
@@ -44,7 +49,7 @@ namespace Omnikeeper.Model
 
         public async Task<(AuthRole authRole, bool changed)> InsertOrUpdate(string id, IEnumerable<string> permissions, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
-            return await InsertOrUpdate(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
+            return await InsertOrUpdateAttributes(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
                 ("auth_role.id", new AttributeScalarValueText(id)),
                 ("auth_role.permissions", AttributeArrayValueText.BuildFromString(permissions)),
                 (ICIModel.NameAttribute, new AttributeScalarValueText($"AuthRole - {id}"))

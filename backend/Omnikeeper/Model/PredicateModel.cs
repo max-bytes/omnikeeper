@@ -11,10 +11,10 @@ using System.Threading.Tasks;
 namespace Omnikeeper.Model
 {
     // TODO: think about caching?
-    public class PredicateModel : TraitDataConfigBaseModel<Predicate>, IPredicateModel
+    public class PredicateModel : TraitDataConfigBaseModel<Predicate, string>, IPredicateModel
     {
-        public PredicateModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel)
-            : base(CoreTraits.PredicateFlattened, effectiveTraitModel, ciModel, baseAttributeModel)
+        public PredicateModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
+            : base(CoreTraits.PredicateFlattened, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
         { }
 
         public async Task<Predicate> GetPredicate(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
@@ -36,7 +36,7 @@ namespace Omnikeeper.Model
             return await GetAll(layerSet, trans, timeThreshold);
         }
 
-        protected override (Predicate, string) EffectiveTrait2DC(EffectiveTrait et)
+        protected override (Predicate, string) EffectiveTrait2DC(EffectiveTrait et, MergedCI ci)
         {
             var predicateID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
             var wordingFrom = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "wording_from");
@@ -44,9 +44,14 @@ namespace Omnikeeper.Model
             return (new Predicate(predicateID, wordingFrom, wordingTo), predicateID);
         }
 
+        protected override string EffectiveTrait2ID(EffectiveTrait et, MergedCI ci)
+        {
+            return TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
+        }
+
         public async Task<(Predicate predicate, bool changed)> InsertOrUpdate(string id, string wordingFrom, string wordingTo, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
-            return await InsertOrUpdate(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
+            return await InsertOrUpdateAttributes(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
                 ("predicate.id", new AttributeScalarValueText(id)),
                 ("predicate.wording_from", new AttributeScalarValueText(wordingFrom)),
                 ("predicate.wording_to", new AttributeScalarValueText(wordingTo)),

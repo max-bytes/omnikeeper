@@ -42,7 +42,7 @@ namespace Tests.Integration.Model
             var rt1 = await recursiveTraitModel.GetRecursiveTraits(new LayerSet(baseConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.IsEmpty(rt1);
 
-            var changesetProxy = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
+            var changesetProxy1 = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
 
             RecursiveTrait trait;
             using (var trans = ModelContextBuilder.BuildDeferred())
@@ -54,7 +54,7 @@ namespace Tests.Integration.Model
                     new List<TraitRelation>() { },
                     new List<string>() { },
                     new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
-                    new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
+                    new DataOriginV1(DataOriginType.Manual), changesetProxy1, trans);
 
                 Assert.IsNotNull(trait);
                 Assert.IsTrue(changed);
@@ -65,11 +65,13 @@ namespace Tests.Integration.Model
             var rt2 = await recursiveTraitModel.GetRecursiveTraits(new LayerSet(baseConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             rt2.Should().BeEquivalentTo(new List<RecursiveTrait>() { trait });
 
+            var changesetProxy2 = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
+
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 bool deleted = await recursiveTraitModel.TryToDelete(trait.ID,
                     new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer, 
-                    new DataOriginV1(DataOriginType.Manual), changesetProxy, trans);
+                    new DataOriginV1(DataOriginType.Manual), changesetProxy2, trans);
                 Assert.IsTrue(deleted);
                 trans.Commit();
             }

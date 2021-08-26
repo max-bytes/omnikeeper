@@ -23,10 +23,10 @@ namespace OKPluginGenericJSONIngest
         Task<bool> TryToDelete(string id, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans);
     }
 
-    public class ContextModel : TraitDataConfigBaseModel<Context>, IContextModel
+    public class ContextModel : TraitDataConfigBaseModel<Context, string>, IContextModel
     {
-        public ContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel)
-            : base(Traits.ContextFlattenedTrait, effectiveTraitModel, ciModel, baseAttributeModel)
+        public ContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
+            : base(Traits.ContextFlattenedTrait, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
         { }
 
         public async Task<Context> GetContext(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
@@ -43,13 +43,18 @@ namespace OKPluginGenericJSONIngest
             return await TryToGet(id, layerSet, timeThreshold, trans);
         }
 
-        protected override (Context, string) EffectiveTrait2DC(EffectiveTrait et)
+        protected override (Context, string) EffectiveTrait2DC(EffectiveTrait et, MergedCI ci)
         {
             var contextID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
             var extractConfig = TraitConfigDataUtils.ExtractMandatoryScalarJSONAttribute(et, "extract_config", Context.ExtractConfigSerializer);
             var transformConfig = TraitConfigDataUtils.ExtractMandatoryScalarJSONAttribute(et, "transform_config", Context.TransformConfigSerializer);
             var loadConfig = TraitConfigDataUtils.ExtractMandatoryScalarJSONAttribute(et, "load_config", Context.LoadConfigSerializer);
             return (new Context(contextID, extractConfig, transformConfig, loadConfig), contextID);
+        }
+
+        protected override string EffectiveTrait2ID(EffectiveTrait et, MergedCI ci)
+        {
+            return TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
         }
 
         public async Task<IDictionary<string, Context>> GetContexts(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
@@ -59,7 +64,7 @@ namespace OKPluginGenericJSONIngest
 
         public async Task<(Context context, bool changed)> InsertOrUpdate(string id, IExtractConfig extractConfig, ITransformConfig transformConfig, ILoadConfig loadConfig, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
-            return await InsertOrUpdate(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
+            return await InsertOrUpdateAttributes(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
                 ("gji_context.id", new AttributeScalarValueText(id)),
                 ("gji_context.extract_config", AttributeScalarValueJSON.Build(Context.ExtractConfigSerializer.SerializeToJObject(extractConfig))),
                 ("gji_context.transform_config", AttributeScalarValueJSON.Build(Context.TransformConfigSerializer.SerializeToJObject(transformConfig))),

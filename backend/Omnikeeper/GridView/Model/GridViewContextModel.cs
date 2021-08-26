@@ -12,10 +12,10 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.GridView.Model
 {
-    public class GridViewContextModel : TraitDataConfigBaseModel<FullContext>, IGridViewContextModel
+    public class GridViewContextModel : TraitDataConfigBaseModel<FullContext, string>, IGridViewContextModel
     {
-        public GridViewContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel)
-            : base(CoreTraits.GridviewContextFlattened, effectiveTraitModel, ciModel, baseAttributeModel)
+        public GridViewContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
+            : base(CoreTraits.GridviewContextFlattened, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
         {
         }
 
@@ -38,7 +38,7 @@ namespace Omnikeeper.GridView.Model
             return await TryToGet(id, layerSet, timeThreshold, trans);
         }
 
-        protected override (FullContext dc, string id) EffectiveTrait2DC(EffectiveTrait et)
+        protected override (FullContext dc, string id) EffectiveTrait2DC(EffectiveTrait et, MergedCI ci)
         {
             var contextID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
             var speakingName = TraitConfigDataUtils.ExtractOptionalScalarTextAttribute(et, "speaking_name");
@@ -48,11 +48,16 @@ namespace Omnikeeper.GridView.Model
             return (new FullContext(contextID, speakingName, description, config), contextID);
         }
 
+        protected override string EffectiveTrait2ID(EffectiveTrait et, MergedCI ci)
+        {
+            return TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
+        }
+
         public async Task<(FullContext fullContext, bool changed)> InsertOrUpdate(string id, string speakingName, string description, GridViewConfiguration configuration, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             IDValidations.ValidateGridViewContextIDThrow(id);
 
-            return await InsertOrUpdate(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
+            return await InsertOrUpdateAttributes(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
                 ("gridview_context.id", new AttributeScalarValueText(id)),
                 ("gridview_context.config", AttributeScalarValueJSON.Build(GridViewConfiguration.Serializer.SerializeToJObject(configuration))),
                 ("gridview_context.speaking_name", new AttributeScalarValueText(speakingName)),

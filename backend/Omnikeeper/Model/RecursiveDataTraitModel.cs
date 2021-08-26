@@ -12,10 +12,10 @@ using System.Threading.Tasks;
 namespace Omnikeeper.Model
 {
     // TODO: think about caching?
-    public class RecursiveDataTraitModel : TraitDataConfigBaseModel<RecursiveTrait>, IRecursiveDataTraitModel
+    public class RecursiveDataTraitModel : TraitDataConfigBaseModel<RecursiveTrait, string>, IRecursiveDataTraitModel
     {
-        public RecursiveDataTraitModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel)
-            : base(CoreTraits.TraitFlattened, effectiveTraitModel, ciModel, baseAttributeModel)
+        public RecursiveDataTraitModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
+            : base(CoreTraits.TraitFlattened, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
         {
         }
 
@@ -39,7 +39,7 @@ namespace Omnikeeper.Model
             return traits.Values;
         }
 
-        protected override (RecursiveTrait dc, string id) EffectiveTrait2DC(EffectiveTrait et)
+        protected override (RecursiveTrait dc, string id) EffectiveTrait2DC(EffectiveTrait et, MergedCI ci)
         {
             var traitID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
 
@@ -52,9 +52,14 @@ namespace Omnikeeper.Model
             return (new RecursiveTrait(traitID, new TraitOriginV1(TraitOriginType.Data), requiredAttributes, optionalAttributes, requiredRelations, requiredTraits), traitID);
         }
 
+        protected override string EffectiveTrait2ID(EffectiveTrait et, MergedCI ci)
+        {
+            return TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
+        }
+
         public async Task<(RecursiveTrait recursiveTrait, bool changed)> InsertOrUpdate(string id, IEnumerable<TraitAttribute> requiredAttributes, IEnumerable<TraitAttribute>? optionalAttributes, IEnumerable<TraitRelation>? requiredRelations, IEnumerable<string>? requiredTraits, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
-            return await InsertOrUpdate(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
+            return await InsertOrUpdateAttributes(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
                 ("trait.id", new AttributeScalarValueText(id)),
                 ("trait.required_attributes", AttributeArrayValueJSON.Build(requiredAttributes.Select(a => TraitAttribute.Serializer.SerializeToJObject(a)))),
                 (optionalAttributes != null) ? ("trait.optional_attributes", AttributeArrayValueJSON.Build(optionalAttributes.Select(a => TraitAttribute.Serializer.SerializeToJObject(a)))) : default,

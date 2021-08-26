@@ -38,7 +38,7 @@ namespace Omnikeeper.Base.CLB
 
                 var timeThreshold = TimeThreshold.BuildLatest();
 
-                var username = Name; // make username the same as CLB name
+                var username = $"__cl.{Name}"; // make username the same as CLB name
                 var displayName = username;
                 // generate a unique but deterministic GUID from the clb Name
                 var clbUserGuidNamespace = new Guid("2544f9a7-cc17-4cba-8052-e88656cf1ef1");

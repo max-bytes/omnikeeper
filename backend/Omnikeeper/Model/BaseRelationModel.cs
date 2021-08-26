@@ -31,6 +31,10 @@ namespace Omnikeeper.Model
                     innerWhereClauses.Add("(from_ci_id = @from_ci_id)");
                     parameters.Add(new NpgsqlParameter("from_ci_id", rsft.fromCIID));
                     break;
+                case RelationSelectionTo rst:
+                    innerWhereClauses.Add("(to_ci_id = @to_ci_id)");
+                    parameters.Add(new NpgsqlParameter("to_ci_id", rst.toCIID));
+                    break;
                 case RelationSelectionEitherFromOrTo rsot:
                     innerWhereClauses.Add("(from_ci_id = @ci_identity OR to_ci_id = @ci_identity)");
                     parameters.Add(new NpgsqlParameter("ci_identity", rsot.ciid));

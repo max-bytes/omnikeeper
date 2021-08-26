@@ -17,6 +17,17 @@ namespace Omnikeeper.Base.Model
 
         public string ToHashKey() => $"rsf_{fromCIID}";
     }
+    public class RelationSelectionTo : IRelationSelection
+    {
+        public readonly Guid toCIID;
+
+        public RelationSelectionTo(Guid toCIID)
+        {
+            this.toCIID = toCIID;
+        }
+
+        public string ToHashKey() => $"rst_{toCIID}";
+    }
     public class RelationSelectionEitherFromOrTo : IRelationSelection
     {
         public readonly Guid ciid;
