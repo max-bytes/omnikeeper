@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Omnikeeper.Base.Validation
+namespace OKPluginValidation.Validation
 {
     public class ValidationIssue
     {

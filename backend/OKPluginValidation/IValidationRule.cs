@@ -4,7 +4,7 @@ using Omnikeeper.Base.Utils.ModelContext;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.Base.Validation
+namespace OKPluginValidation.Validation
 {
     public interface IValidationRule
     {

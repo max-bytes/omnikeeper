@@ -3,11 +3,10 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
-using Omnikeeper.Validation;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace Omnikeeper.Model
+namespace Omnikeeper.Base.Model
 {
     public static class CoreTraits
     {
@@ -76,7 +75,6 @@ namespace Omnikeeper.Model
         public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() { 
             Named, 
             Trait, Predicate, AuthRole, GridviewContext,
-            ValidationTraits.ValidationIssue, ValidationTraits.Validation,
         };
     }
 

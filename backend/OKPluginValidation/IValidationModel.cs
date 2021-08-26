@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.Base.Validation
+namespace OKPluginValidation.Validation
 {
     public interface IValidationModel
     {

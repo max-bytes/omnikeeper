@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 
-namespace Omnikeeper.Base.Validation
+namespace OKPluginValidation.Validation
 {
     public class Validation
     {

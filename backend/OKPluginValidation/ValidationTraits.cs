@@ -4,7 +4,7 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 
-namespace Omnikeeper.Validation
+namespace OKPluginValidation.Validation
 {
     public static class ValidationTraits
     {

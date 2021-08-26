@@ -12,7 +12,6 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Base.Utils.Serialization;
-using Omnikeeper.Base.Validation;
 using Omnikeeper.GraphQL;
 using Omnikeeper.GridView.Model;
 using Omnikeeper.Model;
@@ -20,8 +19,6 @@ using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
-using Omnikeeper.Validation;
-using Omnikeeper.Validation.Rules;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -165,14 +162,10 @@ namespace Omnikeeper.Startup
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 
             services.AddSingleton<ReactiveLogReceiver>();
-        }
 
-        public static void RegisterValidation(IServiceCollection services)
-        {
-            services.AddSingleton<IValidationIssueModel, ValidationIssueModel>();
-            services.AddSingleton<IValidationModel, ValidationModel>();
-            services.AddSingleton<IValidationRule, ValidationRuleNamedCI>();
-            services.AddScoped<IValidationEngine, ValidationEngine>();
+
+            //var tmp = new OKPluginValidation.PluginRegistration();
+            //tmp.RegisterServices(services);
         }
 
         public static void RegisterLogging(IServiceCollection services)

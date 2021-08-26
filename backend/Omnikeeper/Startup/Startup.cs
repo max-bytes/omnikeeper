@@ -83,7 +83,6 @@ namespace Omnikeeper.Startup
             // TODO: also think about graphql DataLoaders
             ServiceRegistration.RegisterModels(services, enableModelCaching, true, true);
             ServiceRegistration.RegisterServices(services);
-            ServiceRegistration.RegisterValidation(services);
             ServiceRegistration.RegisterGraphQL(services);
             var assemblies = ServiceRegistration.RegisterOKPlugins(services, pluginFolder);
 

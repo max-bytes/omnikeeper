@@ -2,9 +2,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Runners;
-using Omnikeeper.Validation;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,11 +25,20 @@ namespace Omnikeeper.Startup
             var trans = modelContextBuilder.BuildImmediate();
             var config = await baseConfigurationModel.GetConfigOrDefault(trans);
 
+            var plugins = scope.ServiceProvider.GetServices<IPluginRegistration>();
+
+
             RecurringJob.AddOrUpdate<CLBRunner>(s => s.Run(null), config.CLBRunnerInterval);
             RecurringJob.AddOrUpdate<MarkedForDeletionRunner>(s => s.Run(null), config.MarkedForDeletionRunnerInterval);
             RecurringJob.AddOrUpdate<ExternalIDManagerRunner>(s => s.Run(null), config.ExternalIDManagerRunnerInterval);
             RecurringJob.AddOrUpdate<ArchiveOldDataRunner>(s => s.Run(null), config.ArchiveOldDataRunnerInterval);
-            RecurringJob.AddOrUpdate<ValidationEngineRunner>(s => s.Run(null), "*/5 * * * * *"); // TODO: proper configurable time interval
+
+            // plugin hangfire jobs
+            foreach (var plugin in plugins)
+            {
+                plugin.RegisterHangfireJobRunners();
+            }
+            //RecurringJob.AddOrUpdate<ValidationEngineRunner>(s => s.Run(null), "*/5 * * * * *");
         }
     }
 }

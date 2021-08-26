@@ -20,7 +20,7 @@ using System.Collections.Generic;
 
 namespace Tests.Integration
 {
-    abstract class DIServicedTestBase : DBBackedTestBase
+    public abstract class DIServicedTestBase : DBBackedTestBase
     {
         private ServiceProvider? serviceProvider;
 
@@ -37,7 +37,8 @@ namespace Tests.Integration
         {
             base.Setup();
 
-            var services = InitServices();
+            var services = new ServiceCollection();
+            InitServices(services);
             serviceProvider = services.BuildServiceProvider();
         }
 
@@ -52,9 +53,8 @@ namespace Tests.Integration
 
         protected ServiceProvider ServiceProvider => serviceProvider!;
 
-        protected virtual IServiceCollection InitServices()
+        protected virtual void InitServices(IServiceCollection services)
         {
-            var services = new ServiceCollection();
             ServiceRegistration.RegisterLogging(services);
             ServiceRegistration.RegisterDB(services, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
             ServiceRegistration.RegisterOIABase(services);
@@ -103,8 +103,6 @@ namespace Tests.Integration
             services.AddSingleton((sp) => lbas.Object);
 
             services.AddSingleton((sp) => new Mock<ICIBasedAuthorizationService>().Object);
-
-            return services;
         }
     }
 }

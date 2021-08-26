@@ -10,6 +10,9 @@
     <PackageReference Include="dbup-postgresql" Version="4.5.0" />
     <PackageReference Include="DotLiquid" Version="2.0.325" />
     <PackageReference Include="Flurl.Http" Version="3.0.1" />
+    <PackageReference Include="Hangfire.Console" Version="1.4.2" />
+    <PackageReference Include="Hangfire.Core" Version="1.7.24" />
+    <PackageReference Include="Hangfire.MaximumConcurrentExecutions" Version="1.1.0" />
     <PackageReference Include="JmesPath.Net" Version="1.0.153" />
     <PackageReference Include="JsonSubTypes" Version="1.7.0" />
     <PackageReference Include="Keycloak.Net" Version="1.0.16" />
@@ -20,8 +23,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="Npgsql" Version="4.1.3.1" />
-    <PackageReference Include="Npgsql.Json.NET" Version="4.1.3" />
+    <PackageReference Include="Npgsql" Version="5.0.7" />
+    <PackageReference Include="Npgsql.Json.NET" Version="5.0.7" />
     <PackageReference Include="protobuf-net" Version="3.0.73" />
     <PackageReference Include="Scriban" Version="2.1.2" />
     <PackageReference Include="System.Collections.Immutable" Version="5.0.0" />

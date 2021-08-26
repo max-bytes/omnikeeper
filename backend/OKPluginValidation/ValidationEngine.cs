@@ -2,18 +2,18 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Base.Validation;
 using Omnikeeper.Validation.Rules;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.Validation
+namespace OKPluginValidation.Validation
 {
     public class ValidationEngine : IValidationEngine
     {
@@ -92,13 +92,15 @@ namespace Omnikeeper.Validation
                 // TODO: implement a bulk update instead of updating each item separately
                 foreach (var (_, newIssue) in newIssues)
                     await validationIssueModel.InsertOrUpdate(newIssue.ID, newIssue.Message, newIssue.AffectedCIs, validationWriteLayerset, validationWriteLayerID,
-                        new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.ComputeLayer), changesetProxy, trans);
+                        new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy, trans);
 
                 var outdatedIssues = oldValidationIssues.Where(kv => !newIssues.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
                 foreach (var (_, outdatedIssue) in outdatedIssues)
                     await validationIssueModel.TryToDelete(outdatedIssue.ID, validationWriteLayerset, validationWriteLayerID,
-                        new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.ComputeLayer), changesetProxy, trans);
+                        new DataOriginV1(DataOriginType.ComputeLayer), changesetProxy, trans);
+
+                // TODO: add relations from validation issue to validation
 
                 trans.Commit();
             } catch (Exception e)

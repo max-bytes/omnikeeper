@@ -5,6 +5,7 @@ using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;

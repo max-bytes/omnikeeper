@@ -1,26 +1,26 @@
 ﻿using Hangfire;
 using Hangfire.Server;
 using Microsoft.Extensions.Logging;
-using Omnikeeper.Base.Validation;
-using Omnikeeper.Utils;
+using Omnikeeper.Base.Plugins;
+using Omnikeeper.Base.Utils;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.Validation
+namespace OKPluginValidation.Validation
 {
-    public class ValidationEngineRunner
+    public class ValidationEngineRunner : IHangfireJobRunner
     {
         private readonly IValidationEngine validationEngine;
-        private readonly IServiceProvider sp;
         private readonly ILogger<ValidationEngineRunner> logger;
 
-        public ValidationEngineRunner(IValidationEngine validationEngine, IServiceProvider sp, ILogger<ValidationEngineRunner> logger)
+        public ValidationEngineRunner(IValidationEngine validationEngine, ILogger<ValidationEngineRunner> logger)
             {
             this.validationEngine = validationEngine;
-            this.sp = sp;
             this.logger = logger;
         }
+
+        public string CronExpression => "*/5 * * * * *";
 
         [MaximumConcurrentExecutions(1, timeoutInSeconds: 120)]
         [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
