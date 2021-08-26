@@ -7,12 +7,6 @@ using System.Reflection;
 
 namespace Omnikeeper.Base.Plugins
 {
-    public interface IHangfireJobRunner
-    {
-        string CronExpression { get; }
-        void Run(PerformContext? context);
-    }
-
     public interface IPluginRegistration
     {
         IPluginDBMigrator? DBMigration { get; }

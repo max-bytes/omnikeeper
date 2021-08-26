@@ -27,7 +27,6 @@ namespace Omnikeeper.Startup
 
             var plugins = scope.ServiceProvider.GetServices<IPluginRegistration>();
 
-
             RecurringJob.AddOrUpdate<CLBRunner>(s => s.Run(null), config.CLBRunnerInterval);
             RecurringJob.AddOrUpdate<MarkedForDeletionRunner>(s => s.Run(null), config.MarkedForDeletionRunnerInterval);
             RecurringJob.AddOrUpdate<ExternalIDManagerRunner>(s => s.Run(null), config.ExternalIDManagerRunnerInterval);
@@ -38,7 +37,6 @@ namespace Omnikeeper.Startup
             {
                 plugin.RegisterHangfireJobRunners();
             }
-            //RecurringJob.AddOrUpdate<ValidationEngineRunner>(s => s.Run(null), "*/5 * * * * *");
         }
     }
 }

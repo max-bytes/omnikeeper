@@ -145,7 +145,6 @@ namespace Omnikeeper.Base.Model
             foreach (var attribute in attributesToRemove)
             {
                 var (_, changed) = await baseAttributeModel.RemoveAttribute(attribute, t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
-                //Console.WriteLine(changed);
             }
 
             var allRelationsForward = await baseRelationModel.GetRelations(new RelationSelectionFrom(t.Item1), writeLayerID, trans, TimeThreshold.BuildLatest());
@@ -159,7 +158,6 @@ namespace Omnikeeper.Base.Model
             foreach (var r in relationsToRemove)
             {
                 var (_, changed) = await baseRelationModel.RemoveRelation(r.FromCIID, r.ToCIID, r.PredicateID, writeLayerID, changesetProxy, dataOrigin, trans);
-                //Console.WriteLine(changed);
             }
 
             var tAfterDeletion = await TryToGet(id, layerSet, changesetProxy.TimeThreshold, trans);

@@ -162,10 +162,6 @@ namespace Omnikeeper.Startup
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 
             services.AddSingleton<ReactiveLogReceiver>();
-
-
-            //var tmp = new OKPluginValidation.PluginRegistration();
-            //tmp.RegisterServices(services);
         }
 
         public static void RegisterLogging(IServiceCollection services)
