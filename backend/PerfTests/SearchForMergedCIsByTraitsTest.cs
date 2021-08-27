@@ -1,5 +1,4 @@
 ﻿using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Running;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,28 +17,27 @@ using Tests;
 
 namespace PerfTests
 {
-    public class GetMergedCIsWithTraitTest : Base
+    public class SearchForMergedCIsByTraitsTest : Base
     {
-        [GlobalSetup(Target = nameof(GetMergedCIsWithTrait))]
-        public async Task Setup() => await SetupGeneric(false, WithModelCaching, WithEffectiveTraitCaching);
+        [GlobalSetup(Target = nameof(SearchForMergedCIsByTraits))]
+        public async Task Setup() => await SetupGeneric(WithModelCaching, WithEffectiveTraitCaching);
 
         [Benchmark]
-        public async Task GetMergedCIsWithTrait()
+        public async Task SearchForMergedCIsByTraits()
         {
             using var mc = modelContextBuilder!.BuildImmediate();
             var ciSelection = (SpecificCIs) ? selectedCIIDs : new AllCIIDsSelection();
-            (await effectiveTraitModel!.GetMergedCIsWithTrait(trait!, layerset!, ciSelection!, mc, time)).Consume(consumer);
+            (await ciSearchModel!.SearchForMergedCIsByTraits(ciSelection!, RequiredTraits!, new string[0], layerset!, mc, time)).Consume(consumer);
 
-            // second time should hit cache
-            (await effectiveTraitModel!.GetMergedCIsWithTrait(trait!, layerset!, ciSelection!, mc, time)).Consume(consumer);
+            // should hit cache, second time
+            (await ciSearchModel!.SearchForMergedCIsByTraits(ciSelection!, RequiredTraits!, new string[0], layerset!, mc, time)).Consume(consumer);
         }
 
-        [GlobalCleanup(Target = nameof(GetMergedCIsWithTrait))]
+        [GlobalCleanup(Target = nameof(SearchForMergedCIsByTraits))]
         public void TearDownT() => TearDown();
 
-        private IEffectiveTraitModel? effectiveTraitModel;
+        private ICISearchModel? ciSearchModel;
         private IModelContextBuilder? modelContextBuilder;
-        private ITrait? trait;
         private LayerSet? layerset;
         private TimeThreshold time;
         private ICIIDSelection? selectedCIIDs;
@@ -47,10 +45,9 @@ namespace PerfTests
 
         [ParamsSource(nameof(AttributeCITuples))]
         public (int numCIs, int numAttributeInserts, int numLayers, int numDataTransactions) AttributeCITuple { get; set; }
-        public IEnumerable<(int numCIs, int numAttributeInserts, int numLayers, int numDataTransactions)> AttributeCITuples => new[] { 
-            //(50, 500, 4, 1),
-            (5000, 50000, 4, 1),
-            //(100000, 1000000, 4, 1),
+        public IEnumerable<(int numCIs, int numAttributeInserts, int numLayers, int numDataTransactions)> AttributeCITuples => new[] {
+            (500, 5000, 4, 1),
+            //(5000, 50000, 4, 1),
         };
 
         [Params(false)]
@@ -62,13 +59,14 @@ namespace PerfTests
         [Params(false)]
         public bool WithCachingForGetAttributes { get; set; }
 
-        [Params("host", "host_linux")]
-        public string? TraitToFetch { get; set; }
+        [ParamsSource(nameof(RequiredTraitsList))]
+        public string[]? RequiredTraits { get; set; }
+        public IEnumerable<string[]> RequiredTraitsList => new string[][] { new string[] { "host_linux" } };
 
         [Params(false)]
         public bool SpecificCIs { get; set; }
 
-        public async Task SetupGeneric(bool runPartitioning, bool enableModelCaching, bool enableEffectiveTraitCaching)
+        public async Task SetupGeneric(bool enableModelCaching, bool enableEffectiveTraitCaching)
         {
             Setup(enableModelCaching, enableEffectiveTraitCaching);
 
@@ -79,9 +77,8 @@ namespace PerfTests
 
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
             var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
-            var traitsProvider = ServiceProvider.GetRequiredService<ITraitsProvider>();
-            effectiveTraitModel = ServiceProvider.GetRequiredService<IEffectiveTraitModel>();
             modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
+            ciSearchModel = ServiceProvider.GetRequiredService<ICISearchModel>();
 
             if (WithModelCaching)
             {
@@ -97,38 +94,15 @@ namespace PerfTests
 
             time = TimeThreshold.BuildLatest();
 
-            trait = await traitsProvider.GetActiveTrait(TraitToFetch!, mc, time);
-
             var allCIIDs = await ciModel.GetCIIDs(mc);
             var random = new Random(3);
             selectedCIIDs = SpecificCIIDsSelection.Build(allCIIDs.Where(ciid => random.Next(0, 2 + 1) == 0).ToHashSet());
-
-            if (runPartitioning)
-            {
-                var dataPartitionService = ServiceProvider.GetRequiredService<IDataPartitionService>();
-                await dataPartitionService.StartNewPartition();
-            }
-
-            // NOTE: optimizing postgres with
-            // SET random_page_cost = 1.1;
-            // produces much better results as the indices are used more often by the query planer, at least in test scenarios
-            // further research required, also see https://www.postgresql.org/docs/12/runtime-config-query.html#RUNTIME-CONFIG-QUERY-CONSTANTS
         }
 
         [Test]
-        public void RunBenchmark()
+        public void Run()
         {
-            var summary = BenchmarkRunner.Run<GetMergedCIsWithTraitTest>();
-        }
-
-        [Test]
-        public async Task RunDebuggable()
-        {
-            TraitToFetch = "host";
-            AttributeCITuple = AttributeCITuples.First();
-            await SetupGeneric(false, false, true);
-            await GetMergedCIsWithTrait();
-            TearDown();
+            var summary = BenchmarkRunner.Run<SearchForMergedCIsByTraitsTest>();
         }
     }
 }

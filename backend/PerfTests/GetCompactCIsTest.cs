@@ -19,7 +19,7 @@ namespace PerfTests
     {
 
         [GlobalSetup(Target = nameof(GetCompactCIs))]
-        public async Task Setup() => await SetupGeneric(true, true);
+        public async Task Setup() => await SetupGeneric(true, true, true);
         [Benchmark]
         public async Task GetCompactCIs()
         {
@@ -31,7 +31,7 @@ namespace PerfTests
 
 
         [GlobalSetup(Target = nameof(GetCompactCIsWithoutCaching))]
-        public async Task SetupWithoutCaching() => await SetupGeneric(true, false);
+        public async Task SetupWithoutCaching() => await SetupGeneric(true, false, false);
         [Benchmark]
         public async Task GetCompactCIsWithoutCaching()
         {
@@ -47,9 +47,9 @@ namespace PerfTests
         private TimeThreshold time;
         private readonly Consumer consumer = new Consumer();
 
-        public async Task SetupGeneric(bool runPartitioning, bool enableCaching)
+        public async Task SetupGeneric(bool runPartitioning, bool enableModelCaching, bool enableEffectiveTraitCaching)
         {
-            Setup(enableCaching);
+            Setup(enableModelCaching, enableEffectiveTraitCaching);
 
             var numCIs = 500;
             var numLayers = 4;

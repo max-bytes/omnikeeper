@@ -23,7 +23,7 @@ namespace PerfTests
         [SetUp]
         public void Setup()
         {
-            Setup(true);
+            Setup(true, true);
         }
 
         [TearDown]

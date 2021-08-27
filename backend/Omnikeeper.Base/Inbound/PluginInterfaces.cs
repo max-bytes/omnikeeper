@@ -111,6 +111,7 @@ namespace Omnikeeper.Base.Inbound
     public interface IOnlineAccessProxy
     {
         Task<bool> IsOnlineInboundLayer(string layerID, IModelContext trans);
+        Task<bool> ContainsOnlineInboundLayer(LayerSet layerset, IModelContext trans);
 
         IAsyncEnumerable<(CIAttribute attribute, string layerID)> GetAttributes(ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime);
         IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime);

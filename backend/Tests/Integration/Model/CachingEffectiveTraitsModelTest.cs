@@ -10,6 +10,9 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
+using Omnikeeper.Model.Decorators;
+using Omnikeeper.Model.Decorators.CachingEffectiveTraits;
+using Omnikeeper.Utils;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,19 +20,18 @@ using Tests.Integration.Model.Mocks;
 
 namespace Tests.Integration.Model
 {
-    partial class EffectiveTraitsModelTest : DBBackedTestBase
+    partial class CachingEffectiveTraitsModelTest : DBBackedTestBase
     {
         [Test]
-        public async Task TestTraitAttributes()
+        public async Task TestGetMergedCIsWithTrait()
         {
             var traitsProvider = new MockedTraitsProvider();
-            var (traitModel, layerset, ciids) = await BaseSetup();
+            var (traitModel, cache, attributeModel, changesetModel, user, layerset, ciids) = await BaseSetup();
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
             var trans = ModelContextBuilder.BuildImmediate();
 
-            // TODO: move test for TraitsProvider to its own test-class
             var invalidTrait = await traitsProvider.GetActiveTrait("invalid_trait", trans, timeThreshold);
             Assert.AreEqual(null, invalidTrait);
 
@@ -37,67 +39,75 @@ namespace Tests.Integration.Model
             var testTrait2 = (await traitsProvider.GetActiveTrait("test_trait_2", trans, timeThreshold))!;
             var testTrait3 = (await traitsProvider.GetActiveTrait("test_trait_3", trans, timeThreshold))!;
 
-            var et1 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait1, layerset, new AllCIIDsSelection(), trans, timeThreshold);
-            Assert.AreEqual(3, et1.Count());
-            var et2 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait2, layerset, new AllCIIDsSelection(), trans, timeThreshold);
-            Assert.AreEqual(2, et2.Count());
-            Assert.IsTrue(et2.All(t => t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a2") && t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a4")));
-            var et3 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait3, layerset, new AllCIIDsSelection(), trans, timeThreshold);
-            Assert.AreEqual(2, et3.Count());
-            Assert.IsTrue(et3.All(t => t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
-
+            // first access
             var cis1 = await traitModel.GetMergedCIsWithTrait(testTrait1, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(3, cis1.Count());
             cis1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
 
+            // check if cache is filled
+            Assert.IsTrue(cache.GetCIIDsHavingTrait(testTrait1.ID, layerset, out var ciidsInCache1));
+            ciidsInCache1.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
+            Assert.IsFalse(cache.GetCIIDsHavingTrait(testTrait2.ID, layerset, out var _));
+            Assert.IsFalse(cache.GetCIIDsHavingTrait(testTrait3.ID, layerset, out var _));
+
+            // second access, should come from cache
+            var cis1again = await traitModel.GetMergedCIsWithTrait(testTrait1, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            Assert.AreEqual(3, cis1again.Count());
+            cis1again.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
+
+            // first access for trait2
             var cis2 = await traitModel.GetMergedCIsWithTrait(testTrait2, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(2, cis2.Count());
             cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
 
+            // check if cache is filled for trait2 too
+            Assert.IsTrue(cache.GetCIIDsHavingTrait(testTrait2.ID, layerset, out var ciidsInCache2));
+            ciidsInCache2.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
+            Assert.IsTrue(cache.GetCIIDsHavingTrait(testTrait1.ID, layerset, out var _));
+
+            // do a change to ci1's attributes
+            using (var transD = ModelContextBuilder.BuildDeferred())
+            {
+                var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+                await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1_changed"), ciids[1], "l1", changeset, new DataOriginV1(DataOriginType.Manual), transD);
+                transD.Commit();
+            }
+
+            // trait 2 should now contain 1 more item in cache, trait 1 still full
+            Assert.IsTrue(cache.GetCIIDsHavingTrait(testTrait2.ID, layerset, out var ciidsInCache3));
+            ciidsInCache3.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
+            Assert.IsTrue(cache.GetCIIDsHavingTrait(testTrait1.ID, layerset, out var ciidsInCache4));
+            ciidsInCache4.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
+
+
+            // second access for trait2, should still return the same two cis, even when cache contains 3
+            var cis3 = await traitModel.GetMergedCIsWithTrait(testTrait2, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            Assert.AreEqual(2, cis3.Count());
+            cis3.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
+
+            // cache for trait 2 is updated again
+            Assert.IsTrue(cache.GetCIIDsHavingTrait(testTrait2.ID, layerset, out var ciidsInCache5));
+            ciidsInCache5.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
         }
 
-        [Test]
-        public async Task TestDependentTraits()
+        private async Task<(CachingEffectiveTraitModel traitModel, EffectiveTraitCache cache, AttributeModel attributeModel, 
+            ChangesetModel changesetModel, UserInDatabase user, LayerSet layerset, Guid[])> BaseSetup()
         {
-            var traitsProvider = new MockedTraitsProvider();
-            var (traitModel, layerset, _) = await BaseSetup();
-
-            var timeThreshold = TimeThreshold.BuildLatest();
-            var trans = ModelContextBuilder.BuildImmediate();
-
-
-            var t4 = await traitsProvider.GetActiveTrait("test_trait_4", trans, timeThreshold);
-            var t5 = await traitsProvider.GetActiveTrait("test_trait_5", trans, timeThreshold);
-
-            var t1 = await traitModel.CalculateEffectiveTraitsForTrait(t4!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
-            Assert.AreEqual(2, t1.Count());
-            var t2 = await traitModel.CalculateEffectiveTraitsForTrait(t5!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
-            Assert.AreEqual(1, t2.Count());
-        }
-
-        [Test]
-        public async Task TestDependentTraitLoop()
-        {
-            var timeThreshold = TimeThreshold.BuildLatest();
-            var traitsProvider = new MockedTraitsProviderWithLoop();
-            var (traitModel, layerset, _) = await BaseSetup();
-            var trans = ModelContextBuilder.BuildImmediate();
-            var tt1 = await traitsProvider.GetActiveTrait("test_trait_1", trans, timeThreshold);
-            var t1 = await traitModel.CalculateEffectiveTraitsForTrait(tt1!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
-            Assert.AreEqual(0, t1.Count());
-        }
-
-        private async Task<(EffectiveTraitModel traitModel, LayerSet layerset, Guid[])> BaseSetup()
-        {
+            var cache = new EffectiveTraitCache();
             var oap = new Mock<IOnlineAccessProxy>();
             oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<string>(), It.IsAny<IModelContext>())).ReturnsAsync(false);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            oap.Setup(_ => _.ContainsOnlineInboundLayer(It.IsAny<LayerSet>(), It.IsAny<IModelContext>())).ReturnsAsync(false);
+            var decoratedBaseAttributeModel = new TraitCacheInvalidationBaseAttributeModel(new BaseAttributeModel(new PartitionModel()), cache);
+            var attributeModel = new AttributeModel(decoratedBaseAttributeModel);
+
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var layerModel = new LayerModel();
             var traitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, oap.Object, NullLogger<EffectiveTraitModel>.Instance);
+
+            var decoratedTraitModel = new CachingEffectiveTraitModel(traitModel, ciModel, cache, oap.Object);
 
             var transI = ModelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, transI);
@@ -125,7 +135,7 @@ namespace Tests.Integration.Model
             }
 
             var layerset = await layerModel.BuildLayerSet(new string[] { "l1" }, transI);
-            return (traitModel, layerset, new Guid[] { ciid1, ciid2, ciid3 });
+            return (decoratedTraitModel, cache, attributeModel, changesetModel, user, layerset, new Guid[] { ciid1, ciid2, ciid3 });
         }
     }
 }

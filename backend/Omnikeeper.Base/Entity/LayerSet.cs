@@ -6,11 +6,11 @@ using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
-    public class LayerSet : IEnumerable<string>
+    public class LayerSet : IEnumerable<string>, IEquatable<LayerSet>
     {
         // can be unsorted
         public string[] LayerIDs { get; private set; }
-        public long LayerHash
+        public long LayerHash // TODO: can this be removed? Who uses this? or at least make it private
         {
             get
             {
@@ -47,5 +47,19 @@ namespace Omnikeeper.Base.Entity
         {
             return string.Join(",", LayerIDs);
         }
+
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = (int)2166136261;
+                // Suitable nullity checks etc, of course :)
+                foreach(var layerID in LayerIDs)
+                    hash = (hash * 16777619) ^ layerID.GetHashCode();
+                return hash;
+            }
+        }
+        public override bool Equals(object? obj) => Equals(obj as LayerSet);
+        public bool Equals(LayerSet? other) => other != null && LayerIDs.SequenceEqual(other.LayerIDs);
     }
 }

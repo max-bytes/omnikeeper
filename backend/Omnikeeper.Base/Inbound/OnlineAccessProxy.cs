@@ -28,6 +28,18 @@ namespace Omnikeeper.Base.Inbound
             return await pluginManager.IsValidOnlinePluginInstance(adapterName, trans);
         }
 
+        public async Task<bool> ContainsOnlineInboundLayer(LayerSet layerset, IModelContext trans)
+        {
+            var layers = await layerModel.GetLayers(layerset.LayerIDs, trans);
+            foreach (var layer in layers)
+            {
+                var adapterName = layer.OnlineInboundAdapterLink.AdapterName;
+                if (await pluginManager.IsValidOnlinePluginInstance(adapterName, trans))
+                    return true;
+            }
+            return false;
+        }
+
         private async IAsyncEnumerable<(ILayerAccessProxy proxy, Layer layer)> GetAccessProxies(LayerSet layerset, IModelContext trans)
         {
             foreach (var layer in await layerModel.GetLayers(layerset.LayerIDs, trans))

@@ -72,6 +72,7 @@ namespace Omnikeeper.Model
                 AllCIIDsSelection _ => "1=1",
                 SpecificCIIDsSelection _ => "ci_id = ANY(@ci_ids)", // TODO: performance test the in, some places suggest its slow: https://dba.stackexchange.com/questions/91247/optimizing-a-postgres-query-with-a-large-in
                 AllCIIDsExceptSelection _ => "ci_id <> ALL(@ci_ids)", // TODO: performance test the in, some places suggest its slow: https://dba.stackexchange.com/questions/91247/optimizing-a-postgres-query-with-a-large-in
+                NoCIIDsSelection _ => "1=0",
                 _ => throw new NotImplementedException("")
             };
         }

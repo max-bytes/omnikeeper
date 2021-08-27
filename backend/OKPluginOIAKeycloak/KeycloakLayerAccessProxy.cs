@@ -168,6 +168,8 @@ namespace OKPluginOIAKeycloak
                         }
                         break;
                     }
+                case NoCIIDsSelection _:
+                    break;
             }
         }
 

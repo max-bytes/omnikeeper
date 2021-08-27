@@ -60,9 +60,6 @@ namespace Omnikeeper.Model
             return (ret, true);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-            => await InsertAttribute(ICIModel.NameAttribute, new AttributeScalarValueText(nameValue), ciid, layerID, changesetProxy, origin, trans);
-
         public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var readTS = TimeThreshold.BuildLatest();
@@ -113,7 +110,7 @@ namespace Omnikeeper.Model
         // it is not possible to insert the "same" attribute (same ciid, name and layer) multiple times
         // if this operation detects a duplicate, an exception is thrown;
         // the caller is responsible for making sure there are no duplicates
-        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var readTS = TimeThreshold.BuildLatest();
 
@@ -208,8 +205,8 @@ namespace Omnikeeper.Model
                 writer.Complete();
             }
 
-            return actualInserts;
-
+            // return all attributes that have changed (their ciids and the attribute full names)
+            return actualInserts.Select(i => (i.ciid, i.fullName)).Concat(outdatedAttributes.Values.Select(i => (i.CIID, i.Name)));
         }
     }
 }

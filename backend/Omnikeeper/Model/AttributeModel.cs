@@ -232,12 +232,7 @@ namespace Omnikeeper.Model
             return await baseModel.RemoveAttribute(name, ciid, layerID, changeset, origin, trans);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
-        {
-            return await baseModel.InsertCINameAttribute(nameValue, ciid, layerID, changeset, origin, trans);
-        }
-
-        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
+        public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
             return await baseModel.BulkReplaceAttributes(data, changeset, origin, trans);
         }

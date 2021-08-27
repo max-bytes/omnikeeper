@@ -57,8 +57,8 @@ namespace Omnikeeper.Model
 
         public async Task<IEnumerable<MergedCI>> GetMergedCIsWithTrait(ITrait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
         {
-            if (layerSet.IsEmpty)
-                return ImmutableList<MergedCI>.Empty; // return empty, an empty layer list can never produce any traits
+            if (layerSet.IsEmpty && !(trait is TraitEmpty))
+                return ImmutableList<MergedCI>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
 
             bool bail;
             (ciidSelection, bail) = await Prefilter(trait, layerSet, ciidSelection, trans, atTime);
@@ -66,7 +66,7 @@ namespace Omnikeeper.Model
                 return ImmutableList<MergedCI>.Empty;
 
             // now do a full pass to check which ci's REALLY fulfill the trait's requirements
-            var cis = await ciModel.GetMergedCIs(ciidSelection, layerSet, false, trans, atTime);
+            var cis = await ciModel.GetMergedCIs(ciidSelection, layerSet, true, trans, atTime);
             var ret = new List<MergedCI>();
             foreach (var ci in cis)
             {
@@ -160,8 +160,8 @@ namespace Omnikeeper.Model
 
         public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> CalculateEffectiveTraitsForTrait(ITrait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
         {
-            if (layerSet.IsEmpty)
-                return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty; // return empty, an empty layer list can never produce any traits
+            if (layerSet.IsEmpty && !(trait is TraitEmpty))
+                return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
 
             bool bail;
             (ciidSelection, bail) = await Prefilter(trait, layerSet, ciidSelection, trans, atTime);
@@ -203,7 +203,7 @@ namespace Omnikeeper.Model
                             var checks = TemplateCheckService.CalculateTemplateErrorsRelation(relatedCIs, tr.RelationTemplate);
                             if (!checks.Errors.IsEmpty())
                                 return false;
-                        };
+                        }
                     }
 
                     return true;
