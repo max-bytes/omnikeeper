@@ -48,9 +48,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginGenericJSONIngest.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginOIAOmnikeeper", "OKPluginOIAOmnikeeper\OKPluginOIAOmnikeeper.csproj", "{C4FAA89F-C2B6-487C-B123-4BC8E1C68B72}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginValidation", "OKPluginValidation\OKPluginValidation.csproj", "{D7D75DA5-5393-4524-A17A-8A30D908D4D1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginValidation", "OKPluginValidation\OKPluginValidation.csproj", "{D7D75DA5-5393-4524-A17A-8A30D908D4D1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginValidation.Tests", "OKPluginValidation.Tests\OKPluginValidation.Tests.csproj", "{45CCDFE1-2717-44C5-A4BD-4C73ADE43C93}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginValidation.Tests", "OKPluginValidation.Tests\OKPluginValidation.Tests.csproj", "{45CCDFE1-2717-44C5-A4BD-4C73ADE43C93}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginNaemonConfig", "OKPluginNaemonConfig\OKPluginNaemonConfig.csproj", "{96BE6C6B-62A9-4395-825E-52250E3D5964}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -138,6 +140,10 @@ Global
 		{45CCDFE1-2717-44C5-A4BD-4C73ADE43C93}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{45CCDFE1-2717-44C5-A4BD-4C73ADE43C93}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{45CCDFE1-2717-44C5-A4BD-4C73ADE43C93}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96BE6C6B-62A9-4395-825E-52250E3D5964}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96BE6C6B-62A9-4395-825E-52250E3D5964}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96BE6C6B-62A9-4395-825E-52250E3D5964}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96BE6C6B-62A9-4395-825E-52250E3D5964}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
