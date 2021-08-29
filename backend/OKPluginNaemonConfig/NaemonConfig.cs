@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace OKPluginNaemonConfig
 {
-    public class NamonConfig : CLBBase
+    public class NaemonConfig : CLBBase
     {
         private readonly IRelationModel relationModel;
         private readonly ICIModel ciModel;
         private readonly IEffectiveTraitModel traitModel;
-        public NamonConfig(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
+        public NaemonConfig(ICIModel ciModel, IAttributeModel atributeModel, ILayerModel layerModel, IEffectiveTraitModel traitModel, IRelationModel relationModel,
                            IChangesetModel changesetModel, IUserInDatabaseModel userModel)
             : base(atributeModel, layerModel, changesetModel, userModel)
         {

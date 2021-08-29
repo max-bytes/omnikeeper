@@ -11,7 +11,7 @@ namespace OKPluginNaemonConfig
     {
         public override void RegisterServices(IServiceCollection sc)
         {
-            sc.AddSingleton<IComputeLayerBrain, NamonConfig>();
+            sc.AddSingleton<IComputeLayerBrain, NaemonConfig>();
         }
 
         //public override IEnumerable<RecursiveTrait> DefinedTraits => Traits.RecursiveTraits;
