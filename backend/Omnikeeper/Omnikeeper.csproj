@@ -61,6 +61,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DBMigrations\DBMigrations.csproj" />
+    <ProjectReference Include="..\OKPluginNaemonConfig\OKPluginNaemonConfig.csproj" />
     <ProjectReference Include="..\Omnikeeper.Base\Omnikeeper.Base.csproj" />
   </ItemGroup>
   

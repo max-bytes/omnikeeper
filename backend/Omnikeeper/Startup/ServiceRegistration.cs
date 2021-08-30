@@ -55,10 +55,12 @@ namespace Omnikeeper.Startup
             //services.AddSingleton<OKPluginGenericJSONIngest.IContextModel, OKPluginGenericJSONIngest.ContextModel>();
             //services.AddTransient<Controllers.Ingest.PassiveFilesController>();
             //services.AddTransient<Controllers.Ingest.ManageContextController>();
-            //var pr = new OKPluginGenericJSONIngest.PluginRegistration();
-            //pr.RegisterServices(services);
+            var prNaemon = new OKPluginNaemonConfig.PluginRegistration();
+            services.AddSingleton<IPluginRegistration>(prNaemon);
+            prNaemon.RegisterServices(services);
             //var cs = Configuration.GetConnectionString("OmnikeeperDatabaseConnection");
             //var result = plugin.DBMigration.Migrate(cs);
+
 
 
             var dotNetFramework = Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
