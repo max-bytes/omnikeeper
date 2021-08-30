@@ -17,6 +17,7 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
         // instead, what this structure contains is guaranteed to be a superset of CIs that fulfill a particular trait
         // in other words, if a CI is part of a set (inside a dictionary entry), it MAY have that trait, it's not guaranteed;
         // BUT, if a CI is NOT part of a set, it is guaranteed to NOT have that trait
+        // NOTE: using LayerSet objects as keys relies on their HashCode to be well-implemented. 
         private IDictionary<string, IDictionary<LayerSet, ISet<Guid>>> trait2cisSuperset = new Dictionary<string, IDictionary<LayerSet, ISet<Guid>>>();
 
         public void FullUpdateTrait(string traitID, LayerSet layerset, ISet<Guid> ciidsHavingTrait)

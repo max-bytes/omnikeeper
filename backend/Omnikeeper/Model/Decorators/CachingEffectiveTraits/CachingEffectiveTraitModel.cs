@@ -17,6 +17,9 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
 
     // idea: for traits/layer combinations that include > N % of CIs already, it might make sense not to cache, because it's faster to just get it from the database directly
 
+    // NOTE: newly created CIs should actually also be put into the cache, because otherwise they don't get picked up and are not returned when selecting the empty trait
+    // but, because empty CIs are not much use and very likely will be filled with attributes/relations anyway, we don't add them right away
+
     public class CachingEffectiveTraitModel : IEffectiveTraitModel
     {
         private readonly IEffectiveTraitModel baseModel;
