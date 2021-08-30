@@ -80,12 +80,7 @@ namespace Omnikeeper.Model
 
         private async Task<(ICIIDSelection filteredSelection, bool bail)> Prefilter(ITrait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
         {
-            var hasOnlineInboundLayers = false;
-            foreach (var l in layerSet)
-            {
-                if (hasOnlineInboundLayers = await onlineAccessProxy.IsOnlineInboundLayer(l, trans))
-                    break;
-            }
+            var hasOnlineInboundLayers = await onlineAccessProxy.ContainsOnlineInboundLayer(layerSet, trans);
 
             // TODO: this is not even faster for a lot of cases, consider when to actually use this
             var runPrecursorFiltering = false;

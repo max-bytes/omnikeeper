@@ -53,7 +53,6 @@ namespace Omnikeeper.Base.Entity
             unchecked // Overflow is fine, just wrap
             {
                 int hash = (int)2166136261;
-                // Suitable nullity checks etc, of course :)
                 foreach(var layerID in LayerIDs)
                     hash = (hash * 16777619) ^ layerID.GetHashCode();
                 return hash;
