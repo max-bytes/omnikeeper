@@ -75,6 +75,5 @@ namespace Omnikeeper.GridView.Model
                 ICIModel.NameAttribute
             );
         }
-
     }
 }

@@ -97,7 +97,7 @@ namespace Omnikeeper.Model.Decorators
             {
                 // TODO: implement properly, instead of falling back to FindAttributesByFullName()
                 var attributes = await FindAttributesByFullName(name, selection, layerID, trans, atTime);
-                return attributes.Where(a => a.Value.Equals(value)).Select(a => a.CIID);
+                return attributes.Where(a => a.Value.Equals(value)).Select(a => a.CIID).ToHashSet();
             }
             return await model.FindCIIDsWithAttributeNameAndValue(name, value, selection, layerID, trans, atTime);
         }
