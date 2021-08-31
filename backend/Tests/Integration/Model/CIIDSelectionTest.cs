@@ -1,8 +1,6 @@
 ﻿using NUnit.Framework;
 using Omnikeeper.Base.Model;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Tests.Integration.Model
 {
