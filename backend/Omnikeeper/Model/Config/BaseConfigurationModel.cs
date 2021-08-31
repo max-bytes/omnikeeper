@@ -65,6 +65,18 @@ namespace Omnikeeper.Model
             }
         }
 
+        public async Task<bool> IsLayerPartOfBaseConfiguration(string layerID, IModelContext trans)
+        {
+            var baseConfiguration = await GetConfigOrDefault(trans);
+
+            if (baseConfiguration.ConfigWriteLayer == layerID)
+                return true;
+            foreach (var l in baseConfiguration.ConfigLayerset)
+                if (l == layerID)
+                    return true;
+            return false;
+        }
+
         public async Task<BaseConfigurationV1> SetConfig(BaseConfigurationV1 config, IModelContext trans)
         {
             var configJO = BaseConfigurationV1.Serializer.SerializeToJObject(config);

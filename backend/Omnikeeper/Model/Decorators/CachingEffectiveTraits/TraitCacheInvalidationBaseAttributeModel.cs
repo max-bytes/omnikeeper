@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -17,11 +18,13 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
     public class TraitCacheInvalidationBaseAttributeModel : IBaseAttributeModel
     {
         private readonly IBaseAttributeModel model;
+        private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly EffectiveTraitCache cache;
 
-        public TraitCacheInvalidationBaseAttributeModel(IBaseAttributeModel model, EffectiveTraitCache cache)
+        public TraitCacheInvalidationBaseAttributeModel(IBaseAttributeModel model, IBaseConfigurationModel baseConfigurationModel, EffectiveTraitCache cache)
         {
             this.model = model;
+            this.baseConfigurationModel = baseConfigurationModel;
             this.cache = cache;
         }
 
@@ -29,7 +32,12 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
         {
             var t = await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, origin, trans);
             if (t.changed)
-                cache.AddCIID(ciid, layerID);
+            {
+                if (await baseConfigurationModel.IsLayerPartOfBaseConfiguration(layerID, trans))
+                    cache.PurgeAll();
+                else
+                    cache.AddCIID(ciid, layerID);
+            }
             return t;
         }
 
@@ -37,14 +45,25 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
         {
             var t = await model.RemoveAttribute(name, ciid, layerID, changesetProxy, origin, trans);
             if (t.changed)
-                cache.AddCIID(ciid, layerID);
+            {
+                if (await baseConfigurationModel.IsLayerPartOfBaseConfiguration(layerID, trans))
+                    cache.PurgeAll();
+                else
+                    cache.AddCIID(ciid, layerID);
+            }
             return t;
         }
 
         public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var updatedCIIDs = await model.BulkReplaceAttributes(data, changesetProxy, origin, trans);
-            cache.AddCIIDs(updatedCIIDs.Select(t => t.ciid), data.LayerID);
+            if (!updatedCIIDs.IsEmpty())
+            {
+                if (await baseConfigurationModel.IsLayerPartOfBaseConfiguration(data.LayerID, trans))
+                    cache.PurgeAll();
+                else
+                    cache.AddCIIDs(updatedCIIDs.Select(t => t.ciid), data.LayerID);
+            }
             return updatedCIIDs;
         }
 

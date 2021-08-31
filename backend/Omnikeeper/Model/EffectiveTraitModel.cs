@@ -224,7 +224,7 @@ namespace Omnikeeper.Model
                     });
                     IEnumerable<(string traitRelationIdentifier, IEnumerable<CompactRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)> requiredEffectiveTraitRelations
                         = new List<(string traitRelationIdentifier, IEnumerable<CompactRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)>();
-                    if (tt.RequiredRelations.Count > 0) // TODO: consider removing requiredRelations... they are TOUGH on performance
+                    if (tt.RequiredRelations.Count > 0) // TODO: consider batching up fetching of related CIs... fetching them one-by-one is TOUGH on performance
                     {
                         var allCompactRelatedCIs = await RelationService.GetCompactRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, null, trans, atTime);
                         requiredEffectiveTraitRelations = tt.RequiredRelations.Select(tr =>

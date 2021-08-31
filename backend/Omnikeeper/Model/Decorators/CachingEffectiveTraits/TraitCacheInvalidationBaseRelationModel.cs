@@ -1,6 +1,7 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -15,18 +16,26 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
     public class TraitCacheInvalidationBaseRelationModel : IBaseRelationModel
     {
         private readonly IBaseRelationModel model;
+        private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly EffectiveTraitCache cache;
 
-        public TraitCacheInvalidationBaseRelationModel(IBaseRelationModel model, EffectiveTraitCache cache)
+        public TraitCacheInvalidationBaseRelationModel(IBaseRelationModel model, IBaseConfigurationModel baseConfigurationModel, EffectiveTraitCache cache)
         {
             this.model = model;
+            this.baseConfigurationModel = baseConfigurationModel;
             this.cache = cache;
         }
 
         public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var changed = await model.BulkReplaceRelations(data, changesetProxy, origin, trans);
-            cache.AddCIIDs(changed.SelectMany(t => new Guid[] { t.fromCIID, t.toCIID }), data.LayerID);
+            if (!changed.IsEmpty())
+            {
+                if (await baseConfigurationModel.IsLayerPartOfBaseConfiguration(data.LayerID, trans))
+                    cache.PurgeAll();
+                else
+                    cache.AddCIIDs(changed.SelectMany(t => new Guid[] { t.fromCIID, t.toCIID }), data.LayerID);
+            }
             return changed;
         }
 
@@ -34,7 +43,12 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
         {
             var t = await model.InsertRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, origin, trans);
             if (t.changed)
-                cache.AddCIIDs(new Guid[] { fromCIID, toCIID }, layerID);
+            {
+                if (await baseConfigurationModel.IsLayerPartOfBaseConfiguration(layerID, trans))
+                    cache.PurgeAll();
+                else
+                    cache.AddCIIDs(new Guid[] { fromCIID, toCIID }, layerID);
+            }
             return t;
         }
 
@@ -42,7 +56,12 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
         {
             var t = await model.RemoveRelation(fromCIID, toCIID, predicateID, layerID, changesetProxy, origin, trans);
             if (t.changed)
-                cache.AddCIIDs(new Guid[] { fromCIID, toCIID }, layerID);
+            {
+                if (await baseConfigurationModel.IsLayerPartOfBaseConfiguration(layerID, trans))
+                    cache.PurgeAll();
+                else
+                    cache.AddCIIDs(new Guid[] { fromCIID, toCIID }, layerID);
+            }
             return t;
         }
 

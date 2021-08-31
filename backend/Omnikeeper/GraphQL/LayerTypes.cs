@@ -32,14 +32,7 @@ namespace Omnikeeper.GraphQL
 
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-
-                if (baseConfiguration.ConfigWriteLayer == context.Source.ID)
-                    return true;
-                foreach (var l in baseConfiguration.ConfigLayerset)
-                    if (l == context.Source.ID)
-                        return true;
-                return false;
+                return await baseConfigurationModel.IsLayerPartOfBaseConfiguration(context.Source.ID, userContext.Transaction);
             });
 
         }

@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
 {
-    // TODO: when a trait ITSELF changes (its definition), how should we purge the cache properly?
-    // there is not really a good hook that we can latch onto that fires whenever a trait changes
-    // idea: whenever something in the base configuration layer(s) changes, purge everything
+    // NOTE: when a trait ITSELF changes (its definition), we need to purge the cache for that trait
+    // unfortunately, there is not really a good hook that we can latch onto that fires whenever a trait definition changes
+    // workaround: whenever something in the base configuration layer(s) changes, purge everything
 
     // idea: for traits/layer combinations that include > N % of CIs already, it might make sense not to cache, because it's faster to just get it from the database directly
 
