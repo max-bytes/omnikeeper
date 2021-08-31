@@ -3,6 +3,8 @@ name: update-wiki
 on:
   workflow_dispatch:
   push:
+    branches:
+      - master
     paths:
       - 'docs/**'
 
