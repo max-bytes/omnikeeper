@@ -241,5 +241,10 @@ namespace Omnikeeper.Model
         {
             return await baseModel.GetCINames(selection, layerID, trans, atTime);
         }
+
+        public async Task<IEnumerable<Guid>> FindCIIDsWithAttributeNameAndValue(string name, IAttributeValue value, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            return await baseModel.FindCIIDsWithAttributeNameAndValue(name, value, selection, layerID, trans, atTime);
+        }
     }
 }

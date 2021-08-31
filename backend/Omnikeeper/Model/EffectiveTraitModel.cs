@@ -5,6 +5,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Service;
 using System;
 using System.Collections.Generic;
@@ -31,7 +32,7 @@ namespace Omnikeeper.Model
             this.logger = logger;
         }
 
-        public async Task<IEnumerable<EffectiveTrait>> CalculateEffectiveTraitsForCI(IEnumerable<ITrait> traits, MergedCI ci, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<EffectiveTrait>> GetEffectiveTraitsForCI(IEnumerable<ITrait> traits, MergedCI ci, IModelContext trans, TimeThreshold atTime)
         {
             var resolved = new List<EffectiveTrait>();
             foreach (var trait in traits)
@@ -49,7 +50,7 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<EffectiveTrait?> CalculateEffectiveTraitForCI(MergedCI ci, ITrait trait, IModelContext trans, TimeThreshold atTime)
+        public async Task<EffectiveTrait?> GetEffectiveTraitForCI(MergedCI ci, ITrait trait, IModelContext trans, TimeThreshold atTime)
         {
             return await Resolve(trait, ci, trans, atTime);
         }
@@ -80,13 +81,11 @@ namespace Omnikeeper.Model
 
         private async Task<(ICIIDSelection filteredSelection, bool bail)> Prefilter(ITrait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
         {
-            var hasOnlineInboundLayers = await onlineAccessProxy.ContainsOnlineInboundLayer(layerSet, trans);
-
             // TODO: this is not even faster for a lot of cases, consider when to actually use this
             var runPrecursorFiltering = false;
             // do a precursor filtering based on required attribute names
             // we can only do this filtering (better performance) when the trait has required attributes AND no online inbound layers are in play
-            if (runPrecursorFiltering && trait is GenericTrait tt && tt.RequiredAttributes.Count > 0 && !hasOnlineInboundLayers)
+            if (runPrecursorFiltering && trait is GenericTrait tt && tt.RequiredAttributes.Count > 0 && !(await onlineAccessProxy.ContainsOnlineInboundLayer(layerSet, trans)))
             {
                 var requiredAttributeNames = tt.RequiredAttributes.Select(a => a.AttributeTemplate.Name);
                 ISet<Guid>? candidateCIIDs = null;
@@ -153,7 +152,7 @@ namespace Omnikeeper.Model
             }
         }
 
-        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> CalculateEffectiveTraitsForTrait(ITrait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> GetEffectiveTraitsForTrait(ITrait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
         {
             if (layerSet.IsEmpty && !(trait is TraitEmpty))
                 return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
@@ -171,6 +170,47 @@ namespace Omnikeeper.Model
                 var et = await Resolve(trait, ci, trans, atTime);
                 if (et != null)
                     ret.Add(ci.ID, (ci, et));
+            }
+
+            return ret;
+        }
+
+        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> GetEffectiveTraitsWithTraitAttributeValue(ITrait trait, string traitAttributeIdentifier, IAttributeValue value, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
+        {
+            if (trait is TraitEmpty)
+                return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty; // return empty, the empty trait can never have any attributes
+            if (layerSet.IsEmpty)
+                return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty; // return empty, an empty layer list can never produce any traits
+
+            // extract actual attribute name from trait attributes
+            if (!(trait is GenericTrait genericTrait)) throw new Exception("Unknown trait type detected");
+            var traitAttribute = genericTrait.RequiredAttributes.FirstOrDefault(a => a.Identifier == traitAttributeIdentifier) ?? genericTrait.OptionalAttributes.FirstOrDefault(a => a.Identifier == traitAttributeIdentifier);
+            if (traitAttribute == null) throw new Exception($"Trait Attribute identifier {traitAttribute} does not exist in trait {trait.ID}");
+
+            // get ciids of CIs that contain a fitting attribute (name + value) in ANY of the relevant layers
+            // the union of those ciids serves as the ciid selection basis for the next step
+            var attributeName = traitAttribute.AttributeTemplate.Name;
+            var candidateCIIDs = new HashSet<Guid>();
+            foreach (var layerID in layerSet) {
+                var ciids = await attributeModel.FindCIIDsWithAttributeNameAndValue(attributeName, value, ciidSelection, layerID, trans, atTime);
+                candidateCIIDs.UnionWith(ciids);
+            }
+
+            // now do a full pass to check which ci's REALLY fulfill the trait's requirements
+            // also check (again) if the final mergedCI fulfills the attribute requirement
+            var cis = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(candidateCIIDs), layerSet, false, trans, atTime);
+            var ret = new Dictionary<Guid, (MergedCI ci, EffectiveTrait et)>();
+            foreach (var ci in cis)
+            {
+                var et = await Resolve(trait, ci, trans, atTime);
+                if (et != null)
+                {
+                    if (et.TraitAttributes.TryGetValue(traitAttributeIdentifier, out var outValue))
+                    {
+                        if (outValue.Attribute.Value.Equals(value))
+                            ret.Add(ci.ID, (ci, et));
+                    }
+                }
             }
 
             return ret;

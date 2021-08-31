@@ -130,5 +130,11 @@ namespace Omnikeeper.Model.Decorators
             // TODO: implement
             return model.GetAttributesOfChangeset(changesetID, trans);
         }
+
+        public async Task<IEnumerable<Guid>> FindCIIDsWithAttributeNameAndValue(string name, IAttributeValue value, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            // TODO: implement
+            return await model.FindCIIDsWithAttributeNameAndValue(name, value, selection, layerID, trans, atTime);
+        }
     }
 }

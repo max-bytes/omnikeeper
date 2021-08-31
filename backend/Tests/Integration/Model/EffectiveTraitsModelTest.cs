@@ -37,12 +37,12 @@ namespace Tests.Integration.Model
             var testTrait2 = (await traitsProvider.GetActiveTrait("test_trait_2", trans, timeThreshold))!;
             var testTrait3 = (await traitsProvider.GetActiveTrait("test_trait_3", trans, timeThreshold))!;
 
-            var et1 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait1, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var et1 = await traitModel.GetEffectiveTraitsForTrait(testTrait1, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(3, et1.Count());
-            var et2 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait2, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var et2 = await traitModel.GetEffectiveTraitsForTrait(testTrait2, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(2, et2.Count());
             Assert.IsTrue(et2.All(t => t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a2") && t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a4")));
-            var et3 = await traitModel.CalculateEffectiveTraitsForTrait(testTrait3, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var et3 = await traitModel.GetEffectiveTraitsForTrait(testTrait3, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(2, et3.Count());
             Assert.IsTrue(et3.All(t => t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
 
@@ -53,7 +53,27 @@ namespace Tests.Integration.Model
             var cis2 = await traitModel.GetMergedCIsWithTrait(testTrait2, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(2, cis2.Count());
             cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
+        }
 
+        [Test]
+        public async Task TestTraitWithNameAndValue()
+        {
+            var traitsProvider = new MockedTraitsProvider();
+            var (traitModel, layerset, ciids) = await BaseSetup();
+
+            var timeThreshold = TimeThreshold.BuildLatest();
+
+            var trans = ModelContextBuilder.BuildImmediate();
+
+            var testTrait1 = (await traitsProvider.GetActiveTrait("test_trait_1", trans, timeThreshold))!;
+
+            var et1 = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(testTrait1, "a4", new AttributeScalarValueText("text41"), layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            Assert.AreEqual(1, et1.Count());
+            Assert.AreEqual(ciids[0], et1.First().Key);
+
+            var et2 = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(testTrait1, "a4", new AttributeScalarValueText("text42"), layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            Assert.AreEqual(2, et2.Count());
+            et2.Select(e => e.Key).Should().BeEquivalentTo(new Guid[] { ciids[1], ciids[2] });
         }
 
         [Test]
@@ -69,9 +89,9 @@ namespace Tests.Integration.Model
             var t4 = await traitsProvider.GetActiveTrait("test_trait_4", trans, timeThreshold);
             var t5 = await traitsProvider.GetActiveTrait("test_trait_5", trans, timeThreshold);
 
-            var t1 = await traitModel.CalculateEffectiveTraitsForTrait(t4!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var t1 = await traitModel.GetEffectiveTraitsForTrait(t4!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(2, t1.Count());
-            var t2 = await traitModel.CalculateEffectiveTraitsForTrait(t5!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var t2 = await traitModel.GetEffectiveTraitsForTrait(t5!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(1, t2.Count());
         }
 
@@ -83,7 +103,7 @@ namespace Tests.Integration.Model
             var (traitModel, layerset, _) = await BaseSetup();
             var trans = ModelContextBuilder.BuildImmediate();
             var tt1 = await traitsProvider.GetActiveTrait("test_trait_1", trans, timeThreshold);
-            var t1 = await traitModel.CalculateEffectiveTraitsForTrait(tt1!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var t1 = await traitModel.GetEffectiveTraitsForTrait(tt1!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(0, t1.Count());
         }
 
@@ -112,14 +132,14 @@ namespace Tests.Integration.Model
                 await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text4"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text41"), ciid1, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
                 await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("text1"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text4"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text42"), ciid2, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
                 await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("text2"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("text3"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
-                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text4"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
+                await attributeModel.InsertAttribute("a4", new AttributeScalarValueText("text42"), ciid3, layer1.ID, changeset, new DataOriginV1(DataOriginType.Manual), trans);
 
                 trans.Commit();
             }

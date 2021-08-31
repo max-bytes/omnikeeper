@@ -3,6 +3,7 @@ using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
@@ -35,18 +36,21 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             this.onlineAccessProxy = onlineAccessProxy;
         }
 
-        public async Task<EffectiveTrait?> CalculateEffectiveTraitForCI(MergedCI ci, ITrait trait, IModelContext trans, TimeThreshold atTime)
+        public async Task<EffectiveTrait?> GetEffectiveTraitForCI(MergedCI ci, ITrait trait, IModelContext trans, TimeThreshold atTime)
         {
-            return await baseModel.CalculateEffectiveTraitForCI(ci, trait, trans, atTime);
+            // cannot cache well
+            return await baseModel.GetEffectiveTraitForCI(ci, trait, trans, atTime);
         }
 
-        public async Task<IEnumerable<EffectiveTrait>> CalculateEffectiveTraitsForCI(IEnumerable<ITrait> traits, MergedCI ci, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<EffectiveTrait>> GetEffectiveTraitsForCI(IEnumerable<ITrait> traits, MergedCI ci, IModelContext trans, TimeThreshold atTime)
         {
-            return await baseModel.CalculateEffectiveTraitsForCI(traits, ci, trans, atTime);
+            // cannot cache well
+            return await baseModel.GetEffectiveTraitsForCI(traits, ci, trans, atTime);
         }
 
         public async Task<bool> DoesCIHaveTrait(MergedCI ci, ITrait trait, IModelContext trans, TimeThreshold atTime)
         {
+            // cannot cache well
             return await baseModel.DoesCIHaveTrait(ci, trait, trans, atTime);
         }
 
@@ -56,25 +60,25 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
         // that way, it is guaranteed that querying the EffectiveTraitModel with this ci-selection yields a superset of the required traits
         // afterwards, calculate actual traits and update cache -> remove items that do not in fact have trait, even though they were in cache
 
-        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> CalculateEffectiveTraitsForTrait(ITrait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> GetEffectiveTraitsForTrait(ITrait trait, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
         {
             if (!atTime.IsLatest)
             {
-                return await baseModel.CalculateEffectiveTraitsForTrait(trait, layerSet, ciidSelection, trans, atTime);
+                return await baseModel.GetEffectiveTraitsForTrait(trait, layerSet, ciidSelection, trans, atTime);
             }
 
             if (await onlineAccessProxy.ContainsOnlineInboundLayer(layerSet, trans))
             {
-                return await baseModel.CalculateEffectiveTraitsForTrait(trait, layerSet, ciidSelection, trans, atTime);
+                return await baseModel.GetEffectiveTraitsForTrait(trait, layerSet, ciidSelection, trans, atTime);
             }
 
             if (cache.GetCIIDsHavingTrait(trait.ID, layerSet, out var ciids))
             { // cache hit
                 // do an intersection of incoming ciidselection and ciids in cache, fetch only those
                 // because the cache has a superset of all cis that actually have the trait, this is guaranteed to return exactly all relevant cis
-                var ciidIntersection = ciidSelection.Intersect(SpecificCIIDsSelection.Build(ciids!));
+                var ciidIntersection = ciidSelection.Intersect(SpecificCIIDsSelection.Build(ciids));
 
-                var intersectedETs = await baseModel.CalculateEffectiveTraitsForTrait(trait, layerSet, ciidIntersection, trans, atTime);
+                var intersectedETs = await baseModel.GetEffectiveTraitsForTrait(trait, layerSet, ciidIntersection, trans, atTime);
 
                 // update cache, remove the ciids from cache that do not in fact have the trait
                 if (intersectedETs.Count() != await ciidIntersection.CountAsync(async () => await ciModel.GetCIIDs(trans)))
@@ -89,7 +93,7 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             else
             { // cache miss
                 // we fetch with an ciidselection of ALL, so we can properly fill the cache
-                var allETs = await baseModel.CalculateEffectiveTraitsForTrait(trait, layerSet, new AllCIIDsSelection(), trans, atTime);
+                var allETs = await baseModel.GetEffectiveTraitsForTrait(trait, layerSet, new AllCIIDsSelection(), trans, atTime);
 
                 // update cache with full set of ciids that fulfill trait
                 cache.FullUpdateTrait(trait.ID, layerSet, allETs.Keys.ToHashSet());
@@ -120,7 +124,7 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             { // cache hit
                 // do an intersection of incoming ciidselection and ciids in cache, fetch only those
                 // because the cache has a superset of all cis that actually have the trait, this is guaranteed to return exactly all relevant cis
-                var ciidIntersection = ciidSelection.Intersect(SpecificCIIDsSelection.Build(ciids!));
+                var ciidIntersection = ciidSelection.Intersect(SpecificCIIDsSelection.Build(ciids));
 
                 var intersectedMergedCIs = await baseModel.GetMergedCIsWithTrait(trait, layerSet, ciidIntersection, trans, atTime);
 
@@ -151,6 +155,12 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
                     _ => allCIs.Where(ci => ciidSelection.Contains(ci.ID))
                 };
             }
+        }
+
+        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> GetEffectiveTraitsWithTraitAttributeValue(ITrait trait, string traitAttributeIdentifier, IAttributeValue value, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
+        {
+            // cannot cache well
+            return await baseModel.GetEffectiveTraitsWithTraitAttributeValue(trait, traitAttributeIdentifier, value, layerSet, ciidSelection, trans, atTime);
         }
     }
 }

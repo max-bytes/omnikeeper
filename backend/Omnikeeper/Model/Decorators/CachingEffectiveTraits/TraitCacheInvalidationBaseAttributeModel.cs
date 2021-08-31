@@ -106,5 +106,10 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
         {
             return await model.GetAttributes(selection, layerID, trans, atTime);
         }
+
+        public async Task<IEnumerable<Guid>> FindCIIDsWithAttributeNameAndValue(string name, IAttributeValue value, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            return await model.FindCIIDsWithAttributeNameAndValue(name, value, selection, layerID, trans, atTime);
+        }
     }
 }
