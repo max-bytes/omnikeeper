@@ -48,10 +48,7 @@ namespace Omnikeeper.GridView.Model
             return (new FullContext(contextID, speakingName, description, config), contextID);
         }
 
-        protected override string EffectiveTrait2ID(EffectiveTrait et, MergedCI ci)
-        {
-            return TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
-        }
+        protected override IAttributeValue ID2AttributeValue(string id) => new AttributeScalarValueText(id);
 
         public async Task<(FullContext fullContext, bool changed)> InsertOrUpdate(string id, string speakingName, string description, GridViewConfiguration configuration, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
@@ -78,5 +75,6 @@ namespace Omnikeeper.GridView.Model
                 ICIModel.NameAttribute
             );
         }
+
     }
 }

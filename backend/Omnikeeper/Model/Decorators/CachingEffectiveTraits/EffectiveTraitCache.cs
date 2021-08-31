@@ -2,6 +2,7 @@
 using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -105,7 +106,7 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
         }
 
         // only when this method returns true does the out variable have significance, otherwise the cache can't answer this 
-        public bool GetCIIDsHavingTrait(string traitID, LayerSet layerset, out ISet<Guid>? ciids)
+        public bool GetCIIDsHavingTrait(string traitID, LayerSet layerset, [MaybeNullWhen(false)] out ISet<Guid> ciids)
         {
             rwl.EnterReadLock();
             try

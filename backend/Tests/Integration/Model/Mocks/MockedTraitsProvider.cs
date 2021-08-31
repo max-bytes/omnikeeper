@@ -61,7 +61,6 @@ namespace Tests.Integration.Model.Mocks
             };
 
             // TODO: should we really flatten here in a mocked class?
-            // TODO: should we really flatten here in a mocked class?
             var t = RecursiveTraitService.FlattenRecursiveTraits(r);
             var tt = (IDictionary<string, ITrait>)t.ToDictionary(t => t.Key, t => (ITrait)t.Value);
             return Task.FromResult(tt);

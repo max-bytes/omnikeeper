@@ -258,6 +258,51 @@ namespace Omnikeeper.Model
             return attributes.ToDictionary(a => a.CIID, a => a.Value.Value2String());
         }
 
+        public async Task<IEnumerable<Guid>> FindCIIDsWithAttributeNameAndValue(string name, IAttributeValue value, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
+
+            var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
+
+            var ret = new HashSet<Guid>();
+
+            // TODO: check if query is well optimized regarding index use
+            using (var command = new NpgsqlCommand(@$"
+                select distinct on (ci_id) state, ci_id from
+                    attribute where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id 
+                    and type = @type and value_text = @value_text and value_binary = @value_binary and value_control = @value_control
+                    and partition_index >= @partition_index
+                    order by ci_id, timestamp DESC NULLS LAST
+            ", trans.DBConnection, trans.DBTransaction))
+            {
+                command.Parameters.AddWithValue("time_threshold", atTime.Time);
+                command.Parameters.AddWithValue("name", name);
+                command.Parameters.AddWithValue("layer_id", layerID);
+                command.Parameters.AddWithValue("type", value.Type);
+                command.Parameters.AddWithValue("value_text", valueText);
+                command.Parameters.AddWithValue("value_binary", valueBinary);
+                command.Parameters.AddWithValue("value_control", valueControl);
+                command.Parameters.AddWithValue("partition_index", partitionIndex);
+                AddQueryParametersFromCIIDSelection(selection, command.Parameters);
+
+                command.Prepare();
+
+                using var dr = await command.ExecuteReaderAsync();
+
+                while (await dr.ReadAsync())
+                {
+                    var state = dr.GetFieldValue<AttributeState>(0);
+                    if (state != AttributeState.Removed)
+                    {
+                        var CIID = dr.GetGuid(1);
+                        ret.Add(CIID);
+                    }
+                }
+            }
+
+            return ret;
+        }
+
         // TODO: actually needed? check and remove if not
         public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {

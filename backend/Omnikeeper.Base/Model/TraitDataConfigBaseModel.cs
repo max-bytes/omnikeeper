@@ -42,14 +42,12 @@ namespace Omnikeeper.Base.Model
 
         public async Task<(Guid, T)> TryToGet(ID id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
-            // TODO: better performance possible?
-            // TODO: this desperately NEEDS better performance!
-            var CIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(trait, layerSet, new AllCIIDsSelection(), trans, timeThreshold);
+            var attributeValue = ID2AttributeValue(id);
+            var foundCIs = await effectiveTraitModel.GetEffectiveTraitsWithTraitAttributeValue(trait, IDTraitAttributeIdentifier(), attributeValue, layerSet, new AllCIIDsSelection(), trans, timeThreshold);
 
-            var foundCIs = CIs.Where(pci => EffectiveTrait2ID(pci.Value.et, pci.Value.ci).Equals(id))
-                .OrderBy(t => t.Key); // we order by GUID to stay consistent even when multiple CIs would match
+            var sortedCIs = foundCIs.OrderBy(t => t.Key); // we order by GUID to stay consistent even when multiple CIs would match
 
-            var foundCI = foundCIs.FirstOrDefault();
+            var foundCI = sortedCIs.FirstOrDefault();
             if (!foundCI.Equals(default(KeyValuePair<Guid, (MergedCI ci, EffectiveTrait et)>)))
             {
                 var (dc, _) = EffectiveTrait2DC(foundCI.Value.et, foundCI.Value.ci);
@@ -59,12 +57,14 @@ namespace Omnikeeper.Base.Model
         }
 
         protected abstract (T dc, ID id) EffectiveTrait2DC(EffectiveTrait et, MergedCI ci);
-        protected abstract ID EffectiveTrait2ID(EffectiveTrait et, MergedCI ci);
+        protected abstract IAttributeValue ID2AttributeValue(ID id);
+        protected virtual string IDTraitAttributeIdentifier() => "id";
+
         protected virtual async Task<Guid> CreateNewCI(ID id, IModelContext trans) => await ciModel.CreateCI(trans);
 
         public async Task<IDictionary<ID, T>> GetAll(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var CIs = await effectiveTraitModel.CalculateEffectiveTraitsForTrait(trait, layerSet, new AllCIIDsSelection(), trans, timeThreshold);
+            var CIs = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, layerSet, new AllCIIDsSelection(), trans, timeThreshold);
             var ret = new Dictionary<ID, T>();
             foreach (var (ci, et) in CIs.Values.OrderBy(t => t.ci.ID)) // we order by GUID to stay consistent even when multiple CIs have the same ID
             {

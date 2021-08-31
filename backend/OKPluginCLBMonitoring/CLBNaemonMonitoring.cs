@@ -77,7 +77,7 @@ namespace OKPluginCLBMonitoring
 
                 var monitoringModuleCI = monitoringModuleCIs[p.Relation.ToCIID];
 
-                var monitoringModuleET = await traitModel.CalculateEffectiveTraitForCI(monitoringModuleCI, Traits.ModuleFlattened, trans, changesetProxy.TimeThreshold);
+                var monitoringModuleET = await traitModel.GetEffectiveTraitForCI(monitoringModuleCI, Traits.ModuleFlattened, trans, changesetProxy.TimeThreshold);
                 if (monitoringModuleET == null)
                 {
                     logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{Traits.ModuleFlattened.ID}\"");
@@ -160,7 +160,7 @@ namespace OKPluginCLBMonitoring
 
             // assign monitored cis to naemon instances
             var monitoredByCIIDFragments = new List<BulkRelationDataPredicateScope.Fragment>();
-            var naemonInstancesTS = await traitModel.CalculateEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, layerSetAll, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var naemonInstancesTS = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, layerSetAll, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
             foreach (var naemonInstanceTS in naemonInstancesTS)
                 foreach (var monitoredCI in monitoredCIs.Values)
                     if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value.et))
@@ -279,7 +279,7 @@ namespace OKPluginCLBMonitoring
                     contactGroupsMap = contactGroupRelations.GroupBy(r => r.Relation.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.Relation.ToCIID]));
                     foreach (var ci in contactGroupsMap.Values.SelectMany(t => t).Distinct())
                     {
-                        var et = await traitModel.CalculateEffectiveTraitForCI(ci, contactgroupTrait, trans, timeThreshold);
+                        var et = await traitModel.GetEffectiveTraitForCI(ci, contactgroupTrait, trans, timeThreshold);
                         if (et != null)
                         {
                             var name = (et.TraitAttributes["name"].Attribute.Value as AttributeScalarValueText)?.Value;

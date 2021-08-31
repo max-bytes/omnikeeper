@@ -91,6 +91,17 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetAttributes(selection, layerID, trans, atTime);
         }
 
+        public async Task<IEnumerable<Guid>> FindCIIDsWithAttributeNameAndValue(string name, IAttributeValue value, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
+            {
+                // TODO: implement properly, instead of falling back to FindAttributesByFullName()
+                var attributes = await FindAttributesByFullName(name, selection, layerID, trans, atTime);
+                return attributes.Where(a => a.Value.Equals(value)).Select(a => a.CIID);
+            }
+            return await model.FindCIIDsWithAttributeNameAndValue(name, value, selection, layerID, trans, atTime);
+        }
+
         public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans)) throw new Exception("Cannot write to online inbound layer");
