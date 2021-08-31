@@ -9,5 +9,7 @@ namespace Omnikeeper.Base.Model.Config
         Task<BaseConfigurationV1> GetConfig(IModelContext trans);
         Task<BaseConfigurationV1> GetConfigOrDefault(IModelContext trans);
         Task<BaseConfigurationV1> SetConfig(BaseConfigurationV1 config, IModelContext trans);
+
+        Task<bool> IsLayerPartOfBaseConfiguration(string layerID, IModelContext trans);
     }
 }

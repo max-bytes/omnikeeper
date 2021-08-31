@@ -52,6 +52,9 @@ namespace Omnikeeper.Model.Decorators
                     case AllCIIDsExceptSelection es:
                         names = names.Where(kv => es.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
                         break;
+                    case NoCIIDsSelection _:
+                        names = new Dictionary<Guid, string?>();
+                        break;
                     default:
                         throw new Exception("Unknown ciid selection encountered");
                 }
@@ -193,18 +196,6 @@ namespace Omnikeeper.Model.Decorators
             return t;
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            var t = await model.InsertCINameAttribute(nameValue, ciid, layerID, changesetProxy, origin, trans);
-            if (t.changed)
-            {
-                trans.EvictFromCache(CacheKeyService.Attributes(ciid, layerID));
-                trans.EvictFromCache(CacheKeyService.CIIDsWithAttributeName(ICIModel.NameAttribute, layerID));
-                trans.EvictFromCache(CacheKeyService.CINames(layerID));
-            }
-            return t;
-        }
-
         public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var t = await model.RemoveAttribute(name, ciid, layerID, changesetProxy, origin, trans);
@@ -217,18 +208,18 @@ namespace Omnikeeper.Model.Decorators
             return t;
         }
 
-        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
-            var inserted = await model.BulkReplaceAttributes(data, changesetProxy, origin, trans);
+            var changed = await model.BulkReplaceAttributes(data, changesetProxy, origin, trans);
             var evictCINames = false;
-            foreach (var (ciid, fullName, _, _) in inserted)
+            foreach (var (ciid, fullName) in changed)
             {
                 trans.EvictFromCache(CacheKeyService.Attributes(ciid, data.LayerID)); // NOTE: inserted list is not distinct on ciids, but that's ok
                 trans.EvictFromCache(CacheKeyService.CIIDsWithAttributeName(fullName, data.LayerID)); // NOTE: inserted list is not distinct on attribute names, but that's ok
                 evictCINames = evictCINames || fullName == ICIModel.NameAttribute;
             }
             if (evictCINames) trans.EvictFromCache(CacheKeyService.CINames(data.LayerID));
-            return inserted;
+            return changed;
         }
 
         public Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, IModelContext trans)

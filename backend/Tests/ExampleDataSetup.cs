@@ -64,10 +64,12 @@ namespace Tests
 
             var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(modelContextBuilder.BuildImmediate());
 
-
             List<Layer> layers;
             using (var mc = modelContextBuilder.BuildDeferred())
             {
+                // okconfig layer
+                layerModel.UpsertLayer("__okconfig", mc).GetAwaiter().GetResult();
+
                 await ciModel.BulkCreateCIs(ciids, mc);
 
                 layers = layerNames.Select(identity =>

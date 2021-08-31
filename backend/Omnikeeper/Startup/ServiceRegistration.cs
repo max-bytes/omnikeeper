@@ -17,6 +17,7 @@ using Omnikeeper.GridView.Model;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
+using Omnikeeper.Model.Decorators.CachingEffectiveTraits;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using System;
@@ -169,7 +170,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<NpgsqlLoggingProvider>();
         }
 
-        public static void RegisterModels(IServiceCollection services, bool enableModelCaching, bool enableOIA, bool enabledGenerators)
+        public static void RegisterModels(IServiceCollection services, bool enableModelCaching, bool enableEffectiveTraitCaching, bool enableOIA, bool enabledGenerators)
         {
             services.AddSingleton<ICISearchModel, CISearchModel>();
             services.AddSingleton<ICIModel, CIModel>();
@@ -215,6 +216,16 @@ namespace Omnikeeper.Startup
                 services.Decorate<IPartitionModel, CachingPartitionModel>();
 
                 services.Decorate<ITemplatesProvider, CachedTemplatesProvider>();
+            }
+
+            if (enableEffectiveTraitCaching)
+            {
+                services.Decorate<IEffectiveTraitModel, CachingEffectiveTraitModel>();
+                services.Decorate<IBaseAttributeModel, TraitCacheInvalidationBaseAttributeModel>();
+                services.Decorate<IBaseAttributeRevisionistModel, TraitCacheInvalidationBaseAttributeRevisionistModel>();
+                services.Decorate<IBaseRelationModel, TraitCacheInvalidationBaseRelationModel>();
+                services.Decorate<IBaseRelationRevisionistModel, TraitCacheInvalidationBaseRelationRevisionistModel>();
+                services.AddSingleton<EffectiveTraitCache>(); // TODO: create interface
             }
 
             if (enableOIA)

@@ -115,17 +115,12 @@ namespace Omnikeeper.Model.Decorators
             return await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, origin, trans);
         }
 
-        public async Task<(CIAttribute attribute, bool changed)> InsertCINameAttribute(string nameValue, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            return await model.InsertCINameAttribute(nameValue, ciid, layerID, changesetProxy, origin, trans);
-        }
-
         public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             return await model.RemoveAttribute(name, ciid, layerID, changesetProxy, origin, trans);
         }
 
-        public async Task<IEnumerable<(Guid ciid, string fullName, IAttributeValue value, AttributeState state)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             return await model.BulkReplaceAttributes(data, changesetProxy, origin, trans);
         }

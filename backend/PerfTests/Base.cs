@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Npgsql;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -25,14 +26,14 @@ namespace PerfTests
         private NpgsqlConnection? conn;
         private ServiceProvider? serviceProvider;
 
-        public virtual void Setup(bool enableModelCaching)
+        public virtual void Setup(bool enableModelCaching, bool enableEffectiveTraitCaching)
         {
             DBSetup.Setup();
 
             var dbcb = new DBConnectionBuilder();
             conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
 
-            var services = InitServices(enableModelCaching);
+            var services = InitServices(enableModelCaching, enableEffectiveTraitCaching);
             serviceProvider = services.BuildServiceProvider();
         }
 
@@ -44,13 +45,13 @@ namespace PerfTests
                 serviceProvider.Dispose();
         }
 
-        protected virtual IServiceCollection InitServices(bool enableModelCaching)
+        protected virtual IServiceCollection InitServices(bool enableModelCaching, bool enableEffectiveTraitCaching)
         {
             var services = new ServiceCollection();
             ServiceRegistration.RegisterLogging(services);
             ServiceRegistration.RegisterDB(services, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
             ServiceRegistration.RegisterOIABase(services);
-            ServiceRegistration.RegisterModels(services, enableModelCaching, false, false);
+            ServiceRegistration.RegisterModels(services, enableModelCaching, enableEffectiveTraitCaching, false, false);
             ServiceRegistration.RegisterServices(services);
             ServiceRegistration.RegisterGraphQL(services);
 
@@ -77,6 +78,7 @@ namespace PerfTests
             services.AddSingleton<ILogger<CachingBaseAttributeModel>>((sp) => NullLogger<CachingBaseAttributeModel>.Instance);
             services.AddSingleton<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance);
             services.AddSingleton<ILoggerFactory, NullLoggerFactory>();
+            services.AddSingleton<ILogger<CISearchModel>>((sp) => NullLogger<CISearchModel>.Instance);
 
             services.AddSingleton<IConfiguration>((sp) => new Mock<IConfiguration>().Object);
 

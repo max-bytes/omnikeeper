@@ -317,7 +317,8 @@ namespace Omnikeeper.Model
                 writer.Complete();
             }
 
-            return actualInserts;
+            return actualInserts
+                .Concat(outdatedRelations.Values.Select(r => (r.FromCIID, r.ToCIID, r.PredicateID, RelationState.Removed)));
         }
     }
 }

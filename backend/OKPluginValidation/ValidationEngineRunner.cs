@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace OKPluginValidation.Validation
 {
-    public class ValidationEngineRunner : IHangfireJobRunner
+    public class ValidationEngineRunner
     {
         private readonly IValidationEngine validationEngine;
         private readonly ILogger<ValidationEngineRunner> logger;
