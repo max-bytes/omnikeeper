@@ -1,6 +1,7 @@
 ﻿using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ namespace Omnikeeper.Base.Model
         public bool Contains(Guid ciid);
     }
 
-    public class SpecificCIIDsSelection : ICIIDSelection
+    public class SpecificCIIDsSelection : ICIIDSelection, IEquatable<SpecificCIIDsSelection>
     {
         public ISet<Guid> CIIDs { get; }
         private SpecificCIIDsSelection(ISet<Guid> ciids)
@@ -31,9 +32,21 @@ namespace Omnikeeper.Base.Model
             if (ciids.IsEmpty()) return new NoCIIDsSelection();
             return new SpecificCIIDsSelection(ciids.ToHashSet());
         }
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = (int)2166136261;
+                foreach (var ciid in CIIDs)
+                    hash = (hash * 16777619) ^ ciid.GetHashCode();
+                return hash;
+            }
+        }
+        public override bool Equals(object? obj) => Equals(obj as SpecificCIIDsSelection);
+        public bool Equals(SpecificCIIDsSelection? other) => other != null && CIIDs.SetEquals(other.CIIDs);
     }
 
-    public class AllCIIDsExceptSelection : ICIIDSelection
+    public class AllCIIDsExceptSelection : ICIIDSelection, IEquatable<AllCIIDsExceptSelection>
     {
         public ISet<Guid> ExceptCIIDs { get; }
         private AllCIIDsExceptSelection(ISet<Guid> ciids)
@@ -43,26 +56,46 @@ namespace Omnikeeper.Base.Model
 
         public bool Contains(Guid ciid) => !ExceptCIIDs.Contains(ciid);
 
-        public static AllCIIDsExceptSelection Build(ISet<Guid> ciids)
+        public static ICIIDSelection Build(ISet<Guid> ciids)
         {
-            if (ciids.IsEmpty()) throw new Exception("Empty except list for AllCIIDsExceptSelection not allowed");
+            if (ciids.IsEmpty()) return new AllCIIDsSelection();
             return new AllCIIDsExceptSelection(ciids);
         }
-        public static AllCIIDsExceptSelection Build(params Guid[] ciids)
+        public static ICIIDSelection Build(params Guid[] ciids)
         {
-            if (ciids.IsEmpty()) throw new Exception("Empty except list for AllCIIDsExceptSelection not allowed");
+            if (ciids.IsEmpty()) return new AllCIIDsSelection();
             return new AllCIIDsExceptSelection(ciids.ToHashSet());
         }
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = (int)2166136261;
+                foreach (var ciid in ExceptCIIDs)
+                    hash = (hash * 16777619) ^ ciid.GetHashCode();
+                return hash;
+            }
+        }
+        public override bool Equals(object? obj) => Equals(obj as AllCIIDsExceptSelection);
+        public bool Equals(AllCIIDsExceptSelection? other) => other != null && ExceptCIIDs.SetEquals(other.ExceptCIIDs);
     }
 
-    public class AllCIIDsSelection : ICIIDSelection
+    public class AllCIIDsSelection : ICIIDSelection, IEquatable<AllCIIDsSelection>
     {
         public bool Contains(Guid ciid) => true;
+
+        public override int GetHashCode() => 0;
+        public override bool Equals(object? obj) => Equals(obj as AllCIIDsSelection);
+        public bool Equals(AllCIIDsSelection? other) => other != null;
     }
 
-    public class NoCIIDsSelection : ICIIDSelection
+    public class NoCIIDsSelection : ICIIDSelection, IEquatable<NoCIIDsSelection>
     {
         public bool Contains(Guid ciid) => false;
+
+        public override int GetHashCode() => 0;
+        public override bool Equals(object? obj) => Equals(obj as NoCIIDsSelection);
+        public bool Equals(NoCIIDsSelection? other) => other != null;
     }
 
     public static class CIIDSelectionExtensions
@@ -101,7 +134,6 @@ namespace Omnikeeper.Base.Model
             };
         }
 
-        // TODO: write tests
         public static ICIIDSelection Except(this ICIIDSelection selection, ICIIDSelection other)
         {
             return selection switch
@@ -142,7 +174,6 @@ namespace Omnikeeper.Base.Model
             };
         }
 
-        // TODO: write tests
         public static ICIIDSelection Intersect(this ICIIDSelection selection, ICIIDSelection other)
         {
             return selection switch
@@ -167,7 +198,7 @@ namespace Omnikeeper.Base.Model
                 {
                     AllCIIDsSelection _ => e,
                     SpecificCIIDsSelection specific => SpecificCIIDsSelection.Build(specific.CIIDs.Except(e.ExceptCIIDs).ToHashSet()),
-                    AllCIIDsExceptSelection allExcept => SpecificCIIDsSelection.Build(allExcept.ExceptCIIDs.Union(e.ExceptCIIDs).ToHashSet()),
+                    AllCIIDsExceptSelection allExcept => AllCIIDsExceptSelection.Build(allExcept.ExceptCIIDs.Union(e.ExceptCIIDs).ToHashSet()),
                     NoCIIDsSelection n => n,
                     _ => throw new NotImplementedException()
                 },
