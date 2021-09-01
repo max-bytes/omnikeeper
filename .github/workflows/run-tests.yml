@@ -8,6 +8,15 @@ jobs:
   tests:
     name: Run backend tests
     runs-on: ubuntu-20.04
+    services:
+      postgres:
+        image: postgres:12-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: omnikeeper_tests
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -17,15 +26,7 @@ jobs:
           dotnet-version: '3.1.x'
       - name: Run tests
         env:
-          ConnectionStrings__DatabaseConnection: Server=database;Port=5432;User Id=postgres;Password=postgres;Database=omnikeeper_tests;Pooling=false
+          ConnectionStrings__DatabaseConnection: Server=localhost;Port=5432;User Id=postgres;Password=postgres;Database=omnikeeper_tests;Pooling=false
         run: |
           cd backend
-          dotnet test
-    services:
-      database:
-        image: postgres:12-alpine
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: omnikeeper_tests
-        ports:
-          - 5432:5432
+          dotnet test -- StopOnError=true
