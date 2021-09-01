@@ -15,6 +15,7 @@ using Tests;
 namespace PerfTests
 {
     //[SimpleJob(RunStrategy.Monitoring, launchCount: 0, warmupCount: 0, targetCount: 1)]
+    [Explicit]
     public class GetCompactCIsTest : Base
     {
 

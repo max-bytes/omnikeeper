@@ -17,6 +17,7 @@ using Tests;
 
 namespace PerfTests
 {
+    [Explicit]
     public class SearchForMergedCIsByTraitsTest : Base
     {
         [GlobalSetup(Target = nameof(SearchForMergedCIsByTraits))]

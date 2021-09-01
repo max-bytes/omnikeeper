@@ -14,6 +14,7 @@ using Tests.Integration;
 
 namespace PerfTests
 {
+    [Explicit]
     class GetMergedAttributesTest : Base
     {
         private List<Guid> ciNames = new List<Guid>();

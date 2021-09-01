@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\LICENSE = ..\LICENSE
 		..\.github\workflows\package-variants.yml = ..\.github\workflows\package-variants.yml
 		..\README.md = ..\README.md
+		..\.github\workflows\run-tests.yml = ..\.github\workflows\run-tests.yml
 		..\.github\workflows\update-wiki.yml = ..\.github\workflows\update-wiki.yml
 	EndProjectSection
 EndProject
@@ -48,9 +49,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginGenericJSONIngest.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginOIAOmnikeeper", "OKPluginOIAOmnikeeper\OKPluginOIAOmnikeeper.csproj", "{C4FAA89F-C2B6-487C-B123-4BC8E1C68B72}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginValidation", "OKPluginValidation\OKPluginValidation.csproj", "{D7D75DA5-5393-4524-A17A-8A30D908D4D1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginValidation", "OKPluginValidation\OKPluginValidation.csproj", "{D7D75DA5-5393-4524-A17A-8A30D908D4D1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OKPluginValidation.Tests", "OKPluginValidation.Tests\OKPluginValidation.Tests.csproj", "{45CCDFE1-2717-44C5-A4BD-4C73ADE43C93}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OKPluginValidation.Tests", "OKPluginValidation.Tests\OKPluginValidation.Tests.csproj", "{45CCDFE1-2717-44C5-A4BD-4C73ADE43C93}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

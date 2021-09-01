@@ -1,0 +1,26 @@
+---
+name: run-tests
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  tests:
+    name: Run backend tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2.1.0
+      - name: Run tests
+        env:
+          ConnectionStrings__DatabaseConnection: Server=database;Port=5432;User Id=postgres;Password=postgres;Database=omnikeeper_tests;Pooling=false
+        run: |
+          cd backend
+          dotnet test
+    services:
+      database:
+        image: postgres:12-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: omnikeeper_tests
+        ports:
+          - 5432:5432
