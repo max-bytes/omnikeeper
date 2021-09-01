@@ -204,6 +204,7 @@ namespace Omnikeeper.Model
         /// <param name="threshold"></param>
         /// <param name="trans"></param>
         /// <returns></returns>
+        [Obsolete]
         public async Task<int> ArchiveUnusedChangesetsOlderThan(DateTimeOffset threshold, IModelContext trans)
         {
             var query = @"delete from changeset where
