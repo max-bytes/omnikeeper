@@ -1,7 +1,7 @@
 ﻿using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Utils;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
@@ -29,6 +29,13 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
                 else
                     cache.PurgeLayer(layerID);
             }
+            return numDeleted;
+        }
+
+        public async Task<int> DeleteOutdatedAttributesOlderThan(string layerID, IModelContext trans, System.DateTimeOffset threshold, TimeThreshold atTime)
+        {
+            // NOTE: because this only deletes outdated (=not latest) attributes, it does not affect the cache
+            var numDeleted = await model.DeleteOutdatedAttributesOlderThan(layerID, trans, threshold, atTime);
             return numDeleted;
         }
     }

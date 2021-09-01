@@ -8,7 +8,7 @@ using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
-using Omnikeeper.Utils;
+using System;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Runners
@@ -17,47 +17,59 @@ namespace Omnikeeper.Runners
     {
         private readonly ILogger<ArchiveOldDataRunner> logger;
         private readonly IExternalIDMapPersister externalIDMapPersister;
+        private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
+        private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
         private readonly IChangesetModel changesetModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
+        private readonly ILayerModel layerModel;
         private readonly IModelContextBuilder modelContextBuilder;
 
-        public ArchiveOldDataRunner(ILogger<ArchiveOldDataRunner> logger, IExternalIDMapPersister externalIDMapPersister,
-            IChangesetModel changesetModel, IBaseConfigurationModel baseConfigurationModel, IModelContextBuilder modelContextBuilder)
+        public ArchiveOldDataRunner(ILogger<ArchiveOldDataRunner> logger, IExternalIDMapPersister externalIDMapPersister, 
+            IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
+            IChangesetModel changesetModel, IBaseConfigurationModel baseConfigurationModel, ILayerModel layerModel, IModelContextBuilder modelContextBuilder)
         {
             this.logger = logger;
             this.externalIDMapPersister = externalIDMapPersister;
+            this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
+            this.baseRelationRevisionistModel = baseRelationRevisionistModel;
             this.changesetModel = changesetModel;
             this.baseConfigurationModel = baseConfigurationModel;
+            this.layerModel = layerModel;
             this.modelContextBuilder = modelContextBuilder;
         }
 
         public async Task RunAsync()
         {
-            // remove outdated changesets
-            // this in turn also removes outdated attributes and relations
-            logger.LogDebug($"Archiving outdated changesets");
+            var now = TimeThreshold.BuildLatest();
+            // delete outdated attributes and relations (empty changesets are deleted afterwards)
             using (var trans = modelContextBuilder.BuildDeferred())
             {
                 var cfg = await baseConfigurationModel.GetConfigOrDefault(trans);
-
-                var archiveThreshold = cfg.ArchiveChangesetThreshold;
+                var archiveThreshold = cfg.ArchiveChangesetThreshold; // TODO: rename to something better fitting
 
                 if (archiveThreshold == BaseConfigurationV1.InfiniteArchiveChangesetThreshold)
                 {
                     return;
                 }
+                var threshold = DateTimeOffset.Now.Add(archiveThreshold.Negate());
 
-                //var threshold = DateTimeOffset.Now.Add(archiveThreshold.Negate());
-
-                // TODO: rewrite to delete single attributes/relations (empty changeset deletion is handled later)
-                // OR: think about data archiving rather in terms of partitioning!
-                //var numArchivedChangesets = await changesetModel.ArchiveUnusedChangesetsOlderThan(threshold, trans);
-                //if (numArchivedChangesets > 0)
-                //    logger.LogInformation($"Archived {numArchivedChangesets} changesets because they are unused and older than {threshold}");
+                logger.LogDebug($"Deleting outdated attributes and relations older than {threshold}");
+    
+                var numDeletedAttributes = 0;
+                var numDeletedRelations = 0;
+                foreach (var layer in await layerModel.GetLayers(trans))
+                {
+                    numDeletedAttributes += await baseAttributeRevisionistModel.DeleteOutdatedAttributesOlderThan(layer.ID, trans, threshold, now);
+                    numDeletedRelations += await baseRelationRevisionistModel.DeleteOutdatedRelationsOlderThan(layer.ID, trans, threshold, now);
+                }
+                if (numDeletedAttributes > 0)
+                    logger.LogInformation($"Deleted {numDeletedAttributes} attributes because they were outdated and older than {threshold}");
+                if (numDeletedRelations > 0)
+                    logger.LogInformation($"Deleted {numDeletedRelations} relations because they were outdated and older than {threshold}");
 
                 trans.Commit();
+                logger.LogDebug($"Done deleting outdated attributes and relations");
             }
-            logger.LogDebug($"Done archiving outdated changesets");
 
             // archive empty changesets
             // NOTE: several procedures exist that can delete attributes/relations, but do not check if the associated changeset becomes empty

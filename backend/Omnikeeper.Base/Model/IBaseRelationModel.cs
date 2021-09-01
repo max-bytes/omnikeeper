@@ -27,5 +27,6 @@ namespace Omnikeeper.Base.Model
     public interface IBaseRelationRevisionistModel
     {
         Task<int> DeleteAllRelations(string layerID, IModelContext trans);
+        Task<int> DeleteOutdatedRelationsOlderThan(string layerID, IModelContext trans, DateTimeOffset threshold, TimeThreshold atTime);
     }
 }
