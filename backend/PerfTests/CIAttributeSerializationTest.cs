@@ -14,7 +14,8 @@ using System.Text;
 
 namespace PerfTests
 {
-    public class CIAttributeSerialization
+    [Explicit]
+    public class CIAttributeSerializationTest
     {
         private readonly CIAttribute aScalarText;
         private readonly CIAttribute aScalarYAML;
@@ -28,7 +29,7 @@ namespace PerfTests
         private readonly IDataSerializer protoBufDS = new ProtoBufDataSerializer();
         private readonly IDataSerializer binaryFormatterDS = new BinaryFormatterDataSerializer();
 
-        public CIAttributeSerialization()
+        public CIAttributeSerializationTest()
         {
             var testYAML = @"foo: 
   bar: 
@@ -78,7 +79,7 @@ namespace PerfTests
         [Test]
         public void Run()
         {
-            var summary = BenchmarkRunner.Run<CIAttributeSerialization>();
+            var summary = BenchmarkRunner.Run<CIAttributeSerializationTest>();
         }
     }
 }

@@ -18,6 +18,7 @@ using Tests;
 
 namespace PerfTests
 {
+    [Explicit]
     public class GetMergedCIsWithTraitTest : Base
     {
         [GlobalSetup(Target = nameof(GetMergedCIsWithTrait))]

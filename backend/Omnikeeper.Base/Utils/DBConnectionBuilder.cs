@@ -34,6 +34,7 @@ namespace Omnikeeper.Base.Utils
         {
             ConfigurationBuilder cb = new ConfigurationBuilder();
             cb.AddUserSecrets(rootAssembly);
+            cb.AddEnvironmentVariables();
             var c = cb.Build();
             var connectionString = c.GetConnectionString(configName);
             return connectionString;
