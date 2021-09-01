@@ -1,13 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
+﻿using Microsoft.Extensions.Logging;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Validation.Rules;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,7 +42,7 @@ namespace OKPluginValidation.Validation
             var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(modelContextBuilder.BuildImmediate());
 
             var timeThreshold = TimeThreshold.BuildLatest();
-    
+
             var validations = await validationModel.GetValidations(new LayerSet(baseConfiguration.ConfigLayerset), modelContextBuilder.BuildImmediate(), timeThreshold);
 
             // user handling: get or create
@@ -103,7 +100,8 @@ namespace OKPluginValidation.Validation
                 // TODO: add relations from validation issue to validation
 
                 trans.Commit();
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 logger.LogError($"Updating validation issues failed: {e.Message}");
             }

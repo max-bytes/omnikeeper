@@ -49,7 +49,8 @@ namespace Omnikeeper.Validation.Rules
             try
             {
                 parsedConfig = Config.Serializer.Deserialize(config);
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 throw new Exception("Could not parse config", e);
             }

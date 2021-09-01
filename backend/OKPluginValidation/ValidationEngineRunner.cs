@@ -1,7 +1,6 @@
 ﻿using Hangfire;
 using Hangfire.Server;
 using Microsoft.Extensions.Logging;
-using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Utils;
 using System;
 using System.Diagnostics;
@@ -15,7 +14,7 @@ namespace OKPluginValidation.Validation
         private readonly ILogger<ValidationEngineRunner> logger;
 
         public ValidationEngineRunner(IValidationEngine validationEngine, ILogger<ValidationEngineRunner> logger)
-            {
+        {
             this.validationEngine = validationEngine;
             this.logger = logger;
         }
