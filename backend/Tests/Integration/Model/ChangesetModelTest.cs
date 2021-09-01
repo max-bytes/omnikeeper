@@ -151,8 +151,6 @@ namespace Tests.Integration.Model
             var baseRelationModel = new BaseRelationModel(new PartitionModel());
             var relationModel = new RelationModel(baseRelationModel);
             var ciModel = new CIModel(attributeModel, new CIIDModel());
-            var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
-            var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);
             var layerModel = new LayerModel();
             var baseAttributeRevisionistModel = new BaseAttributeRevisionistModel();
 
@@ -188,6 +186,7 @@ namespace Tests.Integration.Model
 
 
         [Test]
+        [Obsolete]
         public async Task ArchiveOldTest()
         {
             var userModel = new UserInDatabaseModel();
@@ -197,8 +196,6 @@ namespace Tests.Integration.Model
             var baseRelationModel = new BaseRelationModel(new PartitionModel());
             var relationModel = new RelationModel(baseRelationModel);
             var ciModel = new CIModel(attributeModel, new CIIDModel());
-            var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
-            var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);
             var layerModel = new LayerModel();
 
             using var trans = ModelContextBuilder.BuildDeferred();

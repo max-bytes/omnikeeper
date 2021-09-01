@@ -93,7 +93,7 @@ namespace Tests.Integration.Model
         private async Task<(CachingEffectiveTraitModel traitModel, EffectiveTraitCache cache, AttributeModel attributeModel, 
             ChangesetModel changesetModel, UserInDatabase user, LayerSet layerset, Guid[])> BaseSetup()
         {
-            var baseConfigurationModel = new BaseConfigurationModel(null);
+            var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
             var cache = new EffectiveTraitCache();
             var oap = new Mock<IOnlineAccessProxy>();
             oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<string>(), It.IsAny<IModelContext>())).ReturnsAsync(false);

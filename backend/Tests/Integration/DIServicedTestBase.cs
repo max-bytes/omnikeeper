@@ -30,6 +30,7 @@ namespace Tests.Integration
         protected DIServicedTestBase(bool enableModelCaching)
         {
             this.enableModelCaching = enableModelCaching;
+            currentUserServiceMock = new Mock<ICurrentUserService>();
         }
 
         [SetUp]
@@ -89,7 +90,6 @@ namespace Tests.Integration
             services.AddSingleton<IConfiguration>((sp) => new Mock<IConfiguration>().Object);
 
             // override user service
-            currentUserServiceMock = new Mock<ICurrentUserService>();
             services.AddSingleton<ICurrentUserService>((sp) => currentUserServiceMock.Object);
             services.AddSingleton<ILogger<DataPartitionService>>((sp) => NullLogger<DataPartitionService>.Instance);
 

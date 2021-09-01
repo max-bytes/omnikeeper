@@ -21,18 +21,18 @@ namespace Omnikeeper.GraphQL
             resolve: (context) =>
             {
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                var lbas = context.RequestServices.GetRequiredService<ILayerBasedAuthorizationService>();
-                var isWritable = lbas.CanUserWriteToLayer(userContext.User, context.Source.ID);
+                var lbas = context.RequestServices!.GetRequiredService<ILayerBasedAuthorizationService>();
+                var isWritable = lbas.CanUserWriteToLayer(userContext.User, context.Source!.ID);
                 return isWritable;
             });
             FieldAsync<BooleanGraphType>("isBaseConfigurationLayer",
             resolve: async (context) =>
             {
-                var baseConfigurationModel = context.RequestServices.GetRequiredService<IBaseConfigurationModel>();
+                var baseConfigurationModel = context.RequestServices!.GetRequiredService<IBaseConfigurationModel>();
 
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                return await baseConfigurationModel.IsLayerPartOfBaseConfiguration(context.Source.ID, userContext.Transaction);
+                return await baseConfigurationModel.IsLayerPartOfBaseConfiguration(context.Source!.ID, userContext.Transaction);
             });
 
         }

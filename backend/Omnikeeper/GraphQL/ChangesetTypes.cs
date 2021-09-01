@@ -34,33 +34,33 @@ namespace Omnikeeper.GraphQL
             FieldAsync<LayerType>("layer",
             resolve: async (context) =>
             {
-                var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                var layerID = context.Source.LayerID;
+                var layerID = context.Source!.LayerID;
                 return await layerModel.GetLayer(layerID, userContext.Transaction);
             });
             FieldAsync<ChangesetStatisticsType>("statistics",
             resolve: async (context) =>
             {
-                var statisticsModel = context.RequestServices.GetRequiredService<IChangesetStatisticsModel>();
+                var statisticsModel = context.RequestServices!.GetRequiredService<IChangesetStatisticsModel>();
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                var changesetID = context.Source.ID;
+                var changesetID = context.Source!.ID;
                 return await statisticsModel.GetStatistics(changesetID, userContext.Transaction);
             });
             FieldAsync<ListGraphType<CIAttributeType>>("attributes",
             resolve: async (context) =>
             {
-                var attributeModel = context.RequestServices.GetRequiredService<IAttributeModel>();
+                var attributeModel = context.RequestServices!.GetRequiredService<IAttributeModel>();
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                var changesetID = context.Source.ID;
+                var changesetID = context.Source!.ID;
                 return await attributeModel.GetAttributesOfChangeset(changesetID, userContext.Transaction);
             });
             FieldAsync<ListGraphType<RelationType>>("relations",
             resolve: async (context) =>
             {
-                var relationModel = context.RequestServices.GetRequiredService<IRelationModel>();
+                var relationModel = context.RequestServices!.GetRequiredService<IRelationModel>();
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                var changesetID = context.Source.ID;
+                var changesetID = context.Source!.ID;
                 return await relationModel.GetRelationsOfChangeset(changesetID, userContext.Transaction);
             });
         }

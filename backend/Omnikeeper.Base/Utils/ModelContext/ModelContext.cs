@@ -154,10 +154,10 @@ namespace Omnikeeper.Base.Utils.ModelContext
             this.logger = logger;
         }
 
-        public IDbConnection Connection => DBTransaction.Connection;
+        public IDbConnection? Connection => DBTransaction.Connection;
         public IsolationLevel IsolationLevel => DBTransaction.IsolationLevel;
         public NpgsqlTransaction DBTransaction { get; }
-        public NpgsqlConnection DBConnection => DBTransaction.Connection;
+        public NpgsqlConnection DBConnection => DBTransaction.Connection!;
 
         public void Commit()
         {

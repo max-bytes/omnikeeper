@@ -33,8 +33,8 @@ namespace Omnikeeper.GraphQL
             }),
             resolve: async (context) =>
             {
-                var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
-                var relationModel = context.RequestServices.GetRequiredService<IRelationModel>();
+                var ciModel = context.RequestServices!.GetRequiredService<ICIModel>();
+                var relationModel = context.RequestServices!.GetRequiredService<IRelationModel>();
 
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerset = userContext.LayerSet;
@@ -45,7 +45,7 @@ namespace Omnikeeper.GraphQL
                 if (perPredicateLimit.HasValue && perPredicateLimit.Value <= 0)
                     return new List<CompactRelatedCI>();
 
-                var CIIdentity = context.Source.ID;
+                var CIIdentity = context.Source!.ID;
 
                 var relatedCIs = await RelationService.GetCompactRelatedCIs(CIIdentity, layerset, ciModel, relationModel, perPredicateLimit, userContext.Transaction, userContext.TimeThreshold);
 
@@ -67,23 +67,23 @@ namespace Omnikeeper.GraphQL
             FieldAsync<TemplateErrorsCIType>("templateErrors",
             resolve: async (context) =>
             {
-                var templateModel = context.RequestServices.GetRequiredService<ITemplateModel>();
+                var templateModel = context.RequestServices!.GetRequiredService<ITemplateModel>();
 
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                return await templateModel.CalculateTemplateErrors(context.Source, userContext.Transaction, userContext.TimeThreshold);
+                return await templateModel.CalculateTemplateErrors(context.Source!, userContext.Transaction, userContext.TimeThreshold);
             });
 
             FieldAsync<ListGraphType<EffectiveTraitType>>("effectiveTraits",
             resolve: async (context) =>
             {
-                var traitModel = context.RequestServices.GetRequiredService<IEffectiveTraitModel>();
-                var traitsProvider = context.RequestServices.GetRequiredService<ITraitsProvider>();
+                var traitModel = context.RequestServices!.GetRequiredService<IEffectiveTraitModel>();
+                var traitsProvider = context.RequestServices!.GetRequiredService<ITraitsProvider>();
 
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
                 var traits = (await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.TimeThreshold)).Values;
 
-                var et = await traitModel.GetEffectiveTraitsForCI(traits, context.Source, userContext.Transaction, userContext.TimeThreshold);
+                var et = await traitModel.GetEffectiveTraitsForCI(traits, context.Source!, userContext.Transaction, userContext.TimeThreshold);
                 return et;
             });
         }
@@ -111,10 +111,10 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<LayerType>>("layerStack",
             resolve: async (context) =>
             {
-                var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
+                var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
 
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                var layerstackIDs = context.Source.LayerStackIDs;
+                var layerstackIDs = context.Source!.LayerStackIDs;
                 return await layerModel.GetLayers(layerstackIDs, userContext.Transaction);
             });
         }

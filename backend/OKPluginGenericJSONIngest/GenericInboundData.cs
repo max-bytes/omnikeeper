@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#pragma warning disable CS8618
 namespace OKPluginGenericJSONIngest
 {
     public class GenericInboundData
@@ -42,3 +43,4 @@ namespace OKPluginGenericJSONIngest
         public string to;
     }
 }
+#pragma warning restore CS8618
