@@ -46,6 +46,7 @@ namespace OKPluginValidation.Validation
             var validations = await validationModel.GetValidations(new LayerSet(baseConfiguration.ConfigLayerset), modelContextBuilder.BuildImmediate(), timeThreshold);
 
             // user handling: get or create
+            // TODO: generalize, offer method for upserting a special process user (consolidate with CLB users)
             var username = "__validation.engine";
             var displayName = username;
             // generate a unique but deterministic GUID
