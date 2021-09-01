@@ -57,17 +57,14 @@ Another important difference is that one CI can exhibit any number of traits, wh
 Traits share some similarities with [tags and tagging systems](https://en.wikipedia.org/wiki/Tag_(metadata)). Tags are metadata that is used to label and describe entities and allows it to be searched for, just like traits for CIs in omnikeeper. An entity can have any number of tags, just as CIs can have any number of traits.  
 The biggest difference between typical tagging systems and omnikeeper's tag system is that tags are normally applied manually and by humans, leading to a certain fuzziness in its explanatory power. Traits on the other hand are applied fully automatically by application of its requirements to the CI's data. Provided that the trait is properly defined, omnikeeper keeps track of which CIs exhibit which traits rigorously.
 
-
 ### Traits vs. change
 TODO: Write about changes in data structures and requirements -> traits are flexible enough.
-
 
 ### Traits vs. layersets
 Traits and layers (or layersets) are two distinct, yet strongly related concepts. When talking about whether CIs have a trait, the question is always only answerable when a layerset is chosen as well. A CI might have a trait in one layerset, but not in another. 
 
 ### Traits vs. blueprints/templates
 TODO: A trait is in a way a blueprint or template for CIs. 
-
 
 ## Trait sources
 Traits can be defined and come from different sources.
