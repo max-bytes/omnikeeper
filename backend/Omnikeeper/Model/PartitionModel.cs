@@ -48,7 +48,7 @@ namespace Omnikeeper.Model
 
             // move attributes over
             using var commandMoveAttributes = new NpgsqlCommand($@"
-            UPDATE attribute SET partition_index = @new_partition_index
+            UPDATE attribute SET partition_index = @new_partition_index::timestamptz
             FROM (
                 select distinct on(ci_id, name, layer_id) id FROM attribute 
                 where timestamp <= @time_threshold and partition_index = @old_partition_index
@@ -56,7 +56,7 @@ namespace Omnikeeper.Model
             WHERE attribute.id = sub.id", trans.DBConnection, trans.DBTransaction);
             commandMoveAttributes.Parameters.AddWithValue("time_threshold", timeThreshold.Time);
             commandMoveAttributes.Parameters.AddWithValue("old_partition_index", oldPartitionIndex);
-            commandMoveAttributes.Parameters.AddWithValue("new_partition_index", newPartitionIndex);
+            commandMoveAttributes.Parameters.AddWithValue("new_partition_index", newPartitionIndex.ToUniversalTime());
             await commandMoveAttributes.ExecuteNonQueryAsync();
 
             // create partition table for relations
