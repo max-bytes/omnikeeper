@@ -10,7 +10,6 @@ namespace Omnikeeper.GraphQL
         public EffectiveTraitType()
         {
             Field(x => x.UnderlyingTrait, type: typeof(TraitType));
-            Field("attributes", x => x.TraitAttributes.Values, type: typeof(ListGraphType<MergedCIAttributeType>)); // TODO: remove
             Field("traitAttributes", x => x.TraitAttributes.Select(t => new EffectiveTraitAttribute(t.Key, t.Value)), type: typeof(ListGraphType<EffectiveTraitAttributeType>));
             Field("traitRelations", x => x.TraitRelations.Select(t => new EffectiveTraitRelation(t.Key, t.Value)), type: typeof(ListGraphType<EffectiveTraitRelationType>));
         }
