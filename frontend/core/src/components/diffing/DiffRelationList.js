@@ -1,7 +1,7 @@
 import React from 'react';
 import { Row, Col} from 'antd';
 import { Flipper, Flipped } from 'react-flip-toolkit'
-import RelatedCI from 'components/RelatedCI';
+import RelatedCI from 'components/cis/RelatedCI';
 import _ from 'lodash';
 import { onAppear, onExit } from 'utils/animation';
 import { MissingLabel, CompareLabel, EmptyLabel, stateBasedBackgroundColor } from './DiffUtilComponents';

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import './App.css';
-import Explorer from './components/Explorer';
+import Explorer from './components/cis/Explorer';
 import Diffing from './components/diffing/Diffing';
 import 'antd/dist/antd.css';
 import Keycloak from 'keycloak-js'
@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExchangeAlt, faPlus, faSearch, faWrench, faTh, faList, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
 import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
-import AddNewCI from './components/AddNewCI'
+import AddNewCI from './components/cis/AddNewCI'
 import SearchCIAdvanced from './components/search/SearchCIAdvanced'
 import ChangesetList from "components/changesets/ChangesetList";
 import Changeset from "components/changesets/Changeset";

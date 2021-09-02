@@ -1,8 +1,8 @@
 import React from "react";
 import { Form, Typography } from 'antd';
 import _ from 'lodash';
-import LayerIcon from "./LayerIcon";
-import OriginPopup from "./OriginPopup";
+import LayerIcon from "components/LayerIcon";
+import OriginPopup from "components/OriginPopup";
 import { CIID } from "utils/uuidRenderers";
 
 const { Text } = Typography;

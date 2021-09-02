@@ -4,7 +4,7 @@ import Attribute from './Attribute';
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import _ from 'lodash';
 import { Collapse, Button } from "antd";
-import { onAppear, onExit } from '../utils/animation';
+import { onAppear, onExit } from 'utils/animation';
 import {useAttributeSegmentsToggler} from 'utils/useAttributeSegmentsToggler'
 
 const { Panel } = Collapse;

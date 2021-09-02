@@ -4,11 +4,11 @@ import { Descriptions, Tabs, Typography } from 'antd';
 import { queries } from "../../graphql/queries";
 import { useExplorerLayers } from "../../utils/layers";
 import { useParams } from "react-router-dom";
-import Attribute from "components/Attribute";
+import Attribute from "components/cis/Attribute";
 import LayerIcon from "components/LayerIcon";
 import { formatTimestamp } from "utils/datetime";
 import UserTypeIcon from './../UserTypeIcon';
-import Relation from "components/Relation";
+import Relation from "components/cis/Relation";
 import _ from 'lodash';
 import { ChangesetID, CIID } from "utils/uuidRenderers";
 
