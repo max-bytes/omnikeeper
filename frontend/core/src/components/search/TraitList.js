@@ -3,6 +3,7 @@ import { Button, Radio, Space, Checkbox } from 'antd';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWrench, faPlug, faArchive } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
+import TraitID from "utils/TraitID";
 
 function TraitList(props) {
 
@@ -94,7 +95,7 @@ function TraitList(props) {
                             <FontAwesomeIcon icon={icon} style={{ marginRight: "0.5rem" }}/>
                         </span>
                         <span style={styles.traitsID}>
-                            {effectiveTrait.id}
+                            <TraitID id={effectiveTrait.id} link={true} />
                         </span>
                         <span>
                                 <Radio.Group buttonStyle="solid" size="small"

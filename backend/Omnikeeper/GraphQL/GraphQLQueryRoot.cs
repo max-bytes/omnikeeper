@@ -268,6 +268,24 @@ namespace Omnikeeper.GraphQL
                     return await changesetModel.GetChangesetsInTimespan(from, to, userContext.LayerSet, selection, userContext.Transaction, limit);
                 });
 
+            FieldAsync<TraitType>("activeTrait",
+                arguments: new QueryArguments(
+                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }),
+                resolve: async context =>
+                {
+                    var traitsProvider = context.RequestServices!.GetRequiredService<ITraitsProvider>();
+                    var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
+
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
+                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
+
+                    var id = context.GetArgument<string>("id")!;
+
+                    var trait = await traitsProvider.GetActiveTrait(id, userContext.Transaction, userContext.TimeThreshold);
+                    return trait;
+                });
+
             FieldAsync<ListGraphType<TraitType>>("activeTraits",
                 resolve: async context =>
                 {

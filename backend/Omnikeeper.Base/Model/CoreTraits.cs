@@ -88,5 +88,9 @@ namespace Omnikeeper.Base.Model
         public IImmutableSet<string> AncestorTraits => ImmutableHashSet<string>.Empty;
 
         public TraitOriginV1 Origin => new TraitOriginV1(TraitOriginType.Core);
+
+        public IImmutableList<TraitAttribute> RequiredAttributes { get => ImmutableList<TraitAttribute>.Empty;  }
+        public IImmutableList<TraitAttribute> OptionalAttributes { get => ImmutableList<TraitAttribute>.Empty; }
+        public IImmutableList<TraitRelation> RequiredRelations { get => ImmutableList<TraitRelation>.Empty; }
     }
 }

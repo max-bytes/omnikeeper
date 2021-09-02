@@ -21,6 +21,7 @@ import env from "@beam-australia/react-env";
 import { ReactKeycloakProvider } from '@react-keycloak/web'
 import { Menu, Layout, Button, Drawer } from 'antd';
 import ExplorerLayers from "components/ExplorerLayers";
+import Trait from "components/traits/Trait";
 const { Header, Content } = Layout;
 
 const keycloak = new Keycloak({
@@ -113,6 +114,9 @@ function App() {
               </PrivateRoute>
               <PrivateRoute path="/manage">
                 <Manage/>
+              </PrivateRoute>
+              <PrivateRoute path="/traits/:traitID">
+                <Trait />
               </PrivateRoute>
 
               <Route path="*">
