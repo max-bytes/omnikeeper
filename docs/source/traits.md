@@ -23,7 +23,7 @@ Dots should be used as a hierarchy and grouping mechanism to pool similar traits
 
 Underscores should be used to separate words, following the [snake_case](https://en.wikipedia.org/wiki/Snake_case) convention.
 
-The trait ID should - as best as possible - describe the property it models. For many usecases, a (compound) noun fits best. The singular is highly preferred over the plural. Example: use `host_windows`, do NOT use `hosts_windows`. Some usecases might better suit the use of an adjective, often with the suffix `able`, to describe that something can be done with this CI. Example: use `automation.ansible_targetable` to describe a CI that can be targeted with ansible automation (also note the use of the `automation` prefix and dot).  
+The trait ID should - as best as possible - describe the property it models. For many usecases, a (compound) noun fits best. The singular is highly preferred over the plural. Example: use `host_windows`, do NOT use `hosts_windows`. Some usecases might better suit the use of an adjective, often with the suffix `able`, to describe that something can be done with this CI. Example: use `automation.ansible_targetable` to describe CIs that can be targeted with ansible automation (also note the use of the `automation` prefix and dot).  
 When leveraging dependent traits to form a trait type hierarchy tree, it is recommended that the "child" traits keep the "parent" trait as a prefix. Example: parent trait `host`, child traits `host_windows` and `host_linux`.
 
 Whenever possible, try to follow these rules for your own traits when specifying their ID.
