@@ -5,6 +5,7 @@ import Text from 'antd/lib/typography/Text';
 import RelatedCIText from './RelatedCIText';
 import { queries } from 'graphql/queries';
 import { useQuery } from '@apollo/client';
+import TraitID from 'utils/TraitID';
 
 const { Panel } = Collapse;
 
@@ -54,6 +55,10 @@ function EffectiveTraits(props) {
   return <Collapse defaultActiveKey={[]} ghost>
       {props.traits.map((t, index) => {
         return <Panel header={t.underlyingTrait.id} key={index}>
+          <h4 style={{margin: '0px', paddingLeft: '15px'}}>Underlying Trait:</h4>
+            <div style={{paddingLeft: '30px'}}>
+              <TraitID id={t.underlyingTrait.id} link={true} />
+            </div>
           <h4 style={{margin: '0px', paddingLeft: '15px'}}>Trait Attributes:</h4>
           <div style={{paddingLeft: '30px'}}>
             <TraitAttributes traitAttributes={t.traitAttributes} />

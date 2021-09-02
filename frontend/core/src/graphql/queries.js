@@ -38,6 +38,21 @@ export const queries = {
             }
         }
     `,
+    ActiveTrait: gql`
+        query($id: String!) {
+            activeTrait(id: $id) {
+                id
+                origin {
+                    type
+                    info
+                }
+                ancestorTraits
+                requiredAttributes
+                optionalAttributes
+                requiredRelations
+            }
+        }
+    `,
 
     FullCI: gql`
         query($ciid: Guid!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
