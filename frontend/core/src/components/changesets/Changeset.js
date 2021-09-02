@@ -11,6 +11,7 @@ import UserTypeIcon from './../UserTypeIcon';
 import Relation from "components/cis/Relation";
 import _ from 'lodash';
 import { ChangesetID, CIID } from "utils/uuidRenderers";
+import CountBadge from "components/CountBadge";
 
 const { TabPane } = Tabs;
 const { Title } = Typography;
@@ -51,7 +52,9 @@ export default function Changeset(props) {
                 <Descriptions.Item label="Changeset-ID" span={2}><ChangesetID id={data.changeset.id} link={false} /></Descriptions.Item>
             </Descriptions>
             <Tabs defaultActiveKey={(data.changeset.attributes.length === 0) ? "relations" : "attributes"} style={{padding: "1rem"}}>
-                <TabPane tab={`Attributes (${data.changeset.attributes.length})`} key="attributes" disabled={data.changeset.attributes.length === 0}>
+                <TabPane 
+                 tab={<CountBadge count={data.changeset.attributes.length}>Attributes</CountBadge>}
+                 key="attributes" disabled={data.changeset.attributes.length === 0}>
                     {_.values(_.mapValues(groupedAttributesByCIID, (attributes, ciid) => {
                         return <div key={ciid} style={{marginTop: '1.5rem'}}>
                             <Title level={5} style={{marginBottom: 0}}>CI <CIID id={ciid} link={true} /></Title>
@@ -61,7 +64,9 @@ export default function Changeset(props) {
                         </div>;
                     }))}
                 </TabPane>
-                <TabPane tab={`Relations (${data.changeset.relations.length})`} key="relations" disabled={data.changeset.relations.length === 0}>
+                <TabPane 
+                 tab={<CountBadge count={data.changeset.relations.length}>Relations</CountBadge>}
+                 key="relations" disabled={data.changeset.relations.length === 0}>
                     {data.changeset.relations.map(r => {
                         return <Relation predicates={dataPredicates.predicates} relation={r} layer={data.changeset.layer} key={r.id} />;
                     })}
