@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types'
-import { Row, Col } from "antd";
+import { Row, Col, Badge } from "antd";
 import AddNewAttribute from './AddNewAttribute';
 import ExplorerAttributeList from './ExplorerAttributeList';
 import TemplateErrors from './TemplateErrors';
@@ -17,9 +17,16 @@ function CI(props) {
   const [createNewAttribute, setCreateNewAttribute] = useState(undefined);
   const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
   const { data: visibleLayers } = useExplorerLayers(true);
+
+  const CountBadge = (props) => {
+    const {children, count} = props;
+    return <Badge count={count} size="small" offset={[0, -5]} style={{ backgroundColor: '#096dd9' }}>
+      {children}
+    </Badge>;
+  }
     
   const panes = (<>
-    <TabPane tab="Attributes" key="attributes">
+    <TabPane tab={<CountBadge count={props.ci.mergedAttributes.length}>Attributes</CountBadge>} key="attributes">
       <Row>
         <Col span={24}>
           <AddNewAttribute prefilled={createNewAttribute} isEditable={props.isEditable} ciIdentity={props.ci.id}></AddNewAttribute>
@@ -33,10 +40,10 @@ function CI(props) {
       </Row>
     </TabPane>
 
-    <TabPane tab="Relations" key="relations">
+    <TabPane tab={<CountBadge count={props.ci.related.length}>Relations</CountBadge>} key="relations">
       <CIRelations relatedCIs={props.ci.related} isEditable={props.isEditable} ciIdentity={props.ci.id} />
     </TabPane>
-    <TabPane tab="Effective Traits" key="effectiveTraits">
+    <TabPane tab={<CountBadge count={props.ci.effectiveTraits.length}>Effective Traits</CountBadge>} key="effectiveTraits">
       <EffectiveTraits timeThreshold={props.timeThreshold} traits={props.ci.effectiveTraits} ciIdentity={props.ci.id} />
     </TabPane>
   </>)
