@@ -9,6 +9,7 @@ function EditableAttributeValue(props) {
   
   isEditable = isEditable ?? true;
   controlIdSuffix = controlIdSuffix ?? "";
+  setHasErrors = setHasErrors ?? (() => void 0);
 
   var [errorsInArray, setErrorsInArray] = useState([]);
   useEffect(() => setHasErrors(errorsInArray.filter(e => e).length > 0), [errorsInArray, setHasErrors]);

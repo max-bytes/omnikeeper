@@ -4,9 +4,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWrench, faPlug, faArchive } from '@fortawesome/free-solid-svg-icons';
 import _ from 'lodash';
 
-function EffectiveTraitList(props) {
+function TraitList(props) {
 
-    const {checked, setChecked, showMetaTraits, setShowMetaTraits, showEmptyTrait, setShowEmptyTrait, effectiveTraitList} = props;
+    const {checked, setChecked, showMetaTraits, setShowMetaTraits, showEmptyTrait, setShowEmptyTrait, traitList} = props;
 
     function onReset() {
         var newChecked = {};
@@ -58,7 +58,7 @@ function EffectiveTraitList(props) {
     return (
             <Space direction="vertical" style={styles.container}>
                 <div key={-1} style={styles.traitElement}>
-                    <h4 style={styles.title}>Effective Traits</h4>
+                    <h4 style={styles.title}>Traits</h4>
                     <span style={styles.reset}>
                         <Checkbox
                             checked={showEmptyTrait}
@@ -71,7 +71,7 @@ function EffectiveTraitList(props) {
                         <Button onClick={onReset} size="small">Reset</Button>
                     </span>
                 </div>
-            {effectiveTraitList
+            {traitList
                 .filter(effectiveTrait => (showMetaTraits || !isMetaTraitID(effectiveTrait.id)) && (showEmptyTrait || !isEmptyTraitID(effectiveTrait.id)))
                 .map((effectiveTrait, index) => {
 
@@ -111,7 +111,7 @@ function EffectiveTraitList(props) {
     );
 }
 
-export default EffectiveTraitList;
+export default TraitList;
 
 const styles = {
     container: {

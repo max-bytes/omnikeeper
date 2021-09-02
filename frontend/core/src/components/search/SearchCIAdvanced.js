@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { queries } from "../../graphql/queries";
 import { SearchResults } from "./SearchResults.js";
 import { useExplorerLayers } from "../../utils/layers";
-import EffectiveTraitList from "./EffectiveTraitList.js";
+import TraitList from "./TraitList.js";
 import { withRouter } from "react-router-dom";
 import queryString from 'query-string';
 import { Spin, Form, Input } from 'antd';
@@ -102,7 +102,7 @@ function SearchCIAdvanced(props) {
                     </div>
                     <div style={styles.searchColumnEntry}>
                         {activeTraits && 
-                            <EffectiveTraitList effectiveTraitList={activeTraits.activeTraits} 
+                            <TraitList traitList={activeTraits.activeTraits} 
                             checked={checkedTraits} setChecked={setCheckedTraits}
                             showMetaTraits={showMetaTraits} setShowMetaTraits={setShowMetaTraits}
                             showEmptyTrait={showEmptyTrait} setShowEmptyTrait={setShowEmptyTrait} />
