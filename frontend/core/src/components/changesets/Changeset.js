@@ -43,7 +43,7 @@ export default function Changeset(props) {
 
         const groupedAttributesByCIID = _.groupBy(data.changeset.attributes, a => a.ciid);
 
-        return <div style={{margin: '10px'}}>
+        return <div style={{marginTop: '1rem'}}>
             <Descriptions title="Changeset" bordered column={2}>
                 <Descriptions.Item label="User"><UserTypeIcon userType={data.changeset.user.type} /> {data.changeset.user.displayName}</Descriptions.Item>
                 <Descriptions.Item label="Timestamp">{formatTimestamp(data.changeset.timestamp)}</Descriptions.Item>
@@ -51,7 +51,7 @@ export default function Changeset(props) {
                 <Descriptions.Item label="Origin-Type">{data.changeset.dataOrigin.type}</Descriptions.Item>
                 <Descriptions.Item label="Changeset-ID" span={2}><ChangesetID id={data.changeset.id} link={false} /></Descriptions.Item>
             </Descriptions>
-            <Tabs defaultActiveKey={(data.changeset.attributes.length === 0) ? "relations" : "attributes"} style={{padding: "1rem"}}>
+            <Tabs defaultActiveKey={(data.changeset.attributes.length === 0) ? "relations" : "attributes"} style={{paddingTop: "1rem"}}>
                 <TabPane 
                  tab={<CountBadge count={data.changeset.attributes.length}>Attributes</CountBadge>}
                  key="attributes" disabled={data.changeset.attributes.length === 0}>

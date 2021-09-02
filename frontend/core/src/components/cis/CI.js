@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types'
-import { Row, Col, Badge } from "antd";
+import { Row, Col } from "antd";
 import AddNewAttribute from './AddNewAttribute';
 import ExplorerAttributeList from './ExplorerAttributeList';
 import TemplateErrors from 'components/TemplateErrors';
@@ -9,6 +9,7 @@ import EffectiveTraits from './EffectiveTraits';
 import { Tabs } from 'antd'
 import { useExplorerLayers } from 'utils/layers';
 import { CIID } from 'utils/uuidRenderers';
+import CountBadge from 'components/CountBadge';
 
 const { TabPane } = Tabs;
 
@@ -18,13 +19,6 @@ function CI(props) {
   const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
   const { data: visibleLayers } = useExplorerLayers(true);
 
-  const CountBadge = (props) => {
-    const {children, count} = props;
-    return <Badge count={count} size="small" offset={[0, -5]} style={{ backgroundColor: '#096dd9' }}>
-      {children}
-    </Badge>;
-  }
-    
   const panes = (<>
     <TabPane tab={<CountBadge count={props.ci.mergedAttributes.length}>Attributes</CountBadge>} key="attributes">
       <Row>
