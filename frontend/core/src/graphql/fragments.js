@@ -51,8 +51,17 @@ export const Fragments = {
         }
         effectiveTraits { 
             underlyingTrait {id}
-            attributes { 
+            traitAttributes {
+              identifier
+              mergedAttribute {
                 ...FullMergedAttribute
+              }
+            }
+            traitRelations {
+              identifier
+              relatedCIs {
+                ...RelatedCI
+              }
             }
         }
         templateErrors {

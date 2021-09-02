@@ -1,39 +1,70 @@
 import React from 'react';
-import ReactJson from 'react-json-view'
-import _ from 'lodash';
+import EditableAttributeValue from './EditableAttributeValue';
+import { Col, Row, Collapse } from 'antd';
+import Text from 'antd/lib/typography/Text';
+import RelatedCIText from './RelatedCIText';
+import { queries } from 'graphql/queries';
+import { useQuery } from '@apollo/client';
 
-function Attributes(props) {
+const { Panel } = Collapse;
+
+function TraitAttribute(props) {
+  const { traitAttribute } = props;
+  const attributeValue = traitAttribute.mergedAttribute.attribute.value;
+  return <Row>
+      <Col span={6}>{traitAttribute.identifier}</Col>
+      <Col style={{ flexGrow: 1 }}>
+        <EditableAttributeValue isEditable={false} values={attributeValue.values} type={attributeValue.type} isArray={attributeValue.isArray} />
+      </Col>
+    </Row>;
+}
+
+function TraitAttributes(props) {
+  const { traitAttributes } = props;
+  if (traitAttributes.length <= 0)
+    return <Text disabled>No trait attributes</Text>;
   return <>
-    <h4 style={{margin: '0px', paddingLeft: '15px'}}>Attributes:</h4>
-    {props.attributes.map(a => (<div key={a.attribute.name} style={{paddingLeft: '30px'}}>
-    <div>{a.attribute.name}</div>
-    <ReactJson collapsed={0} name={false} src={_.pick(a.attribute.value, ['type', 'isArray', 'values'])} enableClipboard={false} />
-    </div>))}
+    {traitAttributes.map(a => <TraitAttribute key={a.identifier} traitAttribute={a} />)}
   </>;
 }
 
-// function DependentTraits(props) {
-//   return <>
-//     <h5 style={{margin: '0px', paddingLeft: '15px'}}>Dependent Traits:</h5>
-//     {props.dependentTraits.map(dt => (<div key={dt} style={{paddingLeft: '30px'}}>
-//       {dt}
-//     </div>))}
-//     </>;
-// }
+function TraitRelation(props) {
+  const { traitRelation, predicates } = props;
+  return <Row>
+      <Col span={6}>{traitRelation.identifier}</Col>
+      <Col style={{ flexGrow: 1 }}>
+        {traitRelation.relatedCIs.map(related => <RelatedCIText key={related.relationID} related={related} predicates={predicates} />)}
+      </Col>
+    </Row>;
+}
+
+function TraitRelations(props) {
+  const { traitRelations, predicates } = props;
+  if (traitRelations.length <= 0)
+    return <Text disabled>No trait relations</Text>;
+  return <>
+    {traitRelations.map(r => <TraitRelation key={r.identifier} traitRelation={r} predicates={predicates} />)}
+  </>;
+}
 
 function EffectiveTraits(props) {
-  return <div>
+
+  const { data: dataPredicates } = useQuery(queries.PredicateList, { variables: {} });
+
+  return <Collapse defaultActiveKey={[]} ghost>
       {props.traits.map((t, index) => {
-        // TODO: show required relations
-        return (<div key={index} style={{marginBottom: '30px'}}>
-          <h3 style={{margin: '0px'}}>{t.underlyingTrait.id}:</h3>
-          
-          {t.attributes.length > 0 && <Attributes attributes={t.attributes} />}
-          {/* TODO: relations, etc. */}
-          {/* {t.dependentTraits.length > 0 && <DependentTraits dependentTraits={t.dependentTraits} />} */}
-        </div>);
+        return <Panel header={t.underlyingTrait.id} key={index}>
+          <h4 style={{margin: '0px', paddingLeft: '15px'}}>Trait Attributes:</h4>
+          <div style={{paddingLeft: '30px'}}>
+            <TraitAttributes traitAttributes={t.traitAttributes} />
+          </div>
+          <h4 style={{margin: '0px', paddingLeft: '15px'}}>Trait Relations:</h4>
+          <div style={{paddingLeft: '30px'}}>
+            <TraitRelations traitRelations={t.traitRelations} predicates={dataPredicates?.predicates} />
+          </div>
+        </Panel>;
       })}
-    </div>;
+    </Collapse>;
 }
 
 export default EffectiveTraits;
