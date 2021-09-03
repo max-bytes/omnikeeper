@@ -26,6 +26,7 @@ export default function ManageTraits() {
           requiredAttributes: JSON.stringify(rt.requiredAttributes.map(e => JSON.parse(e))), // TODO
           optionalAttributes: JSON.stringify(rt.optionalAttributes.map(e => JSON.parse(e))), // TODO
           requiredRelations: JSON.stringify(rt.requiredRelations.map(e => JSON.parse(e))), // TODO
+          optionalRelations: JSON.stringify(rt.optionalRelations.map(e => JSON.parse(e))), // TODO
           requiredTraits: JSON.stringify(rt.requiredTraits),
         };
       })
@@ -46,6 +47,7 @@ export default function ManageTraits() {
     { headerName: "Required Attributes", field: "requiredAttributes" },
     { headerName: "Optional Attributes", field: "optionalAttributes" },
     { headerName: "Required Relations", field: "requiredRelations" },
+    { headerName: "Optional Relations", field: "optionalRelations" },
     { headerName: "Required Traits", field: "requiredTraits" },
   ];
 
@@ -60,6 +62,7 @@ export default function ManageTraits() {
           requiredAttributes: JSON.parse(row.requiredAttributes).map(e => JSON.stringify(e)),
           optionalAttributes: JSON.parse(row.optionalAttributes).map(e => JSON.stringify(e)),
           requiredRelations: JSON.parse(row.requiredRelations).map(e => JSON.stringify(e)),
+          optionalRelations: JSON.parse(row.optionalRelations).map(e => JSON.stringify(e)),
           requiredTraits: JSON.parse(row.requiredTraits),
         };
         return upsert({ variables: { trait: trait } })

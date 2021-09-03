@@ -6,20 +6,8 @@ import { Descriptions, Tabs } from "antd";
 import TraitID from "utils/TraitID";
 import CountBadge from "components/CountBadge";
 import ReactJson from "react-json-view";
-import _ from 'lodash';
 
 const { TabPane } = Tabs;
-
-function omitDeep(collection, excludeKeys) {
-    function omitFn(value) {
-      if (value && typeof value === 'object') {
-        excludeKeys.forEach((key) => {
-          delete value[key];
-        });
-      }
-    }
-    return _.cloneDeepWith(collection, omitFn);
-  }
 
 export default function Trait(props) {
     const { traitID } = useParams();
@@ -52,21 +40,28 @@ export default function Trait(props) {
                     tab={<CountBadge count={data.activeTrait.requiredAttributes.length}>Required Attributes</CountBadge>}
                     key="Required Attributes" disabled={data.activeTrait.requiredAttributes.length === 0}>
                         {data.activeTrait.requiredAttributes.map((r, index) => {
-                            return <ReactJson key={index} collapsed={false} name={false} src={omitDeep(JSON.parse(r), ["$type"])} enableClipboard={false} />
+                            return <ReactJson key={index} collapsed={false} name={false} src={JSON.parse(r)} enableClipboard={false} />
                         })}
                 </TabPane>
                 <TabPane 
                     tab={<CountBadge count={data.activeTrait.optionalAttributes.length}>Optional Attributes</CountBadge>}
                     key="Optional Attributes" disabled={data.activeTrait.optionalAttributes.length === 0}>
                         {data.activeTrait.optionalAttributes.map((r, index) => {
-                            return <ReactJson key={index} collapsed={false} name={false} src={omitDeep(JSON.parse(r), ["$type"])} enableClipboard={false} />
+                            return <ReactJson key={index} collapsed={false} name={false} src={JSON.parse(r)} enableClipboard={false} />
                         })}
                 </TabPane>
                 <TabPane 
                     tab={<CountBadge count={data.activeTrait.requiredRelations.length}>Required Relations</CountBadge>}
                     key="Required Relations" disabled={data.activeTrait.requiredRelations.length === 0}>
                         {data.activeTrait.requiredRelations.map((r, index) => {
-                            return <ReactJson key={index} collapsed={false} name={false} src={omitDeep(JSON.parse(r), ["$type"])} enableClipboard={false} />
+                            return <ReactJson key={index} collapsed={false} name={false} src={JSON.parse(r)} enableClipboard={false} />
+                        })}
+                </TabPane>
+                <TabPane 
+                    tab={<CountBadge count={data.activeTrait.optionalRelations.length}>Optional Relations</CountBadge>}
+                    key="Optional Relations" disabled={data.activeTrait.optionalRelations.length === 0}>
+                        {data.activeTrait.optionalRelations.map((r, index) => {
+                            return <ReactJson key={index} collapsed={false} name={false} src={JSON.parse(r)} enableClipboard={false} />
                         })}
                 </TabPane>
             </Tabs>

@@ -87,7 +87,7 @@ namespace Omnikeeper.Base.Entity
         [ProtoMember(4)] public readonly TraitAttribute[] OptionalAttributes = Array.Empty<TraitAttribute>();
         [ProtoMember(5)] public readonly string[] RequiredTraits = Array.Empty<string>();
         [ProtoMember(6)] public readonly TraitRelation[] RequiredRelations = Array.Empty<TraitRelation>();
-        // TODO: implement optional relations
+        [ProtoMember(7)] public readonly TraitRelation[] OptionalRelations = Array.Empty<TraitRelation>();
 
 #pragma warning disable CS8618
         private RecursiveTrait() { }
@@ -97,6 +97,7 @@ namespace Omnikeeper.Base.Entity
             IEnumerable<TraitAttribute>? requiredAttributes = null,
             IEnumerable<TraitAttribute>? optionalAttributes = null,
             IEnumerable<TraitRelation>? requiredRelations = null,
+            IEnumerable<TraitRelation>? optionalRelations = null,
             IEnumerable<string>? requiredTraits = null)
         {
             ID = id;
@@ -104,6 +105,7 @@ namespace Omnikeeper.Base.Entity
             RequiredAttributes = requiredAttributes?.ToArray() ?? new TraitAttribute[0];
             OptionalAttributes = optionalAttributes?.ToArray() ?? new TraitAttribute[0];
             RequiredRelations = requiredRelations?.ToArray() ?? new TraitRelation[0];
+            OptionalRelations = optionalRelations?.ToArray() ?? new TraitRelation[0];
             RequiredTraits = requiredTraits?.ToArray() ?? new string[0];
         }
 

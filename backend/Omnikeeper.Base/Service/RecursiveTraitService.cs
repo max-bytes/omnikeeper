@@ -55,8 +55,9 @@ namespace Omnikeeper.Base.Service
             var requiredAttributes = trait.RequiredAttributes.Concat(flattenedDependencies.SelectMany(d => d.RequiredAttributes));
             var optionalAttributes = trait.OptionalAttributes.Concat(flattenedDependencies.SelectMany(d => d.OptionalAttributes));
             var requiredRelations = trait.RequiredRelations.Concat(flattenedDependencies.SelectMany(d => d.RequiredRelations));
+            var optionalRelations = trait.OptionalRelations.Concat(flattenedDependencies.SelectMany(d => d.OptionalRelations));
             var ancestorTraits = trait.RequiredTraits.Concat(flattenedDependencies.SelectMany(d => d.AncestorTraits)).ToHashSet();
-            var flattenedTrait = GenericTrait.Build(trait.ID, trait.Origin, requiredAttributes, optionalAttributes, requiredRelations, ancestorTraits);
+            var flattenedTrait = GenericTrait.Build(trait.ID, trait.Origin, requiredAttributes, optionalAttributes, requiredRelations, optionalRelations, ancestorTraits);
 
             flattened.Add(trait.ID, flattenedTrait);
 

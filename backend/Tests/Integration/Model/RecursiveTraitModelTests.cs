@@ -52,6 +52,7 @@ namespace Tests.Integration.Model
                     new List<TraitAttribute>() { new TraitAttribute("test_ta", CIAttributeTemplate.BuildFromParams("test_a", Omnikeeper.Entity.AttributeValues.AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))) },
                     new List<TraitAttribute>() { },
                     new List<TraitRelation>() { },
+                    new List<TraitRelation>() { },
                     new List<string>() { },
                     new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
                     new DataOriginV1(DataOriginType.Manual), changesetProxy1, trans);
