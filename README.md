@@ -28,7 +28,7 @@
 
 ## About
 
-To Do
+omnikeeper is a general-purpose and highly flexible data store solution and application framework
 
 ## Getting Started
 
