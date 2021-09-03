@@ -145,6 +145,7 @@ namespace Omnikeeper.GraphQL
         public string[] RequiredAttributes { get; private set; }
         public string[] OptionalAttributes { get; private set; }
         public string[] RequiredRelations { get; private set; }
+        public string[] OptionalRelations { get; private set; }
         public string[] RequiredTraits { get; private set; }
     }
     public class UpsertRecursiveTraitInputType : InputObjectGraphType<UpsertRecursiveTraitInput>
@@ -155,6 +156,7 @@ namespace Omnikeeper.GraphQL
             Field(x => x.RequiredAttributes);
             Field(x => x.OptionalAttributes);
             Field(x => x.RequiredRelations);
+            Field(x => x.OptionalRelations);
             Field(x => x.RequiredTraits);
         }
     }

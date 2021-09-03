@@ -50,6 +50,7 @@ export const queries = {
                 requiredAttributes
                 optionalAttributes
                 requiredRelations
+                optionalRelations
             }
         }
     `,

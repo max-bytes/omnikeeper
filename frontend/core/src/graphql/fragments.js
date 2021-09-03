@@ -147,6 +147,7 @@ export const Fragments = {
     requiredAttributes,
     optionalAttributes,
     requiredRelations,
+    optionalRelations,
     requiredTraits
   }
   `,

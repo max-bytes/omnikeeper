@@ -289,9 +289,25 @@ namespace Omnikeeper.Model
                             return (traitAttributeIdentifier, foundAttribute, checks);
                         }).Where(t => t.checks.Errors.IsEmpty());
 
+                        // add optional traitRelations
+                        IEnumerable<(string traitRelationIdentifier, IEnumerable<CompactRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)> optionalEffectiveTraitRelations = 
+                            new(string traitRelationIdentifier, IEnumerable < CompactRelatedCI > relatedCIs, TemplateErrorsRelation checks)[0];
+                        if (tt.OptionalRelations.Count > 0) 
+                        {
+                            // TODO: consider batching up fetching of related CIs... fetching them one-by-one is TOUGH on performance
+                            var allCompactRelatedCIs = await RelationService.GetCompactRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, null, trans, atTime);
+                            optionalEffectiveTraitRelations = tt.OptionalRelations.Select(tr =>
+                            {
+                                var traitRelationIdentifier = tr.Identifier;
+                                var relatedCIs = allCompactRelatedCIs.Where(rci => rci.PredicateID == tr.RelationTemplate.PredicateID);
+                                var checks = TemplateCheckService.CalculateTemplateErrorsRelation(relatedCIs, tr.RelationTemplate);
+                                return (traitRelationIdentifier, relatedCIs, checks);
+                            }).Where(t => t.checks.Errors.IsEmpty());
+                        }
+
                         var resolvedET = new EffectiveTrait(tt,
                             requiredEffectiveTraitAttributes.Concat(optionalEffectiveTraitAttributes).ToDictionary(t => t.traitAttributeIdentifier, t => t.foundAttribute!),
-                            requiredEffectiveTraitRelations.ToDictionary(t => t.traitRelationIdentifier, t => t.mergedRelatedCIs));
+                            requiredEffectiveTraitRelations.Concat(optionalEffectiveTraitRelations).ToDictionary(t => t.traitRelationIdentifier, t => t.mergedRelatedCIs));
                         return resolvedET;
                     }
                     else

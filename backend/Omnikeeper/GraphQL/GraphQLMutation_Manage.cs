@@ -353,6 +353,7 @@ namespace Omnikeeper.GraphQL
                   var requiredAttributes = trait.RequiredAttributes.Select(str => TraitAttribute.Serializer.Deserialize(str));
                   var optionalAttributes = trait.OptionalAttributes?.Select(str => TraitAttribute.Serializer.Deserialize(str));
                   var requiredRelations = trait.RequiredRelations?.Select(str => TraitRelation.Serializer.Deserialize(str));
+                  var optionalRelations = trait.OptionalRelations?.Select(str => TraitRelation.Serializer.Deserialize(str));
 
                   var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
@@ -365,7 +366,7 @@ namespace Omnikeeper.GraphQL
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
                   var newTrait = await traitModel.InsertOrUpdate(
-                      trait.ID, requiredAttributes, optionalAttributes, requiredRelations, trait.RequiredTraits,
+                      trait.ID, requiredAttributes, optionalAttributes, requiredRelations, optionalRelations, trait.RequiredTraits,
                       new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       changesetProxy, transaction);
