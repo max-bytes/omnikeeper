@@ -29,7 +29,7 @@ jobs:
           ConnectionStrings__DatabaseConnection: Server=localhost;Port=5432;User Id=postgres;Password=postgres;Database=omnikeeper_tests;Pooling=false
         run: |
           cd backend
-          dotnet run --project .\PerfTests\ -c Release -- --job short --runtimes netcoreapp31 --filter *SearchForMergedCIsByTraits* --exporters json
+          dotnet run --project ./PerfTests -c Release -- --job short --runtimes netcoreapp31 --filter *SearchForMergedCIsByTraits* --exporters json
       - name: Store benchmark result
         uses: Happypig375/github-action-benchmark@v1
         with:
