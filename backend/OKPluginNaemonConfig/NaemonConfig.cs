@@ -5,6 +5,8 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace OKPluginNaemonConfig
@@ -22,6 +24,11 @@ namespace OKPluginNaemonConfig
             this.relationModel = relationModel;
             this.traitModel = traitModel;
         }
+
+        private List<string> loadcmdbcustomer = new List<string>() { "ADISSEO", "AGRANA", "AMS", "AMSINT", "ANDRITZ", "ATS", "AVESTRA", "AWS" };
+
+        // this is only temporary since this should be readed from configuration
+        private List<string> naemonsConfigGenerateprofiles = new List<string>(){ "svphg200mon001", "svphg200mon002", "uansvclxnaemp01", "uansvclxnaemp02", "uansvclxnaemp03", "uansvclxnaemp04", "uansvclxnaemp05", "uansvclxnaemp06" };
         public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start naemonConfig");
@@ -29,18 +36,145 @@ namespace OKPluginNaemonConfig
             //attributeModel
             var timeThreshold = TimeThreshold.BuildLatest();
             var layerset = await layerModel.BuildLayerSet(new[] { "testlayer01" }, trans);
-            var attrName = "monman-instance.id";
+
 
             // no need for this we can add a trait as Max suggested
-            var attributesDict = await attributeModel.FindMergedAttributesByFullName(attrName, new AllCIIDsSelection(), layerset, trans, timeThreshold);
+            //var attributesDict = await attributeModel.FindMergedAttributesByFullName(attrName, new AllCIIDsSelection(), layerset, trans, timeThreshold);
             // Since attributesDict returns all attributes which have name monman-instance.id we need to group  
             // based on id value, this means that for earch item we need to create a configuration
-            foreach (var attribute in attributesDict)
+            //foreach (var attribute in attributesDict)
+            //{
+
+            //}
+
+            var naemonInstances = await traitModel.CalculateEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+
+            //foreach (var instance in naemonInstances)
+            //{
+            //    //$id = $agent['ID'];
+            //    var ci = instance.Value.ci;
+            //    var instanceIdattrName = "monman-instance.id";
+
+            //    var agent = ci.MergedAttributes;
+
+            //    MergedCIAttribute id;
+
+            //    var success = ci.MergedAttributes.TryGetValue(instanceIdattrName, out id!);
+
+            //    if (!success)
+            //    {
+            //        // log an error here
+            //        break;
+            //    }
+
+            //    var naemonInstanceId = id.Attribute.Value.Value2String();
+
+            //    var ciData = new List<TraitAttribute>();
+            //    // $generateConfig and $isSpecialNode
+
+            //    // get hosts and service traits
+
+            //    var hCis = await traitModel.CalculateEffectiveTraitsForTrait(Traits.HCisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            //    var aCis = await traitModel.CalculateEffectiveTraitsForTrait(Traits.ACisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+
+            //    // we need to filter hCis and aCis based on loadcmdbcustomer list 
+            //    // convert these two lists to one ciData list
+            //    var hMergedCis = new List<MergedCI>();
+            //    var aMergedCis = new List<MergedCI>();
+
+            //    foreach (var el in hCis)
+            //    {
+            //        (MergedCI elCi, _) = el.Value;
+
+            //        var s = elCi.MergedAttributes.TryGetValue("cmdb.customer", out MergedCIAttribute? cmdbCustomer);
+
+            //        // check if cmd.customer is in the loadcmdbcustomer list
+            //        var v = cmdbCustomer!.Attribute.Value.Value2String();
+            //        if (s && loadcmdbcustomer.Contains(v!))
+            //        {
+            //            hMergedCis.Add(elCi); // now this list contins filtered mergedCis  based on loadcmdbcustomer list
+            //        }
+            //    }
+
+            //    foreach (var el in aCis)
+            //    {
+            //        (MergedCI elCi, _) = el.Value;
+            //        var s = elCi.MergedAttributes.TryGetValue("SVCCUSTOMER", out MergedCIAttribute? svcCustomer); // this attribute looks like is missing after the data is transformed to omnikeeper?
+            //        var v = svcCustomer!.Attribute.Value.Value2String();
+            //        if (s && loadcmdbcustomer.Contains(v!))
+            //        {
+            //            aMergedCis.Add(elCi); // now this list contins filtered mergedCis  based on loadcmdbcustomer list
+            //        }
+            //    }
+
+            //    // now we need to check what addToNormalizedCiDataFromBaseData() function returns
+
+            //    // now we have ci data that is returned by getNormalizedCiBaseData() function on php project
+
+            //}
+
+
+            var naemonIds = new List<string>();
+
+            var naemonModules = await traitModel.CalculateEffectiveTraitsForTrait(Traits.NaemonModulesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+
+            //$profileFromDbNaemons = [];
+            // get db enabled naemons
+            var profileFromDbNaemons = new List<MergedCI>();
+            foreach (var naemon in naemonInstances)
+            {
+                // we need to check here if isNaemonProfileFromDbEnabled 
+                (MergedCI ci, EffectiveTrait et) = naemon.Value;
+
+                var success = ci.MergedAttributes.TryGetValue("monman-instance.name", out MergedCIAttribute? instanceNameAttribute);
+
+                if (!success)
+                {
+                    continue;
+                }
+
+                var instanceName = instanceNameAttribute!.Attribute.Value.Value2String();
+
+                if (naemonsConfigGenerateprofiles.Contains(instanceName))
+                {
+                    profileFromDbNaemons.Add(ci);
+                }
+            }
+
+            // getCapabilityMap - NaemonInstancesTagsFlattened
+
+            var naemonInstancesTags = await traitModel.CalculateEffectiveTraitsForTrait(Traits.NaemonInstancesTagsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+
+            var capMap = new List<MergedCI>();
+
+            foreach (var instanceTag in naemonInstancesTags)
+            {
+                (MergedCI ci, _) = instanceTag.Value;
+
+                var success = ci.MergedAttributes.TryGetValue("monman-instance_tag.tag", out MergedCIAttribute? instanceTagAttribute);
+
+                if (!success)
+                {
+                    continue;
+                }
+
+                var tag = instanceTagAttribute!.Attribute.Value.Value2String();
+
+                if (tag.StartsWith("cap_"))
+                {
+                    capMap.Add(ci);
+                }
+            }
+
+            var naemonProfiles = await traitModel.CalculateEffectiveTraitsForTrait(Traits.NaemonProfilesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+
+            /* extend capMap */
+
+            foreach (var profile in naemonProfiles)
             {
 
             }
 
-            //traitModel.CalculateEffectiveTraitsForTrait
 
             return true;
         }

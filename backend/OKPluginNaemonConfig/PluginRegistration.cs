@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.CLB;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Plugins;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,6 @@ namespace OKPluginNaemonConfig
             sc.AddSingleton<IComputeLayerBrain, NaemonConfig>();
         }
 
-        //public override IEnumerable<RecursiveTrait> DefinedTraits => Traits.RecursiveTraits;
+        public override IEnumerable<RecursiveTrait> DefinedTraits => Traits.RecursiveTraits;
     }
 }
