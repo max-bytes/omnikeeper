@@ -2,10 +2,10 @@
 name: run-perf-tests
 
 on: 
-  #workflow_dispatch: # TODO: related issue: https://github.com/rhysd/github-action-benchmark/issues/73
-  push:
-    branches:
-      - master
+  workflow_dispatch: # TODO: related issue: https://github.com/rhysd/github-action-benchmark/issues/73
+  #push:
+  #  branches:
+  #    - master
 
 jobs:
   tests:
@@ -39,6 +39,6 @@ jobs:
         with:
             tool: 'benchmarkdotnet'
             output-file-path: backend/BenchmarkDotNet.Artifacts/results/PerfTests.SearchForMergedCIsByTraitsTest-report-full-compressed.json
-            gh-pages-branch: master
+            gh-pages-branch: master # TODO: related issue: https://github.com/rhysd/github-action-benchmark/issues/51
             benchmark-data-dir-path: docs/benchmarks
 
