@@ -73,12 +73,6 @@ namespace Omnikeeper.Controllers.Ingest
                 if (files.IsEmpty())
                     return BadRequest($"No files specified");
 
-                // TODO: think about maybe requiring specific file(name)s and making that configurable
-                var fileStreams = files.Select<IFormFile, (Func<Stream> stream, string filename)>(f => (
-                   () => f.OpenReadStream(),
-                   Path.GetFileName(f.FileName) // stripping path for security reasons: https://docs.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads?view=aspnetcore-3.1#upload-small-files-with-buffered-model-binding-to-physical-storage-1
-               ));
-
                 var searchLayers = new LayerSet(ctx.LoadConfig.SearchLayerIDs);
                 var writeLayer = await layerModel.GetLayer(ctx.LoadConfig.WriteLayerID, mc);
                 if (writeLayer == null)
@@ -95,6 +89,13 @@ namespace Omnikeeper.Controllers.Ingest
                 }
                 // NOTE: we don't do any ci-based authorization here... its pretty hard to do because of all the temporary CIs
                 // TODO: think about this!
+
+
+                // TODO: think about maybe requiring specific file(name)s and making that configurable
+                var fileStreams = files.Select<IFormFile, (Func<Stream> stream, string filename)>(f => (
+                   () => f.OpenReadStream(),
+                   Path.GetFileName(f.FileName) // stripping path for security reasons: https://docs.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads?view=aspnetcore-3.1#upload-small-files-with-buffered-model-binding-to-physical-storage-1
+               ));
 
                 GenericInboundData genericInboundData;
                 switch (ctx.TransformConfig)
