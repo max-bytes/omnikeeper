@@ -2,7 +2,10 @@
 name: run-perf-tests
 
 on: 
-  workflow_dispatch:
+  #workflow_dispatch: # TODO: related issue: https://github.com/rhysd/github-action-benchmark/issues/73
+  push:
+    branches:
+      - master
 
 jobs:
   tests:
