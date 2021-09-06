@@ -140,6 +140,8 @@ namespace Omnikeeper.Model
         public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var readTS = TimeThreshold.BuildLatest();
+
+            // consider ALL relevant attributes as outdated first
             var outdatedAttributes = (data switch
             { // TODO: performance improvements when data.NamePrefix is empty?
                 BulkCIAttributeDataLayerScope d => (await FindAttributesByName($"^{data.NamePrefix}", new AllCIIDsSelection(), data.LayerID, returnRemoved: true, trans, readTS)),
@@ -181,6 +183,11 @@ namespace Omnikeeper.Model
                 var attributeID = Guid.NewGuid();
                 actualInserts.Add((ciid, fullName, value, state, attributeID, currentAttribute.attribute?.ID));
             }
+
+            // the list of outdatedAttributes now contains only attributes that need to be removed
+            // BUT: the list of outdatedAttributes also can contain attributes whose state == "removed"
+            // those cases we can ignore because they do not need to be removed anymore, so we remove them from the list too
+            outdatedAttributes = outdatedAttributes.Where(t => t.Value.attribute.State != AttributeState.Removed).ToDictionary(t => t.Key, t => t.Value);
 
             // changeset is only created and copy mode is only entered when there is actually anything inserted
             if (!actualInserts.IsEmpty() || !outdatedAttributes.IsEmpty())
