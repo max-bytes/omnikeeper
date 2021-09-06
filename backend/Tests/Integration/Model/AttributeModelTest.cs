@@ -19,7 +19,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestAddingUpdatingRemovingAndRenewingOfAttributes()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var model = new CIModel(attributeModel, new CIIDModel());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
@@ -114,7 +114,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             var transI = ModelContextBuilder.BuildImmediate();
@@ -159,7 +159,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             var transI = ModelContextBuilder.BuildImmediate();
@@ -194,7 +194,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             var transI = ModelContextBuilder.BuildImmediate();
@@ -270,7 +270,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             using var trans = ModelContextBuilder.BuildDeferred();
@@ -299,7 +299,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             using var trans = ModelContextBuilder.BuildDeferred();
@@ -345,7 +345,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             using var trans = ModelContextBuilder.BuildDeferred();
@@ -390,7 +390,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var model = new CIModel(attributeModel, new CIIDModel());
             var layerModel = new LayerModel();
             using var trans = ModelContextBuilder.BuildDeferred();

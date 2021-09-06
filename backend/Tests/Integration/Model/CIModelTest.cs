@@ -17,7 +17,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestGetCIs()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var model = new CIModel(attributeModel, new CIIDModel());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
@@ -77,7 +77,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestLayerSets()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var model = new CIModel(attributeModel, new CIIDModel());
@@ -118,7 +118,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestRemoveShowsLayerBelow()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var model = new CIModel(attributeModel, new CIIDModel());

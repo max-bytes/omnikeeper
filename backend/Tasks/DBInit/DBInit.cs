@@ -35,7 +35,7 @@ namespace Tasks.DBInit
 
             var partitionModel = new PartitionModel();
             var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
-            var baseAttributeModel = new BaseAttributeModel(partitionModel);
+            var baseAttributeModel = new BaseAttributeModel(partitionModel, new CIIDModel());
             var attributeModel = new AttributeModel(baseAttributeModel);
             var baseRelationModel = new BaseRelationModel(partitionModel);
             var ciModel = new CIModel(attributeModel, new CIIDModel());

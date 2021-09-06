@@ -98,7 +98,7 @@ namespace Tests.Integration.Model
             var oap = new Mock<IOnlineAccessProxy>();
             oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<string>(), It.IsAny<IModelContext>())).ReturnsAsync(false);
             oap.Setup(_ => _.ContainsOnlineInboundLayer(It.IsAny<LayerSet>(), It.IsAny<IModelContext>())).ReturnsAsync(false);
-            var decoratedBaseAttributeModel = new TraitCacheInvalidationBaseAttributeModel(new BaseAttributeModel(new PartitionModel()), baseConfigurationModel, cache);
+            var decoratedBaseAttributeModel = new TraitCacheInvalidationBaseAttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()), baseConfigurationModel, cache);
             var attributeModel = new AttributeModel(decoratedBaseAttributeModel);
 
             var ciModel = new CIModel(attributeModel, new CIIDModel());

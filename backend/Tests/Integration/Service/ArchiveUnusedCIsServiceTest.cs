@@ -19,7 +19,7 @@ namespace Tests.Integration.Service
         [Test]
         public async Task TestArchiveUnusedCIs()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var model = new CIModel(attributeModel, new CIIDModel());
