@@ -11,19 +11,24 @@ namespace Omnikeeper.Model
     {
         public async Task<int> DeleteAllAttributes(string layerID, IModelContext trans)
         {
-            var query = @"delete from attribute a where a.layer_id = @layer_id";
+            using var commandLatest = new NpgsqlCommand(@"delete from attribute_latest a where a.layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
+            commandLatest.Parameters.AddWithValue("layer_id", layerID);
+            commandLatest.Prepare();
+            await commandLatest.ExecuteNonQueryAsync();
 
-            using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
-            command.Parameters.AddWithValue("layer_id", layerID);
-            command.Prepare();
+            using var commandHistoric = new NpgsqlCommand(@"delete from attribute a where a.layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
+            commandHistoric.Parameters.AddWithValue("layer_id", layerID);
+            commandHistoric.Prepare();
 
-            var numDeleted = await command.ExecuteNonQueryAsync();
+            var numDeleted = await commandHistoric.ExecuteNonQueryAsync();
 
             return numDeleted;
         }
 
         public async Task<int> DeleteOutdatedAttributesOlderThan(string layerID, IModelContext trans, DateTimeOffset threshold, TimeThreshold atTime)
         {
+            // TODO: this fails to consider attributes with state "removed"!
+            // and it also does not affect the attribute_latest table, which it SHOULD affect in case of removed attributes
             var query = @"DELETE FROM attribute
 	                WHERE timestamp < @delete_threshold
                     AND id NOT IN (

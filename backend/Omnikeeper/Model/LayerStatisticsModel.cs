@@ -12,6 +12,7 @@ namespace Omnikeeper.Model
         public async Task<long> GetActiveAttributes(Layer layer, IModelContext trans)
         {
             // return number of all active attributes
+            // TODO: rework to use attribute_latest table
             using var commandActiveLayers = new NpgsqlCommand($@"
                 SELECT COUNT(*)
                 FROM 

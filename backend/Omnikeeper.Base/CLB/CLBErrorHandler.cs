@@ -36,7 +36,7 @@ namespace Omnikeeper.Base.CLB
         // TODO: rewrite into using bulk replace?
         public async Task RemoveOutdatedErrors()
         {
-            var allAttributes = await attributeModel.FindAttributesByName($"^{AttributeNamePrefix}", new AllCIIDsSelection(), clbLayerID, trans, TimeThreshold.BuildLatest());
+            var allAttributes = await attributeModel.FindAttributesByName($"^{AttributeNamePrefix}", new AllCIIDsSelection(), clbLayerID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
 
             var attributesToRemove = allAttributes.Where(a =>
             {

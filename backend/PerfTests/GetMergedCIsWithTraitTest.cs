@@ -9,6 +9,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Model;
 using Omnikeeper.Model.Decorators;
 using System;
 using System.Collections.Generic;
@@ -27,6 +28,7 @@ namespace PerfTests
         [Benchmark]
         public async Task GetMergedCIsWithTrait()
         {
+            BaseAttributeModel._USE_LATEST_TABLE = UseLatestTable;
             using var mc = modelContextBuilder!.BuildImmediate();
             var ciSelection = (SpecificCIs) ? selectedCIIDs : new AllCIIDsSelection();
             (await effectiveTraitModel!.GetMergedCIsWithTrait(trait!, layerset!, ciSelection!, mc, time)).Consume(consumer);
@@ -48,7 +50,7 @@ namespace PerfTests
 
         [ParamsSource(nameof(AttributeCITuples))]
         public (int numCIs, int numAttributeInserts, int numLayers, int numDataTransactions) AttributeCITuple { get; set; }
-        public IEnumerable<(int numCIs, int numAttributeInserts, int numLayers, int numDataTransactions)> AttributeCITuples => new[] { 
+        public IEnumerable<(int numCIs, int numAttributeInserts, int numLayers, int numDataTransactions)> AttributeCITuples => new[] {
             //(50, 500, 4, 1),
             (5000, 50000, 4, 1),
             //(100000, 1000000, 4, 1),
@@ -56,6 +58,9 @@ namespace PerfTests
 
         [Params(false)]
         public bool WithModelCaching { get; set; }
+
+        [Params(false, true)]
+        public bool UseLatestTable { get; set; }
 
         [Params(false, true)]
         public bool WithEffectiveTraitCaching { get; set; }
@@ -114,12 +119,6 @@ namespace PerfTests
             // SET random_page_cost = 1.1;
             // produces much better results as the indices are used more often by the query planer, at least in test scenarios
             // further research required, also see https://www.postgresql.org/docs/12/runtime-config-query.html#RUNTIME-CONFIG-QUERY-CONSTANTS
-        }
-
-        [Test]
-        public void RunBenchmark()
-        {
-            var summary = BenchmarkRunner.Run<GetMergedCIsWithTraitTest>();
         }
 
         [Test]
