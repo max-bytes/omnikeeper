@@ -428,22 +428,6 @@ namespace Tests.Integration.Model
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a2").Count());
             var a2 = await attributeModel.FindAttributesByName("^prefix2", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans3, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a2.Count());
-
-
-            // 
-            using var trans4 = ModelContextBuilder.BuildDeferred();
-            var changeset4 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-            await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", layer1.ID, new BulkCIAttributeDataLayerScope.Fragment[] {
-                new BulkCIAttributeDataLayerScope.Fragment("a1", new AttributeScalarValueText("textNew"), ciid1),
-                new BulkCIAttributeDataLayerScope.Fragment("a4", new AttributeScalarValueText("textNew2"), ciid2),
-                new BulkCIAttributeDataLayerScope.Fragment("a2", new AttributeScalarValueText("textNew2"), ciid2),
-                new BulkCIAttributeDataLayerScope.Fragment("a3", new AttributeScalarValueText("textNew2"), ciid1),
-                new BulkCIAttributeDataLayerScope.Fragment("a5", new AttributeScalarValueText("textNew2"), ciid1),
-                new BulkCIAttributeDataLayerScope.Fragment("a5", new AttributeScalarValueText("textNew2"), ciid2),
-            }), changeset4, new DataOriginV1(DataOriginType.Manual), trans4);
-            trans4.Commit();
-
-
         }
     }
 }
