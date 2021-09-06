@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
+﻿using BenchmarkDotNet.Running;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Npgsql;
+using NUnit.Framework;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -96,5 +98,11 @@ namespace PerfTests
         }
 
         protected ServiceProvider ServiceProvider => serviceProvider!;
+
+        [Test]
+        public void RunBenchmark()
+        {
+            var summary = BenchmarkRunner.Run<GetMergedAttributesTest>();
+        }
     }
 }

@@ -420,11 +420,13 @@ namespace Tests.Integration.Model
                 new BulkCIAttributeDataLayerScope.Fragment("a4", new AttributeScalarValueText("textNew"), ciid2),
                 new BulkCIAttributeDataLayerScope.Fragment("a2", new AttributeScalarValueText("textNew"), ciid2),
             }), changeset3, new DataOriginV1(DataOriginType.Manual), trans2);
+            trans2.Commit();
 
-            var a1 = await attributeModel.FindAttributesByName("^prefix1", new AllCIIDsSelection(), layer1.ID, trans2, TimeThreshold.BuildLatest());
+            using var trans3 = ModelContextBuilder.BuildImmediate();
+            var a1 = await attributeModel.FindAttributesByName("^prefix1", new AllCIIDsSelection(), layer1.ID, trans3, TimeThreshold.BuildLatest());
             Assert.AreEqual(3, a1.Count());
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a2").Count());
-            var a2 = await attributeModel.FindAttributesByName("^prefix2", new AllCIIDsSelection(), layer1.ID, trans2, TimeThreshold.BuildLatest());
+            var a2 = await attributeModel.FindAttributesByName("^prefix2", new AllCIIDsSelection(), layer1.ID, trans3, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, a2.Count());
         }
     }
