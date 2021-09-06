@@ -136,7 +136,7 @@ namespace Omnikeeper.Model
             var i = 0;
             foreach (var layerID in layers)
             {
-                var la = await baseModel.FindAttributesByName(regex, selection, layerID, trans, atTime);
+                var la = await baseModel.FindAttributesByName(regex, selection, layerID, returnRemoved: false, trans, atTime);
                 attributes[i++] = (la, layerID);
             }
 
@@ -207,9 +207,9 @@ namespace Omnikeeper.Model
             return await baseModel.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
-            return await baseModel.FindAttributesByName(regex, selection, layerID, trans, atTime);
+            return await baseModel.FindAttributesByName(regex, selection, layerID, returnRemoved, trans, atTime);
         }
 
         public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)

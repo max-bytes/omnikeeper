@@ -26,11 +26,11 @@ namespace Omnikeeper.Model.Decorators
             this.logger = logger;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
             // TODO: caching?
             logger.LogTrace("Cache Nope - FindAttributesByName");
-            return await model.FindAttributesByName(regex, selection, layerID, trans, atTime);
+            return await model.FindAttributesByName(regex, selection, layerID, returnRemoved, trans, atTime);
         }
 
         public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)

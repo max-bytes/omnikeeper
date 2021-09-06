@@ -198,7 +198,7 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
             NpgsqlCommand command;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
@@ -237,7 +237,7 @@ namespace Omnikeeper.Model
             while (dr.Read())
             {
                 var state = dr.GetFieldValue<AttributeState>(0);
-                if (state != AttributeState.Removed)
+                if (state != AttributeState.Removed || returnRemoved)
                 {
                     var id = dr.GetGuid(1);
                     var name = dr.GetString(2);

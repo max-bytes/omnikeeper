@@ -25,9 +25,9 @@ namespace Omnikeeper.Model.Decorators
             this.sp = sp;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
-            var @base = await model.FindAttributesByName(regex, selection, layerID, trans, atTime);
+            var @base = await model.FindAttributesByName(regex, selection, layerID, returnRemoved, trans, atTime);
             var generatorSelection = new GeneratorSelectionContainingRegexItemName(regex);
             @base = await MergeInGeneratedAttributes(@base, selection, generatorSelection, layerID, trans, atTime);
 
