@@ -126,6 +126,8 @@ namespace Omnikeeper.Model
                     // at first, we fetch the mergedCIs with the first requiredNonTrait
                     // then we "invert" the ciid-selection and get the mergedCIs for that selection
                     var excludedCIs = await traitModel.GetMergedCIsWithTrait(requiredNonTrait, layerSet, ciidSelection, trans, atTime);
+                    // TODO: implement traitModel.GetMergedCIIDsWithTrait() and use that -> that would allow us to use the cache (if present) and hit the database less
+                    // we only need the CIIDs anyway here
 
                     var workCIIDSelection = ciidSelection.Except(SpecificCIIDsSelection.Build(excludedCIs.Select(ci => ci.ID).ToHashSet()));
                     workCIs = await ciModel.GetMergedCIs(workCIIDSelection, layerSet, true, trans, atTime);
