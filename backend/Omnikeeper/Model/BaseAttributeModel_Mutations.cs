@@ -16,6 +16,9 @@ namespace Omnikeeper.Model
 {
     public partial class BaseAttributeModel
     {
+        // TODO: with the introduction of the latest table, consider using/enforcing a different transaction isolation level as the default "read committed" for modifications
+        // ("repeatable read" may be needed?)
+
         public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var readTS = TimeThreshold.BuildLatest();
