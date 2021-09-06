@@ -19,21 +19,19 @@ namespace Omnikeeper.Runners
         private readonly IExternalIDMapPersister externalIDMapPersister;
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
-        private readonly IPartitionModel partitionModel;
         private readonly IChangesetModel changesetModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly ILayerModel layerModel;
         private readonly IModelContextBuilder modelContextBuilder;
 
         public ArchiveOldDataRunner(ILogger<ArchiveOldDataRunner> logger, IExternalIDMapPersister externalIDMapPersister, 
-            IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel, IPartitionModel partitionModel,
+            IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
             IChangesetModel changesetModel, IBaseConfigurationModel baseConfigurationModel, ILayerModel layerModel, IModelContextBuilder modelContextBuilder)
         {
             this.logger = logger;
             this.externalIDMapPersister = externalIDMapPersister;
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
-            this.partitionModel = partitionModel;
             this.changesetModel = changesetModel;
             this.baseConfigurationModel = baseConfigurationModel;
             this.layerModel = layerModel;
@@ -96,14 +94,6 @@ namespace Omnikeeper.Runners
                 logger.LogInformation($"Archived {numArchivedCIs} CIs because they are unused");
             logger.LogDebug($"Done archiving unused CIs");
 
-
-            //logger.LogDebug($"Rebuilding latest tables");
-            //using (var trans = modelContextBuilder.BuildDeferred())
-            //{
-            //    await RebuildLatestTablesService.RebuildLatestAttributesTable(partitionModel, layerModel, trans);
-            //    trans.Commit();
-            //}
-            //logger.LogDebug($"Done rebuilding latest tables");
         }
 
         [MaximumConcurrentExecutions(1, timeoutInSeconds: 120)]

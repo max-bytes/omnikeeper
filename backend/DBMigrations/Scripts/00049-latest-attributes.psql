@@ -1,4 +1,3 @@
-
 CREATE TABLE public.attribute_latest
 (
     id uuid NOT NULL,
@@ -36,4 +35,3 @@ CREATE INDEX ON public.attribute_latest USING btree
 CREATE INDEX ON public.attribute_latest USING btree
     (layer_id ASC NULLS LAST, ci_id ASC NULLS LAST);
 
--- TODO: other indices?
