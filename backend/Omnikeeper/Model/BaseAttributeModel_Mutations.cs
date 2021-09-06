@@ -233,6 +233,9 @@ namespace Omnikeeper.Model
 
                 // latest
                 // new inserts
+                // NOTE: actual new inserts are only those that have a state == new, which must be equivalent to NOT having an entry in the latest table
+                // that allows us to do COPY insertion, because we guarantee that there are no unique constraint violations
+                // should this ever throw a unique constraint violation, means there is a bug and _latest and _historic are out of sync
                 var actualNewInserts = actualInserts.Where(t => t.state == AttributeState.New);
                 if (!actualNewInserts.IsEmpty())
                 {
