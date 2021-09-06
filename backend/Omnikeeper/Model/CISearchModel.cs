@@ -41,17 +41,13 @@ namespace Omnikeeper.Model
 
         public async Task<IEnumerable<CompactCI>> AdvancedSearchForCompactCIs(string searchString, string[] withEffectiveTraits, string[] withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
-            var ciSelection = await _AdvancedSearch(searchString, withEffectiveTraits, withoutEffectiveTraits, layerSet, trans, atTime);
-            if (ciSelection == null)
-                return ImmutableArray<CompactCI>.Empty;
-
-            var cis = await ciModel.GetCompactCIs(ciSelection, layerSet, trans, atTime);
+            var cis = await _AdvancedSearch(searchString, withEffectiveTraits, withoutEffectiveTraits, layerSet, trans, atTime);
 
             // HACK, properly sort unnamed CIs
             return cis.OrderBy(t => t.Name ?? "ZZZZZZZZZZZ");
         }
 
-        private async Task<ICIIDSelection?> _AdvancedSearch(string searchString, string[] withEffectiveTraits, string[] withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
+        private async Task<IEnumerable<CompactCI>> _AdvancedSearch(string searchString, string[] withEffectiveTraits, string[] withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             var finalSS = searchString.Trim();
             ICIIDSelection ciSelection;
@@ -61,7 +57,7 @@ namespace Omnikeeper.Model
                 if (await ciModel.CIIDExists(guid, trans))
                     ciSelection = SpecificCIIDsSelection.Build(guid);
                 else
-                    return null;
+                    return new CompactCI[0];
             }
             else if (finalSS.Length > 0)
             {
@@ -71,7 +67,7 @@ namespace Omnikeeper.Model
                     return CultureInfo.InvariantCulture.CompareInfo.IndexOf(kv.Value, searchString, CompareOptions.IgnoreCase) >= 0;
                 }).Select(kv => kv.Key).ToHashSet();
                 if (foundCIIDs.IsEmpty())
-                    return null;
+                    return new CompactCI[0];
                 ciSelection = SpecificCIIDsSelection.Build(foundCIIDs);
             }
             else
@@ -83,11 +79,13 @@ namespace Omnikeeper.Model
             {
                 var mergedCIs = await SearchForMergedCIsByTraits(ciSelection, withEffectiveTraits, withoutEffectiveTraits, layerSet, trans, atTime);
 
-                if (mergedCIs.IsEmpty())
-                    return null;
-                ciSelection = SpecificCIIDsSelection.Build(mergedCIs.Select(ci => ci.ID).ToHashSet());
+                return mergedCIs.Select(ci => CompactCI.BuildFromMergedCI(ci));
             }
-            return ciSelection;
+            else
+            {
+                var cis = await ciModel.GetCompactCIs(ciSelection, layerSet, trans, atTime);
+                return cis;
+            }
         }
 
         public async Task<IEnumerable<MergedCI>> SearchForMergedCIsByTraits(ICIIDSelection ciidSelection, string[] withEffectiveTraits, string[] withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
@@ -98,6 +96,15 @@ namespace Omnikeeper.Model
 
             if (ReduceTraitRequirements(ref requiredTraits, ref requiredNonTraits))
                 return ImmutableList<MergedCI>.Empty; // bail completely
+
+            // NOTE: depending on which traits are required and non-required, checking them in different orders can have a big impact on performance
+            // it makes sense to check for traits that reduce the working set the most first, because then later checks have it easier;
+            // consider developing a heuristic for checking which traits reduce the working set the most and check for those first
+            // this goes for both required and non-required traits
+            // the heuristic we choose for now... length of the trait's ID
+            // this is a really weird heuristic at first but it makes some sense given that the shorter a trait's ID is, the more likely it is very broad and generic
+            requiredTraits = requiredTraits.OrderByDescending(t => t.ID.Length);
+            requiredNonTraits = requiredNonTraits.OrderByDescending(t => t.ID.Length);
 
             IEnumerable<MergedCI>? workCIs = null;
             foreach (var requiredTrait in requiredTraits)
