@@ -29,8 +29,10 @@ namespace Omnikeeper.Model
         {
             // TODO: this fails to consider attributes with state "removed"!
             // and it also does not affect the attribute_latest table, which it SHOULD affect in case of removed attributes
+            // TODO: use latest table
             var query = @"DELETE FROM attribute
 	                WHERE timestamp < @delete_threshold
+                    AND layer_id = @layer_id
                     AND id NOT IN (
                         select distinct on(ci_id, name) id FROM attribute 
                         where timestamp <= @now and layer_id = @layer_id

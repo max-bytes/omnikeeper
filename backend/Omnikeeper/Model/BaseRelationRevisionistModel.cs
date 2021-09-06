@@ -26,6 +26,7 @@ namespace Omnikeeper.Model
         {
             var query = @"DELETE FROM relation
 	                WHERE timestamp < @delete_threshold
+                    AND layer_id = @layer_id
                     AND id NOT IN (
                         select distinct on(from_ci_id, to_ci_id, predicate_id) id FROM relation 
                         where timestamp <= @now and layer_id = @layer_id
