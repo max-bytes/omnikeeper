@@ -15,12 +15,13 @@ namespace Omnikeeper.Model
     public partial class BaseAttributeModel : IBaseAttributeModel
     {
         private readonly IPartitionModel partitionModel;
-
+        private readonly ICIIDModel ciidModel;
         public static bool _USE_LATEST_TABLE = true;
 
-        public BaseAttributeModel(IPartitionModel partitionModel)
+        public BaseAttributeModel(IPartitionModel partitionModel, ICIIDModel ciidModel)
         {
             this.partitionModel = partitionModel;
+            this.ciidModel = ciidModel;
         }
 
         public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
@@ -111,10 +112,34 @@ namespace Omnikeeper.Model
             };
         }
 
+        // NOTE: this exists because querying using AllCIIDsExceptSelection is very slow when the list of excluded CIIDs gets large
+        // that's why we - under certain circumstances - flip the selection and turn the AllCIIDsExceptSelection into a SpecificCIIDsSelection
+        private static readonly int CIIDSELECTION_ALL_EXCEPT_ABS_THRESHOLD = 100;
+        private static readonly float CIIDSELECTION_ALL_EXCEPT_PERCENTAGE_THRESHOLD = 0.5f;
+        private async Task<ICIIDSelection> OptimizeCIIDSelection(ICIIDSelection selection, IModelContext trans)
+        {
+            if (selection is AllCIIDsExceptSelection ae)
+            {
+                if (ae.ExceptCIIDs.Count >= CIIDSELECTION_ALL_EXCEPT_ABS_THRESHOLD)
+                {
+                    var allCIIDs = await ciidModel.GetCIIDs(trans);
+                    var allCIIDsCount = allCIIDs.Count();
+                    if (allCIIDsCount > 0 && (float)ae.ExceptCIIDs.Count / (float)allCIIDsCount >= CIIDSELECTION_ALL_EXCEPT_PERCENTAGE_THRESHOLD)
+                    {
+                        var specific = allCIIDs.Except(ae.ExceptCIIDs).ToHashSet();
+                        return SpecificCIIDsSelection.Build(specific);
+                    }
+                }
+            }
+
+            return selection;
+        }
+
         public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
-            NpgsqlCommand command;
+            selection = await OptimizeCIIDSelection(selection, trans);
 
+            NpgsqlCommand command;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
                 command = new NpgsqlCommand($@"
@@ -201,6 +226,8 @@ namespace Omnikeeper.Model
 
         public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
+            selection = await OptimizeCIIDSelection(selection, trans);
+
             NpgsqlCommand command;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
@@ -261,6 +288,8 @@ namespace Omnikeeper.Model
 
         public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
+            selection = await OptimizeCIIDSelection(selection, trans);
+
             NpgsqlCommand command;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
@@ -321,6 +350,8 @@ namespace Omnikeeper.Model
 
         public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
+            selection = await OptimizeCIIDSelection(selection, trans);
+
             // NOTE: re-using FindAttributesByFullName() because the custom implementation is not very different
             var attributes = await FindAttributesByFullName(ICIModel.NameAttribute, selection, layerID, trans, atTime);
             return attributes.ToDictionary(a => a.CIID, a => a.Value.Value2String());
@@ -328,6 +359,8 @@ namespace Omnikeeper.Model
 
         public async Task<IEnumerable<Guid>> FindCIIDsWithAttributeNameAndValue(string name, IAttributeValue value, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
+            selection = await OptimizeCIIDSelection(selection, trans);
+
             var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
 
             NpgsqlCommand command;
@@ -394,6 +427,8 @@ namespace Omnikeeper.Model
         // TODO: actually needed? check and remove if not
         public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
+            selection = await OptimizeCIIDSelection(selection, trans);
+
             NpgsqlCommand command;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
