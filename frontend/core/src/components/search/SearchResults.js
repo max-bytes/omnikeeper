@@ -23,6 +23,9 @@ export function SearchResults(props) {
                         flexGrow: "2",
                         fontWeight: "bold",
                         flexBasis: "0",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap"
                     }}
                 >
                     {result.name ?? "[UNNAMED]"}
