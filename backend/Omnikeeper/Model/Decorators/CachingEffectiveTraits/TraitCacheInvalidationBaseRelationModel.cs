@@ -75,9 +75,9 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return await model.GetRelationsOfChangeset(changesetID, trans);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
-            return await model.GetRelations(rl, layerID, trans, atTime);
+            return await model.GetRelations(rl, layerID, returnRemoved, trans, atTime);
         }
     }
 }

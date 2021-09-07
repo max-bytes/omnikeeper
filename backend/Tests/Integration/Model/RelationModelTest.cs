@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using FluentAssertions;
+using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
@@ -251,6 +252,13 @@ namespace Tests.Integration.Model
 
             var r1 = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(predicateID1), layerset, trans2, TimeThreshold.BuildLatest());
             Assert.AreEqual(4, r1.Count());
+            r1.Select(r => (r.Relation.PredicateID, r.Relation.FromCIID, r.Relation.ToCIID, r.Relation.State)).Should().BeEquivalentTo(new (string, Guid, Guid, RelationState)[]
+            {
+                (predicateID1, ciid1, ciid2, RelationState.New),
+                (predicateID1, ciid2, ciid1, RelationState.New),
+                (predicateID1, ciid3, ciid2, RelationState.New),
+                (predicateID1, ciid3, ciid1, RelationState.New),
+            });
         }
     }
 }

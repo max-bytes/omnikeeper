@@ -16,12 +16,14 @@ namespace Omnikeeper.Model
     {
         private readonly IPartitionModel partitionModel;
 
+        public static bool _USE_LATEST_TABLE = true;
+
         public BaseRelationModel(IPartitionModel partitionModel)
         {
             this.partitionModel = partitionModel;
         }
 
-        private NpgsqlCommand CreateRelationCommand(IRelationSelection rl, string layerID, DateTimeOffset partitionIndex, IModelContext trans, TimeThreshold atTime)
+        private async Task<NpgsqlCommand> CreateRelationCommand(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var innerWhereClauses = new List<string>();
             var parameters = new List<NpgsqlParameter>();
@@ -50,20 +52,37 @@ namespace Omnikeeper.Model
             }
             var innerWhereClause = string.Join(" AND ", innerWhereClauses);
             if (innerWhereClause == "") innerWhereClause = "1=1";
-            var query = $@"
+
+            NpgsqlCommand command;
+            if (atTime.IsLatest && _USE_LATEST_TABLE)
+            {
+                var query = $@"
+                select id, from_ci_id, to_ci_id, predicate_id, state, changeset_id from relation_latest
+                    where layer_id = @layer_id and ({innerWhereClause})
+                ";
+                command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
+                foreach (var p in parameters)
+                    command.Parameters.Add(p);
+                command.Parameters.AddWithValue("layer_id", layerID);
+                command.Prepare();
+            }
+            else
+            {
+                var query = $@"
                 select distinct on (from_ci_id, to_ci_id, predicate_id) id, from_ci_id, to_ci_id, predicate_id, state, changeset_id from relation 
                     where timestamp <= @time_threshold and ({innerWhereClause}) and layer_id = @layer_id 
                     and partition_index >= @partition_index
                     order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC NULLS LAST
-            "; // TODO: remove order by layer_id, but consider not breaking indices first
-
-            var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
-            foreach (var p in parameters)
-                command.Parameters.Add(p);
-            command.Parameters.AddWithValue("time_threshold", atTime.Time);
-            command.Parameters.AddWithValue("layer_id", layerID);
-            command.Parameters.AddWithValue("partition_index", partitionIndex);
-            command.Prepare();
+                "; // TODO: remove order by layer_id, but consider not breaking indices first
+                var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
+                command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
+                foreach (var p in parameters)
+                    command.Parameters.Add(p);
+                command.Parameters.AddWithValue("time_threshold", atTime.Time);
+                command.Parameters.AddWithValue("layer_id", layerID);
+                command.Parameters.AddWithValue("partition_index", partitionIndex);
+                command.Prepare();
+            }
             return command;
         }
 
@@ -95,12 +114,10 @@ namespace Omnikeeper.Model
             return new Relation(id, fromCIID, toCIID, predicateID, state, changesetID);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
-            var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
-
             var relations = new List<Relation>();
-            using (var command = CreateRelationCommand(rs, layerID, partitionIndex, trans, atTime))
+            using (var command = await CreateRelationCommand(rs, layerID, trans, atTime))
             {
                 using var dr = await command.ExecuteReaderAsync();
 
@@ -115,7 +132,7 @@ namespace Omnikeeper.Model
 
                     var relation = new Relation(id, fromCIID, toCIID, predicateID, state, changesetID);
 
-                    if (state != RelationState.Removed)
+                    if (state != RelationState.Removed || returnRemoved)
                         relations.Add(relation);
                 }
             }
@@ -152,44 +169,6 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-        {
-            var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, changesetProxy.TimeThreshold);
-
-            if (currentRelation == null)
-            {
-                // relation does not exist
-                throw new Exception("Trying to remove relation that does not exist");
-            }
-            if (currentRelation.State == RelationState.Removed)
-            {
-                // the relation is already removed, no-op(?)
-                return (currentRelation, false);
-            }
-
-            var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
-
-            using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp, partition_index) 
-                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp, @partition_index)", trans.DBConnection, trans.DBTransaction);
-
-            var changeset = await changesetProxy.GetChangeset(layerID, origin, trans);
-
-            var id = Guid.NewGuid();
-            command.Parameters.AddWithValue("id", id);
-            command.Parameters.AddWithValue("from_ci_id", fromCIID);
-            command.Parameters.AddWithValue("to_ci_id", toCIID);
-            command.Parameters.AddWithValue("predicate_id", predicateID);
-            command.Parameters.AddWithValue("layer_id", layerID);
-            command.Parameters.AddWithValue("state", RelationState.Removed);
-            command.Parameters.AddWithValue("changeset_id", changeset.ID);
-            command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
-            command.Parameters.AddWithValue("partition_index", partitionIndex);
-
-
-            await command.ExecuteNonQueryAsync();
-            return (new Relation(id, fromCIID, toCIID, predicateID, RelationState.Removed, changeset.ID), true);
-        }
-
         public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             if (fromCIID == toCIID)
@@ -213,44 +192,102 @@ namespace Omnikeeper.Model
             }
 
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
-
-            using var command = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp, partition_index) 
-                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp, @partition_index)", trans.DBConnection, trans.DBTransaction);
-
             var changeset = await changesetProxy.GetChangeset(layerID, origin, trans);
-
             var id = Guid.NewGuid();
-            command.Parameters.AddWithValue("id", id);
-            command.Parameters.AddWithValue("from_ci_id", fromCIID);
-            command.Parameters.AddWithValue("to_ci_id", toCIID);
-            command.Parameters.AddWithValue("predicate_id", predicateID);
-            command.Parameters.AddWithValue("layer_id", layerID);
-            command.Parameters.AddWithValue("state", state);
-            command.Parameters.AddWithValue("changeset_id", changeset.ID);
-            command.Parameters.AddWithValue("timestamp", changeset.Timestamp);
-            command.Parameters.AddWithValue("partition_index", partitionIndex);
 
-            await command.ExecuteNonQueryAsync();
+            using var commandHistoric = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp, partition_index) 
+                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp, @partition_index)", trans.DBConnection, trans.DBTransaction);
+            commandHistoric.Parameters.AddWithValue("id", id);
+            commandHistoric.Parameters.AddWithValue("from_ci_id", fromCIID);
+            commandHistoric.Parameters.AddWithValue("to_ci_id", toCIID);
+            commandHistoric.Parameters.AddWithValue("predicate_id", predicateID);
+            commandHistoric.Parameters.AddWithValue("layer_id", layerID);
+            commandHistoric.Parameters.AddWithValue("state", state);
+            commandHistoric.Parameters.AddWithValue("changeset_id", changeset.ID);
+            commandHistoric.Parameters.AddWithValue("timestamp", changeset.Timestamp);
+            commandHistoric.Parameters.AddWithValue("partition_index", partitionIndex);
+            await commandHistoric.ExecuteNonQueryAsync();
+
+            using var commandLatest = new NpgsqlCommand(@"INSERT INTO relation_latest (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp) 
+                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp)
+                ON CONFLICT ON CONSTRAINT predicate_from_ci_id_to_ci_id_layer_id DO UPDATE SET id = EXCLUDED.id, 
+                state = EXCLUDED.state, ""timestamp"" = EXCLUDED.""timestamp"", changeset_id = EXCLUDED.changeset_id", trans.DBConnection, trans.DBTransaction);
+            commandLatest.Parameters.AddWithValue("id", id);
+            commandLatest.Parameters.AddWithValue("from_ci_id", fromCIID);
+            commandLatest.Parameters.AddWithValue("to_ci_id", toCIID);
+            commandLatest.Parameters.AddWithValue("predicate_id", predicateID);
+            commandLatest.Parameters.AddWithValue("layer_id", layerID);
+            commandLatest.Parameters.AddWithValue("state", state);
+            commandLatest.Parameters.AddWithValue("changeset_id", changeset.ID);
+            commandLatest.Parameters.AddWithValue("timestamp", changeset.Timestamp);
+            await commandLatest.ExecuteNonQueryAsync();
+
             return (new Relation(id, fromCIID, toCIID, predicateID, state, changeset.ID), true);
         }
 
+        public async Task<(Relation relation, bool changed)> RemoveRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        {
+            var currentRelation = await GetRelation(fromCIID, toCIID, predicateID, layerID, trans, changesetProxy.TimeThreshold);
 
-        // NOTE: this bulk operation does not check if the relations that are inserted are "unique":
-        // it is possible to insert the "same" relation (same from_ciid, to_ciid, predicate_id and layer) multiple times
+            if (currentRelation == null)
+            {
+                // relation does not exist
+                throw new Exception("Trying to remove relation that does not exist");
+            }
+            if (currentRelation.State == RelationState.Removed)
+            {
+                // the relation is already removed, no-op(?)
+                return (currentRelation, false);
+            }
+
+            var changeset = await changesetProxy.GetChangeset(layerID, origin, trans);
+            var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
+
+            var id = Guid.NewGuid();
+
+            using var commandHistoric = new NpgsqlCommand(@"INSERT INTO relation (id, from_ci_id, to_ci_id, predicate_id, layer_id, state, changeset_id, timestamp, partition_index) 
+                VALUES (@id, @from_ci_id, @to_ci_id, @predicate_id, @layer_id, @state, @changeset_id, @timestamp, @partition_index)", trans.DBConnection, trans.DBTransaction);
+            commandHistoric.Parameters.AddWithValue("id", id);
+            commandHistoric.Parameters.AddWithValue("from_ci_id", fromCIID);
+            commandHistoric.Parameters.AddWithValue("to_ci_id", toCIID);
+            commandHistoric.Parameters.AddWithValue("predicate_id", predicateID);
+            commandHistoric.Parameters.AddWithValue("layer_id", layerID);
+            commandHistoric.Parameters.AddWithValue("state", RelationState.Removed);
+            commandHistoric.Parameters.AddWithValue("changeset_id", changeset.ID);
+            commandHistoric.Parameters.AddWithValue("timestamp", changeset.Timestamp);
+            commandHistoric.Parameters.AddWithValue("partition_index", partitionIndex);
+            await commandHistoric.ExecuteNonQueryAsync();
+
+            using var commandLatest = new NpgsqlCommand(@"
+                UPDATE relation_latest SET id = @id, state = @state, ""timestamp"" = @timestamp, changeset_id = @changeset_id WHERE id = @old_id
+                ", trans.DBConnection, trans.DBTransaction);
+            commandLatest.Parameters.AddWithValue("id", id);
+            commandLatest.Parameters.AddWithValue("old_id", currentRelation.ID);
+            commandLatest.Parameters.AddWithValue("state", RelationState.Removed);
+            commandLatest.Parameters.AddWithValue("changeset_id", changeset.ID);
+            commandLatest.Parameters.AddWithValue("timestamp", changeset.Timestamp);
+            await commandLatest.ExecuteNonQueryAsync();
+
+            return (new Relation(id, fromCIID, toCIID, predicateID, RelationState.Removed, changeset.ID), true);
+        }
+
+
+        // NOTE: this bulk operation DOES check if the relations that are inserted are "unique":
+        // it is not possible to insert the "same" relation (same from_ciid, to_ciid, predicate_id and layer) multiple times
+        // if this operation detects a duplicate, an exception is thrown;
         // the caller is responsible for making sure there are no duplicates
         public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var outdatedRelations = (data switch
             {
-                BulkRelationDataPredicateScope p => (await GetRelations(new RelationSelectionWithPredicate(p.PredicateID), data.LayerID, trans, changesetProxy.TimeThreshold)),
-                BulkRelationDataLayerScope l => (await GetRelations(new RelationSelectionAll(), data.LayerID, trans, changesetProxy.TimeThreshold)),
+                BulkRelationDataPredicateScope p => (await GetRelations(new RelationSelectionWithPredicate(p.PredicateID), data.LayerID, returnRemoved: true, trans, changesetProxy.TimeThreshold)),
+                BulkRelationDataLayerScope l => (await GetRelations(new RelationSelectionAll(), data.LayerID, returnRemoved: true, trans, changesetProxy.TimeThreshold)),
                 _ => null
-            }).ToDictionary(r => r.InformationHash);
+            }).ToDictionary(r => r.InformationHash, relation => (relation, Guid.NewGuid()));
 
-            var actualInserts = new List<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>();
+            var actualInserts = new List<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state, Guid newRelationID, Guid? existingRelationID)>();
             foreach (var fragment in data.Fragments)
             {
-                var id = Guid.NewGuid();
                 var fromCIID = data.GetFromCIID(fragment);
                 var toCIID = data.GetToCIID(fragment);
                 if (fromCIID == toCIID)
@@ -266,16 +303,22 @@ namespace Omnikeeper.Model
                 outdatedRelations.Remove(informationHash, out var currentRelation);
 
                 var state = RelationState.New;
-                if (currentRelation != null)
+                if (currentRelation.relation != null)
                 {
-                    if (currentRelation.State == RelationState.Removed)
+                    if (currentRelation.relation.State == RelationState.Removed)
                         state = RelationState.Renewed;
                     else
                         continue;
                 }
 
-                actualInserts.Add((fromCIID, toCIID, predicateID, state));
+                Guid relationID = Guid.NewGuid();
+                actualInserts.Add((fromCIID, toCIID, predicateID, state, relationID, currentRelation.relation?.ID));
             }
+
+            // the list of outdatedRelations now contains only relations that need to be removed
+            // BUT: the list of outdatedRelations also can contain relations whose state == "removed"
+            // those cases we can ignore because they do not need to be removed anymore, so we remove them from the list too
+            outdatedRelations = outdatedRelations.Where(t => t.Value.relation.State != RelationState.Removed).ToDictionary(t => t.Key, t => t.Value);
 
             // changeset is only created and copy mode is only entered when there is actually anything inserted
             if (!actualInserts.IsEmpty() || !outdatedRelations.IsEmpty())
@@ -284,41 +327,93 @@ namespace Omnikeeper.Model
 
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
 
-                // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
-                using var writer = trans.DBConnection.BeginBinaryImport(@"COPY relation (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, state, ""timestamp"", partition_index) FROM STDIN (FORMAT BINARY)");
-                foreach (var (fromCIID, toCIID, predicateID, state) in actualInserts)
+                // historic
+                using var writerHistoric = trans.DBConnection.BeginBinaryImport(@"COPY relation (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, state, ""timestamp"", partition_index) FROM STDIN (FORMAT BINARY)");
+                foreach (var (fromCIID, toCIID, predicateID, state, newRelationID, _) in actualInserts)
                 {
-                    writer.StartRow();
-                    writer.Write(Guid.NewGuid());
-                    writer.Write(fromCIID);
-                    writer.Write(toCIID);
-                    writer.Write(predicateID);
-                    writer.Write(changeset.ID);
-                    writer.Write(data.LayerID);
-                    writer.Write(state, "relationstate");
-                    writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
-                    writer.Write(partitionIndex, NpgsqlDbType.TimestampTz);
+                    writerHistoric.StartRow();
+                    writerHistoric.Write(newRelationID);
+                    writerHistoric.Write(fromCIID);
+                    writerHistoric.Write(toCIID);
+                    writerHistoric.Write(predicateID);
+                    writerHistoric.Write(changeset.ID);
+                    writerHistoric.Write(data.LayerID);
+                    writerHistoric.Write(state, "relationstate");
+                    writerHistoric.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
+                    writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
                 }
 
                 // remove outdated 
-                foreach (var outdatedRelation in outdatedRelations.Values)
+                foreach (var (outdatedRelation, newRelationID) in outdatedRelations.Values)
                 {
-                    writer.StartRow();
-                    writer.Write(Guid.NewGuid());
-                    writer.Write(outdatedRelation.FromCIID);
-                    writer.Write(outdatedRelation.ToCIID);
-                    writer.Write(outdatedRelation.PredicateID);
-                    writer.Write(changeset.ID);
-                    writer.Write(data.LayerID);
-                    writer.Write(RelationState.Removed, "relationstate");
-                    writer.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
-                    writer.Write(partitionIndex, NpgsqlDbType.TimestampTz);
+                    writerHistoric.StartRow();
+                    writerHistoric.Write(newRelationID);
+                    writerHistoric.Write(outdatedRelation.FromCIID);
+                    writerHistoric.Write(outdatedRelation.ToCIID);
+                    writerHistoric.Write(outdatedRelation.PredicateID);
+                    writerHistoric.Write(changeset.ID);
+                    writerHistoric.Write(data.LayerID);
+                    writerHistoric.Write(RelationState.Removed, "relationstate");
+                    writerHistoric.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
+                    writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
                 }
-                writer.Complete();
+                writerHistoric.Complete();
+                writerHistoric.Close();
+
+                // latest
+                // new inserts
+                // NOTE: actual new inserts are only those that have a state == new, which must be equivalent to NOT having an entry in the latest table
+                // that allows us to do COPY insertion, because we guarantee that there are no unique constraint violations
+                // should this ever throw a unique constraint violation, means there is a bug and _latest and _historic are out of sync
+                var actualNewInserts = actualInserts.Where(t => t.state == RelationState.New);
+                if (!actualNewInserts.IsEmpty())
+                {
+                    using var writerLatest = trans.DBConnection.BeginBinaryImport(@"COPY relation_latest (id, from_ci_id, to_ci_id, predicate_id, changeset_id, layer_id, state, ""timestamp"") FROM STDIN (FORMAT BINARY)");
+                    foreach (var (fromCIID, toCIID, predicateID, state, newRelationID, _) in actualNewInserts)
+                    {
+                        writerLatest.StartRow();
+                        writerLatest.Write(newRelationID);
+                        writerLatest.Write(fromCIID);
+                        writerLatest.Write(toCIID);
+                        writerLatest.Write(predicateID);
+                        writerLatest.Write(changeset.ID);
+                        writerLatest.Write(data.LayerID);
+                        writerLatest.Write(state, "relationstate");
+                        writerLatest.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
+                    }
+                    writerLatest.Complete();
+                    writerLatest.Close();
+                }
+
+                // updates (actual updates and removals)
+                var actualModified = actualInserts.Where(t => t.state != RelationState.New);
+                foreach (var (fromCIID, toCIID, predicateID, state, newRelationID, existingRelationID) in actualModified)
+                {
+                    using var commandUpdateLatest = new NpgsqlCommand(@"
+                        UPDATE relation_latest SET id = @id, state = @state, ""timestamp"" = @timestamp, changeset_id = @changeset_id WHERE id = @old_id", 
+                        trans.DBConnection, trans.DBTransaction);
+                    commandUpdateLatest.Parameters.AddWithValue("id", newRelationID);
+                    commandUpdateLatest.Parameters.AddWithValue("old_id", existingRelationID!);
+                    commandUpdateLatest.Parameters.AddWithValue("state", state);
+                    commandUpdateLatest.Parameters.AddWithValue("timestamp", changeset.Timestamp);
+                    commandUpdateLatest.Parameters.AddWithValue("changeset_id", changeset.ID);
+                    await commandUpdateLatest.ExecuteNonQueryAsync();
+                }
+                foreach (var (outdatedRelation, newRelationID) in outdatedRelations.Values)
+                {
+                    using var commandRemoveLatest = new NpgsqlCommand(@"
+                        UPDATE relation_latest SET id = @id, state = @state, ""timestamp"" = @timestamp, changeset_id = @changeset_id WHERE id = @old_id", trans.DBConnection, trans.DBTransaction);
+                    commandRemoveLatest.Parameters.AddWithValue("id", newRelationID);
+                    commandRemoveLatest.Parameters.AddWithValue("old_id", outdatedRelation.ID);
+                    commandRemoveLatest.Parameters.AddWithValue("state", RelationState.Removed);
+                    commandRemoveLatest.Parameters.AddWithValue("timestamp", changeset.Timestamp);
+                    commandRemoveLatest.Parameters.AddWithValue("changeset_id", changeset.ID);
+                    await commandRemoveLatest.ExecuteNonQueryAsync();
+                }
             }
 
-            return actualInserts
-                .Concat(outdatedRelations.Values.Select(r => (r.FromCIID, r.ToCIID, r.PredicateID, RelationState.Removed)));
+            return actualInserts.Select(r => (r.fromCIID, r.toCIID, r.predicateID, r.state))
+                .Concat(outdatedRelations.Values.Select(r => (r.relation.FromCIID, r.relation.ToCIID, r.relation.PredicateID, RelationState.Removed)));
         }
     }
 }

@@ -11,19 +11,24 @@ namespace Omnikeeper.Model
     {
         public async Task<int> DeleteAllRelations(string layerID, IModelContext trans)
         {
-            var query = @"delete from relation r where r.layer_id = @layer_id";
+            using var commandLatest = new NpgsqlCommand(@"delete from relation_latest r where r.layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
+            commandLatest.Parameters.AddWithValue("layer_id", layerID);
+            commandLatest.Prepare();
+            await commandLatest.ExecuteNonQueryAsync();
 
-            using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
-            command.Parameters.AddWithValue("layer_id", layerID);
-            command.Prepare();
-
-            var numDeleted = await command.ExecuteNonQueryAsync();
+            using var commandHistoric = new NpgsqlCommand(@"delete from relation r where r.layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
+            commandHistoric.Parameters.AddWithValue("layer_id", layerID);
+            commandHistoric.Prepare();
+            var numDeleted = await commandHistoric.ExecuteNonQueryAsync();
 
             return numDeleted;
         }
 
         public async Task<int> DeleteOutdatedRelationsOlderThan(string layerID, IModelContext trans, DateTimeOffset threshold, TimeThreshold atTime)
         {
+            // TODO: this fails to consider relations with state "removed"!
+            // and it also does not affect the relation_latest table, which it SHOULD affect in case of removed relations
+            // TODO: use latest table
             var query = @"DELETE FROM relation
 	                WHERE timestamp < @delete_threshold
                     AND layer_id = @layer_id

@@ -25,9 +25,9 @@ namespace Omnikeeper.Model
             return await baseModel.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rs, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
-            return await baseModel.GetRelations(rs, layerID, trans, atTime);
+            return await baseModel.GetRelations(rs, layerID, returnRemoved, trans, atTime);
         }
 
         private IEnumerable<MergedRelation> MergeRelations(IEnumerable<(Relation relation, string layerID)> relations, LayerSet layers)
@@ -55,7 +55,7 @@ namespace Omnikeeper.Model
 
             foreach (var layerID in layerset)
             {
-                var lr = await GetRelations(rl, layerID, trans, atTime);
+                var lr = await GetRelations(rl, layerID, returnRemoved: false, trans, atTime);
                 foreach (var r in lr)
                     relations.Add((r, layerID));
             }
