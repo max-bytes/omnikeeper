@@ -52,10 +52,22 @@ namespace Omnikeeper.Base.Service
             }
 
             // merge flattened dependencies and current recursive trait into one single trait
-            var requiredAttributes = trait.RequiredAttributes.Concat(flattenedDependencies.SelectMany(d => d.RequiredAttributes));
-            var optionalAttributes = trait.OptionalAttributes.Concat(flattenedDependencies.SelectMany(d => d.OptionalAttributes));
-            var requiredRelations = trait.RequiredRelations.Concat(flattenedDependencies.SelectMany(d => d.RequiredRelations));
-            var optionalRelations = trait.OptionalRelations.Concat(flattenedDependencies.SelectMany(d => d.OptionalRelations));
+            // NOTE: it is possible that multiple requirements share the same identifier; this needs to be resorted because the identifier must be unique per trait attribute/relation.
+            // To disambiguate in cases of duplicate trait identifiers, there is a priority that governs which requirement gets picked, and the rest are dropped
+            // this priority goes as follows:
+            // 1) within the trait itself, the priority of requirements is defined by their order of appearance in the definition (this is relevant in case a trait itself has multiple requirements with the same identifier)
+            // 2) requirements of the trait itself have a higher priority than requirements from required traits
+            // 3) the priority of requirements from required traits is resolved by their order of appearance in the required-traits array
+            // 4) the priority of requirements within a required trait is resolved by their order of appearance in the definition
+            var requiredAttributes = trait.RequiredAttributes.Concat(flattenedDependencies.SelectMany(d => d.RequiredAttributes)).GroupBy(d => d.Identifier).Select(l => l.First());
+            var optionalAttributes = trait.OptionalAttributes.Concat(flattenedDependencies.SelectMany(d => d.OptionalAttributes)).GroupBy(d => d.Identifier).Select(l => l.First());
+            var requiredRelations = trait.RequiredRelations.Concat(flattenedDependencies.SelectMany(d => d.RequiredRelations)).GroupBy(d => d.Identifier).Select(l => l.First());
+            var optionalRelations = trait.OptionalRelations.Concat(flattenedDependencies.SelectMany(d => d.OptionalRelations)).GroupBy(d => d.Identifier).Select(l => l.First());
+
+            // remove the optional requirement when there is a mandatory requirement with the same identifier
+            optionalAttributes = optionalAttributes.Where(r => requiredAttributes.All(rr => rr.Identifier != r.Identifier));
+            optionalRelations = optionalRelations.Where(r => requiredRelations.All(rr => rr.Identifier != r.Identifier));
+
             var ancestorTraits = trait.RequiredTraits.Concat(flattenedDependencies.SelectMany(d => d.AncestorTraits)).ToHashSet();
             var flattenedTrait = GenericTrait.Build(trait.ID, trait.Origin, requiredAttributes, optionalAttributes, requiredRelations, optionalRelations, ancestorTraits);
 
