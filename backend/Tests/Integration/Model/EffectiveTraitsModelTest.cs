@@ -104,7 +104,7 @@ namespace Tests.Integration.Model
             var trans = ModelContextBuilder.BuildImmediate();
             var tt1 = await traitsProvider.GetActiveTrait("test_trait_1", trans, timeThreshold);
             var t1 = await traitModel.GetEffectiveTraitsForTrait(tt1!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
-            Assert.AreEqual(0, t1.Count());
+            Assert.AreEqual(1, t1.Count());
         }
 
         private async Task<(EffectiveTraitModel traitModel, LayerSet layerset, Guid[])> BaseSetup()
