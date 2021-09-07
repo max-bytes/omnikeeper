@@ -47,7 +47,7 @@ namespace Omnikeeper.Base.Service
             foreach (var cic in data.CICandidates)
             {
                 var attributes = cic.Attributes;
-                var ciCandidateID = cic.TempCIID;
+                var ciCandidateID = cic.TempCIID; // TODO: detect duplicate tempCIIDs in source -> throw exception if so, each candidate MUST have a unique ID
 
                 // find out if it's a new CI or an existing one
                 var foundCIIDs = await ciMappingService.TryToMatch(ciCandidateID.ToString(), cic.IdentificationMethod, ciMappingContext, trans, logger);
