@@ -18,6 +18,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 *Empty*
 
 -->
+
+## [1.4.0] - 2021-09-07
+
+### Added
+- big performance improvements to attribute and relations fetching due to introduction of *-latest caching tables
+- performance improvements to attribute fetching due to inversion of CIIDSelection, when feasible
+- performance improvements to traits fetching
+- performance improvements to CI search when specifying traits
+- performance improvements to changeset in timerange fetching
+
+### Fixed
+
+- resolving of dependent traits is now consistent and its order is documented
+- selection of what constitutes outdated attributes and relations for archiving purposes was wrong, fixed now
  
 ## [1.3.0] - 2021-09-03
 
