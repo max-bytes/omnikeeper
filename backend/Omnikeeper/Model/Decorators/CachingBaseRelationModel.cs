@@ -50,18 +50,18 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetRelationsOfChangeset(changesetID, trans);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
             if (atTime.IsLatest)
             {
                 var (item, hit) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.Relations(rl, layerID), async () =>
                 {
-                    return await model.GetRelations(rl, layerID, trans, atTime);
+                    return await model.GetRelations(rl, layerID, returnRemoved, trans, atTime);
                 });
                 return item;
             }
             else
-                return await model.GetRelations(rl, layerID, trans, atTime);
+                return await model.GetRelations(rl, layerID, returnRemoved, trans, atTime);
         }
 
         public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)

@@ -2,25 +2,52 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Npgsql.Logging;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Omnikeeper
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var version = VersionService.GetVersion();
             Console.WriteLine($"Running version: {version}");
 
             AddAssemblyResolver();
 
-            CreateHostBuilder(args).Build().Run();
+            var host = CreateHostBuilder(args).Build();
+
+            using (var scope = host.Services.CreateScope())
+            {
+                NpgsqlLogManager.Provider = scope.ServiceProvider.GetRequiredService<NpgsqlLoggingProvider>();
+
+                // migration/rebuild of *-latest tables in database to be backward compatible
+                await RebuildLatestTablesIfNonEmpty(scope);
+            }
+
+            host.Run();
+        }
+
+        private static async Task RebuildLatestTablesIfNonEmpty(IServiceScope scope)
+        {
+            var modelContextBuilder = scope.ServiceProvider.GetRequiredService<IModelContextBuilder>();
+            var partitionModel = scope.ServiceProvider.GetRequiredService<IPartitionModel>();
+            var layerModel = scope.ServiceProvider.GetRequiredService<ILayerModel>();
+            using (var mc = modelContextBuilder.BuildDeferred())
+            {
+                await RebuildLatestTablesService.RebuildLatestAttributesTable(true, partitionModel, layerModel, mc);
+                await RebuildLatestTablesService.RebuildlatestRelationsTable(true, partitionModel, layerModel, mc);
+                mc.Commit();
+            }
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

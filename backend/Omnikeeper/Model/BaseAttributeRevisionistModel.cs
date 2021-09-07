@@ -19,7 +19,6 @@ namespace Omnikeeper.Model
             using var commandHistoric = new NpgsqlCommand(@"delete from attribute a where a.layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
             commandHistoric.Parameters.AddWithValue("layer_id", layerID);
             commandHistoric.Prepare();
-
             var numDeleted = await commandHistoric.ExecuteNonQueryAsync();
 
             return numDeleted;

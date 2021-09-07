@@ -39,14 +39,14 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
                 return onlineAccessProxy.GetRelations(rl, layerID, trans, atTime).ToEnumerable();
             }
 
-            return await model.GetRelations(rl, layerID, trans, atTime);
+            return await model.GetRelations(rl, layerID, returnRemoved, trans, atTime);
         }
 
         public async Task<(Relation relation, bool changed)> InsertRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
