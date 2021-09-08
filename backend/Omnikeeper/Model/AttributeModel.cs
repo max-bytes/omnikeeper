@@ -25,7 +25,7 @@ namespace Omnikeeper.Model
         // attributes must be a pre-sorted enumerable based on layer-sort
         private IEnumerable<MergedCIAttribute> MergeAttributes(IEnumerable<(IEnumerable<CIAttribute> attributes, string layerID)> layeredAttributes)
         {
-            var compound = new Dictionary<string, List<(CIAttribute attribute, string layerID)>>();
+            var compound = new Dictionary<string, (CIAttribute attribute, List<string> layerIDs)>();
             foreach (var (attributes, layerID) in layeredAttributes)
             {
                 foreach (var attribute in attributes)
@@ -33,16 +33,37 @@ namespace Omnikeeper.Model
                     var key = attribute.InformationHash;
                     if (compound.TryGetValue(key, out var l))
                     {
-                        l.Add((attribute, layerID));
+                        l.layerIDs.Add(layerID);
                     }
                     else
                     {
-                        compound.Add(key, new List<(CIAttribute attribute, string layerID)>() { (attribute, layerID) });
+                        compound.Add(key, (attribute, new List<string> { layerID }));
                     }
                 }
             }
-            return compound.Select(t => new MergedCIAttribute(t.Value.First().attribute, layerStackIDs: t.Value.Select(tt => tt.layerID).Reverse().ToArray()));
+            return compound.Select(t => new MergedCIAttribute(t.Value.attribute, layerStackIDs: Enumerable.Reverse(t.Value.layerIDs).ToArray()));
         }
+
+        //private IEnumerable<MergedCIAttribute> MergeAttributes(IEnumerable<(IEnumerable<CIAttribute> attributes, string layerID)> layeredAttributes)
+        //{
+        //    var compound = new Dictionary<string, List<(CIAttribute attribute, string layerID)>>();
+        //    foreach (var (attributes, layerID) in layeredAttributes)
+        //    {
+        //        foreach (var attribute in attributes)
+        //        {
+        //            var key = attribute.InformationHash;
+        //            if (compound.TryGetValue(key, out var l))
+        //            {
+        //                l.Add((attribute, layerID));
+        //            }
+        //            else
+        //            {
+        //                compound.Add(key, new List<(CIAttribute attribute, string layerID)>() { (attribute, layerID) });
+        //            }
+        //        }
+        //    }
+        //    return compound.Select(t => new MergedCIAttribute(t.Value.First().attribute, layerStackIDs: t.Value.Select(tt => tt.layerID).Reverse().ToArray()));
+        //}
 
         // strings must be a pre-sorted enumerable based on layer-sort
         private IDictionary<Guid, string> MergeStrings(IEnumerable<(IDictionary<Guid, string> strings, string layerID)> strings)
