@@ -111,8 +111,8 @@ namespace PerfTests
                 return (ciModel.CreateCI(identity, mc).GetAwaiter().GetResult(), identity);
             }).ToList();
 
-            specificCIIDs = SpecificCIIDsSelection.Build(ciids.Take(ciids.Count / 2).ToHashSet());
-            allExceptCIIDs = AllCIIDsExceptSelection.Build(ciids.Take(ciids.Count / 2).ToHashSet());
+            specificCIIDs = SpecificCIIDsSelection.Build(ciids.Take(ciids.Count / 3).ToHashSet());
+            allExceptCIIDs = AllCIIDsExceptSelection.Build(ciids.Take(ciids.Count / 3).ToHashSet());
 
             var layers = layerNames.Select(identity =>
             {
