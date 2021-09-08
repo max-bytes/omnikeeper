@@ -69,7 +69,7 @@ namespace PerfTests
 
         public async Task SetupGeneric(bool enableModelCaching, bool enableEffectiveTraitCaching)
         {
-            Setup(enableModelCaching, enableEffectiveTraitCaching);
+            Setup(enableModelCaching, enableEffectiveTraitCaching, true);
 
             var numCIs = AttributeCITuple.numCIs;
             var numLayers = AttributeCITuple.numLayers;

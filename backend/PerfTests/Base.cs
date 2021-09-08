@@ -28,9 +28,12 @@ namespace PerfTests
         private NpgsqlConnection? conn;
         private ServiceProvider? serviceProvider;
 
-        public virtual void Setup(bool enableModelCaching, bool enableEffectiveTraitCaching)
+        public virtual void Setup(bool enableModelCaching, bool enableEffectiveTraitCaching, bool setupDBSchema)
         {
-            DBSetup.Setup();
+            if (setupDBSchema)
+            {
+                DBSetup.Setup();
+            }
 
             var dbcb = new DBConnectionBuilder();
             conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
