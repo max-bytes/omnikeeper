@@ -37,7 +37,7 @@ namespace Omnikeeper.Base.Entity
 
         // information hash: 
         public string InformationHash => CreateInformationHash(Name, CIID);
-        public static string CreateInformationHash(string name, Guid ciid) => name + "_" + ciid;
+        public static string CreateInformationHash(string name, Guid ciid) => name + ciid;
 
         public CIAttribute(Guid id, string name, Guid CIID, IAttributeValue value, AttributeState state, Guid changesetID)
         {

@@ -64,14 +64,14 @@ namespace Omnikeeper.GraphQL
             });
 
             // TODO: remove?
-            FieldAsync<TemplateErrorsCIType>("templateErrors",
-            resolve: async (context) =>
-            {
-                var templateModel = context.RequestServices!.GetRequiredService<ITemplateModel>();
+            //FieldAsync<TemplateErrorsCIType>("templateErrors",
+            //resolve: async (context) =>
+            //{
+            //    var templateModel = context.RequestServices!.GetRequiredService<ITemplateModel>();
 
-                var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                return await templateModel.CalculateTemplateErrors(context.Source!, userContext.Transaction, userContext.TimeThreshold);
-            });
+            //    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+            //    return await templateModel.CalculateTemplateErrors(context.Source!, userContext.Transaction, userContext.TimeThreshold);
+            //});
 
             FieldAsync<ListGraphType<EffectiveTraitType>>("effectiveTraits",
             resolve: async (context) =>

@@ -1,5 +1,6 @@
 ﻿using JsonSubTypes;
 using Newtonsoft.Json;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using ProtoBuf;
 using ProtoBuf.Serializers;
@@ -18,7 +19,9 @@ namespace Omnikeeper.Base.Entity
     public interface ICIAttributeValueConstraint
     {
         public string type { get; }
+        [Obsolete]
         IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value);
+        bool HasErrors(IAttributeValue value);
     }
 
     [ProtoContract(SkipConstructor = true)]
@@ -42,6 +45,7 @@ namespace Omnikeeper.Base.Entity
             return new CIAttributeValueConstraintTextLength(min, max);
         }
 
+        [Obsolete]
         public IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value)
         {
             // HACK: this is a bit unclean, as we do CLR type-checking, but return an error based on the AttributeValueType value
@@ -52,6 +56,19 @@ namespace Omnikeeper.Base.Entity
             else
             {
                 return new ITemplateErrorAttribute[] { new TemplateErrorAttributeWrongType(new AttributeValueType[] { AttributeValueType.Text, AttributeValueType.MultilineText }, value.Type) };
+            }
+        }
+
+        public bool HasErrors(IAttributeValue value)
+        {
+            // HACK: this is a bit unclean, as we do CLR type-checking, but return an error based on the AttributeValueType value
+            if (value is IAttributeValueText v)
+            {
+                return !v.ApplyTextLengthConstraint(Minimum, Maximum).IsEmpty();
+            }
+            else
+            {
+                return true;
             }
         }
     }
@@ -77,6 +94,7 @@ namespace Omnikeeper.Base.Entity
             return new CIAttributeValueConstraintArrayLength(min, max);
         }
 
+        [Obsolete]
         public IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value)
         {
             if (value.IsArray)
@@ -92,6 +110,25 @@ namespace Omnikeeper.Base.Entity
             else
             {
                 yield return new TemplateErrorAttributeWrongMultiplicity();
+            }
+        }
+
+        public bool HasErrors(IAttributeValue value)
+        {
+            if (value.IsArray)
+            {
+                var a = (value as IAttributeArrayValue);
+                if (a == null)
+                    return true;
+                else if (Maximum.HasValue && a.Length > Maximum)
+                    return true;
+                else if (Minimum.HasValue && a.Length < Minimum)
+                    return true;
+                return false;
+            }
+            else
+            {
+                return true;
             }
         }
     }
@@ -124,6 +161,7 @@ namespace Omnikeeper.Base.Entity
             regex = null;
         }
 
+        [Obsolete]
         public IEnumerable<ITemplateErrorAttribute> CalculateErrors(IAttributeValue value)
         {
             // HACK: this is a bit unclean, as we do CLR type-checking, but return an error based on the AttributeValueType value
@@ -136,6 +174,21 @@ namespace Omnikeeper.Base.Entity
             else
             {
                 return new ITemplateErrorAttribute[] { new TemplateErrorAttributeWrongType(new AttributeValueType[] { AttributeValueType.Text, AttributeValueType.MultilineText }, value.Type) };
+            }
+        }
+
+        public bool HasErrors(IAttributeValue value)
+        {
+            // HACK: this is a bit unclean, as we do CLR type-checking, but return an error based on the AttributeValueType value
+            if (value is IAttributeValueText v)
+            {
+                if (regex == null)
+                    regex = new Regex(RegexStr, RegexOptions);
+                return !v.MatchRegex(regex).IsEmpty();
+            }
+            else
+            {
+                return true;
             }
         }
 

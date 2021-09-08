@@ -186,7 +186,6 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IRelationModel, RelationModel>();
             services.AddSingleton<IBaseRelationModel, BaseRelationModel>();
             services.AddSingleton<IChangesetModel, ChangesetModel>();
-            services.AddSingleton<ITemplateModel, TemplateModel>();
             services.AddSingleton<IPredicateModel, PredicateModel>();
             services.AddSingleton<ICacheModel, CacheModel>();
             services.AddSingleton<IODataAPIContextModel, ODataAPIContextModel>();
@@ -200,7 +199,6 @@ namespace Omnikeeper.Startup
 
             // these aren't real models, but we keep them here because they are closely related to models
             services.AddSingleton<ITraitsProvider, TraitsProvider>();
-            services.AddSingleton<ITemplatesProvider, TemplatesProvider>();
             services.AddSingleton<IEffectiveGeneratorProvider, EffectiveGeneratorProvider>();
             services.AddSingleton<IDataSerializer, ProtoBufDataSerializer>();
 
@@ -214,8 +212,6 @@ namespace Omnikeeper.Startup
                 services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
                 services.Decorate<IBaseConfigurationModel, CachingBaseConfigurationModel>();
                 services.Decorate<IPartitionModel, CachingPartitionModel>();
-
-                services.Decorate<ITemplatesProvider, CachedTemplatesProvider>();
             }
 
             if (enableEffectiveTraitCaching)

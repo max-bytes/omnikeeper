@@ -134,6 +134,7 @@ namespace Omnikeeper.Model
             return selection;
         }
 
+        // TODO: consider: rework so that this returns a dictionary of lists, keyed by ciid... calling methods might have it easier that way
         public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             selection = await OptimizeCIIDSelection(selection, trans);
