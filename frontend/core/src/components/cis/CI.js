@@ -43,22 +43,6 @@ function CI(props) {
 
   return (<div style={{margin: "10px 10px"}}>
     <h2>CI "{props.ci.name ?? "[UNNAMED]"}" <CIID id={props.ci.id} link={false} /></h2>
-    {/* <TemplateErrors templateErrors={props.ci.templateErrors} 
-      onCreateNewAttribute={(attributeName, attributeType) => {
-        setCreateNewAttribute({name: attributeName, type: attributeType, value: '', layer: visibleAndWritableLayers[0]}); // TODO: correct layer
-      }}
-      onOverwriteAttribute={(attributeName, attributeType) => {
-        // find current value and layer
-        var currentAttribute = props.ci.mergedAttributes.find(a => a.attribute.name === attributeName);
-        if (currentAttribute) {
-          // TODO: get current correct layer
-          const layerID = currentAttribute.layerStackIDs[currentAttribute.layerStackIDs.length - 1];
-          const layer = visibleAndWritableLayers.find(l => l.id === layerID);
-          const newValues = {name: attributeName, type: attributeType, value: currentAttribute.attribute.value.value, layer: layer};
-          setCreateNewAttribute(newValues);
-        }
-      }}
-      /> */}
     <Tabs defaultActiveKey={"attributes"} style={{padding: "1rem"}}>{panes}</Tabs>
   </div>);
 }
