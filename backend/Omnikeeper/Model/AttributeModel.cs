@@ -37,16 +37,16 @@ namespace Omnikeeper.Model
                         {
                             if (existingAttributes.TryGetValue(newAttribute.Key, out var existingMergedAttribute))
                             {
-                                existingAttributes[newAttribute.Key] = new MergedCIAttribute(existingMergedAttribute.Attribute, existingMergedAttribute.LayerStackIDs.Append(layerID).ToList());
+                                existingAttributes[newAttribute.Key].LayerStackIDs.Add(layerID);
                             } else
                             {
-                                existingAttributes[newAttribute.Key] = new MergedCIAttribute(newAttribute.Value, new string[] { layerID });
+                                existingAttributes[newAttribute.Key] = new MergedCIAttribute(newAttribute.Value, new List<string> { layerID });
                             }
                         }
                     }
                     else
                     {
-                        compound.Add(ciid, ci.Value.ToDictionary(a => a.Key, a => new MergedCIAttribute(a.Value, new string[] { layerID })));
+                        compound.Add(ciid, ci.Value.ToDictionary(a => a.Key, a => new MergedCIAttribute(a.Value, new List<string> { layerID })));
                     }
                 }
             }
@@ -63,11 +63,11 @@ namespace Omnikeeper.Model
                     var ciid = ci.Key;
                     if (compound.TryGetValue(ciid, out var existingMergedAttribute))
                     {
-                        compound[ciid] = new MergedCIAttribute(existingMergedAttribute.Attribute, existingMergedAttribute.LayerStackIDs.Append(layerID).ToList());
+                        existingMergedAttribute.LayerStackIDs.Add(layerID);
                     }
                     else
                     {
-                        compound.Add(ciid, new MergedCIAttribute(ci.Value, new string[] { layerID }));
+                        compound.Add(ciid, new MergedCIAttribute(ci.Value, new List<string> { layerID }));
                     }
                 }
             }
