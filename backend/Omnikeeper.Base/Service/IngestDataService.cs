@@ -42,7 +42,7 @@ namespace Omnikeeper.Base.Service
             var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, ChangesetModel);
 
             var ciMappingContext = new CIMappingService.CIMappingContext(AttributeModel, TimeThreshold.BuildLatest());
-            var attributeData = new Dictionary<Guid, CICandidateAttributeData>();
+            var affectedCIs = new HashSet<Guid>();
             var cisToCreate = new List<Guid>();
             foreach (var cic in data.CICandidates)
             {
@@ -76,20 +76,18 @@ namespace Omnikeeper.Base.Service
                 // add to mapping context
                 ciMappingContext.AddTemp2FinallCIIDMapping(ciCandidateID, finalCIID);
 
-                if (attributeData.ContainsKey(finalCIID))
-                    attributeData[finalCIID] = attributeData[finalCIID].Concat(attributes);
-                else
-                    attributeData.Add(finalCIID, attributes);
+                cic.TempCIID = finalCIID; // we update the TempCIID of the CI candidate with its final ID
+
+                affectedCIs.Add(finalCIID);
             }
 
             // batch process CI creation
             await CIModel.BulkCreateCIs(cisToCreate, trans);
 
-            var bulkAttributeData = new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeData.SelectMany(ad =>
-                ad.Value.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, ad.Key))
+            var bulkAttributeData = new BulkCIAttributeDataLayerScope("", writeLayer.ID, data.CICandidates.SelectMany(cic =>
+                cic.Attributes.Fragments.Select(f => new BulkCIAttributeDataLayerScope.Fragment(f.Name, f.Value, cic.TempCIID))
             ));
             await AttributeModel.BulkReplaceAttributes(bulkAttributeData, changesetProxy, new DataOriginV1(DataOriginType.InboundIngest), trans);
-
 
             var relationFragments = new List<BulkRelationDataLayerScope.Fragment>();
             foreach (var cic in data.RelationCandidates)
@@ -109,13 +107,13 @@ namespace Omnikeeper.Base.Service
 
             trans.Commit();
 
-            return (attributeData.Keys.Count, bulkRelationData.Fragments.Length);
+            return (affectedCIs.Count(), bulkRelationData.Fragments.Length);
         }
     }
 
     public class CICandidate
     {
-        public Guid TempCIID { get; private set; }
+        public Guid TempCIID { get; set; }
         public ICIIdentificationMethod IdentificationMethod { get; private set; }
         public CICandidateAttributeData Attributes { get; private set; }
 
