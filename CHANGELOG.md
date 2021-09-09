@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [1.4.1] - 2021-09-09
+
+### Fixed
+- bugfix in gridview frontend when having a context column with a dot (".") in it
+- bugfix in frontend: long names in CI search result list are now properly cut off
+
 ## [1.4.0] - 2021-09-07
 
 ### Added
