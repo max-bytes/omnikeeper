@@ -383,7 +383,7 @@ namespace Tests.Integration.Model
 
             var ciids3 = await attributeModel.FindCIIDsWithAttributeNameAndValue("a2", new AttributeScalarValueText("textL1"), new AllCIIDsSelection(), layer2.ID, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(2, ciids3.Count());
-            ciids3.Should().BeEquivalentTo(new Guid[] { ciid1, ciid2 }, options => options.WithStrictOrdering());
+            ciids3.Should().BeEquivalentTo(new Guid[] { ciid1, ciid2 }, options => options.WithoutStrictOrdering());
         }
 
         [Test]
