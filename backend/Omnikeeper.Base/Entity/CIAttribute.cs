@@ -16,9 +16,9 @@ namespace Omnikeeper.Base.Entity
     public class MergedCIAttribute
     {
         public CIAttribute Attribute { get; private set; }
-        public string[] LayerStackIDs { get; private set; }
+        public IList<string> LayerStackIDs { get; private set; }
 
-        public MergedCIAttribute(CIAttribute attribute, string[] layerStackIDs)
+        public MergedCIAttribute(CIAttribute attribute, IList<string> layerStackIDs)
         {
             Attribute = attribute;
             LayerStackIDs = layerStackIDs;

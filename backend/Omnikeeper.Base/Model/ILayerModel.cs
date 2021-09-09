@@ -15,7 +15,7 @@ namespace Omnikeeper.Base.Model
         Task<bool> TryToDelete(string id, IModelContext trans);
 
         Task<Layer?> GetLayer(string layerID, IModelContext trans);
-        Task<IEnumerable<Layer>> GetLayers(string[] layerIDs, IModelContext trans);
+        Task<IEnumerable<Layer>> GetLayers(IEnumerable<string> layerIDs, IModelContext trans);
         Task<IEnumerable<Layer>> GetLayers(IModelContext trans);
         Task<IEnumerable<Layer>> GetLayers(AnchorStateFilter stateFilter, IModelContext trans);
     }

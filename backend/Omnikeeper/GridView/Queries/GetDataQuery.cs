@@ -120,9 +120,9 @@ namespace Omnikeeper.GridView.Queries
                         bool changable = true;
                         if (attr != null)
                         {
-                            if (attr.LayerStackIDs.Length > 1)
+                            if (attr.LayerStackIDs.Count > 1)
                             {
-                                if (attr.LayerStackIDs[^1] != config.WriteLayer)
+                                if (attr.LayerStackIDs.Last() != config.WriteLayer)
                                 {
                                     changable = false;
                                 }

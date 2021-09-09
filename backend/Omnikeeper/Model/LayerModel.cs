@@ -205,9 +205,9 @@ namespace Omnikeeper.Model
         }
 
 
-        public async Task<IEnumerable<Layer>> GetLayers(string[] layerIDs, IModelContext trans)
+        public async Task<IEnumerable<Layer>> GetLayers(IEnumerable<string> layerIDs, IModelContext trans)
         {
-            if (layerIDs.Length == 0) return new List<Layer>();
+            if (layerIDs.IsEmpty()) return new List<Layer>();
 
             IDValidations.ValidateLayerIDsThrow(layerIDs);
 

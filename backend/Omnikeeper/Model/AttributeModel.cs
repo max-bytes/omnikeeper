@@ -37,7 +37,7 @@ namespace Omnikeeper.Model
                         {
                             if (existingAttributes.TryGetValue(newAttribute.Key, out var existingMergedAttribute))
                             {
-                                existingAttributes[newAttribute.Key] = new MergedCIAttribute(existingMergedAttribute.Attribute, new string[] { layerID }.Concat(existingMergedAttribute.LayerStackIDs).ToArray()); // TODO: reverse by appending
+                                existingAttributes[newAttribute.Key] = new MergedCIAttribute(existingMergedAttribute.Attribute, existingMergedAttribute.LayerStackIDs.Prepend(layerID).ToList()); // TODO: reverse by appending
                             } else
                             {
                                 existingAttributes[newAttribute.Key] = new MergedCIAttribute(newAttribute.Value, new string[] { layerID });
