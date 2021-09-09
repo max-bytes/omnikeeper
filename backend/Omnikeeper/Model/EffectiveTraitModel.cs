@@ -67,7 +67,8 @@ namespace Omnikeeper.Model
                 return ImmutableList<MergedCI>.Empty;
 
             // now do a full pass to check which ci's REALLY fulfill the trait's requirements
-            var cis = await ciModel.GetMergedCIs(ciidSelection, layerSet, true, trans, atTime);
+            var fetchEmptyCIs = (trait is TraitEmpty); // only fetch empty traits if the specified trait is empty, otherwise we don't have to do that because a non-empty CI can never fulfill the empty trait
+            var cis = await ciModel.GetMergedCIs(ciidSelection, layerSet, fetchEmptyCIs, trans, atTime); 
             var ret = new List<MergedCI>(cis.Count());
             foreach (var ci in cis)
             {

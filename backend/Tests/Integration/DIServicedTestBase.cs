@@ -83,7 +83,6 @@ namespace Tests.Integration
             services.AddSingleton<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance);
             services.AddSingleton<ILogger<RecursiveDataTraitModel>>((sp) => NullLogger<RecursiveDataTraitModel>.Instance);
             services.AddSingleton<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance);
-            services.AddSingleton<ILogger<CachingBaseAttributeModel>>((sp) => NullLogger<CachingBaseAttributeModel>.Instance);
             services.AddSingleton<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance);
             services.AddSingleton<ILoggerFactory, NullLoggerFactory>();
 

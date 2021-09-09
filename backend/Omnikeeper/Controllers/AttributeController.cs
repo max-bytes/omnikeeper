@@ -147,10 +147,12 @@ namespace Omnikeeper.Controllers
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var attributes = await attributeModel.FindMergedAttributesByName(regex, selection, new LayerSet(layerIDs), trans, timeThreshold);
 
-            if (selection is AllCIIDsSelection)
-                attributes = attributes.Where(a => ciBasedAuthorizationService.CanReadCI(a.Attribute.CIID)); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
+            var flatAttributes = attributes.SelectMany(t => t.Value.Values);
 
-            return Ok(attributes.Select(a => CIAttributeDTO.Build(a)));
+            if (selection is AllCIIDsSelection)
+                flatAttributes = flatAttributes.Where(a => ciBasedAuthorizationService.CanReadCI(a.Attribute.CIID)); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
+
+            return Ok(flatAttributes.Select(a => CIAttributeDTO.Build(a)));
         }
 
         /// <summary>

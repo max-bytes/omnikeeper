@@ -323,19 +323,19 @@ namespace Tests.Integration.Model
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
             await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
 
-            var a1 = await attributeModel.FindAttributesByName("^a", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
+            var a1 = (await attributeModel.FindAttributesByName("^a", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(2, a1.Count());
 
-            var a2 = await attributeModel.FindAttributesByName("^a2$", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
+            var a2 = (await attributeModel.FindAttributesByName("^a2$", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(1, a2.Count());
 
-            var a3 = await attributeModel.FindAttributesByName("3$", new AllCIIDsSelection(), layer2.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
+            var a3 = (await attributeModel.FindAttributesByName("3$", new AllCIIDsSelection(), layer2.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(1, a3.Count());
 
-            var a4 = await attributeModel.FindAttributesByName("^3", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
+            var a4 = (await attributeModel.FindAttributesByName("^3", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(0, a4.Count());
 
-            var a5 = await attributeModel.FindAttributesByName("^a1$", SpecificCIIDsSelection.Build(ciid2), layer2.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
+            var a5 = (await attributeModel.FindAttributesByName("^a1$", SpecificCIIDsSelection.Build(ciid2), layer2.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(1, a5.Count());
         }
 
@@ -423,10 +423,10 @@ namespace Tests.Integration.Model
             trans2.Commit();
 
             using var trans3 = ModelContextBuilder.BuildImmediate();
-            var a1 = await attributeModel.FindAttributesByName("^prefix1", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans3, TimeThreshold.BuildLatest());
+            var a1 = (await attributeModel.FindAttributesByName("^prefix1", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans3, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(3, a1.Count());
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a2").Count());
-            var a2 = await attributeModel.FindAttributesByName("^prefix2", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans3, TimeThreshold.BuildLatest());
+            var a2 = (await attributeModel.FindAttributesByName("^prefix2", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans3, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(1, a2.Count());
         }
     }

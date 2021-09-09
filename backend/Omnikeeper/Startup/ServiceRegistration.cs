@@ -204,11 +204,7 @@ namespace Omnikeeper.Startup
 
             if (enableModelCaching)
             {
-                services.Decorate<IBaseAttributeModel, CachingBaseAttributeModel>();
-                services.Decorate<IBaseAttributeRevisionistModel, CachingBaseAttributeRevisionistModel>();
                 services.Decorate<ILayerModel, CachingLayerModel>();
-                services.Decorate<IBaseRelationModel, CachingBaseRelationModel>();
-                services.Decorate<IBaseRelationRevisionistModel, CachingBaseRelationRevisionistModel>();
                 services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
                 services.Decorate<IBaseConfigurationModel, CachingBaseConfigurationModel>();
                 services.Decorate<IPartitionModel, CachingPartitionModel>();
@@ -232,7 +228,7 @@ namespace Omnikeeper.Startup
 
             if (enabledGenerators)
             {
-                services.Decorate<IBaseAttributeModel, GeneratingBaseAttributeModel>();
+                //services.Decorate<IBaseAttributeModel, GeneratingBaseAttributeModel>();
             }
         }
 

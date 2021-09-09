@@ -134,8 +134,7 @@ namespace Omnikeeper.Model
             return selection;
         }
 
-        // TODO: consider: rework so that this returns a dictionary of lists, keyed by ciid... calling methods might have it easier that way
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             selection = await OptimizeCIIDSelection(selection, trans);
 
@@ -169,7 +168,7 @@ namespace Omnikeeper.Model
 
             command.Dispose();
 
-            var ret = new List<CIAttribute>();
+            var ret = new Dictionary<Guid, IDictionary<string, CIAttribute>>();
             while (dr.Read())
             {
                 var state = dr.GetFieldValue<AttributeState>(0);
@@ -186,7 +185,10 @@ namespace Omnikeeper.Model
                     var changesetID = dr.GetGuid(8);
 
                     var att = new CIAttribute(id, name, CIID, av, state, changesetID);
-                    ret.Add(att);
+                    if (ret.TryGetValue(CIID, out var l))
+                        l.Add(name, att);
+                    else
+                        ret.Add(CIID, new Dictionary<string, CIAttribute>() { { name, att } });
                 }
             }
             return ret;
@@ -224,7 +226,7 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
             selection = await OptimizeCIIDSelection(selection, trans);
 
@@ -260,7 +262,7 @@ namespace Omnikeeper.Model
 
             command.Prepare();
 
-            var ret = new List<CIAttribute>();
+            var ret = new Dictionary<Guid, IDictionary<string, CIAttribute>>();
             using var dr = await command.ExecuteReaderAsync();
             while (dr.Read())
             {
@@ -277,7 +279,10 @@ namespace Omnikeeper.Model
                     var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
                     var changesetID = dr.GetGuid(8);
                     var att = new CIAttribute(id, name, CIID, av, state, changesetID);
-                    ret.Add(att);
+                    if (ret.TryGetValue(CIID, out var l))
+                        l.Add(name, att);
+                    else
+                        ret.Add(CIID, new Dictionary<string, CIAttribute>() { { name, att } });
                 }
             }
 
@@ -286,7 +291,7 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             selection = await OptimizeCIIDSelection(selection, trans);
 
@@ -324,7 +329,7 @@ namespace Omnikeeper.Model
 
             using var dr = await command.ExecuteReaderAsync();
 
-            var ret = new List<CIAttribute>();
+            var ret = new Dictionary<Guid, CIAttribute>();
             while (await dr.ReadAsync())
             {
                 var state = dr.GetFieldValue<AttributeState>(0);
@@ -339,7 +344,7 @@ namespace Omnikeeper.Model
                     var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
                     var changesetID = dr.GetGuid(7);
 
-                    ret.Add(new CIAttribute(id, name, CIID, av, state, changesetID));
+                    ret[CIID] = new CIAttribute(id, name, CIID, av, state, changesetID);
                 }
             }
 
@@ -354,7 +359,7 @@ namespace Omnikeeper.Model
 
             // NOTE: re-using FindAttributesByFullName() because the custom implementation is not very different
             var attributes = await FindAttributesByFullName(ICIModel.NameAttribute, selection, layerID, trans, atTime);
-            return attributes.ToDictionary(a => a.CIID, a => a.Value.Value2String());
+            return attributes.ToDictionary(a => a.Key, a => a.Value.Value.Value2String());
         }
 
         public async Task<IEnumerable<Guid>> FindCIIDsWithAttributeNameAndValue(string name, IAttributeValue value, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)

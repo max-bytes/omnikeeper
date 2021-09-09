@@ -36,17 +36,18 @@ namespace Omnikeeper.Base.CLB
         // TODO: rewrite into using bulk replace?
         public async Task RemoveOutdatedErrors()
         {
-            var allAttributes = await attributeModel.FindAttributesByName($"^{AttributeNamePrefix}", new AllCIIDsSelection(), clbLayerID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
+            // TODO: disfunct, rework
+            //var allAttributes = await attributeModel.FindAttributesByName($"^{AttributeNamePrefix}", new AllCIIDsSelection(), clbLayerID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
 
-            var attributesToRemove = allAttributes.Where(a =>
-            {
-                return !writtenErrors.Any(we => we.ID == a.ID);
-            });
+            //var attributesToRemove = allAttributes.Where(a =>
+            //{
+            //    return !writtenErrors.Any(we => we.ID == a.Key);
+            //});
 
-            foreach (var remove in attributesToRemove)
-            {
-                await attributeModel.RemoveAttribute(remove.Name, remove.CIID, clbLayerID, changeset, new DataOriginV1(DataOriginType.ComputeLayer), trans);
-            }
+            //foreach (var remove in attributesToRemove)
+            //{
+            //    await attributeModel.RemoveAttribute(remove.Name, remove.CIID, clbLayerID, changeset, new DataOriginV1(DataOriginType.ComputeLayer), trans);
+            //}
         }
 
         public async Task LogError(Guid ciid, string name, string message)

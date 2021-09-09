@@ -23,21 +23,25 @@ namespace Omnikeeper.Model.Decorators
             this.onlineAccessProxy = onlineAccessProxy;
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
-                return onlineAccessProxy.FindAttributesByName(regex, selection, layerID, trans, atTime).ToEnumerable();
+                // TODO
+                var tmp = onlineAccessProxy.FindAttributesByName(regex, selection, layerID, trans, atTime).ToEnumerable();
+                return (IDictionary<Guid, IDictionary<string, CIAttribute>>)tmp.GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));
             }
 
             return await model.FindAttributesByName(regex, selection, layerID, returnRemoved, trans, atTime);
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
-                return onlineAccessProxy.FindAttributesByFullName(name, selection, layerID, trans, atTime).ToEnumerable();
+                // TODO
+                var tmp = onlineAccessProxy.FindAttributesByFullName(name, selection, layerID, trans, atTime).ToEnumerable();
+                return tmp.ToDictionary(t => t.CIID);
             }
 
             return await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
@@ -55,7 +59,7 @@ namespace Omnikeeper.Model.Decorators
             {
                 // TODO: implement properly, instead of falling back to FindAttributesByFullName()
                 var attributes = await FindAttributesByFullName(ICIModel.NameAttribute, selection, layerID, trans, atTime);
-                return attributes.ToDictionary(a => a.CIID, a => a.Value.Value2String());
+                return attributes.ToDictionary(a => a.Key, a => a.Value.Value.Value2String());
             }
 
             return await model.GetCINames(selection, layerID, trans, atTime);
@@ -81,11 +85,12 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
             {
-                return onlineAccessProxy.GetAttributes(selection, layerID, trans, atTime).ToEnumerable();
+                var tmp = onlineAccessProxy.GetAttributes(selection, layerID, trans, atTime).ToEnumerable();
+                return (IDictionary<Guid, IDictionary<string, CIAttribute>>)tmp.GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));
             }
 
             return await model.GetAttributes(selection, layerID, trans, atTime);
@@ -97,7 +102,7 @@ namespace Omnikeeper.Model.Decorators
             {
                 // TODO: implement properly, instead of falling back to FindAttributesByFullName()
                 var attributes = await FindAttributesByFullName(name, selection, layerID, trans, atTime);
-                return attributes.Where(a => a.Value.Equals(value)).Select(a => a.CIID).ToHashSet();
+                return attributes.Where(a => a.Value.Value.Equals(value)).Select(a => a.Key).ToHashSet();
             }
             return await model.FindCIIDsWithAttributeNameAndValue(name, value, selection, layerID, trans, atTime);
         }

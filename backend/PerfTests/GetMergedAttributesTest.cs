@@ -30,7 +30,7 @@ namespace PerfTests
         [ParamsSource(nameof(AttributeCITuples))]
         public (int numCIs, int numAttributeInserts, int numLayers, int numAttributeNames) AttributeCITuple { get; set; }
         public IEnumerable<(int numCIs, int numAttributeInserts, int numLayers, int numAttributeNames)> AttributeCITuples => new[] {
-            (10000, 100000, 4, 50),
+            (1000, 10000, 4, 50),
         };
 
         [Params("all", "specific", "allExcept")]

@@ -65,9 +65,6 @@ namespace PerfTests
         [Params(false, true)]
         public bool WithEffectiveTraitCaching { get; set; }
 
-        [Params(false)]
-        public bool WithCachingForGetAttributes { get; set; }
-
         [Params("host", "host_linux")]
         public string? TraitToFetch { get; set; }
 
@@ -88,13 +85,6 @@ namespace PerfTests
             var traitsProvider = ServiceProvider.GetRequiredService<ITraitsProvider>();
             effectiveTraitModel = ServiceProvider.GetRequiredService<IEffectiveTraitModel>();
             modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
-
-            if (WithModelCaching)
-            {
-                // NOTE: this is a pretty hacky way to get the decorator and set the flag, but it does the job... 
-                var cachedBaseAttributeModel = ServiceProvider.GetRequiredService<IBaseAttributeModel>() as CachingBaseAttributeModel;
-                cachedBaseAttributeModel!.CachingEnabledForGetAttributes = WithCachingForGetAttributes;
-            }
 
             using var mc = modelContextBuilder.BuildImmediate();
 
