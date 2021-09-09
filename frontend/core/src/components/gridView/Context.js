@@ -101,6 +101,7 @@ export function Context(props) {
                         animateRows={true}
                         rowSelection="multiple"
                         onCellValueChanged={updateCellValue}
+                        suppressFieldDotNotation={true}
                         getRowNodeId={function (data) {
                             return data.ciid;
                         }}

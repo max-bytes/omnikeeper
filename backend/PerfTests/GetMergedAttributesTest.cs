@@ -150,14 +150,16 @@ namespace PerfTests
             }).ToList();
 
             var attributeNames = Enumerable.Range(0, AttributeCITuple.numAttributeNames).Select(i => "A" + RandomUtility.GenerateRandomString(32, random)).ToList();
-            foreach (var layer in layers) {
+
+            foreach (var layer in layers)
+            {
                 var usedAttributes = new HashSet<string>();
                 var fragments = Enumerable.Range(0, AttributeCITuple.numAttributeInserts).Select(i =>
                 {
                     var found = false;
                     string name = "";
                     Guid ciid = new Guid();
-                    while(!found)
+                    while (!found)
                     {
                         name = attributeNames.GetRandom(random)!;
                         ciid = cis.GetRandom(random).Item1;
