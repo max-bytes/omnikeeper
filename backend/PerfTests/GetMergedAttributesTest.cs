@@ -90,6 +90,12 @@ namespace PerfTests
             (await attributeModel!.GetMergedAttributes(selection, layerset!, mc, TimeThreshold.BuildLatest())).Consume(consumer);
         }
 
+        [Test]
+        public void RunBenchmark()
+        {
+            var summary = BenchmarkRunner.Run<GetMergedAttributesTest>();
+        }
+
 
         [Test]
         public async Task RunDebuggable()

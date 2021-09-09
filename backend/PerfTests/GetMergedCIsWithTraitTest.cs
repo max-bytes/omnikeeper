@@ -37,6 +37,12 @@ namespace PerfTests
             (await effectiveTraitModel!.GetMergedCIsWithTrait(trait!, layerset!, ciSelection!, mc, time)).Consume(consumer);
         }
 
+        [Test]
+        public void RunBenchmark()
+        {
+            var summary = BenchmarkRunner.Run<GetMergedCIsWithTraitTest>();
+        }
+
         [GlobalCleanup(Target = nameof(GetMergedCIsWithTrait))]
         public void TearDownT() => TearDown();
 

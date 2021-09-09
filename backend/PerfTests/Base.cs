@@ -100,11 +100,5 @@ namespace PerfTests
         }
 
         protected ServiceProvider ServiceProvider => serviceProvider!;
-
-        [Test]
-        public void RunBenchmark()
-        {
-            var summary = BenchmarkRunner.Run<GetMergedAttributesTest>();
-        }
     }
 }

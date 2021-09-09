@@ -79,10 +79,10 @@ namespace PerfTests
             }
         }
 
-        //[Test]
-        //public void Run()
-        //{
-        //    var summary = BenchmarkRunner.Run<GetCompactCIsTest>();
-        //}
+        [Test]
+        public void Run()
+        {
+            var summary = BenchmarkRunner.Run<GetCompactCIsTest>();
+        }
     }
 }
