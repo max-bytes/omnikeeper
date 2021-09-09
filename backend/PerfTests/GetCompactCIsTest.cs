@@ -50,7 +50,7 @@ namespace PerfTests
 
         public async Task SetupGeneric(bool runPartitioning, bool enableModelCaching, bool enableEffectiveTraitCaching)
         {
-            Setup(enableModelCaching, enableEffectiveTraitCaching);
+            Setup(enableModelCaching, enableEffectiveTraitCaching, true);
 
             var numCIs = 500;
             var numLayers = 4;
@@ -79,10 +79,10 @@ namespace PerfTests
             }
         }
 
-        //[Test]
-        //public void Run()
-        //{
-        //    var summary = BenchmarkRunner.Run<GetCompactCIsTest>();
-        //}
+        [Test]
+        public void Run()
+        {
+            var summary = BenchmarkRunner.Run<GetCompactCIsTest>();
+        }
     }
 }

@@ -9,6 +9,7 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.Model;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -323,19 +324,19 @@ namespace Tests.Integration.Model
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
             await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
 
-            var a1 = await attributeModel.FindAttributesByName("^a", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
+            var a1 = (await attributeModel.FindAttributesByName("^a", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(2, a1.Count());
 
-            var a2 = await attributeModel.FindAttributesByName("^a2$", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
+            var a2 = (await attributeModel.FindAttributesByName("^a2$", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(1, a2.Count());
 
-            var a3 = await attributeModel.FindAttributesByName("3$", new AllCIIDsSelection(), layer2.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
+            var a3 = (await attributeModel.FindAttributesByName("3$", new AllCIIDsSelection(), layer2.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(1, a3.Count());
 
-            var a4 = await attributeModel.FindAttributesByName("^3", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
+            var a4 = (await attributeModel.FindAttributesByName("^3", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(0, a4.Count());
 
-            var a5 = await attributeModel.FindAttributesByName("^a1$", SpecificCIIDsSelection.Build(ciid2), layer2.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
+            var a5 = (await attributeModel.FindAttributesByName("^a1$", SpecificCIIDsSelection.Build(ciid2), layer2.ID, returnRemoved: false, trans, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(1, a5.Count());
         }
 
@@ -382,7 +383,7 @@ namespace Tests.Integration.Model
 
             var ciids3 = await attributeModel.FindCIIDsWithAttributeNameAndValue("a2", new AttributeScalarValueText("textL1"), new AllCIIDsSelection(), layer2.ID, trans, TimeThreshold.BuildLatest());
             Assert.AreEqual(2, ciids3.Count());
-            ciids3.Should().BeEquivalentTo(new Guid[] { ciid1, ciid2 });
+            ciids3.Should().BeEquivalentTo(new Guid[] { ciid1, ciid2 }, options => options.WithStrictOrdering());
         }
 
         [Test]
@@ -423,11 +424,49 @@ namespace Tests.Integration.Model
             trans2.Commit();
 
             using var trans3 = ModelContextBuilder.BuildImmediate();
-            var a1 = await attributeModel.FindAttributesByName("^prefix1", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans3, TimeThreshold.BuildLatest());
+            var a1 = (await attributeModel.FindAttributesByName("^prefix1", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans3, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(3, a1.Count());
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a2").Count());
-            var a2 = await attributeModel.FindAttributesByName("^prefix2", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans3, TimeThreshold.BuildLatest());
+            var a2 = (await attributeModel.FindAttributesByName("^prefix2", new AllCIIDsSelection(), layer1.ID, returnRemoved: false, trans3, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(1, a2.Count());
+        }
+
+
+        [Test]
+        public async Task TestFindMergedAttributesByFullName()
+        {
+            var userModel = new UserInDatabaseModel();
+            var changesetModel = new ChangesetModel(userModel);
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
+            var model = new CIModel(attributeModel, new CIIDModel());
+            var layerModel = new LayerModel();
+            using var trans = ModelContextBuilder.BuildDeferred();
+            var user = await DBSetup.SetupUser(userModel, trans);
+
+            var ciid1 = await model.CreateCI(trans);
+            var ciid2 = await model.CreateCI(trans);
+            var layer1 = await layerModel.UpsertLayer("l1", trans);
+            var layer2 = await layerModel.UpsertLayer("l2", trans);
+
+            var layerset1 = new LayerSet(new string[] { layer2.ID, layer1.ID });
+
+            var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+            var (a11, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);
+            await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);
+
+            var changeset2 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+            var (a12, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid1, layer2.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans);
+
+            var changeset3 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
+            var (a13, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
+            await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
+
+            var a1 = await attributeModel.FindMergedAttributesByFullName("a1", new AllCIIDsSelection(), new LayerSet(layer1.ID, layer2.ID), trans, TimeThreshold.BuildLatest());
+            a1.Should().BeEquivalentTo(new Dictionary<Guid, MergedCIAttribute>()
+            {
+                { ciid1, new MergedCIAttribute(a11, new List<string>() { layer1.ID, layer2.ID }) },
+                { ciid2, new MergedCIAttribute(a13, new List<string>() { layer2.ID }) }
+            }, options => options.WithStrictOrdering());
         }
     }
 }

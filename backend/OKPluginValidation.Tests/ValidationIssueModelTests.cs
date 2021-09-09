@@ -83,7 +83,7 @@ namespace OKPluginValidation.Tests
             var vi2 = await validationIssueModel.GetValidationIssues(new LayerSet(baseConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.AreEqual(1, vi2.Count());
             var tmp = vi2.First().Value;
-            validationIssue.Should().BeEquivalentTo(tmp);
+            validationIssue.Should().BeEquivalentTo(tmp, options => options.WithStrictOrdering());
 
             var changesetProxy2 = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
 

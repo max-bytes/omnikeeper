@@ -28,9 +28,12 @@ namespace PerfTests
         private NpgsqlConnection? conn;
         private ServiceProvider? serviceProvider;
 
-        public virtual void Setup(bool enableModelCaching, bool enableEffectiveTraitCaching)
+        public virtual void Setup(bool enableModelCaching, bool enableEffectiveTraitCaching, bool setupDBSchema)
         {
-            DBSetup.Setup();
+            if (setupDBSchema)
+            {
+                DBSetup.Setup();
+            }
 
             var dbcb = new DBConnectionBuilder();
             conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
@@ -77,7 +80,6 @@ namespace PerfTests
             services.AddSingleton<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance);
             services.AddSingleton<ILogger<RecursiveDataTraitModel>>((sp) => NullLogger<RecursiveDataTraitModel>.Instance);
             services.AddSingleton<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance);
-            services.AddSingleton<ILogger<CachingBaseAttributeModel>>((sp) => NullLogger<CachingBaseAttributeModel>.Instance);
             services.AddSingleton<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance);
             services.AddSingleton<ILoggerFactory, NullLoggerFactory>();
             services.AddSingleton<ILogger<CISearchModel>>((sp) => NullLogger<CISearchModel>.Instance);

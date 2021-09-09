@@ -31,7 +31,7 @@ namespace Tests.Integration.Serialization
             var a = new OIAContext("name", 234L, new TestConfig() { BuilderName = "BuilderName", MapperScope = "MapperScope"});
             var b = dataSerializer.ToByteArray(a);
             var c = dataSerializer.FromByteArray<OIAContext>(b);
-            c.Should().BeEquivalentTo(a);
+            c.Should().BeEquivalentTo(a, options => options.WithStrictOrdering());
         }
     }
 }

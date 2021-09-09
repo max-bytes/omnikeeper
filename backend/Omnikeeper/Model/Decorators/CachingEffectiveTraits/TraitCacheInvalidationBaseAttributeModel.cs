@@ -72,7 +72,7 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return model.GetAttributesOfChangeset(changesetID, trans);
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
             return await model.FindAttributesByName(regex, selection, layerID, returnRemoved, trans, atTime);
         }
@@ -82,7 +82,7 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return await model.GetCINames(selection, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
         }
@@ -102,7 +102,7 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await model.GetAttributes(selection, layerID, trans, atTime);
         }

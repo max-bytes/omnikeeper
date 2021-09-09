@@ -73,7 +73,7 @@ namespace Tests.Integration.Model
             {
                 var json = RecursiveTrait.Serializer.SerializeToString(rt);
                 var x = RecursiveTrait.Serializer.Deserialize(json);
-                x.Should().BeEquivalentTo(rt);
+                x.Should().BeEquivalentTo(rt, options => options.WithStrictOrdering());
             }
         }
     }

@@ -34,7 +34,7 @@ function ExplorerAttributeList(props) {
         <Panel header={title} key={key}>
           <Flipper flipKey={sortedAttributes.map(a => a.layerStackIDs).join(' ')}>
             {sortedAttributes.map((a, index) => {
-              var isEditable = props.isEditable && props.visibleAndWritableLayers.some(l => l.id === a.layerStackIDs[a.layerStackIDs.length - 1]);
+              var isEditable = props.isEditable && props.visibleAndWritableLayers.some(l => l.id === a.layerStackIDs[0]);
               return (<Flipped key={a.attribute.name} flipId={a.attribute.name} onAppear={onAppear} onExit={onExit}>
                 <Attribute visibleLayers={props.visibleLayers} style={{padding: '5px 0px', backgroundColor: ((index % 2 === 1) ? '#00000009' : '#00000000')}} 
                   attribute={a.attribute} layerStack={a.layerStack} isEditable={isEditable} />

@@ -38,7 +38,7 @@ function Attribute(props) {
   let input;
 
   const layerStackIDs = layerStack.map(l => l.id);
-  const layerID = layerStackIDs[layerStackIDs.length - 1];
+  const layerID = layerStackIDs[0];
 
   const removed = attribute.state === 'REMOVED';
 

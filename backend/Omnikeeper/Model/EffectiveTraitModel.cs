@@ -67,8 +67,9 @@ namespace Omnikeeper.Model
                 return ImmutableList<MergedCI>.Empty;
 
             // now do a full pass to check which ci's REALLY fulfill the trait's requirements
-            var cis = await ciModel.GetMergedCIs(ciidSelection, layerSet, true, trans, atTime);
-            var ret = new List<MergedCI>();
+            var fetchEmptyCIs = (trait is TraitEmpty); // only fetch empty traits if the specified trait is empty, otherwise we don't have to do that because a non-empty CI can never fulfill the empty trait
+            var cis = await ciModel.GetMergedCIs(ciidSelection, layerSet, fetchEmptyCIs, trans, atTime); 
+            var ret = new List<MergedCI>(cis.Count());
             foreach (var ci in cis)
             {
                 var canResolve = await CanResolve(trait, ci, trans, atTime);
@@ -164,7 +165,7 @@ namespace Omnikeeper.Model
 
             // now do a full pass to check which ci's REALLY fulfill the trait's requirements
             var cis = await ciModel.GetMergedCIs(ciidSelection, layerSet, false, trans, atTime);
-            var ret = new Dictionary<Guid, (MergedCI ci, EffectiveTrait et)>();
+            var ret = new Dictionary<Guid, (MergedCI ci, EffectiveTrait et)>(cis.Count());
             foreach (var ci in cis)
             {
                 var et = await Resolve(trait, ci, trans, atTime);
@@ -224,8 +225,8 @@ namespace Omnikeeper.Model
                     foreach (var ta in tt.RequiredAttributes)
                     {
                         var traitAttributeIdentifier = ta.Identifier;
-                        var (_, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
-                        if (!checks.Errors.IsEmpty())
+                        var (_, errors) = TemplateCheckService.CalculateTemplateErrorsAttributeSimple(ci, ta.AttributeTemplate);
+                        if (errors)
                             return false;
                     };
                     if (tt.RequiredRelations.Count > 0)
@@ -235,8 +236,8 @@ namespace Omnikeeper.Model
                         {
                             var traitRelationIdentifier = tr.Identifier;
                             var relatedCIs = allCompactRelatedCIs.Where(rci => rci.PredicateID == tr.RelationTemplate.PredicateID);
-                            var checks = TemplateCheckService.CalculateTemplateErrorsRelation(relatedCIs, tr.RelationTemplate);
-                            if (!checks.Errors.IsEmpty())
+                            var errors = TemplateCheckService.CalculateTemplateErrorsRelationSimple(relatedCIs, tr.RelationTemplate);
+                            if (errors)
                                 return false;
                         }
                     }
@@ -256,64 +257,62 @@ namespace Omnikeeper.Model
             switch (trait)
             {
                 case GenericTrait tt:
-                    var requiredEffectiveTraitAttributes = tt.RequiredAttributes.Select(ta =>
+
+                    var effectiveTraitAttributes = new Dictionary<string, MergedCIAttribute>(tt.RequiredAttributes.Count + tt.OptionalAttributes.Count);
+                    var effectiveTraitRelations = new Dictionary<string, IEnumerable<CompactRelatedCI>>(tt.RequiredRelations.Count + tt.OptionalRelations.Count);
+
+                    // required attributes
+                    foreach (var ta in tt.RequiredAttributes)
                     {
                         var traitAttributeIdentifier = ta.Identifier;
-                        var (foundAttribute, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
-                        return (traitAttributeIdentifier, foundAttribute, checks);
-                    });
-                    IEnumerable<(string traitRelationIdentifier, IEnumerable<CompactRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)> requiredEffectiveTraitRelations
-                        = new List<(string traitRelationIdentifier, IEnumerable<CompactRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)>();
+                        var (foundAttribute, errors) = TemplateCheckService.CalculateTemplateErrorsAttributeSimple(ci, ta.AttributeTemplate);
+                        if (errors)
+                            return null;
+                        effectiveTraitAttributes.Add(traitAttributeIdentifier, foundAttribute!);
+                    }
+
+                    // required relations
                     if (tt.RequiredRelations.Count > 0) // TODO: consider batching up fetching of related CIs... fetching them one-by-one is TOUGH on performance
                     {
                         var allCompactRelatedCIs = await RelationService.GetCompactRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, null, trans, atTime);
-                        requiredEffectiveTraitRelations = tt.RequiredRelations.Select(tr =>
+                        foreach (var tr in tt.RequiredRelations)
                         {
                             var traitRelationIdentifier = tr.Identifier;
                             var relatedCIs = allCompactRelatedCIs.Where(rci => rci.PredicateID == tr.RelationTemplate.PredicateID);
-                            var checks = TemplateCheckService.CalculateTemplateErrorsRelation(relatedCIs, tr.RelationTemplate);
-                            return (traitRelationIdentifier, relatedCIs, checks);
-                        });
-                    }
-
-                    var isTraitApplicable = requiredEffectiveTraitAttributes.All(t => t.checks.Errors.IsEmpty())
-                        && requiredEffectiveTraitRelations.All(t => t.checks.Errors.IsEmpty());
-
-                    if (isTraitApplicable)
-                    {
-                        // add optional traitAttributes
-                        var optionalEffectiveTraitAttributes = tt.OptionalAttributes.Select(ta =>
-                        {
-                            var traitAttributeIdentifier = ta.Identifier;
-                            var (foundAttribute, checks) = TemplateCheckService.CalculateTemplateErrorsAttribute(ci, ta.AttributeTemplate);
-                            return (traitAttributeIdentifier, foundAttribute, checks);
-                        }).Where(t => t.checks.Errors.IsEmpty());
-
-                        // add optional traitRelations
-                        IEnumerable<(string traitRelationIdentifier, IEnumerable<CompactRelatedCI> mergedRelatedCIs, TemplateErrorsRelation checks)> optionalEffectiveTraitRelations = 
-                            new(string traitRelationIdentifier, IEnumerable < CompactRelatedCI > relatedCIs, TemplateErrorsRelation checks)[0];
-                        if (tt.OptionalRelations.Count > 0) 
-                        {
-                            // TODO: consider batching up fetching of related CIs... fetching them one-by-one is TOUGH on performance
-                            var allCompactRelatedCIs = await RelationService.GetCompactRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, null, trans, atTime);
-                            optionalEffectiveTraitRelations = tt.OptionalRelations.Select(tr =>
-                            {
-                                var traitRelationIdentifier = tr.Identifier;
-                                var relatedCIs = allCompactRelatedCIs.Where(rci => rci.PredicateID == tr.RelationTemplate.PredicateID);
-                                var checks = TemplateCheckService.CalculateTemplateErrorsRelation(relatedCIs, tr.RelationTemplate);
-                                return (traitRelationIdentifier, relatedCIs, checks);
-                            }).Where(t => t.checks.Errors.IsEmpty());
+                            var errors = TemplateCheckService.CalculateTemplateErrorsRelationSimple(relatedCIs, tr.RelationTemplate);
+                            if (errors)
+                                return null;
+                            effectiveTraitRelations.Add(traitRelationIdentifier, relatedCIs);
                         }
+                    }
 
-                        var resolvedET = new EffectiveTrait(tt,
-                            requiredEffectiveTraitAttributes.Concat(optionalEffectiveTraitAttributes).ToDictionary(t => t.traitAttributeIdentifier, t => t.foundAttribute!),
-                            requiredEffectiveTraitRelations.Concat(optionalEffectiveTraitRelations).ToDictionary(t => t.traitRelationIdentifier, t => t.mergedRelatedCIs));
-                        return resolvedET;
-                    }
-                    else
+                    // add optional traitAttributes
+                    foreach (var ta in tt.OptionalAttributes)
                     {
-                        return null;
+                        var traitAttributeIdentifier = ta.Identifier;
+                        var (foundAttribute, errors) = TemplateCheckService.CalculateTemplateErrorsAttributeSimple(ci, ta.AttributeTemplate);
+                        if (!errors)
+                            effectiveTraitAttributes.Add(traitAttributeIdentifier, foundAttribute!);
                     }
+
+                    // add optional traitRelations
+                    if (tt.OptionalRelations.Count > 0)
+                    {
+                        // TODO: consider batching up fetching of related CIs... fetching them one-by-one is TOUGH on performance
+                        var allCompactRelatedCIs = await RelationService.GetCompactRelatedCIs(ci.ID, ci.Layers, ciModel, relationModel, null, trans, atTime);
+                        foreach (var tr in tt.OptionalRelations)
+                        {
+                            var traitRelationIdentifier = tr.Identifier;
+                            var relatedCIs = allCompactRelatedCIs.Where(rci => rci.PredicateID == tr.RelationTemplate.PredicateID);
+                            var errors = TemplateCheckService.CalculateTemplateErrorsRelationSimple(relatedCIs, tr.RelationTemplate);
+                            if (!errors)
+                                effectiveTraitRelations.Add(traitRelationIdentifier, relatedCIs);
+                        };
+                    }
+
+                    var resolvedET = new EffectiveTrait(tt, effectiveTraitAttributes, effectiveTraitRelations);
+                    return resolvedET;
+
                 case TraitEmpty te:
                     if (ci.MergedAttributes.IsEmpty()) // TODO: check for relations too?
                         return new EffectiveTrait(te, new Dictionary<string, MergedCIAttribute>(), new Dictionary<string, IEnumerable<CompactRelatedCI>>());

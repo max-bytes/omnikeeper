@@ -49,7 +49,7 @@ namespace Omnikeeper.Model.Decorators
                 return null;
         }
 
-        public async Task<IEnumerable<Layer>> GetLayers(string[] layerIDs, IModelContext trans)
+        public async Task<IEnumerable<Layer>> GetLayers(IEnumerable<string> layerIDs, IModelContext trans)
         {
             var (allLayers, _) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.AllLayersByID(), async () => (await Model.GetLayers(trans)).ToDictionary(l => l.ID));
 

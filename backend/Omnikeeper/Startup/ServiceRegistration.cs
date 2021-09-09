@@ -186,7 +186,6 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IRelationModel, RelationModel>();
             services.AddSingleton<IBaseRelationModel, BaseRelationModel>();
             services.AddSingleton<IChangesetModel, ChangesetModel>();
-            services.AddSingleton<ITemplateModel, TemplateModel>();
             services.AddSingleton<IPredicateModel, PredicateModel>();
             services.AddSingleton<ICacheModel, CacheModel>();
             services.AddSingleton<IODataAPIContextModel, ODataAPIContextModel>();
@@ -200,22 +199,15 @@ namespace Omnikeeper.Startup
 
             // these aren't real models, but we keep them here because they are closely related to models
             services.AddSingleton<ITraitsProvider, TraitsProvider>();
-            services.AddSingleton<ITemplatesProvider, TemplatesProvider>();
             services.AddSingleton<IEffectiveGeneratorProvider, EffectiveGeneratorProvider>();
             services.AddSingleton<IDataSerializer, ProtoBufDataSerializer>();
 
             if (enableModelCaching)
             {
-                services.Decorate<IBaseAttributeModel, CachingBaseAttributeModel>();
-                services.Decorate<IBaseAttributeRevisionistModel, CachingBaseAttributeRevisionistModel>();
                 services.Decorate<ILayerModel, CachingLayerModel>();
-                services.Decorate<IBaseRelationModel, CachingBaseRelationModel>();
-                services.Decorate<IBaseRelationRevisionistModel, CachingBaseRelationRevisionistModel>();
                 services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
                 services.Decorate<IBaseConfigurationModel, CachingBaseConfigurationModel>();
                 services.Decorate<IPartitionModel, CachingPartitionModel>();
-
-                services.Decorate<ITemplatesProvider, CachedTemplatesProvider>();
             }
 
             if (enableEffectiveTraitCaching)
@@ -236,7 +228,7 @@ namespace Omnikeeper.Startup
 
             if (enabledGenerators)
             {
-                services.Decorate<IBaseAttributeModel, GeneratingBaseAttributeModel>();
+                //services.Decorate<IBaseAttributeModel, GeneratingBaseAttributeModel>();
             }
         }
 

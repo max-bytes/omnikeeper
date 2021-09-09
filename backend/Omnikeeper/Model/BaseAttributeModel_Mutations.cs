@@ -147,8 +147,8 @@ namespace Omnikeeper.Model
                 BulkCIAttributeDataLayerScope d => (await FindAttributesByName($"^{data.NamePrefix}", new AllCIIDsSelection(), data.LayerID, returnRemoved: true, trans, readTS)),
                 BulkCIAttributeDataCIScope d => (await FindAttributesByName($"^{data.NamePrefix}", SpecificCIIDsSelection.Build(d.CIID), data.LayerID, returnRemoved: true, trans, readTS)),
                 _ => null
-            }).ToDictionary(a => a.InformationHash, attribute => (attribute, Guid.NewGuid()));
-
+            }).SelectMany(t => t.Value.Values).ToDictionary(a => a.InformationHash, a => (attribute: a, newAttributeID: Guid.NewGuid())); // TODO: slow?
+            
             var actualInserts = new List<(Guid ciid, string fullName, IAttributeValue value, AttributeState state, Guid attributeID, Guid? existingAttributeID)>();
             var informationHashesToInsert = new HashSet<string>();
             foreach (var fragment in data.Fragments)

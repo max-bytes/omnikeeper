@@ -23,7 +23,7 @@ namespace Tests.Integration.Serialization
             });
             var b = dataSerializer.ToByteArray(a);
             var c = dataSerializer.FromByteArray<RecursiveTrait>(b);
-            c.Should().BeEquivalentTo(a);
+            c.Should().BeEquivalentTo(a, options => options.WithStrictOrdering());
         }
     }
 }

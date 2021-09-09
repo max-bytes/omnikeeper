@@ -112,7 +112,7 @@ namespace OKPluginActiveDirectoryXMLIngest.Tests
                     new CICandidateAttributeData.Fragment("ad.canonicalName", new AttributeScalarValueText("acme.local/ACME/PC-3")),
                     new CICandidateAttributeData.Fragment("ad.description", new AttributeScalarValueText("PC of Alan Steiner")),
                 }),
-            });
+            }, options => options.WithStrictOrdering());
 
             relationCandidates.Should().HaveCount(7);
         }

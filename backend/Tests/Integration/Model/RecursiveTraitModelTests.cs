@@ -64,7 +64,7 @@ namespace Tests.Integration.Model
             }
 
             var rt2 = await recursiveTraitModel.GetRecursiveTraits(new LayerSet(baseConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            rt2.Should().BeEquivalentTo(new List<RecursiveTrait>() { trait });
+            rt2.Should().BeEquivalentTo(new List<RecursiveTrait>() { trait }, options => options.WithStrictOrdering());
 
             var changesetProxy2 = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
 

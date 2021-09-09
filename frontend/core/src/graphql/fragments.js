@@ -64,25 +64,6 @@ export const Fragments = {
               }
             }
         }
-        templateErrors {
-          attributeErrors {
-                attributeName
-                errors {
-                    __typename
-                    ... on TemplateErrorAttributeMissingType {errorMessage, type}
-                    ... on TemplateErrorAttributeWrongTypeType {errorMessage, correctTypes}
-                    ... on TemplateErrorAttributeWrongMultiplicityType {errorMessage, correctIsArray}
-                    ... on TemplateErrorAttributeGenericType {errorMessage}
-                }
-            }
-            relationErrors {
-                predicateID
-                errors {
-                    __typename
-                    ... on TemplateErrorRelationGenericType {errorMessage}
-                }
-            }
-        }
         related(perPredicateLimit: $includeRelated) {
             ...RelatedCI
         }

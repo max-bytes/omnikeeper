@@ -88,6 +88,7 @@ namespace Omnikeeper.Model
             }
         }
 
+        // TODO: most (all?) users of this method only require CompactCIs anway... we could make this potentially more performant if we could work with CompactCIs instead
         public async Task<IEnumerable<MergedCI>> SearchForMergedCIsByTraits(ICIIDSelection ciidSelection, string[] withEffectiveTraits, string[] withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             var activeTraits = await traitsProvider.GetActiveTraits(trans, atTime);
@@ -96,15 +97,6 @@ namespace Omnikeeper.Model
 
             if (ReduceTraitRequirements(ref requiredTraits, ref requiredNonTraits))
                 return ImmutableList<MergedCI>.Empty; // bail completely
-
-            // NOTE: depending on which traits are required and non-required, checking them in different orders can have a big impact on performance
-            // it makes sense to check for traits that reduce the working set the most first, because then later checks have it easier;
-            // consider developing a heuristic for checking which traits reduce the working set the most and check for those first
-            // this goes for both required and non-required traits
-            // the heuristic we choose for now... length of the trait's ID
-            // this is a really weird heuristic at first but it makes some sense given that the shorter a trait's ID is, the more likely it is very broad and generic
-            requiredTraits = requiredTraits.OrderByDescending(t => t.ID.Length);
-            requiredNonTraits = requiredNonTraits.OrderByDescending(t => t.ID.Length);
 
             IEnumerable<MergedCI>? workCIs = null;
             foreach (var requiredTrait in requiredTraits)
@@ -129,15 +121,25 @@ namespace Omnikeeper.Model
             {
                 if (workCIs == null)
                 {
-                    // can't optimize this case well to use cache:
-                    // at first, we fetch the mergedCIs with the first requiredNonTrait
-                    // then we "invert" the ciid-selection and get the mergedCIs for that selection
-                    var excludedCIs = await traitModel.GetMergedCIsWithTrait(requiredNonTrait, layerSet, ciidSelection, trans, atTime);
-                    // TODO: implement traitModel.GetMergedCIIDsWithTrait() and use that -> that would allow us to use the cache (if present) and hit the database less
-                    // we only need the CIIDs anyway here
+                    if (requiredNonTrait.ID == TraitEmpty.StaticID)
+                    {
+                        // treat empty trait special, because its simply GetMergedCIs with includeEmptyCIs: false
+                        workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: true, trans, atTime);
+                    }
+                    else
+                    {
+                        // can't optimize this case well to use cache:
+                        // at first, we fetch the mergedCIs with the first requiredNonTrait
+                        // then we "invert" the ciid-selection and get the mergedCIs for that selection
+                        var excludedCIs = await traitModel.GetMergedCIsWithTrait(requiredNonTrait, layerSet, ciidSelection, trans, atTime);
+                        // TODO: implement traitModel.GetMergedCIIDsWithTrait() and use that -> that would allow us to use the cache (if present) and hit the database less
+                        // we only need the CIIDs anyway here
 
-                    var workCIIDSelection = ciidSelection.Except(SpecificCIIDsSelection.Build(excludedCIs.Select(ci => ci.ID).ToHashSet()));
-                    workCIs = await ciModel.GetMergedCIs(workCIIDSelection, layerSet, true, trans, atTime);
+                        var workCIIDSelection = ciidSelection.Except(SpecificCIIDsSelection.Build(excludedCIs.Select(ci => ci.ID).ToHashSet()));
+                        // NOTE: we must keep includeEmptyCIs true here
+                        var includeEmptyCIs = true;
+                        workCIs = await ciModel.GetMergedCIs(workCIIDSelection, layerSet, includeEmptyCIs, trans, atTime); 
+                    }
                 }
                 else
                 {
@@ -187,6 +189,33 @@ namespace Omnikeeper.Model
             }
             requiredTraits = requiredTraits.Where(rt => !filteredRequiredTraits.Contains(rt.ID));
             requiredNonTraits = requiredNonTraits.Where(rt => !filteredRequiredNonTraits.Contains(rt.ID));
+
+            // handle empty trait special: if its required, checking other traits makes no sense and we can remove checking for other traits, both required and non-required
+            // if its non-required, and there are other traits that are required, we can remove it from the non-required traits
+            // if its non-required and there are no other traits that are required, we put it last in the non-required traits, so that the code that does the resolving has an easier time
+            var requiredEmptyTrait = requiredTraits.FirstOrDefault(t => t.ID == TraitEmpty.StaticID);
+            var requiredNonEmptyTrait = requiredNonTraits.FirstOrDefault(t => t.ID == TraitEmpty.StaticID);
+            if (requiredEmptyTrait != null)
+            {
+                requiredTraits = new List<ITrait>() { requiredEmptyTrait };
+                requiredNonTraits = new List<ITrait>();
+            } else if (requiredNonEmptyTrait != null)
+            {
+                if (!requiredTraits.IsEmpty())
+                {
+                    requiredNonTraits = requiredNonTraits.Where(t => t.ID != TraitEmpty.StaticID);
+                } 
+            }
+
+            // NOTE: depending on which traits are required and non-required, checking them in different orders can have a big impact on performance
+            // it makes sense to check for traits that reduce the working set the most first, because then later checks have it easier;
+            // consider developing a heuristic for checking which traits reduce the working set the most and check for those first
+            // this goes for both required and non-required traits
+            // the heuristic we choose for now... length of the trait's ID
+            // this is a really weird heuristic at first but it makes some sense given that the shorter a trait's ID is, the more likely it is very broad and generic
+            // Also, we put the nonrequired empty trait last, if it is set (see above why)
+            requiredTraits = requiredTraits.OrderByDescending(t => t.ID.Length);
+            requiredNonTraits = requiredNonTraits.OrderByDescending(t => (t.ID == TraitEmpty.StaticID) ? -1 : t.ID.Length);
 
             return false;
         }

@@ -45,12 +45,18 @@ namespace PerfTests
         [Params(false, true)]
         public bool UseLatestTable { get; set; }
 
+        [Params(true)]
+        public bool PreSetupData { get; set; }
+
         [GlobalSetup(Target = nameof(GetMergedAttributes))]
         public async Task Setup()
         {
-            Setup(WithModelCaching, WithEffectiveTraitCaching);
+            Setup(WithModelCaching, WithEffectiveTraitCaching, PreSetupData);
 
-            await SetupData();
+            if (PreSetupData)
+            {
+                await SetupData();
+            }
 
             var modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
@@ -144,6 +150,7 @@ namespace PerfTests
             }).ToList();
 
             var attributeNames = Enumerable.Range(0, AttributeCITuple.numAttributeNames).Select(i => "A" + RandomUtility.GenerateRandomString(32, random)).ToList();
+
             foreach (var layer in layers)
             {
                 var usedAttributes = new HashSet<string>();
