@@ -37,7 +37,7 @@ namespace Omnikeeper.Model
                         {
                             if (existingAttributes.TryGetValue(newAttribute.Key, out var existingMergedAttribute))
                             {
-                                existingAttributes[newAttribute.Key] = new MergedCIAttribute(existingMergedAttribute.Attribute, existingMergedAttribute.LayerStackIDs.Prepend(layerID).ToList()); // TODO: reverse by appending
+                                existingAttributes[newAttribute.Key] = new MergedCIAttribute(existingMergedAttribute.Attribute, existingMergedAttribute.LayerStackIDs.Append(layerID).ToList());
                             } else
                             {
                                 existingAttributes[newAttribute.Key] = new MergedCIAttribute(newAttribute.Value, new string[] { layerID });
@@ -53,12 +53,25 @@ namespace Omnikeeper.Model
             return compound;
         }
 
-        // HACK, TODO: simplify
         private IDictionary<Guid, MergedCIAttribute> MergeAttributes(IEnumerable<(IDictionary<Guid, CIAttribute> attributes, string layerID)> layeredAttributes)
         {
-            var tmp = layeredAttributes.Select(c => ((IDictionary<Guid, IDictionary<string, CIAttribute>>)c.attributes.ToDictionary(t => t.Key, t => (IDictionary<string, CIAttribute>)new Dictionary<string, CIAttribute>() { { t.Value.Name, t.Value } }), c.layerID));
-            var tmp2 = MergeAttributes(tmp);
-            return tmp2.ToDictionary(t => t.Key, t => t.Value.First().Value);
+            var compound = new Dictionary<Guid, MergedCIAttribute>();
+            foreach (var (cis, layerID) in layeredAttributes)
+            {
+                foreach (var ci in cis)
+                {
+                    var ciid = ci.Key;
+                    if (compound.TryGetValue(ciid, out var existingMergedAttribute))
+                    {
+                        compound[ciid] = new MergedCIAttribute(existingMergedAttribute.Attribute, existingMergedAttribute.LayerStackIDs.Append(layerID).ToList());
+                    }
+                    else
+                    {
+                        compound.Add(ciid, new MergedCIAttribute(ci.Value, new string[] { layerID }));
+                    }
+                }
+            }
+            return compound;
         }
 
         // strings must be a pre-sorted enumerable based on layer-sort

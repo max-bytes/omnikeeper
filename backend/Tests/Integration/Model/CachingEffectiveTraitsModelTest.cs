@@ -42,27 +42,27 @@ namespace Tests.Integration.Model
             // first access
             var cis1 = await traitModel.GetMergedCIsWithTrait(testTrait1, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(3, cis1.Count());
-            cis1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
+            cis1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] }, options => options.WithStrictOrdering());
 
             // check if cache is filled
             Assert.IsTrue(cache.GetCIIDsHavingTrait(testTrait1.ID, layerset, out var ciidsInCache1));
-            ciidsInCache1.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
+            ciidsInCache1.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] }, options => options.WithStrictOrdering());
             Assert.IsFalse(cache.GetCIIDsHavingTrait(testTrait2.ID, layerset, out var _));
             Assert.IsFalse(cache.GetCIIDsHavingTrait(testTrait3.ID, layerset, out var _));
 
             // second access, should come from cache
             var cis1again = await traitModel.GetMergedCIsWithTrait(testTrait1, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(3, cis1again.Count());
-            cis1again.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
+            cis1again.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] }, options => options.WithStrictOrdering());
 
             // first access for trait2
             var cis2 = await traitModel.GetMergedCIsWithTrait(testTrait2, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(2, cis2.Count());
-            cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
+            cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] }, options => options.WithStrictOrdering());
 
             // check if cache is filled for trait2 too
             Assert.IsTrue(cache.GetCIIDsHavingTrait(testTrait2.ID, layerset, out var ciidsInCache2));
-            ciidsInCache2.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
+            ciidsInCache2.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] }, options => options.WithStrictOrdering());
             Assert.IsTrue(cache.GetCIIDsHavingTrait(testTrait1.ID, layerset, out var _));
 
             // do a change to ci1's attributes
@@ -75,19 +75,19 @@ namespace Tests.Integration.Model
 
             // trait 2 should now contain 1 more item in cache, trait 1 still full
             Assert.IsTrue(cache.GetCIIDsHavingTrait(testTrait2.ID, layerset, out var ciidsInCache3));
-            ciidsInCache3.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
+            ciidsInCache3.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] }, options => options.WithoutStrictOrdering());
             Assert.IsTrue(cache.GetCIIDsHavingTrait(testTrait1.ID, layerset, out var ciidsInCache4));
-            ciidsInCache4.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
+            ciidsInCache4.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] }, options => options.WithoutStrictOrdering());
 
 
             // second access for trait2, should still return the same two cis, even when cache contains 3
             var cis3 = await traitModel.GetMergedCIsWithTrait(testTrait2, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(2, cis3.Count());
-            cis3.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
+            cis3.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] }, options => options.WithStrictOrdering());
 
             // cache for trait 2 is updated again
             Assert.IsTrue(cache.GetCIIDsHavingTrait(testTrait2.ID, layerset, out var ciidsInCache5));
-            ciidsInCache5.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
+            ciidsInCache5.Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] }, options => options.WithStrictOrdering());
         }
 
         private async Task<(CachingEffectiveTraitModel traitModel, EffectiveTraitCache cache, AttributeModel attributeModel, 

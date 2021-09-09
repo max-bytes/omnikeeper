@@ -81,11 +81,11 @@ namespace Tests.Integration.Model
             //(await searchModel.SimpleSearch("ci2", transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci2"));
             //(await searchModel.SimpleSearch("i3", transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci3"));
 
-            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { }, new string[] { }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all);
-            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { "test_trait_3" }, new string[] { }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci1"));
-            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { "test_trait_3" }, new string[] { }, new LayerSet(layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty);
-            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { "test_trait_4" }, new string[] { }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty);
-            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { }, new string[] { "test_trait_3" }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name != "ci1"));
+            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { }, new string[] { }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all, options => options.WithStrictOrdering());
+            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { "test_trait_3" }, new string[] { }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci1"), options => options.WithStrictOrdering());
+            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { "test_trait_3" }, new string[] { }, new LayerSet(layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty, options => options.WithStrictOrdering());
+            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { "test_trait_4" }, new string[] { }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty, options => options.WithStrictOrdering());
+            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { }, new string[] { "test_trait_3" }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name != "ci1"), options => options.WithStrictOrdering());
 
         }
     }

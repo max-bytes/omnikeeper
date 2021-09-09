@@ -15,7 +15,7 @@ namespace Tests.Integration.Serialization
             var dataSerializer = new ProtoBufDataSerializer();
             var a = new Relation(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "id", RelationState.Removed, Guid.NewGuid());
             var b = dataSerializer.ToByteArray(a);
-            dataSerializer.FromByteArray<Relation>(b).Should().BeEquivalentTo(a);
+            dataSerializer.FromByteArray<Relation>(b).Should().BeEquivalentTo(a, options => options.WithStrictOrdering());
         }
     }
 }

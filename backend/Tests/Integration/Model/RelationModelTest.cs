@@ -258,7 +258,7 @@ namespace Tests.Integration.Model
                 (predicateID1, ciid2, ciid1, RelationState.New),
                 (predicateID1, ciid3, ciid2, RelationState.New),
                 (predicateID1, ciid3, ciid1, RelationState.New),
-            });
+            }, options => options.WithStrictOrdering());
         }
     }
 }

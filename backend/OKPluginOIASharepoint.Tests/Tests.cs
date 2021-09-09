@@ -72,7 +72,7 @@ namespace OKPluginOIASharepoint.Tests
                 lap.BuildAttributeFromValue(ICIModel.NameAttribute, "Tibbot", fakeCIID2),
                 lap.BuildAttributeFromValue("title_attribute", "5", fakeCIID2),
                 lap.BuildAttributeFromValue("last_name", "Tibbot", fakeCIID2),
-            });
+            }, options => options.WithStrictOrdering());
         }
 
         [Test]
@@ -87,7 +87,7 @@ namespace OKPluginOIASharepoint.Tests
 
             var items = await client.GetListItems(ExternalSharepointListID, new string[] { "Title" }).ToListAsync();
 
-            items.Should().BeEquivalentTo(listItems.Select(t => (t.itemGuid, Dyn2Dict(t.data))));
+            items.Should().BeEquivalentTo(listItems.Select(t => (t.itemGuid, Dyn2Dict(t.data))), options => options.WithStrictOrdering());
 
             //foreach (var (itemGuid, data) in items)
             //{

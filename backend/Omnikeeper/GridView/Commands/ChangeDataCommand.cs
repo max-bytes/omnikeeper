@@ -251,7 +251,7 @@ namespace Omnikeeper.GridView.Commands
                         {
                             if (attr.LayerStackIDs.Count > 1)
                             {
-                                if (attr.LayerStackIDs.Last() != config.WriteLayer)
+                                if (attr.LayerStackIDs.First() != config.WriteLayer)
                                 {
                                     changable = false;
                                 }

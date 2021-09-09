@@ -48,11 +48,11 @@ namespace Tests.Integration.Model
 
             var cis1 = await traitModel.GetMergedCIsWithTrait(testTrait1, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(3, cis1.Count());
-            cis1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] });
+            cis1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] }, options => options.WithStrictOrdering());
 
             var cis2 = await traitModel.GetMergedCIsWithTrait(testTrait2, layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(2, cis2.Count());
-            cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] });
+            cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] }, options => options.WithStrictOrdering());
         }
 
         [Test]
@@ -73,7 +73,7 @@ namespace Tests.Integration.Model
 
             var et2 = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(testTrait1, "a4", new AttributeScalarValueText("text42"), layerset, new AllCIIDsSelection(), trans, timeThreshold);
             Assert.AreEqual(2, et2.Count());
-            et2.Select(e => e.Key).Should().BeEquivalentTo(new Guid[] { ciids[1], ciids[2] });
+            et2.Select(e => e.Key).Should().BeEquivalentTo(new Guid[] { ciids[1], ciids[2] }, options => options.WithStrictOrdering());
         }
 
         [Test]

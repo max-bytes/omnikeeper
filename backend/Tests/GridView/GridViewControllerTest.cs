@@ -99,7 +99,7 @@ namespace Tests.Integration.Controller
             r2.Should().BeOfType<OkObjectResult>();
             var ctxData = ((r2 as OkObjectResult)!.Value as GetContextResponse);
             ctxData.Should().NotBeNull();
-            ctxData!.Context.Should().BeEquivalentTo(new FullContext("ctx1", "Context 1", "Description", cfg1));
+            ctxData!.Context.Should().BeEquivalentTo(new FullContext("ctx1", "Context 1", "Description", cfg1), options => options.WithStrictOrdering());
 
             // test getting data
             var r3 = await controller.GetData("ctx1");
@@ -124,7 +124,7 @@ namespace Tests.Integration.Controller
                         new Cell("a2", new AttributeValueDTO() { Values = new string[] { "text2" }, IsArray = false, Type = AttributeValueType.Text }, true),
                     }
                 )
-            });
+            }, options => options.WithStrictOrdering());
         }
 
         public class MockedTraitsProvider : ITraitsProvider

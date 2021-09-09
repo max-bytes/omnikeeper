@@ -8,7 +8,7 @@ function argbToRGB(color) {
 }
 function LayerStackIcons(props) {
     var numLayers = props.layerStack.length;
-    return (<span style={{display: 'block', position: 'relative', flexShrink: 0, height: '16px', width: '16px', margin: "0px 5px"}}>{props.layerStack.map((l, i) => {
+    return (<span style={{display: 'block', position: 'relative', flexShrink: 0, height: '16px', width: '16px', margin: "0px 5px"}}>{props.layerStack.reverse().map((l, i) => {
         var j = (numLayers - 1 - i);
         return <div key={i} style={{backgroundColor: argbToRGB(l.color), position: 'absolute', top: (j * 3) + "px", left: (-j * 3) + "px", width: "16px", height: "16px", border: "1px solid black"}}></div>
     })}</span>

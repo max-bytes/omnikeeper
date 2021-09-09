@@ -66,7 +66,7 @@ namespace OKPluginGenericJSONIngest.Tests.TransformJMESPath
             var expected = JsonConvert.DeserializeObject<GenericInboundData>(File.ReadAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),
                         "data", "usecase_ansible_inventory", "expected.json")), settings);
 
-            result.Should().BeEquivalentTo(expected);
+            result.Should().BeEquivalentTo(expected, options => options.WithStrictOrdering());
 
             string resultJson = JsonConvert.SerializeObject(result, Formatting.Indented);
             File.WriteAllText(Path.Combine(Directory.GetParent(ApplicationEnvironment.ApplicationBasePath).Parent.Parent.Parent.ToString(),

@@ -32,8 +32,8 @@ namespace Tests.Integration.Service
             var attributesAfter = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), new Omnikeeper.Base.Entity.LayerSet("1", "2"), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             var relationsAfter = await relationModel.GetMergedRelations(new RelationSelectionAll(), new Omnikeeper.Base.Entity.LayerSet("1", "2"), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
 
-            attributesAfter.Should().BeEquivalentTo(attributesBefore);
-            relationsAfter.Should().BeEquivalentTo(relationsBefore);
+            attributesAfter.Should().BeEquivalentTo(attributesBefore, options => options.WithStrictOrdering());
+            relationsAfter.Should().BeEquivalentTo(relationsBefore, options => options.WithStrictOrdering());
 
             Thread.Sleep(1000); // need to sleep because partitioning service does not support performing a new partitioning in the same second
 
