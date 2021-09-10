@@ -44,10 +44,7 @@ namespace Omnikeeper.Model
             return (new Predicate(predicateID, wordingFrom, wordingTo), predicateID);
         }
 
-        protected override string EffectiveTrait2ID(EffectiveTrait et, MergedCI ci)
-        {
-            return TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
-        }
+        protected override IAttributeValue ID2AttributeValue(string id) => new AttributeScalarValueText(id);
 
         public async Task<(Predicate predicate, bool changed)> InsertOrUpdate(string id, string wordingFrom, string wordingTo, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {

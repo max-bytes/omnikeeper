@@ -137,13 +137,9 @@ namespace Omnikeeper.Model
         private async Task<IEnumerable<Changeset>> GetChangesetsInTimespan(DateTimeOffset from, DateTimeOffset to, LayerSet layers, IModelContext trans, int? limit = null)
         {
             var query = @"SELECT distinct c.id, c.user_id, c.layer_id, c.origin_type, c.timestamp, u.username, u.displayName, u.keycloak_id, u.type, u.timestamp FROM changeset c 
-                LEFT JOIN attribute a ON a.changeset_id = c.id 
-                LEFT JOIN relation r ON r.changeset_id = c.id
                 LEFT JOIN ""user"" u ON c.user_id = u.id
                 WHERE c.timestamp >= @from AND c.timestamp <= @to
-                AND
-                    (EXISTS(SELECT * FROM attribute a WHERE a.changeset_id = c.id AND a.layer_id = ANY(@layer_ids))
-                    OR EXISTS(SELECT * FROM relation r WHERE r.changeset_id = c.id AND r.layer_id = ANY(@layer_ids)))
+                AND c.layer_id = ANY(@layer_ids)
                 ORDER BY c.timestamp DESC NULLS LAST";
             if (limit.HasValue)
                 query += " LIMIT @limit";
@@ -204,6 +200,7 @@ namespace Omnikeeper.Model
         /// <param name="threshold"></param>
         /// <param name="trans"></param>
         /// <returns></returns>
+        [Obsolete]
         public async Task<int> ArchiveUnusedChangesetsOlderThan(DateTimeOffset threshold, IModelContext trans)
         {
             var query = @"delete from changeset where

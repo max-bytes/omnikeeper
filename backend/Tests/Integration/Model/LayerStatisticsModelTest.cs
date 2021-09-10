@@ -30,7 +30,7 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel);
             //var predicateModel = new CachingPredicateModel(new PredicateModel());
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var ciModel = new CIModel(attributeModel, new CIIDModel());
 
             var layerModel = new LayerModel();
@@ -77,7 +77,7 @@ namespace Tests.Integration.Model
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var ciModel = new CIModel(attributeModel, new CIIDModel());
 
             var layerModel = new LayerModel();

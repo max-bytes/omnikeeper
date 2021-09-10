@@ -52,10 +52,7 @@ namespace OKPluginGenericJSONIngest
             return (new Context(contextID, extractConfig, transformConfig, loadConfig), contextID);
         }
 
-        protected override string EffectiveTrait2ID(EffectiveTrait et, MergedCI ci)
-        {
-            return TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
-        }
+        protected override IAttributeValue ID2AttributeValue(string id) => new AttributeScalarValueText(id);
 
         public async Task<IDictionary<string, Context>> GetContexts(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {

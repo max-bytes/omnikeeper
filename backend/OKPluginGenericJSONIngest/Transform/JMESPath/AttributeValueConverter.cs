@@ -11,7 +11,7 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
     {
         public override bool CanConvert(Type objectType) => true;
 
-        public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
             if (reader.TokenType == JsonToken.StartArray)
             {
@@ -20,6 +20,8 @@ namespace OKPluginGenericJSONIngest.Transform.JMESPath
                 while (reader.TokenType != JsonToken.EndArray)
                 {
                     var item = serializer.Deserialize(reader, objectType);
+                    if (item == null)
+                        throw new Exception("Could not deserialize item in array");
                     array.Add(item);
                     reader.Read();
                 }

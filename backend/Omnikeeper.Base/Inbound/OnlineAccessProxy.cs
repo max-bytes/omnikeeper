@@ -28,9 +28,21 @@ namespace Omnikeeper.Base.Inbound
             return await pluginManager.IsValidOnlinePluginInstance(adapterName, trans);
         }
 
-        private async IAsyncEnumerable<(ILayerAccessProxy proxy, Layer layer)> GetAccessProxies(LayerSet layerset, IModelContext trans)
+        public async Task<bool> ContainsOnlineInboundLayer(LayerSet layerset, IModelContext trans)
         {
-            foreach (var layer in await layerModel.GetLayers(layerset.LayerIDs, trans))
+            var layers = await layerModel.GetLayers(layerset.LayerIDs, trans);
+            foreach (var layer in layers)
+            {
+                var adapterName = layer.OnlineInboundAdapterLink.AdapterName;
+                if (await pluginManager.IsValidOnlinePluginInstance(adapterName, trans))
+                    return true;
+            }
+            return false;
+        }
+
+        private async IAsyncEnumerable<(ILayerAccessProxy proxy, Layer layer)> GetAccessProxies(string[] layerIDs, IModelContext trans)
+        {
+            foreach (var layer in await layerModel.GetLayers(layerIDs, trans))
             {
                 var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
                 if (plugin != null)
@@ -40,39 +52,13 @@ namespace Omnikeeper.Base.Inbound
             }
         }
 
-        public async IAsyncEnumerable<(CIAttribute attribute, string layerID)> GetAttributes(ICIIDSelection selection, LayerSet layerset, IModelContext trans, TimeThreshold atTime)
+        public async IAsyncEnumerable<(CIAttribute attribute, string layerID)> GetAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null)
         {
-            await foreach (var (proxy, layer) in GetAccessProxies(layerset, trans))
+            await foreach (var (proxy, layer) in GetAccessProxies(layerIDs, trans))
             {
-                await foreach (var attribute in proxy.GetAttributes(selection, atTime).Select(a => (a, layer.ID)))
+                await foreach (var attribute in proxy.GetAttributes(selection, atTime, nameRegexFilter).Select(a => (a, layer.ID)))
                     yield return attribute;
             }
-        }
-
-        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            var layer = await layerModel.GetLayer(layerID, trans);
-            if (layer == null)
-                throw new Exception($"Could not find layer with ID {layerID}");
-            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-
-            if (plugin == null)
-                throw new Exception($"Could not load plugin instance {layer.OnlineInboundAdapterLink.AdapterName}");
-            await foreach (var a in plugin.CreateLayerAccessProxy(layer).GetAttributes(selection, atTime))
-                yield return a;
-        }
-
-        public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            var layer = await layerModel.GetLayer(layerID, trans);
-            if (layer == null)
-                throw new Exception($"Could not find layer with ID {layerID}");
-            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-
-            if (plugin == null)
-                throw new Exception($"Could not load plugin instance {layer.OnlineInboundAdapterLink.AdapterName}");
-            await foreach (var a in plugin.CreateLayerAccessProxy(layer).FindAttributesByName(regex, selection, atTime))
-                yield return a;
         }
 
         public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)

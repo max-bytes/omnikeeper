@@ -37,10 +37,7 @@ namespace Omnikeeper.Model
             return (new AuthRole(AuthRoleID, permissions.ToArray()), AuthRoleID);
         }
 
-        protected override string EffectiveTrait2ID(EffectiveTrait et, MergedCI ci)
-        {
-            return TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
-        }
+        protected override IAttributeValue ID2AttributeValue(string id) => new AttributeScalarValueText(id);
 
         public async Task<IDictionary<string, AuthRole>> GetAuthRoles(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {

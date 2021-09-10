@@ -12,6 +12,7 @@ namespace Omnikeeper.Model
         public async Task<long> GetActiveAttributes(Layer layer, IModelContext trans)
         {
             // return number of all active attributes
+            // TODO: rework to use attribute_latest table
             using var commandActiveLayers = new NpgsqlCommand($@"
                 SELECT COUNT(*)
                 FROM 
@@ -49,7 +50,7 @@ namespace Omnikeeper.Model
         public async Task<long> GetActiveRelations(Layer layer, IModelContext trans)
         {
             // return number of all active relations
-
+            // TODO: rework to use attribute_latest table
             using var command = new NpgsqlCommand($@"
                 SELECT COUNT(*)
                 FROM(
@@ -70,7 +71,6 @@ namespace Omnikeeper.Model
         public async Task<long> GetRelationChangesHistory(Layer layer, IModelContext trans)
         {
             // return number of all historic relation changes
-
             using var command = new NpgsqlCommand($@"
                 SELECT COUNT(*)
                 FROM relation R
@@ -86,7 +86,6 @@ namespace Omnikeeper.Model
         public async Task<long> GetLayerChangesetsHistory(Layer layer, IModelContext trans)
         {
             // return number of all historic changesets that affect this layer
-
             using var command = new NpgsqlCommand($@"
                 SELECT COUNT(*)
                 FROM

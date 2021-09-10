@@ -28,20 +28,20 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
-                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
-                    var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
-                    var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
-                    var attributeModel = context.RequestServices.GetRequiredService<IAttributeModel>();
-                    var relationModel = context.RequestServices.GetRequiredService<IRelationModel>();
-                    var ciBasedAuthorizationService = context.RequestServices.GetRequiredService<ICIBasedAuthorizationService>();
-                    var layerBasedAuthorizationService = context.RequestServices.GetRequiredService<ILayerBasedAuthorizationService>();
-                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                    var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
+                    var ciModel = context.RequestServices!.GetRequiredService<ICIModel>();
+                    var changesetModel = context.RequestServices!.GetRequiredService<IChangesetModel>();
+                    var attributeModel = context.RequestServices!.GetRequiredService<IAttributeModel>();
+                    var relationModel = context.RequestServices!.GetRequiredService<IRelationModel>();
+                    var ciBasedAuthorizationService = context.RequestServices!.GetRequiredService<ICIBasedAuthorizationService>();
+                    var layerBasedAuthorizationService = context.RequestServices!.GetRequiredService<ILayerBasedAuthorizationService>();
+                    var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var layers = context.GetArgument<string[]?>("layers", null);
                     var insertAttributes = context.GetArgument("InsertAttributes", new List<InsertCIAttributeInput>());
                     var removeAttributes = context.GetArgument("RemoveAttributes", new List<RemoveCIAttributeInput>());
-                    var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>());
-                    var removeRelations = context.GetArgument("RemoveRelations", new List<RemoveRelationInput>());
+                    var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>())!;
+                    var removeRelations = context.GetArgument("RemoveRelations", new List<RemoveRelationInput>())!;
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
@@ -133,15 +133,15 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
-                    var layerModel = context.RequestServices.GetRequiredService<ILayerModel>();
-                    var ciModel = context.RequestServices.GetRequiredService<ICIModel>();
-                    var changesetModel = context.RequestServices.GetRequiredService<IChangesetModel>();
-                    var attributeModel = context.RequestServices.GetRequiredService<IAttributeModel>();
-                    var relationModel = context.RequestServices.GetRequiredService<IRelationModel>();
-                    var layerBasedAuthorizationService = context.RequestServices.GetRequiredService<ILayerBasedAuthorizationService>();
-                    var modelContextBuilder = context.RequestServices.GetRequiredService<IModelContextBuilder>();
+                    var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
+                    var ciModel = context.RequestServices!.GetRequiredService<ICIModel>();
+                    var changesetModel = context.RequestServices!.GetRequiredService<IChangesetModel>();
+                    var attributeModel = context.RequestServices!.GetRequiredService<IAttributeModel>();
+                    var relationModel = context.RequestServices!.GetRequiredService<IRelationModel>();
+                    var layerBasedAuthorizationService = context.RequestServices!.GetRequiredService<ILayerBasedAuthorizationService>();
+                    var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
-                    var createCIs = context.GetArgument("cis", new List<CreateCIInput>());
+                    var createCIs = context.GetArgument("cis", new List<CreateCIInput>())!;
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
 

@@ -57,7 +57,7 @@ namespace Tests.Integration.GraphQL.Base
             string expected,
             Inputs? inputs = null,
             object? root = null,
-            IDictionary<string, object>? userContext = null,
+            IDictionary<string, object?>? userContext = null,
             CancellationToken cancellationToken = default,
             int expectedErrorCount = 0,
             bool renderErrors = false,
@@ -81,7 +81,7 @@ namespace Tests.Integration.GraphQL.Base
             ExecutionResult expectedExecutionResult,
             Inputs? inputs = null,
             object? root = null,
-            IDictionary<string, object>? userContext = null,
+            IDictionary<string, object?>? userContext = null,
             CancellationToken cancellationToken = default,
             int expectedErrorCount = 0,
             bool renderErrors = false,
@@ -93,7 +93,7 @@ namespace Tests.Integration.GraphQL.Base
                 options.Query = query;
                 options.Root = root;
                 options.Inputs = inputs;
-                options.UserContext = userContext;
+                options.UserContext = userContext ?? new Dictionary<string, object?>();
                 options.CancellationToken = cancellationToken;
                 options.UnhandledExceptionDelegate = unhandledExceptionDelegate ?? (ctx => { });
             }).GetAwaiter().GetResult();
@@ -129,7 +129,7 @@ namespace Tests.Integration.GraphQL.Base
                 options.Query = query;
                 options.Root = root;
                 options.Inputs = inputs;
-                options.UserContext = userContext;
+                options.UserContext = userContext ?? new Dictionary<string, object?>();
                 options.CancellationToken = cancellationToken;
                 options.ValidationRules = rules;
                 options.UnhandledExceptionDelegate = unhandledExceptionDelegate ?? (ctx => { });
@@ -159,7 +159,7 @@ namespace Tests.Integration.GraphQL.Base
         {
             return new ExecutionResult
             {
-                Data = string.IsNullOrWhiteSpace(result) ? null : result.ToDictionary(),
+                Data = string.IsNullOrWhiteSpace(result) ? null : result.ToInputs(),
                 Errors = errors,
                 Executed = true
             };

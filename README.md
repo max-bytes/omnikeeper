@@ -10,6 +10,7 @@
 <br />
 
 [![license](https://img.shields.io/github/license/max-bytes/omnikeeper)](LICENSE)
+![tests](https://github.com/max-bytes/omnikeeper/actions/workflows/run-tests.yml/badge.svg)
 
 </div>
 
@@ -27,7 +28,7 @@
 
 ## About
 
-To Do
+omnikeeper is a general-purpose and highly flexible data store solution and application framework
 
 ## Getting Started
 

@@ -2,7 +2,7 @@
 
 DRAFT
 
-One of the central features of omnikeeper is its simple and flexible data model: CIs, attributes and relations hold all the data. There are no restrictions on what data a CI can hold or represent. It could model a piece of IT hardware, a virtualized service, a network interface, a user-group or any other entity. It's not required to define complex data types or schemas beforehand.  
+One of the central features of omnikeeper is its simple and flexible data model: CIs, attributes and relations hold all the data. There are no restrictions on what data a CI can hold or represent. It could model a piece of IT hardware, a virtualized service, a network interface, a user-group or any other entity. Anything is a CI. And it's not necessary to define complex data types or schemas beforehand.  
 This approach allows omnikeeper to keep up with evolving requirements to its data model. Expanding or otherwise modifying existing CIs does not require costly data schema re-designs and implementation changes. New "types" of CIs can be added much easier. Users and developers simply have more room to move.
 
 There is a danger to this approach of modelling data. Without good tools and mechanisms, the data can become hard to understand and work with. When working with any non-trivial amount of data, you'll always want to form groups of entities that are - for the current purpose - the same and then treat them all in the same way. But because each CI has the potential to change in different ways, two CIs that arguably model entities of the same "type" can look totally different when looking at their data. 

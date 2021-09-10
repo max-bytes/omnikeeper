@@ -5,9 +5,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace OKPluginValidation.Validation
@@ -41,11 +39,7 @@ namespace OKPluginValidation.Validation
             return (new Validation(id, ruleName, ruleConfig), id);
         }
 
-        protected override string EffectiveTrait2ID(EffectiveTrait et, MergedCI ci)
-        {
-            var id = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
-            return id;
-        }
+        protected override IAttributeValue ID2AttributeValue(string id) => new AttributeScalarValueText(id);
 
         public async Task<(Validation validationIssue, bool changed)> InsertOrUpdate(string id, string ruleName, JObject ruleConfig, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
@@ -66,15 +60,5 @@ namespace OKPluginValidation.Validation
                 ICIModel.NameAttribute
             );
         }
-
-
-        //new List<TraitAttribute>() {
-        //        new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("validation.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-        //        new TraitAttribute("rule", CIAttributeTemplate.BuildFromParams("validation.rule", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-        //        new TraitAttribute("rule_config", CIAttributeTemplate.BuildFromParams("validation.rule_config", AttributeValueType.JSON, false)),
-        //    },
-        //    new List<TraitAttribute>() {
-        //        new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-        //    }
     }
 }

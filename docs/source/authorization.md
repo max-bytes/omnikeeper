@@ -64,12 +64,6 @@ The super user role serves two primary purposes:
 - in a simple setup where you do not want to bother with AuthRoles or authorization in general (f.e. during development or in simple production environments)
 - to be able to bootstrap omnikeeper. Because omnikeeper keeps its own configuration within layers, there's a chicken-egg problem. See [[configuration layers|configuration_configuration-layers]] for an explanation.
 
-## Keycloak
-
-omnikeeper works well together with Keycloak.
-
-TODO
-
 ## Diagram of authorization flow
 
 Example using Keycloak and layer access

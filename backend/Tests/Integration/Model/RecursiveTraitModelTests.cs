@@ -52,6 +52,7 @@ namespace Tests.Integration.Model
                     new List<TraitAttribute>() { new TraitAttribute("test_ta", CIAttributeTemplate.BuildFromParams("test_a", Omnikeeper.Entity.AttributeValues.AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))) },
                     new List<TraitAttribute>() { },
                     new List<TraitRelation>() { },
+                    new List<TraitRelation>() { },
                     new List<string>() { },
                     new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
                     new DataOriginV1(DataOriginType.Manual), changesetProxy1, trans);
@@ -63,7 +64,7 @@ namespace Tests.Integration.Model
             }
 
             var rt2 = await recursiveTraitModel.GetRecursiveTraits(new LayerSet(baseConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            rt2.Should().BeEquivalentTo(new List<RecursiveTrait>() { trait });
+            rt2.Should().BeEquivalentTo(new List<RecursiveTrait>() { trait }, options => options.WithStrictOrdering());
 
             var changesetProxy2 = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
 

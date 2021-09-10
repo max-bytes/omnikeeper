@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using FluentAssertions;
+using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
@@ -19,7 +20,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var layerModel = new LayerModel();
@@ -87,7 +88,7 @@ namespace Tests.Integration.Model
             using var trans = ModelContextBuilder.BuildDeferred();
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var layerModel = new LayerModel();
@@ -123,7 +124,7 @@ namespace Tests.Integration.Model
             using var trans = ModelContextBuilder.BuildDeferred();
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var layerModel = new LayerModel();
@@ -158,7 +159,7 @@ namespace Tests.Integration.Model
         [Test]
         public async Task TestRemoveShowsLayerBelow()
         {
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var userModel = new UserInDatabaseModel();
@@ -216,7 +217,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel()));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var layerModel = new LayerModel();
@@ -251,6 +252,13 @@ namespace Tests.Integration.Model
 
             var r1 = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(predicateID1), layerset, trans2, TimeThreshold.BuildLatest());
             Assert.AreEqual(4, r1.Count());
+            r1.Select(r => (r.Relation.PredicateID, r.Relation.FromCIID, r.Relation.ToCIID, r.Relation.State)).Should().BeEquivalentTo(new (string, Guid, Guid, RelationState)[]
+            {
+                (predicateID1, ciid1, ciid2, RelationState.New),
+                (predicateID1, ciid2, ciid1, RelationState.New),
+                (predicateID1, ciid3, ciid2, RelationState.New),
+                (predicateID1, ciid3, ciid1, RelationState.New),
+            }, options => options.WithStrictOrdering());
         }
     }
 }

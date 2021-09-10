@@ -4,7 +4,6 @@ using OKPluginValidation.Validation;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Validation.Rules;
-using System;
 using System.Collections.Generic;
 
 namespace OKPluginValidation

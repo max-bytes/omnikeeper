@@ -15,9 +15,11 @@ namespace Omnikeeper.Service
 
         public IEnumerable<T> FilterReadableCIs<T>(IEnumerable<T> t, Func<T, Guid> f)
         {
-            var d = t.ToDictionary(tt => f(tt));
-            var filtered = FilterReadableCIs(d.Keys);
-            return d.Where(dd => filtered.Contains(dd.Key)).Select(dd => dd.Value);
+            foreach(var tt in t)
+            {
+                if (CanReadCI(f(tt)))
+                    yield return tt;
+            }
         }
 
         public IEnumerable<Guid> FilterReadableCIs(IEnumerable<Guid> ciids)

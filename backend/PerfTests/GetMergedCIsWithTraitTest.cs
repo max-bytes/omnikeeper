@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Running;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +9,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Model;
 using Omnikeeper.Model.Decorators;
 using System;
 using System.Collections.Generic;
@@ -17,23 +19,36 @@ using Tests;
 
 namespace PerfTests
 {
+    [Explicit]
     public class GetMergedCIsWithTraitTest : Base
     {
         [GlobalSetup(Target = nameof(GetMergedCIsWithTrait))]
-        public async Task Setup() => await SetupGeneric(false, WithCaching);
+        public async Task Setup() => await SetupGeneric(false, WithModelCaching, WithEffectiveTraitCaching);
+
         [Benchmark]
         public async Task GetMergedCIsWithTrait()
         {
+            BaseAttributeModel._USE_LATEST_TABLE = UseLatestTable;
             using var mc = modelContextBuilder!.BuildImmediate();
             var ciSelection = (SpecificCIs) ? selectedCIIDs : new AllCIIDsSelection();
-            (await effectiveTraitModel!.GetMergedCIsWithTrait(traitHost!, layerset!, ciSelection!, mc, time)).Consume(consumer);
+            (await effectiveTraitModel!.GetMergedCIsWithTrait(trait!, layerset!, ciSelection!, mc, time)).Consume(consumer);
+
+            // second time should hit cache
+            (await effectiveTraitModel!.GetMergedCIsWithTrait(trait!, layerset!, ciSelection!, mc, time)).Consume(consumer);
         }
+
+        [Test]
+        public void RunBenchmark()
+        {
+            var summary = BenchmarkRunner.Run<GetMergedCIsWithTraitTest>();
+        }
+
         [GlobalCleanup(Target = nameof(GetMergedCIsWithTrait))]
         public void TearDownT() => TearDown();
 
         private IEffectiveTraitModel? effectiveTraitModel;
         private IModelContextBuilder? modelContextBuilder;
-        private ITrait? traitHost;
+        private ITrait? trait;
         private LayerSet? layerset;
         private TimeThreshold time;
         private ICIIDSelection? selectedCIIDs;
@@ -41,20 +56,30 @@ namespace PerfTests
 
         [ParamsSource(nameof(AttributeCITuples))]
         public (int numCIs, int numAttributeInserts, int numLayers, int numDataTransactions) AttributeCITuple { get; set; }
-        public IEnumerable<(int numCIs, int numAttributeInserts, int numLayers, int numDataTransactions)> AttributeCITuples => new[] { (5000, 50000, 4, 1) };//, (50000, 500000, 4, 1) };
+        public IEnumerable<(int numCIs, int numAttributeInserts, int numLayers, int numDataTransactions)> AttributeCITuples => new[] {
+            //(50, 500, 4, 1),
+            (5000, 50000, 4, 1),
+            //(100000, 1000000, 4, 1),
+        };
 
-        [Params(true)]
-        public bool WithCaching { get; set; }
+        [Params(false)]
+        public bool WithModelCaching { get; set; }
 
-        [Params(true)]
-        public bool WithCachingForGetAttributes { get; set; }
+        [Params(false, true)]
+        public bool UseLatestTable { get; set; }
+
+        [Params(false, true)]
+        public bool WithEffectiveTraitCaching { get; set; }
+
+        [Params("host", "host_linux")]
+        public string? TraitToFetch { get; set; }
 
         [Params(false)]
         public bool SpecificCIs { get; set; }
 
-        public async Task SetupGeneric(bool runPartitioning, bool enableCaching)
+        public async Task SetupGeneric(bool runPartitioning, bool enableModelCaching, bool enableEffectiveTraitCaching)
         {
-            Setup(enableCaching);
+            Setup(enableModelCaching, enableEffectiveTraitCaching, true);
 
             var numCIs = AttributeCITuple.numCIs;
             var numLayers = AttributeCITuple.numLayers;
@@ -67,21 +92,14 @@ namespace PerfTests
             effectiveTraitModel = ServiceProvider.GetRequiredService<IEffectiveTraitModel>();
             modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();
 
-            if (WithCaching)
-            {
-                // NOTE: this is a pretty hacky way to get the decorator and set the flag, but it does the job... 
-                var cachedBaseAttributeModel = ServiceProvider.GetRequiredService<IBaseAttributeModel>() as CachingBaseAttributeModel;
-                cachedBaseAttributeModel!.CachingEnabledForGetAttributes = WithCachingForGetAttributes;
-            }
-
             using var mc = modelContextBuilder.BuildImmediate();
+
+            var layerNames = await ExampleDataSetup.SetupCMDBExampleData(numCIs, numLayers, numAttributeInserts, numDataTransactions, true, ServiceProvider, modelContextBuilder);
+            layerset = layerModel.BuildLayerSet(layerNames.ToArray(), mc).GetAwaiter().GetResult();
+
             time = TimeThreshold.BuildLatest();
 
-            var layerNames = await ExampleDataSetup.SetupCMDBExampleData(numCIs, numLayers, numAttributeInserts, numDataTransactions, false, ServiceProvider, modelContextBuilder);
-            layerset = layerModel.BuildLayerSet(layerNames.ToArray(), mc).GetAwaiter().GetResult();
-            //var layerNames = new List<string>() { "L0", "L1", "L2", "L3" };
-
-            traitHost = await traitsProvider.GetActiveTrait("host", mc, time);
+            trait = await traitsProvider.GetActiveTrait(TraitToFetch!, mc, time);
 
             var allCIIDs = await ciModel.GetCIIDs(mc);
             var random = new Random(3);
@@ -100,9 +118,13 @@ namespace PerfTests
         }
 
         [Test]
-        public void Run()
+        public async Task RunDebuggable()
         {
-            var summary = BenchmarkRunner.Run<GetMergedCIsWithTraitTest>();
+            TraitToFetch = "host";
+            AttributeCITuple = AttributeCITuples.First();
+            await SetupGeneric(false, false, true);
+            await GetMergedCIsWithTrait();
+            TearDown();
         }
     }
 }

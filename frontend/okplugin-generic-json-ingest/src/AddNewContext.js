@@ -19,7 +19,7 @@ function AddNewContext(props) {
         try {
             setLoading(true);
             if (editMode) {
-                    const contextJson = await swaggerClient.apis.OKPluginGenericJSONIngest.GetContext2(
+                    const contextJson = await swaggerClient.apis.OKPluginGenericJSONIngest.GetContext(
                             {
                                 version: apiVersion,
                                 id: contextID
@@ -41,8 +41,9 @@ function AddNewContext(props) {
         } catch(e) {
             setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
             setSwaggerMsg(e.toString());
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     }, [swaggerClient, apiVersion, contextID, editMode])
 
     useEffect(() => {refresh();}, [refresh]);
@@ -78,8 +79,9 @@ function AddNewContext(props) {
                             } catch(e) {
                                 setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
                                 setSwaggerMsg(e.toString());
+                            } finally {
+                                setLoading(false)
                             }
-                            setLoading(false)
                         }
                     }
                     initialValues={{

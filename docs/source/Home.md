@@ -6,7 +6,7 @@ Welcome to the documentation for omnikeeper.
 
 # Introduction - What is omnikeeper?
 
-omnikeeper is a general-purpose and highly flexible data store solution. omnikeeper's initial usecase: a store for application and infrastructure configuration data. This puts omnikeeper in the vicinity of databases for [ITIL](https://en.wikipedia.org/wiki/ITIL) configuration management or in short: [CMDB](https://en.wikipedia.org/wiki/Configuration_management_database)s. But while omnikeeper shares a lot of similarities with CMDBs, there are key concepts that set it apart. And because of its simple, but generic data structures, omnikeeper supports a lot more usecases that CMDBs do. To get a better sense of what omnikeeper is, lets briefly look at how it stores and models data:
+omnikeeper is a general-purpose and highly flexible data store solution and application framework. omnikeeper's initial usecase: a store for application and infrastructure configuration data. This puts omnikeeper in the vicinity of databases for [ITIL](https://en.wikipedia.org/wiki/ITIL) configuration management or in short: [CMDB](https://en.wikipedia.org/wiki/Configuration_management_database)s. But while omnikeeper shares a lot of similarities with CMDBs, there are key concepts that set it apart. And because of its simple, but generic data structures, omnikeeper supports a lot more usecases that CMDBs do. To get a better sense of what omnikeeper is, lets briefly look at how it stores and models data:
 
 # Data structures
 The data structures of omnikeeper are very simple. There are attributes, CIs and relations:
@@ -40,7 +40,7 @@ Another important topic when talking about data and change is the dimension of t
 # Usecases for omnikeeper
 
 - a data store for application and infrastructure configuration
-- an application prototyping framework or a data layer for applications that allows data models to stay in flux and evolve during development and beyond
+- an application prototyping framework or a data layer for applications that allows data models to stay in flux and evolve during initial development and beyond
 - as an intermediate component in a data pipeline between data producers and consumers, offering data mapping, selection and prioritization capabilities
 
 # What is omnikeeper NOT

@@ -57,6 +57,8 @@
     <None Remove="Scripts\00046-changesets-add-origin-type.psql" />
     <None Remove="Scripts\00047-attribute-relations-remove-origin-type.psql" />
     <None Remove="Scripts\00048-remove-gridview-config.psql" />
+    <None Remove="Scripts\00049-latest-attributes.psql" />
+    <None Remove="Scripts\00050-latest-relations.psql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -93,6 +95,8 @@
     <EmbeddedResource Include="Scripts\00010-computerlayerbrain-rework.psql" />
     <EmbeddedResource Include="Scripts\00028-create-table-gridviewconfig.psql" />
     <EmbeddedResource Include="Scripts\00033-add-speakingName-description-columns.psql" />
+    <EmbeddedResource Include="Scripts\00050-latest-relations.psql" />
+    <EmbeddedResource Include="Scripts\00049-latest-attributes.psql" />
     <EmbeddedResource Include="Scripts\00048-remove-gridview-config.psql" />
     <EmbeddedResource Include="Scripts\00047-attribute-relations-remove-origin-type.psql" />
     <EmbeddedResource Include="Scripts\00046-changesets-add-origin-type.psql" />

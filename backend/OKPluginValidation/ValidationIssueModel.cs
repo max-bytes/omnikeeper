@@ -17,16 +17,6 @@ namespace OKPluginValidation.Validation
             : base(ValidationTraits.ValidationIssueFlattened, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
         { }
 
-        //public async Task<ValidationIssue> GetValidationIssue(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
-        //{
-        //    return await Get(id, layerSet, timeThreshold, trans);
-        //}
-
-        //public async Task<(Guid, ValidationIssue)> TryToGetValidationIssue(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
-        //{
-        //    return await TryToGet(id, layerSet, timeThreshold, trans);
-        //}
-
         public async Task<IDictionary<string, ValidationIssue>> GetValidationIssues(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             return await GetAll(layerSet, trans, timeThreshold);
@@ -41,11 +31,12 @@ namespace OKPluginValidation.Validation
             return (new ValidationIssue(id, message, affectedCIs), id);
         }
 
-        protected override string EffectiveTrait2ID(EffectiveTrait et, MergedCI ci)
-        {
-            var id = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
-            return id;
-        }
+        //protected override string EffectiveTrait2ID(EffectiveTrait et, MergedCI ci)
+        //{
+        //    var id = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
+        //    return id;
+        //}
+        protected override IAttributeValue ID2AttributeValue(string id) => new AttributeScalarValueText(id);
 
         public async Task<(ValidationIssue validationIssue, bool changed)> InsertOrUpdate(string id, string message, IEnumerable<Guid> affectedCIs, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {

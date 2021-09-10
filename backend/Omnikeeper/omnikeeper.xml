@@ -32,16 +32,6 @@
             <param name="atTime"></param>
             <returns></returns>
         </member>
-        <member name="M:Omnikeeper.Controllers.AttributeController.FindMergedAttributesByName(System.String,System.Collections.Generic.IEnumerable{System.Guid},System.String[],System.Nullable{System.DateTimeOffset})">
-            <summary>
-            
-            </summary>
-            <param name="regex"></param>
-            <param name="ciids"></param>
-            <param name="layerIDs"></param>
-            <param name="atTime"></param>
-            <returns></returns>
-        </member>
         <member name="M:Omnikeeper.Controllers.AttributeController.BulkReplaceAttributesInLayer(Omnikeeper.Base.Entity.DTO.BulkCIAttributeLayerScopeDTO)">
             <summary>
             bulk replace all attributes in specified layer

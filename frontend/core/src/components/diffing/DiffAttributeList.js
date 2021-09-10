@@ -1,5 +1,5 @@
 import React from 'react';
-import Attribute from 'components/Attribute';
+import Attribute from 'components/cis/Attribute';
 import { Flipper, Flipped } from 'react-flip-toolkit'
 import _ from 'lodash';
 import { Collapse } from "antd";

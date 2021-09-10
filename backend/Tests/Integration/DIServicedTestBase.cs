@@ -30,6 +30,7 @@ namespace Tests.Integration
         protected DIServicedTestBase(bool enableModelCaching)
         {
             this.enableModelCaching = enableModelCaching;
+            currentUserServiceMock = new Mock<ICurrentUserService>();
         }
 
         [SetUp]
@@ -58,7 +59,7 @@ namespace Tests.Integration
             ServiceRegistration.RegisterLogging(services);
             ServiceRegistration.RegisterDB(services, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
             ServiceRegistration.RegisterOIABase(services);
-            ServiceRegistration.RegisterModels(services, enableModelCaching, false, false);
+            ServiceRegistration.RegisterModels(services, enableModelCaching, true, false, false);
             ServiceRegistration.RegisterServices(services);
             ServiceRegistration.RegisterGraphQL(services);
 
@@ -82,14 +83,12 @@ namespace Tests.Integration
             services.AddSingleton<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance);
             services.AddSingleton<ILogger<RecursiveDataTraitModel>>((sp) => NullLogger<RecursiveDataTraitModel>.Instance);
             services.AddSingleton<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance);
-            services.AddSingleton<ILogger<CachingBaseAttributeModel>>((sp) => NullLogger<CachingBaseAttributeModel>.Instance);
             services.AddSingleton<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance);
             services.AddSingleton<ILoggerFactory, NullLoggerFactory>();
 
             services.AddSingleton<IConfiguration>((sp) => new Mock<IConfiguration>().Object);
 
             // override user service
-            currentUserServiceMock = new Mock<ICurrentUserService>();
             services.AddSingleton<ICurrentUserService>((sp) => currentUserServiceMock.Object);
             services.AddSingleton<ILogger<DataPartitionService>>((sp) => NullLogger<DataPartitionService>.Instance);
 

@@ -11,27 +11,24 @@ namespace Omnikeeper.Base.Service
 {
     public class RelationService
     {
-
         public static async Task<IEnumerable<CompactRelatedCI>> GetCompactRelatedCIs(Guid ciid, LayerSet layerset, ICIModel ciModel, IRelationModel relationModel, int? perPredicateLimit, IModelContext trans, TimeThreshold atTime)
         {
             var relations = await relationModel.GetMergedRelations(new RelationSelectionEitherFromOrTo(ciid), layerset, trans, atTime);
 
             // HACK: limit number per predicate type
             var predicateCounts = new Dictionary<string, int>();
-            var limitedRelations = new List<MergedRelation>();
+            var limitedRelations = relations;
             if (perPredicateLimit.HasValue)
             {
+                var lr = new List<MergedRelation>();
                 foreach (var r in relations)
                 {
                     predicateCounts.TryGetValue(r.Relation.PredicateID, out int current);
                     predicateCounts[r.Relation.PredicateID] = current + 1;
                     if (current < perPredicateLimit.Value)
-                        limitedRelations.Add(r);
+                        lr.Add(r);
                 }
-            }
-            else
-            {
-                limitedRelations.AddRange(relations);
+                limitedRelations = lr;
             }
 
             var relationTuples = limitedRelations.Select(r =>

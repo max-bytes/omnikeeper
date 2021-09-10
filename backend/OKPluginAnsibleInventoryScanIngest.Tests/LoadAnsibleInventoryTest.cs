@@ -58,7 +58,7 @@ namespace Tests.Ingest
             using var conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
             //using var conn = dbcb.Build("landscape_prototype", false, true);
             var partitionModel = new PartitionModel();
-            var attributeModel = new AttributeModel(new BaseAttributeModel(partitionModel));
+            var attributeModel = new AttributeModel(new BaseAttributeModel(partitionModel, new CIIDModel()));
             var layerModel = new LayerModel();
             var userModel = new UserInDatabaseModel();
             var ciModel = new CIModel(attributeModel, new CIIDModel());
@@ -68,7 +68,7 @@ namespace Tests.Ingest
 
             var mc = modelContextBuilder.BuildImmediate();
 
-            Layer layer1 = await layerModel.UpsertLayer("Inventory Scan", mc);
+            Layer layer1 = await layerModel.UpsertLayer("inventory_scan", mc);
 
             // mock the current user service
             var mockCurrentUserService = new Mock<ICurrentUserService>();

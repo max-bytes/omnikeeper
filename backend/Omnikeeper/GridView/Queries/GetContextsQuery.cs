@@ -41,12 +41,9 @@ namespace Omnikeeper.GridView.Queries
             async Task<(GetContextsResponse?, Exception?)> IRequestHandler<Query, (GetContextsResponse?, Exception?)>.Handle(Query request, CancellationToken cancellationToken)
             {
                 var trans = modelContextBuilder.BuildImmediate();
-                var user = await currentUserService.GetCurrentUser(trans);
-
+                
                 var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
-                if (!managementAuthorizationService.CanReadManagement(user, baseConfiguration, out var message))
-                    return (null, new Exception($"User \"{user.Username}\" does not have permission to read gridview context: {message}"));
-
+                
                 var contexts = await gridViewContextModel.GetFullContexts(new LayerSet(baseConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
 
                 return (new GetContextsResponse(contexts.Values.ToList()), null); // TODO: why not return dictionary?

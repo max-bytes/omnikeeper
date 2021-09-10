@@ -51,27 +51,17 @@ export const Fragments = {
         }
         effectiveTraits { 
             underlyingTrait {id}
-            attributes { 
+            traitAttributes {
+              identifier
+              mergedAttribute {
                 ...FullMergedAttribute
+              }
             }
-        }
-        templateErrors {
-          attributeErrors {
-                attributeName
-                errors {
-                    __typename
-                    ... on TemplateErrorAttributeMissingType {errorMessage, type}
-                    ... on TemplateErrorAttributeWrongTypeType {errorMessage, correctTypes}
-                    ... on TemplateErrorAttributeWrongMultiplicityType {errorMessage, correctIsArray}
-                    ... on TemplateErrorAttributeGenericType {errorMessage}
-                }
-            }
-            relationErrors {
-                predicateID
-                errors {
-                    __typename
-                    ... on TemplateErrorRelationGenericType {errorMessage}
-                }
+            traitRelations {
+              identifier
+              relatedCIs {
+                ...RelatedCI
+              }
             }
         }
         related(perPredicateLimit: $includeRelated) {
@@ -138,6 +128,7 @@ export const Fragments = {
     requiredAttributes,
     optionalAttributes,
     requiredRelations,
+    optionalRelations,
     requiredTraits
   }
   `,

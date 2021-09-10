@@ -34,7 +34,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
                 new IngestData(
                     new List<CICandidate> { }, 
                     new List<RelationCandidate> { }
-                )
+                ), options => options.WithStrictOrdering()
             );
         }
 
@@ -73,7 +73,7 @@ namespace OKPluginGenericJSONIngest.Tests.Load
             var ingestData = loader.GenericInboundData2IngestData(inboundData, new Omnikeeper.Base.Entity.LayerSet("1", "2"));
 
             var jsonValue = ingestData.CICandidates.ToList().First().Attributes.Fragments.First().Value;
-            jsonValue.Should().BeEquivalentTo(AttributeArrayValueJSON.BuildFromString(new string[] { }));
+            jsonValue.Should().BeEquivalentTo(AttributeArrayValueJSON.BuildFromString(new string[] { }), options => options.WithStrictOrdering());
         }
 
 

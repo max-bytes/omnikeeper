@@ -64,10 +64,12 @@ namespace Tests
 
             var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(modelContextBuilder.BuildImmediate());
 
-
             List<Layer> layers;
             using (var mc = modelContextBuilder.BuildDeferred())
             {
+                // okconfig layer
+                layerModel.UpsertLayer("__okconfig", mc).GetAwaiter().GetResult();
+
                 await ciModel.BulkCreateCIs(ciids, mc);
 
                 layers = layerNames.Select(identity =>
@@ -78,7 +80,7 @@ namespace Tests
                 var rts = Traits.Get();
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var rt in rts)
-                    await traitModel.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.RequiredTraits,
+                    await traitModel.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.OptionalRelations, rt.RequiredTraits,
                         new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
                         new DataOriginV1(DataOriginType.Manual), changeset, mc);
                 mc.Commit();

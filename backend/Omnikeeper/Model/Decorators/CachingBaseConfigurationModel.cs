@@ -38,5 +38,10 @@ namespace Omnikeeper.Model.Decorators
             trans.EvictFromCache(CacheKeyService.BaseConfiguration());
             return await Model.SetConfig(config, trans);
         }
+
+        public async Task<bool> IsLayerPartOfBaseConfiguration(string layerID, IModelContext trans)
+        {
+            return await Model.IsLayerPartOfBaseConfiguration(layerID, trans);
+        }
     }
 }

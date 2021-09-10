@@ -24,7 +24,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var baseAttributeModel = new BaseAttributeModel(new PartitionModel());
+            var baseAttributeModel = new BaseAttributeModel(new PartitionModel(), new CIIDModel());
             var attributeModel = new AttributeModel(baseAttributeModel);
             var baseRelationModel = new BaseRelationModel(new PartitionModel());
             var relationModel = new RelationModel(baseRelationModel);
@@ -95,7 +95,7 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var baseAttributeModel = new BaseAttributeModel(new PartitionModel());
+            var baseAttributeModel = new BaseAttributeModel(new PartitionModel(), new CIIDModel());
             var attributeModel = new AttributeModel(baseAttributeModel);
             var baseRelationModel = new BaseRelationModel(new PartitionModel());
             var relationModel = new RelationModel(baseRelationModel);
@@ -146,13 +146,11 @@ namespace Tests.Integration.Model
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var baseAttributeModel = new BaseAttributeModel(new PartitionModel());
+            var baseAttributeModel = new BaseAttributeModel(new PartitionModel(), new CIIDModel());
             var attributeModel = new AttributeModel(baseAttributeModel);
             var baseRelationModel = new BaseRelationModel(new PartitionModel());
             var relationModel = new RelationModel(baseRelationModel);
             var ciModel = new CIModel(attributeModel, new CIIDModel());
-            var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
-            var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);
             var layerModel = new LayerModel();
             var baseAttributeRevisionistModel = new BaseAttributeRevisionistModel();
 
@@ -188,17 +186,16 @@ namespace Tests.Integration.Model
 
 
         [Test]
+        [Obsolete]
         public async Task ArchiveOldTest()
         {
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
-            var baseAttributeModel = new BaseAttributeModel(new PartitionModel());
+            var baseAttributeModel = new BaseAttributeModel(new PartitionModel(), new CIIDModel());
             var attributeModel = new AttributeModel(baseAttributeModel);
             var baseRelationModel = new BaseRelationModel(new PartitionModel());
             var relationModel = new RelationModel(baseRelationModel);
             var ciModel = new CIModel(attributeModel, new CIIDModel());
-            var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
-            var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);
             var layerModel = new LayerModel();
 
             using var trans = ModelContextBuilder.BuildDeferred();

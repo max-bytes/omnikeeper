@@ -26,6 +26,7 @@ namespace Omnikeeper.Base.Model
             {
                 new TraitAttribute("optional_attributes", CIAttributeTemplate.BuildFromParams("trait.optional_attributes", AttributeValueType.JSON, true)),
                 new TraitAttribute("required_relations", CIAttributeTemplate.BuildFromParams("trait.required_relations", AttributeValueType.JSON, true)),
+                new TraitAttribute("optional_relations", CIAttributeTemplate.BuildFromParams("trait.optional_relations", AttributeValueType.JSON, true)),
                 new TraitAttribute("required_traits", CIAttributeTemplate.BuildFromParams("trait.required_traits", AttributeValueType.Text, true)),
                 new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
             }
@@ -88,5 +89,10 @@ namespace Omnikeeper.Base.Model
         public IImmutableSet<string> AncestorTraits => ImmutableHashSet<string>.Empty;
 
         public TraitOriginV1 Origin => new TraitOriginV1(TraitOriginType.Core);
+
+        public IImmutableList<TraitAttribute> RequiredAttributes { get => ImmutableList<TraitAttribute>.Empty;  }
+        public IImmutableList<TraitAttribute> OptionalAttributes { get => ImmutableList<TraitAttribute>.Empty; }
+        public IImmutableList<TraitRelation> RequiredRelations { get => ImmutableList<TraitRelation>.Empty; }
+        public IImmutableList<TraitRelation> OptionalRelations { get => ImmutableList<TraitRelation>.Empty; }
     }
 }

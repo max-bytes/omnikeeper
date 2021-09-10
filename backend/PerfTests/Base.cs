@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
+﻿using BenchmarkDotNet.Running;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +8,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Npgsql;
+using NUnit.Framework;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -25,14 +28,17 @@ namespace PerfTests
         private NpgsqlConnection? conn;
         private ServiceProvider? serviceProvider;
 
-        public virtual void Setup(bool enableModelCaching)
+        public virtual void Setup(bool enableModelCaching, bool enableEffectiveTraitCaching, bool setupDBSchema)
         {
-            DBSetup.Setup();
+            if (setupDBSchema)
+            {
+                DBSetup.Setup();
+            }
 
             var dbcb = new DBConnectionBuilder();
             conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
 
-            var services = InitServices(enableModelCaching);
+            var services = InitServices(enableModelCaching, enableEffectiveTraitCaching);
             serviceProvider = services.BuildServiceProvider();
         }
 
@@ -44,13 +50,13 @@ namespace PerfTests
                 serviceProvider.Dispose();
         }
 
-        protected virtual IServiceCollection InitServices(bool enableModelCaching)
+        protected virtual IServiceCollection InitServices(bool enableModelCaching, bool enableEffectiveTraitCaching)
         {
             var services = new ServiceCollection();
             ServiceRegistration.RegisterLogging(services);
             ServiceRegistration.RegisterDB(services, DBConnectionBuilder.GetConnectionStringFromUserSecrets(GetType().Assembly), true);
             ServiceRegistration.RegisterOIABase(services);
-            ServiceRegistration.RegisterModels(services, enableModelCaching, false, false);
+            ServiceRegistration.RegisterModels(services, enableModelCaching, enableEffectiveTraitCaching, false, false);
             ServiceRegistration.RegisterServices(services);
             ServiceRegistration.RegisterGraphQL(services);
 
@@ -74,9 +80,9 @@ namespace PerfTests
             services.AddSingleton<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance);
             services.AddSingleton<ILogger<RecursiveDataTraitModel>>((sp) => NullLogger<RecursiveDataTraitModel>.Instance);
             services.AddSingleton<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance);
-            services.AddSingleton<ILogger<CachingBaseAttributeModel>>((sp) => NullLogger<CachingBaseAttributeModel>.Instance);
             services.AddSingleton<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance);
             services.AddSingleton<ILoggerFactory, NullLoggerFactory>();
+            services.AddSingleton<ILogger<CISearchModel>>((sp) => NullLogger<CISearchModel>.Instance);
 
             services.AddSingleton<IConfiguration>((sp) => new Mock<IConfiguration>().Object);
 

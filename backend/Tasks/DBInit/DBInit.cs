@@ -35,7 +35,7 @@ namespace Tasks.DBInit
 
             var partitionModel = new PartitionModel();
             var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
-            var baseAttributeModel = new BaseAttributeModel(partitionModel);
+            var baseAttributeModel = new BaseAttributeModel(partitionModel, new CIIDModel());
             var attributeModel = new AttributeModel(baseAttributeModel);
             var baseRelationModel = new BaseRelationModel(partitionModel);
             var ciModel = new CIModel(attributeModel, new CIIDModel());
@@ -64,7 +64,7 @@ namespace Tasks.DBInit
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var rt in DefaultTraits.Get())
                 {
-                    await traitModel.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.RequiredTraits,
+                    await traitModel.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.OptionalRelations, rt.RequiredTraits, 
                         new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
                         new DataOriginV1(DataOriginType.Manual), changeset, mc);
                 }

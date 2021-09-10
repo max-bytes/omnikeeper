@@ -1,0 +1,37 @@
+CREATE TABLE public.attribute_latest
+(
+    id uuid NOT NULL,
+    name text COLLATE pg_catalog."default" NOT NULL,
+    ci_id uuid NOT NULL,
+    type attributevaluetype NOT NULL DEFAULT 'text'::attributevaluetype,
+    value_text text COLLATE pg_catalog."default" NOT NULL,
+    state attributestate NOT NULL DEFAULT 'new'::attributestate,
+    "timestamp" timestamp with time zone NOT NULL,
+    changeset_id uuid,
+    value_control bytea NOT NULL DEFAULT '\x'::bytea,
+    value_binary bytea NOT NULL DEFAULT '\x'::bytea,
+    layer_id text COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT latest_attribute_pkey PRIMARY KEY (id),
+    CONSTRAINT f_latest_ci FOREIGN KEY (ci_id)
+        REFERENCES public.ci (id) MATCH SIMPLE
+        ON UPDATE RESTRICT
+        ON DELETE RESTRICT,
+    CONSTRAINT f_latest_changeset FOREIGN KEY (changeset_id)
+        REFERENCES public.changeset (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT f_latest_layer FOREIGN KEY (layer_id)
+        REFERENCES public.layer (id) MATCH SIMPLE
+        ON UPDATE RESTRICT
+        ON DELETE RESTRICT
+);
+
+ALTER TABLE public.attribute_latest
+    ADD CONSTRAINT name_ci_id_layer_id UNIQUE (name, ci_id, layer_id);
+
+CREATE INDEX ON public.attribute_latest USING btree
+    (layer_id ASC NULLS LAST);
+
+CREATE INDEX ON public.attribute_latest USING btree
+    (layer_id ASC NULLS LAST, ci_id ASC NULLS LAST);
+

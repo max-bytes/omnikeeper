@@ -1,7 +1,6 @@
 ﻿using Hangfire;
 using Hangfire.Server;
 using Microsoft.Extensions.Logging;
-using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Utils;
 using System;
 using System.Diagnostics;
@@ -9,20 +8,20 @@ using System.Threading.Tasks;
 
 namespace OKPluginValidation.Validation
 {
-    public class ValidationEngineRunner : IHangfireJobRunner
+    public class ValidationEngineRunner
     {
         private readonly IValidationEngine validationEngine;
         private readonly ILogger<ValidationEngineRunner> logger;
 
         public ValidationEngineRunner(IValidationEngine validationEngine, ILogger<ValidationEngineRunner> logger)
-            {
+        {
             this.validationEngine = validationEngine;
             this.logger = logger;
         }
 
         public string CronExpression => "*/5 * * * * *";
 
-        [MaximumConcurrentExecutions(1, timeoutInSeconds: 120)]
+        [MaximumConcurrentExecutions(1, timeoutInSeconds: 300)]
         [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
         public void Run(PerformContext? context)
         {

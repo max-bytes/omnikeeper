@@ -56,7 +56,7 @@ namespace Omnikeeper.Model
             WHERE attribute.id = sub.id", trans.DBConnection, trans.DBTransaction);
             commandMoveAttributes.Parameters.AddWithValue("time_threshold", timeThreshold.Time);
             commandMoveAttributes.Parameters.AddWithValue("old_partition_index", oldPartitionIndex);
-            commandMoveAttributes.Parameters.AddWithValue("new_partition_index", newPartitionIndex);
+            commandMoveAttributes.Parameters.AddWithValue("new_partition_index", newPartitionIndex.ToUniversalTime());
             await commandMoveAttributes.ExecuteNonQueryAsync();
 
             // create partition table for relations
@@ -78,7 +78,7 @@ namespace Omnikeeper.Model
             WHERE relation.id = sub.id", trans.DBConnection, trans.DBTransaction);
             commandMoveRelations.Parameters.AddWithValue("time_threshold", timeThreshold.Time);
             commandMoveRelations.Parameters.AddWithValue("old_partition_index", oldPartitionIndex);
-            commandMoveRelations.Parameters.AddWithValue("new_partition_index", newPartitionIndex);
+            commandMoveRelations.Parameters.AddWithValue("new_partition_index", newPartitionIndex.ToUniversalTime());
             await commandMoveRelations.ExecuteNonQueryAsync();
         }
     }
