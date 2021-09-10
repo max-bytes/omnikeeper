@@ -193,7 +193,6 @@ namespace Omnikeeper.Model
             }
         }
 
-        // TODO: merge GetAttributes() and FindAttributesByName()
         public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null)
         {
             selection = await OptimizeCIIDSelection(selection, trans);

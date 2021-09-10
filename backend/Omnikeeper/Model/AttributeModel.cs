@@ -26,7 +26,7 @@ namespace Omnikeeper.Model
         private IDictionary<Guid, IDictionary<string, MergedCIAttribute>> MergeAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>>[] layeredAttributes, string[] layerIDs)
         {
             var compound = new Dictionary<Guid, IDictionary<string, MergedCIAttribute>>();
-            for (var i = 0;i < layerIDs.Length;i++)// each (var (layerID, cis) in layeredAttributes)
+            for (var i = 0;i < layerIDs.Length;i++)
             {
                 var layerID = layerIDs[i];
                 var cis = layeredAttributes[i];
