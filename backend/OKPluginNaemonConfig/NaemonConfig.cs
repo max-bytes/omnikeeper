@@ -35,7 +35,7 @@ namespace OKPluginNaemonConfig
 
             var layerset = await layerModel.BuildLayerSet(new[] { "testlayer01" }, trans);
 
-            var naemonInstances = await traitModel.CalculateEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var naemonInstances = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
             //foreach (var instance in naemonInstances)
             //{
@@ -62,8 +62,8 @@ namespace OKPluginNaemonConfig
 
             //    // get hosts and service traits
 
-            //    var hCis = await traitModel.CalculateEffectiveTraitsForTrait(Traits.HCisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-            //    var aCis = await traitModel.CalculateEffectiveTraitsForTrait(Traits.ACisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            //    var hCis = await traitModel.GetEffectiveTraitsForTrait(Traits.HCisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            //    var aCis = await traitModel.GetEffectiveTraitsForTrait(Traits.ACisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
             //    // we need to filter hCis and aCis based on loadcmdbcustomer list 
             //    // convert these two lists to one ciData list
@@ -104,7 +104,7 @@ namespace OKPluginNaemonConfig
 
             var naemonIds = new List<string>();
 
-            var naemonModules = await traitModel.CalculateEffectiveTraitsForTrait(Traits.NaemonModulesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var naemonModules = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonModulesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
             //$profileFromDbNaemons = [];
             // get db enabled naemons
@@ -145,7 +145,7 @@ namespace OKPluginNaemonConfig
 
             // getCapabilityMap - NaemonInstancesTagsFlattened
 
-            var naemonInstancesTags = await traitModel.CalculateEffectiveTraitsForTrait(Traits.NaemonInstancesTagsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var naemonInstancesTags = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonInstancesTagsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
             var capMap = new Dictionary<string, List<string>>();
 
@@ -174,7 +174,7 @@ namespace OKPluginNaemonConfig
                 }
             }
 
-            var naemonProfiles = await traitModel.CalculateEffectiveTraitsForTrait(Traits.NaemonProfilesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var naemonProfiles = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonProfilesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
             /* extend capMap */
 
