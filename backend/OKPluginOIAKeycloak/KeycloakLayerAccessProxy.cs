@@ -8,6 +8,7 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -31,7 +32,20 @@ namespace OKPluginOIAKeycloak
             this.layer = layer;
         }
 
-        private IEnumerable<CIAttribute> BuildAttributesFromUser(Keycloak.Net.Models.Users.User user, Guid ciid, Keycloak.Net.Models.Common.Mapping? roleMappings)
+        private bool BuildAttribute(string name, Guid ciid, IAttributeValue value, Guid changesetID, Regex? nameRegexFilter, [MaybeNullWhen(false)] out CIAttribute ret)
+        {
+            if (nameRegexFilter != null && !nameRegexFilter.IsMatch(name))
+            {
+                ret = null;
+                return false;
+            }
+            // create a deterministic, dependent guid from the ciid + attribute name + value
+            var id = GuidUtility.Create(ciid, name + layer.ID.ToString() + value.Value2String()); // NOTE: id must change when the value changes
+            ret = new CIAttribute(id, name, ciid, value, AttributeState.New, changesetID);
+            return true;
+        }
+
+        private IEnumerable<CIAttribute> BuildAttributesFromUser(Keycloak.Net.Models.Users.User user, Guid ciid, Keycloak.Net.Models.Common.Mapping? roleMappings, string? nameRegexFilter = null)
         {
             /* with external data sources, we don't have a single source of attributes and hence
                 * we don't have a single source of attribute IDs (or relation IDs, or...)
@@ -40,24 +54,18 @@ namespace OKPluginOIAKeycloak
             var changesetID = staticChangesetID; // TODO: how to work with changesets when its online access?
             var CIName = (user.FirstName.Length > 0 && user.LastName.Length > 0) ? $"{user.FirstName} {user.LastName}" : user.UserName;
 
-            CIAttribute BuildAttribute(string name, Guid ciid, IAttributeValue value, Guid changesetID)
-            {
-                // create a deterministic, dependent guid from the ciid + attribute name + value
-                var id = GuidUtility.Create(ciid, name + layer.ID.ToString() + value.Value2String()); // NOTE: id must change when the value changes
-                return new CIAttribute(id, name, ciid, value, AttributeState.New, changesetID);
-            }
-
-            yield return BuildAttribute(ICIModel.NameAttribute, ciid, new AttributeScalarValueText($"User {CIName}"), changesetID);
-            yield return BuildAttribute("user.email", ciid, new AttributeScalarValueText(user.Email), changesetID);
-            yield return BuildAttribute("user.username", ciid, new AttributeScalarValueText(user.UserName), changesetID);
-            yield return BuildAttribute("user.first_name", ciid, new AttributeScalarValueText(user.FirstName), changesetID);
-            yield return BuildAttribute("user.last_name", ciid, new AttributeScalarValueText(user.LastName), changesetID);
-            yield return BuildAttribute("keycloak.id", ciid, new AttributeScalarValueText(user.Id), changesetID);
+            var nameRegex = (nameRegexFilter != null) ? new Regex(nameRegexFilter) : null;
+            if (BuildAttribute(ICIModel.NameAttribute, ciid, new AttributeScalarValueText($"User {CIName}"), changesetID, nameRegex, out var a1)) { yield return a1; }
+            if (BuildAttribute("user.email", ciid, new AttributeScalarValueText(user.Email), changesetID, nameRegex, out var a2)) yield return a2;
+            if (BuildAttribute("user.username", ciid, new AttributeScalarValueText(user.UserName), changesetID, nameRegex, out var a3)) yield return a3;
+            if (BuildAttribute("user.first_name", ciid, new AttributeScalarValueText(user.FirstName), changesetID, nameRegex, out var a4)) yield return a4;
+            if (BuildAttribute("user.last_name", ciid, new AttributeScalarValueText(user.LastName), changesetID, nameRegex, out var a5)) yield return a5;
+            if (BuildAttribute("keycloak.id", ciid, new AttributeScalarValueText(user.Id), changesetID, nameRegex, out var a6)) yield return a6;
 
             // roles
             if (roleMappings != null && roleMappings.ClientMappings != null)
             {
-                yield return BuildAttribute("keycloak.client_mappings", ciid, AttributeScalarValueJSON.BuildFromString(JsonConvert.SerializeObject(roleMappings.ClientMappings)), changesetID);
+                if (BuildAttribute("keycloak.client_mappings", ciid, AttributeScalarValueJSON.BuildFromString(JsonConvert.SerializeObject(roleMappings.ClientMappings)), changesetID, nameRegex, out var a7)) yield return a7;
             }
 
         }
@@ -82,7 +90,7 @@ namespace OKPluginOIAKeycloak
             return Task.FromResult<CIAttribute?>(null); // TODO: not implemented
         }
 
-        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime)
+        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime, string? nameRegexFilter = null)
         {
             if (!atTime.IsLatest) yield break; // we don't have historic information
 
@@ -93,7 +101,7 @@ namespace OKPluginOIAKeycloak
                 var user = await client.GetUserAsync(realm, externalID.ID);
                 var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.ID);
 
-                foreach (var a in BuildAttributesFromUser(user, ciid, roleMappings))
+                foreach (var a in BuildAttributesFromUser(user, ciid, roleMappings, nameRegexFilter))
                     yield return a;
             }
         }
@@ -115,63 +123,63 @@ namespace OKPluginOIAKeycloak
             }
         }
 
-        public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, TimeThreshold atTime)
-        {
-            if (!atTime.IsLatest) yield break; // we don't have historic information
+        //public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, TimeThreshold atTime)
+        //{
+        //    if (!atTime.IsLatest) yield break; // we don't have historic information
 
-            switch (selection)
-            {
-                case SpecificCIIDsSelection mcs:
-                    {
-                        foreach (var ciid in mcs.CIIDs)
-                        {
-                            var externalID = mapper.GetExternalID(ciid);
-                            if (!externalID.HasValue)
-                                continue;
+        //    switch (selection)
+        //    {
+        //        case SpecificCIIDsSelection mcs:
+        //            {
+        //                foreach (var ciid in mcs.CIIDs)
+        //                {
+        //                    var externalID = mapper.GetExternalID(ciid);
+        //                    if (!externalID.HasValue)
+        //                        continue;
 
-                            var user = await client.GetUserAsync(realm, externalID.Value.ID);
-                            var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.Value.ID);
+        //                    var user = await client.GetUserAsync(realm, externalID.Value.ID);
+        //                    var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.Value.ID);
 
-                            foreach (var a in BuildAttributesFromUser(user, ciid, roleMappings))
-                                if (Regex.IsMatch(a.Name, regex))
-                                    yield return a;
-                        }
-                        break;
-                    }
-                case AllCIIDsSelection _:
-                    {
-                        var users = await client.GetUsersAsync(realm, true, null, null, null, null, 99999, null, null); // TODO, HACK: magic number, how to properly get all user IDs?
-                        foreach (var user in users)
-                        {
-                            var id = mapper.GetCIID(new ExternalIDString(user.Id));
-                            if (id.HasValue)
-                            {
-                                foreach (var a in BuildAttributesFromUser(user, id.Value, null))
-                                    if (Regex.IsMatch(a.Name, regex)) // HACK: we are getting ALL attributes of the user and then discard many of them again
-                                        yield return a;
-                            }
-                        }
-                        break;
-                    }
-                case AllCIIDsExceptSelection allExcept:
-                    {
-                        var users = await client.GetUsersAsync(realm, true, null, null, null, null, 99999, null, null); // TODO, HACK: magic number, how to properly get all user IDs?
-                        foreach (var user in users)
-                        {
-                            var id = mapper.GetCIID(new ExternalIDString(user.Id));
-                            if (id.HasValue && allExcept.Contains(id.Value))
-                            {
-                                foreach (var a in BuildAttributesFromUser(user, id.Value, null))
-                                    if (Regex.IsMatch(a.Name, regex)) // HACK: we are getting ALL attributes of the user and then discard many of them again
-                                        yield return a;
-                            }
-                        }
-                        break;
-                    }
-                case NoCIIDsSelection _:
-                    break;
-            }
-        }
+        //                    foreach (var a in BuildAttributesFromUser(user, ciid, roleMappings))
+        //                        if (Regex.IsMatch(a.Name, regex))
+        //                            yield return a;
+        //                }
+        //                break;
+        //            }
+        //        case AllCIIDsSelection _:
+        //            {
+        //                var users = await client.GetUsersAsync(realm, true, null, null, null, null, 99999, null, null); // TODO, HACK: magic number, how to properly get all user IDs?
+        //                foreach (var user in users)
+        //                {
+        //                    var id = mapper.GetCIID(new ExternalIDString(user.Id));
+        //                    if (id.HasValue)
+        //                    {
+        //                        foreach (var a in BuildAttributesFromUser(user, id.Value, null))
+        //                            if (Regex.IsMatch(a.Name, regex)) // HACK: we are getting ALL attributes of the user and then discard many of them again
+        //                                yield return a;
+        //                    }
+        //                }
+        //                break;
+        //            }
+        //        case AllCIIDsExceptSelection allExcept:
+        //            {
+        //                var users = await client.GetUsersAsync(realm, true, null, null, null, null, 99999, null, null); // TODO, HACK: magic number, how to properly get all user IDs?
+        //                foreach (var user in users)
+        //                {
+        //                    var id = mapper.GetCIID(new ExternalIDString(user.Id));
+        //                    if (id.HasValue && allExcept.Contains(id.Value))
+        //                    {
+        //                        foreach (var a in BuildAttributesFromUser(user, id.Value, null))
+        //                            if (Regex.IsMatch(a.Name, regex)) // HACK: we are getting ALL attributes of the user and then discard many of them again
+        //                                yield return a;
+        //                    }
+        //                }
+        //                break;
+        //            }
+        //        case NoCIIDsSelection _:
+        //            break;
+        //    }
+        //}
 
         public IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime)
         {

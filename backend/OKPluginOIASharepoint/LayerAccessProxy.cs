@@ -7,6 +7,7 @@ using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static OKPluginOIASharepoint.Config;
 
@@ -79,15 +80,18 @@ namespace OKPluginOIASharepoint
             return Task.FromResult<CIAttribute?>(null); // TODO: not implemented
         }
 
-        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime)
+        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime, string? nameRegexFilter = null)
         {
             if (!atTime.IsLatest && !useCurrentForHistoric) yield break; // we don't have historic information
 
             var ciids = selection.GetCIIDs(() => mapper.GetAllCIIDs()).ToHashSet();
             var idPairs = mapper.GetIDPairs(ciids);
 
+            var nameRegex = (nameRegexFilter != null) ? new Regex(nameRegexFilter) : null;
+
             await foreach (var a in GetAttributes(idPairs))
-                yield return a;
+                if (nameRegex == null || nameRegex.IsMatch(a.Name))
+                    yield return a;
         }
         public async IAsyncEnumerable<CIAttribute> GetAttributes(IEnumerable<(Guid ciid, SharepointExternalListItemID externalID)> idPairs)
         {
@@ -180,16 +184,6 @@ namespace OKPluginOIASharepoint
                     yield return BuildAttributeFromValue(attributeName, attributeValue, ciid);
                 }
             }
-        }
-
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, TimeThreshold atTime)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-        {
-            //if (!atTime.IsLatest) yield break; // we don't have historic information
-
-
-            yield break; // TODO: implement
         }
 
         public IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime)

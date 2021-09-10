@@ -23,17 +23,17 @@ namespace Omnikeeper.Model.Decorators
             this.onlineAccessProxy = onlineAccessProxy;
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
-        {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
-            {
-                // TODO
-                var tmp = onlineAccessProxy.FindAttributesByName(regex, selection, layerID, trans, atTime).ToEnumerable();
-                return (IDictionary<Guid, IDictionary<string, CIAttribute>>)tmp.GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));
-            }
+        //public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
+        //{
+        //    if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
+        //    {
+        //        // TODO
+        //        var tmp = onlineAccessProxy.FindAttributesByName(regex, selection, layerID, trans, atTime).ToEnumerable();
+        //        return (IDictionary<Guid, IDictionary<string, CIAttribute>>)tmp.GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));
+        //    }
 
-            return await model.FindAttributesByName(regex, selection, layerID, returnRemoved, trans, atTime);
-        }
+        //    return await model.FindAttributesByName(regex, selection, layerID, returnRemoved, trans, atTime);
+        //}
 
         public async Task<IDictionary<Guid, CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
@@ -85,15 +85,53 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null)
         {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
+            var layerMap = new Dictionary<string, (int index, bool isOnlineLayer)>();
+            var ii = 0;
+            foreach (var layerID in layerIDs)
             {
-                var tmp = onlineAccessProxy.GetAttributes(selection, layerID, trans, atTime).ToEnumerable();
-                return (IDictionary<Guid, IDictionary<string, CIAttribute>>)tmp.GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));
+                var isOnlineLayer = await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans);
+                layerMap.Add(layerID, (ii, isOnlineLayer));
+                ii++;
             }
 
-            return await model.GetAttributes(selection, layerID, trans, atTime);
+            if (!layerMap.Values.Any(l => l.isOnlineLayer))
+            {
+                return await model.GetAttributes(selection, layerIDs, returnRemoved, trans, atTime, nameRegexFilter);
+            } else
+            {
+                var ret = new IDictionary<Guid, IDictionary<string, CIAttribute>>[layerMap.Count];
+
+                // split online- and regular layers, add into return array
+                var regularLayerIDs = layerMap.Where(l => !l.Value.isOnlineLayer).Select(t => t.Key).ToArray();
+                var regularResults = await model.GetAttributes(selection, regularLayerIDs, returnRemoved, trans, atTime, nameRegexFilter);
+                for(int i = 0;i < regularResults.Length;i++)
+                {
+                    var regularLayerID = regularLayerIDs[i];
+                    var indexInFullArray = layerMap[regularLayerID].index;
+                    ret[indexInFullArray] = regularResults[i];
+                }
+
+                var onlineLayerIDs = layerMap.Where(l => l.Value.isOnlineLayer).Select(t => t.Key).ToArray();
+                var onlineResults = onlineAccessProxy.GetAttributes(selection, onlineLayerIDs, trans, atTime, nameRegexFilter).ToEnumerable();
+                var groupedOnlineResults = onlineResults.GroupBy(t => t.layerID, t => t.attribute);
+                foreach (var layerGroup in groupedOnlineResults)
+                {
+                    var layerID = layerGroup.Key;
+                    var tmp2 = (IDictionary<Guid, IDictionary<string, CIAttribute>>)layerGroup.GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));
+                    var indexInFullArray = layerMap[layerID].index;
+                    ret[indexInFullArray] = tmp2;
+                }
+                return ret;
+            }
+
+            //if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
+            //{
+            //    // TODO: add returnRemoved option to proxy
+            //    var tmp = onlineAccessProxy.GetAttributes(selection, layerID, trans, atTime).ToEnumerable();
+            //    return (IDictionary<Guid, IDictionary<string, CIAttribute>>)tmp.GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));
+            //}
         }
 
         public async Task<IEnumerable<Guid>> FindCIIDsWithAttributeNameAndValue(string name, IAttributeValue value, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
