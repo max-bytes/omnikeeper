@@ -61,32 +61,6 @@ namespace Omnikeeper.Base.Inbound
             }
         }
 
-        //public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        //{
-        //    var layer = await layerModel.GetLayer(layerID, trans);
-        //    if (layer == null)
-        //        throw new Exception($"Could not find layer with ID {layerID}");
-        //    var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-
-        //    if (plugin == null)
-        //        throw new Exception($"Could not load plugin instance {layer.OnlineInboundAdapterLink.AdapterName}");
-        //    await foreach (var a in plugin.CreateLayerAccessProxy(layer).GetAttributes(selection, atTime))
-        //        yield return a;
-        //}
-
-        //public async IAsyncEnumerable<CIAttribute> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        //{
-        //    var layer = await layerModel.GetLayer(layerID, trans);
-        //    if (layer == null)
-        //        throw new Exception($"Could not find layer with ID {layerID}");
-        //    var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-
-        //    if (plugin == null)
-        //        throw new Exception($"Could not load plugin instance {layer.OnlineInboundAdapterLink.AdapterName}");
-        //    await foreach (var a in plugin.CreateLayerAccessProxy(layer).FindAttributesByName(regex, selection, atTime))
-        //        yield return a;
-        //}
-
         public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);

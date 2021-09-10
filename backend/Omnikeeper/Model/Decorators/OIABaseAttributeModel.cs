@@ -23,18 +23,6 @@ namespace Omnikeeper.Model.Decorators
             this.onlineAccessProxy = onlineAccessProxy;
         }
 
-        //public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
-        //{
-        //    if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
-        //    {
-        //        // TODO
-        //        var tmp = onlineAccessProxy.FindAttributesByName(regex, selection, layerID, trans, atTime).ToEnumerable();
-        //        return (IDictionary<Guid, IDictionary<string, CIAttribute>>)tmp.GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));
-        //    }
-
-        //    return await model.FindAttributesByName(regex, selection, layerID, returnRemoved, trans, atTime);
-        //}
-
         public async Task<IDictionary<Guid, CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
@@ -125,13 +113,6 @@ namespace Omnikeeper.Model.Decorators
                 }
                 return ret;
             }
-
-            //if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
-            //{
-            //    // TODO: add returnRemoved option to proxy
-            //    var tmp = onlineAccessProxy.GetAttributes(selection, layerID, trans, atTime).ToEnumerable();
-            //    return (IDictionary<Guid, IDictionary<string, CIAttribute>>)tmp.GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));
-            //}
         }
 
         public async Task<IEnumerable<Guid>> FindCIIDsWithAttributeNameAndValue(string name, IAttributeValue value, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)

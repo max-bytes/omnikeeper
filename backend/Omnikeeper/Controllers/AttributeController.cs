@@ -122,42 +122,6 @@ namespace Omnikeeper.Controllers
         }
 
         /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="regex"></param>
-        /// <param name="ciids"></param>
-        /// <param name="layerIDs"></param>
-        /// <param name="atTime"></param>
-        /// <returns></returns>
-        //[HttpGet("findMergedAttributesByName")]
-        //public async Task<ActionResult<IEnumerable<CIAttributeDTO>>> FindMergedAttributesByName([FromQuery, Required] string regex, [FromQuery] IEnumerable<Guid> ciids, [FromQuery, Required] string[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
-        //{
-        //    var trans = modelContextBuilder.BuildImmediate();
-        //    var user = await currentUserService.GetCurrentUser(trans);
-        //    if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
-        //        return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
-        //    ICIIDSelection selection;
-        //    if (ciids == null)
-        //        selection = new AllCIIDsSelection();
-        //    else
-        //    {
-        //        ISet<Guid> ciidSet = ciids.ToHashSet(); // TODO: needed
-        //        if (!ciBasedAuthorizationService.CanReadAllCIs(ciidSet, out var notAllowedCI))
-        //            return Forbid($"User \"{user.Username}\" does not have permission to read from CI {notAllowedCI}");
-        //        selection = SpecificCIIDsSelection.Build(ciidSet);
-        //    }
-        //    var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
-        //    var attributes = await attributeModel.FindMergedAttributesByName(regex, selection, new LayerSet(layerIDs), trans, timeThreshold);
-
-        //    var flatAttributes = attributes.SelectMany(t => t.Value.Values);
-
-        //    if (selection is AllCIIDsSelection)
-        //        flatAttributes = flatAttributes.Where(a => ciBasedAuthorizationService.CanReadCI(a.Attribute.CIID)); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
-
-        //    return Ok(flatAttributes.Select(a => CIAttributeDTO.Build(a)));
-        //}
-
-        /// <summary>
         /// bulk replace all attributes in specified layer
         /// </summary>
         /// <param name="dto"></param>
