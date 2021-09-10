@@ -132,12 +132,6 @@ namespace Omnikeeper.Model
             return ma;
         }
 
-        public async Task<IDictionary<string, MergedCIAttribute>> GetMergedAttributes(Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-        {
-            var d = await GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), layers, trans, atTime);
-            return d.GetValueOrDefault(ciid, new Dictionary<string, MergedCIAttribute>());
-        }
-
         public async Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, LayerSet layers, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null)
         {
             if (layers.IsEmpty)
