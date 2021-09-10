@@ -144,10 +144,14 @@ namespace Omnikeeper.Model
             // consider ALL relevant attributes as outdated first
             var outdatedAttributes = (data switch
             { // TODO: performance improvements when data.NamePrefix is empty?
-                BulkCIAttributeDataLayerScope d => (await FindAttributesByName($"^{data.NamePrefix}", new AllCIIDsSelection(), data.LayerID, returnRemoved: true, trans, readTS)),
-                BulkCIAttributeDataCIScope d => (await FindAttributesByName($"^{data.NamePrefix}", SpecificCIIDsSelection.Build(d.CIID), data.LayerID, returnRemoved: true, trans, readTS)),
+            BulkCIAttributeDataLayerScope d => (data.NamePrefix.IsEmpty()) ?
+                        (await GetAttributes(new AllCIIDsSelection(), new string[] { data.LayerID }, true, trans, readTS)) :
+                        (await GetAttributes(new AllCIIDsSelection(), new string[] { data.LayerID }, true, trans, readTS, data.NamePrefix)),
+                BulkCIAttributeDataCIScope d => (data.NamePrefix.IsEmpty()) ? 
+                        (await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), new string[] { data.LayerID }, returnRemoved: true, trans, readTS)) :
+                        (await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), new string[] { data.LayerID }, returnRemoved: true, trans, readTS, data.NamePrefix)),
                 _ => null
-            }).SelectMany(t => t.Value.Values).ToDictionary(a => a.InformationHash, a => (attribute: a, newAttributeID: Guid.NewGuid())); // TODO: slow?
+            }).SelectMany(t => t.Values.SelectMany(tt => tt.Values)).ToDictionary(a => a.InformationHash, a => (attribute: a, newAttributeID: Guid.NewGuid())); // TODO: slow?
             
             var actualInserts = new List<(Guid ciid, string fullName, IAttributeValue value, AttributeState state, Guid attributeID, Guid? existingAttributeID)>();
             var informationHashesToInsert = new HashSet<string>();
@@ -187,10 +191,10 @@ namespace Omnikeeper.Model
             // the list of outdatedAttributes now contains only attributes that need to be removed
             // BUT: the list of outdatedAttributes also can contain attributes whose state == "removed"
             // those cases we can ignore because they do not need to be removed anymore, so we remove them from the list too
-            outdatedAttributes = outdatedAttributes.Where(t => t.Value.attribute.State != AttributeState.Removed).ToDictionary(t => t.Key, t => t.Value);
+            var actualOutdatedAttributes = outdatedAttributes.Values.Where(t => t.attribute.State != AttributeState.Removed);
 
             // changeset is only created and copy mode is only entered when there is actually anything inserted
-            if (!actualInserts.IsEmpty() || !outdatedAttributes.IsEmpty())
+            if (!actualInserts.IsEmpty() || !actualOutdatedAttributes.IsEmpty())
             {
                 Changeset changeset = await changesetProxy.GetChangeset(data.LayerID, origin, trans);
 
@@ -219,7 +223,7 @@ namespace Omnikeeper.Model
                 }
 
                 // remove outdated 
-                foreach (var (outdatedAttribute, newAttributeID) in outdatedAttributes.Values)
+                foreach (var (outdatedAttribute, newAttributeID) in actualOutdatedAttributes)
                 {
                     var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(outdatedAttribute.Value);
 
@@ -290,7 +294,7 @@ namespace Omnikeeper.Model
                     commandUpdateLatest.Parameters.AddWithValue("changeset_id", changeset.ID);
                     await commandUpdateLatest.ExecuteNonQueryAsync();
                 }
-                foreach (var (outdatedAttribute, newAttributeID) in outdatedAttributes.Values)
+                foreach (var (outdatedAttribute, newAttributeID) in actualOutdatedAttributes)
                 {
                     using var commandRemoveLatest = new NpgsqlCommand(@"
                         UPDATE attribute_latest SET id = @id, state = @state, ""timestamp"" = @timestamp, changeset_id = @changeset_id WHERE id = @old_id", trans.DBConnection, trans.DBTransaction);
@@ -304,7 +308,7 @@ namespace Omnikeeper.Model
             }
 
             // return all attributes that have changed (their ciids and the attribute full names)
-            return actualInserts.Select(i => (i.ciid, i.fullName)).Concat(outdatedAttributes.Values.Select(i => (i.attribute.CIID, i.attribute.Name)));
+            return actualInserts.Select(i => (i.ciid, i.fullName)).Concat(actualOutdatedAttributes.Select(i => (i.attribute.CIID, i.attribute.Name)));
         }
     }
 }
