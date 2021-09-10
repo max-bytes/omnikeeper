@@ -13,21 +13,21 @@ namespace Omnikeeper.Base.Service
 {
     public class CIMappingService
     {
-        public async Task<IEnumerable<Guid>> TryToMatch(string ciCandidateID, ICIIdentificationMethod method, CIMappingContext ciMappingContext, IModelContext trans, ILogger logger)
+        public async Task<ISet<Guid>> TryToMatch(string ciCandidateID, ICIIdentificationMethod method, CIMappingContext ciMappingContext, IModelContext trans, ILogger logger)
         {
             switch (method)
             {
                 case CIIdentificationMethodByData d: // use identifiable data for finding out CIID
 
-                    var candidateCIIDs = new List<Guid>();
+                    ISet<Guid> candidateCIIDs = new HashSet<Guid>();
                     var isFirst = true;
                     foreach (var f in d.IdentifiableFragments)
                     {
                         var ciids = await ciMappingContext.GetMergedCIIDsByAttributeNameAndValue(f.Name, f.Value, d.SearchableLayers, trans);
                         if (isFirst)
-                            candidateCIIDs.AddRange(ciids);
+                            candidateCIIDs.UnionWith(ciids);
                         else
-                            candidateCIIDs = candidateCIIDs.Intersect(ciids).ToList();
+                            candidateCIIDs.IntersectWith(ciids);
                         isFirst = false;
                     }
 
@@ -35,14 +35,14 @@ namespace Omnikeeper.Base.Service
                 case CIIdentificationMethodByTemporaryCIID t:
                     if (!ciMappingContext.TryGetMappedTemp2FinalCIID(t.CIID, out Guid ciid))
                         throw new Exception($"Could not find temporary CIID {t.CIID} while trying to match CICandidate {ciCandidateID}");
-                    return new List<Guid>() { ciid };
+                    return new HashSet<Guid>() { ciid };
                 case CIIdentificationMethodByCIID c:
-                    return new List<Guid>() { c.CIID };
+                    return new HashSet<Guid>() { c.CIID };
                 case CIIdentificationMethodNoop _:
-                    return new List<Guid>() { };
+                    return new HashSet<Guid>() { };
                 default:
                     logger.LogWarning("Unknown CI Identification method detected");
-                    return new List<Guid>() { };
+                    return new HashSet<Guid>() { };
             }
         }
 
@@ -66,19 +66,15 @@ namespace Omnikeeper.Base.Service
 
             internal async Task<IEnumerable<Guid>> GetMergedCIIDsByAttributeNameAndValue(string name, IAttributeValue value, LayerSet searchableLayers, IModelContext trans)
             {
-                if (!attributeCache.ContainsKey(name))
-                {
-                    var attributes = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsSelection(), searchableLayers, trans, atTime);
-                    attributeCache[name] = attributes.ToLookup(kv => kv.Value.Attribute.Value, kv => kv.Key);
-                }
-                var ac = attributeCache[name];
-                if (ac.Contains(value))
+                if (attributeCache.TryGetValue(name, out var ac))
                 {
                     return ac[value];
-                }
-                else
+                } else
                 {
-                    return new List<Guid>();
+                    var attributes = await attributeModel.FindMergedAttributesByFullName(name, new AllCIIDsSelection(), searchableLayers, trans, atTime);
+                    var attributesLookup = attributes.ToLookup(kv => kv.Value.Attribute.Value, kv => kv.Key);
+                    attributeCache[name] = attributesLookup;
+                    return attributesLookup[value];
                 }
             }
 
