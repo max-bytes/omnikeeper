@@ -27,25 +27,13 @@ namespace OKPluginNaemonConfig
 
         private List<string> loadcmdbcustomer = new List<string>() { "ADISSEO", "AGRANA", "AMS", "AMSINT", "ANDRITZ", "ATS", "AVESTRA", "AWS" };
 
-        // this is only temporary since this should be readed from configuration
+        // this is only temporary since this should be read from configuration
         private List<string> naemonsConfigGenerateprofiles = new List<string>(){ "svphg200mon001", "svphg200mon002", "uansvclxnaemp01", "uansvclxnaemp02", "uansvclxnaemp03", "uansvclxnaemp04", "uansvclxnaemp05", "uansvclxnaemp06" };
         public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start naemonConfig");
 
-            //attributeModel
-            var timeThreshold = TimeThreshold.BuildLatest();
             var layerset = await layerModel.BuildLayerSet(new[] { "testlayer01" }, trans);
-
-
-            // no need for this we can add a trait as Max suggested
-            //var attributesDict = await attributeModel.FindMergedAttributesByFullName(attrName, new AllCIIDsSelection(), layerset, trans, timeThreshold);
-            // Since attributesDict returns all attributes which have name monman-instance.id we need to group  
-            // based on id value, this means that for earch item we need to create a configuration
-            //foreach (var attribute in attributesDict)
-            //{
-
-            //}
 
             var naemonInstances = await traitModel.CalculateEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
@@ -120,7 +108,10 @@ namespace OKPluginNaemonConfig
 
             //$profileFromDbNaemons = [];
             // get db enabled naemons
-            var profileFromDbNaemons = new List<MergedCI>();
+            //var profileFromDbNaemons = new List<MergedCI>();
+
+            var profileFromDbNaemons = new List<string>();
+
             foreach (var naemon in naemonInstances)
             {
                 // we need to check here if isNaemonProfileFromDbEnabled 
@@ -137,7 +128,18 @@ namespace OKPluginNaemonConfig
 
                 if (naemonsConfigGenerateprofiles.Contains(instanceName))
                 {
-                    profileFromDbNaemons.Add(ci);
+                    //profileFromDbNaemons.Add(ci);
+
+                    // monman-instance.id
+                    var s = ci.MergedAttributes.TryGetValue("monman-instance.id", out MergedCIAttribute? instanceIdAttribute);
+
+                    if (!s)
+                    {
+                        continue;
+                    }
+
+                    profileFromDbNaemons.Add(instanceIdAttribute!.Attribute.Value.Value2String());
+
                 }
             }
 
@@ -145,7 +147,7 @@ namespace OKPluginNaemonConfig
 
             var naemonInstancesTags = await traitModel.CalculateEffectiveTraitsForTrait(Traits.NaemonInstancesTagsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
-            var capMap = new List<MergedCI>();
+            var capMap = new Dictionary<string, List<string>>();
 
             foreach (var instanceTag in naemonInstancesTags)
             {
@@ -162,7 +164,13 @@ namespace OKPluginNaemonConfig
 
                 if (tag.StartsWith("cap_"))
                 {
-                    capMap.Add(ci);
+                    var s = ci.MergedAttributes.TryGetValue("monman-instance_tag.tag", out MergedCIAttribute? instanceIdAttribute);
+                    if (!s)
+                    {
+                        continue;
+                    }
+
+                    capMap.Add(tag, new List<string> { instanceIdAttribute!.Attribute.Value.Value2String() });
                 }
             }
 
@@ -170,10 +178,34 @@ namespace OKPluginNaemonConfig
 
             /* extend capMap */
 
-            foreach (var profile in naemonProfiles)
+            if (profileFromDbNaemons.Count > 0)
             {
+                foreach (var profile in naemonProfiles)
+                {
+                    (MergedCI ci, _) = profile.Value;
+                    // first get profile name 
+                    var success = ci.MergedAttributes.TryGetValue("monman-profile.name", out MergedCIAttribute? profileNameAttribute);
 
+                    if (!success)
+                    {
+                        continue;
+                    }
+
+                    //$cap = 'cap_lp_'.strtolower($profile['NAME']);
+
+                    var cap = "cap_lp_" + profileNameAttribute!.Attribute.Value.Value2String();
+
+                    if (!capMap.ContainsKey(cap))
+                    {
+                        capMap.Add(cap, new List<string>());
+                    }
+
+                    capMap[cap] = (List<string>)profileFromDbNaemons.Concat(new List<string> { cap });
+                }
             }
+
+            /* test compatibility of naemons and add NAEMONSAVAIL */
+
 
 
             return true;

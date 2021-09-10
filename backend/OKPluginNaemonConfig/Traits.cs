@@ -36,14 +36,6 @@ namespace OKPluginNaemonConfig
 
         public static readonly GenericTrait ACisFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(ACis);
 
-        //public static readonly RecursiveTrait NaemonInstances = new RecursiveTrait("naemon_instances", traitOrigin, new List<TraitAttribute>() {
-        //new TraitAttribute("monman-instance.id",
-        //    CIAttributeTemplate.BuildFromParams("monman-instance.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
-        //    )
-        //});
-
-        //public static readonly GenericTrait NaemonInstancesFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(NaemonInstances);
-
         public static readonly RecursiveTrait NaemonModules = new RecursiveTrait("modules", traitOrigin, new List<TraitAttribute>() {
         new TraitAttribute("name",
             CIAttributeTemplate.BuildFromParams("monman-module.name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
