@@ -36,8 +36,6 @@ const breadcrumbNameMap = [
   
   { search: '/traits/(.*)', name: 'Trait %1%' },
   { search: '/traits', name: 'Traits', skipIfLast: true },
-
-  // TODO: plugins?
 ];
 
 function pathname2BreadcrumbItems(pathname) {
@@ -75,17 +73,12 @@ function pathname2BreadcrumbItems(pathname) {
         <Link to={url}>{name}</Link>
       </Breadcrumb.Item>;
     } else {
-      return null;//<Breadcrumb.Item key={url}>[Unknown]</Breadcrumb.Item>;
+      return null;
     }
   }).filter(i => i);
 
-  // skip last if empty
-  // if (extraBreadcrumbItems.length > 0 && _.last(extraBreadcrumbItems).skipIfLast)
-  //   extraBreadcrumbItems.pop();
-
   return extraBreadcrumbItems;
 }
-
 
 function Breadcrumbs(props) {
   const { location, style } = props;
