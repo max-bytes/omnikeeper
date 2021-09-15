@@ -5,12 +5,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { queries } from '../../graphql/queries_manage'
 import { mutations } from '../../graphql/mutations_manage'
-import { Button, Card, Col, Divider, Popconfirm, Row, Statistic, Typography } from "antd";
+import { Button, Card, Col, Divider, Popconfirm, Row, Statistic, Typography, Upload, Space, Alert } from "antd";
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import { useParams } from 'react-router-dom'
 import useSwaggerClient from 'utils/useSwaggerClient';
 import download from 'downloadjs';
+import { UploadOutlined } from '@ant-design/icons';
 const { Text } = Typography;
 
 export default function LayerOperations(props) {
@@ -19,7 +20,7 @@ export default function LayerOperations(props) {
   const { data, loading: loadingStatistics, refetch: refetchStatistics } = useQuery(queries.LayerStatistics, {
     variables: { layerID: layerID }
   });
-  const { data: swaggerClient, loading: loadingSwaggerClient, error: errorSwaggerClient } = useSwaggerClient();
+  const { data: swaggerClient } = useSwaggerClient();
 
   var [truncatingLayer, setTruncatingLayer] = useState(false);
   const [truncateLayerMutation] = useMutation(mutations.TRUNCATE_LAYER);
@@ -53,6 +54,43 @@ export default function LayerOperations(props) {
     }
   }, [swaggerClient, data]);
 
+  
+  var [importingLayers, setImportingLayers] = useState(false);
+  const [fileToImport, setFileToImport] = useState(undefined);
+  const [importError, setImportError] = useState(undefined);
+  const [importSuccess, setImportSuccess] = useState(undefined);
+  const importLayer = useCallback(async () => {
+    if (data && swaggerClient) {
+      setImportingLayers(true);
+      setImportError(undefined);
+      setImportSuccess(undefined);
+      try {
+        await swaggerClient.apis.ImportExportLayer.ImportLayer({ 
+            version: 1, 
+            overwriteLayerID: data.manage_layerStatistics.layer.id 
+          }, {
+            requestBody: {
+              files: [fileToImport]
+            }
+          })
+          .then(response => {
+            if (response.status === 200) {
+              setFileToImport(undefined);
+              setImportSuccess('Import successful');
+            } else {
+              setImportError(`Unknown error, HTTP response: ${response.status}`);
+            }
+          }).then(d => {
+            return refetchStatistics();
+          }).catch(e => {
+            setImportError(e.response.text);
+          });
+      } finally {
+        setImportingLayers(false);
+      }
+    }
+  }, [swaggerClient, data, fileToImport, setFileToImport]);
+
   if (data && swaggerClient) {
     return <>
       <div style={{marginBottom: '10px'}}><Link to=".."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
@@ -84,7 +122,7 @@ export default function LayerOperations(props) {
         <Col span={8}>
           <Card title="Export Layer">
             <p><Text>Export the currently active attributes and relations of this layer into an .okl1 file and download it</Text></p>
-
+            <p><Text>Note: this export only exports the currently active attributes and relations; it does NOT export any historic data.</Text></p>
             <Popconfirm
                 title={`Are you sure you want to export layer ${data.manage_layerStatistics.layer.id}?`}
                 onConfirm={exportLayer}
@@ -93,6 +131,29 @@ export default function LayerOperations(props) {
             >
               <Button disabled={exportingLayer}>{exportingLayer ? 'Running...' : 'Export Layer'}</Button>
             </Popconfirm>
+          </Card>
+        </Col><Col span={8}>
+          <Card title="Import Layer">
+            <p><Text>Import the attributes and relations from an .okl1 file and insert them into the current layer.</Text></p>
+            <p><Text>Note: before importing, make sure the layer is completely empty. Importing into a non-empty layer will fail. You may truncate the layer, if necessary.</Text></p>
+            <p><Text>Note: the data will be inserted as a new changeset from your current user and at the current timestamp.</Text></p>
+            <Space direction="vertical">
+              <Upload fileList={fileToImport ? [fileToImport] : []}
+                beforeUpload={file => {
+                  setFileToImport(file);
+                  return false;
+                }}
+                onRemove={file => {
+                  setFileToImport(null);
+                }}
+                >
+                <Button icon={<UploadOutlined />}>Click to Select File</Button>
+              </Upload>
+              <Button type="primary" onClick={importLayer} disabled={importingLayers || !fileToImport}>Import</Button>
+              
+              {importError && <Alert message="Error" type="error" showIcon closable description={importError} />}
+              {importSuccess && <Alert message="Success" type="success" showIcon closable description={importSuccess} />}
+            </Space>
           </Card>
         </Col><Col span={8}>
           <Card title="Truncate Layer">
