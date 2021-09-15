@@ -1,8 +1,5 @@
 import React, {useCallback, useState} from 'react';
-import { Link } from 'react-router-dom'
 import { useQuery, useMutation } from '@apollo/client';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { queries } from '../../graphql/queries_manage'
 import { mutations } from '../../graphql/mutations_manage'
 import { Button, Card, Col, Divider, Popconfirm, Row, Statistic, Typography, Upload, Space, Alert } from "antd";
@@ -93,7 +90,6 @@ export default function LayerOperations(props) {
 
   if (data && swaggerClient) {
     return <>
-      <div style={{marginBottom: '10px'}}><Link to=".."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
       <h2>Layer Statistics</h2>
       <h3>Layer-ID: {data.manage_layerStatistics.layer.id}</h3>
       <Row gutter={4}>
