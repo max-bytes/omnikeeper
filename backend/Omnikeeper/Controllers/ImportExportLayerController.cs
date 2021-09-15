@@ -103,7 +103,9 @@ namespace Omnikeeper.Controllers
                 new InMemoryFile("data.json", byteData)
             });
 
-            return File(zipFile, "application/octet-stream", $"ok_layerexport_{layerID}_{timeThreshold.Time:yyyyMMddHHmmss}.okl1");
+            // NOTE: this should be a safe filename in all circumstances, because layerID must be a valid layer-ID
+            var filename = $"{layerID}-{timeThreshold.Time:yyyyMMddHHmmss}.okl1";
+            return File(zipFile, "application/octet-stream", filename);
         }
 
         [HttpPost("importLayer")]

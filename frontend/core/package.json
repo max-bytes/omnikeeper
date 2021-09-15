@@ -20,6 +20,7 @@
     "antd": "^4.8.0",
     "build-url": "^6.0.1",
     "console-feed": "^3.1.10",
+    "downloadjs": "^1.4.7",
     "env-cmd": "^10.1.0",
     "graphql": "^14.7.0",
     "keycloak-js": "^9.0.3",
