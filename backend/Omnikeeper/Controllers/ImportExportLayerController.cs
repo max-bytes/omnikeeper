@@ -186,13 +186,14 @@ namespace Omnikeeper.Controllers
             byte[] archiveFile;
             using (var archiveStream = new MemoryStream())
             {
-                using (var archive = new ZipArchive(archiveStream, ZipArchiveMode.Create, true)) // TODO: leave open?
+                // NOTE: apparently we need to keep leaveOpen = true, see https://stackoverflow.com/questions/50720298/creating-zip-archive-in-memory-and-returning-it-from-a-web-api
+                using (var archive = new ZipArchive(archiveStream, ZipArchiveMode.Create, leaveOpen: true))
                 {
                     foreach (var file in files)
                     {
                         var zipArchiveEntry = archive.CreateEntry(file.FileName, CompressionLevel.Fastest);
-                        using (var zipStream = zipArchiveEntry.Open())
-                            zipStream.Write(file.Content, 0, file.Content.Length);
+                        using var zipStream = zipArchiveEntry.Open();
+                        zipStream.Write(file.Content, 0, file.Content.Length);
                     }
                 }
 
