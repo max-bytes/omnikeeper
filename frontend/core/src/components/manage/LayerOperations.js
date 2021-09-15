@@ -89,7 +89,7 @@ export default function LayerOperations(props) {
         setImportingLayers(false);
       }
     }
-  }, [swaggerClient, data, fileToImport, setFileToImport]);
+  }, [swaggerClient, data, fileToImport, setFileToImport, refetchStatistics]);
 
   if (data && swaggerClient) {
     return <>
