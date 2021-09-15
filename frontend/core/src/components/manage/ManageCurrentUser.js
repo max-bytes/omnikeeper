@@ -1,7 +1,4 @@
 import React from 'react';
-import { Link  } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { useQuery } from '@apollo/client';
 import { queries } from '../../graphql/queries_manage'
 import 'ag-grid-community/dist/styles/ag-grid.css';
@@ -15,7 +12,6 @@ export default function ManageCurrentUser() {
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Current User</h2>
-    <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
     <h3>Debug-Infos</h3>
     <ul>
       {data.manage_debugCurrentUser.map(k => (<li key={k}>{k}</li>))}

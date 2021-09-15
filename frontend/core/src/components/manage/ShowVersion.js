@@ -1,7 +1,4 @@
 import React from 'react';
-import { Link  } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { useQuery } from '@apollo/client';
 import { queries } from '../../graphql/queries_manage'
 import 'ag-grid-community/dist/styles/ag-grid.css';
@@ -21,7 +18,6 @@ export default function ShowVersion(props) {
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Version</h2>
-    <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
     <div>
       Omnikeeper Core: {data.manage_version.coreVersion ?? 'unknown'}<br />
       Technical Frontend: {env('VERSION') ?? 'unknown'}<br />

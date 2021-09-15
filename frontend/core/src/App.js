@@ -22,6 +22,7 @@ import { ReactKeycloakProvider } from '@react-keycloak/web'
 import { Menu, Layout, Button, Drawer } from 'antd';
 import ExplorerLayers from "components/ExplorerLayers";
 import Trait from "components/traits/Trait";
+import Breadcrumbs from "utils/Breadcrumbs";
 const { Header, Content } = Layout;
 
 const keycloak = new Keycloak({
@@ -87,6 +88,7 @@ function App() {
           </Header>
             
           <Content className="site-layout" style={{ padding: '0 50px', marginTop: 64 }}>
+            <Breadcrumbs style={{marginTop: '10px', marginBottom: '10px'}} />
             <Switch>
               <Route path="/login">
                 <LoginPage />

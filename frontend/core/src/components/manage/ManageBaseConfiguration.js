@@ -1,7 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { Form, Input, Button } from 'antd';
 import { queries } from 'graphql/queries_manage'
 import { mutations } from 'graphql/mutations_manage'
@@ -23,7 +20,6 @@ export default function ManageBaseConfiguration() {
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Base Configuration</h2>
-    <div><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
     { config ?
         <div style={{ display: 'flex', justifyContent: 'center', flexGrow: 1 }}>
             <Form 

@@ -1,7 +1,5 @@
 import React from 'react';
 import { Switch, Link, useRouteMatch, useLocation, Redirect } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { PrivateRoute } from 'components/PrivateRoute';
 import ManagePredicates from 'components/manage/ManagePredicates';
 import ManageBaseConfiguration from 'components/manage/ManageBaseConfiguration';
@@ -27,7 +25,7 @@ export default function Manage(props) {
     if (frontendPluginsmanagerError) return "Error:" + frontendPluginsmanagerError;
 
     return (
-        <div style={{display: 'flex', flexDirection: 'column', height: '100%', paddingTop: "15px"}}>
+        // <div style={{display: 'flex', flexDirection: 'column', height: '100%', paddingTop: "15px"}}>
             <Switch>
                 <Redirect from="/:url*(/+)" to={pathname.slice(0, -1)} /> {/* Removes trailing slashes */}
                 <PrivateRoute path={`${path}/base-configuration`}>
@@ -77,7 +75,6 @@ export default function Manage(props) {
                                         <div style={{ padding: "10px" }}>
                                             <h2 style={{ marginBottom: 0 }}>{plugin.title}</h2>
                                             <p>{plugin.description}</p>
-                                            <div style={{marginBottom: '10px'}}><Link to={path}><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
                                         </div>
                                         {plugin.components.manageComponent()}
                                     </div>
@@ -87,7 +84,7 @@ export default function Manage(props) {
                 }
 
                 <PrivateRoute path={path}>
-                    <div style={{ padding: '10px' }}><h2>Management</h2>
+                    <div><h2>Management</h2>
                         <h3>Core Management</h3>
                         <ul>
                             <li><Link to={`${url}/base-configuration`}>Base Configuration</Link></li>
@@ -126,6 +123,6 @@ export default function Manage(props) {
                     </div>
                 </PrivateRoute>
             </Switch>
-        </div>
+        // </div>
     )
 }

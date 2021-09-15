@@ -1,7 +1,4 @@
 import React, { useState } from 'react';
-import { Link  } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { useQuery, useMutation, useApolloClient } from '@apollo/client';
 import { queries } from '../../graphql/queries_manage'
 import { mutations } from '../../graphql/mutations_manage'
@@ -42,7 +39,6 @@ export default function ManageLayers(props) {
 
   return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
     <h2>Layers</h2>
-    <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
       saveRow={async row => {
