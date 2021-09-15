@@ -124,7 +124,7 @@ namespace Omnikeeper.Model
                     if (requiredNonTrait.ID == TraitEmpty.StaticID)
                     {
                         // treat empty trait special, because its simply GetMergedCIs with includeEmptyCIs: false
-                        workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: true, trans, atTime);
+                        workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: false, trans, atTime);
                     }
                     else
                     {
