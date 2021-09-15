@@ -27,7 +27,7 @@ export default function ManageODataAPIContexts(props) {
       cellEditorParams: { maxLength: 999999, cols: 120 }  }
   ];
 
-  return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
+  return <>
     <h2>OData API Contexts</h2>
     <p>OData API url: https://[instance]/backend/api/odata/[context ID]</p>
 
@@ -47,5 +47,5 @@ export default function ManageODataAPIContexts(props) {
           .then(r => ({result: r.data.manage_upsertODataAPIContext, id: row.id}))
           .catch(e => ({result: e, id: row.id }));
       }} />
-  </div>;
+  </>;
 }

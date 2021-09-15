@@ -29,7 +29,7 @@ export default function ManageOIAContexts(props) {
       cellEditorParams: { maxLength: 999999, cols: 120 }  }
   ];
 
-  return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
+  return <>
     <h2>Online Inbound Adapter Contexts</h2>
 
     <AgGridCrud idIsUserCreated={false} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
@@ -54,5 +54,5 @@ export default function ManageOIAContexts(props) {
             .catch(e => ({result: e, id: row.id }));
         }
       }} />
-  </div>;
+  </>;
 }

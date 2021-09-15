@@ -16,7 +16,7 @@ export default function ShowVersion(props) {
   if (frontendPluginsmanagerError) return "Error:" + frontendPluginsmanagerError;
   if (!data) return "Loading...";
 
-  return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
+  return <>
     <h2>Version</h2>
     <div>
       Omnikeeper Core: {data.manage_version.coreVersion ?? 'unknown'}<br />
@@ -36,5 +36,5 @@ export default function ShowVersion(props) {
         })
       }
       </ul>
-  </div>
+  </>
 }

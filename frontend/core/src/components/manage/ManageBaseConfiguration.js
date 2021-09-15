@@ -18,7 +18,7 @@ export default function ManageBaseConfiguration() {
     if (!!data) setConfig(data.manage_baseConfiguration);
   }, [data]);
 
-  return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
+  return <>
     <h2>Base Configuration</h2>
     { config ?
         <div style={{ display: 'flex', justifyContent: 'center', flexGrow: 1 }}>
@@ -65,5 +65,5 @@ export default function ManageBaseConfiguration() {
             </Form>
         </div>
     : "Loading..." }
-  </div>;
+  </>;
 }

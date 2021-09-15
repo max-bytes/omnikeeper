@@ -33,7 +33,7 @@ export default function ManageAuthRoles(props) {
     }
   ];
 
-  return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
+  return <>
     <h2>Auth Roles</h2>
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
@@ -56,5 +56,5 @@ export default function ManageAuthRoles(props) {
           .catch(e => ({result: e, id: row.id }));
         }
       }} />
-  </div>;
+  </>;
 }

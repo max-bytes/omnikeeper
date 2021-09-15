@@ -59,10 +59,10 @@ export default function ShowVersion() {
         createHubConnection();
     }, []);
 
-  return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
+  return <>
     <h2>Logs</h2>
-    <div style={{backgroundColor: '#333333', overflow: 'scroll'}}>
+    <div style={{backgroundColor: '#333333', overflow: 'scroll', height: '100%'}}>
       <Console logs={logs} variant="dark" />
     </div>
-  </div>
+  </>
 }

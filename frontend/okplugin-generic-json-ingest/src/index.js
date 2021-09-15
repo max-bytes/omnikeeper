@@ -23,7 +23,7 @@ export default function OKPluginGenericJSONIngest(props) {
     if (loading) return "Loading...";
 
     const ManageComponent = () =>  (
-        <div style={{display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <>
             <Route
                 render={({ location, }) => {
                     const locPath = location.pathname.split("/");
@@ -53,7 +53,7 @@ export default function OKPluginGenericJSONIngest(props) {
                 <Redirect to={`${path}/${pluginName}/explorer`} />
             </PrivateRoute>
             </Switch>
-        </div>
+        </>
     );
 
     return {

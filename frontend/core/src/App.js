@@ -88,43 +88,45 @@ function App() {
           </Header>
             
           <Content className="site-layout" style={{ padding: '0 50px', marginTop: 64 }}>
-            <Breadcrumbs style={{marginTop: '10px', marginBottom: '10px'}} />
-            <Switch>
-              <Route path="/login">
-                <LoginPage />
-              </Route>
-              <PrivateRoute path="/diffing">
-                <Diffing />
-              </PrivateRoute>
-              <PrivateRoute path="/createCI">
-                <AddNewCI />
-              </PrivateRoute>
-              <PrivateRoute path="/explorer/:ciid">
-                <Explorer />
-              </PrivateRoute>
-              <PrivateRoute path="/explorer">
-                <SearchCIAdvanced />
-              </PrivateRoute>
-              <PrivateRoute path="/changesets/:changesetID">
-                <Changeset />
-              </PrivateRoute>
-              <PrivateRoute path="/changesets">
-                <ChangesetList />
-              </PrivateRoute>
-              <PrivateRoute path="/grid-view">
-                <GridView/>
-              </PrivateRoute>
-              <PrivateRoute path="/manage">
-                <Manage/>
-              </PrivateRoute>
-              <PrivateRoute path="/traits/:traitID">
-                <Trait />
-              </PrivateRoute>
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <Breadcrumbs style={{marginTop: '10px', marginBottom: '10px'}} />
+              <Switch>
+                <Route path="/login">
+                  <LoginPage />
+                </Route>
+                <PrivateRoute path="/diffing">
+                  <Diffing />
+                </PrivateRoute>
+                <PrivateRoute path="/createCI">
+                  <AddNewCI />
+                </PrivateRoute>
+                <PrivateRoute path="/explorer/:ciid">
+                  <Explorer />
+                </PrivateRoute>
+                <PrivateRoute path="/explorer">
+                  <SearchCIAdvanced />
+                </PrivateRoute>
+                <PrivateRoute path="/changesets/:changesetID">
+                  <Changeset />
+                </PrivateRoute>
+                <PrivateRoute path="/changesets">
+                  <ChangesetList />
+                </PrivateRoute>
+                <PrivateRoute path="/grid-view">
+                  <GridView/>
+                </PrivateRoute>
+                <PrivateRoute path="/manage">
+                  <Manage/>
+                </PrivateRoute>
+                <PrivateRoute path="/traits/:traitID">
+                  <Trait />
+                </PrivateRoute>
 
-              <Route path="*">
-                <Redirect to="/explorer" />
-              </Route>
-            </Switch>
+                <Route path="*">
+                  <Redirect to="/explorer" />
+                </Route>
+              </Switch>
+            </div>
 
             <Drawer 
               width={440}

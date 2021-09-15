@@ -37,7 +37,7 @@ export default function ManageLayers(props) {
     }
   ];
 
-  return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
+  return <>
     <h2>Layers</h2>
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
@@ -47,5 +47,5 @@ export default function ManageLayers(props) {
             .then(r => ({result: r.data.manage_upsertLayer, id: row.id}))
             .catch(e => ({result: e, id: row.id }));
       }} />
-  </div>;
+  </>;
 }

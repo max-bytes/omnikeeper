@@ -22,7 +22,6 @@ function AddNewCI(props) {
   else {
 
     return (
-      <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
         <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1}}>
           <Form labelCol={{ span: "8" }} style={{display: 'flex', flexDirection: 'column', flexBasis: '500px'}} onFinish={e => {
                 createNewCI({ variables: { name: newCI.name, layerIDForName: newCI.layerForName?.id }})
@@ -55,7 +54,6 @@ function AddNewCI(props) {
           </Form>
 
         </div>
-      </div>
     );
   }
 }

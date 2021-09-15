@@ -13,12 +13,11 @@ export default function ManageCache() {
   var sortedKeys = [...data.manage_cacheKeys];
   sortedKeys.sort();
 
-  return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
+  return <>
     <h2>Memory Cache</h2>
     <p>TODO: make editable / manageable</p>
     <ul>
       {sortedKeys.map(k => (<li key={k}>{k}</li>))}
     </ul>
-    
-  </div>;
+  </>;
 }

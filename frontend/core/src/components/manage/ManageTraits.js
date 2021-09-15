@@ -48,7 +48,7 @@ export default function ManageTraits() {
     { headerName: "Required Traits", field: "requiredTraits" },
   ];
 
-  return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
+  return <>
     <h2>Traits</h2>
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
@@ -76,5 +76,5 @@ export default function ManageTraits() {
           .catch(e => ({result: e, id: row.id }));
         }
       }} />
-  </div>;
+  </>;
 }
