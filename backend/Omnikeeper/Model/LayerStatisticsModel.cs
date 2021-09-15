@@ -31,6 +31,14 @@ namespace Omnikeeper.Model
             return (long)await commandActiveLayers.ExecuteScalarAsync();
         }
 
+        public async Task<bool> IsLayerEmpty(Layer layer, IModelContext trans)
+        {
+            var numAttributes = await GetAttributeChangesHistory(layer, trans);
+            if (numAttributes > 0) return false;
+            var numRelations = await GetRelationChangesHistory(layer, trans);
+            if (numRelations > 0) return false;
+            return true;
+        }
 
         public async Task<long> GetAttributeChangesHistory(Layer layer, IModelContext trans)
         {
@@ -47,6 +55,7 @@ namespace Omnikeeper.Model
 
             return (long)await command.ExecuteScalarAsync();
         }
+
         public async Task<long> GetActiveRelations(Layer layer, IModelContext trans)
         {
             // return number of all active relations

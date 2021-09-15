@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types'
 import { Row, Col } from "antd";
 import AddNewAttribute from './AddNewAttribute';
@@ -14,7 +14,6 @@ const { TabPane } = Tabs;
 
 function CI(props) {
 
-  const [createNewAttribute, setCreateNewAttribute] = useState(undefined);
   const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
   const { data: visibleLayers } = useExplorerLayers(true);
 
@@ -22,7 +21,7 @@ function CI(props) {
     <TabPane tab={<CountBadge count={props.ci.mergedAttributes.length}>Attributes</CountBadge>} key="attributes">
       <Row>
         <Col span={24}>
-          <AddNewAttribute prefilled={createNewAttribute} isEditable={props.isEditable} ciIdentity={props.ci.id}></AddNewAttribute>
+          <AddNewAttribute isEditable={props.isEditable} ciIdentity={props.ci.id}></AddNewAttribute>
         </Col>
       </Row>
       <Row>

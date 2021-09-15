@@ -64,7 +64,8 @@ namespace Omnikeeper.Startup
                builder.WithOrigins(Configuration.GetSection("CORS")["AllowedHosts"].Split(","))
                .AllowCredentials()
                 .AllowAnyMethod()
-                .AllowAnyHeader())
+                .AllowAnyHeader()
+                .WithExposedHeaders("Content-Disposition"))
             );
 
             services.AddOData();//.EnableApiVersioning();
