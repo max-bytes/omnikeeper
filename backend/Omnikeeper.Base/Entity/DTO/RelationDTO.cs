@@ -46,6 +46,17 @@ namespace Omnikeeper.Base.Entity.DTO
                 r.Relation.State
             );
         }
+
+        public static RelationDTO BuildFromRelation(Relation r)
+        {
+            return new RelationDTO(
+                r.ID,
+                r.FromCIID,
+                r.ToCIID,
+                r.PredicateID,
+                r.State
+            );
+        }
     }
 
 }

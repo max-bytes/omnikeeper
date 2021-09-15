@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.IO;
 
 namespace Omnikeeper.Base.Utils
 {
@@ -39,6 +40,20 @@ namespace Omnikeeper.Base.Utils
         public string SerializeToString(T config)
         {
             return JsonConvert.SerializeObject(config, SerializerSettings);
+        }
+        public void SerializeToTextWriter(T config, TextWriter textWriter)
+        {
+            Serializer.Serialize(textWriter, config);
+        }
+
+        public T Deserialize(Stream stream)
+        {
+            using var tr = new StreamReader(stream);
+            using var jsonReader = new JsonTextReader(tr);
+            var t = Serializer.Deserialize<T>(jsonReader);
+            if (t == null)
+                throw new Exception("Could not deserialize stream");
+            return t;
         }
     }
 }
