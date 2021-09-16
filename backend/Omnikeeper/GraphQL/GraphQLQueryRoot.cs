@@ -147,7 +147,7 @@ namespace Omnikeeper.GraphQL
                     return cis;
                 });
 
-            FieldAsync<ListGraphType<CompactCIType>>("advancedSearchCIs",
+            FieldAsync<ListGraphType<CompactCIType>>("advancedSearchCompactCIs",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "searchString" },
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "withEffectiveTraits" },

@@ -9,7 +9,7 @@ import { CIID } from "utils/uuidRenderers";
 export function SearchResults(props) {
 
     const Row = ({ index, style }) => {
-        const result = props.advancedSearchCIs[index];
+        const result = props.advancedSearchCompactCIs[index];
         return <Link key={result.id} to={`/explorer/${result.id}`} style={style}>
             <div
                 style={{
@@ -43,7 +43,7 @@ export function SearchResults(props) {
                 {({ height, width }) => (
                     <List
                     height={height}
-                    itemCount={props.advancedSearchCIs?.length ?? 0}
+                    itemCount={props.advancedSearchCompactCIs?.length ?? 0}
                     itemSize={42}
                     width={width}
                     >
@@ -57,7 +57,7 @@ export function SearchResults(props) {
     return <>
     <h3>Results:</h3>     
         <Spin spinning={props.loading}>
-            <h4>Number of CIs: {props.advancedSearchCIs?.length ?? '?'}</h4>
+            <h4>Number of CIs: {props.advancedSearchCompactCIs?.length ?? '?'}</h4>
             <Results />
         </Spin>
     </>;

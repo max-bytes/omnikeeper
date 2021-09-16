@@ -2,14 +2,6 @@ import gql from 'graphql-tag';
 import { Fragments } from './fragments';
 
 export const queries = {
-    CIList: gql`
-        query($layers: [String]!) {
-            compactCIs(layers: $layers) {
-              ...CompactCI
-            }
-          }
-        ${Fragments.compactCI}
-    `,
     PredicateList: gql`
         query {
             predicates {
@@ -19,9 +11,9 @@ export const queries = {
         ${Fragments.fullPredicate}
     `,
 
-    AdvancedSearchCIs: gql`
+    AdvancedSearchCompactCIs: gql`
         query($searchString: String!, $withEffectiveTraits: [String]!, $withoutEffectiveTraits: [String]!, $layers: [String]!) {
-            advancedSearchCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits, withoutEffectiveTraits: $withoutEffectiveTraits, layers: $layers) {
+            advancedSearchCompactCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits, withoutEffectiveTraits: $withoutEffectiveTraits, layers: $layers) {
                 ...CompactCI
             }
         }
