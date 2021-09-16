@@ -139,23 +139,24 @@ namespace OKPluginOIAOmnikeeper
         {
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
-            var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
-            var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
-            var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
+            throw new NotImplementedException(); // TODO
 
-            var relationsDTO = rl switch
-            {
-                RelationSelectionFrom f => await client.GetMergedRelationsOutgoingFromCIAsync(f.fromCIID, remoteLayerIDs, time, ClientVersion),
-                RelationSelectionTo f => throw new NotImplementedException(), // TODO
-                RelationSelectionWithPredicate p => await client.GetMergedRelationsWithPredicateAsync(p.predicateID, remoteLayerIDs, time, ClientVersion),
-                RelationSelectionEitherFromOrTo fot => await client.GetMergedRelationsFromOrToCIAsync(fot.ciid, remoteLayerIDs, time, ClientVersion),
-                RelationSelectionAll a => await client.GetAllMergedRelationsAsync(remoteLayerIDs, time, ClientVersion),
-                _ => throw new NotImplementedException(),// must not be
-            };
+            //var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
+            //var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
+            //var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
 
-            // we need to reduce the relations to those whose related CIs are actually present in the mapper, to ensure that only relations of mapped cis are fetched
-            foreach (var r in RelationDTO2Regular(relationsDTO))
-                yield return r;
+            //var relationsDTO = rl switch
+            //{
+            //    RelationSelectionFrom f => await client.GetMergedRelationsOutgoingFromCIAsync(f.fromCIIDs, remoteLayerIDs, time, ClientVersion),
+            //    RelationSelectionTo f => throw new NotImplementedException(), // TODO
+            //    RelationSelectionWithPredicate p => await client.GetMergedRelationsWithPredicateAsync(p.predicateID, remoteLayerIDs, time, ClientVersion),
+            //    RelationSelectionAll a => await client.GetAllMergedRelationsAsync(remoteLayerIDs, time, ClientVersion),
+            //    _ => throw new NotImplementedException(),// must not be
+            //};
+
+            //// we need to reduce the relations to those whose related CIs are actually present in the mapper, to ensure that only relations of mapped cis are fetched
+            //foreach (var r in RelationDTO2Regular(relationsDTO))
+            //    yield return r;
         }
 
         public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime)

@@ -25,12 +25,8 @@ namespace Omnikeeper.GraphQL
             Field("layerhash", x => x.Layers.LayerHash);
             Field(x => x.AtTime, type: typeof(TimeThresholdType));
             Field("mergedAttributes", x => x.MergedAttributes.Values, type: typeof(ListGraphType<MergedCIAttributeType>));
-            FieldAsync<ListGraphType<CompactRelatedCIType>>("related",
-            arguments: new QueryArguments(new List<QueryArgument>
-            {
-                new QueryArgument<StringGraphType> { Name = "where" },
-                new QueryArgument<IntGraphType> { Name = "perPredicateLimit" },
-            }),
+
+            FieldAsync<ListGraphType<MergedRelationType>>("outgoingMergedRelations",
             resolve: async (context) =>
             {
                 var ciModel = context.RequestServices!.GetRequiredService<ICIModel>();
@@ -41,26 +37,26 @@ namespace Omnikeeper.GraphQL
                 if (layerset == null)
                     throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!");
 
-                var perPredicateLimit = context.GetArgument<int?>("perPredicateLimit");
-                if (perPredicateLimit.HasValue && perPredicateLimit.Value <= 0)
-                    return new List<CompactRelatedCI>();
+                var CIIdentity = context.Source!.ID;
+
+                var relations = await relationModel.GetMergedRelations(new RelationSelectionFrom(CIIdentity), layerset, userContext.Transaction, userContext.TimeThreshold);
+                return relations;
+            });
+            FieldAsync<ListGraphType<MergedRelationType>>("incomingMergedRelations",
+            resolve: async (context) =>
+            {
+                var ciModel = context.RequestServices!.GetRequiredService<ICIModel>();
+                var relationModel = context.RequestServices!.GetRequiredService<IRelationModel>();
+
+                var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                var layerset = userContext.LayerSet;
+                if (layerset == null)
+                    throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!");
 
                 var CIIdentity = context.Source!.ID;
 
-                var relatedCIs = await RelationService.GetCompactRelatedCIs(CIIdentity, layerset, ciModel, relationModel, perPredicateLimit, userContext.Transaction, userContext.TimeThreshold);
-
-                var wStr = context.GetArgument<string>("where"); // TODO: develop further
-                if (wStr != null)
-                    try
-                    {
-                        relatedCIs = relatedCIs.AsQueryable().Where(wStr).ToList();
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-
-                return relatedCIs;
+                var relations = await relationModel.GetMergedRelations(new RelationSelectionTo(CIIdentity), layerset, userContext.Transaction, userContext.TimeThreshold);
+                return relations;
             });
 
             FieldAsync<ListGraphType<EffectiveTraitType>>("effectiveTraits",

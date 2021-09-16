@@ -57,39 +57,28 @@ export const Fragments = {
                 ...FullMergedAttribute
               }
             }
-            traitRelations {
+            outgoingTraitRelations {
               identifier
-              relatedCIs {
-                ...RelatedCI
+              relations {
+                ...OutgoingMergedRelation
               }
             }
-        }
-        related(perPredicateLimit: $includeRelated) {
-            ...RelatedCI
+            incomingTraitRelations {
+              identifier
+              relations {
+                ...IncomingMergedRelation
+              }
+            }
         }
         mergedAttributes @include(if: $includeAttributes) {
             ...FullMergedAttribute
         }
-    }
-  `,
-  relatedCI: gql`
-  fragment RelatedCI on CompactRelatedCIType {
-        relationID
-        ci {
-            ...CompactCI
+        outgoingMergedRelations @include(if: $includeRelated) {
+            ...OutgoingMergedRelation
         }
-        fromCIID
-        toCIID
-        predicateID
-        layerID
-        changesetID
-        layerStackIDs
-        layerStack {
-            id
-            description
-            color
+        incomingMergedRelations @include(if: $includeRelated) {
+            ...IncomingMergedRelation
         }
-        isForwardRelation
     }
   `,
   fullLayer: gql`
@@ -103,16 +92,46 @@ export const Fragments = {
     onlineInboundAdapterName
   }
   `,
-  relation: gql`
-    fragment Relation on RelationType {
+  outgoingMergedRelation: gql`
+    fragment OutgoingMergedRelation on MergedRelationType {
+        relation {
+          id
+          fromCIID
+          toCIID
+          toCIName
+          predicateID
+          changesetID
+          state
+        }
+        layerStackIDs
+        layerID
+        layerStack {
+            id
+            description
+            color
+        }
+    }
+  `,
+  incomingMergedRelation: gql`
+  fragment IncomingMergedRelation on MergedRelationType {
+      relation {
         id
         fromCIID
         toCIID
+        fromCIName
         predicateID
         changesetID
         state
-    }
-  `,
+      }
+      layerStackIDs
+      layerID
+      layerStack {
+          id
+          description
+          color
+      }
+  }
+`,
   fullPredicate: gql`
   fragment FullPredicate on PredicateType {
     id,

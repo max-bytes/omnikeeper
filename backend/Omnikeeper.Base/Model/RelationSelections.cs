@@ -4,39 +4,24 @@ namespace Omnikeeper.Base.Model
 {
     public interface IRelationSelection
     {
-        public string ToHashKey();
     }
     public class RelationSelectionFrom : IRelationSelection
     {
-        public readonly Guid fromCIID;
+        public readonly Guid[] fromCIIDs;
 
-        public RelationSelectionFrom(Guid fromCIID)
+        public RelationSelectionFrom(params Guid[] fromCIIDs)
         {
-            this.fromCIID = fromCIID;
+            this.fromCIIDs = fromCIIDs;
         }
-
-        public string ToHashKey() => $"rsf_{fromCIID}";
     }
     public class RelationSelectionTo : IRelationSelection
     {
-        public readonly Guid toCIID;
+        public readonly Guid[] toCIIDs;
 
-        public RelationSelectionTo(Guid toCIID)
+        public RelationSelectionTo(params Guid[] toCIIDs)
         {
-            this.toCIID = toCIID;
+            this.toCIIDs = toCIIDs;
         }
-
-        public string ToHashKey() => $"rst_{toCIID}";
-    }
-    public class RelationSelectionEitherFromOrTo : IRelationSelection
-    {
-        public readonly Guid ciid;
-
-        public RelationSelectionEitherFromOrTo(Guid ciid)
-        {
-            this.ciid = ciid;
-        }
-        public string ToHashKey() => $"efot_{ciid}";
     }
     public class RelationSelectionWithPredicate : IRelationSelection
     {
@@ -46,11 +31,9 @@ namespace Omnikeeper.Base.Model
         {
             this.predicateID = predicateID;
         }
-        public string ToHashKey() => $"p_{predicateID}";
     }
     public class RelationSelectionAll : IRelationSelection
     {
-        public string ToHashKey() => $"all";
     }
 
 }

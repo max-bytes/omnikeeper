@@ -14,7 +14,7 @@ namespace Omnikeeper.Base.Entity
     {
         public Relation Relation { get; private set; }
         public string[] LayerStackIDs { get; private set; }
-        public string LayerID { get => LayerStackIDs[^1]; }
+        public string LayerID { get => LayerStackIDs[0]; }
 
         public MergedRelation(Relation relation, string[] layerStackIDs)
         {

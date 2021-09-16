@@ -93,7 +93,6 @@ namespace Omnikeeper.Base.Model
 
             Guid ciid = (t.Equals(default)) ? await CreateNewCI(id, trans) : t.Item1;
 
-
             var changed = false;
             foreach (var (attributeName, value) in attributes)
             {

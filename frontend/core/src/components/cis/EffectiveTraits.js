@@ -34,7 +34,7 @@ function TraitRelation(props) {
   return <Row>
       <Col span={6}>{traitRelation.identifier}</Col>
       <Col style={{ flexGrow: 1 }}>
-        {traitRelation.relatedCIs.map(related => <RelatedCIText key={related.relationID} related={related} predicates={predicates} />)}
+        {traitRelation.relations.map(mergedRelation => <RelatedCIText key={mergedRelation.relation.id} relation={mergedRelation.relation} predicates={predicates} />)}
       </Col>
     </Row>;
 }
@@ -42,7 +42,7 @@ function TraitRelation(props) {
 function TraitRelations(props) {
   const { traitRelations, predicates } = props;
   if (traitRelations.length <= 0)
-    return <Text disabled>No trait relations</Text>;
+    return <Text disabled>None</Text>;
   return <>
     {traitRelations.map(r => <TraitRelation key={r.identifier} traitRelation={r} predicates={predicates} />)}
   </>;
@@ -63,9 +63,13 @@ function EffectiveTraits(props) {
           <div style={{paddingLeft: '30px'}}>
             <TraitAttributes traitAttributes={t.traitAttributes} />
           </div>
-          <h4 style={{margin: '0px', paddingLeft: '15px'}}>Trait Relations:</h4>
+          <h4 style={{margin: '0px', paddingLeft: '15px'}}>Outgoing Trait Relations:</h4>
           <div style={{paddingLeft: '30px'}}>
-            <TraitRelations traitRelations={t.traitRelations} predicates={dataPredicates?.predicates} />
+            <TraitRelations traitRelations={t.outgoingTraitRelations} predicates={dataPredicates?.predicates} />
+          </div>
+          <h4 style={{margin: '0px', paddingLeft: '15px'}}>Incoming Trait Relations:</h4>
+          <div style={{paddingLeft: '30px'}}>
+            <TraitRelations traitRelations={t.incomingTraitRelations} predicates={dataPredicates?.predicates} />
           </div>
         </Panel>;
       })}

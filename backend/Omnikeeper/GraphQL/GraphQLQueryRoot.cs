@@ -219,14 +219,18 @@ namespace Omnikeeper.GraphQL
 
             FieldAsync<ChangesetType>("changeset",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "id" }),
+                    new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "id" },
+                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
                 resolve: async context =>
                 {
                     var changesetModel = context.RequestServices!.GetRequiredService<IChangesetModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
+                    var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
+                    var layerStrings = context.GetArgument<string[]>("layers")!;
+                    userContext.LayerSet = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
                     var id = context.GetArgument<Guid>("id");
                     var changeset = await changesetModel.GetChangeset(id, userContext.Transaction);
                     return changeset;

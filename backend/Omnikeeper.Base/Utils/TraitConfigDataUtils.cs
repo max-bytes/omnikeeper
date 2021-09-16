@@ -113,9 +113,9 @@ namespace Omnikeeper.Base.Utils
         }
 
 
-        public static IEnumerable<CompactRelatedCI> ExtractMandatoryRelations(EffectiveTrait et, string traitRelationName)
+        public static IEnumerable<MergedRelation> ExtractMandatoryOutgoingRelations(EffectiveTrait et, string traitRelationName)
         {
-            if (!et.TraitRelations.TryGetValue(traitRelationName, out var relatedCIs))
+            if (!et.OutgoingTraitRelations.TryGetValue(traitRelationName, out var relatedCIs))
                 throw new Exception("Invalid trait configuration");
 
             return relatedCIs;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import PropTypes from 'prop-types'
 import { useMutation } from '@apollo/client';
 import { mutations } from 'graphql/mutations'
-import { Form, Button, Card, Radio } from "antd";
+import { Form, Button, Card } from "antd";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import LayerDropdown from "components/LayerDropdown";
@@ -11,11 +11,13 @@ import PredicateSelect from "components/PredicateSelect";
 import SingleCISelect from "components/SingleCISelect";
 
 function AddNewRelation(props) {
+  const {isOutgoingRelation} = props;
+
   const [insertError, setInsertError] = useState(undefined);
   const canBeEdited = props.isEditable && props.visibleAndWritableLayers.length > 0;
   // use useRef to ensure reference is constant and can be properly used in dependency array
   const visibleLayersRef = useRef(JSON.stringify(props.visibleLayers)); // because JS only does reference equality, we need to convert the array to a string
-  const { current: initialRelation } = useRef({predicateID: "", targetCIID: null, forward: true, layer: null });
+  const { current: initialRelation } = useRef({predicateID: "", targetCIID: null, layer: null });
   const [isOpen, setOpen] = useState(false);
 
   const [newRelation, setNewRelation] = useState(initialRelation);
@@ -32,7 +34,7 @@ function AddNewRelation(props) {
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
   const addButton = <Button disabled={!canBeEdited} onClick={() => setOpen(!isOpen)} icon={<FontAwesomeIcon icon={faPlus} style={{marginRight: "10px"}}/>} type="primary">
-    Add Relation
+    Add {(isOutgoingRelation) ? "Outgoing" : "Incoming"} Relation
   </Button>
   
   let addRelation = <></>;
@@ -51,8 +53,8 @@ function AddNewRelation(props) {
       />
     </Form.Item>;
     const thisCIStyle = {height: '30px', display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap'};
-    const thisCI = <span key="thisCI" style={thisCIStyle}>{newRelation.forward ? `This CI...` : `...this CI`}</span>;
-    const directionalUI = (newRelation.forward) ? 
+    const thisCI = <span key="thisCI" style={thisCIStyle}>{isOutgoingRelation ? `This CI...` : `...this CI`}</span>;
+    const directionalUI = (isOutgoingRelation) ? 
       (<>{thisCI} {predicateSelect} {targetCISelect}</>) : 
       (<>{targetCISelect} {predicateSelect} {thisCI}</>);
 
@@ -63,7 +65,7 @@ function AddNewRelation(props) {
         <Form onFinish={e => {
             setInsertError(undefined);
 
-            const fromTo = (newRelation.forward) 
+            const fromTo = (isOutgoingRelation) 
               ? { fromCIID: props.ciIdentity, toCIID: newRelation.targetCIID } 
               : { fromCIID: newRelation.targetCIID, toCIID: props.ciIdentity };
 
@@ -77,14 +79,7 @@ function AddNewRelation(props) {
               });
           }} labelCol={{ span: 4 }} wrapperCol={{ span: 20 }}>
 
-          <Form.Item label="Direction">
-            <Radio.Group onChange={e => setNewRelation({...newRelation, forward: e.target.value})} value={newRelation.forward}>
-              <Radio value={true}>Forward</Radio>
-              <Radio value={false}>Backward</Radio>
-            </Radio.Group>
-          </Form.Item>
-
-          <Form.Item label="Relation" name="relation">
+          <Form.Item label={(isOutgoingRelation) ? "Outgoing Relation" : "Incoming Relation"} name="relation">
             <div style={{display: 'flex', gap: '10px'}}>
               {directionalUI}
             </div>
