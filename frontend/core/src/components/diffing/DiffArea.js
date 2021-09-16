@@ -74,8 +74,6 @@ export function DiffArea(props) {
       }
       return {...m, outgoingMergedRelations: mergedRelations };
     });
-
-    // TODO: outgoing relations
     
     mergedCIs = _.mapValues(mergedCIs, m => {
       var leftD = _.keyBy(m.left?.effectiveTraits, r => `${r.underlyingTrait.id}`);
