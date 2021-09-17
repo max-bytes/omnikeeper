@@ -22,34 +22,28 @@ namespace Omnikeeper.GraphQL
             FieldAsync<StringGraphType>("fromCIName",
                 resolve: async (context) =>
                 {
-                    var ciModel = context.RequestServices!.GetRequiredService<ICIModel>();
+                    var attributeModel = context.RequestServices!.GetRequiredService<IAttributeModel>();
                     var fromCIID = context.Source!.FromCIID;
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var layerset = userContext.LayerSet;
                     if (layerset == null)
                         throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!");
 
-                    // TODO: find better way to get CI's name
-                    var compactCIs = await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(fromCIID), layerset, userContext.Transaction, userContext.TimeThreshold);
-                    if (compactCIs.Count() != 1)
-                        throw new Exception("TODO");
-                    return compactCIs.First().Name;
+                    var names = await attributeModel.GetMergedCINames(SpecificCIIDsSelection.Build(fromCIID), layerset, userContext.Transaction, userContext.TimeThreshold);
+                    return names.FirstOrDefault().Value;
                 });
             FieldAsync<StringGraphType>("toCIName",
                 resolve: async (context) =>
                 {
-                    var ciModel = context.RequestServices!.GetRequiredService<ICIModel>();
+                    var attributeModel = context.RequestServices!.GetRequiredService<IAttributeModel>();
                     var toCIID = context.Source!.ToCIID;
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     var layerset = userContext.LayerSet;
                     if (layerset == null)
                         throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!");
 
-                    // TODO: find better way to get CI's name
-                    var compactCIs = await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(toCIID), layerset, userContext.Transaction, userContext.TimeThreshold);
-                    if (compactCIs.Count() != 1)
-                        throw new Exception("TODO");
-                    return compactCIs.First().Name;
+                    var names = await attributeModel.GetMergedCINames(SpecificCIIDsSelection.Build(toCIID), layerset, userContext.Transaction, userContext.TimeThreshold);
+                    return names.FirstOrDefault().Value;
                 });
         }
     }
