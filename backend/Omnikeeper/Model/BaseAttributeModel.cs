@@ -85,6 +85,8 @@ namespace Omnikeeper.Model
             return att;
         }
 
+        // TODO: for larger values of specific and except ciid selections, instead use a temp table 
+        // see here for a discussion https://stackoverflow.com/questions/17037508/sql-when-it-comes-to-not-in-and-not-equal-to-which-is-more-efficient-and-why/17038097#17038097
         private string CIIDSelection2WhereClause(ICIIDSelection selection)
         {
             return selection switch
