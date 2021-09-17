@@ -23,6 +23,7 @@ namespace Omnikeeper.Model
             this.partitionModel = partitionModel;
         }
 
+        // TODO: rework to use CTEs, like attributes use -> performs much better
         private async Task<NpgsqlCommand> CreateRelationCommand(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var innerWhereClauses = new List<string>();
