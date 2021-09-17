@@ -179,11 +179,11 @@ namespace Omnikeeper.Model
 
                 command = new NpgsqlCommand($@"
                     {CIIDSelection2CTEClause(selection)}
-                    select distinct on(a.ci_id, name) state, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute a
+                    select distinct on(a.ci_id, name, layer_id) state, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute a
                     {CIIDSelection2JoinClause(selection)}
                     where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and layer_id = ANY(@layer_ids) and partition_index >= @partition_index
                     and ({((nameRegexFilter != null) ? "name ~ @name_regex" : "1=1")})
-                    order by a.ci_id, name, timestamp DESC NULLS LAST
+                    order by a.ci_id, name, layer_id, timestamp DESC NULLS LAST
                     ", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("layer_ids", layerIDs);
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
