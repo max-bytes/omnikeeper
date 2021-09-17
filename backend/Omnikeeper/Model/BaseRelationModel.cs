@@ -30,16 +30,12 @@ namespace Omnikeeper.Model
             switch (rl)
             {
                 case RelationSelectionFrom rsft:
-                    innerWhereClauses.Add("(from_ci_id = @from_ci_id)");
-                    parameters.Add(new NpgsqlParameter("from_ci_id", rsft.fromCIID));
+                    innerWhereClauses.Add("(from_ci_id = ANY(@from_ci_ids))");
+                    parameters.Add(new NpgsqlParameter("from_ci_ids", rsft.fromCIIDs));
                     break;
                 case RelationSelectionTo rst:
-                    innerWhereClauses.Add("(to_ci_id = @to_ci_id)");
-                    parameters.Add(new NpgsqlParameter("to_ci_id", rst.toCIID));
-                    break;
-                case RelationSelectionEitherFromOrTo rsot:
-                    innerWhereClauses.Add("(from_ci_id = @ci_identity OR to_ci_id = @ci_identity)");
-                    parameters.Add(new NpgsqlParameter("ci_identity", rsot.ciid));
+                    innerWhereClauses.Add("(to_ci_id = ANY(@to_ci_ids))");
+                    parameters.Add(new NpgsqlParameter("to_ci_ids", rst.toCIIDs));
                     break;
                 case RelationSelectionWithPredicate rsp:
                     innerWhereClauses.Add("(predicate_id = @predicate_id)");

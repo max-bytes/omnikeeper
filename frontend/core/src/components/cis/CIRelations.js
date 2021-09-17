@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from '@apollo/client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import RelatedCI from './RelatedCI';
 import {Row, Col} from 'antd';
 import AddNewRelation from './AddNewRelation';
@@ -12,7 +12,7 @@ import { useExplorerLayers } from 'utils/layers';
 
 function CIRelations(props) {
 
-  const {relatedCIs, ciIdentity, isEditable} = props;
+  const {mergedRelations, ciIdentity, isEditable, areOutgoingRelations } = props;
 
   const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
   const { data: visibleLayers } = useExplorerLayers(true);
@@ -34,48 +34,47 @@ function CIRelations(props) {
   });
   const [setSelectedTimeThreshold] = useMutation(mutations.SET_SELECTED_TIME_THRESHOLD);
 
-  const [sortedRelatedCIs, setSortedRelatedCIs] = useState(null);
-  useEffect(() => {
-    if (relatedCIs && dataPredicates) {
-      const tmp = [...relatedCIs];
-      tmp.sort((a,b) => {
-        const predicateCompare = a.predicateID?.localeCompare(b.predicateID) ?? 0;
-        if (predicateCompare !== 0)
-          return predicateCompare;
-        const targetCINameCompare = a.ci.name?.localeCompare(b.ci.name) ?? 0;
-        if (targetCINameCompare !== 0)
-          return targetCINameCompare;
-        return a.ci.id.localeCompare(b.ci.id);
-      });
-      setSortedRelatedCIs(tmp);
-    }
-  }, [relatedCIs, dataPredicates, setSortedRelatedCIs]);
-
-
   
-  if (sortedRelatedCIs) {
+  const sortingFunc = useCallback((a,b) => {
+    const predicateCompare = a.relation.predicateID?.localeCompare(b.relation.predicateID) ?? 0;
+    if (predicateCompare !== 0)
+      return predicateCompare;
+    const fromCIIDCompare = a.relation.fromCIID.localeCompare(b.relation.fromCIID);
+    if (fromCIIDCompare !== 0)
+      return fromCIIDCompare;
+    return a.relation.toCIID.localeCompare(b.relation.toCIID)
+  }, []);
+
+  const [sortedRelations, setSortedRelations] = useState(null);
+  useEffect(() => {
+    const tmp = [...mergedRelations];
+    tmp.sort(sortingFunc);
+    setSortedRelations(tmp);
+  }, [mergedRelations, setSortedRelations, sortingFunc]);
+
+  if (sortedRelations && dataPredicates) {
     return (<>
     <Row>
       <Col span={24}>
-        <AddNewRelation isEditable={isEditable} visibleLayers={visibleLayers.map(l => l.id)} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={ciIdentity}></AddNewRelation>
+        <AddNewRelation isOutgoingRelation={areOutgoingRelations} isEditable={isEditable} visibleLayers={visibleLayers.map(l => l.id)} visibleAndWritableLayers={visibleAndWritableLayers} ciIdentity={ciIdentity}></AddNewRelation>
       </Col>
     </Row>
     <Row>
       <Col span={24}>
-        <Flipper flipKey={sortedRelatedCIs.map(r => r.layerStackIDs).join(' ')}>
-          {sortedRelatedCIs.map(r => {
+        <Flipper flipKey={sortedRelations.map(r => r.layerStackIDs).join(' ')}>
+          {sortedRelations.map(r => {
             const isLayerWritable = visibleAndWritableLayers.some(l => l.id === r.layerID);
 
             const onRemove = (isEditable && isLayerWritable) ? 
             (() => {
-              removeRelation({ variables: { fromCIID: r.fromCIID, toCIID: r.toCIID,
-                predicateID: r.predicateID, layerID: r.layerID, layers: visibleLayers.map(l => l.id) } })
+              removeRelation({ variables: { fromCIID: r.relation.fromCIID, toCIID: r.relation.toCIID,
+                predicateID: r.relation.predicateID, layerID: r.layerID, layers: visibleLayers.map(l => l.id) } })
               .then(d => setSelectedTimeThreshold({ variables: { newTimeThreshold: null, isLatest: true, refreshTimeline: true, refreshCI: true }}));
             })
             : null;
 
-            return (<Flipped key={r.predicateID + "_" + r.ci.id + "_" + r.isForwardRelation} flipId={r.predicateID} onAppear={onAppear} onExit={onExit}>
-                <RelatedCI related={r} predicates={dataPredicates.predicates} onRemove={onRemove}></RelatedCI>
+            return (<Flipped key={r.relation.predicateID + "_" + r.relation.fromCIID + "_" + r.relation.toCIID} flipId={r.relation.predicateID} onAppear={onAppear} onExit={onExit}>
+                <RelatedCI mergedRelation={r} predicates={dataPredicates.predicates} onRemove={onRemove} isOutgoingRelation={areOutgoingRelations} />
               </Flipped>);
           })}
         </Flipper>

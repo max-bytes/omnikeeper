@@ -30,13 +30,14 @@ namespace Omnikeeper.Controllers
         private readonly IChangesetModel changesetModel;
         private readonly ILayerModel layerModel;
         private readonly ICurrentUserService currentUserService;
+        private readonly ICIModel ciModel;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerStatisticsModel layerStatisticsModel;
         private readonly IRelationModel relationModel;
 
-        public ImportExportLayerController(IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserService currentUserService,
+        public ImportExportLayerController(IAttributeModel attributeModel, IChangesetModel changesetModel, ICurrentUserService currentUserService, ICIModel ciModel,
             ILayerBasedAuthorizationService layerBasedAuthorizationService, IModelContextBuilder modelContextBuilder, ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerModel layerModel, ILayerStatisticsModel layerStatisticsModel, IRelationModel relationModel)
         {
             this.modelContextBuilder = modelContextBuilder;
@@ -44,6 +45,7 @@ namespace Omnikeeper.Controllers
             this.attributeModel = attributeModel;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.currentUserService = currentUserService;
+            this.ciModel = ciModel;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
             this.layerModel = layerModel;
             this.layerStatisticsModel = layerStatisticsModel;
@@ -163,6 +165,11 @@ namespace Omnikeeper.Controllers
                     // layer import works as follows:
                     // timestamp, changeset, user, data-origin, state, attribute- and relation-id is different
                     // ciid and other data stays as it was exported
+
+                    var cisToImport = data.Attributes.Select(ci => ci.CIID).Union(data.Relations.SelectMany(r => new Guid[] { r.FromCIID, r.ToCIID })).ToHashSet();
+                    var existingCIIDs = await ciModel.GetCIIDs(trans);
+                    var cisToCreate = cisToImport.Except(existingCIIDs);
+                    await ciModel.BulkCreateCIs(cisToCreate, trans);
 
                     var attributeFragments = data.Attributes.Select(t => new BulkCIAttributeDataLayerScope.Fragment(t.Name, AttributeValueBuilder.BuildFromDTO(t.Value), t.CIID));
                     await attributeModel.BulkReplaceAttributes(new BulkCIAttributeDataLayerScope("", writeLayer.ID, attributeFragments), changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);

@@ -24,7 +24,7 @@ export default function Changeset(props) {
     const { data: visibleLayers } = useExplorerLayers(true);
 
     const { error, data } = useQuery(queries.FullChangeset, {
-        variables: { id: changesetID }
+        variables: { id: changesetID, layers: visibleLayers.map((l) => l.id) }
     });
     
     const { data: dataPredicates } = useQuery(queries.PredicateList, { variables: {} });

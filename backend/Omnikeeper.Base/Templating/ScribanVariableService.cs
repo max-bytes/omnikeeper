@@ -98,24 +98,24 @@ namespace Omnikeeper.Base.Templating
             public IRelationModel RelationModel { get; }
         }
 
-        public class ScriptObjectRelatedCIs : ScriptObject
-        {
-            public ScriptObjectRelatedCIs(IEnumerable<CompactRelatedCI> relatedCIs, ScriptObjectComplexContext context)
-            {
-                Add("forward", relatedCIs.Where(r => r.IsForwardRelation).GroupBy(r => r.PredicateID)
-                    .ToDictionary(t => t.Key, t => t.Select(r =>
-                    {
-                        var ci = context.CIModel.GetMergedCI(r.CI.ID, context.Layerset, context.Transaction, context.AtTime).GetAwaiter().GetResult();
-                        return new ScriptObjectComplexCI(ci, context);
-                    })));
-                Add("back", relatedCIs.Where(r => !r.IsForwardRelation).GroupBy(r => r.PredicateID)
-                    .ToDictionary(t => t.Key, t => t.Select(r =>
-                    {
-                        var ci = context.CIModel.GetMergedCI(r.CI.ID, context.Layerset, context.Transaction, context.AtTime).GetAwaiter().GetResult();
-                        return new ScriptObjectComplexCI(ci, context);
-                    })));
-            }
-        }
+        //public class ScriptObjectRelatedCIs : ScriptObject
+        //{
+        //    public ScriptObjectRelatedCIs(IEnumerable<CompactRelatedCI> relatedCIs, ScriptObjectComplexContext context)
+        //    {
+        //        Add("forward", relatedCIs.Where(r => r.IsForwardRelation).GroupBy(r => r.PredicateID)
+        //            .ToDictionary(t => t.Key, t => t.Select(r =>
+        //            {
+        //                var ci = context.CIModel.GetMergedCI(r.CI.ID, context.Layerset, context.Transaction, context.AtTime).GetAwaiter().GetResult();
+        //                return new ScriptObjectComplexCI(ci, context);
+        //            })));
+        //        Add("back", relatedCIs.Where(r => !r.IsForwardRelation).GroupBy(r => r.PredicateID)
+        //            .ToDictionary(t => t.Key, t => t.Select(r =>
+        //            {
+        //                var ci = context.CIModel.GetMergedCI(r.CI.ID, context.Layerset, context.Transaction, context.AtTime).GetAwaiter().GetResult();
+        //                return new ScriptObjectComplexCI(ci, context);
+        //            })));
+        //    }
+        //}
 
         public class ScriptObjectComplexCI : ScriptObject
         {
@@ -131,12 +131,12 @@ namespace Omnikeeper.Base.Templating
                         AddNested(attributeVariables, $"{monitoredCIAttribute.Attribute.Name}", monitoredCIAttribute.Attribute.Value);
                     return attributeVariables;
                 }));
-                this.Import("relations", new Func<ScriptObjectRelatedCIs>(() =>
-                {
-                    var relatedCIs = RelationService.GetCompactRelatedCIs(ci.ID, context.Layerset, context.CIModel, context.RelationModel, null, context.Transaction, context.AtTime)
-                        .GetAwaiter().GetResult(); // HACK, TODO: async
-                    return new ScriptObjectRelatedCIs(relatedCIs, context);
-                }));
+                //this.Import("relations", new Func<ScriptObjectRelatedCIs>(() =>
+                //{
+                //    var relatedCIs = RelationService.GetCompactRelatedCIs(ci.ID, context.Layerset, context.CIModel, context.RelationModel, context.Transaction, context.AtTime)
+                //        .GetAwaiter().GetResult(); // HACK, TODO: async
+                //    return new ScriptObjectRelatedCIs(relatedCIs, context);
+                //}));
             }
         }
 

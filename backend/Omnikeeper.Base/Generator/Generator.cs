@@ -192,16 +192,11 @@ namespace Omnikeeper.Base.Generator
                             continue; // a trait that is not found can never apply
 
                         var cis = await ciModel.GetMergedCIs(selection, g.ReadLayerSet, false, mc, timeThreshold); // TODO: group by layerset to cut down on calls to GetMergedCIs
-                        foreach (var ci in cis)
+                        var cisWithTrait = await effectiveTraitModel.FilterCIsWithTrait(cis, trait, g.ReadLayerSet, mc, timeThreshold);
+                        foreach(var ciWithTrait in cisWithTrait)
                         {
-                            // check if generator applies
-                            var applies = await effectiveTraitModel.DoesCIHaveTrait(ci, trait, mc, timeThreshold);
-
-                            if (applies)
-                            {
-                                foreach (var item in items)
-                                    effectiveGeneratorItems.Add((item, ci));
-                            }
+                            foreach (var item in items)
+                                effectiveGeneratorItems.Add((item, ciWithTrait));
                         }
                     }
                 }

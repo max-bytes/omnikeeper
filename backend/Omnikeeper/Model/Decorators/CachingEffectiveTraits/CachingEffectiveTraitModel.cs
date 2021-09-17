@@ -36,22 +36,22 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             this.onlineAccessProxy = onlineAccessProxy;
         }
 
-        public async Task<EffectiveTrait?> GetEffectiveTraitForCI(MergedCI ci, ITrait trait, IModelContext trans, TimeThreshold atTime)
+        public async Task<EffectiveTrait?> GetEffectiveTraitForCI(MergedCI ci, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             // cannot cache well
-            return await baseModel.GetEffectiveTraitForCI(ci, trait, trans, atTime);
+            return await baseModel.GetEffectiveTraitForCI(ci, trait, layers, trans, atTime);
         }
 
-        public async Task<IEnumerable<EffectiveTrait>> GetEffectiveTraitsForCI(IEnumerable<ITrait> traits, MergedCI ci, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<EffectiveTrait>> GetEffectiveTraitsForCI(IEnumerable<ITrait> traits, MergedCI ci, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             // cannot cache well
-            return await baseModel.GetEffectiveTraitsForCI(traits, ci, trans, atTime);
+            return await baseModel.GetEffectiveTraitsForCI(traits, ci, layers, trans, atTime);
         }
 
-        public async Task<bool> DoesCIHaveTrait(MergedCI ci, ITrait trait, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedCI>> FilterCIsWithTrait(IEnumerable<MergedCI> cis, ITrait trait, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             // cannot cache well
-            return await baseModel.DoesCIHaveTrait(ci, trait, trans, atTime);
+            return await baseModel.FilterCIsWithTrait(cis, trait, layers, trans, atTime);
         }
 
         // caching of effective traits works like this:

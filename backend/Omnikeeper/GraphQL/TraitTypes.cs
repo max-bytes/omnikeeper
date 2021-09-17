@@ -11,7 +11,8 @@ namespace Omnikeeper.GraphQL
         {
             Field(x => x.UnderlyingTrait, type: typeof(TraitType));
             Field("traitAttributes", x => x.TraitAttributes.Select(t => new EffectiveTraitAttribute(t.Key, t.Value)), type: typeof(ListGraphType<EffectiveTraitAttributeType>));
-            Field("traitRelations", x => x.TraitRelations.Select(t => new EffectiveTraitRelation(t.Key, t.Value)), type: typeof(ListGraphType<EffectiveTraitRelationType>));
+            Field("outgoingTraitRelations", x => x.OutgoingTraitRelations.Select(t => new EffectiveTraitRelation(t.Key, t.Value)), type: typeof(ListGraphType<EffectiveTraitRelationType>));
+            Field("incomingTraitRelations", x => x.IncomingTraitRelations.Select(t => new EffectiveTraitRelation(t.Key, t.Value)), type: typeof(ListGraphType<EffectiveTraitRelationType>));
         }
     }
     public class TraitType : ObjectGraphType<ITrait>
@@ -78,12 +79,12 @@ namespace Omnikeeper.GraphQL
     public class EffectiveTraitRelation
     {
         public readonly string Identifier;
-        public readonly IEnumerable<CompactRelatedCI> RelatedCIs;
+        public readonly IEnumerable<MergedRelation> Relations;
 
-        public EffectiveTraitRelation(string identifier, IEnumerable<CompactRelatedCI> relatedCIs)
+        public EffectiveTraitRelation(string identifier, IEnumerable<MergedRelation> relations)
         {
             Identifier = identifier;
-            RelatedCIs = relatedCIs;
+            Relations = relations;
         }
     }
 
@@ -92,7 +93,7 @@ namespace Omnikeeper.GraphQL
         public EffectiveTraitRelationType()
         {
             Field("identifier", x => x.Identifier);
-            Field("relatedCIs", x => x.RelatedCIs, type: typeof(ListGraphType<CompactRelatedCIType>));
+            Field("relations", x => x.Relations, type: typeof(ListGraphType<MergedRelationType>));
         }
     }
 }

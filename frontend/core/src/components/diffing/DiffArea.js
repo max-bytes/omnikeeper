@@ -44,8 +44,8 @@ export function DiffArea(props) {
     });
 
     mergedCIs = _.mapValues(mergedCIs, m => {
-      var leftD = _.keyBy(m.left?.related, r => `${r.predicateID}-${r.ci.id}`);
-      var rightD = _.keyBy(m.right?.related, r => `${r.predicateID}-${r.ci.id}`);
+      var leftD = _.keyBy(m.left?.incomingMergedRelations, r => `${r.relation.predicateID}-${r.relation.fromCIID}`);
+      var rightD = _.keyBy(m.right?.incomingMergedRelations, r => `${r.relation.predicateID}-${r.relation.fromCIID}`);
 
       var keys = _.union(_.keys(leftD), _.keys(rightD));
 
@@ -56,9 +56,24 @@ export function DiffArea(props) {
       if (!props.showEqual) {
         mergedRelations = _.pickBy(mergedRelations, (v, k) => v.compareResult.state !== 'equal');
       }
-      return {...m, mergedRelations };
+      return {...m, incomingMergedRelations: mergedRelations };
     });
 
+    mergedCIs = _.mapValues(mergedCIs, m => {
+      var leftD = _.keyBy(m.left?.outgoingMergedRelations, r => `${r.relation.predicateID}-${r.relation.toCIID}`);
+      var rightD = _.keyBy(m.right?.outgoingMergedRelations, r => `${r.relation.predicateID}-${r.relation.toCIID}`);
+
+      var keys = _.union(_.keys(leftD), _.keys(rightD));
+
+      let mergedRelations = {};
+      for(const key of keys) {
+        mergedRelations[key] = { key: key, left: leftD[key], right: rightD[key], compareResult: compareRelations(leftD[key], rightD[key]) };
+      }
+      if (!props.showEqual) {
+        mergedRelations = _.pickBy(mergedRelations, (v, k) => v.compareResult.state !== 'equal');
+      }
+      return {...m, outgoingMergedRelations: mergedRelations };
+    });
     
     mergedCIs = _.mapValues(mergedCIs, m => {
       var leftD = _.keyBy(m.left?.effectiveTraits, r => `${r.underlyingTrait.id}`);
@@ -87,13 +102,23 @@ export function DiffArea(props) {
           </div>;
         })}
       </TabPane>
-      <TabPane tab="Relations" key="relations">
+      <TabPane tab="Outgoing Relations" key="outgoingRelations">
         {_.map(mergedCIs, (m, ciid) => {
-          if (!props.showEqual && _.size(m.mergedRelations) === 0)
+          if (!props.showEqual && _.size(m.outgoingMergedRelations) === 0)
             return <div key={ciid}></div>;
           return <div key={ciid} style={{marginTop: '1.5rem'}}>
             <Title level={5} style={{marginBottom: 0}}>{m.name} - <CIID id={ciid} link={true} /></Title>
-            <DiffRelationList relations={m.mergedRelations} />
+            <DiffRelationList relations={m.outgoingMergedRelations} areOutgoingRelations={true} />
+          </div>;
+        })}
+      </TabPane>
+      <TabPane tab="Incoming Relations" key="incomingRelations">
+        {_.map(mergedCIs, (m, ciid) => {
+          if (!props.showEqual && _.size(m.incomingMergedRelations) === 0)
+            return <div key={ciid}></div>;
+          return <div key={ciid} style={{marginTop: '1.5rem'}}>
+            <Title level={5} style={{marginBottom: 0}}>{m.name} - <CIID id={ciid} link={true} /></Title>
+            <DiffRelationList relations={m.incomingMergedRelations} areOutgoingRelations={false} />
           </div>;
         })}
       </TabPane>

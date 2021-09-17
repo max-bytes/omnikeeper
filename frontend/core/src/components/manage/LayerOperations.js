@@ -125,7 +125,7 @@ export default function LayerOperations(props) {
                 okText="Yes, export!"
                 cancelText="No, cancel"
             >
-              <Button disabled={exportingLayer}>{exportingLayer ? 'Running...' : 'Export Layer'}</Button>
+              <Button disabled={exportingLayer} loading={exportingLayer}>{exportingLayer ? 'Running...' : 'Export Layer'}</Button>
             </Popconfirm>
           </Card>
         </Col><Col span={8}>
@@ -145,7 +145,7 @@ export default function LayerOperations(props) {
                 >
                 <Button icon={<UploadOutlined />}>Click to Select File</Button>
               </Upload>
-              <Button type="primary" onClick={importLayer} disabled={importingLayers || !fileToImport}>Import</Button>
+              <Button type="primary" onClick={importLayer} disabled={importingLayers || !fileToImport} loading={importingLayers}>Import</Button>
               
               {importError && <Alert message="Error" type="error" showIcon closable description={importError} />}
               {importSuccess && <Alert message="Success" type="success" showIcon closable description={importSuccess} />}
@@ -162,7 +162,7 @@ export default function LayerOperations(props) {
                 okButtonProps={{type: "danger"}}
                 cancelText="No, cancel"
             >
-              <Button type="danger" disabled={truncatingLayer}>{truncatingLayer ? 'Running...' : 'Truncate Layer!'}</Button>
+              <Button type="danger" disabled={truncatingLayer} loading={truncatingLayer}>{truncatingLayer ? 'Running...' : 'Truncate Layer!'}</Button>
             </Popconfirm>
           </Card>
         </Col>

@@ -8,6 +8,8 @@ import { MissingLabel, CompareLabel, EmptyLabel, stateBasedBackgroundColor } fro
 
 function DiffRelationList(props) {
 
+  const {areOutgoingRelations} = props;
+
   if (_.size(props.relations) === 0)
     return EmptyLabel();
 
@@ -22,14 +24,14 @@ function DiffRelationList(props) {
               <div style={{ width: "100%" }}>
                 <Row style={{ backgroundColor: stateBasedBackgroundColor(state), display: "flex", justifyContent: "space-evenly" }}>
                     <Col>
-                        {r.left && <RelatedCI related={r.left} alignRight></RelatedCI>}
+                        {r.left && <RelatedCI mergedRelation={r.left} isOutgoingRelation={areOutgoingRelations} alignRight></RelatedCI>}
                         {!r.left && <MissingLabel /> }
                     </Col>
                     <Col>
                         <CompareLabel state={state} />
                     </Col>
                     <Col>
-                        {r.right && <RelatedCI related={r.right}></RelatedCI>}
+                        {r.right && <RelatedCI mergedRelation={r.right} isOutgoingRelation={areOutgoingRelations}></RelatedCI>}
                         {!r.right && <MissingLabel /> }
                     </Col>
                 </Row>
