@@ -1,4 +1,5 @@
 ﻿using GraphQL;
+using GraphQL.DataLoader;
 using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
 using GraphQL.Validation;
@@ -25,13 +26,14 @@ namespace Omnikeeper.Controllers
         private readonly IDocumentExecuter _documentExecuter;
         private readonly IDocumentWriter _documentWriter;
         private readonly IModelContextBuilder _modelContextBuilder;
+        private readonly DataLoaderDocumentListener dataLoaderDocumentListener;
         private readonly IEnumerable<IValidationRule> _validationRules;
         private readonly IWebHostEnvironment _env;
         private readonly ICurrentUserService _currentUserService;
 
         public GraphQLController(ISchema schema, ICurrentUserService currentUserService,
             IDocumentExecuter documentExecuter, IDocumentWriter documentWriter,
-            IModelContextBuilder modelContextBuilder,
+            IModelContextBuilder modelContextBuilder, DataLoaderDocumentListener dataLoaderDocumentListener,
             IEnumerable<IValidationRule> validationRules, IWebHostEnvironment env)
         {
             _currentUserService = currentUserService;
@@ -39,6 +41,7 @@ namespace Omnikeeper.Controllers
             _documentExecuter = documentExecuter;
             _documentWriter = documentWriter;
             _modelContextBuilder = modelContextBuilder;
+            this.dataLoaderDocumentListener = dataLoaderDocumentListener;
             _validationRules = validationRules;
             _env = env;
         }
@@ -78,6 +81,7 @@ namespace Omnikeeper.Controllers
                 options.UserContext = new OmnikeeperUserContext(user);
                 options.ValidationRules = DocumentValidator.CoreRules.Concat(_validationRules).ToList();
                 options.RequestServices = HttpContext.RequestServices;
+                options.Listeners.Add(dataLoaderDocumentListener);
             });
 
             var json = await _documentWriter.WriteToStringAsync(result);
