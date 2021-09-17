@@ -77,7 +77,7 @@ namespace OKPluginCLBMonitoring
 
                 var monitoringModuleCI = monitoringModuleCIs[p.Relation.ToCIID];
 
-                var monitoringModuleET = await traitModel.GetEffectiveTraitForCI(monitoringModuleCI, Traits.ModuleFlattened, trans, changesetProxy.TimeThreshold);
+                var monitoringModuleET = await traitModel.GetEffectiveTraitForCI(monitoringModuleCI, Traits.ModuleFlattened, layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
                 if (monitoringModuleET == null)
                 {
                     logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{Traits.ModuleFlattened.ID}\"");
@@ -279,7 +279,7 @@ namespace OKPluginCLBMonitoring
                     contactGroupsMap = contactGroupRelations.GroupBy(r => r.Relation.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.Relation.ToCIID]));
                     foreach (var ci in contactGroupsMap.Values.SelectMany(t => t).Distinct())
                     {
-                        var et = await traitModel.GetEffectiveTraitForCI(ci, contactgroupTrait, trans, timeThreshold);
+                        var et = await traitModel.GetEffectiveTraitForCI(ci, contactgroupTrait, layerSetAll, trans, timeThreshold);
                         if (et != null)
                         {
                             var name = (et.TraitAttributes["name"].Attribute.Value as AttributeScalarValueText)?.Value;

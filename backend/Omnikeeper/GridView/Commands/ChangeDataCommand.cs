@@ -199,15 +199,12 @@ namespace Omnikeeper.GridView.Commands
                     timeThreshold
                     );
 
-                foreach (var mergedCI in mergedCIs)
+                var cisWithTrait = await effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, new LayerSet(config.ReadLayerset.ToArray()), trans, timeThreshold);
+                if (cisWithTrait.Count() < mergedCIs.Count())
                 {
-                    var hasTrait = await effectiveTraitModel.DoesCIHaveTrait(mergedCI, activeTrait, trans, timeThreshold);
-
-                    if (!hasTrait)
-                    {
-                        trans.Rollback();
-                        return (null, new Exception($"Consistency validation for CI with id={mergedCI.ID} failed. CI doesn't have the configured trait {activeTrait.ID}!"));
-                    }
+                    var cisWithoutTrait = mergedCIs.Select(ci => ci.ID).ToHashSet().Except(cisWithTrait.Select(ci => ci.ID));
+                    trans.Rollback();
+                    return (null, new Exception($"Consistency validation for CI with id={cisWithoutTrait.FirstOrDefault()} failed. CI doesn't have the configured trait {activeTrait.ID}!"));
                 }
 
                 trans.Commit();

@@ -107,13 +107,7 @@ namespace Omnikeeper.Model
                 }
                 else
                 {
-                    var reduced = new List<MergedCI>();
-                    foreach (var ci in workCIs)
-                    {
-                        if (await traitModel.DoesCIHaveTrait(ci, requiredTrait, trans, atTime))
-                            reduced.Add(ci);
-                    }
-                    workCIs = reduced;
+                    workCIs = await traitModel.FilterCIsWithTrait(workCIs, requiredTrait, layerSet, trans, atTime);
                 }
             }
 
@@ -143,11 +137,20 @@ namespace Omnikeeper.Model
                 }
                 else
                 {
+
+                    var cisToFilterOut = await traitModel.FilterCIsWithTrait(workCIs, requiredNonTrait, layerSet, trans, atTime);
+
+                    // HACK: this relies on the order of cisToFilterOut to be the same as the passed in workCIs
                     var reduced = new List<MergedCI>();
                     foreach (var ci in workCIs)
                     {
-                        if (!await traitModel.DoesCIHaveTrait(ci, requiredNonTrait, trans, atTime))
+                        var ciToFilterOut = cisToFilterOut.FirstOrDefault();
+                        if (ciToFilterOut == null)
                             reduced.Add(ci);
+                        else if (ciToFilterOut != ci)
+                            reduced.Add(ci);
+                        else
+                            cisToFilterOut = cisToFilterOut.Skip(1);
                     }
                     workCIs = reduced;
                 }
