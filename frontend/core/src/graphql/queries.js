@@ -14,10 +14,10 @@ export const queries = {
     AdvancedSearchCompactCIs: gql`
         query($searchString: String!, $withEffectiveTraits: [String]!, $withoutEffectiveTraits: [String]!, $layers: [String]!) {
             advancedSearchCompactCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits, withoutEffectiveTraits: $withoutEffectiveTraits, layers: $layers) {
-                ...CompactCI
+                id
+                name
             }
         }
-        ${Fragments.compactCI}
     `,
     ActiveTraits: gql`
         query {
