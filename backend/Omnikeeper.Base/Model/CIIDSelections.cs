@@ -133,7 +133,6 @@ namespace Omnikeeper.Base.Model
             };
         }
 
-        // TODO: unit test
         public static ICIIDSelection UnionAll(IEnumerable<ICIIDSelection> selections)
         {
             var specific = new HashSet<Guid>();
