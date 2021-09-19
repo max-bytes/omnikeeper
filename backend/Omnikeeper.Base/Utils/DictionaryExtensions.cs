@@ -58,6 +58,18 @@ namespace Omnikeeper.Base.Utils
             }
         }
 
+        public static TValue? GetOrWithClass<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue? or) where TKey : notnull where TValue : class
+        {
+            if (dictionary.ContainsKey(key))
+            {
+                return dictionary[key];
+            }
+            else
+            {
+                return or;
+            }
+        }
+
         public static TValue GetOr<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue or) where TKey : notnull
         {
             if (dictionary.ContainsKey(key))

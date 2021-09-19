@@ -23,30 +23,37 @@ namespace Omnikeeper.Model
             this.partitionModel = partitionModel;
         }
 
+        private (string? whereClause, IEnumerable<NpgsqlParameter> parameters) Eval(IRelationSelection rl)
+        {
+            switch (rl)
+            {
+                case RelationSelectionFrom rsft:
+                    return ("(from_ci_id = ANY(@from_ci_ids))", new[] { new NpgsqlParameter("from_ci_ids", rsft.fromCIIDs) });
+                case RelationSelectionTo rst:
+                    return ("(to_ci_id = ANY(@to_ci_ids))", new[] { new NpgsqlParameter("to_ci_ids", rst.toCIIDs) });
+                case RelationSelectionWithPredicate rsp:
+                    return ("(predicate_id = @predicate_id)", new[] { new NpgsqlParameter("predicate_id", rsp.predicateID) });
+                case RelationSelectionAll _:
+                    return (null, new NpgsqlParameter[0]);
+                //case RelationSelectionOr or:
+                //    var (whereClause, parameters) = or.inners.Select(t => Eval(t)).Aggregate((tPrev, tNew) => (tPrev.whereClause + " or " + tNew.whereClause, tPrev.parameters.Concat(tNew.parameters)));
+                //    return ("(" + whereClause + ")", parameters);
+                default:
+                    throw new Exception("Invalid relation selection");
+            }
+        }
+
         // TODO: rework to use CTEs, like attributes use -> performs much better
         private async Task<NpgsqlCommand> CreateRelationCommand(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var innerWhereClauses = new List<string>();
             var parameters = new List<NpgsqlParameter>();
-            switch (rl)
-            {
-                case RelationSelectionFrom rsft:
-                    innerWhereClauses.Add("(from_ci_id = ANY(@from_ci_ids))");
-                    parameters.Add(new NpgsqlParameter("from_ci_ids", rsft.fromCIIDs));
-                    break;
-                case RelationSelectionTo rst:
-                    innerWhereClauses.Add("(to_ci_id = ANY(@to_ci_ids))");
-                    parameters.Add(new NpgsqlParameter("to_ci_ids", rst.toCIIDs));
-                    break;
-                case RelationSelectionWithPredicate rsp:
-                    innerWhereClauses.Add("(predicate_id = @predicate_id)");
-                    parameters.Add(new NpgsqlParameter("predicate_id", rsp.predicateID));
-                    break;
-                case RelationSelectionAll _:
-                    break;
-                default:
-                    throw new Exception("Invalid relation selection");
-            }
+
+            var (rlInnerWhereClause, rlParameters) = Eval(rl);
+            if (rlInnerWhereClause != null)
+                innerWhereClauses.Add(rlInnerWhereClause);
+            parameters.AddRange(rlParameters);
+
             var innerWhereClause = string.Join(" AND ", innerWhereClauses);
             if (innerWhereClause == "") innerWhereClause = "1=1";
 
