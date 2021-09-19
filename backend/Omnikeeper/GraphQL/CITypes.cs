@@ -104,14 +104,13 @@ namespace Omnikeeper.GraphQL
                 }
             }
 
-            // TODO: handle empty relation selections 
             var relationsTo = await relationModel.GetMergedRelations(new RelationSelectionTo(combinedRelationsTo.ToArray()), layerset, userContext.Transaction, userContext.TimeThreshold);
             var relationsFrom = await relationModel.GetMergedRelations(new RelationSelectionFrom(combinedRelationsFrom.ToArray()), layerset, userContext.Transaction, userContext.TimeThreshold);
 
             var relationsToMap = relationsTo.ToLookup(t => t.Relation.ToCIID);
             var relationsFromMap = relationsFrom.ToLookup(t => t.Relation.FromCIID);
 
-            var ret = new List<(IRelationSelection, MergedRelation)>(); // TODO: seems weird, cant lookup be created better?
+            var ret = new List<(IRelationSelection, MergedRelation)>();
             foreach (var rs in relationSelections)
             {
                 switch (rs)

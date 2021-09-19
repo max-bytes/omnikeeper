@@ -85,7 +85,6 @@ namespace Omnikeeper.GraphQL
             return ret;
         }
 
-        // TODO: move to somewhere more general?
         private async Task<ILookup<ICIIDSelection, MergedCI>> FetchMergedCIs(OmnikeeperUserContext userContext, IEnumerable<ICIIDSelection> ciidSelections)
         {
             var layerset = userContext.LayerSet;
@@ -96,7 +95,7 @@ namespace Omnikeeper.GraphQL
 
             var combinedCIs = (await ciModel.GetMergedCIs(combinedCIIDSelection, layerset, true, userContext.Transaction, userContext.TimeThreshold)).ToDictionary(ci => ci.ID);
 
-            var ret = new List<(ICIIDSelection, MergedCI)>(); // TODO: seems weird, cant lookup be created better?
+            var ret = new List<(ICIIDSelection, MergedCI)>(); // NOTE: seems weird, cant lookup be created better?
             foreach (var ciidSelection in ciidSelections)
             {
                 var ciids = await ciidSelection.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(userContext.Transaction));
