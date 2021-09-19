@@ -13,16 +13,19 @@ namespace OKPluginNaemonConfig
         private static readonly TraitOriginV1 traitOrigin = PluginRegistrationBase.GetTraitOrigin(typeof(Traits).Assembly);
 
         public static readonly RecursiveTrait NaemonInstance = new RecursiveTrait("naemon_instance", traitOrigin, new List<TraitAttribute>() {
-            new TraitAttribute("name",
+            new TraitAttribute("monman-instance.id",
                 CIAttributeTemplate.BuildFromParams("monman-instance.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
         public static readonly GenericTrait NaemonInstanceFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(NaemonInstance);
 
-        public static readonly RecursiveTrait HCis = new RecursiveTrait("hosts", traitOrigin, new List<TraitAttribute>() { 
+        public static readonly RecursiveTrait HCis = new RecursiveTrait("hosts", traitOrigin, new List<TraitAttribute>() {
         new TraitAttribute("hostname",
             CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+            ),
+        new TraitAttribute("cmdb.platform",
+            CIAttributeTemplate.BuildFromParams("cmdb.platform", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
@@ -60,6 +63,23 @@ namespace OKPluginNaemonConfig
 
         public static readonly GenericTrait NaemonInstancesTagsFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(NaemonInstancesTags);
 
-        public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() { NaemonInstance, HCis, ACis, NaemonModules, NaemonProfiles, NaemonInstancesTags };
+        public static readonly RecursiveTrait Commands = new RecursiveTrait("commands", traitOrigin, new List<TraitAttribute>() {
+        new TraitAttribute("monman-command.id",
+            CIAttributeTemplate.BuildFromParams("monman-command.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+            )
+        });
+
+        public static readonly GenericTrait CommandsFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(Commands);
+
+        // monman-timeperiod.id
+        public static readonly RecursiveTrait TimePeriods = new RecursiveTrait("timeperiods", traitOrigin, new List<TraitAttribute>() {
+        new TraitAttribute("monman-timeperiod.id",
+            CIAttributeTemplate.BuildFromParams("monman-timeperiod.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+            )
+        });
+
+        public static readonly GenericTrait TimePeriodsFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(TimePeriods);
+
+        public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() { NaemonInstance, HCis, ACis, NaemonModules, NaemonProfiles, NaemonInstancesTags, Commands, TimePeriods };
     }
 }
