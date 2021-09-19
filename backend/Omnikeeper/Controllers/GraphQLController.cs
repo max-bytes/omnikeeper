@@ -86,12 +86,13 @@ namespace Omnikeeper.Controllers
 
             var json = await _documentWriter.WriteToStringAsync(result);
 
+            var ret = Content(json, "application/json");
             if (result.Errors?.Count > 0)
             {
-                return BadRequest(json);
+                ret.StatusCode = 400;
             }
 
-            return Ok(json);
+            return ret;
         }
     }
 }
