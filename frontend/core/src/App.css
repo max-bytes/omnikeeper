@@ -10,3 +10,9 @@
 .ag-theme-balham .ag-popup {
     height: auto; /* resize, so you have no white background*/
 }
+
+/* HACK: ant design sets box-sizing globally to "border-box" and graphiql does not like this
+  so we manually reset the box-sizing inside the graphiql-container and its children */
+.graphiql-container * {
+  box-sizing: unset !important;
+}
