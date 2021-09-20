@@ -28,7 +28,18 @@ namespace Omnikeeper.GraphQL
             Field("name", x => x.Name, nullable: true);
             Field("layerhash", x => x.Layers.LayerHash);
             Field(x => x.AtTime, type: typeof(TimeThresholdType));
-            Field("mergedAttributes", x => x.MergedAttributes.Values, type: typeof(ListGraphType<MergedCIAttributeType>));
+            Field<ListGraphType<MergedCIAttributeType>>("mergedAttributes",
+                arguments: new QueryArguments(new QueryArgument<ListGraphType<StringGraphType>> { Name = "attributeNames" }),
+                resolve: context => 
+                {
+                    var mergedAttributes = context.Source!.MergedAttributes.Values;
+
+                    var attributeNames = context.GetArgument<string[]?>("attributeNames", null)?.ToHashSet();
+                    if (attributeNames != null)
+                        return mergedAttributes.Where(a => attributeNames.Contains(a.Attribute.Name));
+                    return mergedAttributes;
+                }
+            );
 
             Field<ListGraphType<MergedRelationType>>("outgoingMergedRelations",
             arguments: new QueryArguments(new QueryArgument<StringGraphType> { Name = "requiredPredicateID" }),

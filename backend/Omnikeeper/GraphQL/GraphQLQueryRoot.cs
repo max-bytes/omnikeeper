@@ -117,8 +117,8 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<CompactCIType>>("advancedSearchCompactCIs",
                 arguments: new QueryArguments(
                     new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "searchString" },
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "withEffectiveTraits" },
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "withoutEffectiveTraits" },
+                    new QueryArgument<ListGraphType<StringGraphType>> { Name = "withEffectiveTraits" },
+                    new QueryArgument<ListGraphType<StringGraphType>> { Name = "withoutEffectiveTraits" },
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
                 resolve: async context =>
                 {
@@ -131,8 +131,8 @@ namespace Omnikeeper.GraphQL
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
                     var searchString = context.GetArgument<string>("searchString")!;
-                    var withEffectiveTraits = context.GetArgument<string[]>("withEffectiveTraits")!;
-                    var withoutEffectiveTraits = context.GetArgument<string[]>("withoutEffectiveTraits")!;
+                    var withEffectiveTraits = context.GetArgument<string[]>("withEffectiveTraits", new string[0])!;
+                    var withoutEffectiveTraits = context.GetArgument<string[]>("withoutEffectiveTraits", new string[0])!;
                     var ciid = context.GetArgument<Guid>("identity");
                     var layerStrings = context.GetArgument<string[]>("layers")!;
                     var ls = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
@@ -150,8 +150,8 @@ namespace Omnikeeper.GraphQL
 
             FieldAsync<ListGraphType<MergedCIType>>("advancedSearchFullCIs",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "withEffectiveTraits" },
-                    new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "withoutEffectiveTraits" },
+                    new QueryArgument<ListGraphType<StringGraphType>> { Name = "withEffectiveTraits" },
+                    new QueryArgument<ListGraphType<StringGraphType>> { Name = "withoutEffectiveTraits" },
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
                 resolve: async context =>
@@ -164,8 +164,8 @@ namespace Omnikeeper.GraphQL
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
-                    var withEffectiveTraits = context.GetArgument<string[]>("withEffectiveTraits")!;
-                    var withoutEffectiveTraits = context.GetArgument<string[]>("withoutEffectiveTraits")!;
+                    var withEffectiveTraits = context.GetArgument<string[]>("withEffectiveTraits", new string[0])!;
+                    var withoutEffectiveTraits = context.GetArgument<string[]>("withoutEffectiveTraits", new string[0])!;
                     var ciid = context.GetArgument<Guid>("identity");
                     var layerStrings = context.GetArgument<string[]>("layers")!;
                     var ls = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
