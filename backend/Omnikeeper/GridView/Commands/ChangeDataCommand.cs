@@ -49,6 +49,7 @@ namespace Omnikeeper.GridView.Commands
         {
             private readonly ICIModel ciModel;
             private readonly IAttributeModel attributeModel;
+            private readonly IRelationModel relationModel;
             private readonly IChangesetModel changesetModel;
             private readonly ICurrentUserService currentUserService;
             private readonly IGridViewContextModel gridViewContextModel;
@@ -59,7 +60,7 @@ namespace Omnikeeper.GridView.Commands
             private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
             private readonly IBaseConfigurationModel baseConfigurationModel;
 
-            public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel,
+            public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, 
                 IChangesetModel changesetModel, ICurrentUserService currentUserService, IGridViewContextModel gridViewContextModel,
                 IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
                 ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService,
@@ -67,6 +68,7 @@ namespace Omnikeeper.GridView.Commands
             {
                 this.ciModel = ciModel;
                 this.attributeModel = attributeModel;
+                this.relationModel = relationModel;
                 this.changesetModel = changesetModel;
                 this.currentUserService = currentUserService;
                 this.gridViewContextModel = gridViewContextModel;
@@ -96,7 +98,7 @@ namespace Omnikeeper.GridView.Commands
 
                 var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
 
-                var context = await gridViewContextModel.GetFullContext(request.Context, new LayerSet(baseConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
+                var context = await gridViewContextModel.GetFullContext(request.Context, new LayerSet(baseConfiguration.ConfigLayerset), timeThreshold, trans);
                 var config = context.Configuration;
 
                 if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, config.WriteLayer))
@@ -120,9 +122,9 @@ namespace Omnikeeper.GridView.Commands
                             return (null, new Exception($"Could not find the supplied column with ID \"{cell.ID}\" in the configuration"));
                         }
 
-                        if (configItem.SourceAttributeName == null)
-                            return (null, new Exception($"Modifying attributes whose column are NOT configured via sourceAttributeName is not supported (yet)"));
-                        var attributeName = configItem.SourceAttributeName!;
+                        if (configItem.SourceAttributePath != null)
+                            return (null, new Exception($"Modifying attributes whose column are configured via SourceAttributePath is not supported (yet)"));
+                        var attributeName = configItem.SourceAttributeName;
 
                         string writeLayer;
 
@@ -212,19 +214,22 @@ namespace Omnikeeper.GridView.Commands
                 }
 
                 trans.Commit();
-                return (BuildChangeResponse(mergedCIs, config), null);
+                return (await BuildChangeResponse(mergedCIs, config), null);
             }
 
-            private ChangeDataResponse BuildChangeResponse(IEnumerable<MergedCI> mergedCIs, GridViewConfiguration config)
+            private async Task<ChangeDataResponse> BuildChangeResponse(IEnumerable<MergedCI> mergedCIs, GridViewConfiguration config)
             {
                 using var trans = modelContextBuilder.BuildImmediate();
+                var timeThreshold = TimeThreshold.BuildLatest();
 
                 var result = new ChangeDataResponse(new List<ChangeDataRow>());
+
+                var attributeResolver = new AttributeResolver();
+                await attributeResolver.PrefetchRelatedCIsAndLookups(config, mergedCIs, relationModel, ciModel, trans, timeThreshold);
 
                 foreach (var item in mergedCIs)
                 {
                     var ci_id = item.ID;
-
 
                     var canWrite = ciBasedAuthorizationService.CanWriteToCI(ci_id); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
 
@@ -235,7 +240,7 @@ namespace Omnikeeper.GridView.Commands
 
                     var filteredColumns = config.Columns.Select(column =>
                     {
-                        if (item.MergedAttributes.TryGetValue(column.SourceAttributeName, out var attribute))
+                        if (attributeResolver.TryResolveAttribute(item, column, out var attribute))
                         {
                             return ((GridViewColumn column, MergedCIAttribute? attr))(column, attribute);
                         }

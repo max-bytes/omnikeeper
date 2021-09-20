@@ -112,16 +112,16 @@ namespace Tests.Integration.Controller
                     ciid1,
                     new List<Cell>()
                     {
-                        new Cell("a1", new AttributeValueDTO() { Values = new string[] { "text1" }, IsArray = false, Type = AttributeValueType.Text }, true),
-                        new Cell("a2", new AttributeValueDTO() { Values = new string[] { }, IsArray = false, Type = AttributeValueType.Text }, true), // empty / not-set cell
+                        new Cell("columnID_a1", new AttributeValueDTO() { Values = new string[] { "text1" }, IsArray = false, Type = AttributeValueType.Text }, true),
+                        new Cell("columnID_a2", new AttributeValueDTO() { Values = new string[] { }, IsArray = false, Type = AttributeValueType.Text }, true), // empty / not-set cell
                     }
                 ),
                 new Row(
                     ciid2,
                     new List<Cell>()
                     {
-                        new Cell("a1", new AttributeValueDTO() { Values = new string[] { "text1" }, IsArray = false, Type = AttributeValueType.Text }, true),
-                        new Cell("a2", new AttributeValueDTO() { Values = new string[] { "text2" }, IsArray = false, Type = AttributeValueType.Text }, true),
+                        new Cell("columnID_a1", new AttributeValueDTO() { Values = new string[] { "text1" }, IsArray = false, Type = AttributeValueType.Text }, true),
+                        new Cell("columnID_a2", new AttributeValueDTO() { Values = new string[] { "text2" }, IsArray = false, Type = AttributeValueType.Text }, true),
                     }
                 )
             }, options => options.WithStrictOrdering());

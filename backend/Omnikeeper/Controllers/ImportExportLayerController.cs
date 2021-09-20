@@ -89,7 +89,7 @@ namespace Omnikeeper.Controllers
             var attributesDTO = attributesDict
                 .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key)) // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
                 .SelectMany(kv => kv.Value.Select(t => CIAttributeDTO.Build(t.Value)));
-            var relations = (await relationModel.GetRelations(new RelationSelectionAll(), layerID, false, trans, timeThreshold));
+            var relations = (await relationModel.GetRelations(RelationSelectionAll.Instance, layerID, false, trans, timeThreshold));
             var relationsDTO = relations.Select(r => RelationDTO.BuildFromRelation(r));
             // TODO: ci authorization?
 

@@ -32,13 +32,13 @@ namespace Omnikeeper.GridView.Entity
 
     public class GridViewColumn
     {
-        public string? SourceAttributeName { get; set; } // TODO: remove, is obsolete
+        public string SourceAttributeName { get; set; }
         public string[]? SourceAttributePath { get; set; }
         public string ColumnDescription { get; set; }
         public AttributeValueType? ValueType { get; set; }
         public string? WriteLayer { get; set; }
 
-        public GridViewColumn(string? SourceAttributeName, string[]? SourceAttributePath, string ColumnDescription, string? WriteLayer, AttributeValueType? valueType)
+        public GridViewColumn(string SourceAttributeName, string[]? SourceAttributePath, string ColumnDescription, string? WriteLayer, AttributeValueType? valueType)
         {
             this.SourceAttributeName = SourceAttributeName;
             this.SourceAttributePath = SourceAttributePath;
@@ -49,11 +49,10 @@ namespace Omnikeeper.GridView.Entity
 
         public static string GenerateColumnID(GridViewColumn column)
         {
-            if (column.SourceAttributeName != null && column.SourceAttributePath == null)
+            if (column.SourceAttributePath != null)
+                return $"columnID_{string.Join(",", column.SourceAttributePath)}_{column.SourceAttributeName}";
+            else
                 return $"columnID_{column.SourceAttributeName}";
-            else if (column.SourceAttributeName == null && column.SourceAttributePath != null)
-                return $"columnID_{string.Join(",", column.SourceAttributePath)}";
-            throw new Exception("Invalid source attribute configuration for column detected");
         }
     }
 }
