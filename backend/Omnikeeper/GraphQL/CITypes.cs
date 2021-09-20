@@ -50,7 +50,7 @@ namespace Omnikeeper.GraphQL
                 var requiredPredicateID = context.GetArgument<string?>("requiredPredicateID", null);
 
                 var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader("GetMergedRelations", (IEnumerable<IRelationSelection> relationSelections) => FetchRelations(userContext, relationSelections));
-                return loader.LoadAsync(new RelationSelectionFrom(CIIdentity)).Then(ret =>
+                return loader.LoadAsync(RelationSelectionFrom.Build(CIIdentity)).Then(ret =>
                 { // TODO: move predicateID filtering into fetch and RelationSelection
                     if (requiredPredicateID != null)
                         return ret.Where(r => r.Relation.PredicateID == requiredPredicateID);
@@ -67,7 +67,7 @@ namespace Omnikeeper.GraphQL
                 var requiredPredicateID = context.GetArgument<string?>("requiredPredicateID", null);
 
                 var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader("GetMergedRelations", (IEnumerable<IRelationSelection> relationSelections) => FetchRelations(userContext, relationSelections));
-                return loader.LoadAsync(new RelationSelectionTo(CIIdentity)).Then(ret =>
+                return loader.LoadAsync(RelationSelectionTo.Build(CIIdentity)).Then(ret =>
                 { // TODO: move predicateID filtering into fetch and RelationSelection
                     if (requiredPredicateID != null)
                         return ret.Where(r => r.Relation.PredicateID == requiredPredicateID);
@@ -105,18 +105,18 @@ namespace Omnikeeper.GraphQL
                 switch (rs)
                 {
                     case RelationSelectionTo t:
-                        combinedRelationsTo.UnionWith(t.toCIIDs);
+                        combinedRelationsTo.UnionWith(t.ToCIIDs);
                         break;
                     case RelationSelectionFrom f:
-                        combinedRelationsFrom.UnionWith(f.fromCIIDs);
+                        combinedRelationsFrom.UnionWith(f.FromCIIDs);
                         break;
                     default:
                         throw new NotSupportedException("Not supported (yet)");
                 }
             }
 
-            var relationsTo = await relationModel.GetMergedRelations(new RelationSelectionTo(combinedRelationsTo.ToArray()), layerset, userContext.Transaction, userContext.TimeThreshold);
-            var relationsFrom = await relationModel.GetMergedRelations(new RelationSelectionFrom(combinedRelationsFrom.ToArray()), layerset, userContext.Transaction, userContext.TimeThreshold);
+            var relationsTo = await relationModel.GetMergedRelations(RelationSelectionTo.Build(combinedRelationsTo), layerset, userContext.Transaction, userContext.TimeThreshold);
+            var relationsFrom = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(combinedRelationsFrom), layerset, userContext.Transaction, userContext.TimeThreshold);
 
             var relationsToMap = relationsTo.ToLookup(t => t.Relation.ToCIID);
             var relationsFromMap = relationsFrom.ToLookup(t => t.Relation.FromCIID);
@@ -127,10 +127,10 @@ namespace Omnikeeper.GraphQL
                 switch (rs)
                 {
                     case RelationSelectionTo t:
-                        foreach (var ciid in t.toCIIDs) ret.AddRange(relationsToMap[ciid].Select(t => (rs, t)));
+                        foreach (var ciid in t.ToCIIDs) ret.AddRange(relationsToMap[ciid].Select(t => (rs, t)));
                         break;
                     case RelationSelectionFrom f:
-                        foreach (var ciid in f.fromCIIDs) ret.AddRange(relationsFromMap[ciid].Select(t => (rs, t)));
+                        foreach (var ciid in f.FromCIIDs) ret.AddRange(relationsFromMap[ciid].Select(t => (rs, t)));
                         break;
                     default:
                         throw new NotSupportedException("Not supported (yet)");

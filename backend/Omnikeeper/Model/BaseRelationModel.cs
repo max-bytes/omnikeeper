@@ -28,13 +28,15 @@ namespace Omnikeeper.Model
             switch (rl)
             {
                 case RelationSelectionFrom rsft:
-                    return ("(from_ci_id = ANY(@from_ci_ids))", new[] { new NpgsqlParameter("from_ci_ids", rsft.fromCIIDs) });
+                    return ("(from_ci_id = ANY(@from_ci_ids))", new[] { new NpgsqlParameter("from_ci_ids", rsft.FromCIIDs.ToArray()) });
                 case RelationSelectionTo rst:
-                    return ("(to_ci_id = ANY(@to_ci_ids))", new[] { new NpgsqlParameter("to_ci_ids", rst.toCIIDs) });
+                    return ("(to_ci_id = ANY(@to_ci_ids))", new[] { new NpgsqlParameter("to_ci_ids", rst.ToCIIDs.ToArray()) });
                 case RelationSelectionWithPredicate rsp:
-                    return ("(predicate_id = @predicate_id)", new[] { new NpgsqlParameter("predicate_id", rsp.predicateID) });
+                    return ("(predicate_id = @predicate_id)", new[] { new NpgsqlParameter("predicate_id", rsp.PredicateID) });
                 case RelationSelectionAll _:
                     return (null, new NpgsqlParameter[0]);
+                case RelationSelectionNone _:
+                    return ("(1=0)", new NpgsqlParameter[0]);
                 //case RelationSelectionOr or:
                 //    var (whereClause, parameters) = or.inners.Select(t => Eval(t)).Aggregate((tPrev, tNew) => (tPrev.whereClause + " or " + tNew.whereClause, tPrev.parameters.Concat(tNew.parameters)));
                 //    return ("(" + whereClause + ")", parameters);
@@ -284,8 +286,8 @@ namespace Omnikeeper.Model
         {
             var outdatedRelations = (data switch
             {
-                BulkRelationDataPredicateScope p => (await GetRelations(new RelationSelectionWithPredicate(p.PredicateID), data.LayerID, returnRemoved: true, trans, changesetProxy.TimeThreshold)),
-                BulkRelationDataLayerScope l => (await GetRelations(new RelationSelectionAll(), data.LayerID, returnRemoved: true, trans, changesetProxy.TimeThreshold)),
+                BulkRelationDataPredicateScope p => (await GetRelations(RelationSelectionWithPredicate.Build(p.PredicateID), data.LayerID, returnRemoved: true, trans, changesetProxy.TimeThreshold)),
+                BulkRelationDataLayerScope l => (await GetRelations(RelationSelectionAll.Instance, data.LayerID, returnRemoved: true, trans, changesetProxy.TimeThreshold)),
                 _ => null
             }).ToDictionary(r => r.InformationHash, relation => (relation, Guid.NewGuid()));
 

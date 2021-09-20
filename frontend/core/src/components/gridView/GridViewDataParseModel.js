@@ -3,9 +3,6 @@ import _ from "lodash";
 export default function GridViewDataParseModel(rowStatus) {
     // ########## FROM BACKEND-STRUCTURE TO FRONTEND/AG-GRID-STRUCTURE ##########
 
-     // TODO: what if a gridview context defines a column named "status" or "ciid"
-     // rename these two to something "cryptic", so the chances of a collision are slim
-
     // Create columnDefs from schema and data
     const createColumnDefs = (schema, data) => {
         let columnDefs = [
@@ -39,11 +36,11 @@ export default function GridViewDataParseModel(rowStatus) {
         _.forEach(schema.columns, function (value) {
             columnDefs.push({
                 headerName: value.description,
-                field: value.name,
+                field: value.id,
                 editable: function (params) {
                     const ciid = params.node.data.ciid;
-                    const name = params.colDef.field;
-                    return getCellEditable(ciid, name, data, value.writable); // TODO: this function sucks(?) it cannot deal with new items
+                    const columnID = params.colDef.field;
+                    return getCellEditable(ciid, columnID, data, value.writable); // TODO: this function sucks(?) it cannot deal with new items
                 },
                 cellStyle: function (params) {
                     const editable = params.colDef.editable(params);
@@ -104,7 +101,7 @@ export default function GridViewDataParseModel(rowStatus) {
         _.forEach(data.rows, function (value) {
             let dataCell = [];
             _.forEach(value.cells, function (value) {
-                dataCell[value.name] = value.value;
+                dataCell[value.columnID] = value.value;
             });
             rowdata.push({
                 status: rowStatus.clean, // set status to 'clean'
@@ -125,7 +122,7 @@ export default function GridViewDataParseModel(rowStatus) {
             _.forOwn(value, function (v, key, o) {
                 if (key !== "ciid" && key !== "status")
                     cells.push({
-                        name: key,
+                        id: key,
                         value: v,
                     });
             });
@@ -142,13 +139,13 @@ export default function GridViewDataParseModel(rowStatus) {
 
     // ########## HELPERS ##########
 
-    // returns editable/changeable-attr of cell, defined by its ciid and name/colName
-    function getCellEditable(ciid, name, data, isColumnWritable) {
+    // returns editable/changeable-attr of cell, defined by its ciid and id (field in ag grid speak)
+    function getCellEditable(ciid, columnID, data, isColumnWritable) {
         if (!isColumnWritable) return false;
         if (data) {
             let row = _.find(data.rows, o => o.ciid === ciid);
             if (row) {
-                let cell = _.find(row.cells, o => o.name === name);
+                let cell = _.find(row.cells, o => o.columnID === columnID);
                 if (cell)
                     return cell.changeable;
                 else return false;

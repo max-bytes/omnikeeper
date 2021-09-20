@@ -17,14 +17,14 @@ namespace Omnikeeper.GridView.Response
 
     public class Column
     {
-        public string Name { get; set; }
+        public string ID { get; set; }
         public string Description { get; set; }
         public AttributeValueType ValueType { get; set; }
         public bool Writable { get; set; }
 
-        public Column(string Name, string Description, AttributeValueType attributeValueType, bool writable)
+        public Column(string id, string Description, AttributeValueType attributeValueType, bool writable)
         {
-            this.Name = Name;
+            this.ID = id;
             this.Description = Description;
             ValueType = attributeValueType;
             this.Writable = writable;

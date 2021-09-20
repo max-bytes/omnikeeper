@@ -210,11 +210,11 @@ namespace Omnikeeper.Model
                     ILookup<Guid, MergedRelation> toRelations = Enumerable.Empty<MergedRelation>().ToLookup(x => default(Guid));
                     if (tt.RequiredRelations.Count > 0)
                     {
-                        var ciids = cis.Select(ci => ci.ID).ToArray();
+                        var ciids = cis.Select(ci => ci.ID).ToHashSet();
                         if (tt.RequiredRelations.Any(r => r.RelationTemplate.DirectionForward))
-                            fromRelations = (await relationModel.GetMergedRelations(new RelationSelectionFrom(ciids), layers, trans, atTime)).ToLookup(r => r.Relation.FromCIID);
+                            fromRelations = (await relationModel.GetMergedRelations(RelationSelectionFrom.Build(ciids), layers, trans, atTime)).ToLookup(r => r.Relation.FromCIID);
                         if (tt.RequiredRelations.Any(r => !r.RelationTemplate.DirectionForward))
-                            toRelations = (await relationModel.GetMergedRelations(new RelationSelectionTo(ciids), layers, trans, atTime)).ToLookup(r => r.Relation.ToCIID);
+                            toRelations = (await relationModel.GetMergedRelations(RelationSelectionTo.Build(ciids), layers, trans, atTime)).ToLookup(r => r.Relation.ToCIID);
                     }
 
                     foreach (var ci in cis)
@@ -258,11 +258,11 @@ namespace Omnikeeper.Model
                     ILookup<Guid, MergedRelation> toRelations = Enumerable.Empty<MergedRelation>().ToLookup(x => default(Guid));
                     if (tt.RequiredRelations.Count > 0 || tt.OptionalRelations.Count > 0)
                     {
-                        var ciids = cis.Select(ci => ci.ID).ToArray();
+                        var ciids = cis.Select(ci => ci.ID).ToHashSet();
                         if (tt.RequiredRelations.Any(r => r.RelationTemplate.DirectionForward) || tt.OptionalRelations.Any(r => r.RelationTemplate.DirectionForward))
-                            fromRelations = (await relationModel.GetMergedRelations(new RelationSelectionFrom(ciids), layers, trans, atTime)).ToLookup(r => r.Relation.FromCIID);
+                            fromRelations = (await relationModel.GetMergedRelations(RelationSelectionFrom.Build(ciids), layers, trans, atTime)).ToLookup(r => r.Relation.FromCIID);
                         if (tt.RequiredRelations.Any(r => !r.RelationTemplate.DirectionForward) || tt.OptionalRelations.Any(r => !r.RelationTemplate.DirectionForward))
-                            toRelations = (await relationModel.GetMergedRelations(new RelationSelectionTo(ciids), layers, trans, atTime)).ToLookup(r => r.Relation.ToCIID);
+                            toRelations = (await relationModel.GetMergedRelations(RelationSelectionTo.Build(ciids), layers, trans, atTime)).ToLookup(r => r.Relation.ToCIID);
                     }
 
                     foreach (var ci in cis)

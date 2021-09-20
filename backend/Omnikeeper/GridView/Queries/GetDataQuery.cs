@@ -9,10 +9,12 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GridView.Entity;
+using Omnikeeper.GridView.Helper;
 using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Response;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,6 +45,8 @@ namespace Omnikeeper.GridView.Queries
         {
             private readonly IGridViewContextModel gridViewContextModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
+            private readonly IRelationModel relationModel;
+            private readonly ICIModel ciModel;
             private readonly ITraitsProvider traitsProvider;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly IBaseConfigurationModel baseConfigurationModel;
@@ -50,12 +54,14 @@ namespace Omnikeeper.GridView.Queries
             private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
             private readonly ICurrentUserService currentUserService;
 
-            public GetDataQueryHandler(IGridViewContextModel gridViewContextModel, IEffectiveTraitModel effectiveTraitModel,
+            public GetDataQueryHandler(IGridViewContextModel gridViewContextModel, IEffectiveTraitModel effectiveTraitModel, IRelationModel relationModel, ICIModel ciModel,
                 ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder, IBaseConfigurationModel baseConfigurationModel,
                 ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserService currentUserService)
             {
                 this.gridViewContextModel = gridViewContextModel;
                 this.effectiveTraitModel = effectiveTraitModel;
+                this.relationModel = relationModel;
+                this.ciModel = ciModel;
                 this.traitsProvider = traitsProvider;
                 this.modelContextBuilder = modelContextBuilder;
                 this.baseConfigurationModel = baseConfigurationModel;
@@ -72,11 +78,13 @@ namespace Omnikeeper.GridView.Queries
                 var trans = modelContextBuilder.BuildImmediate();
                 var user = await currentUserService.GetCurrentUser(trans);
 
+                var atTime = TimeThreshold.BuildLatest();
+
                 var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
-                var context = await gridViewContextModel.GetFullContext(request.Context, new LayerSet(baseConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
+                var context = await gridViewContextModel.GetFullContext(request.Context, new LayerSet(baseConfiguration.ConfigLayerset), atTime, trans);
                 var config = context.Configuration;
 
-                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, TimeThreshold.BuildLatest());
+                var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, atTime);
 
                 if (activeTrait == null)
                 {
@@ -86,18 +94,15 @@ namespace Omnikeeper.GridView.Queries
                 if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, config.ReadLayerset))
                     return (null, new Exception($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', config.ReadLayerset)}"));
 
-                var res = await effectiveTraitModel.GetMergedCIsWithTrait(
-                    activeTrait,
-                    new LayerSet(config.ReadLayerset), new AllCIIDsSelection(),
-                    trans,
-                    TimeThreshold.BuildLatest()
-                    );
-
-
-                var resultRows = new Dictionary<Guid, Row>();
+                var mergedCIs = await effectiveTraitModel.GetMergedCIsWithTrait(activeTrait, new LayerSet(config.ReadLayerset), new AllCIIDsSelection(), trans, atTime);
 
                 // filter readable CIs based on authorization
-                var filteredCIs = ciBasedAuthorizationService.FilterReadableCIs(res, (t) => t.ID);
+                var filteredCIs = ciBasedAuthorizationService.FilterReadableCIs(mergedCIs, (t) => t.ID);
+
+                var attributeResolver = new AttributeResolver();
+                await attributeResolver.PrefetchRelatedCIsAndLookups(config, filteredCIs, relationModel, ciModel, trans, atTime);
+
+                var resultRows = new Dictionary<Guid, Row>();
 
                 foreach (var item in filteredCIs)
                 {
@@ -105,7 +110,7 @@ namespace Omnikeeper.GridView.Queries
 
                     var filteredColumns = config.Columns.Select(column =>
                     {
-                        if (item.MergedAttributes.TryGetValue(column.SourceAttributeName, out var attribute))
+                        if (attributeResolver.TryResolveAttribute(item, column, out var attribute))
                         {
                             return ((GridViewColumn column, MergedCIAttribute? attr))(column, attribute);
                         }
@@ -134,7 +139,7 @@ namespace Omnikeeper.GridView.Queries
                             : AttributeValueDTO.BuildEmpty(column.ValueType ?? AttributeValueType.Text, false);
 
                         var cell = new Cell(
-                                column.SourceAttributeName,
+                                GridViewColumn.GenerateColumnID(column),
                                 value,
                                 column.WriteLayer == null ? true : (column.WriteLayer != "") && changable
                             );
