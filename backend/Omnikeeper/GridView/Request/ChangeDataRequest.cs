@@ -28,13 +28,13 @@ namespace Omnikeeper.GridView.Request
 
     public class ChangeDataCell
     {
-        public string Name { get; set; }
+        public string ID { get; set; }
         public AttributeValueDTO Value { get; set; }
         public bool Changeable { get; set; } // TODO: needed?
 
-        public ChangeDataCell(string Name, AttributeValueDTO Value, bool Changeable)
+        public ChangeDataCell(string id, AttributeValueDTO Value, bool Changeable)
         {
-            this.Name = Name;
+            this.ID = id;
             this.Value = Value;
             this.Changeable = Changeable;
         }

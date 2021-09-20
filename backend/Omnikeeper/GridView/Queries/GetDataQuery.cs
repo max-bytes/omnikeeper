@@ -134,7 +134,7 @@ namespace Omnikeeper.GridView.Queries
                             : AttributeValueDTO.BuildEmpty(column.ValueType ?? AttributeValueType.Text, false);
 
                         var cell = new Cell(
-                                column.SourceAttributeName,
+                                GridViewColumn.GenerateColumnID(column),
                                 value,
                                 column.WriteLayer == null ? true : (column.WriteLayer != "") && changable
                             );

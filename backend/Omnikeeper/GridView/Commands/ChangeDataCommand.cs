@@ -114,11 +114,15 @@ namespace Omnikeeper.GridView.Commands
 
                     foreach (var cell in row.Cells)
                     {
-                        var configItem = config.Columns.Find(item => item.SourceAttributeName == cell.Name);
+                        var configItem = config.Columns.Find(item => GridViewColumn.GenerateColumnID(item) == cell.ID);
                         if (configItem == null)
                         {
-                            return (null, new Exception($"Could not find the supplied column {cell.Name} in the configuration"));
+                            return (null, new Exception($"Could not find the supplied column with ID \"{cell.ID}\" in the configuration"));
                         }
+
+                        if (configItem.SourceAttributeName == null)
+                            return (null, new Exception($"Modifying attributes whose column are NOT configured via sourceAttributeName is not supported (yet)"));
+                        var attributeName = configItem.SourceAttributeName!;
 
                         string writeLayer;
 
@@ -128,7 +132,7 @@ namespace Omnikeeper.GridView.Commands
                         }
                         else if (configItem.WriteLayer == "")
                         {
-                            return (null, new Exception($"Provided column {cell.Name} is not writable!"));
+                            return (null, new Exception($"Provided column with ID \"{cell.ID}\" is not writable!"));
                         }
                         else
                         {
@@ -148,7 +152,7 @@ namespace Omnikeeper.GridView.Commands
                                 try
                                 {
                                     await attributeModel.RemoveAttribute(
-                                        cell.Name,
+                                        attributeName,
                                         row.Ciid,
                                         writeLayer,
                                         changesetProxy,
@@ -158,7 +162,7 @@ namespace Omnikeeper.GridView.Commands
                                 catch (Exception e)
                                 {
                                     trans.Rollback();
-                                    return (null, new Exception($"Removing attribute {cell.Name} for ci with id: {row.Ciid} failed!", e));
+                                    return (null, new Exception($"Removing attribute {attributeName} for ci with id: {row.Ciid} failed!", e));
                                 }
                             }
                         }
@@ -169,7 +173,7 @@ namespace Omnikeeper.GridView.Commands
                                 var val = AttributeValueBuilder.BuildFromDTO(cell.Value);
 
                                 await attributeModel.InsertAttribute(
-                                    cell.Name,
+                                    attributeName,
                                     val,
                                     row.Ciid,
                                     writeLayer,
@@ -180,7 +184,7 @@ namespace Omnikeeper.GridView.Commands
                             catch (Exception e)
                             {
                                 trans.Rollback();
-                                return (null, new Exception($"Inserting attribute {cell.Name} for ci with id: {row.Ciid} failed!", e));
+                                return (null, new Exception($"Inserting attribute {attributeName} for ci with id: {row.Ciid} failed!", e));
                             }
                         }
                     }
@@ -260,7 +264,7 @@ namespace Omnikeeper.GridView.Commands
                             : AttributeValueDTO.BuildEmpty(column.ValueType ?? AttributeValueType.Text, false);
 
                         var cell = new Response.ChangeDataCell(
-                                column.SourceAttributeName,
+                                GridViewColumn.GenerateColumnID(column),
                                 value,
                                 column.WriteLayer == null ? true : (column.WriteLayer != "") && changable
                             );

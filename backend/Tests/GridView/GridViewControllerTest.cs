@@ -84,8 +84,8 @@ namespace Tests.Integration.Controller
                             new List<string> { layerID1, layerID2 },
                             new List<GridViewColumn>()
                             {
-                                new GridViewColumn("a1", "", layerID1, AttributeValueType.Text),
-                                new GridViewColumn("a2", "", "invalid", AttributeValueType.Text) // invalid write layer
+                                new GridViewColumn("a1", null, "", layerID1, AttributeValueType.Text),
+                                new GridViewColumn("a2", null, "", "invalid", AttributeValueType.Text) // invalid write layer
                             },
                             "test_trait_1"
                         );
