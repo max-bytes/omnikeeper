@@ -197,13 +197,7 @@ namespace Omnikeeper.GridView.Commands
                     return (null, new Exception($"Could not find trait {config.Trait}"));
 
                 var cisList = SpecificCIIDsSelection.Build(request.Changes.SparseRows.Select(i => i.Ciid).ToHashSet());
-                var mergedCIs = await ciModel.GetMergedCIs(
-                    cisList,
-                    new LayerSet(config.ReadLayerset.ToArray()),
-                    true,
-                    trans,
-                    timeThreshold
-                    );
+                var mergedCIs = await ciModel.GetMergedCIs(cisList, new LayerSet(config.ReadLayerset.ToArray()), true, trans, timeThreshold);
 
                 var cisWithTrait = await effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, new LayerSet(config.ReadLayerset.ToArray()), trans, timeThreshold);
                 if (cisWithTrait.Count() < mergedCIs.Count())

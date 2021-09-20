@@ -96,13 +96,13 @@ namespace Omnikeeper.GridView.Queries
 
                 var mergedCIs = await effectiveTraitModel.GetMergedCIsWithTrait(activeTrait, new LayerSet(config.ReadLayerset), new AllCIIDsSelection(), trans, atTime);
 
-                var attributeResolver = new AttributeResolver();
-                await attributeResolver.PrefetchRelatedCIsAndLookups(config, mergedCIs, relationModel, ciModel, trans, atTime);
-
-                var resultRows = new Dictionary<Guid, Row>();
-
                 // filter readable CIs based on authorization
                 var filteredCIs = ciBasedAuthorizationService.FilterReadableCIs(mergedCIs, (t) => t.ID);
+
+                var attributeResolver = new AttributeResolver();
+                await attributeResolver.PrefetchRelatedCIsAndLookups(config, filteredCIs, relationModel, ciModel, trans, atTime);
+
+                var resultRows = new Dictionary<Guid, Row>();
 
                 foreach (var item in filteredCIs)
                 {
