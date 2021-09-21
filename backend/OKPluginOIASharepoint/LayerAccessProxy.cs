@@ -41,40 +41,6 @@ namespace OKPluginOIASharepoint
             return new CIAttribute(id, name, ciid, new AttributeScalarValueText(value), AttributeState.New, StaticChangesetID);
         }
 
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
-        {
-            if (!atTime.IsLatest && !useCurrentForHistoric) return null; // we don't have historic information
-
-            var externalID = mapper.GetExternalID(ciid);
-            if (!externalID.HasValue)
-                return null;
-
-            return await GetAttribute(name, ciid, externalID.Value);
-        }
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, SharepointExternalListItemID externalID)
-        {
-            if (!cachedListConfigs.TryGetValue(externalID.listID, out var listConfig))
-                return null; // list is not configured (anymore)
-
-            var columnName = listConfig.AttributeName2ColumnName(name);
-            if (columnName == null)
-                return null; // column is not configured
-
-            try
-            {
-                var item = await client.GetListItem(externalID.listID, externalID.itemID, new string[] { columnName });
-
-                if (!(item.GetOr(columnName, null) is string value) || value == null)
-                    return null; // attribute is not present in list item
-
-                return BuildAttributeFromValue(name, value, ciid);
-            }
-            catch (Exception)
-            { // TODO: handle
-                return null;
-            }
-        }
-
         public Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime)
         {
             return Task.FromResult<CIAttribute?>(null); // TODO: not implemented

@@ -91,28 +91,15 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<MergedCIAttribute?> GetMergedAttribute(string name, Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-        {
-            return await _GetMergedAttribute(name, ciid, layers, trans, atTime, false);
-        }
         public async Task<MergedCIAttribute?> GetFullBinaryMergedAttribute(string name, Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
-        {
-            return await _GetMergedAttribute(name, ciid, layers, trans, atTime, true);
-        }
-
-        public async Task<MergedCIAttribute?> _GetMergedAttribute(string name, Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime, bool fullBinary)
         {
             if (layers.IsEmpty)
                 return null; // return empty, an empty layer list can never produce any attributes
             var attributes = new IDictionary<Guid, IDictionary<string, CIAttribute>>[layers.Length];
             var i = 0;
-            foreach (var layerID in layers) // TODO: rework for GetAttribute() to support multi layers
+            foreach (var layerID in layers) // TODO: rework for GetFullBinaryAttribute() to support multi layers
             {
-                CIAttribute? a;
-                if (fullBinary)
-                    a = await baseModel.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
-                else
-                    a = await baseModel.GetAttribute(name, ciid, layerID, trans, atTime);
+                CIAttribute? a = await baseModel.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
                 if (a != null)
                     attributes[i++] = new Dictionary<Guid, IDictionary<string, CIAttribute>>() { { ciid, new Dictionary<string, CIAttribute>() { { a.Name, a } } } };
                 else
@@ -189,10 +176,6 @@ namespace Omnikeeper.Model
             return await baseModel.GetAttributesOfChangeset(changesetID, trans);
         }
 
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await baseModel.GetAttribute(name, ciid, layerID, trans, atTime);
-        }
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await baseModel.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
@@ -201,11 +184,6 @@ namespace Omnikeeper.Model
         public async Task<IDictionary<Guid, CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await baseModel.FindAttributesByFullName(name, selection, layerID, trans, atTime);
-        }
-
-        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await baseModel.FindCIIDsWithAttribute(name, selection, layerID, trans, atTime);
         }
 
         public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)

@@ -61,18 +61,13 @@ namespace Tests.Integration.Controller
                 trans.Commit();
             }
 
-            var ma1 = await attributeController.GetMergedAttribute(ciid1, "a1", new string[] { layerID1 });
+            var ma2 = await attributeController.GetMergedAttributes(new Guid[] { ciid1, ciid2 }, new string[] { layerID1 });
 
             var expectedAttribute1 = CIAttributeDTO.Build(
                 new MergedCIAttribute(
                     new CIAttribute(attribute1ID, "a1", ciid1, new AttributeScalarValueText("text1"), AttributeState.New, changesetID),
                     new string[] { layerID1 }
                 ));
-            (ma1.Result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedAttribute1, options => options.WithStrictOrdering());
-
-
-            var ma2 = await attributeController.GetMergedAttributes(new Guid[] { ciid1, ciid2 }, new string[] { layerID1 });
-
             var expectedAttribute2 = CIAttributeDTO.Build(
                 new MergedCIAttribute(
                     new CIAttribute(attribute2ID, "a2", ciid2, new AttributeScalarValueText("text2"), AttributeState.New, changesetID),

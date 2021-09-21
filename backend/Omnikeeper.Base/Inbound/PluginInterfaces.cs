@@ -101,7 +101,6 @@ namespace Omnikeeper.Base.Inbound
     {
         IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime, string? nameRegexFilter = null);
         IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, TimeThreshold atTime);
-        Task<CIAttribute?> GetAttribute(string name, Guid ciid, TimeThreshold atTime);
         Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime);
         IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime);
         Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, TimeThreshold atTime);
@@ -114,7 +113,6 @@ namespace Omnikeeper.Base.Inbound
 
         IAsyncEnumerable<(CIAttribute attribute, string layerID)> GetAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null);
         IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime);
-        Task<CIAttribute?> GetAttribute(string name, string layerID, Guid ciid, IModelContext trans, TimeThreshold atTime);
         Task<CIAttribute?> GetFullBinaryAttribute(string name, string layerID, Guid ciid, IModelContext trans, TimeThreshold atTime);
 
         IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime);

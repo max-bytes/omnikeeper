@@ -99,17 +99,6 @@ namespace Omnikeeper.Base.Inbound
                 yield return relation;
         }
 
-        public async Task<CIAttribute?> GetAttribute(string name, string layerID, Guid ciid, IModelContext trans, TimeThreshold atTime)
-        {
-            var layer = await layerModel.GetLayer(layerID, trans);
-            if (layer == null)
-                throw new Exception($"Could not find layer with ID {layerID}");
-            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-
-            if (plugin == null)
-                throw new Exception($"Could not load plugin instance {layer.OnlineInboundAdapterLink.AdapterName}");
-            return await plugin.CreateLayerAccessProxy(layer).GetAttribute(name, ciid, atTime);
-        }
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, string layerID, Guid ciid, IModelContext trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);

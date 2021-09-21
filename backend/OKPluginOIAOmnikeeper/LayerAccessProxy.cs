@@ -99,22 +99,6 @@ namespace OKPluginOIAOmnikeeper
                 yield return a;
         }
 
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
-        {
-            if (!atTime.IsLatest) return null; // TODO: implement historic information
-
-            var externalID = mapper.GetExternalID(ciid);
-            if (externalID == null) return null;
-
-            var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
-            var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
-
-            var attributeDTO = await client.GetMergedAttributeAsync(ciid, name, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion);
-            if (attributeDTO == null) return null;
-
-            return AttributeDTO2Regular(attributeDTO);
-        }
-
         public Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime)
         {
             return Task.FromResult<CIAttribute?>(null); // TODO: not implemented

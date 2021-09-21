@@ -109,15 +109,13 @@ namespace Tests.Integration.Model
 
         private async Task<(EffectiveTraitModel traitModel, LayerSet layerset, Guid[])> BaseSetup()
         {
-            var oap = new Mock<IOnlineAccessProxy>();
-            oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<string>(), It.IsAny<IModelContext>())).ReturnsAsync(false);
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var layerModel = new LayerModel();
-            var traitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, oap.Object, NullLogger<EffectiveTraitModel>.Instance);
+            var traitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, NullLogger<EffectiveTraitModel>.Instance);
 
             var transI = ModelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, transI);

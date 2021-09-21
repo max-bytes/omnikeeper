@@ -18,10 +18,6 @@ namespace Omnikeeper.Base.Model
          */
         Task<IDictionary<Guid, string>> GetMergedCINames(ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime);
 
-        /**
-         * NOTE: unlike IAttributeModel.GetAttribute(), GetMergedAttribute() does NOT return removed attributes
-         */
-        Task<MergedCIAttribute?> GetMergedAttribute(string name, Guid ciid, LayerSet layerset, IModelContext trans, TimeThreshold atTime);
         Task<MergedCIAttribute?> GetFullBinaryMergedAttribute(string name, Guid ciid, LayerSet layerset, IModelContext trans, TimeThreshold atTime);
 
     }

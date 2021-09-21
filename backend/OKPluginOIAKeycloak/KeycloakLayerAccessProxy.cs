@@ -67,22 +67,6 @@ namespace OKPluginOIAKeycloak
             {
                 if (BuildAttribute("keycloak.client_mappings", ciid, AttributeScalarValueJSON.BuildFromString(JsonConvert.SerializeObject(roleMappings.ClientMappings)), changesetID, nameRegex, out var a7)) yield return a7;
             }
-
-        }
-
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
-        {
-            if (!atTime.IsLatest) return null; // we don't have historic information
-
-            var externalID = mapper.GetExternalID(ciid);
-            if (!externalID.HasValue)
-                return null;
-
-            var user = await client.GetUserAsync(realm, externalID.Value.ID);
-            var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.Value.ID);
-
-            var attributes = BuildAttributesFromUser(user, ciid, roleMappings);
-            return attributes.FirstOrDefault(a => a.Name.Equals(name));
         }
 
         public Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime)

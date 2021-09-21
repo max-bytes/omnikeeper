@@ -35,12 +35,6 @@ namespace Omnikeeper.Model.Decorators
             return await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            // TODO: implement
-            return await model.FindCIIDsWithAttribute(name, selection, layerID, trans, atTime);
-        }
-
         public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
@@ -51,16 +45,6 @@ namespace Omnikeeper.Model.Decorators
             }
 
             return await model.GetCINames(selection, layerID, trans, atTime);
-        }
-
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
-            {
-                return await onlineAccessProxy.GetAttribute(name, layerID, ciid, trans, atTime);
-            }
-
-            return await model.GetAttribute(name, ciid, layerID, trans, atTime);
         }
 
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)

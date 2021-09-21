@@ -25,10 +25,6 @@ namespace Omnikeeper.Model
             this.ciidModel = ciidModel;
         }
 
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await _GetAttribute(name, ciid, layerID, trans, atTime, false);
-        }
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await _GetAttribute(name, ciid, layerID, trans, atTime, true);
@@ -419,6 +415,7 @@ namespace Omnikeeper.Model
         }
 
         // TODO: actually needed? check and remove if not
+        [Obsolete]
         public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             selection = await OptimizeCIIDSelection(selection, trans);

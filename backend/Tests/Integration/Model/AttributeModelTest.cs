@@ -67,7 +67,6 @@ namespace Tests.Integration.Model
                 Assert.AreEqual(1, a1.Count());
                 var aa1 = a1.First().Value;
                 Assert.AreEqual(ciid1, aa1.Attribute.CIID);
-                //Assert.AreEqual(layerID1, aa1.Attribute.LayerID);
                 Assert.AreEqual("a1", aa1.Attribute.Name);
                 Assert.AreEqual(AttributeState.Changed, aa1.Attribute.State);
                 Assert.AreEqual(new AttributeScalarValueText("text2"), aa1.Attribute.Value);
@@ -86,11 +85,11 @@ namespace Tests.Integration.Model
                 Assert.AreEqual(0, a2.Count());
 
                 // compare fetching merged vs non-merged: non-merged returns the removed attribute, merged does not
-                var ma3 = await attributeModel.GetMergedAttribute("a1", ciid1, layerset, trans, TimeThreshold.BuildLatest());
-                var a3 = await attributeModel.GetAttribute("a1", ciid1, layerID1, trans, TimeThreshold.BuildLatest());
-                Assert.IsNull(ma3);
-                Assert.IsNotNull(a3);
-                Assert.AreEqual(AttributeState.Removed, a3!.State);
+                var ma3 = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest());
+                var a3 = await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid1), layerset.LayerIDs, true, trans, TimeThreshold.BuildLatest());
+                Assert.AreEqual(0, ma3.Count);
+                Assert.AreEqual(1, a3[0][ciid1].Values.Count);
+                Assert.AreEqual(AttributeState.Removed, a3[0][ciid1].First().Value.State);
 
                 trans.Commit();
             }

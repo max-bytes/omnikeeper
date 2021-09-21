@@ -48,16 +48,9 @@ namespace OKPluginOIASharepoint.Tests
 
             var lap = (oia.CreateLayerAccessProxy(layer) as LayerAccessProxy)!;
 
-            // test single GetAttribute()
+            // test GetAttributes()
             var fakeCIID1 = Guid.NewGuid();
             var fakeCIID2 = Guid.NewGuid();
-            var a = (await lap.GetAttribute("title_attribute", fakeCIID1, new SharepointExternalListItemID(ExternalSharepointListID, new Guid("5c52717c-bcee-4c30-9070-45d85a37dce8"))))!;
-            Assert.AreEqual(fakeCIID1, a.CIID);
-            Assert.AreEqual("title_attribute", a.Name);
-            Assert.AreEqual(LayerAccessProxy.StaticChangesetID, a.ChangesetID);
-            Assert.AreEqual(new AttributeScalarValueText("3"), a.Value);
-
-            // test GetAttributes()
             var aa = await lap.GetAttributes(new List<(Guid, SharepointExternalListItemID)>()
                 {
                     (fakeCIID1, new SharepointExternalListItemID(ExternalSharepointListID, new Guid("5c52717c-bcee-4c30-9070-45d85a37dce8"))),

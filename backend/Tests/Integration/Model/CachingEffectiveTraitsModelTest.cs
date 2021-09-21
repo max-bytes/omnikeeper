@@ -106,7 +106,7 @@ namespace Tests.Integration.Model
             var changesetModel = new ChangesetModel(userModel);
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var layerModel = new LayerModel();
-            var traitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, oap.Object, NullLogger<EffectiveTraitModel>.Instance);
+            var traitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, NullLogger<EffectiveTraitModel>.Instance);
 
             var decoratedTraitModel = new CachingEffectiveTraitModel(traitModel, ciModel, cache, oap.Object);
 
