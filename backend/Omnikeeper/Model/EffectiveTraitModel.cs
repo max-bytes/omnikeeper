@@ -176,20 +176,29 @@ namespace Omnikeeper.Model
             var traitAttribute = genericTrait.RequiredAttributes.FirstOrDefault(a => a.Identifier == traitAttributeIdentifier) ?? genericTrait.OptionalAttributes.FirstOrDefault(a => a.Identifier == traitAttributeIdentifier);
             if (traitAttribute == null) throw new Exception($"Trait Attribute identifier {traitAttribute} does not exist in trait {trait.ID}");
 
+            // NOTE: we had an alternative implementation that used attributeModel.FindCIIDsWithAttributeNameAndValue() to cut down the number of potential CIs
+            // but the implementation for FindCIIDsWithAttributeNameAndValue() was cumbersome and the performance increase was marginal
+            // so, to prioritize a simpler API, we removed this implementation and attributeModel.FindCIIDsWithAttributeNameAndValue() with it
             // get ciids of CIs that contain a fitting attribute (name + value) in ANY of the relevant layers
             // the union of those ciids serves as the ciid selection basis for the next step
-            var attributeName = traitAttribute.AttributeTemplate.Name;
-            var candidateCIIDs = new HashSet<Guid>();
-            foreach (var layerID in layerSet) {
-                var ciids = await attributeModel.FindCIIDsWithAttributeNameAndValue(attributeName, value, ciidSelection, layerID, trans, atTime);
-                candidateCIIDs.UnionWith(ciids);
-            }
+            //var attributeName = traitAttribute.AttributeTemplate.Name;
+            //var candidateCIIDs = new HashSet<Guid>();
+            //foreach (var layerID in layerSet) {
+            //    var ciids = await attributeModel.FindCIIDsWithAttributeNameAndValue(attributeName, value, ciidSelection, layerID, trans, atTime);
+            //    candidateCIIDs.UnionWith(ciids);
+            //}
+            //// now do a full pass to check which ci's REALLY fulfill the trait's requirements
+            //// also check (again) if the final mergedCI fulfills the attribute requirement
+            //var cis = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(candidateCIIDs), layerSet, false, trans, atTime);
+            //var ets = await Resolve(trait, cis, layerSet, trans, atTime);
+            //return ets.Where(t => {
+            //    if (t.Value.et.TraitAttributes.TryGetValue(traitAttributeIdentifier, out var outValue))
+            //        if (outValue.Attribute.Value.Equals(value))
+            //            return true;
+            //    return false;
+            //}).ToDictionary(t => t.Key, t => t.Value);
 
-            // now do a full pass to check which ci's REALLY fulfill the trait's requirements
-            // also check (again) if the final mergedCI fulfills the attribute requirement
-            var cis = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(candidateCIIDs), layerSet, false, trans, atTime);
-
-            var ets = await Resolve(trait, cis, layerSet, trans, atTime);
+            var ets = await GetEffectiveTraitsForTrait(trait, layerSet, new AllCIIDsSelection(), trans, atTime);
             return ets.Where(t => {
                 if (t.Value.et.TraitAttributes.TryGetValue(traitAttributeIdentifier, out var outValue))
                     if (outValue.Attribute.Value.Equals(value))

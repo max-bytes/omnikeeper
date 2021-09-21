@@ -152,6 +152,11 @@ namespace Omnikeeper.Base.Generator
             // setup, TODO: move
             var generators = new Dictionary<string, Generator>()
             {
+                { "generator_test_01", new Generator(new LayerSet("testlayer01"), new GeneratorSelectorByTrait("cmdb.cust.intern"), new List<GeneratorItem>()
+                    {
+                        new GeneratorItem("generated_attribute", GeneratorAttributeValue.Build("{{ a.hostname|string.upcase }}"))
+                    })
+                }
                 //{ "host_set_name_from_hostname", new Generator(new LayerSet(1), new GeneratorSelectorByTrait("host"), new List<GeneratorItem>()
                 //    {
                 //        new GeneratorItem(ICIModel.NameAttribute, GeneratorAttributeValue.Build("{{ a.hostname|string.upcase }}"))
@@ -163,13 +168,13 @@ namespace Omnikeeper.Base.Generator
             // setup, TODO: move
             var appliedGenerators = new Dictionary<string, List<Generator>>
             {
-                //{
-                //    2,
-                //    new List<Generator>()
-                //    {
-                //        generators["host_set_name_from_hostname"]
-                //    }
-                //}
+                {
+                    "testlayer01",
+                    new List<Generator>()
+                    {
+                        generators["generator_test_01"]
+                    }
+                }
             };
 
             var effectiveGeneratorItems = new List<(GeneratorItem, MergedCI)>();

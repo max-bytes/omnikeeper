@@ -229,7 +229,7 @@ namespace Omnikeeper.Startup
 
             if (enabledGenerators)
             {
-                //services.Decorate<IBaseAttributeModel, GeneratingBaseAttributeModel>();
+                services.Decorate<IBaseAttributeModel, GeneratingBaseAttributeModel>();
             }
         }
 

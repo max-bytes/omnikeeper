@@ -158,7 +158,8 @@ namespace Omnikeeper.Model
             var i = 0;
             foreach (var layerID in layers)
             {
-                var la = await baseModel.GetCINames(selection, layerID, trans, atTime);
+                var attributes = await FindAttributesByFullName(ICIModel.NameAttribute, selection, layerID, trans, atTime);
+                var la = attributes.ToDictionary(a => a.Key, a => a.Value.Value.Value2String());
                 names[i++] = (la, layerID);
             }
 
@@ -199,16 +200,6 @@ namespace Omnikeeper.Model
         public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
             return await baseModel.BulkReplaceAttributes(data, changeset, origin, trans);
-        }
-
-        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await baseModel.GetCINames(selection, layerID, trans, atTime);
-        }
-
-        public async Task<IEnumerable<Guid>> FindCIIDsWithAttributeNameAndValue(string name, IAttributeValue value, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await baseModel.FindCIIDsWithAttributeNameAndValue(name, value, selection, layerID, trans, atTime);
         }
     }
 }

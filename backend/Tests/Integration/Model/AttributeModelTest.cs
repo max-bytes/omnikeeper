@@ -339,52 +339,6 @@ namespace Tests.Integration.Model
             Assert.AreEqual(1, a5.Count());
         }
 
-
-        [Test]
-        public async Task TestFindCIIDsWithAttributeNameAndValue()
-        {
-            var userModel = new UserInDatabaseModel();
-            var changesetModel = new ChangesetModel(userModel);
-            var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
-            var model = new CIModel(attributeModel, new CIIDModel());
-            var layerModel = new LayerModel();
-            using var trans = ModelContextBuilder.BuildDeferred();
-            var user = await DBSetup.SetupUser(userModel, trans);
-
-            var ciid1 = await model.CreateCI(trans);
-            var ciid2 = await model.CreateCI(trans);
-            var layer1 = await layerModel.UpsertLayer("l1", trans);
-            var layer2 = await layerModel.UpsertLayer("l2", trans);
-
-            var layerset1 = new LayerSet(new string[] { layer2.ID, layer1.ID });
-
-            var changeset1 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-            var (a1, _) = await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);
-            await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid1, layer1.ID, changeset1, new DataOriginV1(DataOriginType.Manual), trans);
-
-            var changeset2 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-            var (a2, _) = await attributeModel.InsertAttribute("a1", AttributeArrayValueText.BuildFromString(new string[] { "textL2", "textL3" }), ciid1, layer2.ID, changeset2, new DataOriginV1(DataOriginType.Manual), trans);
-
-            var changeset3 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-            await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
-            await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
-
-            var changeset4 = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
-            await attributeModel.InsertAttribute("a2", new AttributeScalarValueText("textL1"), ciid1, layer2.ID, changeset4, new DataOriginV1(DataOriginType.Manual), trans);
-
-            var ciids1 = await attributeModel.FindCIIDsWithAttributeNameAndValue("a1", new AttributeScalarValueText("textL1"), new AllCIIDsSelection(), layer1.ID, trans, TimeThreshold.BuildLatest());
-            Assert.AreEqual(1, ciids1.Count());
-            Assert.AreEqual(a1.CIID, ciids1.First());
-
-            var ciids2 = await attributeModel.FindCIIDsWithAttributeNameAndValue("a1", AttributeArrayValueText.BuildFromString(new string[] { "textL2", "textL3" }), new AllCIIDsSelection(), layer2.ID, trans, TimeThreshold.BuildLatest());
-            Assert.AreEqual(1, ciids2.Count());
-            Assert.AreEqual(a2.CIID, ciids2.First());
-
-            var ciids3 = await attributeModel.FindCIIDsWithAttributeNameAndValue("a2", new AttributeScalarValueText("textL1"), new AllCIIDsSelection(), layer2.ID, trans, TimeThreshold.BuildLatest());
-            Assert.AreEqual(2, ciids3.Count());
-            ciids3.Should().BeEquivalentTo(new Guid[] { ciid1, ciid2 }, options => options.WithoutStrictOrdering());
-        }
-
         [Test]
         public async Task TestBulkReplace()
         {
