@@ -507,6 +507,7 @@ namespace Tests.Integration.Model
 
             var a4 = (await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), layerset4, trans, TimeThreshold.BuildLatest())).SelectMany(t => t.Value.Values);
             Assert.AreEqual(1, a4.Count());
+            a4.First().LayerStackIDs.Should().BeEquivalentTo(new string[] { layer2.ID, layer1.ID }, config => config.WithStrictOrdering());
             Assert.AreEqual(new AttributeScalarValueText("textL2"), a4.First().Attribute.Value);
         }
 

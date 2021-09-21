@@ -99,7 +99,7 @@ export function InputControl(props) {
                     style={{ flexGrow: 1, alignSelf: "center" }}
                     autoFocus={props.autoFocus}
                     disabled={props.disabled}
-                    placeholder={props.disabled ? "[Empty]" : "Enter value"}
+                    placeholder={props.disabled ? "[Empty]" : "[Empty], enter value"}
                     value={props.value ?? ""}
                     onChange={(e) => props.onChange(e.target.value)}
                     autoSize={{ minRows: 3, maxRows: 5 }}
@@ -115,7 +115,7 @@ export function InputControl(props) {
                     {...attributeType2InputProps(props.type)}
                     autoFocus={props.autoFocus}
                     disabled={props.disabled}
-                    placeholder={props.disabled ? "[Empty]" : "Enter value"}
+                    placeholder={props.disabled ? "[Empty]" : "[Empty], enter value"}
                     value={props.value ?? ""}
                     onChange={(e) => props.onChange(e.target.value)}
                 />

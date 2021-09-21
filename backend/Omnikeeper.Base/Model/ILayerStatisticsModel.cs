@@ -11,5 +11,7 @@ namespace Omnikeeper.Base.Model
         Task<long> GetActiveRelations(Layer layer, IModelContext trans);
         Task<long> GetRelationChangesHistory(Layer layer, IModelContext trans);
         Task<long> GetLayerChangesetsHistory(Layer layer, IModelContext trans);
+
+        Task<bool> IsLayerEmpty(Layer layer, IModelContext trans);
     }
 }

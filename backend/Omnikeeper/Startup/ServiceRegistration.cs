@@ -27,6 +27,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
+using GraphQL.DataLoader;
 
 namespace Omnikeeper.Startup
 {
@@ -239,6 +240,8 @@ namespace Omnikeeper.Startup
             services.AddSingleton<ISchema, GraphQLSchema>();
             services.AddSingleton<IDocumentExecuter, MyDocumentExecutor>(); // custom document executor that does serial queries, required by postgres
             services.AddSingleton<IDocumentWriter, DocumentWriter>();
+            services.AddSingleton<IDataLoaderContextAccessor, DataLoaderContextAccessor>();
+            services.AddSingleton<DataLoaderDocumentListener>();
         }
     }
 }

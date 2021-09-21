@@ -38,6 +38,8 @@ namespace Omnikeeper.Base.Entity
         public IImmutableSet<string> AncestorTraits { get; set; }
         public IImmutableList<TraitAttribute> RequiredAttributes { get; set; }
         public IImmutableList<TraitAttribute> OptionalAttributes { get; set; }
+
+        // TODO: split into outgoing and incoming relations, remove DirectionForward from TraitTemplate
         public IImmutableList<TraitRelation> RequiredRelations { get; set; }
         public IImmutableList<TraitRelation> OptionalRelations { get; set; }
 

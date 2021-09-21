@@ -4,6 +4,7 @@ import _ from 'lodash';
 import LayerIcon from "components/LayerIcon";
 import OriginPopup from "components/OriginPopup";
 import { CIID } from "utils/uuidRenderers";
+import { Link } from "react-router-dom";
 
 const { Text } = Typography;
 
@@ -16,8 +17,9 @@ export default function Relation(props) {
     <i>{predicate.wordingFrom}</i>
   : <i style={{textDecorationStyle: 'dashed', textDecorationColor: 'red', textDecorationThickness: '1px', textDecorationLine: 'underline'}}>{relation.predicateID}</i>;
 
-  const fromCIButton = <CIID id={relation.fromCIID} link={true} />;
-  const toCIButton = <CIID id={relation.toCIID} link={true} />;
+  // TODO: merged with CIID component(?)
+  const fromCIButton = (relation.fromCIName) ? <Link to={"/explorer/" + relation.fromCIID}>{relation.fromCIName}</Link> : <CIID id={relation.fromCIID} link={true} />;
+  const toCIButton = (relation.toCIName) ? <Link to={"/explorer/" + relation.toCIID}>{relation.toCIName}</Link> : <CIID id={relation.toCIID} link={true} />;
 
   const removed = relation.state === 'REMOVED';
   const written = <span>{fromCIButton}{` `}{predicateWording}{` `}{toCIButton}</span>;

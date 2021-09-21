@@ -7,14 +7,15 @@ namespace Omnikeeper.Base.Entity
     {
         [ProtoMember(1)] public readonly string PredicateID;
 
-        [ProtoMember(2)] public readonly int? MinCardinality;
-        [ProtoMember(3)] public readonly int? MaxCardinality;
+        [ProtoMember(2)] public readonly bool DirectionForward;
 
-        // TODO: directionality: forward, backward, both
+        [ProtoMember(3)] public readonly int? MinCardinality;
+        [ProtoMember(4)] public readonly int? MaxCardinality;
 
-        public RelationTemplate(string predicateID, int? minCardinality, int? maxCardinality)
+        public RelationTemplate(string predicateID, bool directionForward, int? minCardinality, int? maxCardinality)
         {
             PredicateID = predicateID;
+            DirectionForward = directionForward;
             MinCardinality = minCardinality;
             MaxCardinality = maxCardinality;
         }

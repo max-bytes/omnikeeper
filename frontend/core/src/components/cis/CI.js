@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types'
 import { Row, Col } from "antd";
 import AddNewAttribute from './AddNewAttribute';
@@ -14,7 +14,6 @@ const { TabPane } = Tabs;
 
 function CI(props) {
 
-  const [createNewAttribute, setCreateNewAttribute] = useState(undefined);
   const { data: visibleAndWritableLayers } = useExplorerLayers(true, true);
   const { data: visibleLayers } = useExplorerLayers(true);
 
@@ -22,7 +21,7 @@ function CI(props) {
     <TabPane tab={<CountBadge count={props.ci.mergedAttributes.length}>Attributes</CountBadge>} key="attributes">
       <Row>
         <Col span={24}>
-          <AddNewAttribute prefilled={createNewAttribute} isEditable={props.isEditable} ciIdentity={props.ci.id}></AddNewAttribute>
+          <AddNewAttribute isEditable={props.isEditable} ciIdentity={props.ci.id}></AddNewAttribute>
         </Col>
       </Row>
       <Row>
@@ -33,8 +32,11 @@ function CI(props) {
       </Row>
     </TabPane>
 
-    <TabPane tab={<CountBadge count={props.ci.related.length}>Relations</CountBadge>} key="relations">
-      <CIRelations relatedCIs={props.ci.related} isEditable={props.isEditable} ciIdentity={props.ci.id} />
+    <TabPane tab={<CountBadge count={props.ci.outgoingMergedRelations.length}>Outgoing Relations</CountBadge>} key="outgoingRelations">
+      <CIRelations mergedRelations={props.ci.outgoingMergedRelations} isEditable={props.isEditable} areOutgoingRelations={true} ciIdentity={props.ci.id} />
+    </TabPane>
+    <TabPane tab={<CountBadge count={props.ci.incomingMergedRelations.length}>Incoming Relations</CountBadge>} key="incomingRelations">
+      <CIRelations mergedRelations={props.ci.incomingMergedRelations} isEditable={props.isEditable} areOutgoingRelations={false} ciIdentity={props.ci.id} />
     </TabPane>
     <TabPane tab={<CountBadge count={props.ci.effectiveTraits.length}>Effective Traits</CountBadge>} key="effectiveTraits">
       <EffectiveTraits timeThreshold={props.timeThreshold} traits={props.ci.effectiveTraits} ciIdentity={props.ci.id} />

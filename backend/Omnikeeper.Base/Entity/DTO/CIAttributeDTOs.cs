@@ -24,6 +24,11 @@ namespace Omnikeeper.Base.Entity.DTO
             var DTOValue = AttributeValueDTO.Build(attribute.Attribute.Value);
             return Build(attribute.Attribute.ID, attribute.Attribute.Name, DTOValue, attribute.Attribute.CIID, attribute.Attribute.State);
         }
+        public static CIAttributeDTO Build(CIAttribute attribute)
+        {
+            var DTOValue = AttributeValueDTO.Build(attribute.Value);
+            return Build(attribute.ID, attribute.Name, DTOValue, attribute.CIID, attribute.State);
+        }
         private static CIAttributeDTO Build(Guid id, string name, AttributeValueDTO value, Guid ciid, AttributeState state)
         {
             return new CIAttributeDTO

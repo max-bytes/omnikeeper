@@ -41,13 +41,13 @@ namespace Omnikeeper.Model
 
         public async Task<IEnumerable<CompactCI>> AdvancedSearchForCompactCIs(string searchString, string[] withEffectiveTraits, string[] withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
-            var cis = await _AdvancedSearch(searchString, withEffectiveTraits, withoutEffectiveTraits, layerSet, trans, atTime);
+            var cis = await _AdvancedSearchForCompactCIs(searchString, withEffectiveTraits, withoutEffectiveTraits, layerSet, trans, atTime);
 
             // HACK, properly sort unnamed CIs
             return cis.OrderBy(t => t.Name ?? "ZZZZZZZZZZZ");
         }
 
-        private async Task<IEnumerable<CompactCI>> _AdvancedSearch(string searchString, string[] withEffectiveTraits, string[] withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
+        private async Task<IEnumerable<CompactCI>> _AdvancedSearchForCompactCIs(string searchString, string[] withEffectiveTraits, string[] withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             var finalSS = searchString.Trim();
             ICIIDSelection ciSelection;
@@ -92,8 +92,14 @@ namespace Omnikeeper.Model
         public async Task<IEnumerable<MergedCI>> SearchForMergedCIsByTraits(ICIIDSelection ciidSelection, string[] withEffectiveTraits, string[] withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             var activeTraits = await traitsProvider.GetActiveTraits(trans, atTime);
-            var requiredTraits = activeTraits.Values.Where(t => withEffectiveTraits.Contains(t.ID));
-            var requiredNonTraits = activeTraits.Values.Where(t => withoutEffectiveTraits.Contains(t.ID));
+            //var requiredTraits = withEffectiveTraits.Select(et => activeTraits.GetOrWithClass(et, null)).Where(at => at != null);
+
+            IEnumerable<ITrait> requiredTraits = activeTraits.Values.Where(t => withEffectiveTraits.Contains(t.ID)).ToList();
+            IEnumerable<ITrait> requiredNonTraits = activeTraits.Values.Where(t => withoutEffectiveTraits.Contains(t.ID)).ToList();
+            if (requiredTraits.Count() < withEffectiveTraits.Length)
+                throw new Exception($"Encountered unknown trait(s): {string.Join(",", withEffectiveTraits.Except(requiredTraits.Select(t => t.ID)))}");
+            if (requiredNonTraits.Count() < withoutEffectiveTraits.Length)
+                throw new Exception($"Encountered unknown trait(s): {string.Join(",", withoutEffectiveTraits.Except(requiredNonTraits.Select(t => t.ID)))}");
 
             if (ReduceTraitRequirements(ref requiredTraits, ref requiredNonTraits))
                 return ImmutableList<MergedCI>.Empty; // bail completely
@@ -107,13 +113,7 @@ namespace Omnikeeper.Model
                 }
                 else
                 {
-                    var reduced = new List<MergedCI>();
-                    foreach (var ci in workCIs)
-                    {
-                        if (await traitModel.DoesCIHaveTrait(ci, requiredTrait, trans, atTime))
-                            reduced.Add(ci);
-                    }
-                    workCIs = reduced;
+                    workCIs = await traitModel.FilterCIsWithTrait(workCIs, requiredTrait, layerSet, trans, atTime);
                 }
             }
 
@@ -124,7 +124,7 @@ namespace Omnikeeper.Model
                     if (requiredNonTrait.ID == TraitEmpty.StaticID)
                     {
                         // treat empty trait special, because its simply GetMergedCIs with includeEmptyCIs: false
-                        workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: true, trans, atTime);
+                        workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: false, trans, atTime);
                     }
                     else
                     {
@@ -143,11 +143,20 @@ namespace Omnikeeper.Model
                 }
                 else
                 {
+
+                    var cisToFilterOut = await traitModel.FilterCIsWithTrait(workCIs, requiredNonTrait, layerSet, trans, atTime);
+
+                    // HACK: this relies on the order of cisToFilterOut to be the same as the passed in workCIs
                     var reduced = new List<MergedCI>();
                     foreach (var ci in workCIs)
                     {
-                        if (!await traitModel.DoesCIHaveTrait(ci, requiredNonTrait, trans, atTime))
+                        var ciToFilterOut = cisToFilterOut.FirstOrDefault();
+                        if (ciToFilterOut == null)
                             reduced.Add(ci);
+                        else if (ciToFilterOut != ci)
+                            reduced.Add(ci);
+                        else
+                            cisToFilterOut = cisToFilterOut.Skip(1);
                     }
                     workCIs = reduced;
                 }

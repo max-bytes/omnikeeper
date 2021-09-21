@@ -1,7 +1,4 @@
 import React, { useState } from 'react';
-import { Link  } from 'react-router-dom'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { useQuery, useMutation } from '@apollo/client';
 import { queries } from '../../graphql/queries_manage'
 import { mutations } from '../../graphql/mutations_manage'
@@ -30,10 +27,9 @@ export default function ManageODataAPIContexts(props) {
       cellEditorParams: { maxLength: 999999, cols: 120 }  }
   ];
 
-  return <div style={{ display: 'flex', flexDirection: 'column', padding: '10px', height: '100%' }}>
+  return <>
     <h2>OData API Contexts</h2>
     <p>OData API url: https://[instance]/backend/api/odata/[context ID]</p>
-    <div style={{marginBottom: '10px'}}><Link to="."><FontAwesomeIcon icon={faChevronLeft} /> Back</Link></div>
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
     deletableRows={true}
@@ -51,5 +47,5 @@ export default function ManageODataAPIContexts(props) {
           .then(r => ({result: r.data.manage_upsertODataAPIContext, id: row.id}))
           .catch(e => ({result: e, id: row.id }));
       }} />
-  </div>;
+  </>;
 }

@@ -2,14 +2,6 @@ import gql from 'graphql-tag';
 import { Fragments } from './fragments';
 
 export const queries = {
-    CIList: gql`
-        query($layers: [String]!) {
-            compactCIs(layers: $layers) {
-              ...CompactCI
-            }
-          }
-        ${Fragments.compactCI}
-    `,
     PredicateList: gql`
         query {
             predicates {
@@ -19,13 +11,13 @@ export const queries = {
         ${Fragments.fullPredicate}
     `,
 
-    AdvancedSearchCIs: gql`
+    AdvancedSearchCompactCIs: gql`
         query($searchString: String!, $withEffectiveTraits: [String]!, $withoutEffectiveTraits: [String]!, $layers: [String]!) {
-            advancedSearchCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits, withoutEffectiveTraits: $withoutEffectiveTraits, layers: $layers) {
-                ...CompactCI
+            advancedSearchCompactCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits, withoutEffectiveTraits: $withoutEffectiveTraits, layers: $layers) {
+                id
+                name
             }
         }
-        ${Fragments.compactCI}
     `,
     ActiveTraits: gql`
         query {
@@ -56,25 +48,25 @@ export const queries = {
     `,
 
     FullCI: gql`
-        query($ciid: Guid!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
+        query($ciid: Guid!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
             ci(ciid: $ciid, layers: $layers, timeThreshold: $timeThreshold) {
                 ...FullCI
             }
         }
-        ${Fragments.compactCI}
-        ${Fragments.relatedCI}
+        ${Fragments.outgoingMergedRelation}
+        ${Fragments.incomingMergedRelation}
         ${Fragments.fullCI}
         ${Fragments.mergedAttribute}
         ${Fragments.attribute}
     `,
     FullCIs: gql`
-        query($ciids: [Guid], $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
+        query($ciids: [Guid], $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
             cis(ciids: $ciids, layers: $layers, timeThreshold: $timeThreshold) {
                 ...FullCI
             }
         }
-        ${Fragments.compactCI}
-        ${Fragments.relatedCI}
+        ${Fragments.outgoingMergedRelation}
+        ${Fragments.incomingMergedRelation}
         ${Fragments.fullCI}
         ${Fragments.mergedAttribute}
         ${Fragments.attribute}
@@ -125,7 +117,7 @@ export const queries = {
             }`,
     BasicChangeset: gql`
         query($id: Guid!) {
-            changeset(id: $id) {
+            changeset(id: $id, layers: []) {
                 id
                 timestamp
                 user {
@@ -139,8 +131,8 @@ export const queries = {
             }
         }`,
     FullChangeset: gql`
-        query($id: Guid!) {
-            changeset(id: $id) {
+        query($id: Guid!, $layers:[String]!) {
+            changeset(id: $id, layers: $layers) {
                 id
                 timestamp
                 user {
@@ -160,12 +152,18 @@ export const queries = {
                     ...FullAttribute
                 }
                 relations {
-                    ...Relation
+                    id
+                    fromCIID
+                    toCIID
+                    fromCIName
+                    toCIName
+                    predicateID
+                    changesetID
+                    state
                 }
             }
         }
         ${Fragments.attribute}
-        ${Fragments.relation}
         `,
     SelectedTimeThreshold: gql`
         query {

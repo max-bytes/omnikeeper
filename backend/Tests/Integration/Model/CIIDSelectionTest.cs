@@ -7,6 +7,30 @@ namespace Tests.Integration.Model
     class CIIDSelectionTest
     {
         [Test]
+        public void TestUnionAll()
+        {
+            var ga = Guid.NewGuid();
+            var gb = Guid.NewGuid();
+            var gc = Guid.NewGuid();
+
+            Assert.AreEqual(
+                SpecificCIIDsSelection.Build(ga, gb, gc),
+                CIIDSelectionExtensions.UnionAll(new[] { SpecificCIIDsSelection.Build(ga), SpecificCIIDsSelection.Build(ga, gb, gc) }));
+            Assert.AreEqual(
+                new AllCIIDsSelection(),
+                CIIDSelectionExtensions.UnionAll(new[] { SpecificCIIDsSelection.Build(ga), new AllCIIDsSelection() }));
+            Assert.AreEqual(
+                SpecificCIIDsSelection.Build(ga, gb),
+                CIIDSelectionExtensions.UnionAll(new[] { SpecificCIIDsSelection.Build(ga), SpecificCIIDsSelection.Build(ga, gb), new NoCIIDsSelection() }));
+            Assert.AreEqual(
+                AllCIIDsExceptSelection.Build(gb),
+                CIIDSelectionExtensions.UnionAll(new[] { SpecificCIIDsSelection.Build(ga), AllCIIDsExceptSelection.Build(ga, gb) }));
+            Assert.AreEqual(
+                new AllCIIDsSelection(),
+                CIIDSelectionExtensions.UnionAll(new[] { SpecificCIIDsSelection.Build(ga), AllCIIDsExceptSelection.Build(ga, gb), new AllCIIDsSelection() }));
+        }
+
+        [Test]
         public void TestExcept()
         {
             var ga = Guid.NewGuid();

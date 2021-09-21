@@ -4,20 +4,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Omnikeeper.Base.Entity.DTO
 {
-    public class RelatedCIDTO
-    {
-        [Required] public Guid FromCIID { get; set; }
-        [Required] public Guid ToCIID { get; set; }
-        [Required] public string PredicateID { get; set; }
-
-        public RelatedCIDTO(CompactRelatedCI relatedCI)
-        {
-            FromCIID = relatedCI.FromCIID;
-            ToCIID = relatedCI.ToCIID;
-            PredicateID = relatedCI.PredicateID;
-        }
-    }
-
     public class RelationDTO
     {
         [JsonConstructor]
@@ -44,6 +30,17 @@ namespace Omnikeeper.Base.Entity.DTO
                 r.Relation.ToCIID,
                 r.Relation.PredicateID,
                 r.Relation.State
+            );
+        }
+
+        public static RelationDTO BuildFromRelation(Relation r)
+        {
+            return new RelationDTO(
+                r.ID,
+                r.FromCIID,
+                r.ToCIID,
+                r.PredicateID,
+                r.State
             );
         }
     }

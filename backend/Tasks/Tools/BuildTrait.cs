@@ -16,6 +16,9 @@ namespace Tasks.Tools
                         new TraitAttribute("hostname",
                             CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )
+                    }, requiredRelations: new List<TraitRelation>()
+                    {
+                        new TraitRelation("runs_on", new RelationTemplate("runs_on", false, 1, null))
                     });
 
             var json = RecursiveTrait.Serializer.SerializeToString(trait);

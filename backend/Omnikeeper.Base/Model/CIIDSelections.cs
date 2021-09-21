@@ -133,6 +133,39 @@ namespace Omnikeeper.Base.Model
             };
         }
 
+        public static ICIIDSelection UnionAll(IEnumerable<ICIIDSelection> selections)
+        {
+            var specific = new HashSet<Guid>();
+            HashSet<Guid>? allExcept = null;
+            foreach(var selection in selections)
+            {
+                switch (selection)
+                {
+                    case AllCIIDsSelection a:
+                        return a;
+                    case SpecificCIIDsSelection s:
+                        specific.UnionWith(s.CIIDs);
+                        break;
+                    case NoCIIDsSelection _:
+                        break;
+                    case AllCIIDsExceptSelection e:
+                        if (allExcept == null)
+                            allExcept = new HashSet<Guid>(e.ExceptCIIDs);
+                        else
+                            allExcept.IntersectWith(e.ExceptCIIDs);
+                        break;
+                }
+            }
+
+            if (allExcept != null)
+            {
+                return AllCIIDsExceptSelection.Build(allExcept.Except(specific).ToArray());
+            } else
+            {
+                return SpecificCIIDsSelection.Build(specific);
+            }
+        }
+
         public static ICIIDSelection Except(this ICIIDSelection selection, ICIIDSelection other)
         {
             return selection switch

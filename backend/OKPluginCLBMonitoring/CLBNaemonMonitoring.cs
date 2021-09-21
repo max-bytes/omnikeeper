@@ -48,7 +48,7 @@ namespace OKPluginCLBMonitoring
             var layerSetAll = await layerModel.BuildLayerSet(new[] { "CMDB", "Inventory Scan", "Monitoring Definitions" }, trans);
 
 
-            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
+            var allHasMonitoringModuleRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(hasMonitoringModulePredicate), layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
 
             // prepare contact groups
             var cgr = new ContactgroupResolver(relationModel, ciModel, traitModel, logger, errorHandler);
@@ -77,7 +77,7 @@ namespace OKPluginCLBMonitoring
 
                 var monitoringModuleCI = monitoringModuleCIs[p.Relation.ToCIID];
 
-                var monitoringModuleET = await traitModel.GetEffectiveTraitForCI(monitoringModuleCI, Traits.ModuleFlattened, trans, changesetProxy.TimeThreshold);
+                var monitoringModuleET = await traitModel.GetEffectiveTraitForCI(monitoringModuleCI, Traits.ModuleFlattened, layerSetMonitoringDefinitionsOnly, trans, changesetProxy.TimeThreshold);
                 if (monitoringModuleET == null)
                 {
                     logger.LogError($"Expected CI {monitoringModuleCI.ID} to have trait \"{Traits.ModuleFlattened.ID}\"");
@@ -268,7 +268,7 @@ namespace OKPluginCLBMonitoring
 
             public async Task Setup(LayerSet layerSetAll, string belongsToNaemonContactgroup, ITrait contactgroupTrait, IModelContext trans, TimeThreshold timeThreshold)
             {
-                var contactGroupRelations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(belongsToNaemonContactgroup), layerSetAll, trans, timeThreshold);
+                var contactGroupRelations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(belongsToNaemonContactgroup), layerSetAll, trans, timeThreshold);
                 if (contactGroupRelations.IsEmpty())
                 {
                     contactGroupsMap = new Dictionary<Guid, IEnumerable<MergedCI>>();
@@ -279,7 +279,7 @@ namespace OKPluginCLBMonitoring
                     contactGroupsMap = contactGroupRelations.GroupBy(r => r.Relation.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.Relation.ToCIID]));
                     foreach (var ci in contactGroupsMap.Values.SelectMany(t => t).Distinct())
                     {
-                        var et = await traitModel.GetEffectiveTraitForCI(ci, contactgroupTrait, trans, timeThreshold);
+                        var et = await traitModel.GetEffectiveTraitForCI(ci, contactgroupTrait, layerSetAll, trans, timeThreshold);
                         if (et != null)
                         {
                             var name = (et.TraitAttributes["name"].Attribute.Value as AttributeScalarValueText)?.Value;

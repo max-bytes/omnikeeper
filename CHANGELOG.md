@@ -19,6 +19,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [1.5.1] - 2021-09-20
+
+### Added
+- gridview: support for columns from related CI attributes via `sourceAttributePath`. F.e, specify `sourceAttributePath: [">", "runs_on"]` in addition to `sourceAttributeName` to show attribute of CI related via a forward relation with predicate `runs_on`
+- implemented layer importing and exporting
+- frontend: added GraphiQL playground
+- frontend: improved layer operations view
+- frontend: added breadcrumb navigation throughout frontend, removed back buttons
+- big performance improvements when fetching CIs using large list of selected ciids by using CTEs (common table expressions) instead of Postgres arrays
+- big performance improvements by introducing dataloader for GraphQL, batching database calls together
+- performance improvements for various data fetching methods 
+- performance improvements and memory improvements in data ingest
+- performance improvements for effective trait calculations
+
+### Changed
+- split relations into outgoing and incoming relations in both backend, frontend and GraphQL API
+- gridview: introduced proper column IDs instead of relying on attribue name being unique
+- frontend: reduced network traffic when performing CI searches
+
+### Fixed
+- bugfixes in data ingest code
+- frontend: fixed layout issues
+
 ## [1.4.1] - 2021-09-09
 
 ### Fixed

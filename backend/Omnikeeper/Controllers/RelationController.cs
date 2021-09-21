@@ -80,7 +80,7 @@ namespace Omnikeeper.Controllers
             if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
                 return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
 
-            var relations = await relationModel.GetMergedRelations(new RelationSelectionWithPredicate(predicateID), layerset, trans, timeThreshold);
+            var relations = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(predicateID), layerset, trans, timeThreshold);
             relations = relations.Where(r => ciBasedAuthorizationService.CanReadAllCIs(new Guid[] { r.Relation.FromCIID, r.Relation.ToCIID }, out _));
             return Ok(relations.Select(r => RelationDTO.BuildFromMergedRelation(r)));
         }
@@ -102,7 +102,7 @@ namespace Omnikeeper.Controllers
             if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
                 return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
 
-            var relations = await relationModel.GetMergedRelations(new RelationSelectionAll(), layerset, trans, timeThreshold);
+            var relations = await relationModel.GetMergedRelations(RelationSelectionAll.Instance, layerset, trans, timeThreshold);
             relations = relations.Where(r => ciBasedAuthorizationService.CanReadAllCIs(new Guid[] { r.Relation.FromCIID, r.Relation.ToCIID }, out _));
             return Ok(relations.Select(r => RelationDTO.BuildFromMergedRelation(r)));
         }
@@ -126,7 +126,7 @@ namespace Omnikeeper.Controllers
 
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
-            var relations = await relationModel.GetMergedRelations(new RelationSelectionFrom(fromCIID), layerset, trans, timeThreshold);
+            var relations = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(fromCIID), layerset, trans, timeThreshold);
             relations = relations.Where(r => ciBasedAuthorizationService.CanReadCI(r.Relation.ToCIID)); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
             return Ok(relations.Select(r => RelationDTO.BuildFromMergedRelation(r)));
         }
@@ -139,6 +139,7 @@ namespace Omnikeeper.Controllers
         /// <param name="atTime"></param>
         /// <returns></returns>
         [HttpGet("getMergedRelationsFromOrToCI")]
+        [Obsolete]
         public async Task<ActionResult<IEnumerable<RelationDTO>>> GetMergedRelationsFromOrToCI([FromQuery, Required] Guid ciid, [FromQuery, Required] string[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
         {
             var trans = modelContextBuilder.BuildImmediate();
@@ -150,7 +151,9 @@ namespace Omnikeeper.Controllers
 
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
-            var relations = await relationModel.GetMergedRelations(new RelationSelectionEitherFromOrTo(ciid), layerset, trans, timeThreshold);
+            var relationsFrom = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(ciid), layerset, trans, timeThreshold);
+            var relationsTo = await relationModel.GetMergedRelations(RelationSelectionTo.Build(ciid), layerset, trans, timeThreshold);
+            var relations = relationsFrom.Concat(relationsTo);
             relations = relations.Where(r => ciBasedAuthorizationService.CanReadAllCIs(new Guid[] { r.Relation.FromCIID, r.Relation.ToCIID }, out _)); // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
             return Ok(relations.Select(r => RelationDTO.BuildFromMergedRelation(r)));
         }

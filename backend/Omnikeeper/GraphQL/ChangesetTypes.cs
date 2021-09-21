@@ -1,8 +1,10 @@
-﻿using GraphQL.Types;
+﻿using GraphQL.DataLoader;
+using GraphQL.Types;
 using GraphQL.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using System.Linq;
 
 namespace Omnikeeper.GraphQL
 {
@@ -24,24 +26,25 @@ namespace Omnikeeper.GraphQL
 
     public class ChangesetType : ObjectGraphType<Changeset>
     {
-        public ChangesetType()
+        public ChangesetType(IDataLoaderContextAccessor dataLoaderContextAccessor, ILayerModel layerModel)
         {
             Field("id", x => x.ID);
             Field(x => x.Timestamp);
             Field(x => x.User, type: typeof(UserInDatabaseType));
             Field(x => x.LayerID);
             Field(x => x.DataOrigin, type: typeof(DataOriginGQL));
-            FieldAsync<LayerType>("layer",
-            resolve: async (context) =>
+            Field<LayerType>("layer",
+            resolve: (context) =>
             {
-                var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var layerID = context.Source!.LayerID;
-                return await layerModel.GetLayer(layerID, userContext.Transaction);
+                var loader = dataLoaderContextAccessor.Context.GetOrAddLoader("GetAllLayers", () => layerModel.GetLayers(userContext.Transaction));
+                return loader.LoadAsync().Then(layers => layers.FirstOrDefault(l => l.ID == layerID));
             });
             FieldAsync<ChangesetStatisticsType>("statistics",
             resolve: async (context) =>
             {
+                // TODO: use dataloader
                 var statisticsModel = context.RequestServices!.GetRequiredService<IChangesetStatisticsModel>();
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var changesetID = context.Source!.ID;
@@ -50,6 +53,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<CIAttributeType>>("attributes",
             resolve: async (context) =>
             {
+                // TODO: use dataloader
                 var attributeModel = context.RequestServices!.GetRequiredService<IAttributeModel>();
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var changesetID = context.Source!.ID;
@@ -58,6 +62,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<RelationType>>("relations",
             resolve: async (context) =>
             {
+                // TODO: use dataloader
                 var relationModel = context.RequestServices!.GetRequiredService<IRelationModel>();
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var changesetID = context.Source!.ID;

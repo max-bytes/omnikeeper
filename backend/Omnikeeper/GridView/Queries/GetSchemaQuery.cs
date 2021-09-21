@@ -5,6 +5,7 @@ using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
+using Omnikeeper.GridView.Entity;
 using Omnikeeper.GridView.Helper;
 using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Response;
@@ -66,7 +67,7 @@ namespace Omnikeeper.GridView.Queries
 
                 config.Columns.ForEach(el => result.Columns.Add(new Column
                 (
-                    el.SourceAttributeName,
+                    GridViewColumn.GenerateColumnID(el),
                     el.ColumnDescription,
                     el.ValueType ?? AttributeValueType.Text,
                     el.WriteLayer != ""

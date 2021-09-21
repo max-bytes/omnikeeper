@@ -1,56 +1,131 @@
-﻿using System;
+﻿using Omnikeeper.Base.Utils;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Omnikeeper.Base.Model
 {
     public interface IRelationSelection
     {
-        public string ToHashKey();
     }
-    public class RelationSelectionFrom : IRelationSelection
+    public class RelationSelectionFrom : IRelationSelection, IEquatable<RelationSelectionFrom>
     {
-        public readonly Guid fromCIID;
-
-        public RelationSelectionFrom(Guid fromCIID)
+        public ISet<Guid> FromCIIDs { get; }
+        private RelationSelectionFrom(ISet<Guid> fromCIIDs)
         {
-            this.fromCIID = fromCIID;
+            FromCIIDs = fromCIIDs;
         }
 
-        public string ToHashKey() => $"rsf_{fromCIID}";
-    }
-    public class RelationSelectionTo : IRelationSelection
-    {
-        public readonly Guid toCIID;
-
-        public RelationSelectionTo(Guid toCIID)
+        public static IRelationSelection Build(ISet<Guid> fromCIIDs)
         {
-            this.toCIID = toCIID;
+            if (fromCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
+            return new RelationSelectionFrom(fromCIIDs);
+        }
+        public static IRelationSelection Build(params Guid[] fromCIIDs)
+        {
+            if (fromCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
+            return new RelationSelectionFrom(fromCIIDs.ToHashSet());
+        }
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = (int)2166136261;
+                foreach (var ciid in FromCIIDs)
+                    hash = (hash * 16777619) ^ ciid.GetHashCode();
+                return hash;
+            }
+        }
+        public override bool Equals(object? obj) => Equals(obj as RelationSelectionFrom);
+        public bool Equals(RelationSelectionFrom? other) => other != null && FromCIIDs.SetEquals(other.FromCIIDs);
+    }
+    public class RelationSelectionTo : IRelationSelection, IEquatable<RelationSelectionTo>
+    {
+        public ISet<Guid> ToCIIDs { get; }
+        private RelationSelectionTo(ISet<Guid> toCIIDs)
+        {
+            ToCIIDs = toCIIDs;
         }
 
-        public string ToHashKey() => $"rst_{toCIID}";
-    }
-    public class RelationSelectionEitherFromOrTo : IRelationSelection
-    {
-        public readonly Guid ciid;
-
-        public RelationSelectionEitherFromOrTo(Guid ciid)
+        public static IRelationSelection Build(ISet<Guid> toCIIDs)
         {
-            this.ciid = ciid;
+            if (toCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
+            return new RelationSelectionTo(toCIIDs);
         }
-        public string ToHashKey() => $"efot_{ciid}";
-    }
-    public class RelationSelectionWithPredicate : IRelationSelection
-    {
-        public readonly string predicateID;
-
-        public RelationSelectionWithPredicate(string predicateID)
+        public static IRelationSelection Build(params Guid[] toCIIDs)
         {
-            this.predicateID = predicateID;
+            if (toCIIDs.IsEmpty()) return RelationSelectionNone.Instance;
+            return new RelationSelectionTo(toCIIDs.ToHashSet());
         }
-        public string ToHashKey() => $"p_{predicateID}";
+
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = (int)2166136261;
+                foreach (var ciid in ToCIIDs)
+                    hash = (hash * 16777619) ^ ciid.GetHashCode();
+                return hash;
+            }
+        }
+        public override bool Equals(object? obj) => Equals(obj as RelationSelectionTo);
+        public bool Equals(RelationSelectionTo? other) => other != null && ToCIIDs.SetEquals(other.ToCIIDs);
+    }
+    public class RelationSelectionWithPredicate : IRelationSelection, IEquatable<RelationSelectionWithPredicate>
+    {
+        public readonly string PredicateID;
+
+        private RelationSelectionWithPredicate(string predicateID)
+        {
+            PredicateID = predicateID;
+        }
+        public static RelationSelectionWithPredicate Build(string predicateID)
+        {
+            return new RelationSelectionWithPredicate(predicateID);
+        }
+
+        public override int GetHashCode()
+        {
+            return PredicateID.GetHashCode();
+        }
+        public override bool Equals(object? obj) => Equals(obj as RelationSelectionWithPredicate);
+        public bool Equals(RelationSelectionWithPredicate? other) => other != null && PredicateID == other.PredicateID;
     }
     public class RelationSelectionAll : IRelationSelection
     {
-        public string ToHashKey() => $"all";
+        private RelationSelectionAll() { }
+        public static RelationSelectionAll Instance = new RelationSelectionAll();
     }
+    public class RelationSelectionNone : IRelationSelection
+    {
+        private RelationSelectionNone() { }
+        public static RelationSelectionNone Instance = new RelationSelectionNone();
+    }
+    //public class RelationSelectionOr : IRelationSelection
+    //{
+    //    public readonly IEnumerable<IRelationSelection> inners;
+
+    //    public RelationSelectionOr(IEnumerable<IRelationSelection> inners)
+    //    {
+    //        this.inners = inners;
+    //    }
+    //}
+    //public class RelationSelectionAnd : IRelationSelection
+    //{
+    //    public readonly IEnumerable<IRelationSelection> inners;
+
+    //    public RelationSelectionAnd(IEnumerable<IRelationSelection> inners)
+    //    {
+    //        this.inners = inners;
+    //    }
+    //}
+
+    //public static class RelationSelectionExtensions
+    //{
+    //    public static IRelationSelection UnionAll(IEnumerable<IRelationSelection> selections)
+    //    {
+    //        return new RelationSelectionOr(selections); // TODO: simplify
+    //    }
+    //}
 
 }

@@ -44,7 +44,7 @@ namespace Omnikeeper.Model
                 );
             }
 
-            return compound.Select(t => new MergedRelation(t.Value.First().Value.relation, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).Reverse().ToArray()));
+            return compound.Select(t => new MergedRelation(t.Value.First().Value.relation, layerStackIDs: t.Value.Select(tt => tt.Value.layerID).ToArray()));
         }
         public async Task<IEnumerable<MergedRelation>> GetMergedRelations(IRelationSelection rl, LayerSet layerset, IModelContext trans, TimeThreshold atTime)
         {

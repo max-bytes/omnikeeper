@@ -84,8 +84,6 @@ function Diffing(props) {
 
   const { data: layerData } = useQuery(queries.Layers);
 
-  const perPredicateLimit = 100;
-
   var [ leftLayerSettings, setLeftLayerSettings ] = useState(urlParams.leftLayerSettings);
   var [ rightLayerSettings, setRightLayerSettings ] = useState(urlParams.rightLayerSettings);
   var [ leftLayers, setLeftLayers ] = useState([]);
@@ -104,10 +102,10 @@ function Diffing(props) {
   // useEffect(() => setRightTimeSettings(null), [rightCIID]);
 
   const [loadLeftCI, { data: dataLeftCI, loading: loadingLeftCI }] = useLazyQuery(queries.FullCIs, {
-    variables: { includeRelated: perPredicateLimit }
+    variables: {}
   });
   const [loadRightCI, { data: dataRightCI, loading: loadingRightCI }] = useLazyQuery(queries.FullCIs, {
-    variables: { includeRelated: perPredicateLimit }
+    variables: {}
   });
 
   useEffect(() => {

@@ -90,30 +90,54 @@ namespace Omnikeeper.Model
             return selection switch
             {
                 AllCIIDsSelection _ => "1=1",
-                SpecificCIIDsSelection _ => "ci_id = ANY(@ci_ids)", // TODO: performance test the in, some places suggest its slow: https://dba.stackexchange.com/questions/91247/optimizing-a-postgres-query-with-a-large-in
-                AllCIIDsExceptSelection _ => "ci_id <> ALL(@ci_ids)", // TODO: performance test the in, some places suggest its slow: https://dba.stackexchange.com/questions/91247/optimizing-a-postgres-query-with-a-large-in
+                SpecificCIIDsSelection _ => "t.ci_id is not null",
+                AllCIIDsExceptSelection _ => "t.ci_id is null",
                 NoCIIDsSelection _ => "1=0",
                 _ => throw new NotImplementedException("")
             };
         }
 
-        private void AddQueryParametersFromCIIDSelection(ICIIDSelection selection, NpgsqlParameterCollection p)
+        // NOTE: doing
+        // ci_id = ANY(@ci_ids)
+        // and/or
+        // ci_id <> ALL(@ci_ids)
+        // is really slow in postgres for larger arrays of @ci_ids and the query optimizer does not properly optimize it
+        // hence, we use CTEs/with clause at the start to create a temporary joinable relation
+        // see here for a discussion about the options https://stackoverflow.com/questions/17037508/sql-when-it-comes-to-not-in-and-not-equal-to-which-is-more-efficient-and-why/17038097#17038097
+        private string CIIDSelection2CTEClause(ICIIDSelection selection)
         {
-            switch (selection)
+            return selection switch
             {
-                case SpecificCIIDsSelection m:
-                    p.AddWithValue("ci_ids", m.CIIDs.ToList());
-                    break;
-                case AllCIIDsExceptSelection a:
-                    p.AddWithValue("ci_ids", a.ExceptCIIDs.ToList());
-                    break;
-                default:
-                    break;
+                AllCIIDsSelection _ => "",
+                SpecificCIIDsSelection s => string.Join("",
+                    "WITH included(ci_id) AS (VALUES ",
+                    string.Join(",", s.CIIDs.Select(ciid => $"('{ciid}'::uuid)")),
+                    " )"),
+                AllCIIDsExceptSelection e => string.Join("",
+                    "WITH excluded(ci_id) AS (VALUES ",
+                    string.Join(",", e.ExceptCIIDs.Select(ciid => $"('{ciid}'::uuid)")),
+                    " )"),
+                NoCIIDsSelection _ => "",
+                _ => throw new NotImplementedException("")
+            };
+        }
+
+        private string CIIDSelection2JoinClause(ICIIDSelection selection)
+        {
+            return selection switch
+            {
+                AllCIIDsSelection _ => "",
+                SpecificCIIDsSelection _ => "left join included t ON t.ci_id = a.ci_id",
+                AllCIIDsExceptSelection _ => "left join excluded t ON t.ci_id = a.ci_id",
+                NoCIIDsSelection _ => "",
+                _ => throw new NotImplementedException("")
             };
         }
 
         // NOTE: this exists because querying using AllCIIDsExceptSelection is very slow when the list of excluded CIIDs gets large
         // that's why we - under certain circumstances - flip the selection and turn the AllCIIDsExceptSelection into a SpecificCIIDsSelection
+        // TODO: check if this is still needed after rewrite to CTE
+        // or: check if we should also do it the other way round?
         private static readonly int CIIDSELECTION_ALL_EXCEPT_ABS_THRESHOLD = 100;
         private static readonly float CIIDSELECTION_ALL_EXCEPT_PERCENTAGE_THRESHOLD = 0.5f;
         private async Task<ICIIDSelection> OptimizeCIIDSelection(ICIIDSelection selection, IModelContext trans)
@@ -141,10 +165,11 @@ namespace Omnikeeper.Model
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
                 command = new NpgsqlCommand($@"
-                    select state, id, name, ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute_latest
+                    {CIIDSelection2CTEClause(selection)}
+                    select state, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute_latest a
+                    {CIIDSelection2JoinClause(selection)}
                     where ({CIIDSelection2WhereClause(selection)}) and layer_id = ANY(@layer_ids)
                     and ({((nameRegexFilter != null) ? "name ~ @name_regex" : "1=1")})", trans.DBConnection, trans.DBTransaction);
-                AddQueryParametersFromCIIDSelection(selection, command.Parameters);
                 command.Parameters.AddWithValue("layer_ids", layerIDs);
                 if (nameRegexFilter != null) command.Parameters.AddWithValue("name_regex", nameRegexFilter);
             }
@@ -153,12 +178,13 @@ namespace Omnikeeper.Model
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
                 command = new NpgsqlCommand($@"
-                    select distinct on(ci_id, name) state, id, name, ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute 
-                    where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and layer_id = ANY(@layer_ids) and partition_index >= @partition_index
+                    {CIIDSelection2CTEClause(selection)}
+                    select distinct on(a.ci_id, name, layer_id) state, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute a
+                    {CIIDSelection2JoinClause(selection)}
+                    where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and layer_id = ANY(@layer_ids) and partition_index >= @partition_index
                     and ({((nameRegexFilter != null) ? "name ~ @name_regex" : "1=1")})
-                    order by ci_id, name, timestamp DESC NULLS LAST
+                    order by a.ci_id, name, layer_id, timestamp DESC NULLS LAST
                     ", trans.DBConnection, trans.DBTransaction);
-                AddQueryParametersFromCIIDSelection(selection, command.Parameters);
                 command.Parameters.AddWithValue("layer_ids", layerIDs);
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("partition_index", partitionIndex);
@@ -258,30 +284,32 @@ namespace Omnikeeper.Model
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
                 command = new NpgsqlCommand(@$"
-                    select state, id, ci_id, type, value_text, value_binary, value_control, changeset_id from
-                        attribute_latest where ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id
+                    {CIIDSelection2CTEClause(selection)}
+                    select state, id, a.ci_id, type, value_text, value_binary, value_control, changeset_id from attribute_latest a 
+                    {CIIDSelection2JoinClause(selection)}
+                    where ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id
                 ", trans.DBConnection, trans.DBTransaction);
 
                 command.Parameters.AddWithValue("name", name);
                 command.Parameters.AddWithValue("layer_id", layerID);
-                AddQueryParametersFromCIIDSelection(selection, command.Parameters);
             }
             else
             {
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
                 command = new NpgsqlCommand(@$"
-                    select distinct on (ci_id) state, id, ci_id, type, value_text, value_binary, value_control, changeset_id from
-                        attribute where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id 
+                    {CIIDSelection2CTEClause(selection)}
+                    select distinct on (ci_id) state, id, a.ci_id, type, value_text, value_binary, value_control, changeset_id from attribute a 
+                        {CIIDSelection2JoinClause(selection)}
+                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and name = @name and layer_id = @layer_id 
                         and partition_index >= @partition_index
-                        order by ci_id, timestamp DESC NULLS LAST
+                        order by a.ci_id, timestamp DESC NULLS LAST
                 ", trans.DBConnection, trans.DBTransaction);
 
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("name", name);
                 command.Parameters.AddWithValue("layer_id", layerID);
                 command.Parameters.AddWithValue("partition_index", partitionIndex);
-                AddQueryParametersFromCIIDSelection(selection, command.Parameters);
             }
 
             command.Prepare();
@@ -331,8 +359,10 @@ namespace Omnikeeper.Model
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
                 command = new NpgsqlCommand(@$"
-                    select state, ci_id from
-                        attribute_latest where name = @name and layer_id = @layer_id and ({CIIDSelection2WhereClause(selection)})
+                    {CIIDSelection2CTEClause(selection)}
+                    select state, a.ci_id from attribute_latest a
+                        {CIIDSelection2JoinClause(selection)}
+                        where ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id 
                         and type = @type and value_text = @value_text and value_binary = @value_binary and value_control = @value_control
                 ", trans.DBConnection, trans.DBTransaction);
 
@@ -342,7 +372,6 @@ namespace Omnikeeper.Model
                 command.Parameters.AddWithValue("value_text", valueText);
                 command.Parameters.AddWithValue("value_binary", valueBinary);
                 command.Parameters.AddWithValue("value_control", valueControl);
-                AddQueryParametersFromCIIDSelection(selection, command.Parameters);
             }
             else
             {
@@ -350,11 +379,13 @@ namespace Omnikeeper.Model
 
                 // TODO: check if query is well optimized regarding index use
                 command = new NpgsqlCommand(@$"
-                    select distinct on (ci_id) state, ci_id from
-                        attribute where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id 
+                    {CIIDSelection2CTEClause(selection)}
+                    select distinct on (a.ci_id) state, a.ci_id from attribute a 
+                        {CIIDSelection2JoinClause(selection)}
+                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and name = @name and layer_id = @layer_id 
                         and type = @type and value_text = @value_text and value_binary = @value_binary and value_control = @value_control
                         and partition_index >= @partition_index
-                        order by ci_id, timestamp DESC NULLS LAST
+                        order by a.ci_id, timestamp DESC NULLS LAST
                 ", trans.DBConnection, trans.DBTransaction);
 
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
@@ -365,7 +396,6 @@ namespace Omnikeeper.Model
                 command.Parameters.AddWithValue("value_binary", valueBinary);
                 command.Parameters.AddWithValue("value_control", valueControl);
                 command.Parameters.AddWithValue("partition_index", partitionIndex);
-                AddQueryParametersFromCIIDSelection(selection, command.Parameters);
             }
 
             command.Prepare();
@@ -397,30 +427,31 @@ namespace Omnikeeper.Model
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
                 command = new NpgsqlCommand(@$"
-                    select state, ci_id from
-                        attribute_latest name = @name and layer_id = @layer_id and ({CIIDSelection2WhereClause(selection)})
+                    {CIIDSelection2CTEClause(selection)}
+                    select state, a.ci_id from attribute_latest a 
+                        {CIIDSelection2JoinClause(selection)}
+                        where ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id
                 ", trans.DBConnection, trans.DBTransaction);
 
                 command.Parameters.AddWithValue("name", name);
                 command.Parameters.AddWithValue("layer_id", layerID);
-                AddQueryParametersFromCIIDSelection(selection, command.Parameters);
             }
             else
             {
                 var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
 
                 command = new NpgsqlCommand(@$"
-                    select distinct on (ci_id) state, ci_id from
-                        attribute where timestamp <= @time_threshold and ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id 
+                    {CIIDSelection2CTEClause(selection)}
+                    select distinct on (a.ci_id) state, a.ci_id from attribute a
+                        {CIIDSelection2JoinClause(selection)}
+                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and name = @name and layer_id = @layer_id 
                         and partition_index >= @partition_index
-                        order by ci_id, timestamp DESC NULLS LAST
+                        order by a.ci_id, timestamp DESC NULLS LAST
                 ", trans.DBConnection, trans.DBTransaction);
-
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("name", name);
                 command.Parameters.AddWithValue("layer_id", layerID);
                 command.Parameters.AddWithValue("partition_index", partitionIndex);
-                AddQueryParametersFromCIIDSelection(selection, command.Parameters);
             }
 
             command.Prepare();

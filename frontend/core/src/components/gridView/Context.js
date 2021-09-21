@@ -231,7 +231,7 @@ export function Context(props) {
                 };
                 for(let i = 0;i < schema.columns.length;i++) {
                     const c = schema.columns[i];
-                    newRow[c.name] = {values: [], type: c.valueType, isArray: false };
+                    newRow[c.id] = {values: [], type: c.valueType, isArray: false };
                 }
                 toAdd.push(newRow);
             }
@@ -303,7 +303,7 @@ export function Context(props) {
                     if (key === 'status') return false;
                     else if (key === 'ciid') return true;
                     else {
-                        const column = schema.columns.find(c => c.name === key);
+                        const column = schema.columns.find(c => c.id === key);
                         return column && column.writable;
                     }
                  });

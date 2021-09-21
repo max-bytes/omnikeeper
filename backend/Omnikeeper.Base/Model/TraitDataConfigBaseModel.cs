@@ -93,7 +93,6 @@ namespace Omnikeeper.Base.Model
 
             Guid ciid = (t.Equals(default)) ? await CreateNewCI(id, trans) : t.Item1;
 
-
             var changed = false;
             foreach (var (attributeName, value) in attributes)
             {
@@ -147,8 +146,8 @@ namespace Omnikeeper.Base.Model
                 var (_, changed) = await baseAttributeModel.RemoveAttribute(attribute, t.Item1, writeLayerID, changesetProxy, dataOrigin, trans);
             }
 
-            var allRelationsForward = await baseRelationModel.GetRelations(new RelationSelectionFrom(t.Item1), writeLayerID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
-            var allRelationsBackward = await baseRelationModel.GetRelations(new RelationSelectionTo(t.Item1), writeLayerID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
+            var allRelationsForward = await baseRelationModel.GetRelations(RelationSelectionFrom.Build(t.Item1), writeLayerID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
+            var allRelationsBackward = await baseRelationModel.GetRelations(RelationSelectionTo.Build(t.Item1), writeLayerID, returnRemoved: false, trans, TimeThreshold.BuildLatest());
 
             var relevantRelationsForward = allRelationsForward.Where(r => relationsToRemoveForward.Contains(r.PredicateID));
             var relevantRelationsBackward = allRelationsBackward.Where(r => relationsToRemoveBackward.Contains(r.PredicateID));

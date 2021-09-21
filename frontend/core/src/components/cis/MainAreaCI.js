@@ -23,7 +23,7 @@ function LoadingCI(props) {
   const timeThreshold = selectedTime.time;
   const isEditable = selectedTime.isLatest;
   const { loading: loadingCI, error: errorCI, data: dataCI, refetch: refetchCI } = useQuery(queries.FullCI, {
-    variables: { ciid: props.ciid, layers: props.visibleLayers.map(l => l.id), timeThreshold, includeRelated: 100 }
+    variables: { ciid: props.ciid, layers: props.visibleLayers.map(l => l.id), timeThreshold }
   });
   
   React.useEffect(() => { if (selectedTime.refreshNonceCI) refetchCI(); }, [selectedTime, refetchCI]);

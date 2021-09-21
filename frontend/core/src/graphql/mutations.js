@@ -3,7 +3,7 @@ import { Fragments } from './fragments';
 
 export const mutations = {
   INSERT_CI_ATTRIBUTE: gql`
-    mutation($ciIdentity: Guid!, $name: String!, $layerID: String!, $value: AttributeValueDTOInputType!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Int = 0) {
+    mutation($ciIdentity: Guid!, $name: String!, $layerID: String!, $value: AttributeValueDTOInputType!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
       mutateCIs(insertAttributes: [
         {
           ci: $ciIdentity,
@@ -18,14 +18,14 @@ export const mutations = {
         }
       }
     }
-    ${Fragments.relatedCI}
+    ${Fragments.outgoingMergedRelation}
+    ${Fragments.incomingMergedRelation}
     ${Fragments.mergedAttribute}
     ${Fragments.attribute}
     ${Fragments.fullCI}
-    ${Fragments.compactCI}
   `,
   REMOVE_CI_ATTRIBUTE: gql`
-    mutation($ciIdentity: Guid!, $name: String!, $layerID: String!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Int = 0) {
+    mutation($ciIdentity: Guid!, $name: String!, $layerID: String!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
       mutateCIs(removeAttributes: [
         {
           ci: $ciIdentity,
@@ -38,17 +38,16 @@ export const mutations = {
         }
       }
     }
-    ${Fragments.relatedCI}
+    ${Fragments.outgoingMergedRelation}
+    ${Fragments.incomingMergedRelation}
     ${Fragments.mergedAttribute}
     ${Fragments.attribute}
     ${Fragments.fullCI}
-    ${Fragments.compactCI}
   `,
 
-  // HACK, TODO: includeRelated makes no sense here, but its what we have for now
-  // we should think about how a mutation can return all that has been updated, but does not need to return the FullCI
+  // TODO: we should think about how a mutation can return all that has been updated, but does not need to return the FullCI
   INSERT_RELATION: gql`
-    mutation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: String!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
+    mutation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: String!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
       mutateCIs(insertRelations: [
         {
           fromCIID: $fromCIID,
@@ -62,15 +61,15 @@ export const mutations = {
         }
       }
     }
-    ${Fragments.relatedCI}
+    ${Fragments.outgoingMergedRelation}
+    ${Fragments.incomingMergedRelation}
     ${Fragments.mergedAttribute}
     ${Fragments.attribute}
-    ${Fragments.compactCI}
     ${Fragments.fullCI}
   `,
 
   REMOVE_RELATION: gql`
-  mutation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: String!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Int = 50) {
+  mutation($fromCIID: Guid!, $toCIID: Guid!, $predicateID: String!, $layerID: String!, $layers: [String]!, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
     mutateCIs(removeRelations: [
       {
         fromCIID: $fromCIID,
@@ -84,10 +83,10 @@ export const mutations = {
       }
     }
   }
-  ${Fragments.relatedCI}
+  ${Fragments.outgoingMergedRelation}
+  ${Fragments.incomingMergedRelation}
   ${Fragments.mergedAttribute}
   ${Fragments.attribute}
-  ${Fragments.compactCI}
   ${Fragments.fullCI}
   `,
 

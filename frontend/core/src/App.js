@@ -5,7 +5,7 @@ import Diffing from './components/diffing/Diffing';
 import 'antd/dist/antd.css';
 import Keycloak from 'keycloak-js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExchangeAlt, faPlus, faSearch, faWrench, faTh, faList, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
+import { faExchangeAlt, faPlus, faSearch, faWrench, faTh, faList, faLayerGroup, faPlayCircle } from '@fortawesome/free-solid-svg-icons';
 import {PrivateRoute} from './components/PrivateRoute'
 import LoginPage from './components/LoginPage'
 import AddNewCI from './components/cis/AddNewCI'
@@ -22,6 +22,8 @@ import { ReactKeycloakProvider } from '@react-keycloak/web'
 import { Menu, Layout, Button, Drawer } from 'antd';
 import ExplorerLayers from "components/ExplorerLayers";
 import Trait from "components/traits/Trait";
+import Breadcrumbs from "utils/Breadcrumbs";
+import GraphQLPlayground from "components/GraphQLPlayground";
 const { Header, Content } = Layout;
 
 const keycloak = new Keycloak({
@@ -81,48 +83,55 @@ function App() {
                   <Menu.Item key="diffing"><Link to="/diffing"><FontAwesomeIcon icon={faExchangeAlt} style={{ marginRight: "0.5rem" }}/> Diffing</Link></Menu.Item>
                   <Menu.Item key="grid-view"><Link to="/grid-view"><FontAwesomeIcon icon={faTh} style={{ marginRight: "0.5rem" }}/> Grid View</Link></Menu.Item>
                   <Menu.Item key="createCI"><Link to="/createCI"><FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.5rem" }}/> Create New CI</Link></Menu.Item>
+                  <Menu.Item key="graphql-playground"><Link to="/graphql-playground"><FontAwesomeIcon icon={faPlayCircle} style={{ marginRight: "0.5rem" }}/> GraphQL Playground</Link></Menu.Item>
                 </Menu>
               )}
             />
           </Header>
             
           <Content className="site-layout" style={{ padding: '0 50px', marginTop: 64 }}>
-            <Switch>
-              <Route path="/login">
-                <LoginPage />
-              </Route>
-              <PrivateRoute path="/diffing">
-                <Diffing />
-              </PrivateRoute>
-              <PrivateRoute path="/createCI">
-                <AddNewCI />
-              </PrivateRoute>
-              <PrivateRoute path="/explorer/:ciid">
-                <Explorer />
-              </PrivateRoute>
-              <PrivateRoute path="/explorer">
-                <SearchCIAdvanced />
-              </PrivateRoute>
-              <PrivateRoute path="/changesets/:changesetID">
-                <Changeset />
-              </PrivateRoute>
-              <PrivateRoute path="/changesets">
-                <ChangesetList />
-              </PrivateRoute>
-              <PrivateRoute path="/grid-view">
-                <GridView/>
-              </PrivateRoute>
-              <PrivateRoute path="/manage">
-                <Manage/>
-              </PrivateRoute>
-              <PrivateRoute path="/traits/:traitID">
-                <Trait />
-              </PrivateRoute>
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <Breadcrumbs style={{marginTop: '10px', marginBottom: '10px'}} />
+              <Switch>
+                <Route path="/login">
+                  <LoginPage />
+                </Route>
+                <PrivateRoute path="/graphql-playground">
+                  <GraphQLPlayground />
+                </PrivateRoute>
+                <PrivateRoute path="/diffing">
+                  <Diffing />
+                </PrivateRoute>
+                <PrivateRoute path="/createCI">
+                  <AddNewCI />
+                </PrivateRoute>
+                <PrivateRoute path="/explorer/:ciid">
+                  <Explorer />
+                </PrivateRoute>
+                <PrivateRoute path="/explorer">
+                  <SearchCIAdvanced />
+                </PrivateRoute>
+                <PrivateRoute path="/changesets/:changesetID">
+                  <Changeset />
+                </PrivateRoute>
+                <PrivateRoute path="/changesets">
+                  <ChangesetList />
+                </PrivateRoute>
+                <PrivateRoute path="/grid-view">
+                  <GridView/>
+                </PrivateRoute>
+                <PrivateRoute path="/manage">
+                  <Manage/>
+                </PrivateRoute>
+                <PrivateRoute path="/traits/:traitID">
+                  <Trait />
+                </PrivateRoute>
 
-              <Route path="*">
-                <Redirect to="/explorer" />
-              </Route>
-            </Switch>
+                <Route path="*">
+                  <Redirect to="/explorer" />
+                </Route>
+              </Switch>
+            </div>
 
             <Drawer 
               width={440}
