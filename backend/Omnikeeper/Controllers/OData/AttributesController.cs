@@ -108,7 +108,7 @@ namespace Omnikeeper.Controllers.OData
         {
             var trans = modelContextBuilder.BuildImmediate();
             var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
-            var attributesDict = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), layerset, trans, TimeThreshold.BuildLatest(), AllAttributeSelection.Instance);
+            var attributesDict = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest());
 
             var attributes = attributesDict.SelectMany(a => a.Value.Values);
 

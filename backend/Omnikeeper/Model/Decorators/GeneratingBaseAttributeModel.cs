@@ -43,10 +43,10 @@ namespace Omnikeeper.Model.Decorators
             return ret;
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
 
-            var @base = await model.GetAttributes(selection, layerIDs, returnRemoved, trans, atTime, attributeSelection);
+            var @base = await model.GetAttributes(selection, attributeSelection, layerIDs, returnRemoved, trans, atTime);
 
             var generatorSelection = new GeneratorSelectionAll();
 
@@ -60,7 +60,7 @@ namespace Omnikeeper.Model.Decorators
                 AllAttributeSelection _ => new HashSet<string>(), // we are fetching all attributes anyway, no need to add additional attributes
                 _ => throw new Exception("Invalid attribute selection encountered"),
             };
-            var additionalAttributes = (additionalAttributeNames.Count > 0) ? await model.GetAttributes(selection, layerIDs, false, trans, atTime, NamedAttributesSelection.Build(additionalAttributeNames)) : null;
+            var additionalAttributes = (additionalAttributeNames.Count > 0) ? await model.GetAttributes(selection, NamedAttributesSelection.Build(additionalAttributeNames), layerIDs, false, trans, atTime) : null;
 
             @base = MergeInGeneratedAttributes(@base, additionalAttributes, generatorSelection, layerIDs, attributeSelection);
 
@@ -111,7 +111,6 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-
         public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
             return await model.InsertAttribute(name, value, ciid, layerID, changeset, origin, trans);
@@ -125,6 +124,12 @@ namespace Omnikeeper.Model.Decorators
         public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
             return await model.BulkReplaceAttributes(data, changeset, origin, trans);
+        }
+
+        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        {
+            // NOTE: because generators can only produce attributes on CIs that already have any, we can assume that the results of the base call is valid here too
+            return await model.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
         }
     }
 }

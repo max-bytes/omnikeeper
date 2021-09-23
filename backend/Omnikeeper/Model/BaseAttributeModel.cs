@@ -247,7 +247,7 @@ namespace Omnikeeper.Model
 
         // NOTE: returns a full array (one item for each layer), even when layer contains no attributes
         // NOTE: returns only entries for CIs and attributes where there actually are any attributes, disregarding if the selections specify them
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
             selection = await OptimizeCIIDSelection(selection, trans);
 
@@ -269,6 +269,53 @@ namespace Omnikeeper.Model
                 ret[i] = tmp[layerIDs[i]];
             }
 
+            return ret;
+        }
+
+        // TODO: test
+        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        {
+            NpgsqlCommand command;
+            if (atTime.IsLatest && _USE_LATEST_TABLE)
+            {
+                command = new NpgsqlCommand($@"
+                    {CIIDSelection2CTEClause(selection)}
+                    select distinct a.ci_id FROM attribute_latest a
+                    {CIIDSelection2JoinClause(selection)}
+                    where ({CIIDSelection2WhereClause(selection)}) and layer_id = ANY(@layer_ids) AND a.state != 'removed'
+                    ", trans.DBConnection, trans.DBTransaction);
+                command.Parameters.AddWithValue("layer_ids", layerIDs);
+            }
+            else
+            {
+                var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
+
+                command = new NpgsqlCommand($@"
+                    {CIIDSelection2CTEClause(selection)}
+                    select distinct i.ci_id from (
+                        select distinct on(a.ci_id, name, layer_id) a.ci_id as ci_id, state FROM attribute a
+                        {CIIDSelection2JoinClause(selection)}
+                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and layer_id = ANY(@layer_ids) and partition_index >= @partition_index
+                        order by a.ci_id, name, layer_id, timestamp DESC NULLS LAST
+                    ) i WHERE i.state != 'removed'
+                    ", trans.DBConnection, trans.DBTransaction);
+                command.Parameters.AddWithValue("layer_ids", layerIDs);
+                command.Parameters.AddWithValue("time_threshold", atTime.Time);
+                command.Parameters.AddWithValue("partition_index", partitionIndex);
+            }
+
+            command.Prepare();
+
+            using var dr = await command.ExecuteReaderAsync();
+
+            command.Dispose();
+
+            var ret = new HashSet<Guid>();
+            while (dr.Read())
+            {
+                var ciid = dr.GetGuid(0);
+                ret.Add(ciid);
+            }
             return ret;
         }
 

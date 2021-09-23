@@ -33,10 +33,10 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
             return await MixOnlineAndRegular(layerIDs, trans,
-                async (regularLayerIDs) => await model.GetAttributes(selection, regularLayerIDs, returnRemoved, trans, atTime, attributeSelection),
+                async (regularLayerIDs) => await model.GetAttributes(selection, attributeSelection, regularLayerIDs, returnRemoved, trans, atTime),
                 async (onlineLayerIDs) =>
                 {
                     var onlineResults = await onlineAccessProxy.GetAttributes(selection, onlineLayerIDs, trans, atTime, attributeSelection);
@@ -91,6 +91,12 @@ namespace Omnikeeper.Model.Decorators
                 }
                 return ret;
             }
+        }
+
+        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        {
+            // TODO: implement
+            return await model.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
         }
 
         public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)

@@ -28,10 +28,10 @@ namespace PerfTests
         {
             using var mc = modelContextBuilder!.BuildImmediate();
             var ciSelection = (SpecificCIs) ? selectedCIIDs : new AllCIIDsSelection();
-            (await ciSearchModel!.SearchForMergedCIsByTraits(ciSelection!, RequiredTraits!, new string[0], layerset!, mc, time)).Consume(consumer);
+            (await ciSearchModel!.SearchForMergedCIsByTraits(ciSelection!, AllAttributeSelection.Instance, RequiredTraits!, new string[0], layerset!, mc, time)).Consume(consumer);
 
             // should hit cache, second time
-            (await ciSearchModel!.SearchForMergedCIsByTraits(ciSelection!, RequiredTraits!, new string[0], layerset!, mc, time)).Consume(consumer);
+            (await ciSearchModel!.SearchForMergedCIsByTraits(ciSelection!, AllAttributeSelection.Instance, RequiredTraits!, new string[0], layerset!, mc, time)).Consume(consumer);
         }
 
         [GlobalCleanup(Target = nameof(SearchForMergedCIsByTraits))]

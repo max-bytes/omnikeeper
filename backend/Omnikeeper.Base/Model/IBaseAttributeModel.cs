@@ -11,7 +11,10 @@ namespace Omnikeeper.Base.Model
 {
     public interface IBaseAttributeModel
     {
-        Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection);
+        Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime);
+
+        Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime);
+
         /**
          * NOTE: GetFullBinaryAttribute(),GetAttributesOfChangeset() can also return removed attributes
          */

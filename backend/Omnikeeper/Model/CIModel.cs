@@ -51,7 +51,7 @@ namespace Omnikeeper.Model
 
         public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime)
         {
-            var tmp = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), layers, trans, atTime, attributeSelection);
+            var tmp = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), attributeSelection, layers, trans, atTime);
             var attributes = tmp.GetValueOrDefault(ciid, ImmutableDictionary<string, MergedCIAttribute>.Empty);
             var name = GetNameFromAttributes(attributes);
             return new MergedCI(ciid, name, layers, atTime, attributes);
@@ -59,7 +59,7 @@ namespace Omnikeeper.Model
 
         public async Task<IEnumerable<MergedCI>> GetMergedCIs(ICIIDSelection selection, LayerSet layers, bool includeEmptyCIs, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime)
         {
-            var attributes = await attributeModel.GetMergedAttributes(selection, layers, trans, atTime, attributeSelection);
+            var attributes = await attributeModel.GetMergedAttributes(selection, attributeSelection, layers, trans, atTime);
 
             if (includeEmptyCIs)
             {

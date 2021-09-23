@@ -145,11 +145,11 @@ namespace Omnikeeper.Model
             var outdatedAttributes = (data switch
             { // TODO: performance improvements when data.NamePrefix is empty?
             BulkCIAttributeDataLayerScope d => (data.NamePrefix.IsEmpty()) ?
-                        (await GetAttributes(new AllCIIDsSelection(), new string[] { data.LayerID }, true, trans, readTS, AllAttributeSelection.Instance)) :
-                        (await GetAttributes(new AllCIIDsSelection(), new string[] { data.LayerID }, true, trans, readTS, new RegexAttributeSelection($"^{data.NamePrefix}"))),
+                        (await GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new string[] { data.LayerID }, true, trans, readTS)) :
+                        (await GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection($"^{data.NamePrefix}"), new string[] { data.LayerID }, true, trans, readTS)),
                 BulkCIAttributeDataCIScope d => (data.NamePrefix.IsEmpty()) ? 
-                        (await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), new string[] { data.LayerID }, returnRemoved: true, trans, readTS, AllAttributeSelection.Instance)) :
-                        (await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), new string[] { data.LayerID }, returnRemoved: true, trans, readTS, new RegexAttributeSelection($"^{data.NamePrefix}"))),
+                        (await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, new string[] { data.LayerID }, returnRemoved: true, trans: trans, atTime: readTS)) :
+                        (await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), new RegexAttributeSelection($"^{data.NamePrefix}"), new string[] { data.LayerID }, returnRemoved: true, trans: trans, atTime: readTS)),
                 _ => null
             }).SelectMany(t => t.Values.SelectMany(tt => tt.Values)).ToDictionary(a => a.InformationHash, a => (attribute: a, newAttributeID: Guid.NewGuid())); // TODO: slow?
             

@@ -77,9 +77,14 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
-            return await model.GetAttributes(selection, layerIDs, returnRemoved, trans, atTime, attributeSelection);
+            return await model.GetAttributes(selection, attributeSelection, layerIDs, returnRemoved, trans, atTime);
+        }
+
+        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        {
+            return await model.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
         }
     }
 }
