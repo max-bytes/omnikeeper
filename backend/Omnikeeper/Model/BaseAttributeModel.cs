@@ -245,6 +245,8 @@ namespace Omnikeeper.Model
             }
         }
 
+        // NOTE: returns a full array (one item for each layer), even when layer contains no attributes
+        // NOTE: returns only entries for CIs and attributes where there actually are any attributes, disregarding if the selections specify them
         public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
         {
             selection = await OptimizeCIIDSelection(selection, trans);
@@ -302,80 +304,5 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IDictionary<Guid, CIAttribute>[]> FindAttributesByFullName(string name, ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
-        {
-            selection = await OptimizeCIIDSelection(selection, trans);
-
-            var tmp = new Dictionary<string, IDictionary<Guid,CIAttribute>>(layerIDs.Length);
-            foreach (var layerID in layerIDs)
-                tmp[layerID] = new Dictionary<Guid, CIAttribute>();
-
-            NpgsqlCommand command;
-            if (atTime.IsLatest && _USE_LATEST_TABLE)
-            {
-                command = new NpgsqlCommand(@$"
-                    {CIIDSelection2CTEClause(selection)}
-                    select state, id, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id from attribute_latest a 
-                    {CIIDSelection2JoinClause(selection)}
-                    where ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = ANY(@layer_ids)
-                ", trans.DBConnection, trans.DBTransaction);
-
-                command.Parameters.AddWithValue("name", name);
-                command.Parameters.AddWithValue("layer_ids", layerIDs);
-            }
-            else
-            {
-                var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
-
-                command = new NpgsqlCommand(@$"
-                    {CIIDSelection2CTEClause(selection)}
-                    select distinct on (ci_id, layer_id) state, id, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id from attribute a 
-                        {CIIDSelection2JoinClause(selection)}
-                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and name = @name and layer_id = ANY(@layer_ids) 
-                        and partition_index >= @partition_index
-                        order by a.ci_id, layer_id, timestamp DESC NULLS LAST
-                ", trans.DBConnection, trans.DBTransaction);
-
-                command.Parameters.AddWithValue("time_threshold", atTime.Time);
-                command.Parameters.AddWithValue("name", name);
-                command.Parameters.AddWithValue("layer_ids", layerIDs);
-                command.Parameters.AddWithValue("partition_index", partitionIndex);
-            }
-
-            command.Prepare();
-
-            using var dr = await command.ExecuteReaderAsync();
-
-            while (await dr.ReadAsync())
-            {
-                var state = dr.GetFieldValue<AttributeState>(0);
-                if (state != AttributeState.Removed)
-                {
-                    var id = dr.GetGuid(1);
-                    var CIID = dr.GetGuid(2);
-                    var type = dr.GetFieldValue<AttributeValueType>(3);
-                    var valueText = dr.GetString(4);
-                    var valueBinary = dr.GetFieldValue<byte[]>(5);
-                    var valueControl = dr.GetFieldValue<byte[]>(6);
-                    var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
-                    var changesetID = dr.GetGuid(7);
-                    var layerID = dr.GetString(8);
-
-                    var att = new CIAttribute(id, name, CIID, av, state, changesetID);
-
-                    var r = tmp[layerID];
-                    r[CIID] = att;
-                }
-            }
-
-            command.Dispose();
-
-            var ret = new IDictionary<Guid, CIAttribute>[layerIDs.Length];
-            for (var i = 0; i < layerIDs.Length; i++)
-            {
-                ret[i] = tmp[layerIDs[i]];
-            }
-            return ret;
-        }
     }
 }

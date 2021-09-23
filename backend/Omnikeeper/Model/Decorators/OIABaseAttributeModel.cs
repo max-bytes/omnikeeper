@@ -23,25 +23,6 @@ namespace Omnikeeper.Model.Decorators
             this.onlineAccessProxy = onlineAccessProxy;
         }
 
-        public async Task<IDictionary<Guid, CIAttribute>[]> FindAttributesByFullName(string name, ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
-        {
-            return await MixOnlineAndRegular(layerIDs, trans, 
-                async (regularLayerIDs) => await model.FindAttributesByFullName(name, selection, regularLayerIDs, trans, atTime),
-            async (onlineLayerIDs) =>
-            {
-                var onlineResults = await onlineAccessProxy.FindAttributesByFullName(name, selection, onlineLayerIDs, trans, atTime);
-
-                var ret = new IDictionary<Guid, CIAttribute>[onlineLayerIDs.Length];
-                for (int i = 0; i < onlineResults.Length; i++)
-                {
-                    var layerID = onlineLayerIDs[i];
-                    var tmp2 = onlineResults[i].ToDictionary(a => a.CIID);
-                    ret[i] = tmp2;
-                }
-                return ret;
-            });
-        }
-
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))

@@ -145,17 +145,6 @@ namespace Omnikeeper.Base.Generator
 
     public class EffectiveGeneratorProvider : IEffectiveGeneratorProvider
     {
-        //private readonly ITraitsProvider traitsProvider;
-        //private readonly IEffectiveTraitModel effectiveTraitModel;
-        //private readonly ICIModel ciModel;
-
-        //public EffectiveGeneratorProvider(ITraitsProvider traitsProvider, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel)
-        //{
-        //    this.traitsProvider = traitsProvider;
-        //    this.effectiveTraitModel = effectiveTraitModel;
-        //    this.ciModel = ciModel;
-        //}
-
         public IEnumerable<GeneratorItem> GetEffectiveGeneratorItems(string layerID, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection)
         {
             // setup, TODO: move
@@ -228,11 +217,11 @@ namespace Omnikeeper.Base.Generator
 
     public class GeneratorAttributeResolver
     {
-        public CIAttribute? Resolve(IDictionary<string, CIAttribute> existingAttributes, Guid ciid, string layerID, GeneratorItem item)
+        public CIAttribute? Resolve(IEnumerable<CIAttribute> existingAttributes, IEnumerable<CIAttribute>? additionalAttributes, Guid ciid, string layerID, GeneratorItem item)
         {
             try
             {
-                var relevantAttributes = existingAttributes.Values.Where(a => item.Value.UsedAttributeNames.Contains(a.Name)).ToList();
+                var relevantAttributes = existingAttributes.Concat(additionalAttributes ?? new CIAttribute[0]).Where(a => item.Value.UsedAttributeNames.Contains(a.Name)).ToList();
                 if (relevantAttributes.Count == item.Value.UsedAttributeNames.Count) 
                 {
                     var context = ScribanVariableService.CreateAttributesBasedTemplateContext(relevantAttributes);

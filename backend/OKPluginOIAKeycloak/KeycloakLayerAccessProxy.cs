@@ -89,23 +89,6 @@ namespace OKPluginOIAKeycloak
             }
         }
 
-        public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, TimeThreshold atTime)
-        {
-            if (!atTime.IsLatest) yield break; // we don't have historic information
-
-            var users = await client.GetUsersAsync(realm, true, null, null, null, null, 99999, null, null); // TODO, HACK: magic number, how to properly get all user IDs?
-            foreach (var user in users)
-            {
-                var ciid = mapper.GetCIID(new ExternalIDString(user.Id));
-                if (ciid.HasValue && selection.Contains(ciid.Value)) // HACK: we get ALL users and discard a lot of them again
-                {
-                    foreach (var a in BuildAttributesFromUser(user, ciid.Value, null, AllAttributeSelection.Instance))
-                        if (a.Name.Equals(name)) // HACK: we are getting ALL attributes of the user and then discard them again, except for one
-                            yield return a;
-                }
-            }
-        }
-
         public IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime)
         {
             return AsyncEnumerable.Empty<Relation>();// TODO: implement

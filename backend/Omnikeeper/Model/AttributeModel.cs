@@ -122,10 +122,11 @@ namespace Omnikeeper.Model
             if (layers.IsEmpty)
                 return ImmutableDictionary<Guid, MergedCIAttribute>.Empty; // return empty, an empty layer list can never produce any attributes
 
-            var attributes = await baseModel.FindAttributesByFullName(name, selection, layers.LayerIDs, trans, atTime);
+            var attributes = await baseModel.GetAttributes(selection, layers.LayerIDs, false, trans, atTime, NamedAttributesSelection.Build(name));
             var mergedAttributes = MergeAttributes(attributes, layers.LayerIDs);
 
-            return mergedAttributes;
+            // NOTE: because baseModel.GetAttributes() only return inner dictionaries for CIs that contain ANY attributes, we can safely access the attribute in the dictionary by []
+            return mergedAttributes.ToDictionary(t => t.Key, t => t.Value[name]);
         }
 
         public async Task<IDictionary<Guid, string>> GetMergedCINames(ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime)
@@ -133,9 +134,10 @@ namespace Omnikeeper.Model
             if (layers.IsEmpty)
                 return ImmutableDictionary<Guid, string>.Empty; // return empty, an empty layer list can never produce anything
 
-            var attributes = await baseModel.FindAttributesByFullName(ICIModel.NameAttribute, selection, layers.LayerIDs, trans, atTime);
+            var attributes = await baseModel.GetAttributes(selection, layers.LayerIDs, false, trans, atTime, NamedAttributesSelection.Build(ICIModel.NameAttribute));
             var mergedAttributes = MergeAttributes(attributes, layers.LayerIDs);
-            var ret = mergedAttributes.Select(t => (ciid: t.Key, name: t.Value.Attribute.Value.Value2String())).ToDictionary(t => t.ciid, t => t.name);
+            // NOTE: because baseModel.GetAttributes() only return inner dictionaries for CIs that contain ANY attributes, we can safely access the attribute in the dictionary by []
+            var ret = mergedAttributes.ToDictionary(t => t.Key, t => t.Value[ICIModel.NameAttribute].Attribute.Value.Value2String());
 
             return ret;
         }
@@ -153,11 +155,6 @@ namespace Omnikeeper.Model
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await baseModel.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
-        }
-
-        public async Task<IDictionary<Guid, CIAttribute>[]> FindAttributesByFullName(string name, ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
-        {
-            return await baseModel.FindAttributesByFullName(name, selection, layerIDs, trans, atTime);
         }
 
         public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)

@@ -72,11 +72,6 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return model.GetAttributesOfChangeset(changesetID, trans);
         }
 
-        public async Task<IDictionary<Guid, CIAttribute>[]> FindAttributesByFullName(string name, ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
-        {
-            return await model.FindAttributesByFullName(name, selection, layerIDs, trans, atTime);
-        }
-
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);

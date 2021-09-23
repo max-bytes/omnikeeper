@@ -73,24 +73,6 @@ namespace Omnikeeper.Base.Inbound
             return ret;
         }
 
-        public async Task<IEnumerable<CIAttribute>[]> FindAttributesByFullName(string name, ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
-        {
-            var ret = new IEnumerable<CIAttribute>[layerIDs.Length];
-            await foreach (var (proxy, _, index) in GetAccessProxies(layerIDs, trans))
-            {
-                if (proxy != null)
-                {
-                    var attributes = proxy.FindAttributesByFullName(name, selection, atTime).ToEnumerable();
-                    ret[index] = attributes;
-                }
-                else
-                {
-                    ret[index] = new CIAttribute[0];
-                }
-            }
-            return ret;
-        }
-
         public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);

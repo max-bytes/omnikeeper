@@ -77,7 +77,7 @@ namespace Omnikeeper.Model
 
             if (!withEffectiveTraits.IsEmpty() || !withoutEffectiveTraits.IsEmpty())
             {
-                var mergedCIs = await SearchForMergedCIsByTraits(ciSelection, withEffectiveTraits, withoutEffectiveTraits, layerSet, trans, atTime);
+                var mergedCIs = await SearchForMergedCIsByTraits(ciSelection, NamedAttributesSelection.Build(ICIModel.NameAttribute), withEffectiveTraits, withoutEffectiveTraits, layerSet, trans, atTime);
 
                 return mergedCIs.Select(ci => CompactCI.BuildFromMergedCI(ci));
             }
@@ -88,8 +88,7 @@ namespace Omnikeeper.Model
             }
         }
 
-        // TODO: most (all?) users of this method only require CompactCIs anway... we could make this potentially more performant if we could work with CompactCIs instead
-        public async Task<IEnumerable<MergedCI>> SearchForMergedCIsByTraits(ICIIDSelection ciidSelection, string[] withEffectiveTraits, string[] withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedCI>> SearchForMergedCIsByTraits(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, string[] withEffectiveTraits, string[] withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             var activeTraits = await traitsProvider.GetActiveTraits(trans, atTime);
             //var requiredTraits = withEffectiveTraits.Select(et => activeTraits.GetOrWithClass(et, null)).Where(at => at != null);
@@ -106,12 +105,17 @@ namespace Omnikeeper.Model
 
             // TODO: implement attribute selection improvements, where possible
 
+            //var relevantAttributes = requiredTraits.Select(t => t.RequiredAttributes.SelectMany(ra => ra.AttributeTemplate.Name))
+
+            var finalAttributeSelection = AllAttributeSelection.Instance;// attributeSelection; // TODO: add additionals;
+            // TODO: if we extend the attribute selection, reduce it again (=throw away unwanted attributes) before returning
+
             IEnumerable<MergedCI>? workCIs = null;
             foreach (var requiredTrait in requiredTraits)
             {
                 if (workCIs == null)
                 {
-                    workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: true, AllAttributeSelection.Instance, trans, atTime);
+                    workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: true, finalAttributeSelection, trans, atTime);
                 }
                 workCIs = await traitModel.FilterCIsWithTrait(workCIs, requiredTrait, layerSet, trans, atTime);
             }
@@ -130,7 +134,7 @@ namespace Omnikeeper.Model
                         // can't optimize this case well to use cache:
                         // at first, we fetch the mergedCIs with the first requiredNonTrait
                         // then we "invert" the ciid-selection and get the mergedCIs for that selection
-                        var baseCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: false, AllAttributeSelection.Instance, trans, atTime);
+                        var baseCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: false, finalAttributeSelection, trans, atTime);
                         var excludedCIs = await traitModel.FilterCIsWithTrait(baseCIs, requiredNonTrait, layerSet, trans, atTime);
                         // TODO: implement traitModel.GetMergedCIIDsWithTrait() and use that -> that would allow us to use the cache (if present) and hit the database less
                         // we only need the CIIDs anyway here
@@ -138,7 +142,7 @@ namespace Omnikeeper.Model
                         var workCIIDSelection = ciidSelection.Except(SpecificCIIDsSelection.Build(excludedCIs.Select(ci => ci.ID).ToHashSet()));
                         // NOTE: we must keep includeEmptyCIs true here
                         var includeEmptyCIs = true;
-                        workCIs = await ciModel.GetMergedCIs(workCIIDSelection, layerSet, includeEmptyCIs, AllAttributeSelection.Instance, trans, atTime); 
+                        workCIs = await ciModel.GetMergedCIs(workCIIDSelection, layerSet, includeEmptyCIs, finalAttributeSelection, trans, atTime); 
                     }
                 }
                 else
@@ -162,7 +166,7 @@ namespace Omnikeeper.Model
                 }
             }
 
-            return workCIs ?? await ciModel.GetMergedCIs(ciidSelection, layerSet, true, AllAttributeSelection.Instance, trans, atTime);
+            return workCIs ?? await ciModel.GetMergedCIs(ciidSelection, layerSet, true, finalAttributeSelection, trans, atTime);
         }
 
 

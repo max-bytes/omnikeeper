@@ -99,57 +99,6 @@ namespace OKPluginOIASharepoint
             }
         }
 
-        public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string attributeName, ICIIDSelection selection, TimeThreshold atTime)
-        {
-            if (!atTime.IsLatest && !useCurrentForHistoric) yield break; // we don't have historic information
-
-            var ciids = selection.GetCIIDs(() => mapper.GetAllCIIDs()).ToHashSet();
-            var idPairs = mapper.GetIDPairs(ciids);
-
-            var listIDGroups = idPairs.GroupBy(f => f.externalID.listID);
-
-            foreach (var listIDGroup in listIDGroups)
-            {
-                var listID = listIDGroup.Key;
-                var listItemID2CIIDMap = listIDGroup.ToDictionary(l => l.externalID.itemID, l => l.ciid);
-
-                if (!cachedListConfigs.TryGetValue(listID, out var listConfig))
-                    continue; // list is not configured (anymore)
-
-                var columnName = listConfig.AttributeName2ColumnName(attributeName);
-                if (columnName == null)
-                    continue; // attribute name is not mapped for this list -> ignore
-
-                IEnumerable<(Guid itemGuid, System.Dynamic.ExpandoObject data)> items;
-                try
-                {
-                    // TODO: restrict the items to get to the ones where the guid is requested (or should we simply fetch all and discard later?)
-                    items = await client.GetListItems(listID, new string[] { columnName }).ToListAsync();
-                }
-                catch (Exception)
-                { // TODO: handle
-                    continue;
-                }
-
-                foreach (var (itemGuid, itemColumns) in items)
-                {
-                    if (!listItemID2CIIDMap.TryGetValue(itemGuid, out var ciid))
-                        continue; // the external item does not have a mapping to a CI
-
-                    if (!ciids.Contains(ciid))
-                        continue; // we got an item that is not actually requested, discard
-
-                    if (!((IDictionary<string, object>)itemColumns).TryGetValue(columnName, out var columnValue))
-                        continue; // the external item does not actually have the column we requested
-
-                    var attributeValue = columnValue as string;
-                    if (columnValue == null) continue; // TODO: handle
-                    if (attributeValue == null) continue; // TODO: handle
-                    yield return BuildAttributeFromValue(attributeName, attributeValue, ciid);
-                }
-            }
-        }
-
         public IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime)
         {
             return AsyncEnumerable.Empty<Relation>();// TODO: implement
