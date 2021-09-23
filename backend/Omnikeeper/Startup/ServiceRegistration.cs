@@ -17,7 +17,6 @@ using Omnikeeper.GridView.Model;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
-using Omnikeeper.Model.Decorators.CachingEffectiveTraits;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using System;
@@ -211,14 +210,15 @@ namespace Omnikeeper.Startup
                 services.Decorate<IPartitionModel, CachingPartitionModel>();
             }
 
+            // TODO: rework or remove
             if (enableEffectiveTraitCaching)
             {
-                services.Decorate<IEffectiveTraitModel, CachingEffectiveTraitModel>();
-                services.Decorate<IBaseAttributeModel, TraitCacheInvalidationBaseAttributeModel>();
-                services.Decorate<IBaseAttributeRevisionistModel, TraitCacheInvalidationBaseAttributeRevisionistModel>();
-                services.Decorate<IBaseRelationModel, TraitCacheInvalidationBaseRelationModel>();
-                services.Decorate<IBaseRelationRevisionistModel, TraitCacheInvalidationBaseRelationRevisionistModel>();
-                services.AddSingleton<EffectiveTraitCache>(); // TODO: create interface
+                //services.Decorate<IEffectiveTraitModel, CachingEffectiveTraitModel>();
+                //services.Decorate<IBaseAttributeModel, TraitCacheInvalidationBaseAttributeModel>();
+                //services.Decorate<IBaseAttributeRevisionistModel, TraitCacheInvalidationBaseAttributeRevisionistModel>();
+                //services.Decorate<IBaseRelationModel, TraitCacheInvalidationBaseRelationModel>();
+                //services.Decorate<IBaseRelationRevisionistModel, TraitCacheInvalidationBaseRelationRevisionistModel>();
+                //services.AddSingleton<EffectiveTraitCache>(); // TODO: create interface
             }
 
             if (enableOIA)

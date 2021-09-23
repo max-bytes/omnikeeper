@@ -50,7 +50,8 @@ namespace Omnikeeper.GraphQL
                        if (!ciBasedAuthorizationService.CanReadCI(ciid))
                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read CI {ciid}");
 
-                       var ci = await ciModel.GetMergedCI(ciid, userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
+                       // TODO: reduce attribute selection when mergedAttributes sub-field parameter "attributeNames" is chosen
+                       var ci = await ciModel.GetMergedCI(ciid, userContext.LayerSet, AllAttributeSelection.Instance, userContext.Transaction, userContext.TimeThreshold);
 
                        return ci;
                    });
@@ -87,7 +88,8 @@ namespace Omnikeeper.GraphQL
                         ciidSelection = SpecificCIIDsSelection.Build(ciids);
                     }
 
-                    var cis = await ciModel.GetMergedCIs(ciidSelection, userContext.LayerSet, false, userContext.Transaction, userContext.TimeThreshold);
+                    // TODO: reduce attribute selection when mergedAttributes sub-field parameter "attributeNames" is chosen
+                    var cis = await ciModel.GetMergedCIs(ciidSelection, userContext.LayerSet, false, AllAttributeSelection.Instance, userContext.Transaction, userContext.TimeThreshold);
 
                     if (ciidSelection is AllCIIDsSelection)
                     {

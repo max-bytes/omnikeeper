@@ -93,7 +93,8 @@ namespace Omnikeeper.GraphQL
 
             var combinedCIIDSelection = CIIDSelectionExtensions.UnionAll(ciidSelections);
 
-            var combinedCIs = (await ciModel.GetMergedCIs(combinedCIIDSelection, layerset, true, userContext.Transaction, userContext.TimeThreshold)).ToDictionary(ci => ci.ID);
+            // TODO: implement attribute selection possibilities?
+            var combinedCIs = (await ciModel.GetMergedCIs(combinedCIIDSelection, layerset, true, AllAttributeSelection.Instance, userContext.Transaction, userContext.TimeThreshold)).ToDictionary(ci => ci.ID);
 
             var ret = new List<(ICIIDSelection, MergedCI)>(); // NOTE: seems weird, cant lookup be created better?
             foreach (var ciidSelection in ciidSelections)

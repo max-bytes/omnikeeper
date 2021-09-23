@@ -94,13 +94,15 @@ namespace Omnikeeper.GridView.Queries
                 if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, config.ReadLayerset))
                     return (null, new Exception($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', config.ReadLayerset)}"));
 
-                var mergedCIs = await effectiveTraitModel.GetMergedCIsWithTrait(activeTrait, new LayerSet(config.ReadLayerset), new AllCIIDsSelection(), trans, atTime);
+                // TODO: reduce attribute fetching by selection
+                var mergedCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), new LayerSet(config.ReadLayerset), false, AllAttributeSelection.Instance, trans, atTime);
+                var mergedCIsWithTrait = await effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, new LayerSet(config.ReadLayerset), trans, atTime);
 
                 // filter readable CIs based on authorization
-                var filteredCIs = ciBasedAuthorizationService.FilterReadableCIs(mergedCIs, (t) => t.ID);
+                var filteredCIs = ciBasedAuthorizationService.FilterReadableCIs(mergedCIsWithTrait, (t) => t.ID);
 
                 var attributeResolver = new AttributeResolver();
-                await attributeResolver.PrefetchRelatedCIsAndLookups(config, filteredCIs, relationModel, ciModel, trans, atTime);
+                await attributeResolver.PrefetchRelatedCIsAndLookups(config, filteredCIs.Select(ci => ci.ID).ToHashSet(), relationModel, ciModel, trans, atTime);
 
                 var resultRows = new Dictionary<Guid, Row>();
 

@@ -104,17 +104,16 @@ namespace Omnikeeper.Model
             if (ReduceTraitRequirements(ref requiredTraits, ref requiredNonTraits))
                 return ImmutableList<MergedCI>.Empty; // bail completely
 
+            // TODO: implement attribute selection improvements, where possible
+
             IEnumerable<MergedCI>? workCIs = null;
             foreach (var requiredTrait in requiredTraits)
             {
                 if (workCIs == null)
                 {
-                    workCIs = await traitModel.GetMergedCIsWithTrait(requiredTrait, layerSet, ciidSelection, trans, atTime);
+                    workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: true, AllAttributeSelection.Instance, trans, atTime);
                 }
-                else
-                {
-                    workCIs = await traitModel.FilterCIsWithTrait(workCIs, requiredTrait, layerSet, trans, atTime);
-                }
+                workCIs = await traitModel.FilterCIsWithTrait(workCIs, requiredTrait, layerSet, trans, atTime);
             }
 
             foreach (var requiredNonTrait in requiredNonTraits)
@@ -124,21 +123,22 @@ namespace Omnikeeper.Model
                     if (requiredNonTrait.ID == TraitEmpty.StaticID)
                     {
                         // treat empty trait special, because its simply GetMergedCIs with includeEmptyCIs: false
-                        workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: false, trans, atTime);
+                        workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: false, AllAttributeSelection.Instance, trans, atTime);
                     }
                     else
                     {
                         // can't optimize this case well to use cache:
                         // at first, we fetch the mergedCIs with the first requiredNonTrait
                         // then we "invert" the ciid-selection and get the mergedCIs for that selection
-                        var excludedCIs = await traitModel.GetMergedCIsWithTrait(requiredNonTrait, layerSet, ciidSelection, trans, atTime);
+                        var baseCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: false, AllAttributeSelection.Instance, trans, atTime);
+                        var excludedCIs = await traitModel.FilterCIsWithTrait(baseCIs, requiredNonTrait, layerSet, trans, atTime);
                         // TODO: implement traitModel.GetMergedCIIDsWithTrait() and use that -> that would allow us to use the cache (if present) and hit the database less
                         // we only need the CIIDs anyway here
 
                         var workCIIDSelection = ciidSelection.Except(SpecificCIIDsSelection.Build(excludedCIs.Select(ci => ci.ID).ToHashSet()));
                         // NOTE: we must keep includeEmptyCIs true here
                         var includeEmptyCIs = true;
-                        workCIs = await ciModel.GetMergedCIs(workCIIDSelection, layerSet, includeEmptyCIs, trans, atTime); 
+                        workCIs = await ciModel.GetMergedCIs(workCIIDSelection, layerSet, includeEmptyCIs, AllAttributeSelection.Instance, trans, atTime); 
                     }
                 }
                 else
@@ -162,7 +162,7 @@ namespace Omnikeeper.Model
                 }
             }
 
-            return workCIs ?? await ciModel.GetMergedCIs(ciidSelection, layerSet, true, trans, atTime);
+            return workCIs ?? await ciModel.GetMergedCIs(ciidSelection, layerSet, true, AllAttributeSelection.Instance, trans, atTime);
         }
 
 

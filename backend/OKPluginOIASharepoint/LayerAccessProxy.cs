@@ -46,17 +46,15 @@ namespace OKPluginOIASharepoint
             return Task.FromResult<CIAttribute?>(null); // TODO: not implemented
         }
 
-        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime, string? nameRegexFilter = null)
+        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime, IAttributeSelection attributeSelection)
         {
             if (!atTime.IsLatest && !useCurrentForHistoric) yield break; // we don't have historic information
 
             var ciids = selection.GetCIIDs(() => mapper.GetAllCIIDs()).ToHashSet();
             var idPairs = mapper.GetIDPairs(ciids);
 
-            var nameRegex = (nameRegexFilter != null) ? new Regex(nameRegexFilter) : null;
-
             await foreach (var a in GetAttributes(idPairs))
-                if (nameRegex == null || nameRegex.IsMatch(a.Name))
+                if (attributeSelection.Contains(a.Name))
                     yield return a;
         }
         public async IAsyncEnumerable<CIAttribute> GetAttributes(IEnumerable<(Guid ciid, SharepointExternalListItemID externalID)> idPairs)

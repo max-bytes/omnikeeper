@@ -23,16 +23,23 @@ namespace Omnikeeper.Model.Decorators
             this.onlineAccessProxy = onlineAccessProxy;
         }
 
-        public async Task<IDictionary<Guid, CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, CIAttribute>[]> FindAttributesByFullName(string name, ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
-            if (await onlineAccessProxy.IsOnlineInboundLayer(layerID, trans))
+            return await MixOnlineAndRegular(layerIDs, trans, 
+                async (regularLayerIDs) => await model.FindAttributesByFullName(name, selection, regularLayerIDs, trans, atTime),
+            async (onlineLayerIDs) =>
             {
-                // TODO
-                var tmp = onlineAccessProxy.FindAttributesByFullName(name, selection, layerID, trans, atTime).ToEnumerable();
-                return tmp.ToDictionary(t => t.CIID);
-            }
+                var onlineResults = await onlineAccessProxy.FindAttributesByFullName(name, selection, onlineLayerIDs, trans, atTime);
 
-            return await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
+                var ret = new IDictionary<Guid, CIAttribute>[onlineLayerIDs.Length];
+                for (int i = 0; i < onlineResults.Length; i++)
+                {
+                    var layerID = onlineLayerIDs[i];
+                    var tmp2 = onlineResults[i].ToDictionary(a => a.CIID);
+                    ret[i] = tmp2;
+                }
+                return ret;
+            });
         }
 
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
@@ -45,7 +52,26 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
+        {
+            return await MixOnlineAndRegular(layerIDs, trans,
+                async (regularLayerIDs) => await model.GetAttributes(selection, regularLayerIDs, returnRemoved, trans, atTime, attributeSelection),
+                async (onlineLayerIDs) =>
+                {
+                    var onlineResults = await onlineAccessProxy.GetAttributes(selection, onlineLayerIDs, trans, atTime, attributeSelection);
+                    
+                    var ret = new IDictionary<Guid, IDictionary<string, CIAttribute>>[onlineLayerIDs.Length];
+                    for(int i = 0;i < onlineResults.Length;i++)
+                    {
+                        var layerID = onlineLayerIDs[i];
+                        var tmp2 = (IDictionary<Guid, IDictionary<string, CIAttribute>>)onlineResults[i].GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));
+                        ret[i] = tmp2;
+                    }
+                    return ret;
+                });
+        }
+
+        private async Task<T[]> MixOnlineAndRegular<T>(string[] layerIDs, IModelContext trans, Func<string[], Task<T[]>> baseFetchF, Func<string[], Task<T[]>> proxyFetchF)
         {
             var layerMap = new Dictionary<string, (int index, bool isOnlineLayer)>();
             var ii = 0;
@@ -58,15 +84,16 @@ namespace Omnikeeper.Model.Decorators
 
             if (!layerMap.Values.Any(l => l.isOnlineLayer))
             {
-                return await model.GetAttributes(selection, layerIDs, returnRemoved, trans, atTime, nameRegexFilter);
-            } else
+                return await baseFetchF(layerIDs);
+            }
+            else
             {
-                var ret = new IDictionary<Guid, IDictionary<string, CIAttribute>>[layerMap.Count];
+                var ret = new T[layerMap.Count];
 
                 // split online- and regular layers, add into return array
                 var regularLayerIDs = layerMap.Where(l => !l.Value.isOnlineLayer).Select(t => t.Key).ToArray();
-                var regularResults = await model.GetAttributes(selection, regularLayerIDs, returnRemoved, trans, atTime, nameRegexFilter);
-                for(int i = 0;i < regularResults.Length;i++)
+                var regularResults = await baseFetchF(regularLayerIDs);
+                for (int i = 0; i < regularResults.Length; i++)
                 {
                     var regularLayerID = regularLayerIDs[i];
                     var indexInFullArray = layerMap[regularLayerID].index;
@@ -74,14 +101,12 @@ namespace Omnikeeper.Model.Decorators
                 }
 
                 var onlineLayerIDs = layerMap.Where(l => l.Value.isOnlineLayer).Select(t => t.Key).ToArray();
-                var onlineResults = onlineAccessProxy.GetAttributes(selection, onlineLayerIDs, trans, atTime, nameRegexFilter).ToEnumerable();
-                var groupedOnlineResults = onlineResults.GroupBy(t => t.layerID, t => t.attribute);
-                foreach (var layerGroup in groupedOnlineResults)
+                var onlineResults = await proxyFetchF(onlineLayerIDs);
+                for (int i = 0; i < onlineResults.Length; i++)
                 {
-                    var layerID = layerGroup.Key;
-                    var tmp2 = (IDictionary<Guid, IDictionary<string, CIAttribute>>)layerGroup.GroupBy(a => a.CIID).ToDictionary(t => t.Key, t => t.ToDictionary(t => t.Name));
-                    var indexInFullArray = layerMap[layerID].index;
-                    ret[indexInFullArray] = tmp2;
+                    var onlineLayerID = onlineLayerIDs[i];
+                    var indexInFullArray = layerMap[onlineLayerID].index;
+                    ret[indexInFullArray] = regularResults[i];
                 }
                 return ret;
             }

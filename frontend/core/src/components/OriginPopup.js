@@ -63,13 +63,13 @@ function OriginPopup(props) {
       default:
         return faInfo;
     }
-  })(data?.changeset.dataOrigin.type);
+  })(data?.changeset?.dataOrigin.type);
 
     return (
       <Popover
         placement="topRight"
         trigger="click"
-        content={data ? <InnerPopup changeset={data.changeset} /> : "Loading..."}
+        content={data ? (data.changeset ? <InnerPopup changeset={data.changeset} /> : "No changeset") : "Loading..."}
         // on='click'
         visible={visible}
         onVisibleChange={(visible) => setVisible(visible)}

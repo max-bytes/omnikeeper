@@ -72,9 +72,9 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return model.GetAttributesOfChangeset(changesetID, trans);
         }
 
-        public async Task<IDictionary<Guid, CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, CIAttribute>[]> FindAttributesByFullName(string name, ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
-            return await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
+            return await model.FindAttributesByFullName(name, selection, layerIDs, trans, atTime);
         }
 
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
@@ -82,9 +82,9 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
         {
-            return await model.GetAttributes(selection, layerIDs, returnRemoved, trans, atTime, nameRegexFilter);
+            return await model.GetAttributes(selection, layerIDs, returnRemoved, trans, atTime, attributeSelection);
         }
     }
 }

@@ -24,15 +24,17 @@ namespace Omnikeeper.Controllers
         private readonly ITraitsProvider traitsProvider;
         private readonly ICurrentUserService currentUserService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
+        private readonly ICIModel ciModel;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
-        public TraitController(IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, ICIBasedAuthorizationService ciBasedAuthorizationService,
+        public TraitController(IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider, ICIBasedAuthorizationService ciBasedAuthorizationService, ICIModel ciModel,
             IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService layerBasedAuthorizationService, ICurrentUserService currentUserService)
         {
             this.traitModel = traitModel;
             this.traitsProvider = traitsProvider;
             this.ciBasedAuthorizationService = ciBasedAuthorizationService;
+            this.ciModel = ciModel;
             this.modelContextBuilder = modelContextBuilder;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.currentUserService = currentUserService;
@@ -52,7 +54,8 @@ namespace Omnikeeper.Controllers
             var trait = await traitsProvider.GetActiveTrait(traitName, trans, timeThreshold);
             if (trait == null)
                 return BadRequest($"Trait with name \"{traitName}\" not found");
-            var traitSets = await traitModel.GetEffectiveTraitsForTrait(trait, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerset, includeEmptyCIs: trait is TraitEmpty, AllAttributeSelection.Instance, trans, timeThreshold);
+            var traitSets = await traitModel.GetEffectiveTraitsForTrait(trait, cis, layerset, trans, timeThreshold);
             return Ok(traitSets
                 .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key)) // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
                 .ToDictionary(kv => kv.Key, kv => EffectiveTraitDTO.Build(kv.Value.et)));

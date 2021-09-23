@@ -43,7 +43,8 @@ namespace Omnikeeper.Base.Model
         public async Task<(Guid, T)> TryToGet(ID id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var attributeValue = ID2AttributeValue(id);
-            var foundCIs = await effectiveTraitModel.GetEffectiveTraitsWithTraitAttributeValue(trait, IDTraitAttributeIdentifier(), attributeValue, layerSet, new AllCIIDsSelection(), trans, timeThreshold);
+            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, AllAttributeSelection.Instance, trans, timeThreshold); // TODO: reduce attribute via selection, only fetch trait relevant
+            var foundCIs = await effectiveTraitModel.GetEffectiveTraitsWithTraitAttributeValue(trait, IDTraitAttributeIdentifier(), attributeValue, cis, layerSet, trans, timeThreshold);
 
             var sortedCIs = foundCIs.OrderBy(t => t.Key); // we order by GUID to stay consistent even when multiple CIs would match
 
@@ -64,9 +65,10 @@ namespace Omnikeeper.Base.Model
 
         public async Task<IDictionary<ID, T>> GetAll(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var CIs = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, layerSet, new AllCIIDsSelection(), trans, timeThreshold);
+            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, AllAttributeSelection.Instance, trans, timeThreshold); // TODO: reduce attribute via selection, only fetch trait relevant
+            var cisWithTrait = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, cis, layerSet, trans, timeThreshold);
             var ret = new Dictionary<ID, T>();
-            foreach (var (ci, et) in CIs.Values.OrderBy(t => t.ci.ID)) // we order by GUID to stay consistent even when multiple CIs have the same ID
+            foreach (var (ci, et) in cisWithTrait.Values.OrderBy(t => t.ci.ID)) // we order by GUID to stay consistent even when multiple CIs have the same ID
             {
                 var (dc, id) = EffectiveTrait2DC(et, ci);
                 try

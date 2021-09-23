@@ -19,6 +19,8 @@ using Tests;
 
 namespace PerfTests
 {
+    // TODO: since latest changes, this perf test does not make much sense anymore, consider rework or removal
+
     [Explicit]
     public class GetMergedCIsWithTraitTest : Base
     {
@@ -31,10 +33,11 @@ namespace PerfTests
             BaseAttributeModel._USE_LATEST_TABLE = UseLatestTable;
             using var mc = modelContextBuilder!.BuildImmediate();
             var ciSelection = (SpecificCIs) ? selectedCIIDs : new AllCIIDsSelection();
-            (await effectiveTraitModel!.GetMergedCIsWithTrait(trait!, layerset!, ciSelection!, mc, time)).Consume(consumer);
+            var cis = await ciModel!.GetMergedCIs(ciSelection!, layerset!, false, AllAttributeSelection.Instance, mc, time);
+            (await effectiveTraitModel!.FilterCIsWithTrait(cis, trait!, layerset!, mc, time)).Consume(consumer);
 
             // second time should hit cache
-            (await effectiveTraitModel!.GetMergedCIsWithTrait(trait!, layerset!, ciSelection!, mc, time)).Consume(consumer);
+            (await effectiveTraitModel!.FilterCIsWithTrait(cis, trait!, layerset!, mc, time)).Consume(consumer);
         }
 
         [Test]
@@ -47,6 +50,7 @@ namespace PerfTests
         public void TearDownT() => TearDown();
 
         private IEffectiveTraitModel? effectiveTraitModel;
+        private ICIModel? ciModel;
         private IModelContextBuilder? modelContextBuilder;
         private ITrait? trait;
         private LayerSet? layerset;
@@ -87,7 +91,7 @@ namespace PerfTests
             var numDataTransactions = AttributeCITuple.numDataTransactions;
 
             var layerModel = ServiceProvider.GetRequiredService<ILayerModel>();
-            var ciModel = ServiceProvider.GetRequiredService<ICIModel>();
+            ciModel = ServiceProvider.GetRequiredService<ICIModel>();
             var traitsProvider = ServiceProvider.GetRequiredService<ITraitsProvider>();
             effectiveTraitModel = ServiceProvider.GetRequiredService<IEffectiveTraitModel>();
             modelContextBuilder = ServiceProvider.GetRequiredService<IModelContextBuilder>();

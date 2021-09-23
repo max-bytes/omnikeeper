@@ -57,13 +57,13 @@ namespace OKPluginCLBMonitoring
             // prepare list of all monitored cis
             var monitoredCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.FromCIID).ToHashSet();
             if (monitoredCIIDs.IsEmpty()) return true;
-            var monitoredCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoredCIIDs), layerSetAll, true, trans, changesetProxy.TimeThreshold))
+            var monitoredCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoredCIIDs), layerSetAll, true, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold))
                 .ToDictionary(ci => ci.ID);
 
             // prepare list of all monitoring modules
             var monitoringModuleCIIDs = allHasMonitoringModuleRelations.Select(r => r.Relation.ToCIID).ToHashSet();
             if (monitoringModuleCIIDs.IsEmpty()) return true;
-            var monitoringModuleCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoringModuleCIIDs), layerSetMonitoringDefinitionsOnly, false, trans, changesetProxy.TimeThreshold))
+            var monitoringModuleCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(monitoringModuleCIIDs), layerSetMonitoringDefinitionsOnly, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold))
                 .ToDictionary(ci => ci.ID);
 
 
@@ -99,7 +99,7 @@ namespace OKPluginCLBMonitoring
                     var template = Scriban.Template.Parse(templateStr);
                     string templateSegment = template.Render(context);
                     logger.LogDebug($"  Rendered template:\n{templateSegment}");
-                    renderedTemplateSegments.Add((p.Relation.FromCIID, monitoringModuleCI.Name, templateSegment));
+                    renderedTemplateSegments.Add((p.Relation.FromCIID, monitoringModuleCI.CIName, templateSegment));
                 }
                 catch (Exception e)
                 {
@@ -160,7 +160,8 @@ namespace OKPluginCLBMonitoring
 
             // assign monitored cis to naemon instances
             var monitoredByCIIDFragments = new List<BulkRelationDataPredicateScope.Fragment>();
-            var naemonInstancesTS = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, layerSetAll, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var naemonInstancesCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSetAll, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold); // TODO: reduce attributes to trait relevant
+            var naemonInstancesTS = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, naemonInstancesCIs, layerSetAll, trans, changesetProxy.TimeThreshold);
             foreach (var naemonInstanceTS in naemonInstancesTS)
                 foreach (var monitoredCI in monitoredCIs.Values)
                     if (CanCIBeMonitoredByNaemonInstance(monitoredCI, naemonInstanceTS.Value.et))
@@ -190,7 +191,7 @@ namespace OKPluginCLBMonitoring
                         string[] hostContactgroups = new string[0];
                         if (hostTemplate != null)
                             hostContactgroups = cgr.CalculateContactgroupsOfCI(hostTemplate.ContactgroupSource).ToArray();
-                        var naemonHost = new NaemonHost(monitoredCIs[t.Key].Name ?? "", hostContactgroups,
+                        var naemonHost = new NaemonHost(monitoredCIs[t.Key].CIName ?? "", hostContactgroups,
                             t.Key,
                             // we pick the first host command we can find
                             hostTemplate?.Command.ToFullCommandString() ?? "",
@@ -275,7 +276,7 @@ namespace OKPluginCLBMonitoring
                 }
                 else
                 {
-                    var contactGroupCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(contactGroupRelations.Select(r => r.Relation.ToCIID).ToHashSet()), layerSetAll, false, trans, timeThreshold)).ToDictionary(t => t.ID);
+                    var contactGroupCIs = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(contactGroupRelations.Select(r => r.Relation.ToCIID).ToHashSet()), layerSetAll, false, AllAttributeSelection.Instance, trans, timeThreshold)).ToDictionary(t => t.ID);
                     contactGroupsMap = contactGroupRelations.GroupBy(r => r.Relation.FromCIID).ToDictionary(t => t.Key, t => t.Select(tt => contactGroupCIs[tt.Relation.ToCIID]));
                     foreach (var ci in contactGroupsMap.Values.SelectMany(t => t).Distinct())
                     {

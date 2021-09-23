@@ -17,7 +17,7 @@ namespace Omnikeeper.GridView.Helper
         private ILookup<(string PredicateID, Guid ToCIID), Guid> incomingRelationsLookup = null!;
         private IDictionary<Guid, MergedCI> relatedMergedCIsLookup = new Dictionary<Guid, MergedCI>();
 
-        public async Task PrefetchRelatedCIsAndLookups(GridViewConfiguration config, IEnumerable<MergedCI> mergedCIs, IRelationModel relationModel, ICIModel ciModel, IModelContext trans, TimeThreshold atTime)
+        public async Task PrefetchRelatedCIsAndLookups(GridViewConfiguration config, ISet<Guid> baseCIIDs, IRelationModel relationModel, ICIModel ciModel, IModelContext trans, TimeThreshold atTime)
         {
             // collected necessary outgoing and incoming relations via the specified predicates in the SourceAttributePaths
             // TODO: validate sourceAttributePaths:
@@ -31,7 +31,7 @@ namespace Omnikeeper.GridView.Helper
             ISet<Guid> outgoingRelatedCIIDs = new HashSet<Guid>();
             if (outgoingPathsRequiringRelations.Count() > 0)
             {
-                var outgoingRelations = (await relationModel.GetMergedRelations(RelationSelectionFrom.Build(mergedCIs.Select(ci => ci.ID).ToHashSet()), new LayerSet(config.ReadLayerset), trans, atTime))
+                var outgoingRelations = (await relationModel.GetMergedRelations(RelationSelectionFrom.Build(baseCIIDs), new LayerSet(config.ReadLayerset), trans, atTime))
                     .Where(r => outgoingPathsRequiringRelations.Contains(r.Relation.PredicateID));
                 outgoingRelationsLookup = (outgoingRelations).ToLookup(r => (r.Relation.PredicateID, r.Relation.FromCIID), r => r.Relation.ToCIID);
                 outgoingRelatedCIIDs = outgoingRelations.Select(r => r.Relation.ToCIID).ToHashSet();
@@ -39,14 +39,20 @@ namespace Omnikeeper.GridView.Helper
             ISet<Guid> incomingRelatedCIIDs = new HashSet<Guid>();
             if (incomingPathsRequiringRelations.Count() > 0)
             {
-                var incomingRelations = (await relationModel.GetMergedRelations(RelationSelectionTo.Build(mergedCIs.Select(ci => ci.ID).ToHashSet()), new LayerSet(config.ReadLayerset), trans, atTime))
+                var incomingRelations = (await relationModel.GetMergedRelations(RelationSelectionTo.Build(baseCIIDs), new LayerSet(config.ReadLayerset), trans, atTime))
                        .Where(r => incomingPathsRequiringRelations.Contains(r.Relation.PredicateID));
                 incomingRelationsLookup = (incomingRelations).ToLookup(r => (r.Relation.PredicateID, r.Relation.ToCIID), r => r.Relation.FromCIID);
                 incomingRelatedCIIDs = incomingRelations.Select(r => r.Relation.FromCIID).ToHashSet();
             }
 
             var relatedCIIDs = outgoingRelatedCIIDs.Union(incomingRelatedCIIDs).ToHashSet();
-            relatedMergedCIsLookup = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(relatedCIIDs), new LayerSet(config.ReadLayerset), false, trans, atTime)).ToDictionary(ci => ci.ID);
+
+            // limit the fetched attributes to only those that are relevant for the gridview
+            // NOTE: we do this across relations, so when there are different relation fetches, this selection might fetch more than necessary, because we only use a single list of attributes
+            // could be an area of performance improvement
+            var relatedCIAttributes = pathsRequiringRelations.Select(t => t.attributeName).ToHashSet();
+
+            relatedMergedCIsLookup = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(relatedCIIDs), new LayerSet(config.ReadLayerset), false, NamedAttributesSelection.Build(relatedCIAttributes), trans, atTime)).ToDictionary(ci => ci.ID);
         }
 
         private bool TryGetAttributeFromAttributeName(MergedCI baseCI, string attributeName, [MaybeNullWhen(false)] out MergedCIAttribute attribute)

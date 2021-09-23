@@ -32,9 +32,9 @@ namespace OKPluginOIAKeycloak
             this.layer = layer;
         }
 
-        private bool BuildAttribute(string name, Guid ciid, IAttributeValue value, Guid changesetID, Regex? nameRegexFilter, [MaybeNullWhen(false)] out CIAttribute ret)
+        private bool BuildAttribute(string name, Guid ciid, IAttributeValue value, Guid changesetID, IAttributeSelection attributeSelection, [MaybeNullWhen(false)] out CIAttribute ret)
         {
-            if (nameRegexFilter != null && !nameRegexFilter.IsMatch(name))
+            if (!attributeSelection.Contains(name))
             {
                 ret = null;
                 return false;
@@ -45,7 +45,7 @@ namespace OKPluginOIAKeycloak
             return true;
         }
 
-        private IEnumerable<CIAttribute> BuildAttributesFromUser(Keycloak.Net.Models.Users.User user, Guid ciid, Keycloak.Net.Models.Common.Mapping? roleMappings, string? nameRegexFilter = null)
+        private IEnumerable<CIAttribute> BuildAttributesFromUser(Keycloak.Net.Models.Users.User user, Guid ciid, Keycloak.Net.Models.Common.Mapping? roleMappings, IAttributeSelection attributeSelection)
         {
             /* with external data sources, we don't have a single source of attributes and hence
                 * we don't have a single source of attribute IDs (or relation IDs, or...)
@@ -54,18 +54,17 @@ namespace OKPluginOIAKeycloak
             var changesetID = staticChangesetID; // TODO: how to work with changesets when its online access?
             var CIName = (user.FirstName.Length > 0 && user.LastName.Length > 0) ? $"{user.FirstName} {user.LastName}" : user.UserName;
 
-            var nameRegex = (nameRegexFilter != null) ? new Regex(nameRegexFilter) : null;
-            if (BuildAttribute(ICIModel.NameAttribute, ciid, new AttributeScalarValueText($"User {CIName}"), changesetID, nameRegex, out var a1)) { yield return a1; }
-            if (BuildAttribute("user.email", ciid, new AttributeScalarValueText(user.Email), changesetID, nameRegex, out var a2)) yield return a2;
-            if (BuildAttribute("user.username", ciid, new AttributeScalarValueText(user.UserName), changesetID, nameRegex, out var a3)) yield return a3;
-            if (BuildAttribute("user.first_name", ciid, new AttributeScalarValueText(user.FirstName), changesetID, nameRegex, out var a4)) yield return a4;
-            if (BuildAttribute("user.last_name", ciid, new AttributeScalarValueText(user.LastName), changesetID, nameRegex, out var a5)) yield return a5;
-            if (BuildAttribute("keycloak.id", ciid, new AttributeScalarValueText(user.Id), changesetID, nameRegex, out var a6)) yield return a6;
+            if (BuildAttribute(ICIModel.NameAttribute, ciid, new AttributeScalarValueText($"User {CIName}"), changesetID, attributeSelection, out var a1)) { yield return a1; }
+            if (BuildAttribute("user.email", ciid, new AttributeScalarValueText(user.Email), changesetID, attributeSelection, out var a2)) yield return a2;
+            if (BuildAttribute("user.username", ciid, new AttributeScalarValueText(user.UserName), changesetID, attributeSelection, out var a3)) yield return a3;
+            if (BuildAttribute("user.first_name", ciid, new AttributeScalarValueText(user.FirstName), changesetID, attributeSelection, out var a4)) yield return a4;
+            if (BuildAttribute("user.last_name", ciid, new AttributeScalarValueText(user.LastName), changesetID, attributeSelection, out var a5)) yield return a5;
+            if (BuildAttribute("keycloak.id", ciid, new AttributeScalarValueText(user.Id), changesetID, attributeSelection, out var a6)) yield return a6;
 
             // roles
             if (roleMappings != null && roleMappings.ClientMappings != null)
             {
-                if (BuildAttribute("keycloak.client_mappings", ciid, AttributeScalarValueJSON.BuildFromString(JsonConvert.SerializeObject(roleMappings.ClientMappings)), changesetID, nameRegex, out var a7)) yield return a7;
+                if (BuildAttribute("keycloak.client_mappings", ciid, AttributeScalarValueJSON.BuildFromString(JsonConvert.SerializeObject(roleMappings.ClientMappings)), changesetID, attributeSelection, out var a7)) yield return a7;
             }
         }
 
@@ -74,7 +73,7 @@ namespace OKPluginOIAKeycloak
             return Task.FromResult<CIAttribute?>(null); // TODO: not implemented
         }
 
-        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime, string? nameRegexFilter = null)
+        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime, IAttributeSelection attributeSelection)
         {
             if (!atTime.IsLatest) yield break; // we don't have historic information
 
@@ -85,7 +84,7 @@ namespace OKPluginOIAKeycloak
                 var user = await client.GetUserAsync(realm, externalID.ID);
                 var roleMappings = await client.GetRoleMappingsForUserAsync(realm, externalID.ID);
 
-                foreach (var a in BuildAttributesFromUser(user, ciid, roleMappings, nameRegexFilter))
+                foreach (var a in BuildAttributesFromUser(user, ciid, roleMappings, attributeSelection))
                     yield return a;
             }
         }
@@ -100,7 +99,7 @@ namespace OKPluginOIAKeycloak
                 var ciid = mapper.GetCIID(new ExternalIDString(user.Id));
                 if (ciid.HasValue && selection.Contains(ciid.Value)) // HACK: we get ALL users and discard a lot of them again
                 {
-                    foreach (var a in BuildAttributesFromUser(user, ciid.Value, null))
+                    foreach (var a in BuildAttributesFromUser(user, ciid.Value, null, AllAttributeSelection.Instance))
                         if (a.Name.Equals(name)) // HACK: we are getting ALL attributes of the user and then discard them again, except for one
                             yield return a;
                 }

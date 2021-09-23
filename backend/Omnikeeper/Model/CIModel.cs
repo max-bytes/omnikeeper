@@ -30,6 +30,10 @@ namespace Omnikeeper.Model
             return null; // TODO: we assume we can convert the name to a string, is this correct?
         }
 
+        // TODO: TRY: Fully implement IAttributeSelection, then rename MergedCI into MergedCIAttributes (to signify that it's not necessarily contains all attributes)
+        // then limit db traffic throughout by leveraging IAttributeSelection
+        // then CompactCI is just a special case of MergedCIAttributes and can be removed as well
+
         public async Task<IEnumerable<CompactCI>> GetCompactCIs(ICIIDSelection selection, LayerSet visibleLayers, IModelContext trans, TimeThreshold atTime)
         {
             IDictionary<Guid, string> names = await attributeModel.GetMergedCINames(selection, visibleLayers, trans, atTime);
@@ -45,17 +49,17 @@ namespace Omnikeeper.Model
             // TODO: this actually returns empty compact CIs for ANY Guid/CI-ID, even ones that don't exist, when selection = SpecificCIIDSelection. check if that's expected, I believe not
         }
 
-        public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime)
         {
-            var tmp = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), layers, trans, atTime);
+            var tmp = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), layers, trans, atTime, attributeSelection);
             var attributes = tmp.GetValueOrDefault(ciid, ImmutableDictionary<string, MergedCIAttribute>.Empty);
             var name = GetNameFromAttributes(attributes);
             return new MergedCI(ciid, name, layers, atTime, attributes);
         }
 
-        public async Task<IEnumerable<MergedCI>> GetMergedCIs(ICIIDSelection selection, LayerSet layers, bool includeEmptyCIs, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedCI>> GetMergedCIs(ICIIDSelection selection, LayerSet layers, bool includeEmptyCIs, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime)
         {
-            var attributes = await attributeModel.GetMergedAttributes(selection, layers, trans, atTime);
+            var attributes = await attributeModel.GetMergedAttributes(selection, layers, trans, atTime, attributeSelection);
 
             if (includeEmptyCIs)
             {

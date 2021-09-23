@@ -4,6 +4,9 @@ using Omnikeeper.Base.Templating;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
+using Scriban;
+using Scriban.Parsing;
+using Scriban.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,15 +29,12 @@ namespace Omnikeeper.Base.Generator
 
     public class Generator
     {
-        public Generator(LayerSet readLayerSet, GeneratorSelectorByTrait selector, IEnumerable<GeneratorItem> items)
+        public Generator(IEnumerable<GeneratorItem> items)
         {
-            ReadLayerSet = readLayerSet;
-            Selector = selector;
             Items = items;
         }
 
-        public LayerSet ReadLayerSet { get; }
-        public GeneratorSelectorByTrait Selector { get; }
+        //public GeneratorSelectorByTrait Selector { get; }
         public IEnumerable<GeneratorItem> Items { get; }
     }
 
@@ -62,29 +62,60 @@ namespace Omnikeeper.Base.Generator
 
     public class GeneratorAttributeValue
     {
-        public GeneratorAttributeValue(Scriban.Template template)
+        private GeneratorAttributeValue(Scriban.Template template, ISet<string> usedAttributeNames)
         {
             Template = template;
+            UsedAttributeNames = usedAttributeNames;
         }
 
         public Scriban.Template Template { get; }
+        public ISet<string> UsedAttributeNames { get; }
+
+        private class AttributeNameScriptVisitor : ScriptVisitor
+        {
+            public readonly ISet<string> AttributeNames = new HashSet<string>();
+            //public override void Visit(ScriptVariableGlobal node)
+            //{
+            //    if (node.Name == "attributes")
+            //    {
+            //        Console.WriteLine("!");
+            //    }
+            //    base.Visit(node);
+            //}
+
+            public override void Visit(ScriptMemberExpression node)
+            {
+                if (node.Target is ScriptVariableGlobal target && target.Name == "attributes")
+                {
+                    var attributeName = node.Member.Name;
+                    AttributeNames.Add(attributeName);
+                }
+                base.Visit(node);
+            }
+        }
 
         public static GeneratorAttributeValue Build(string templateStr)
         {
-            return new GeneratorAttributeValue(Scriban.Template.Parse(templateStr));
+            var lexerOptions = new LexerOptions() { Lang = ScriptLang.Default, Mode = ScriptMode.ScriptOnly };
+            var template = Scriban.Template.Parse(templateStr, lexerOptions: lexerOptions);
+
+            var visitor = new AttributeNameScriptVisitor();
+            visitor.Visit(template.Page);
+
+            return new GeneratorAttributeValue(template, new HashSet<string>(visitor.AttributeNames));
         }
     }
 
     public interface IGeneratorSelection
     {
-        bool Contains(Generator g);
-        bool ContainsItem(GeneratorItem item);
+        IEnumerable<Generator> Filter(IEnumerable<Generator> generators);
+        IEnumerable<GeneratorItem> FilterItems(IEnumerable<GeneratorItem> items);
     }
 
     public class GeneratorSelectionAll : IGeneratorSelection
     {
-        public bool Contains(Generator g) => true;
-        public bool ContainsItem(GeneratorItem item) => true;
+        public IEnumerable<Generator> Filter(IEnumerable<Generator> generators) => generators;
+        public IEnumerable<GeneratorItem> FilterItems(IEnumerable<GeneratorItem> items) => items;
     }
 
     public class GeneratorSelectionContainingFullItemName : IGeneratorSelection
@@ -96,65 +127,43 @@ namespace Omnikeeper.Base.Generator
             ItemName = itemName;
         }
 
-        public bool Contains(Generator g)
+        public IEnumerable<Generator> Filter(IEnumerable<Generator> generators)
         {
-            return g.Items.Any(item => item.Name.Equals(ItemName));
+            return generators.Where(ag => ag.Items.Any(item => item.Name.Equals(ItemName)));
         }
-
-        public bool ContainsItem(GeneratorItem item)
+        public IEnumerable<GeneratorItem> FilterItems(IEnumerable<GeneratorItem> items)
         {
-            return item.Name.Equals(ItemName);
-        }
-    }
-
-    public class GeneratorSelectionContainingRegexItemName : IGeneratorSelection
-    {
-        private readonly Regex regexItemName;
-
-        public GeneratorSelectionContainingRegexItemName(string regexItemNamePattern)
-        {
-            regexItemName = new Regex(regexItemNamePattern);
-        }
-
-        public bool Contains(Generator g)
-        {
-            return g.Items.Any(item => regexItemName.IsMatch(item.Name));
-        }
-
-        public bool ContainsItem(GeneratorItem item)
-        {
-            return regexItemName.IsMatch(item.Name);
+            return items.Where(item => item.Name.Equals(ItemName));
         }
     }
-
 
 
     public interface IEffectiveGeneratorProvider
     {
-        Task<IEnumerable<(GeneratorItem generatorItem, MergedCI ci)>> GetEffectiveGeneratorItems(string layerID, ICIIDSelection selection, IGeneratorSelection generatorSelection, IModelContext mc, TimeThreshold timeThreshold);
+        IEnumerable<GeneratorItem> GetEffectiveGeneratorItems(string layerID, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection);
     }
 
     public class EffectiveGeneratorProvider : IEffectiveGeneratorProvider
     {
-        private readonly ITraitsProvider traitsProvider;
-        private readonly IEffectiveTraitModel effectiveTraitModel;
-        private readonly ICIModel ciModel;
+        //private readonly ITraitsProvider traitsProvider;
+        //private readonly IEffectiveTraitModel effectiveTraitModel;
+        //private readonly ICIModel ciModel;
 
-        public EffectiveGeneratorProvider(ITraitsProvider traitsProvider, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel)
-        {
-            this.traitsProvider = traitsProvider;
-            this.effectiveTraitModel = effectiveTraitModel;
-            this.ciModel = ciModel;
-        }
+        //public EffectiveGeneratorProvider(ITraitsProvider traitsProvider, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel)
+        //{
+        //    this.traitsProvider = traitsProvider;
+        //    this.effectiveTraitModel = effectiveTraitModel;
+        //    this.ciModel = ciModel;
+        //}
 
-        public async Task<IEnumerable<(GeneratorItem generatorItem, MergedCI ci)>> GetEffectiveGeneratorItems(string layerID, ICIIDSelection selection, IGeneratorSelection generatorSelection, IModelContext mc, TimeThreshold timeThreshold)
+        public IEnumerable<GeneratorItem> GetEffectiveGeneratorItems(string layerID, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection)
         {
             // setup, TODO: move
             var generators = new Dictionary<string, Generator>()
             {
-                { "generator_test_01", new Generator(new LayerSet("testlayer01"), new GeneratorSelectorByTrait("cmdb.cust.intern"), new List<GeneratorItem>()
+                { "generator_test_01", new Generator(new List<GeneratorItem>()
                     {
-                        new GeneratorItem("generated_attribute", GeneratorAttributeValue.Build("{{ a.hostname|string.upcase }}"))
+                        new GeneratorItem("generated_attribute", GeneratorAttributeValue.Build("attributes.hostname|string.upcase"))
                     })
                 }
                 //{ "host_set_name_from_hostname", new Generator(new LayerSet(1), new GeneratorSelectorByTrait("host"), new List<GeneratorItem>()
@@ -177,57 +186,70 @@ namespace Omnikeeper.Base.Generator
                 }
             };
 
-            var effectiveGeneratorItems = new List<(GeneratorItem, MergedCI)>();
+            //var effectiveGeneratorItems = new List<(GeneratorItem, MergedCI)>();
             if (appliedGenerators.TryGetValue(layerID, out var applicableGenerators))
             {
-                var filteredApplicableGenerators = applicableGenerators.Where(ag =>
-                {
-                    return generatorSelection.Contains(ag);
-                });
-
+                var filteredApplicableGenerators = generatorSelection.Filter(applicableGenerators);
+                
                 foreach (var g in filteredApplicableGenerators)
                 {
-                    var items = g.Items.Where(item => generatorSelection.ContainsItem(item));
+                    var filteredItems = generatorSelection.FilterItems(g.Items);
+                    filteredItems = FilterItemsByAttributeSelection(filteredItems, attributeSelection);
+                    foreach (var item in filteredItems)
+                        yield return item;
 
-                    if (!items.IsEmpty())
-                    {
-                        var traitName = g.Selector.TraitName;
-                        var trait = await traitsProvider.GetActiveTrait(traitName, mc, timeThreshold);
-                        if (trait == null)
-                            continue; // a trait that is not found can never apply
+                    //if (!items.IsEmpty())
+                    //{
+                    //    var traitName = g.Selector.TraitName;
+                    //    var trait = await traitsProvider.GetActiveTrait(traitName, mc, timeThreshold);
+                    //    if (trait == null)
+                    //        continue; // a trait that is not found can never apply
 
-                        var cis = await ciModel.GetMergedCIs(selection, g.ReadLayerSet, false, mc, timeThreshold); // TODO: group by layerset to cut down on calls to GetMergedCIs
-                        var cisWithTrait = await effectiveTraitModel.FilterCIsWithTrait(cis, trait, g.ReadLayerSet, mc, timeThreshold);
-                        foreach(var ciWithTrait in cisWithTrait)
-                        {
-                            foreach (var item in items)
-                                effectiveGeneratorItems.Add((item, ciWithTrait));
-                        }
-                    }
+                    //    var cisWithTrait = await effectiveTraitModel.GetMergedCIsWithTrait(trait, g.ReadLayerSet, selection, mc, timeThreshold);
+                    //    foreach(var ciWithTrait in cisWithTrait)
+                    //    {
+                    //        foreach (var item in items)
+                    //            effectiveGeneratorItems.Add((item, ciWithTrait));
+                    //    }
+                    //}
                 }
             }
 
-            return effectiveGeneratorItems;
+            //return effectiveGeneratorItems;
+        }
+
+        private IEnumerable<GeneratorItem> FilterItemsByAttributeSelection(IEnumerable<GeneratorItem> items, IAttributeSelection attributeSelection)
+        {
+            foreach (var item in items)
+                if (attributeSelection.Contains(item.Name))
+                    yield return item;
         }
     }
 
     public class GeneratorAttributeResolver
     {
-        public CIAttribute? Resolve(MergedCI mergedCI, string layerID, GeneratorItem item)
+        public CIAttribute? Resolve(IDictionary<string, CIAttribute> existingAttributes, Guid ciid, string layerID, GeneratorItem item)
         {
             try
             {
-                var context = ScribanVariableService.CreateSimpleCIBasedTemplateContext(mergedCI);
-                string templateSegment = item.Value.Template.Render(context);
+                var relevantAttributes = existingAttributes.Values.Where(a => item.Value.UsedAttributeNames.Contains(a.Name)).ToList();
+                if (relevantAttributes.Count == item.Value.UsedAttributeNames.Count) 
+                {
+                    var context = ScribanVariableService.CreateAttributesBasedTemplateContext(relevantAttributes);
 
-                var value = new AttributeScalarValueText(templateSegment);
-                // create a deterministic, dependent guid from the ciid, layerID, attribute name; 
-                // TODO: is this correct? NO! we need to incorporate the dependent attributes, otherwise the attribute ID does not change when any of the dependent attributes change
-                // how do we get them? probably by parsing the template and extracting the accessed attributes?
-                var agGuid = GuidUtility.Create(mergedCI.ID, $"{item.Name}-{layerID}");
-                Guid staticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
-                var ag = new CIAttribute(agGuid, item.Name, mergedCI.ID, value, AttributeState.New, staticChangesetID);
-                return ag;
+                    string templateSegment = item.Value.Template.Render(context);
+
+                    var value = new AttributeScalarValueText(templateSegment);
+                    // create a deterministic, dependent guid from the ciid, layerID, attribute values; 
+                    // we need to incorporate the dependent attributes, otherwise the attribute ID does not change when any of the dependent attributes change
+                    var agGuid = GuidUtility.Create(ciid, $"{item.Name}-{layerID}-{string.Join("-", relevantAttributes)}");
+                    Guid staticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
+                    var ag = new CIAttribute(agGuid, item.Name, ciid, value, AttributeState.New, staticChangesetID);
+                    return ag;
+                } else
+                {
+                    return null;
+                }
             }
             catch (Exception)
             {

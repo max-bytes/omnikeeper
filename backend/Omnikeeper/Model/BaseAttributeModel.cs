@@ -93,6 +93,34 @@ namespace Omnikeeper.Model
             };
         }
 
+        private string AttributeSelection2WhereClause(IAttributeSelection selection)
+        {
+            return selection switch
+            {
+                AllAttributeSelection _ => "1=1",
+                RegexAttributeSelection _ => "name ~ @name_regex",
+                NamedAttributesSelection _ => "name = ANY(@names)",
+                _ => throw new NotImplementedException("")
+            };
+        }
+
+        private IEnumerable<NpgsqlParameter> AttributeSelection2Parameters(IAttributeSelection selection)
+        {
+            switch (selection)
+            {
+                case AllAttributeSelection _:
+                    break;
+                case RegexAttributeSelection r:
+                    yield return new NpgsqlParameter("@name_regex", r.RegexStr);
+                    break;
+                case NamedAttributesSelection n:
+                    yield return new NpgsqlParameter("@names", n.AttributeNames.ToArray());
+                    break;
+                default:
+                    throw new NotImplementedException("");
+            };
+        }
+
         // NOTE: doing
         // ci_id = ANY(@ci_ids)
         // and/or
@@ -155,7 +183,7 @@ namespace Omnikeeper.Model
             return selection;
         }
 
-        private async IAsyncEnumerable<(CIAttribute attribute, string layerID)> _GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null)
+        private async IAsyncEnumerable<(CIAttribute attribute, string layerID)> _GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
         {
             NpgsqlCommand command;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
@@ -165,9 +193,10 @@ namespace Omnikeeper.Model
                     select state, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute_latest a
                     {CIIDSelection2JoinClause(selection)}
                     where ({CIIDSelection2WhereClause(selection)}) and layer_id = ANY(@layer_ids)
-                    and ({((nameRegexFilter != null) ? "name ~ @name_regex" : "1=1")})", trans.DBConnection, trans.DBTransaction);
+                    and ({AttributeSelection2WhereClause(attributeSelection)})", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("layer_ids", layerIDs);
-                if (nameRegexFilter != null) command.Parameters.AddWithValue("name_regex", nameRegexFilter);
+                foreach(var p in AttributeSelection2Parameters(attributeSelection))
+                    command.Parameters.Add(p);
             }
             else
             {
@@ -178,13 +207,14 @@ namespace Omnikeeper.Model
                     select distinct on(a.ci_id, name, layer_id) state, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute a
                     {CIIDSelection2JoinClause(selection)}
                     where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and layer_id = ANY(@layer_ids) and partition_index >= @partition_index
-                    and ({((nameRegexFilter != null) ? "name ~ @name_regex" : "1=1")})
+                    and ({AttributeSelection2WhereClause(attributeSelection)})
                     order by a.ci_id, name, layer_id, timestamp DESC NULLS LAST
                     ", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("layer_ids", layerIDs);
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("partition_index", partitionIndex);
-                if (nameRegexFilter != null) command.Parameters.AddWithValue("name_regex", nameRegexFilter);
+                foreach (var p in AttributeSelection2Parameters(attributeSelection))
+                    command.Parameters.Add(p);
             }
 
             command.Prepare();
@@ -215,14 +245,14 @@ namespace Omnikeeper.Model
             }
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
         {
             selection = await OptimizeCIIDSelection(selection, trans);
 
             var tmp = new Dictionary<string, IDictionary<Guid, IDictionary<string, CIAttribute>>>(layerIDs.Length);
             foreach(var layerID in layerIDs)
                 tmp[layerID] = new Dictionary<Guid, IDictionary<string, CIAttribute>>();
-            await foreach (var (att, layerID) in _GetAttributes(selection, layerIDs, returnRemoved, trans, atTime, nameRegexFilter))
+            await foreach (var (att, layerID) in _GetAttributes(selection, layerIDs, returnRemoved, trans, atTime, attributeSelection))
             {
                 var r = tmp[layerID];
                 if (r.TryGetValue(att.CIID, out var l))
@@ -272,22 +302,26 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IDictionary<Guid, CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, CIAttribute>[]> FindAttributesByFullName(string name, ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
             selection = await OptimizeCIIDSelection(selection, trans);
+
+            var tmp = new Dictionary<string, IDictionary<Guid,CIAttribute>>(layerIDs.Length);
+            foreach (var layerID in layerIDs)
+                tmp[layerID] = new Dictionary<Guid, CIAttribute>();
 
             NpgsqlCommand command;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
             {
                 command = new NpgsqlCommand(@$"
                     {CIIDSelection2CTEClause(selection)}
-                    select state, id, a.ci_id, type, value_text, value_binary, value_control, changeset_id from attribute_latest a 
+                    select state, id, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id from attribute_latest a 
                     {CIIDSelection2JoinClause(selection)}
-                    where ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id
+                    where ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = ANY(@layer_ids)
                 ", trans.DBConnection, trans.DBTransaction);
 
                 command.Parameters.AddWithValue("name", name);
-                command.Parameters.AddWithValue("layer_id", layerID);
+                command.Parameters.AddWithValue("layer_ids", layerIDs);
             }
             else
             {
@@ -295,16 +329,16 @@ namespace Omnikeeper.Model
 
                 command = new NpgsqlCommand(@$"
                     {CIIDSelection2CTEClause(selection)}
-                    select distinct on (ci_id) state, id, a.ci_id, type, value_text, value_binary, value_control, changeset_id from attribute a 
+                    select distinct on (ci_id, layer_id) state, id, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id from attribute a 
                         {CIIDSelection2JoinClause(selection)}
-                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and name = @name and layer_id = @layer_id 
+                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and name = @name and layer_id = ANY(@layer_ids) 
                         and partition_index >= @partition_index
-                        order by a.ci_id, timestamp DESC NULLS LAST
+                        order by a.ci_id, layer_id, timestamp DESC NULLS LAST
                 ", trans.DBConnection, trans.DBTransaction);
 
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("name", name);
-                command.Parameters.AddWithValue("layer_id", layerID);
+                command.Parameters.AddWithValue("layer_ids", layerIDs);
                 command.Parameters.AddWithValue("partition_index", partitionIndex);
             }
 
@@ -312,7 +346,6 @@ namespace Omnikeeper.Model
 
             using var dr = await command.ExecuteReaderAsync();
 
-            var ret = new Dictionary<Guid, CIAttribute>();
             while (await dr.ReadAsync())
             {
                 var state = dr.GetFieldValue<AttributeState>(0);
@@ -326,13 +359,22 @@ namespace Omnikeeper.Model
                     var valueControl = dr.GetFieldValue<byte[]>(6);
                     var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
                     var changesetID = dr.GetGuid(7);
+                    var layerID = dr.GetString(8);
 
-                    ret[CIID] = new CIAttribute(id, name, CIID, av, state, changesetID);
+                    var att = new CIAttribute(id, name, CIID, av, state, changesetID);
+
+                    var r = tmp[layerID];
+                    r[CIID] = att;
                 }
             }
 
             command.Dispose();
 
+            var ret = new IDictionary<Guid, CIAttribute>[layerIDs.Length];
+            for (var i = 0; i < layerIDs.Length; i++)
+            {
+                ret[i] = tmp[layerIDs[i]];
+            }
             return ret;
         }
     }

@@ -76,7 +76,7 @@ namespace OKPluginOIAOmnikeeper
             else return null;
         }
 
-        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime, string? nameRegexFilter = null)
+        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime, IAttributeSelection attributeSelection)
         {
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
@@ -92,8 +92,8 @@ namespace OKPluginOIAOmnikeeper
 
             var externalIDs = IDPairs.Select(p => p.externalID.ID);
             var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
-            var attributesDTO = (nameRegexFilter != null) ?
-                await client.FindMergedAttributesByNameAsync(nameRegexFilter, ciids, remoteLayerIDs, time, ClientVersion) : // TODO: does not exist anymore in later versions
+            var attributesDTO = (attributeSelection is RegexAttributeSelection ras) ?
+                await client.FindMergedAttributesByNameAsync(ras.RegexStr, ciids, remoteLayerIDs, time, ClientVersion) : // TODO: does not exist anymore in later versions
                 await client.GetMergedAttributesAsync(externalIDs, remoteLayerIDs, time, ClientVersion);
             foreach (var a in AttributeDTO2Regular(attributesDTO))
                 yield return a;

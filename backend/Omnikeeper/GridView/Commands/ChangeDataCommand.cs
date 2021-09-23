@@ -197,7 +197,8 @@ namespace Omnikeeper.GridView.Commands
                     return (null, new Exception($"Could not find trait {config.Trait}"));
 
                 var cisList = SpecificCIIDsSelection.Build(request.Changes.SparseRows.Select(i => i.Ciid).ToHashSet());
-                var mergedCIs = await ciModel.GetMergedCIs(cisList, new LayerSet(config.ReadLayerset.ToArray()), true, trans, timeThreshold);
+                // TODO: only fetch relevant attributes
+                var mergedCIs = await ciModel.GetMergedCIs(cisList, new LayerSet(config.ReadLayerset.ToArray()), true, AllAttributeSelection.Instance, trans, timeThreshold);
 
                 var cisWithTrait = await effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, new LayerSet(config.ReadLayerset.ToArray()), trans, timeThreshold);
                 if (cisWithTrait.Count() < mergedCIs.Count())
@@ -219,7 +220,7 @@ namespace Omnikeeper.GridView.Commands
                 var result = new ChangeDataResponse(new List<ChangeDataRow>());
 
                 var attributeResolver = new AttributeResolver();
-                await attributeResolver.PrefetchRelatedCIsAndLookups(config, mergedCIs, relationModel, ciModel, trans, timeThreshold);
+                await attributeResolver.PrefetchRelatedCIsAndLookups(config, mergedCIs.Select(ci => ci.ID).ToHashSet(), relationModel, ciModel, trans, timeThreshold);
 
                 foreach (var item in mergedCIs)
                 {
