@@ -11,6 +11,7 @@ namespace Omnikeeper.Base.Model
     {
         Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, IAttributeSelection attributeSelection, LayerSet layers, IModelContext trans, TimeThreshold atTime);
 
+        // NOTE: we may be able to remove this, it is just a convenience wrapper over GetMergedAttributes()
         Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime);
 
         /**

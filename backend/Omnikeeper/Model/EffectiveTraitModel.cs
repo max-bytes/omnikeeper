@@ -55,36 +55,11 @@ namespace Omnikeeper.Model
             return null;
         }
 
-
-        //public async Task<IEnumerable<MergedCI>> GetMergedCIsWithTrait(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
-        //{
-        //    if (layerSet.IsEmpty && !(trait is TraitEmpty))
-        //        return ImmutableList<MergedCI>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
-
-        //    //bool bail;
-        //    //(ciidSelection, bail) = await Prefilter(trait, layerSet, ciidSelection, trans, atTime);
-        //    //if (bail)
-        //    //    return ImmutableList<MergedCI>.Empty;
-
-        //    // now do a full pass to check which ci's REALLY fulfill the trait's requirements
-        //    //var fetchEmptyCIs = (trait is TraitEmpty); // only fetch empty traits if the specified trait is empty, otherwise we don't have to do that because a non-empty CI can never fulfill the empty trait
-        //    //var cis = await ciModel.GetMergedCIs(ciidSelection, layerSet, fetchEmptyCIs, AllAttributeSelection.Instance, trans, atTime);
-        //    var cisWithTrait = await CanResolve(trait, cis, layerSet, trans, atTime);
-        //    return cisWithTrait;
-        //}
-
         public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> GetEffectiveTraitsForTrait(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             if (layerSet.IsEmpty && !(trait is TraitEmpty))
                 return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
 
-            //bool bail;
-            //(ciidSelection, bail) = await Prefilter(trait, layerSet, ciidSelection, trans, atTime);
-            //if (bail)
-            //    return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty;
-
-            // now do a full pass to check which ci's REALLY fulfill the trait's requirements
-            //var cis = await ciModel.GetMergedCIs(ciidSelection, layerSet, false, AllAttributeSelection.Instance, trans, atTime); // TODO: possible to restrict attribute selection?
             var ets = await Resolve(trait, cis, layerSet, trans, atTime);
             return ets;
         }
@@ -134,6 +109,8 @@ namespace Omnikeeper.Model
 
         private async Task<IEnumerable<MergedCI>> CanResolve(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
+            // TODO: sanity check: make sure that MergedCIs contain the necessary attributes (in principle), otherwise resolving cannot work properly
+
             var ret = new List<MergedCI>(cis.Count());
             switch (trait)
             {
@@ -172,7 +149,7 @@ namespace Omnikeeper.Model
                     return ret;
                 case TraitEmpty te:
                     foreach (var ci in cis)
-                        if (ci.MergedAttributes.IsEmpty()) // TODO: check for relations too?
+                        if (ci.MergedAttributes.IsEmpty()) // NOTE: we do not check for relations
                             ret.Add(ci);
                     return ret;
                 default:
@@ -262,7 +239,7 @@ namespace Omnikeeper.Model
 
                 case TraitEmpty te:
                     foreach (var ci in cis)
-                        if (ci.MergedAttributes.IsEmpty()) // TODO: check for relations too?
+                        if (ci.MergedAttributes.IsEmpty()) // NOTE: we do not check for relations
                             ret.Add(ci.ID, (ci, new EffectiveTrait(te, new Dictionary<string, MergedCIAttribute>(), new Dictionary<string, IEnumerable<MergedRelation>>(), new Dictionary<string, IEnumerable<MergedRelation>>())));
                     return ret;
                 default:

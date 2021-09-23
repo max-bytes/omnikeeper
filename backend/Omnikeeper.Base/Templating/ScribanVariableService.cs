@@ -22,7 +22,6 @@ namespace Omnikeeper.Base.Templating
             this.scalar = scalar;
         }
         public override string ToString(string format, IFormatProvider formatProvider) => scalar;
-        //public override string ToString(TemplateContext context, SourceSpan span) => scalar;
     }
 
     public static class ScribanVariableService

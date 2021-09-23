@@ -2,7 +2,6 @@
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Templating;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Scriban;
 using Scriban.Parsing;
@@ -10,23 +9,9 @@ using Scriban.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Generator
 {
-    //public class AppliedGenerator
-    //{
-    //    public AppliedGenerator(Generator generator, long layerID)
-    //    {
-    //        Generator = generator;
-    //        LayerID = layerID;
-    //    }
-
-    //    public Generator Generator { get; }
-    //    public long LayerID { get; }
-    //}
-
     public class Generator
     {
         public Generator(IEnumerable<GeneratorItem> items)
@@ -34,7 +19,6 @@ namespace Omnikeeper.Base.Generator
             Items = items;
         }
 
-        //public GeneratorSelectorByTrait Selector { get; }
         public IEnumerable<GeneratorItem> Items { get; }
     }
 
@@ -62,26 +46,18 @@ namespace Omnikeeper.Base.Generator
 
     public class GeneratorAttributeValue
     {
-        private GeneratorAttributeValue(Scriban.Template template, ISet<string> usedAttributeNames)
+        private GeneratorAttributeValue(Template template, ISet<string> usedAttributeNames)
         {
             Template = template;
             UsedAttributeNames = usedAttributeNames;
         }
 
-        public Scriban.Template Template { get; }
+        public Template Template { get; }
         public ISet<string> UsedAttributeNames { get; }
 
         private class AttributeNameScriptVisitor : ScriptVisitor
         {
             public readonly ISet<string> AttributeNames = new HashSet<string>();
-            //public override void Visit(ScriptVariableGlobal node)
-            //{
-            //    if (node.Name == "attributes")
-            //    {
-            //        Console.WriteLine("!");
-            //    }
-            //    base.Visit(node);
-            //}
 
             public override void Visit(ScriptMemberExpression node)
             {
@@ -97,7 +73,7 @@ namespace Omnikeeper.Base.Generator
         public static GeneratorAttributeValue Build(string templateStr)
         {
             var lexerOptions = new LexerOptions() { Lang = ScriptLang.Default, Mode = ScriptMode.ScriptOnly };
-            var template = Scriban.Template.Parse(templateStr, lexerOptions: lexerOptions);
+            var template = Template.Parse(templateStr, lexerOptions: lexerOptions);
 
             var visitor = new AttributeNameScriptVisitor();
             visitor.Visit(template.Page);
@@ -175,7 +151,6 @@ namespace Omnikeeper.Base.Generator
                 }
             };
 
-            //var effectiveGeneratorItems = new List<(GeneratorItem, MergedCI)>();
             if (appliedGenerators.TryGetValue(layerID, out var applicableGenerators))
             {
                 var filteredApplicableGenerators = generatorSelection.Filter(applicableGenerators);
@@ -186,25 +161,8 @@ namespace Omnikeeper.Base.Generator
                     filteredItems = FilterItemsByAttributeSelection(filteredItems, attributeSelection);
                     foreach (var item in filteredItems)
                         yield return item;
-
-                    //if (!items.IsEmpty())
-                    //{
-                    //    var traitName = g.Selector.TraitName;
-                    //    var trait = await traitsProvider.GetActiveTrait(traitName, mc, timeThreshold);
-                    //    if (trait == null)
-                    //        continue; // a trait that is not found can never apply
-
-                    //    var cisWithTrait = await effectiveTraitModel.GetMergedCIsWithTrait(trait, g.ReadLayerSet, selection, mc, timeThreshold);
-                    //    foreach(var ciWithTrait in cisWithTrait)
-                    //    {
-                    //        foreach (var item in items)
-                    //            effectiveGeneratorItems.Add((item, ciWithTrait));
-                    //    }
-                    //}
                 }
             }
-
-            //return effectiveGeneratorItems;
         }
 
         private IEnumerable<GeneratorItem> FilterItemsByAttributeSelection(IEnumerable<GeneratorItem> items, IAttributeSelection attributeSelection)
@@ -231,7 +189,7 @@ namespace Omnikeeper.Base.Generator
                     var value = new AttributeScalarValueText(templateSegment);
                     // create a deterministic, dependent guid from the ciid, layerID, attribute values; 
                     // we need to incorporate the dependent attributes, otherwise the attribute ID does not change when any of the dependent attributes change
-                    var agGuid = GuidUtility.Create(ciid, $"{item.Name}-{layerID}-{string.Join("-", relevantAttributes)}");
+                    var agGuid = GuidUtility.Create(ciid, $"{item.Name}-{layerID}-{string.Join("-", item.Value.UsedAttributeNames)}");
                     Guid staticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
                     var ag = new CIAttribute(agGuid, item.Name, ciid, value, AttributeState.New, staticChangesetID);
                     return ag;

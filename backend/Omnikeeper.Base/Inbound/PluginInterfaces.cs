@@ -110,7 +110,6 @@ namespace Omnikeeper.Base.Inbound
         Task<bool> IsOnlineInboundLayer(string layerID, IModelContext trans);
         Task<bool> ContainsOnlineInboundLayer(LayerSet layerset, IModelContext trans);
 
-        //IAsyncEnumerable<(CIAttribute attribute, string layerID)> GetAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null);
         Task<IEnumerable<CIAttribute>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection);
         Task<CIAttribute?> GetFullBinaryAttribute(string name, string layerID, Guid ciid, IModelContext trans, TimeThreshold atTime);
 
