@@ -23,7 +23,7 @@ namespace Tests.Integration.Model
         public async Task TestTraitAttributes()
         {
             var traitsProvider = new MockedTraitsProvider();
-            var (traitModel, layerset, ciids) = await BaseSetup();
+            var (traitModel, ciModel, layerset, ciids) = await BaseSetup();
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
@@ -37,20 +37,21 @@ namespace Tests.Integration.Model
             var testTrait2 = (await traitsProvider.GetActiveTrait("test_trait_2", trans, timeThreshold))!;
             var testTrait3 = (await traitsProvider.GetActiveTrait("test_trait_3", trans, timeThreshold))!;
 
-            var et1 = await traitModel.GetEffectiveTraitsForTrait(testTrait1, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerset, false, AllAttributeSelection.Instance, trans, timeThreshold);
+            var et1 = await traitModel.GetEffectiveTraitsForTrait(testTrait1, cis, layerset, trans, timeThreshold);
             Assert.AreEqual(3, et1.Count());
-            var et2 = await traitModel.GetEffectiveTraitsForTrait(testTrait2, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var et2 = await traitModel.GetEffectiveTraitsForTrait(testTrait2, cis, layerset, trans, timeThreshold);
             Assert.AreEqual(2, et2.Count());
-            Assert.IsTrue(et2.All(t => t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a2") && t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a4")));
-            var et3 = await traitModel.GetEffectiveTraitsForTrait(testTrait3, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            Assert.IsTrue(et2.All(t => t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a2") && t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a4")));
+            var et3 = await traitModel.GetEffectiveTraitsForTrait(testTrait3, cis, layerset, trans, timeThreshold);
             Assert.AreEqual(2, et3.Count());
-            Assert.IsTrue(et3.All(t => t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
+            Assert.IsTrue(et3.All(t => t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
 
-            var cis1 = await traitModel.GetMergedCIsWithTrait(testTrait1, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var cis1 = await traitModel.FilterCIsWithTrait(cis, testTrait1, layerset, trans, timeThreshold);
             Assert.AreEqual(3, cis1.Count());
             cis1.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[1], ciids[2] }, options => options.WithStrictOrdering());
 
-            var cis2 = await traitModel.GetMergedCIsWithTrait(testTrait2, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var cis2 = await traitModel.FilterCIsWithTrait(cis, testTrait2, layerset, trans, timeThreshold);
             Assert.AreEqual(2, cis2.Count());
             cis2.Select(c => c.ID).Should().BeEquivalentTo(new Guid[] { ciids[0], ciids[2] }, options => options.WithStrictOrdering());
         }
@@ -59,19 +60,19 @@ namespace Tests.Integration.Model
         public async Task TestTraitWithNameAndValue()
         {
             var traitsProvider = new MockedTraitsProvider();
-            var (traitModel, layerset, ciids) = await BaseSetup();
+            var (traitModel, ciModel, layerset, ciids) = await BaseSetup();
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
             var trans = ModelContextBuilder.BuildImmediate();
 
             var testTrait1 = (await traitsProvider.GetActiveTrait("test_trait_1", trans, timeThreshold))!;
-
-            var et1 = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(testTrait1, "a4", new AttributeScalarValueText("text41"), layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerset, false, AllAttributeSelection.Instance, trans, timeThreshold);
+            var et1 = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(testTrait1, "a4", new AttributeScalarValueText("text41"), cis, layerset, trans, timeThreshold);
             Assert.AreEqual(1, et1.Count());
             Assert.AreEqual(ciids[0], et1.First().Key);
 
-            var et2 = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(testTrait1, "a4", new AttributeScalarValueText("text42"), layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var et2 = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(testTrait1, "a4", new AttributeScalarValueText("text42"), cis, layerset, trans, timeThreshold);
             Assert.AreEqual(2, et2.Count());
             et2.Select(e => e.Key).Should().BeEquivalentTo(new Guid[] { ciids[1], ciids[2] }, options => options.WithStrictOrdering());
         }
@@ -80,7 +81,7 @@ namespace Tests.Integration.Model
         public async Task TestDependentTraits()
         {
             var traitsProvider = new MockedTraitsProvider();
-            var (traitModel, layerset, _) = await BaseSetup();
+            var (traitModel, ciModel, layerset, _) = await BaseSetup();
 
             var timeThreshold = TimeThreshold.BuildLatest();
             var trans = ModelContextBuilder.BuildImmediate();
@@ -88,10 +89,11 @@ namespace Tests.Integration.Model
 
             var t4 = await traitsProvider.GetActiveTrait("test_trait_4", trans, timeThreshold);
             var t5 = await traitsProvider.GetActiveTrait("test_trait_5", trans, timeThreshold);
+            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerset, false, AllAttributeSelection.Instance, trans, timeThreshold);
 
-            var t1 = await traitModel.GetEffectiveTraitsForTrait(t4!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var t1 = await traitModel.GetEffectiveTraitsForTrait(t4!, cis, layerset, trans, timeThreshold);
             Assert.AreEqual(2, t1.Count());
-            var t2 = await traitModel.GetEffectiveTraitsForTrait(t5!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var t2 = await traitModel.GetEffectiveTraitsForTrait(t5!, cis, layerset, trans, timeThreshold);
             Assert.AreEqual(1, t2.Count());
         }
 
@@ -100,24 +102,23 @@ namespace Tests.Integration.Model
         {
             var timeThreshold = TimeThreshold.BuildLatest();
             var traitsProvider = new MockedTraitsProviderWithLoop();
-            var (traitModel, layerset, _) = await BaseSetup();
+            var (traitModel, ciModel, layerset, _) = await BaseSetup();
             var trans = ModelContextBuilder.BuildImmediate();
             var tt1 = await traitsProvider.GetActiveTrait("test_trait_1", trans, timeThreshold);
-            var t1 = await traitModel.GetEffectiveTraitsForTrait(tt1!, layerset, new AllCIIDsSelection(), trans, timeThreshold);
+            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerset, false, AllAttributeSelection.Instance, trans, timeThreshold);
+            var t1 = await traitModel.GetEffectiveTraitsForTrait(tt1!, cis, layerset, trans, timeThreshold);
             Assert.AreEqual(1, t1.Count());
         }
 
-        private async Task<(EffectiveTraitModel traitModel, LayerSet layerset, Guid[])> BaseSetup()
+        private async Task<(EffectiveTraitModel traitModel, CIModel ciModel, LayerSet layerset, Guid[])> BaseSetup()
         {
-            var oap = new Mock<IOnlineAccessProxy>();
-            oap.Setup(_ => _.IsOnlineInboundLayer(It.IsAny<string>(), It.IsAny<IModelContext>())).ReturnsAsync(false);
             var attributeModel = new AttributeModel(new BaseAttributeModel(new PartitionModel(), new CIIDModel()));
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var relationModel = new RelationModel(new BaseRelationModel(new PartitionModel()));
             var layerModel = new LayerModel();
-            var traitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, oap.Object, NullLogger<EffectiveTraitModel>.Instance);
+            var traitModel = new EffectiveTraitModel(relationModel, NullLogger<EffectiveTraitModel>.Instance);
 
             var transI = ModelContextBuilder.BuildImmediate();
             var user = await DBSetup.SetupUser(userModel, transI);
@@ -145,7 +146,7 @@ namespace Tests.Integration.Model
             }
 
             var layerset = await layerModel.BuildLayerSet(new string[] { "l1" }, transI);
-            return (traitModel, layerset, new Guid[] { ciid1, ciid2, ciid3 });
+            return (traitModel, ciModel, layerset, new Guid[] { ciid1, ciid2, ciid3 });
         }
     }
 }

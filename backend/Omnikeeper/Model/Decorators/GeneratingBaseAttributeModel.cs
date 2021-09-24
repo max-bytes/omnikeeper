@@ -1,144 +1,131 @@
-﻿// TODO: defunct, rework
+﻿
+using Microsoft.Extensions.DependencyInjection;
+using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Generator;
+using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Templating;
+using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Entity.AttributeValues;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Threading.Tasks;
 
-//using Microsoft.Extensions.DependencyInjection;
-//using Omnikeeper.Base.Entity;
-//using Omnikeeper.Base.Entity.DataOrigin;
-//using Omnikeeper.Base.Generator;
-//using Omnikeeper.Base.Model;
-//using Omnikeeper.Base.Utils;
-//using Omnikeeper.Base.Utils.ModelContext;
-//using Omnikeeper.Entity.AttributeValues;
-//using System;
-//using System.Collections.Generic;
-//using System.Collections.Immutable;
-//using System.Linq;
-//using System.Threading.Tasks;
+namespace Omnikeeper.Model.Decorators
+{
+    public class GeneratingBaseAttributeModel : IBaseAttributeModel
+    {
+        private readonly IBaseAttributeModel model;
+        private readonly IServiceProvider sp;
 
-//namespace Omnikeeper.Model.Decorators
-//{
-//    public class GeneratingBaseAttributeModel : IBaseAttributeModel
-//    {
-//        private readonly IBaseAttributeModel model;
-//        private readonly IServiceProvider sp;
+        public GeneratingBaseAttributeModel(IBaseAttributeModel model, IServiceProvider sp)
+        {
+            this.model = model;
+            this.sp = sp;
+        }
 
-//        public GeneratingBaseAttributeModel(IBaseAttributeModel model, IServiceProvider sp)
-//        {
-//            this.model = model;
-//            this.sp = sp;
-//        }
+        private ISet<string> CalculateAdditionalRequiredDependentAttributes(IEnumerable<GeneratorV1>[] egis, IAttributeSelection baseAttributeSelection)
+        {
+            var ret = new HashSet<string>();
+            for (int i = 0; i < egis.Length; i++)
+            {
+                foreach (var egi in egis[i])
+                    ret.UnionWith(egi.Value.UsedAttributeNames.Where(name => !baseAttributeSelection.Contains(name)));
+            }
+            return ret;
+        }
 
-//        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>> FindAttributesByName(string regex, ICIIDSelection selection, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
-//        {
-//            var @base = await model.FindAttributesByName(regex, selection, layerID, returnRemoved, trans, atTime);
-//            var generatorSelection = new GeneratorSelectionContainingRegexItemName(regex);
-//            @base = await MergeInGeneratedAttributes(@base, selection, generatorSelection, layerID, trans, atTime);
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
+        {
+            var @base = await model.GetAttributes(selection, attributeSelection, layerIDs, returnRemoved, trans, atTime);
 
-//            return @base;
-//        }
+            var generatorSelection = new GeneratorSelectionAll();
 
-//        public async Task<IDictionary<Guid,CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-//        {
-//            var @base = await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
-//            var generatorSelection = new GeneratorSelectionContainingFullItemName(name);
-//            @base = await MergeInGeneratedAttributes(@base, selection, generatorSelection, layerID, trans, atTime);
+            // calculate effective generators
+            var effectiveGeneratorProvider = sp.GetRequiredService<IEffectiveGeneratorProvider>(); // use serviceProvider to avoid circular dependency
+            var egis = await effectiveGeneratorProvider.GetEffectiveGenerators(layerIDs, generatorSelection, attributeSelection, trans, atTime);
 
-//            return @base;
-//        }
+            // we need to potentially extend the attributeSelection so that it contains all attributes necessary to resolve the generated attributes
+            // the caller is allowed to not know or care about generated attributes and their requirements, so we need to extend here
+            // and also (for the return structure) ignore any additionally fetched attributes that were only fetched to calculate the generated attributes
+            var additionalAttributeNames = attributeSelection switch
+            {
+                NamedAttributesSelection n => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
+                RegexAttributeSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
+                AllAttributeSelection _ => new HashSet<string>(), // we are fetching all attributes anyway, no need to add additional attributes
+                _ => throw new Exception("Invalid attribute selection encountered"),
+            };
+            var additionalAttributes = (additionalAttributeNames.Count > 0) ? await model.GetAttributes(selection, NamedAttributesSelection.Build(additionalAttributeNames), layerIDs, false, trans, atTime) : null;
 
-//        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-//        {
-//            // TODO: implement
-//            return await model.FindCIIDsWithAttribute(name, selection, layerID, trans, atTime);
-//        }
+            @base = MergeInGeneratedAttributes(@base, additionalAttributes, egis, layerIDs);
 
-//        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-//        {
-//            // TODO: implement
-//            return await model.GetCINames(selection, layerID, trans, atTime);
-//        }
+            return @base;
+        }
 
-//        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
-//        {
-//            var @base = await model.GetAttribute(name, ciid, layerID, trans, atTime);
-//            if (@base != null)
-//                return @base;
-//            else
-//            {
-//                var generatorSelection = new GeneratorSelectionContainingFullItemName(name);
-//                var r = await MergeInGeneratedAttributes(ImmutableDictionary<Guid, IDictionary<string, CIAttribute>>.Empty, SpecificCIIDsSelection.Build(ciid), generatorSelection, layerID, trans, atTime);
-//                return r.FirstOrDefault().Value?.FirstOrDefault().Value;
-//            }
-//        }
+        private IDictionary<Guid, IDictionary<string, CIAttribute>>[] MergeInGeneratedAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>>[] @base, 
+            IDictionary<Guid, IDictionary<string, CIAttribute>>[]? additionalAttributes, IEnumerable<GeneratorV1>[] egis, string[] layerIDs)
+        {
+            // TODO: maybe we can find an efficient way to not generate attributes that are guaranteed to be hidden by a higher layer anyway
+            var resolver = new GeneratorAttributeResolver();
+            for (int i = 0; i < @base.Length; i++)
+            {
+                var layerID = layerIDs[i];
+                foreach (var egi in egis[i])
+                {
+                    foreach (var (ciid, existingCIAttributes) in @base[i])
+                    {
+                        // TODO, HACK: this approach of adding additionalAttributes is not 100% clean
+                        // this only adds the additional attributes if the base CI contains any attributes... or not?
+                        // in any case, from this POV, it would make more sense to already pass in all attributes in a single structure instead of 
+                        // having to merged them here... but this would require changes to the fetch parameters, making it fetch the additional attributes in one fetch
+                        var additionals = additionalAttributes?[i].GetOr(ciid, ImmutableDictionary<string, CIAttribute>.Empty);
+                        var generatedAttribute = resolver.Resolve(existingCIAttributes.Values, additionals?.Values, ciid, layerID, egi);
+                        if (generatedAttribute != null)
+                        {
+                            existingCIAttributes[egi.AttributeName] = generatedAttribute;
+                        }
+                    }
+                }
+            }
 
-//        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
-//        {
-//            // NOTE: generating binary attributes is not supported, hence we just pass through here
-//            return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
-//        }
+            return @base;
+        }
 
-//        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>> GetAttributes(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-//        {
-//            var @base = await model.GetAttributes(selection, layerID, trans, atTime);
-//            var generatorSelection = new GeneratorSelectionAll();
-//            @base = await MergeInGeneratedAttributes(@base, selection, generatorSelection, layerID, trans, atTime);
 
-//            return @base;
-//        }
+        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, IModelContext trans)
+        {
+            // NOTE: changesets never contain any generated attributes
+            return await model.GetAttributesOfChangeset(changesetID, trans);
+        }
 
-//        private async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>> MergeInGeneratedAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>> @base, ICIIDSelection ciidSelection, IGeneratorSelection generatorSelection, string layerID, IModelContext trans, TimeThreshold atTime)
-//        {
-//            // NOTE: we use the service provider here to avoid a circular dependency in DI
-//            var effectiveGeneratorProvider = sp.GetRequiredService<IEffectiveGeneratorProvider>();
+        public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
+        {
+            // NOTE: generating binary attributes is not supported, hence we just pass through here
+            return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
+        }
 
-//            var egsTuples = await effectiveGeneratorProvider.GetEffectiveGeneratorItems(layerID, ciidSelection, generatorSelection, trans, atTime);
-//            if (!egsTuples.IsEmpty())
-//            {
-//                //var existingAttributes = @base.Select(a => a.InformationHash).ToHashSet();
-//                var resolver = new GeneratorAttributeResolver();
-//                foreach (var (item, ci) in egsTuples)
-//                {
-//                    var generatedAttribute = resolver.Resolve(ci, layerID, item);
-//                    if (generatedAttribute != null)
-//                    {
-//                        //var newAttributeHash = CIAttribute.CreateInformationHash(item.Name, ci.ID);
-//                        @base.TryGetValue(ci.ID, out var existingCIAttributes);
-//                        // TODO: complex insert stuff
-//                        if (!existingAttributes.Contains(newAttributeHash))
-//                        {
-//                            @base = @base.Concat(generatedAttribute);
-//                            existingAttributes.Add(newAttributeHash);
-//                        }
-//                    }
-//                }
-//            }
-//            return @base;
-//        }
+        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        {
+            // NOTE: because generators can only produce attributes on CIs that already have any, we can assume that the results of the base call is valid here too
+            return await model.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
+        }
 
-//        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-//        {
-//            return await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, origin, trans);
-//        }
+        public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
+        {
+            return await model.InsertAttribute(name, value, ciid, layerID, changeset, origin, trans);
+        }
 
-//        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-//        {
-//            return await model.RemoveAttribute(name, ciid, layerID, changesetProxy, origin, trans);
-//        }
+        public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
+        {
+            return await model.RemoveAttribute(name, ciid, layerID, changeset, origin, trans);
+        }
 
-//        public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
-//        {
-//            return await model.BulkReplaceAttributes(data, changesetProxy, origin, trans);
-//        }
-
-//        public Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, IModelContext trans)
-//        {
-//            // TODO: implement
-//            return model.GetAttributesOfChangeset(changesetID, trans);
-//        }
-
-//        public async Task<IEnumerable<Guid>> FindCIIDsWithAttributeNameAndValue(string name, IAttributeValue value, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-//        {
-//            // TODO: implement
-//            return await model.FindCIIDsWithAttributeNameAndValue(name, value, selection, layerID, trans, atTime);
-//        }
-//    }
-//}
+        public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
+        {
+            return await model.BulkReplaceAttributes(data, changeset, origin, trans);
+        }
+    }
+}

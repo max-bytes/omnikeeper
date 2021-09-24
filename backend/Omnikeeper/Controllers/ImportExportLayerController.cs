@@ -85,7 +85,7 @@ namespace Omnikeeper.Controllers
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var attributesDict = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new string[] { layerID }, false, trans, timeThreshold)).First();
+            var attributesDict = (await attributeModel.GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new string[] { layerID }, false, trans, timeThreshold)).First();
             var attributesDTO = attributesDict
                 .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key)) // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
                 .SelectMany(kv => kv.Value.Select(t => CIAttributeDTO.Build(t.Value)));

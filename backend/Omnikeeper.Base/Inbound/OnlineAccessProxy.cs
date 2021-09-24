@@ -40,38 +40,37 @@ namespace Omnikeeper.Base.Inbound
             return false;
         }
 
-        private async IAsyncEnumerable<(ILayerAccessProxy proxy, Layer layer)> GetAccessProxies(string[] layerIDs, IModelContext trans)
+        private async IAsyncEnumerable<(ILayerAccessProxy? proxy, Layer layer, int index)> GetAccessProxies(string[] layerIDs, IModelContext trans)
         {
+            var i = 0;
             foreach (var layer in await layerModel.GetLayers(layerIDs, trans))
             {
                 var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
                 if (plugin != null)
                 {
-                    yield return (plugin.CreateLayerAccessProxy(layer), layer);
+                    yield return (plugin.CreateLayerAccessProxy(layer), layer, i++);
+                } else
+                {
+                    yield return (null, layer, i++);
                 }
             }
         }
 
-        public async IAsyncEnumerable<(CIAttribute attribute, string layerID)> GetAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null)
+        public async Task<IEnumerable<CIAttribute>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
         {
-            await foreach (var (proxy, layer) in GetAccessProxies(layerIDs, trans))
+            var ret = new IEnumerable<CIAttribute>[layerIDs.Length];
+            await foreach (var (proxy, _, index) in GetAccessProxies(layerIDs, trans))
             {
-                await foreach (var attribute in proxy.GetAttributes(selection, atTime, nameRegexFilter).Select(a => (a, layer.ID)))
-                    yield return attribute;
+                if (proxy != null)
+                {
+                    var attributes = proxy.GetAttributes(selection, atTime, attributeSelection).ToEnumerable();
+                    ret[index] = attributes;
+                } else
+                {
+                    ret[index] = new CIAttribute[0];
+                }
             }
-        }
-
-        public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            var layer = await layerModel.GetLayer(layerID, trans);
-            if (layer == null)
-                throw new Exception($"Could not find layer with ID {layerID}");
-            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-
-            if (plugin == null)
-                throw new Exception($"Could not load plugin instance {layer.OnlineInboundAdapterLink.AdapterName}");
-            await foreach (var a in plugin.CreateLayerAccessProxy(layer).FindAttributesByFullName(name, selection, atTime))
-                yield return a;
+            return ret;
         }
 
         public async Task<Relation?> GetRelation(Guid fromCIID, Guid toCIID, string predicateID, string layerID, IModelContext trans, TimeThreshold atTime)
@@ -99,17 +98,6 @@ namespace Omnikeeper.Base.Inbound
                 yield return relation;
         }
 
-        public async Task<CIAttribute?> GetAttribute(string name, string layerID, Guid ciid, IModelContext trans, TimeThreshold atTime)
-        {
-            var layer = await layerModel.GetLayer(layerID, trans);
-            if (layer == null)
-                throw new Exception($"Could not find layer with ID {layerID}");
-            var plugin = await pluginManager.GetOnlinePluginInstance(layer.OnlineInboundAdapterLink.AdapterName, trans);
-
-            if (plugin == null)
-                throw new Exception($"Could not load plugin instance {layer.OnlineInboundAdapterLink.AdapterName}");
-            return await plugin.CreateLayerAccessProxy(layer).GetAttribute(name, ciid, atTime);
-        }
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, string layerID, Guid ciid, IModelContext trans, TimeThreshold atTime)
         {
             var layer = await layerModel.GetLayer(layerID, trans);

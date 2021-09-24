@@ -172,6 +172,27 @@ namespace Omnikeeper.GraphQL
                     return traitSet;
                 });
 
+
+            FieldAsync<ListGraphType<GeneratorType>>("manage_generators",
+                resolve: async context =>
+                {
+                    var baseConfigurationModel = context.RequestServices!.GetRequiredService<IBaseConfigurationModel>();
+                    var generatorModel = context.RequestServices!.GetRequiredService<IGeneratorModel>();
+                    var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
+
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
+                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
+
+                    var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                    if (!context.RequestServices!.GetRequiredService<IManagementAuthorizationService>().CanReadManagement(userContext.User, baseConfiguration, out var message))
+                        throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read generators: {message}");
+
+                    var generators = await generatorModel.GetGenerators(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, TimeThreshold.BuildLatest());
+                    return generators.Values;
+                });
+
             FieldAsync<ListGraphType<AuthRoleType>>("manage_authRoles",
                 resolve: async context =>
                 {

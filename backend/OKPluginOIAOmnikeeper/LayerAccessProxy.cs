@@ -76,7 +76,7 @@ namespace OKPluginOIAOmnikeeper
             else return null;
         }
 
-        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime, string? nameRegexFilter = null)
+        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime, IAttributeSelection attributeSelection)
         {
             if (!atTime.IsLatest) yield break; // TODO: implement historic information
 
@@ -92,47 +92,16 @@ namespace OKPluginOIAOmnikeeper
 
             var externalIDs = IDPairs.Select(p => p.externalID.ID);
             var time = (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time;
-            var attributesDTO = (nameRegexFilter != null) ?
-                await client.FindMergedAttributesByNameAsync(nameRegexFilter, ciids, remoteLayerIDs, time, ClientVersion) : // TODO: does not exist anymore in later versions
+            var attributesDTO = (attributeSelection is RegexAttributeSelection ras) ? // TODO: support other attribute selections
+                await client.FindMergedAttributesByNameAsync(ras.RegexStr, ciids, remoteLayerIDs, time, ClientVersion) : // TODO: does not exist anymore in later versions
                 await client.GetMergedAttributesAsync(externalIDs, remoteLayerIDs, time, ClientVersion);
             foreach (var a in AttributeDTO2Regular(attributesDTO))
                 yield return a;
         }
 
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
-        {
-            if (!atTime.IsLatest) return null; // TODO: implement historic information
-
-            var externalID = mapper.GetExternalID(ciid);
-            if (externalID == null) return null;
-
-            var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
-            var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
-
-            var attributeDTO = await client.GetMergedAttributeAsync(ciid, name, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion);
-            if (attributeDTO == null) return null;
-
-            return AttributeDTO2Regular(attributeDTO);
-        }
-
         public Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime)
         {
             return Task.FromResult<CIAttribute?>(null); // TODO: not implemented
-        }
-
-        public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string name, ICIIDSelection selection, TimeThreshold atTime)
-        {
-            if (!atTime.IsLatest) yield break; // TODO: implement historic information
-
-            var remoteLayers = await client.GetLayersByNameAsync(remoteLayerNames, ClientVersion);
-            var remoteLayerIDs = remoteLayers.Select(rl => rl.ID).ToArray();
-
-            var attributesDTO = await client.GetMergedAttributesWithNameAsync(name, remoteLayerIDs, (atTime.IsLatest) ? (DateTimeOffset?)null : atTime.Time, ClientVersion);
-
-
-            foreach (var a in AttributeDTO2Regular(attributesDTO))
-                if (selection.Contains(a.CIID)) // TODO, HACK: we fetch without doing any ciid filtering, rework Rest API endpoint to allow CIID filtering
-                    yield return a;
         }
 
         public async IAsyncEnumerable<Relation> GetRelations(IRelationSelection rl, TimeThreshold atTime)

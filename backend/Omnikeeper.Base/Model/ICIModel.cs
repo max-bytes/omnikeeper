@@ -12,8 +12,8 @@ namespace Omnikeeper.Base.Model
         public static readonly string NameAttribute = "__name";
 
         // merged
-        Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime);
-        Task<IEnumerable<MergedCI>> GetMergedCIs(ICIIDSelection selection, LayerSet layers, bool includeEmptyCIs, IModelContext trans, TimeThreshold atTime);
+        Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime);
+        Task<IEnumerable<MergedCI>> GetMergedCIs(ICIIDSelection selection, LayerSet layers, bool includeEmptyCIs, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime);
         Task<IEnumerable<CompactCI>> GetCompactCIs(ICIIDSelection selection, LayerSet visibleLayers, IModelContext trans, TimeThreshold atTime);
 
         Guid CreateCIID();

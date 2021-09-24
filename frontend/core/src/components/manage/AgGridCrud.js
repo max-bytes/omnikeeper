@@ -137,6 +137,11 @@ export default function AgGridCrud(props) {
     resizable: true,
     valueSetter: function (params) {
       var wasSuccessful = false;
+
+      const innerValueSetter = params.column.colDef.innerValueSetter ?? (t => {});
+
+      innerValueSetter(params);
+
       props.setRowData(oldData => {
         var foundIndex = oldData.findIndex(x => {
             if (isFrontendRowNodeOnly(params.data))

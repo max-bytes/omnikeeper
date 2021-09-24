@@ -59,6 +59,7 @@
     <None Remove="Scripts\00048-remove-gridview-config.psql" />
     <None Remove="Scripts\00049-latest-attributes.psql" />
     <None Remove="Scripts\00050-latest-relations.psql" />
+    <None Remove="Scripts\00051-layer-generators.psql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -95,6 +96,7 @@
     <EmbeddedResource Include="Scripts\00010-computerlayerbrain-rework.psql" />
     <EmbeddedResource Include="Scripts\00028-create-table-gridviewconfig.psql" />
     <EmbeddedResource Include="Scripts\00033-add-speakingName-description-columns.psql" />
+    <EmbeddedResource Include="Scripts\00051-layer-generators.psql" />
     <EmbeddedResource Include="Scripts\00050-latest-relations.psql" />
     <EmbeddedResource Include="Scripts\00049-latest-attributes.psql" />
     <EmbeddedResource Include="Scripts\00048-remove-gridview-config.psql" />

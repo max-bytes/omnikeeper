@@ -109,6 +109,14 @@ namespace Tests.Integration.Controller
             data!.Rows.Should().BeEquivalentTo(new Row[]
             {
                 new Row(
+                    ciid2,
+                    new List<Cell>()
+                    {
+                        new Cell("columnID_a1", new AttributeValueDTO() { Values = new string[] { "text1" }, IsArray = false, Type = AttributeValueType.Text }, true),
+                        new Cell("columnID_a2", new AttributeValueDTO() { Values = new string[] { "text2" }, IsArray = false, Type = AttributeValueType.Text }, true),
+                    }
+                ),
+                new Row(
                     ciid1,
                     new List<Cell>()
                     {
@@ -116,15 +124,7 @@ namespace Tests.Integration.Controller
                         new Cell("columnID_a2", new AttributeValueDTO() { Values = new string[] { }, IsArray = false, Type = AttributeValueType.Text }, true), // empty / not-set cell
                     }
                 ),
-                new Row(
-                    ciid2,
-                    new List<Cell>()
-                    {
-                        new Cell("columnID_a1", new AttributeValueDTO() { Values = new string[] { "text1" }, IsArray = false, Type = AttributeValueType.Text }, true),
-                        new Cell("columnID_a2", new AttributeValueDTO() { Values = new string[] { "text2" }, IsArray = false, Type = AttributeValueType.Text }, true),
-                    }
-                )
-            }, options => options.WithStrictOrdering());
+            }, options => options.WithoutStrictOrdering());
         }
 
         public class MockedTraitsProvider : ITraitsProvider

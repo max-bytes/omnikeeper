@@ -46,7 +46,7 @@ namespace Omnikeeper.Controllers
                 return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
             //TODO: ci-based authz
 
-            var cis = await ciSearchModel.SearchForMergedCIsByTraits(new AllCIIDsSelection(), withTraits, withoutTraits, layerset, trans, timeThreshold);
+            var cis = await ciSearchModel.SearchForMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, withTraits, withoutTraits, layerset, trans, timeThreshold);
 
             return Ok(cis.Select(ci => CIDTO.BuildFromMergedCI(ci)));
         }

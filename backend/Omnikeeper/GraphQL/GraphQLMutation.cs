@@ -118,7 +118,7 @@ namespace Omnikeeper.GraphQL
                         .Concat(removedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
                         .ToHashSet();
                         if (!affectedCIIDs.IsEmpty())
-                            affectedCIs = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(affectedCIIDs), userContext.LayerSet, true, transaction, userContext.TimeThreshold);
+                            affectedCIs = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(affectedCIIDs), userContext.LayerSet, true, AllAttributeSelection.Instance, transaction, userContext.TimeThreshold);
                     }
 
                     transaction.Commit();

@@ -57,7 +57,8 @@ namespace Omnikeeper.Validation.Rules
 
             var layerset = new LayerSet(parsedConfig.Layerset);
 
-            var unnamedCIs = await ciSearchModel.SearchForMergedCIsByTraits(new AllCIIDsSelection(), new string[0], new string[] { CoreTraits.Named.ID, TraitEmpty.StaticID }, layerset, trans, atTime);
+            var attributeSelection = NamedAttributesSelection.Build(ICIModel.NameAttribute); // This is weird... it seems like we need to fetch at least ONE attribute otherwise, it's all empty.. which makes sense, but still...
+            var unnamedCIs = await ciSearchModel.SearchForMergedCIsByTraits(new AllCIIDsSelection(), attributeSelection, new string[0], new string[] { CoreTraits.Named.ID, TraitEmpty.StaticID }, layerset, trans, atTime);
 
             if (unnamedCIs.IsEmpty())
                 return new ValidationIssue[0];

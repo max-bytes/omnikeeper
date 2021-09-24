@@ -31,7 +31,7 @@ namespace OKPluginValidation.Validation
             return await GetAll(layerSet, trans, timeThreshold);
         }
 
-        protected override (Validation, string) EffectiveTrait2DC(EffectiveTrait et, MergedCI ci)
+        protected override (Validation, string) EffectiveTrait2DC(EffectiveTrait et)
         {
             var id = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
             var ruleName = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "rule_name");

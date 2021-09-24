@@ -29,7 +29,7 @@ namespace Omnikeeper.Model
             return await TryToGet(id, layerSet, timeThreshold, trans);
         }
 
-        protected override (AuthRole dc, string id) EffectiveTrait2DC(EffectiveTrait et, MergedCI ci)
+        protected override (AuthRole dc, string id) EffectiveTrait2DC(EffectiveTrait et)
         {
             var AuthRoleID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
             var permissions = TraitConfigDataUtils.ExtractOptionalArrayTextAttribute(et, "permissions", new string[] { });

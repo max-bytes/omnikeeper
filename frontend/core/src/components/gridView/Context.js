@@ -396,6 +396,8 @@ export function Context(props) {
         } catch(e) {
             setSwaggerErrorJson(JSON.stringify(e.response, null, 2));
             setSwaggerMsg(e.toString());
+        } finally {
+            gridApi.hideOverlay();
         }
     }
 

@@ -92,33 +92,8 @@ namespace Omnikeeper.Controllers
 
             var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
             var layerset = new LayerSet(layerIDs);
-            var attributes = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciidSet), layerset, trans, timeThreshold);
+            var attributes = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciidSet), AllAttributeSelection.Instance, layerset, trans, timeThreshold);
             return Ok(attributes.SelectMany(t => t.Value.Select(a => CIAttributeDTO.Build(a.Value))));
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="ciid"></param>
-        /// <param name="name"></param>
-        /// <param name="layerIDs"></param>
-        /// <param name="atTime"></param>
-        /// <returns></returns>
-        [HttpGet("getMergedAttribute")]
-        public async Task<ActionResult<CIAttributeDTO>> GetMergedAttribute([FromQuery, Required] Guid ciid, [FromQuery, Required] string name, [FromQuery, Required] string[] layerIDs, [FromQuery] DateTimeOffset? atTime = null)
-        {
-            var trans = modelContextBuilder.BuildImmediate();
-            var user = await currentUserService.GetCurrentUser(trans);
-            if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, layerIDs))
-                return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
-            if (!ciBasedAuthorizationService.CanReadCI(ciid))
-                return Forbid($"User \"{user.Username}\" does not have permission to write to CI {ciid}");
-
-            var timeThreshold = (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest();
-            var attribute = await attributeModel.GetMergedAttribute(name, ciid, new LayerSet(layerIDs), trans, timeThreshold);
-            if (attribute == null)
-                return NotFound();
-            return Ok(CIAttributeDTO.Build(attribute));
         }
 
         /// <summary>
