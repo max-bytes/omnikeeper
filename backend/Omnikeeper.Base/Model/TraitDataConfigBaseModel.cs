@@ -121,9 +121,9 @@ namespace Omnikeeper.Base.Model
                 var dc = await Get(id, layerSet, changesetProxy.TimeThreshold, trans);
                 return (dc, changed);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                throw new Exception("DC does not conform to trait requirements");
+                throw new Exception("DC does not conform to trait requirements", e);
             }
         }
 

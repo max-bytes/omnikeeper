@@ -1,7 +1,9 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Templating;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Scriban;
 using Scriban.Parsing;
@@ -9,6 +11,7 @@ using Scriban.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Generator
 {
@@ -28,13 +31,15 @@ namespace Omnikeeper.Base.Generator
 
     public class GeneratorAttributeValue
     {
-        private GeneratorAttributeValue(Template template, ISet<string> usedAttributeNames)
+        private GeneratorAttributeValue(Template template, string templateStr, ISet<string> usedAttributeNames)
         {
             Template = template;
+            TemplateStr = templateStr;
             UsedAttributeNames = usedAttributeNames;
         }
 
         public Template Template { get; }
+        public string TemplateStr { get; }
         public ISet<string> UsedAttributeNames { get; }
 
         private class AttributeNameScriptVisitor : ScriptVisitor
@@ -47,6 +52,24 @@ namespace Omnikeeper.Base.Generator
                 {
                     var attributeName = node.Member.Name;
                     AttributeNames.Add(attributeName);
+                }
+                base.Visit(node);
+            }
+
+            public override void Visit(ScriptNode node)
+            {
+                base.Visit(node);
+            }
+
+            public override void Visit(ScriptIndexerExpression node)
+            {
+                if (node.Target is ScriptVariableGlobal target && target.Name == "attributes")
+                {
+                    if (node.Index is ScriptLiteral index && index.Value is string attributeName)
+                    {
+                        AttributeNames.Add(attributeName);
+                    }
+                    // TODO: what if the access is more complex? tackle those cases too
                 }
                 base.Visit(node);
             }
@@ -65,7 +88,7 @@ namespace Omnikeeper.Base.Generator
             var visitor = new AttributeNameScriptVisitor();
             visitor.Visit(template.Page);
 
-            return new GeneratorAttributeValue(template, new HashSet<string>(visitor.AttributeNames));
+            return new GeneratorAttributeValue(template, templateStr, new HashSet<string>(visitor.AttributeNames));
         }
     }
 
@@ -82,45 +105,59 @@ namespace Omnikeeper.Base.Generator
 
     public interface IEffectiveGeneratorProvider
     {
-        IEnumerable<GeneratorV1> GetEffectiveGenerators(string layerID, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection);
+        Task<IEnumerable<GeneratorV1>[]> GetEffectiveGenerators(string[] layerIDs, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold timeThreshold);
     }
 
     public class EffectiveGeneratorProvider : IEffectiveGeneratorProvider
     {
-        public IEnumerable<GeneratorV1> GetEffectiveGenerators(string layerID, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection)
+        private readonly IGeneratorModel generatorModel;
+        private readonly IBaseConfigurationModel baseConfigurationModel;
+        private readonly ILayerModel layerModel;
+
+        public EffectiveGeneratorProvider(IGeneratorModel generatorModel, IBaseConfigurationModel baseConfigurationModel, ILayerModel layerModel)
         {
-            // setup, TODO: move
-            var generators = new Dictionary<string, GeneratorV1>()
-            {
-                {"generator_test_01",  new GeneratorV1("generator_test_01", "generated_attribute", GeneratorAttributeValue.Build("attributes.hostname|string.upcase")) }
-                //{ "host_set_name_from_hostname", new Generator(new LayerSet(1), new GeneratorSelectorByTrait("host"), new List<GeneratorItem>()
-                //    {
-                //        new GeneratorItem(ICIModel.NameAttribute, GeneratorAttributeValue.Build("{{ a.hostname|string.upcase }}"))
-                //    }) 
-                //}
-            };
+            this.generatorModel = generatorModel;
+            this.baseConfigurationModel = baseConfigurationModel;
+            this.layerModel = layerModel;
+        }
 
-            // TODO: make sure applied generators are valid and do not read from themselves
-            // setup, TODO: move
-            var appliedGenerators = new Dictionary<string, List<GeneratorV1>>
-            {
-                {
-                    "testlayer01",
-                    new List<GeneratorV1>()
-                    {
-                        generators["generator_test_01"]
-                    }
-                }
-            };
+        public async Task<IEnumerable<GeneratorV1>[]> GetEffectiveGenerators(string[] layerIDs, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            // TODO, NOTE: we assume we get the layers back just as we queried for them, does this hold all the time?
+            // TODO: rewrite GetLayers() to return array
+            var layers = await layerModel.GetLayers(layerIDs, trans);
 
-            if (appliedGenerators.TryGetValue(layerID, out var applicableGenerators))
+            var ret = new IEnumerable<GeneratorV1>[layerIDs.Length];
+            IDictionary<string, GeneratorV1>? availableGenerators = null;
+            Entity.Config.BaseConfigurationV1? baseConfiguration = null;
+            int i = 0;
+            foreach(var layer in layers)
             {
+                var layerID = layer.ID;
+
+                var l = new List<GeneratorV1>();
+                ret[i++] = l;
+
+                // check if this layer even has any active generators configured, if not -> return early
+                var activeGeneratorIDsForLayer = layer.Generators;
+                if (activeGeneratorIDsForLayer.IsEmpty())
+                    continue;
+
+                // NOTE: this is an important mechanism that prevents layers in the base configuration layerset form having effective generators
+                // this is necessary, because otherwise its very easy to get infinite loops of GetGenerators() -> GetAttributes() -> GetGenerators() -> ...
+                baseConfiguration ??= await baseConfigurationModel.GetConfigOrDefault(trans);
+                if (baseConfiguration.ConfigLayerset.Contains(layerID))
+                    continue;
+
+                availableGenerators ??= await generatorModel.GetGenerators(new LayerSet(baseConfiguration.ConfigLayerset), trans, timeThreshold);
+
+                var applicableGenerators = activeGeneratorIDsForLayer.Select(id => availableGenerators.GetOrWithClass(id, null)).Where(g => g != null).Select(g => g!);
+
                 var filteredApplicableGenerators = generatorSelection.Filter(applicableGenerators);
-
                 var filteredItems = FilterGeneratorsByAttributeSelection(filteredApplicableGenerators, attributeSelection);
-                foreach (var generator in filteredItems)
-                    yield return generator;
+                l.AddRange(filteredItems);
             }
+            return ret;
         }
 
         private IEnumerable<GeneratorV1> FilterGeneratorsByAttributeSelection(IEnumerable<GeneratorV1> generators, IAttributeSelection attributeSelection)

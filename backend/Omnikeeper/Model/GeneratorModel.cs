@@ -22,22 +22,22 @@ namespace Omnikeeper.Model
 
         public async Task<GeneratorV1> GetGenerator(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
-            IDValidations.ValidateGeneratorID(id);
+            IDValidations.ValidateGeneratorIDThrow(id);
 
             return await Get(id, layerSet, timeThreshold, trans);
         }
 
         public async Task<(Guid, GeneratorV1)> TryToGetGenerator(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
-            IDValidations.ValidateGeneratorID(id);
+            IDValidations.ValidateGeneratorIDThrow(id);
 
             return await TryToGet(id, layerSet, timeThreshold, trans);
         }
 
-        public async Task<IEnumerable<GeneratorV1>> GetGenerators(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<IDictionary<string, GeneratorV1>> GetGenerators(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             var generators = await GetAll(layerSet, trans, timeThreshold);
-            return generators.Values;
+            return generators;
         }
 
         protected override (GeneratorV1 dc, string id) EffectiveTrait2DC(EffectiveTrait et)
@@ -57,7 +57,7 @@ namespace Omnikeeper.Model
             return await InsertOrUpdateAttributes(id, layerSet, writeLayerID, dataOrigin, changesetProxy, trans,
                 ("generator.id", new AttributeScalarValueText(id)),
                 ("generator.attribute_name", new AttributeScalarValueText(attributeName)),
-                ("generator.attribute_value_template", new AttributeScalarValueText(attributeValueTemplate)),
+                ("generator.attribute_value_template", new AttributeScalarValueText(attributeValueTemplate, true)),
                 (ICIModel.NameAttribute, new AttributeScalarValueText($"Generator - {id}"))
             );
         }

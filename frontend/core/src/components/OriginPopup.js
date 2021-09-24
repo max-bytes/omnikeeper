@@ -60,16 +60,18 @@ function OriginPopup(props) {
         return faCogs;
       case 'GENERATOR':
         return faCalculator;
+      case 'UNKNOWN':
+        return faInfo;
       default:
         return faInfo;
     }
-  })(data?.changeset?.dataOrigin.type);
+  })((data) ? ((data.changeset) ? data.changeset.dataOrigin.type : 'GENERATOR') : 'UNKNOWN');
 
     return (
       <Popover
         placement="topRight"
         trigger="click"
-        content={data ? (data.changeset ? <InnerPopup changeset={data.changeset} /> : "No changeset") : "Loading..."}
+        content={data ? (data.changeset ? <InnerPopup changeset={data.changeset} /> : "No changeset / Calculated") : "Loading..."}
         // on='click'
         visible={visible}
         onVisibleChange={(visible) => setVisible(visible)}

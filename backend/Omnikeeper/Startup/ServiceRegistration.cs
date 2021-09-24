@@ -190,6 +190,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<ICacheModel, CacheModel>();
             services.AddSingleton<IODataAPIContextModel, ODataAPIContextModel>();
             services.AddSingleton<IRecursiveDataTraitModel, RecursiveDataTraitModel>();
+            services.AddSingleton<IGeneratorModel, GeneratorModel>();
             services.AddSingleton<IEffectiveTraitModel, EffectiveTraitModel>();
             services.AddSingleton<IBaseConfigurationModel, BaseConfigurationModel>();
             services.AddSingleton<IOIAContextModel, OIAContextModel>();

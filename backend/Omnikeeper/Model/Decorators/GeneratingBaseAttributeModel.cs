@@ -19,26 +19,21 @@ namespace Omnikeeper.Model.Decorators
     public class GeneratingBaseAttributeModel : IBaseAttributeModel
     {
         private readonly IBaseAttributeModel model;
-        private readonly IEffectiveGeneratorProvider effectiveGeneratorProvider;
+        private readonly IServiceProvider sp;
 
-        public GeneratingBaseAttributeModel(IBaseAttributeModel model, IEffectiveGeneratorProvider effectiveGeneratorProvider)
+        public GeneratingBaseAttributeModel(IBaseAttributeModel model, IServiceProvider sp)
         {
             this.model = model;
-            this.effectiveGeneratorProvider = effectiveGeneratorProvider;
+            this.sp = sp;
         }
 
-        private ISet<string> CalculateAdditionalRequiredDependentAttributes(string[] layerIDs, IGeneratorSelection generatorSelection, IAttributeSelection baseAttributeSelection)
+        private ISet<string> CalculateAdditionalRequiredDependentAttributes(IEnumerable<GeneratorV1>[] egis, IAttributeSelection baseAttributeSelection)
         {
             var ret = new HashSet<string>();
-            for (int i = 0; i < layerIDs.Length; i++)
+            for (int i = 0; i < egis.Length; i++)
             {
-                var layerID = layerIDs[i];
-                var egis = effectiveGeneratorProvider.GetEffectiveGenerators(layerID, generatorSelection, baseAttributeSelection);
-                if (!egis.IsEmpty())
-                {
-                    foreach (var egi in egis)
-                        ret.UnionWith(egi.Value.UsedAttributeNames.Where(name => !baseAttributeSelection.Contains(name)));
-                }
+                foreach (var egi in egis[i])
+                    ret.UnionWith(egi.Value.UsedAttributeNames.Where(name => !baseAttributeSelection.Contains(name)));
             }
             return ret;
         }
@@ -49,34 +44,36 @@ namespace Omnikeeper.Model.Decorators
 
             var generatorSelection = new GeneratorSelectionAll();
 
+            // calculate effective generators
+            var effectiveGeneratorProvider = sp.GetRequiredService<IEffectiveGeneratorProvider>(); // use serviceProvider to avoid circular dependency
+            var egis = await effectiveGeneratorProvider.GetEffectiveGenerators(layerIDs, generatorSelection, attributeSelection, trans, atTime);
+
             // we need to potentially extend the attributeSelection so that it contains all attributes necessary to resolve the generated attributes
             // the caller is allowed to not know or care about generated attributes and their requirements, so we need to extend here
             // and also (for the return structure) ignore any additionally fetched attributes that were only fetched to calculate the generated attributes
             var additionalAttributeNames = attributeSelection switch
             {
-                NamedAttributesSelection n => CalculateAdditionalRequiredDependentAttributes(layerIDs, generatorSelection, attributeSelection),
-                RegexAttributeSelection r => CalculateAdditionalRequiredDependentAttributes(layerIDs, generatorSelection, attributeSelection),
+                NamedAttributesSelection n => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
+                RegexAttributeSelection r => CalculateAdditionalRequiredDependentAttributes(egis, attributeSelection),
                 AllAttributeSelection _ => new HashSet<string>(), // we are fetching all attributes anyway, no need to add additional attributes
                 _ => throw new Exception("Invalid attribute selection encountered"),
             };
             var additionalAttributes = (additionalAttributeNames.Count > 0) ? await model.GetAttributes(selection, NamedAttributesSelection.Build(additionalAttributeNames), layerIDs, false, trans, atTime) : null;
 
-            @base = MergeInGeneratedAttributes(@base, additionalAttributes, generatorSelection, layerIDs, attributeSelection);
+            @base = MergeInGeneratedAttributes(@base, additionalAttributes, egis, layerIDs);
 
             return @base;
         }
 
-        private IDictionary<Guid, IDictionary<string, CIAttribute>>[] MergeInGeneratedAttributes(
-            IDictionary<Guid, IDictionary<string, CIAttribute>>[] @base, IDictionary<Guid, IDictionary<string, CIAttribute>>[]? additionalAttributes,
-            IGeneratorSelection generatorSelection, string[] layerIDs, IAttributeSelection attributeSelection)
+        private IDictionary<Guid, IDictionary<string, CIAttribute>>[] MergeInGeneratedAttributes(IDictionary<Guid, IDictionary<string, CIAttribute>>[] @base, 
+            IDictionary<Guid, IDictionary<string, CIAttribute>>[]? additionalAttributes, IEnumerable<GeneratorV1>[] egis, string[] layerIDs)
         {
             // TODO: maybe we can find an efficient way to not generate attributes that are guaranteed to be hidden by a higher layer anyway
             var resolver = new GeneratorAttributeResolver();
             for (int i = 0; i < @base.Length; i++)
             {
                 var layerID = layerIDs[i];
-                var egis = effectiveGeneratorProvider.GetEffectiveGenerators(layerID, generatorSelection, attributeSelection);
-                foreach (var egi in egis)
+                foreach (var egi in egis[i])
                 {
                     foreach (var (ciid, existingCIAttributes) in @base[i])
                     {

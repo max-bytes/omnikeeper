@@ -62,7 +62,7 @@ namespace Omnikeeper.Base.Model
             new List<TraitAttribute>() {
                 new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("generator.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                 new TraitAttribute("attribute_name", CIAttributeTemplate.BuildFromParams("generator.attribute_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-                new TraitAttribute("attribute_value_template", CIAttributeTemplate.BuildFromParams("generator.attribute_value_template", AttributeValueType.Text, false)),
+                new TraitAttribute("attribute_value_template", CIAttributeTemplate.BuildFromParams("generator.attribute_value_template", AttributeValueType.MultilineText, false)),
             },
             new List<TraitAttribute>()
             {
@@ -88,7 +88,8 @@ namespace Omnikeeper.Base.Model
 
         public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() { 
             Named, 
-            Trait, Predicate, AuthRole, GridviewContext,
+            Trait, Predicate, AuthRole, Generator,
+            GridviewContext,
         };
     }
 

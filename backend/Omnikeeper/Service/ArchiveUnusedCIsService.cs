@@ -46,6 +46,7 @@ namespace Omnikeeper.Service
                 try
                 {
                     using var transD = modelContextBuilder.BuildDeferred();
+                    // TODO: really slow, consider changing to use CTEs or something else
                     using var commandDeleteBulk = new NpgsqlCommand(@"DELETE FROM ci WHERE id = ANY(@ciids)", trans.DBConnection, trans.DBTransaction);
                     commandDeleteBulk.Parameters.AddWithValue("ciids", unusedCIIDs.ToArray());
                     var d = await commandDeleteBulk.ExecuteNonQueryAsync();
