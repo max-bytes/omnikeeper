@@ -33,7 +33,7 @@ namespace Omnikeeper.Model
             {
                 var r = await Resolve(trait, new MergedCI[] { ci }, layers, trans, atTime);
                 if (r.TryGetValue(ci.ID, out var outValue))
-                    resolved.Add(outValue.et);
+                    resolved.Add(outValue);
             }
             return resolved;
         }
@@ -51,25 +51,25 @@ namespace Omnikeeper.Model
         {
             var t = await Resolve(trait, new MergedCI[] { ci }, layers, trans, atTime);
             if (t.TryGetValue(ci.ID, out var outValue))
-                return outValue.et;
+                return outValue;
             return null;
         }
 
-        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> GetEffectiveTraitsForTrait(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, EffectiveTrait>> GetEffectiveTraitsForTrait(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             if (layerSet.IsEmpty && !(trait is TraitEmpty))
-                return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
+                return ImmutableDictionary<Guid, EffectiveTrait>.Empty; // return empty, an empty layer list can never produce any traits (except for the empty trait)
 
             var ets = await Resolve(trait, cis, layerSet, trans, atTime);
             return ets;
         }
 
-        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> GetEffectiveTraitsWithTraitAttributeValue(ITrait trait, string traitAttributeIdentifier, IAttributeValue value, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, EffectiveTrait>> GetEffectiveTraitsWithTraitAttributeValue(ITrait trait, string traitAttributeIdentifier, IAttributeValue value, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             if (trait is TraitEmpty)
-                return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty; // return empty, the empty trait can never have any attributes
+                return ImmutableDictionary<Guid, EffectiveTrait>.Empty; // return empty, the empty trait can never have any attributes
             if (layerSet.IsEmpty)
-                return ImmutableDictionary<Guid, (MergedCI ci, EffectiveTrait et)>.Empty; // return empty, an empty layer list can never produce any traits
+                return ImmutableDictionary<Guid, EffectiveTrait>.Empty; // return empty, an empty layer list can never produce any traits
 
             // extract actual attribute name from trait attributes
             if (!(trait is GenericTrait genericTrait)) throw new Exception("Unknown trait type detected");
@@ -100,7 +100,7 @@ namespace Omnikeeper.Model
 
             var ets = await GetEffectiveTraitsForTrait(trait, cis, layerSet, trans, atTime);
             return ets.Where(t => {
-                if (t.Value.et.TraitAttributes.TryGetValue(traitAttributeIdentifier, out var outValue))
+                if (t.Value.TraitAttributes.TryGetValue(traitAttributeIdentifier, out var outValue))
                     if (outValue.Attribute.Value.Equals(value))
                         return true;
                 return false;
@@ -157,11 +157,11 @@ namespace Omnikeeper.Model
             }
         }
 
-        private async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> Resolve(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        private async Task<IDictionary<Guid, EffectiveTrait>> Resolve(ITrait trait, IEnumerable<MergedCI> cis, LayerSet layers, IModelContext trans, TimeThreshold atTime)
         {
             // TODO: sanity check: make sure that MergedCIs contain the necessary attributes (in principle), otherwise resolving cannot work properly
 
-            var ret = new Dictionary<Guid, (MergedCI ci, EffectiveTrait et)>(cis.Count());
+            var ret = new Dictionary<Guid, EffectiveTrait>(cis.Count());
             switch (trait)
             {
                 case GenericTrait tt:
@@ -229,7 +229,7 @@ namespace Omnikeeper.Model
                         }
 
                         var resolvedET = new EffectiveTrait(tt, effectiveTraitAttributes, effectiveOutgoingTraitRelations, effectiveIncomingTraitRelations);
-                        ret.Add(ci.ID, (ci, resolvedET));
+                        ret.Add(ci.ID, resolvedET);
 
                         ENDOFCILOOP:
                         ;
@@ -240,7 +240,7 @@ namespace Omnikeeper.Model
                 case TraitEmpty te:
                     foreach (var ci in cis)
                         if (ci.MergedAttributes.IsEmpty()) // NOTE: we do not check for relations
-                            ret.Add(ci.ID, (ci, new EffectiveTrait(te, new Dictionary<string, MergedCIAttribute>(), new Dictionary<string, IEnumerable<MergedRelation>>(), new Dictionary<string, IEnumerable<MergedRelation>>())));
+                            ret.Add(ci.ID, new EffectiveTrait(te, new Dictionary<string, MergedCIAttribute>(), new Dictionary<string, IEnumerable<MergedRelation>>(), new Dictionary<string, IEnumerable<MergedRelation>>()));
                     return ret;
                 default:
                     throw new Exception("Unknown trait encountered");

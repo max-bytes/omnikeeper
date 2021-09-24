@@ -58,7 +58,7 @@ namespace Omnikeeper.Controllers
             var traitSets = await traitModel.GetEffectiveTraitsForTrait(trait, cis, layerset, trans, timeThreshold);
             return Ok(traitSets
                 .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key)) // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
-                .ToDictionary(kv => kv.Key, kv => EffectiveTraitDTO.Build(kv.Value.et)));
+                .ToDictionary(kv => kv.Key, kv => EffectiveTraitDTO.Build(kv.Value)));
         }
     }
 }

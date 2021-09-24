@@ -43,7 +43,7 @@ namespace OKPluginGenericJSONIngest
             return await TryToGet(id, layerSet, timeThreshold, trans);
         }
 
-        protected override (Context, string) EffectiveTrait2DC(EffectiveTrait et, MergedCI ci)
+        protected override (Context, string) EffectiveTrait2DC(EffectiveTrait et)
         {
             var contextID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
             var extractConfig = TraitConfigDataUtils.ExtractMandatoryScalarJSONAttribute(et, "extract_config", Context.ExtractConfigSerializer);

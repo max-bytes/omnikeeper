@@ -1,4 +1,4 @@
-﻿// TODO: became defunct with the lastest changes, consider rework or removal
+﻿////TODO: became defunct with the lastest changes, consider rework or removal
 
 //using Omnikeeper.Base.Entity;
 //using Omnikeeper.Base.Inbound;
@@ -95,6 +95,7 @@
 //            else
 //            { // cache miss
 //                // we fetch with an ciidselection of ALL, so we can properly fill the cache
+//                var fullCIs = await ciModel
 //                var allETs = await baseModel.GetEffectiveTraitsForTrait(trait, layerSet, new AllCIIDsSelection(), trans, atTime);
 
 //                // update cache with full set of ciids that fulfill trait
@@ -159,10 +160,10 @@
 //            }
 //        }
 
-//        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> GetEffectiveTraitsWithTraitAttributeValue(ITrait trait, string traitAttributeIdentifier, IAttributeValue value, LayerSet layerSet, ICIIDSelection ciidSelection, IModelContext trans, TimeThreshold atTime)
+//        public async Task<IDictionary<Guid, (MergedCI ci, EffectiveTrait et)>> GetEffectiveTraitsWithTraitAttributeValue(ITrait trait, string traitAttributeIdentifier, IAttributeValue value, IEnumerable<MergedCI> cis, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
 //        {
 //            // cannot cache well
-//            return await baseModel.GetEffectiveTraitsWithTraitAttributeValue(trait, traitAttributeIdentifier, value, layerSet, ciidSelection, trans, atTime);
+//            return await baseModel.GetEffectiveTraitsWithTraitAttributeValue(trait, traitAttributeIdentifier, value, cis, layerSet, trans, atTime);
 //        }
 //    }
 //}

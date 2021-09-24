@@ -36,7 +36,7 @@ namespace Omnikeeper.Model
             return await GetAll(layerSet, trans, timeThreshold);
         }
 
-        protected override (Predicate, string) EffectiveTrait2DC(EffectiveTrait et, MergedCI ci)
+        protected override (Predicate, string) EffectiveTrait2DC(EffectiveTrait et)
         {
             var predicateID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
             var wordingFrom = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "wording_from");

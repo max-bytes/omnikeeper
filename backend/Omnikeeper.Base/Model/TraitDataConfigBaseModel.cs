@@ -49,15 +49,15 @@ namespace Omnikeeper.Base.Model
             var sortedCIs = foundCIs.OrderBy(t => t.Key); // we order by GUID to stay consistent even when multiple CIs would match
 
             var foundCI = sortedCIs.FirstOrDefault();
-            if (!foundCI.Equals(default(KeyValuePair<Guid, (MergedCI ci, EffectiveTrait et)>)))
+            if (!foundCI.Equals(default(KeyValuePair<Guid, EffectiveTrait>)))
             {
-                var (dc, _) = EffectiveTrait2DC(foundCI.Value.et, foundCI.Value.ci);
+                var (dc, _) = EffectiveTrait2DC(foundCI.Value);
                 return (foundCI.Key, dc);
             }
             return default;
         }
 
-        protected abstract (T dc, ID id) EffectiveTrait2DC(EffectiveTrait et, MergedCI ci);
+        protected abstract (T dc, ID id) EffectiveTrait2DC(EffectiveTrait et);
         protected abstract IAttributeValue ID2AttributeValue(ID id);
         protected virtual string IDTraitAttributeIdentifier() => "id";
 
@@ -68,9 +68,9 @@ namespace Omnikeeper.Base.Model
             var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, AllAttributeSelection.Instance, trans, timeThreshold); // TODO: reduce attribute via selection, only fetch trait relevant
             var cisWithTrait = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, cis, layerSet, trans, timeThreshold);
             var ret = new Dictionary<ID, T>();
-            foreach (var (ci, et) in cisWithTrait.Values.OrderBy(t => t.ci.ID)) // we order by GUID to stay consistent even when multiple CIs have the same ID
+            foreach (var (ciid, et) in cisWithTrait.Select(kv => (kv.Key, kv.Value)).OrderBy(t => t.Key)) // we order by GUID to stay consistent even when multiple CIs have the same ID
             {
-                var (dc, id) = EffectiveTrait2DC(et, ci);
+                var (dc, id) = EffectiveTrait2DC(et);
                 try
                 {
                     ret.Add(id, dc);

@@ -30,10 +30,6 @@ namespace Omnikeeper.Model
             return null; // TODO: we assume we can convert the name to a string, is this correct?
         }
 
-        // TODO: TRY: Fully implement IAttributeSelection, then rename MergedCI into MergedCIAttributes (to signify that it's not necessarily contains all attributes)
-        // then limit db traffic throughout by leveraging IAttributeSelection
-        // then CompactCI is just a special case of MergedCIAttributes and can be removed as well
-
         public async Task<IEnumerable<CompactCI>> GetCompactCIs(ICIIDSelection selection, LayerSet visibleLayers, IModelContext trans, TimeThreshold atTime)
         {
             IDictionary<Guid, string> names = await attributeModel.GetMergedCINames(selection, visibleLayers, trans, atTime);

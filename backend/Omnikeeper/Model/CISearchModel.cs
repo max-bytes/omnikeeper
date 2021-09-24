@@ -93,7 +93,6 @@ namespace Omnikeeper.Model
         public async Task<IEnumerable<MergedCI>> SearchForMergedCIsByTraits(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, string[] withEffectiveTraits, string[] withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             var activeTraits = await traitsProvider.GetActiveTraits(trans, atTime);
-            //var requiredTraits = withEffectiveTraits.Select(et => activeTraits.GetOrWithClass(et, null)).Where(at => at != null);
 
             IEnumerable<ITrait> requiredTraits = activeTraits.Values.Where(t => withEffectiveTraits.Contains(t.ID)).ToList();
             IEnumerable<ITrait> requiredNonTraits = activeTraits.Values.Where(t => withoutEffectiveTraits.Contains(t.ID)).ToList();

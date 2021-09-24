@@ -42,10 +42,10 @@ namespace Tests.Integration.Model
             Assert.AreEqual(3, et1.Count());
             var et2 = await traitModel.GetEffectiveTraitsForTrait(testTrait2, cis, layerset, trans, timeThreshold);
             Assert.AreEqual(2, et2.Count());
-            Assert.IsTrue(et2.All(t => t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a2") && t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a4")));
+            Assert.IsTrue(et2.All(t => t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a2") && t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a4")));
             var et3 = await traitModel.GetEffectiveTraitsForTrait(testTrait3, cis, layerset, trans, timeThreshold);
             Assert.AreEqual(2, et3.Count());
-            Assert.IsTrue(et3.All(t => t.Value.et.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
+            Assert.IsTrue(et3.All(t => t.Value.TraitAttributes.Any(ta => ta.Value.Attribute.Name == "a1")));
 
             var cis1 = await traitModel.FilterCIsWithTrait(cis, testTrait1, layerset, trans, timeThreshold);
             Assert.AreEqual(3, cis1.Count());

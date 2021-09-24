@@ -39,7 +39,7 @@ namespace Omnikeeper.Model
             return traits.Values;
         }
 
-        protected override (RecursiveTrait dc, string id) EffectiveTrait2DC(EffectiveTrait et, MergedCI ci)
+        protected override (RecursiveTrait dc, string id) EffectiveTrait2DC(EffectiveTrait et)
         {
             var traitID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
 

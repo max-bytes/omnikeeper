@@ -111,6 +111,12 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
+        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        {
+            // NOTE: because generators can only produce attributes on CIs that already have any, we can assume that the results of the base call is valid here too
+            return await model.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
+        }
+
         public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
             return await model.InsertAttribute(name, value, ciid, layerID, changeset, origin, trans);
@@ -124,12 +130,6 @@ namespace Omnikeeper.Model.Decorators
         public async Task<IEnumerable<(Guid ciid, string fullName)>> BulkReplaceAttributes<F>(IBulkCIAttributeData<F> data, IChangesetProxy changeset, DataOriginV1 origin, IModelContext trans)
         {
             return await model.BulkReplaceAttributes(data, changeset, origin, trans);
-        }
-
-        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
-        {
-            // NOTE: because generators can only produce attributes on CIs that already have any, we can assume that the results of the base call is valid here too
-            return await model.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
         }
     }
 }
