@@ -33,7 +33,7 @@ namespace Omnikeeper.Model.Decorators
             for (int i = 0; i < layerIDs.Length; i++)
             {
                 var layerID = layerIDs[i];
-                var egis = effectiveGeneratorProvider.GetEffectiveGeneratorItems(layerID, generatorSelection, baseAttributeSelection);
+                var egis = effectiveGeneratorProvider.GetEffectiveGenerators(layerID, generatorSelection, baseAttributeSelection);
                 if (!egis.IsEmpty())
                 {
                     foreach (var egi in egis)
@@ -45,7 +45,6 @@ namespace Omnikeeper.Model.Decorators
 
         public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
-
             var @base = await model.GetAttributes(selection, attributeSelection, layerIDs, returnRemoved, trans, atTime);
 
             var generatorSelection = new GeneratorSelectionAll();
@@ -76,7 +75,7 @@ namespace Omnikeeper.Model.Decorators
             for (int i = 0; i < @base.Length; i++)
             {
                 var layerID = layerIDs[i];
-                var egis = effectiveGeneratorProvider.GetEffectiveGeneratorItems(layerID, generatorSelection, attributeSelection);
+                var egis = effectiveGeneratorProvider.GetEffectiveGenerators(layerID, generatorSelection, attributeSelection);
                 foreach (var egi in egis)
                 {
                     foreach (var (ciid, existingCIAttributes) in @base[i])
@@ -89,7 +88,7 @@ namespace Omnikeeper.Model.Decorators
                         var generatedAttribute = resolver.Resolve(existingCIAttributes.Values, additionals?.Values, ciid, layerID, egi);
                         if (generatedAttribute != null)
                         {
-                            existingCIAttributes[egi.Name] = generatedAttribute;
+                            existingCIAttributes[egi.AttributeName] = generatedAttribute;
                         }
                     }
                 }

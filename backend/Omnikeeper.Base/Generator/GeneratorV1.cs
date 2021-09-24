@@ -12,35 +12,17 @@ using System.Linq;
 
 namespace Omnikeeper.Base.Generator
 {
-    public class Generator
+    public class GeneratorV1
     {
-        public Generator(IEnumerable<GeneratorItem> items)
+        public GeneratorV1(string id, string attributeName, GeneratorAttributeValue value)
         {
-            Items = items;
-        }
-
-        public IEnumerable<GeneratorItem> Items { get; }
-    }
-
-    public class GeneratorSelectorByTrait
-    {
-        public GeneratorSelectorByTrait(string traitName)
-        {
-            TraitName = traitName;
-        }
-
-        public string TraitName { get; }
-    }
-
-    public class GeneratorItem
-    {
-        public GeneratorItem(string name, GeneratorAttributeValue value)
-        {
-            Name = name;
+            ID = id;
+            AttributeName = attributeName;
             Value = value;
         }
 
-        public string Name { get; }
+        public string ID { get; }
+        public string AttributeName { get; }
         public GeneratorAttributeValue Value { get; }
     }
 
@@ -75,6 +57,11 @@ namespace Omnikeeper.Base.Generator
             var lexerOptions = new LexerOptions() { Lang = ScriptLang.Default, Mode = ScriptMode.ScriptOnly };
             var template = Template.Parse(templateStr, lexerOptions: lexerOptions);
 
+            if (template.HasErrors)
+            {
+                throw new Exception($"Could not build generator attribute template because of parsing error(s):\n {string.Join("\n", template.Messages.Select(t => t.Message))}");
+            }
+
             var visitor = new AttributeNameScriptVisitor();
             visitor.Visit(template.Page);
 
@@ -84,53 +71,28 @@ namespace Omnikeeper.Base.Generator
 
     public interface IGeneratorSelection
     {
-        IEnumerable<Generator> Filter(IEnumerable<Generator> generators);
-        IEnumerable<GeneratorItem> FilterItems(IEnumerable<GeneratorItem> items);
+        IEnumerable<GeneratorV1> Filter(IEnumerable<GeneratorV1> generators);
     }
 
     public class GeneratorSelectionAll : IGeneratorSelection
     {
-        public IEnumerable<Generator> Filter(IEnumerable<Generator> generators) => generators;
-        public IEnumerable<GeneratorItem> FilterItems(IEnumerable<GeneratorItem> items) => items;
-    }
-
-    public class GeneratorSelectionContainingFullItemName : IGeneratorSelection
-    {
-        private readonly string ItemName;
-
-        public GeneratorSelectionContainingFullItemName(string itemName)
-        {
-            ItemName = itemName;
-        }
-
-        public IEnumerable<Generator> Filter(IEnumerable<Generator> generators)
-        {
-            return generators.Where(ag => ag.Items.Any(item => item.Name.Equals(ItemName)));
-        }
-        public IEnumerable<GeneratorItem> FilterItems(IEnumerable<GeneratorItem> items)
-        {
-            return items.Where(item => item.Name.Equals(ItemName));
-        }
+        public IEnumerable<GeneratorV1> Filter(IEnumerable<GeneratorV1> generators) => generators;
     }
 
 
     public interface IEffectiveGeneratorProvider
     {
-        IEnumerable<GeneratorItem> GetEffectiveGeneratorItems(string layerID, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection);
+        IEnumerable<GeneratorV1> GetEffectiveGenerators(string layerID, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection);
     }
 
     public class EffectiveGeneratorProvider : IEffectiveGeneratorProvider
     {
-        public IEnumerable<GeneratorItem> GetEffectiveGeneratorItems(string layerID, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection)
+        public IEnumerable<GeneratorV1> GetEffectiveGenerators(string layerID, IGeneratorSelection generatorSelection, IAttributeSelection attributeSelection)
         {
             // setup, TODO: move
-            var generators = new Dictionary<string, Generator>()
+            var generators = new Dictionary<string, GeneratorV1>()
             {
-                { "generator_test_01", new Generator(new List<GeneratorItem>()
-                    {
-                        new GeneratorItem("generated_attribute", GeneratorAttributeValue.Build("attributes.hostname|string.upcase"))
-                    })
-                }
+                {"generator_test_01",  new GeneratorV1("generator_test_01", "generated_attribute", GeneratorAttributeValue.Build("attributes.hostname|string.upcase")) }
                 //{ "host_set_name_from_hostname", new Generator(new LayerSet(1), new GeneratorSelectorByTrait("host"), new List<GeneratorItem>()
                 //    {
                 //        new GeneratorItem(ICIModel.NameAttribute, GeneratorAttributeValue.Build("{{ a.hostname|string.upcase }}"))
@@ -140,11 +102,11 @@ namespace Omnikeeper.Base.Generator
 
             // TODO: make sure applied generators are valid and do not read from themselves
             // setup, TODO: move
-            var appliedGenerators = new Dictionary<string, List<Generator>>
+            var appliedGenerators = new Dictionary<string, List<GeneratorV1>>
             {
                 {
                     "testlayer01",
-                    new List<Generator>()
+                    new List<GeneratorV1>()
                     {
                         generators["generator_test_01"]
                     }
@@ -154,44 +116,40 @@ namespace Omnikeeper.Base.Generator
             if (appliedGenerators.TryGetValue(layerID, out var applicableGenerators))
             {
                 var filteredApplicableGenerators = generatorSelection.Filter(applicableGenerators);
-                
-                foreach (var g in filteredApplicableGenerators)
-                {
-                    var filteredItems = generatorSelection.FilterItems(g.Items);
-                    filteredItems = FilterItemsByAttributeSelection(filteredItems, attributeSelection);
-                    foreach (var item in filteredItems)
-                        yield return item;
-                }
+
+                var filteredItems = FilterGeneratorsByAttributeSelection(filteredApplicableGenerators, attributeSelection);
+                foreach (var generator in filteredItems)
+                    yield return generator;
             }
         }
 
-        private IEnumerable<GeneratorItem> FilterItemsByAttributeSelection(IEnumerable<GeneratorItem> items, IAttributeSelection attributeSelection)
+        private IEnumerable<GeneratorV1> FilterGeneratorsByAttributeSelection(IEnumerable<GeneratorV1> generators, IAttributeSelection attributeSelection)
         {
-            foreach (var item in items)
-                if (attributeSelection.Contains(item.Name))
-                    yield return item;
+            foreach (var generator in generators)
+                if (attributeSelection.Contains(generator.AttributeName))
+                    yield return generator;
         }
     }
 
     public class GeneratorAttributeResolver
     {
-        public CIAttribute? Resolve(IEnumerable<CIAttribute> existingAttributes, IEnumerable<CIAttribute>? additionalAttributes, Guid ciid, string layerID, GeneratorItem item)
+        public CIAttribute? Resolve(IEnumerable<CIAttribute> existingAttributes, IEnumerable<CIAttribute>? additionalAttributes, Guid ciid, string layerID, GeneratorV1 generator)
         {
             try
             {
-                var relevantAttributes = existingAttributes.Concat(additionalAttributes ?? new CIAttribute[0]).Where(a => item.Value.UsedAttributeNames.Contains(a.Name)).ToList();
-                if (relevantAttributes.Count == item.Value.UsedAttributeNames.Count) 
+                var relevantAttributes = existingAttributes.Concat(additionalAttributes ?? new CIAttribute[0]).Where(a => generator.Value.UsedAttributeNames.Contains(a.Name)).ToList();
+                if (relevantAttributes.Count == generator.Value.UsedAttributeNames.Count) 
                 {
                     var context = ScribanVariableService.CreateAttributesBasedTemplateContext(relevantAttributes);
 
-                    string templateSegment = item.Value.Template.Render(context);
+                    string templateSegment = generator.Value.Template.Render(context);
 
                     var value = new AttributeScalarValueText(templateSegment);
                     // create a deterministic, dependent guid from the ciid, layerID, attribute values; 
                     // we need to incorporate the dependent attributes, otherwise the attribute ID does not change when any of the dependent attributes change
-                    var agGuid = GuidUtility.Create(ciid, $"{item.Name}-{layerID}-{string.Join("-", item.Value.UsedAttributeNames)}");
+                    var agGuid = GuidUtility.Create(ciid, $"{generator.AttributeName}-{layerID}-{string.Join("-", generator.Value.UsedAttributeNames)}");
                     Guid staticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
-                    var ag = new CIAttribute(agGuid, item.Name, ciid, value, AttributeState.New, staticChangesetID);
+                    var ag = new CIAttribute(agGuid, generator.AttributeName, ciid, value, AttributeState.New, staticChangesetID);
                     return ag;
                 } else
                 {
