@@ -1,10 +1,12 @@
   * [Home](./Home)
   * [authorization](./authorization)
   * [build and packaging](./build-and-packaging)
+  * [comparisons](./comparisons)
   * configuration
     * [application configuration](./configuration_application-configuration)
     * [configuration layers](./configuration_configuration-layers)
   * [datamodel](./datamodel)
+  * [generators](./generators)
   * [gridview](./gridview)
   * inbound adapter
     * [generic json inbound adapter](./inbound-adapter_generic-json-inbound-adapter)
