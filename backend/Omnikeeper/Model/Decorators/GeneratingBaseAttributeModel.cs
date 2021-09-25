@@ -81,6 +81,9 @@ namespace Omnikeeper.Model.Decorators
                         // this only adds the additional attributes if the base CI contains any attributes... or not?
                         // in any case, from this POV, it would make more sense to already pass in all attributes in a single structure instead of 
                         // having to merged them here... but this would require changes to the fetch parameters, making it fetch the additional attributes in one fetch
+
+                        // TODO: we shouldn't add the generated attributes right away... because that might give the impression that generated templates referencing
+                        // other generated attributes is fully supported... which it isnt! Because the recursive dependent attributes are not properly added.
                         var additionals = additionalAttributes?[i].GetOr(ciid, ImmutableDictionary<string, CIAttribute>.Empty);
                         var generatedAttribute = resolver.Resolve(existingCIAttributes.Values, additionals?.Values, ciid, layerID, egi);
                         if (generatedAttribute != null)
