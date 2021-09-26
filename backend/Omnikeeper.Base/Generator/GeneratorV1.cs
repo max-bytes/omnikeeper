@@ -125,7 +125,7 @@ namespace Omnikeeper.Base.Generator
         {
             // TODO, NOTE: we assume we get the layers back just as we queried for them, does this hold all the time?
             // TODO: rewrite GetLayers() to return array
-            var layers = await layerModel.GetLayers(layerIDs, trans);
+            var layers = await layerModel.GetLayers(layerIDs, trans); // TODO: this should actually get the layers at the correct point in time, not the latest!
 
             var ret = new IEnumerable<GeneratorV1>[layerIDs.Length];
             IDictionary<string, GeneratorV1>? availableGenerators = null;
@@ -145,7 +145,7 @@ namespace Omnikeeper.Base.Generator
 
                 // NOTE: this is an important mechanism that prevents layers in the base configuration layerset form having effective generators
                 // this is necessary, because otherwise its very easy to get infinite loops of GetGenerators() -> GetAttributes() -> GetGenerators() -> ...
-                baseConfiguration ??= await baseConfigurationModel.GetConfigOrDefault(trans);
+                baseConfiguration ??= await baseConfigurationModel.GetConfigOrDefault(trans); // TODO: get base configuration at the correct point in time, not the latest
                 if (baseConfiguration.ConfigLayerset.Contains(layerID))
                     continue;
 
