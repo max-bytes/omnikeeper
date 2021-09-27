@@ -46,9 +46,19 @@ namespace Omnikeeper.Service
                 try
                 {
                     using var transD = modelContextBuilder.BuildDeferred();
-                    // TODO: really slow, consider changing to use CTEs or something else
-                    using var commandDeleteBulk = new NpgsqlCommand(@"DELETE FROM ci WHERE id = ANY(@ciids)", trans.DBConnection, trans.DBTransaction);
-                    commandDeleteBulk.Parameters.AddWithValue("ciids", unusedCIIDs.ToArray());
+                    // postgres queries in the form " = ANY(@ciids)" are slow when the list of ciids is large
+                    // therefore we use a CTE instead and join that
+                    // see here for a discussion about the options https://stackoverflow.com/questions/17037508/sql-when-it-comes-to-not-in-and-not-equal-to-which-is-more-efficient-and-why/17038097#17038097
+                    var query = @$"
+                        WITH to_delete(ci_id) AS (VALUES 
+                        {string.Join(",", unusedCIIDs.Select(ciid => $"('{ciid}'::uuid)"))}
+                        )
+                        DELETE FROM ci c
+                        USING to_delete t
+                        WHERE t.ci_id = c.id AND t.ci_id is not null;
+                    ";
+                    using var commandDeleteBulk = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
+
                     var d = await commandDeleteBulk.ExecuteNonQueryAsync();
                     deleted = d;
                     transD.Commit();
