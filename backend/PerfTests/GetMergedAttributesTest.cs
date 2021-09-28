@@ -87,7 +87,7 @@ namespace PerfTests
                 _ => throw new Exception() // must not happen
             };
 
-            (await attributeModel!.GetMergedAttributes(selection, layerset!, mc, TimeThreshold.BuildLatest())).Consume(consumer);
+            (await attributeModel!.GetMergedAttributes(selection, AllAttributeSelection.Instance, layerset!, mc, TimeThreshold.BuildLatest())).Consume(consumer);
         }
 
         [Test]

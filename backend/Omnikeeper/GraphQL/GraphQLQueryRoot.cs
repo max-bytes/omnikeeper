@@ -50,7 +50,8 @@ namespace Omnikeeper.GraphQL
                        if (!ciBasedAuthorizationService.CanReadCI(ciid))
                            throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read CI {ciid}");
 
-                       var ci = await ciModel.GetMergedCI(ciid, userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
+                       // TODO: reduce attribute selection when mergedAttributes sub-field parameter "attributeNames" is chosen
+                       var ci = await ciModel.GetMergedCI(ciid, userContext.LayerSet, AllAttributeSelection.Instance, userContext.Transaction, userContext.TimeThreshold);
 
                        return ci;
                    });
@@ -87,7 +88,8 @@ namespace Omnikeeper.GraphQL
                         ciidSelection = SpecificCIIDsSelection.Build(ciids);
                     }
 
-                    var cis = await ciModel.GetMergedCIs(ciidSelection, userContext.LayerSet, false, userContext.Transaction, userContext.TimeThreshold);
+                    // TODO: reduce attribute selection when mergedAttributes sub-field parameter "attributeNames" is chosen
+                    var cis = await ciModel.GetMergedCIs(ciidSelection, userContext.LayerSet, false, AllAttributeSelection.Instance, userContext.Transaction, userContext.TimeThreshold);
 
                     if (ciidSelection is AllCIIDsSelection)
                     {
@@ -176,7 +178,8 @@ namespace Omnikeeper.GraphQL
                     if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, ls))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
 
-                    var cis = await ciSearchModel.SearchForMergedCIsByTraits(new AllCIIDsSelection(), withEffectiveTraits, withoutEffectiveTraits, ls, userContext.Transaction, userContext.TimeThreshold);
+                    // TODO: add attribute selection parameters
+                    var cis = await ciSearchModel.SearchForMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, withEffectiveTraits, withoutEffectiveTraits, ls, userContext.Transaction, userContext.TimeThreshold);
                     // reduce CIs to those that are allowed
                     cis = ciBasedAuthorizationService.FilterReadableCIs(cis, (ci) => ci.ID);
                     return cis;

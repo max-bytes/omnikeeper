@@ -22,7 +22,7 @@ namespace Omnikeeper.Model
         public async Task<(CIAttribute attribute, bool changed)> InsertAttribute(string name, IAttributeValue value, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var readTS = TimeThreshold.BuildLatest();
-            var currentAttribute = await GetAttribute(name, ciid, layerID, trans, readTS);
+            var currentAttribute = await _GetAttribute(name, ciid, layerID, trans, readTS, false);
 
             var state = AttributeState.New;
             if (currentAttribute != null)
@@ -85,7 +85,7 @@ namespace Omnikeeper.Model
         public async Task<(CIAttribute attribute, bool changed)> RemoveAttribute(string name, Guid ciid, string layerID, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var readTS = TimeThreshold.BuildLatest();
-            var currentAttribute = await GetAttribute(name, ciid, layerID, trans, readTS);
+            var currentAttribute = await _GetAttribute(name, ciid, layerID, trans, readTS, false);
 
             if (currentAttribute == null)
             {
@@ -145,11 +145,11 @@ namespace Omnikeeper.Model
             var outdatedAttributes = (data switch
             { // TODO: performance improvements when data.NamePrefix is empty?
             BulkCIAttributeDataLayerScope d => (data.NamePrefix.IsEmpty()) ?
-                        (await GetAttributes(new AllCIIDsSelection(), new string[] { data.LayerID }, true, trans, readTS)) :
-                        (await GetAttributes(new AllCIIDsSelection(), new string[] { data.LayerID }, true, trans, readTS, data.NamePrefix)),
+                        (await GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new string[] { data.LayerID }, true, trans, readTS)) :
+                        (await GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection($"^{data.NamePrefix}"), new string[] { data.LayerID }, true, trans, readTS)),
                 BulkCIAttributeDataCIScope d => (data.NamePrefix.IsEmpty()) ? 
-                        (await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), new string[] { data.LayerID }, returnRemoved: true, trans, readTS)) :
-                        (await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), new string[] { data.LayerID }, returnRemoved: true, trans, readTS, data.NamePrefix)),
+                        (await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), AllAttributeSelection.Instance, new string[] { data.LayerID }, returnRemoved: true, trans: trans, atTime: readTS)) :
+                        (await GetAttributes(SpecificCIIDsSelection.Build(d.CIID), new RegexAttributeSelection($"^{data.NamePrefix}"), new string[] { data.LayerID }, returnRemoved: true, trans: trans, atTime: readTS)),
                 _ => null
             }).SelectMany(t => t.Values.SelectMany(tt => tt.Values)).ToDictionary(a => a.InformationHash, a => (attribute: a, newAttributeID: Guid.NewGuid())); // TODO: slow?
             

@@ -25,7 +25,7 @@ namespace Omnikeeper.GraphQL
         public MergedCIType(IDataLoaderContextAccessor dataLoaderContextAccessor, IRelationModel relationModel)
         {
             Field("id", x => x.ID);
-            Field("name", x => x.Name, nullable: true);
+            Field("name", x => x.CIName, nullable: true);
             Field("layerhash", x => x.Layers.LayerHash);
             Field(x => x.AtTime, type: typeof(TimeThresholdType));
             Field<ListGraphType<MergedCIAttributeType>>("mergedAttributes",
@@ -34,6 +34,7 @@ namespace Omnikeeper.GraphQL
                 {
                     var mergedAttributes = context.Source!.MergedAttributes.Values;
 
+                    // TODO: only fetch what attributes are requested instead of fetching all, then filtering
                     var attributeNames = context.GetArgument<string[]?>("attributeNames", null)?.ToHashSet();
                     if (attributeNames != null)
                         return mergedAttributes.Where(a => attributeNames.Contains(a.Attribute.Name));

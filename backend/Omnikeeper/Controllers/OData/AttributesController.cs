@@ -93,11 +93,14 @@ namespace Omnikeeper.Controllers.OData
             var trans = modelContextBuilder.BuildImmediate();
             var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
             var timeThreshold = TimeThreshold.BuildLatest();
-            var a = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, layerset, trans, timeThreshold);
-            if (a == null)
+            var ci = await ciModel.GetMergedCI(keyCIID, layerset, NamedAttributesSelection.Build(keyAttributeName), trans, timeThreshold);
+            if (ci.MergedAttributes.TryGetValue(keyAttributeName, out var a))
+            {
+                return Model2DTO(a, ci.CIName);
+            } else
+            {
                 throw new Exception("Could not get attribute");
-            var nameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, keyCIID, layerset, trans, timeThreshold);
-            return Model2DTO(a, nameAttribute?.Attribute?.Value.Value2String());
+            }
         }
 
         [EnableQuery]
@@ -105,7 +108,7 @@ namespace Omnikeeper.Controllers.OData
         {
             var trans = modelContextBuilder.BuildImmediate();
             var layerset = await ODataAPIContextService.GetReadLayersetFromContext(oDataAPIContextModel, context, trans);
-            var attributesDict = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), layerset, trans, TimeThreshold.BuildLatest());
+            var attributesDict = await attributeModel.GetMergedAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest());
 
             var attributes = attributesDict.SelectMany(a => a.Value.Values);
 
@@ -130,7 +133,9 @@ namespace Omnikeeper.Controllers.OData
             if (!authorizationService.CanUserWriteToLayer(user, writeLayerID))
                 return Forbid($"User \"{user.Username}\" does not have permission to write to layer ID {writeLayerID}");
 
-            var old = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, readLayerset, trans, TimeThreshold.BuildLatest());
+            var oldCI = await ciModel.GetMergedCI(keyCIID, readLayerset, NamedAttributesSelection.Build(keyAttributeName), trans, TimeThreshold.BuildLatest());
+            if (oldCI == null) return BadRequest();
+            var old = oldCI.MergedAttributes.GetOrWithClass(keyAttributeName, null);
             if (old == null) return BadRequest();
             var oldDTO = Model2DTO(old, keyCIName);
 
@@ -139,7 +144,9 @@ namespace Omnikeeper.Controllers.OData
             var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
             var @new = await attributeModel.InsertAttribute(@newDTO.AttributeName, new AttributeScalarValueText(@newDTO.Value), @newDTO.CIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
 
-            var newMerged = await attributeModel.GetMergedAttribute(keyAttributeName, keyCIID, readLayerset, trans, TimeThreshold.BuildLatest());
+            var newMergedCI = await ciModel.GetMergedCI(keyCIID, readLayerset, NamedAttributesSelection.Build(keyAttributeName), trans, TimeThreshold.BuildLatest());
+            if (newMergedCI == null) return BadRequest();
+            var newMerged = newMergedCI.MergedAttributes.GetOrWithClass(keyAttributeName, null);
             if (newMerged == null) return BadRequest();
             trans.Commit();
 
@@ -202,20 +209,22 @@ namespace Omnikeeper.Controllers.OData
             { // ci exists already, make sure either name is not set or it matches already present name
                 if (attribute.CIName != null && attribute.CIName != "")
                 {
-                    var currentNameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, finalCIID, readLayerset, trans, timeThreshold);
-                    if (currentNameAttribute == null || !attribute.CIName.Equals(currentNameAttribute.Attribute.Value.Value2String()))
+                    var tmpCI = await ciModel.GetMergedCI(finalCIID, readLayerset, NamedAttributesSelection.Build(ICIModel.NameAttribute), trans, timeThreshold);
+                    if (tmpCI == null || tmpCI.CIName == null || !attribute.CIName.Equals(tmpCI.CIName))
                         return BadRequest($"Cannot set new CI-Name on insert");
                 }
             }
 
             var created = await attributeModel.InsertAttribute(attribute.AttributeName, new AttributeScalarValueText(attribute.Value), finalCIID, writeLayerID, changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
 
-            var nameAttribute = await attributeModel.GetMergedAttribute(ICIModel.NameAttribute, finalCIID, readLayerset, trans, timeThreshold);
-            var createdMerged = await attributeModel.GetMergedAttribute(attribute.AttributeName, finalCIID, readLayerset, trans, TimeThreshold.BuildLatest());
+            var timeThresholdAfter = TimeThreshold.BuildLatest();
+            var finalCI = await ciModel.GetMergedCI(finalCIID, readLayerset, NamedAttributesSelection.Build(attribute.AttributeName), trans, timeThresholdAfter);
+            if (finalCI == null) return BadRequest();
+            var createdMerged = finalCI.MergedAttributes.GetOrWithClass(attribute.AttributeName, null);
             if (createdMerged == null) return BadRequest();
             trans.Commit();
 
-            return Created(Model2DTO(createdMerged, nameAttribute?.Attribute.Value.Value2String()));
+            return Created(Model2DTO(createdMerged, finalCI.CIName));
         }
 
         [EnableQuery]

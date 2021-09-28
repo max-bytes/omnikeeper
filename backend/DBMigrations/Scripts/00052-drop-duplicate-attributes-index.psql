@@ -1,0 +1,1 @@
+drop index public.attribute_ci_id_idx_partitioned; -- is duplicate of public.attribute_ci_id_idx

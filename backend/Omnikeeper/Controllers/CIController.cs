@@ -68,7 +68,7 @@ namespace Omnikeeper.Controllers
             }
 
             var layerset = new LayerSet(layerIDs);
-            var ci = await ciModel.GetMergedCI(CIID, layerset, trans, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
+            var ci = await ciModel.GetMergedCI(CIID, layerset, AllAttributeSelection.Instance, trans, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
             if (ci == null) return NotFound();
             return Ok(CIDTO.BuildFromMergedCI(ci));
         }
@@ -97,7 +97,7 @@ namespace Omnikeeper.Controllers
             }
 
             var layerset = new LayerSet(layerIDs);
-            var cis = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(CIIDs), layerset, true, trans, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
+            var cis = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(CIIDs), layerset, true, AllAttributeSelection.Instance, trans, (atTime.HasValue) ? TimeThreshold.BuildAtTime(atTime.Value) : TimeThreshold.BuildLatest());
             return Ok(cis.Select(ci => CIDTO.BuildFromMergedCI(ci)));
         }
     }

@@ -84,6 +84,9 @@ namespace Omnikeeper.GridView.Queries
                 var context = await gridViewContextModel.GetFullContext(request.Context, new LayerSet(baseConfiguration.ConfigLayerset), atTime, trans);
                 var config = context.Configuration;
 
+                if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, config.ReadLayerset))
+                    return (null, new Exception($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', config.ReadLayerset)}"));
+
                 var activeTrait = await traitsProvider.GetActiveTrait(config.Trait, trans, atTime);
 
                 if (activeTrait == null)
@@ -91,16 +94,19 @@ namespace Omnikeeper.GridView.Queries
                     return (null, new Exception($"Active trait {config.Trait} was not found!"));
                 }
 
-                if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, config.ReadLayerset))
-                    return (null, new Exception($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', config.ReadLayerset)}"));
-
-                var mergedCIs = await effectiveTraitModel.GetMergedCIsWithTrait(activeTrait, new LayerSet(config.ReadLayerset), new AllCIIDsSelection(), trans, atTime);
+                // reduce attribute fetching by selection
+                var relevantAttributes = activeTrait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name)
+                    .Concat(config.Columns.Where(c => c.SourceAttributePath == null).Select(c => c.SourceAttributeName))
+                    .ToHashSet();
+                var attributeSelection = NamedAttributesSelection.Build(relevantAttributes);
+                var mergedCIs = await ciModel.GetMergedCIs(new AllCIIDsSelection(), new LayerSet(config.ReadLayerset), false, attributeSelection, trans, atTime);
+                var mergedCIsWithTrait = await effectiveTraitModel.FilterCIsWithTrait(mergedCIs, activeTrait, new LayerSet(config.ReadLayerset), trans, atTime);
 
                 // filter readable CIs based on authorization
-                var filteredCIs = ciBasedAuthorizationService.FilterReadableCIs(mergedCIs, (t) => t.ID);
+                var filteredCIs = ciBasedAuthorizationService.FilterReadableCIs(mergedCIsWithTrait, (t) => t.ID);
 
                 var attributeResolver = new AttributeResolver();
-                await attributeResolver.PrefetchRelatedCIsAndLookups(config, filteredCIs, relationModel, ciModel, trans, atTime);
+                await attributeResolver.PrefetchRelatedCIsAndLookups(config, filteredCIs.Select(ci => ci.ID).ToHashSet(), relationModel, ciModel, trans, atTime);
 
                 var resultRows = new Dictionary<Guid, Row>();
 

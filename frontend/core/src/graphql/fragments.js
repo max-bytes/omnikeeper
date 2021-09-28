@@ -90,6 +90,7 @@ export const Fragments = {
     writable
     brainName
     onlineInboundAdapterName
+    generators
   }
   `,
   outgoingMergedRelation: gql`
@@ -149,6 +150,13 @@ export const Fragments = {
     requiredRelations,
     optionalRelations,
     requiredTraits
+  }
+  `,
+  generator: gql`
+  fragment Generator on GeneratorType {
+    id,
+    attributeName,
+    attributeValueTemplate
   }
   `,
   authRole: gql`

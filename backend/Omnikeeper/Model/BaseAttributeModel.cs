@@ -25,10 +25,6 @@ namespace Omnikeeper.Model
             this.ciidModel = ciidModel;
         }
 
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await _GetAttribute(name, ciid, layerID, trans, atTime, false);
-        }
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await _GetAttribute(name, ciid, layerID, trans, atTime, true);
@@ -97,6 +93,34 @@ namespace Omnikeeper.Model
             };
         }
 
+        private string AttributeSelection2WhereClause(IAttributeSelection selection)
+        {
+            return selection switch
+            {
+                AllAttributeSelection _ => "1=1",
+                RegexAttributeSelection _ => "name ~ @name_regex",
+                NamedAttributesSelection _ => "name = ANY(@names)",
+                _ => throw new NotImplementedException("")
+            };
+        }
+
+        private IEnumerable<NpgsqlParameter> AttributeSelection2Parameters(IAttributeSelection selection)
+        {
+            switch (selection)
+            {
+                case AllAttributeSelection _:
+                    break;
+                case RegexAttributeSelection r:
+                    yield return new NpgsqlParameter("@name_regex", r.RegexStr);
+                    break;
+                case NamedAttributesSelection n:
+                    yield return new NpgsqlParameter("@names", n.AttributeNames.ToArray());
+                    break;
+                default:
+                    throw new NotImplementedException("");
+            };
+        }
+
         // NOTE: doing
         // ci_id = ANY(@ci_ids)
         // and/or
@@ -159,7 +183,7 @@ namespace Omnikeeper.Model
             return selection;
         }
 
-        private async IAsyncEnumerable<(CIAttribute attribute, string layerID)> _GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null)
+        private async IAsyncEnumerable<(CIAttribute attribute, string layerID)> _GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, IAttributeSelection attributeSelection)
         {
             NpgsqlCommand command;
             if (atTime.IsLatest && _USE_LATEST_TABLE)
@@ -169,9 +193,10 @@ namespace Omnikeeper.Model
                     select state, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute_latest a
                     {CIIDSelection2JoinClause(selection)}
                     where ({CIIDSelection2WhereClause(selection)}) and layer_id = ANY(@layer_ids)
-                    and ({((nameRegexFilter != null) ? "name ~ @name_regex" : "1=1")})", trans.DBConnection, trans.DBTransaction);
+                    and ({AttributeSelection2WhereClause(attributeSelection)})", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("layer_ids", layerIDs);
-                if (nameRegexFilter != null) command.Parameters.AddWithValue("name_regex", nameRegexFilter);
+                foreach(var p in AttributeSelection2Parameters(attributeSelection))
+                    command.Parameters.Add(p);
             }
             else
             {
@@ -182,13 +207,14 @@ namespace Omnikeeper.Model
                     select distinct on(a.ci_id, name, layer_id) state, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute a
                     {CIIDSelection2JoinClause(selection)}
                     where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and layer_id = ANY(@layer_ids) and partition_index >= @partition_index
-                    and ({((nameRegexFilter != null) ? "name ~ @name_regex" : "1=1")})
+                    and ({AttributeSelection2WhereClause(attributeSelection)})
                     order by a.ci_id, name, layer_id, timestamp DESC NULLS LAST
                     ", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("layer_ids", layerIDs);
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
                 command.Parameters.AddWithValue("partition_index", partitionIndex);
-                if (nameRegexFilter != null) command.Parameters.AddWithValue("name_regex", nameRegexFilter);
+                foreach (var p in AttributeSelection2Parameters(attributeSelection))
+                    command.Parameters.Add(p);
             }
 
             command.Prepare();
@@ -219,14 +245,16 @@ namespace Omnikeeper.Model
             }
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null)
+        // NOTE: returns a full array (one item for each layer), even when layer contains no attributes
+        // NOTE: returns only entries for CIs and attributes where there actually are any attributes, disregarding if the selections specify them
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
             selection = await OptimizeCIIDSelection(selection, trans);
 
             var tmp = new Dictionary<string, IDictionary<Guid, IDictionary<string, CIAttribute>>>(layerIDs.Length);
             foreach(var layerID in layerIDs)
                 tmp[layerID] = new Dictionary<Guid, IDictionary<string, CIAttribute>>();
-            await foreach (var (att, layerID) in _GetAttributes(selection, layerIDs, returnRemoved, trans, atTime, nameRegexFilter))
+            await foreach (var (att, layerID) in _GetAttributes(selection, layerIDs, returnRemoved, trans, atTime, attributeSelection))
             {
                 var r = tmp[layerID];
                 if (r.TryGetValue(att.CIID, out var l))
@@ -241,6 +269,53 @@ namespace Omnikeeper.Model
                 ret[i] = tmp[layerIDs[i]];
             }
 
+            return ret;
+        }
+
+        // TODO: test
+        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
+        {
+            NpgsqlCommand command;
+            if (atTime.IsLatest && _USE_LATEST_TABLE)
+            {
+                command = new NpgsqlCommand($@"
+                    {CIIDSelection2CTEClause(selection)}
+                    select distinct a.ci_id FROM attribute_latest a
+                    {CIIDSelection2JoinClause(selection)}
+                    where ({CIIDSelection2WhereClause(selection)}) and layer_id = ANY(@layer_ids) AND a.state != 'removed'
+                    ", trans.DBConnection, trans.DBTransaction);
+                command.Parameters.AddWithValue("layer_ids", layerIDs);
+            }
+            else
+            {
+                var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
+
+                command = new NpgsqlCommand($@"
+                    {CIIDSelection2CTEClause(selection)}
+                    select distinct i.ci_id from (
+                        select distinct on(a.ci_id, name, layer_id) a.ci_id as ci_id, state FROM attribute a
+                        {CIIDSelection2JoinClause(selection)}
+                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and layer_id = ANY(@layer_ids) and partition_index >= @partition_index
+                        order by a.ci_id, name, layer_id, timestamp DESC NULLS LAST
+                    ) i WHERE i.state != 'removed'
+                    ", trans.DBConnection, trans.DBTransaction);
+                command.Parameters.AddWithValue("layer_ids", layerIDs);
+                command.Parameters.AddWithValue("time_threshold", atTime.Time);
+                command.Parameters.AddWithValue("partition_index", partitionIndex);
+            }
+
+            command.Prepare();
+
+            using var dr = await command.ExecuteReaderAsync();
+
+            command.Dispose();
+
+            var ret = new HashSet<Guid>();
+            while (dr.Read())
+            {
+                var ciid = dr.GetGuid(0);
+                ret.Add(ciid);
+            }
             return ret;
         }
 
@@ -273,204 +348,6 @@ namespace Omnikeeper.Model
                 var att = new CIAttribute(id, name, CIID, av, state, changesetID);
                 ret.Add(att);
             }
-            return ret;
-        }
-
-        public async Task<IDictionary<Guid, CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            selection = await OptimizeCIIDSelection(selection, trans);
-
-            NpgsqlCommand command;
-            if (atTime.IsLatest && _USE_LATEST_TABLE)
-            {
-                command = new NpgsqlCommand(@$"
-                    {CIIDSelection2CTEClause(selection)}
-                    select state, id, a.ci_id, type, value_text, value_binary, value_control, changeset_id from attribute_latest a 
-                    {CIIDSelection2JoinClause(selection)}
-                    where ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id
-                ", trans.DBConnection, trans.DBTransaction);
-
-                command.Parameters.AddWithValue("name", name);
-                command.Parameters.AddWithValue("layer_id", layerID);
-            }
-            else
-            {
-                var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
-
-                command = new NpgsqlCommand(@$"
-                    {CIIDSelection2CTEClause(selection)}
-                    select distinct on (ci_id) state, id, a.ci_id, type, value_text, value_binary, value_control, changeset_id from attribute a 
-                        {CIIDSelection2JoinClause(selection)}
-                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and name = @name and layer_id = @layer_id 
-                        and partition_index >= @partition_index
-                        order by a.ci_id, timestamp DESC NULLS LAST
-                ", trans.DBConnection, trans.DBTransaction);
-
-                command.Parameters.AddWithValue("time_threshold", atTime.Time);
-                command.Parameters.AddWithValue("name", name);
-                command.Parameters.AddWithValue("layer_id", layerID);
-                command.Parameters.AddWithValue("partition_index", partitionIndex);
-            }
-
-            command.Prepare();
-
-            using var dr = await command.ExecuteReaderAsync();
-
-            var ret = new Dictionary<Guid, CIAttribute>();
-            while (await dr.ReadAsync())
-            {
-                var state = dr.GetFieldValue<AttributeState>(0);
-                if (state != AttributeState.Removed)
-                {
-                    var id = dr.GetGuid(1);
-                    var CIID = dr.GetGuid(2);
-                    var type = dr.GetFieldValue<AttributeValueType>(3);
-                    var valueText = dr.GetString(4);
-                    var valueBinary = dr.GetFieldValue<byte[]>(5);
-                    var valueControl = dr.GetFieldValue<byte[]>(6);
-                    var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
-                    var changesetID = dr.GetGuid(7);
-
-                    ret[CIID] = new CIAttribute(id, name, CIID, av, state, changesetID);
-                }
-            }
-
-            command.Dispose();
-
-            return ret;
-        }
-
-        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            selection = await OptimizeCIIDSelection(selection, trans);
-
-            // NOTE: re-using FindAttributesByFullName() because the custom implementation is not very different
-            var attributes = await FindAttributesByFullName(ICIModel.NameAttribute, selection, layerID, trans, atTime);
-            return attributes.ToDictionary(a => a.Key, a => a.Value.Value.Value2String());
-        }
-
-        public async Task<IEnumerable<Guid>> FindCIIDsWithAttributeNameAndValue(string name, IAttributeValue value, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            selection = await OptimizeCIIDSelection(selection, trans);
-
-            var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
-
-            NpgsqlCommand command;
-            if (atTime.IsLatest && _USE_LATEST_TABLE)
-            {
-                command = new NpgsqlCommand(@$"
-                    {CIIDSelection2CTEClause(selection)}
-                    select state, a.ci_id from attribute_latest a
-                        {CIIDSelection2JoinClause(selection)}
-                        where ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id 
-                        and type = @type and value_text = @value_text and value_binary = @value_binary and value_control = @value_control
-                ", trans.DBConnection, trans.DBTransaction);
-
-                command.Parameters.AddWithValue("name", name);
-                command.Parameters.AddWithValue("layer_id", layerID);
-                command.Parameters.AddWithValue("type", value.Type);
-                command.Parameters.AddWithValue("value_text", valueText);
-                command.Parameters.AddWithValue("value_binary", valueBinary);
-                command.Parameters.AddWithValue("value_control", valueControl);
-            }
-            else
-            {
-                var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
-
-                // TODO: check if query is well optimized regarding index use
-                command = new NpgsqlCommand(@$"
-                    {CIIDSelection2CTEClause(selection)}
-                    select distinct on (a.ci_id) state, a.ci_id from attribute a 
-                        {CIIDSelection2JoinClause(selection)}
-                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and name = @name and layer_id = @layer_id 
-                        and type = @type and value_text = @value_text and value_binary = @value_binary and value_control = @value_control
-                        and partition_index >= @partition_index
-                        order by a.ci_id, timestamp DESC NULLS LAST
-                ", trans.DBConnection, trans.DBTransaction);
-
-                command.Parameters.AddWithValue("time_threshold", atTime.Time);
-                command.Parameters.AddWithValue("name", name);
-                command.Parameters.AddWithValue("layer_id", layerID);
-                command.Parameters.AddWithValue("type", value.Type);
-                command.Parameters.AddWithValue("value_text", valueText);
-                command.Parameters.AddWithValue("value_binary", valueBinary);
-                command.Parameters.AddWithValue("value_control", valueControl);
-                command.Parameters.AddWithValue("partition_index", partitionIndex);
-            }
-
-            command.Prepare();
-
-            using var dr = await command.ExecuteReaderAsync();
-
-            command.Dispose();
-
-            var ret = new HashSet<Guid>();
-            while (await dr.ReadAsync())
-            {
-                var state = dr.GetFieldValue<AttributeState>(0);
-                if (state != AttributeState.Removed)
-                {
-                    var CIID = dr.GetGuid(1);
-                    ret.Add(CIID);
-                }
-            }
-
-            return ret;
-        }
-
-        // TODO: actually needed? check and remove if not
-        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            selection = await OptimizeCIIDSelection(selection, trans);
-
-            NpgsqlCommand command;
-            if (atTime.IsLatest && _USE_LATEST_TABLE)
-            {
-                command = new NpgsqlCommand(@$"
-                    {CIIDSelection2CTEClause(selection)}
-                    select state, a.ci_id from attribute_latest a 
-                        {CIIDSelection2JoinClause(selection)}
-                        where ({CIIDSelection2WhereClause(selection)}) and name = @name and layer_id = @layer_id
-                ", trans.DBConnection, trans.DBTransaction);
-
-                command.Parameters.AddWithValue("name", name);
-                command.Parameters.AddWithValue("layer_id", layerID);
-            }
-            else
-            {
-                var partitionIndex = await partitionModel.GetLatestPartitionIndex(atTime, trans);
-
-                command = new NpgsqlCommand(@$"
-                    {CIIDSelection2CTEClause(selection)}
-                    select distinct on (a.ci_id) state, a.ci_id from attribute a
-                        {CIIDSelection2JoinClause(selection)}
-                        where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and name = @name and layer_id = @layer_id 
-                        and partition_index >= @partition_index
-                        order by a.ci_id, timestamp DESC NULLS LAST
-                ", trans.DBConnection, trans.DBTransaction);
-                command.Parameters.AddWithValue("time_threshold", atTime.Time);
-                command.Parameters.AddWithValue("name", name);
-                command.Parameters.AddWithValue("layer_id", layerID);
-                command.Parameters.AddWithValue("partition_index", partitionIndex);
-            }
-
-            command.Prepare();
-
-            using var dr = await command.ExecuteReaderAsync();
-
-            command.Dispose();
-
-            var ret = new List<Guid>();
-            while (await dr.ReadAsync())
-            {
-                var state = dr.GetFieldValue<AttributeState>(0);
-                if (state != AttributeState.Removed)
-                {
-                    var CIID = dr.GetGuid(1);
-                    ret.Add(CIID);
-                }
-            }
-
             return ret;
         }
 

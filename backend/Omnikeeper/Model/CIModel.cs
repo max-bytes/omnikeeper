@@ -45,17 +45,17 @@ namespace Omnikeeper.Model
             // TODO: this actually returns empty compact CIs for ANY Guid/CI-ID, even ones that don't exist, when selection = SpecificCIIDSelection. check if that's expected, I believe not
         }
 
-        public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, IModelContext trans, TimeThreshold atTime)
+        public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime)
         {
-            var tmp = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), layers, trans, atTime);
+            var tmp = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), attributeSelection, layers, trans, atTime);
             var attributes = tmp.GetValueOrDefault(ciid, ImmutableDictionary<string, MergedCIAttribute>.Empty);
             var name = GetNameFromAttributes(attributes);
             return new MergedCI(ciid, name, layers, atTime, attributes);
         }
 
-        public async Task<IEnumerable<MergedCI>> GetMergedCIs(ICIIDSelection selection, LayerSet layers, bool includeEmptyCIs, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedCI>> GetMergedCIs(ICIIDSelection selection, LayerSet layers, bool includeEmptyCIs, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime)
         {
-            var attributes = await attributeModel.GetMergedAttributes(selection, layers, trans, atTime);
+            var attributes = await attributeModel.GetMergedAttributes(selection, attributeSelection, layers, trans, atTime);
 
             if (includeEmptyCIs)
             {

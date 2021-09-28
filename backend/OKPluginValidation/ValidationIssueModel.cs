@@ -22,7 +22,7 @@ namespace OKPluginValidation.Validation
             return await GetAll(layerSet, trans, timeThreshold);
         }
 
-        protected override (ValidationIssue, string) EffectiveTrait2DC(EffectiveTrait et, MergedCI ci)
+        protected override (ValidationIssue, string) EffectiveTrait2DC(EffectiveTrait et)
         {
             var id = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
             var message = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "message");

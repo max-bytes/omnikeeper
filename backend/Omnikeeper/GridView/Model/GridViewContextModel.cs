@@ -38,7 +38,7 @@ namespace Omnikeeper.GridView.Model
             return await TryToGet(id, layerSet, timeThreshold, trans);
         }
 
-        protected override (FullContext dc, string id) EffectiveTrait2DC(EffectiveTrait et, MergedCI ci)
+        protected override (FullContext dc, string id) EffectiveTrait2DC(EffectiveTrait et)
         {
             var contextID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
             var speakingName = TraitConfigDataUtils.ExtractOptionalScalarTextAttribute(et, "speaking_name");

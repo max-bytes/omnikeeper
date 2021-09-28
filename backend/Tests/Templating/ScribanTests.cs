@@ -12,6 +12,7 @@ using Scriban;
 using Scriban.Runtime;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Tests.Templating
 {
@@ -33,8 +34,8 @@ namespace Tests.Templating
                         new string[] { @"{ ""foo"": ""bar""}", @"{ ""second"": { ""yes"": true } }" }), AttributeState.New, staticChangesetID), new string[0])
                     //new MergedCIAttribute(new CIAttribute(0, "a.json", Guid.NewGuid(), AttributeValueJSONScalar.Build(
                     //    JObject.Parse(@"{ ""foo"": ""bar""}")), AttributeState.New, 0), new long[0])
-                });
-                var testCIB = new MergedCI(Guid.NewGuid(), "test-ci-b", new LayerSet(), atTime, new List<MergedCIAttribute>() { });
+                }.ToDictionary(t => t.Attribute.Name));
+                var testCIB = new MergedCI(Guid.NewGuid(), "test-ci-b", new LayerSet(), atTime, new Dictionary<string, MergedCIAttribute>() { });
 
                 var relationModel = new Mock<IRelationModel>();
                 relationModel.Setup(x => x.GetMergedRelations(It.IsAny<IRelationSelection>(), It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
@@ -44,8 +45,8 @@ namespace Tests.Templating
 
                 var ciModel = new Mock<ICIModel>();
                 ciModel.Setup(x => x.GetCompactCIs(It.IsAny<ICIIDSelection>(), It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
-                    .ReturnsAsync(new CompactCI[] { new CompactCI(testCIB.ID, testCIB.Name, testCIB.Layers.LayerHash, testCIB.AtTime) });
-                ciModel.Setup(x => x.GetMergedCI(testCIB.ID, It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), atTime))
+                    .ReturnsAsync(new CompactCI[] { new CompactCI(testCIB.ID, testCIB.CIName, testCIB.Layers.LayerHash, testCIB.AtTime) });
+                ciModel.Setup(x => x.GetMergedCI(testCIB.ID, It.IsAny<LayerSet>(), AllAttributeSelection.Instance, It.IsAny<IModelContext>(), atTime))
                     .ReturnsAsync(() => testCIB);
 
                 var context = ScribanVariableService.CreateComplexCIBasedTemplateContext(testCIA, new LayerSet(), atTime, new Mock<IModelContext>().Object, ciModel.Object, relationModel.Object);

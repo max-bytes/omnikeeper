@@ -21,7 +21,7 @@ namespace Omnikeeper.Base.Templating
         {
             this.scalar = scalar;
         }
-        public override string ToString(TemplateContext context, SourceSpan span) => scalar;
+        public override string ToString(string format, IFormatProvider formatProvider) => scalar;
     }
 
     public static class ScribanVariableService
@@ -32,6 +32,13 @@ namespace Omnikeeper.Base.Templating
 
             return v;
         }
+
+        // transform dots in variable name into corresponding object structure
+        private static void AddSimple(IDictionary<string, object> dict, string key, IAttributeValue value)
+        {
+            dict.Add(key, AttributeValue2VariableValue(value));
+        }
+
         // transform dots in variable name into corresponding object structure
         private static void AddNested(IDictionary<string, object> dict, string key, IAttributeValue value)
         {
@@ -122,7 +129,7 @@ namespace Omnikeeper.Base.Templating
             public ScriptObjectComplexCI(MergedCI ci, ScriptObjectComplexContext context)
             {
                 Add("id", ci.ID);
-                Add("name", ci.Name);
+                Add("name", ci.CIName);
                 this.Import("attributes", new Func<Dictionary<string, object>>(() =>
                 {
                     // TODO: caching
@@ -158,7 +165,7 @@ namespace Omnikeeper.Base.Templating
             public ScriptObjectSimpleCI(MergedCI ci)
             {
                 Add("id", ci.ID);
-                Add("name", ci.Name);
+                Add("name", ci.CIName);
                 this.Import("a", new Func<Dictionary<string, object>>(() =>
                 {
                     // TODO: caching
@@ -172,6 +179,29 @@ namespace Omnikeeper.Base.Templating
         public static TemplateContext CreateSimpleCIBasedTemplateContext(MergedCI ci)
         {
             var so = new ScriptObjectSimpleCI(ci);
+            var context = new TemplateContext
+            {
+                //context.StrictVariables = true;
+                EnableRelaxedMemberAccess = true
+            };
+            context.PushGlobal(so);
+            return context;
+        }
+
+        public class ScriptObjectAttributes : ScriptObject
+        {
+            public ScriptObjectAttributes(IEnumerable<CIAttribute> attributes)
+            {
+                this.Import("attributes", new Func<Dictionary<string, object>>(() =>
+                {
+                    // TODO: caching
+                    return attributes.ToDictionary(a => a.Name, a => a.Value.ToGenericObject());
+                }));
+            }
+        }
+        public static TemplateContext CreateAttributesBasedTemplateContext(IEnumerable<CIAttribute> attributes)
+        {
+            var so = new ScriptObjectAttributes(attributes);
             var context = new TemplateContext
             {
                 //context.StrictVariables = true;

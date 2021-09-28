@@ -16,6 +16,7 @@ namespace Omnikeeper.GraphQL
             Field("onlineInboundAdapterName", x => x.OnlineInboundAdapterLink.AdapterName);
             Field("id", x => x.ID);
             Field("color", x => x.Color.ToArgb());
+            Field("generators", x => x.Generators);
             Field(x => x.State, type: typeof(AnchorStateType));
             Field<BooleanGraphType>("writable",
             resolve: (context) =>

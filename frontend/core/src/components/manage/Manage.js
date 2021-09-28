@@ -14,6 +14,7 @@ import ShowLogs from 'components/manage/ShowLogs';
 import ShowVersion from 'components/manage/ShowVersion';
 import LayerOperations from 'components/manage/LayerOperations';
 import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
+import ManageGenerators from './ManageGenerators';
 
 export default function Manage(props) {
     let { path, url } = useRouteMatch();
@@ -47,6 +48,9 @@ export default function Manage(props) {
             </PrivateRoute>
             <PrivateRoute path={`${path}/traits`}>
                 <ManageTraits />
+            </PrivateRoute>
+            <PrivateRoute path={`${path}/generators`}>
+                <ManageGenerators />
             </PrivateRoute>
             <PrivateRoute path={`${path}/auth-roles`}>
                 <ManageAuthRoles />
@@ -95,6 +99,7 @@ export default function Manage(props) {
                         <li><Link to={`${url}/predicates`}>Predicates</Link></li>
                         <li><Link to={`${url}/traits`}>Traits</Link></li>
                         <li><Link to={`${url}/auth-roles`}>Auth Roles</Link></li>
+                        <li><Link to={`${url}/generators`}>Generators</Link></li>
                     </ul>
 
                     <h3>Debug</h3>

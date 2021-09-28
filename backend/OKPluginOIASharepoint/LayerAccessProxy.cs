@@ -41,56 +41,20 @@ namespace OKPluginOIASharepoint
             return new CIAttribute(id, name, ciid, new AttributeScalarValueText(value), AttributeState.New, StaticChangesetID);
         }
 
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, TimeThreshold atTime)
-        {
-            if (!atTime.IsLatest && !useCurrentForHistoric) return null; // we don't have historic information
-
-            var externalID = mapper.GetExternalID(ciid);
-            if (!externalID.HasValue)
-                return null;
-
-            return await GetAttribute(name, ciid, externalID.Value);
-        }
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, SharepointExternalListItemID externalID)
-        {
-            if (!cachedListConfigs.TryGetValue(externalID.listID, out var listConfig))
-                return null; // list is not configured (anymore)
-
-            var columnName = listConfig.AttributeName2ColumnName(name);
-            if (columnName == null)
-                return null; // column is not configured
-
-            try
-            {
-                var item = await client.GetListItem(externalID.listID, externalID.itemID, new string[] { columnName });
-
-                if (!(item.GetOr(columnName, null) is string value) || value == null)
-                    return null; // attribute is not present in list item
-
-                return BuildAttributeFromValue(name, value, ciid);
-            }
-            catch (Exception)
-            { // TODO: handle
-                return null;
-            }
-        }
-
         public Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, TimeThreshold atTime)
         {
             return Task.FromResult<CIAttribute?>(null); // TODO: not implemented
         }
 
-        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime, string? nameRegexFilter = null)
+        public async IAsyncEnumerable<CIAttribute> GetAttributes(ICIIDSelection selection, TimeThreshold atTime, IAttributeSelection attributeSelection)
         {
             if (!atTime.IsLatest && !useCurrentForHistoric) yield break; // we don't have historic information
 
             var ciids = selection.GetCIIDs(() => mapper.GetAllCIIDs()).ToHashSet();
             var idPairs = mapper.GetIDPairs(ciids);
 
-            var nameRegex = (nameRegexFilter != null) ? new Regex(nameRegexFilter) : null;
-
             await foreach (var a in GetAttributes(idPairs))
-                if (nameRegex == null || nameRegex.IsMatch(a.Name))
+                if (attributeSelection.Contains(a.Name))
                     yield return a;
         }
         public async IAsyncEnumerable<CIAttribute> GetAttributes(IEnumerable<(Guid ciid, SharepointExternalListItemID externalID)> idPairs)
@@ -131,57 +95,6 @@ namespace OKPluginOIASharepoint
                         foreach (var attributeName in attributeNames)
                             yield return BuildAttributeFromValue(attributeName, attributeValue, ciid);
                     }
-                }
-            }
-        }
-
-        public async IAsyncEnumerable<CIAttribute> FindAttributesByFullName(string attributeName, ICIIDSelection selection, TimeThreshold atTime)
-        {
-            if (!atTime.IsLatest && !useCurrentForHistoric) yield break; // we don't have historic information
-
-            var ciids = selection.GetCIIDs(() => mapper.GetAllCIIDs()).ToHashSet();
-            var idPairs = mapper.GetIDPairs(ciids);
-
-            var listIDGroups = idPairs.GroupBy(f => f.externalID.listID);
-
-            foreach (var listIDGroup in listIDGroups)
-            {
-                var listID = listIDGroup.Key;
-                var listItemID2CIIDMap = listIDGroup.ToDictionary(l => l.externalID.itemID, l => l.ciid);
-
-                if (!cachedListConfigs.TryGetValue(listID, out var listConfig))
-                    continue; // list is not configured (anymore)
-
-                var columnName = listConfig.AttributeName2ColumnName(attributeName);
-                if (columnName == null)
-                    continue; // attribute name is not mapped for this list -> ignore
-
-                IEnumerable<(Guid itemGuid, System.Dynamic.ExpandoObject data)> items;
-                try
-                {
-                    // TODO: restrict the items to get to the ones where the guid is requested (or should we simply fetch all and discard later?)
-                    items = await client.GetListItems(listID, new string[] { columnName }).ToListAsync();
-                }
-                catch (Exception)
-                { // TODO: handle
-                    continue;
-                }
-
-                foreach (var (itemGuid, itemColumns) in items)
-                {
-                    if (!listItemID2CIIDMap.TryGetValue(itemGuid, out var ciid))
-                        continue; // the external item does not have a mapping to a CI
-
-                    if (!ciids.Contains(ciid))
-                        continue; // we got an item that is not actually requested, discard
-
-                    if (!((IDictionary<string, object>)itemColumns).TryGetValue(columnName, out var columnValue))
-                        continue; // the external item does not actually have the column we requested
-
-                    var attributeValue = columnValue as string;
-                    if (columnValue == null) continue; // TODO: handle
-                    if (attributeValue == null) continue; // TODO: handle
-                    yield return BuildAttributeFromValue(attributeName, attributeValue, ciid);
                 }
             }
         }

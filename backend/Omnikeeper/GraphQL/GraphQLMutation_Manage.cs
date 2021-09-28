@@ -44,7 +44,7 @@ namespace Omnikeeper.GraphQL
                     OnlineInboundAdapterLink oilp = LayerModel.DefaultOILP;
                     if (upsertLayer.OnlineInboundAdapterName != null && upsertLayer.OnlineInboundAdapterName != "")
                         oilp = OnlineInboundAdapterLink.Build(upsertLayer.OnlineInboundAdapterName);
-                    var updatedLayer = await layerModel.UpsertLayer(upsertLayer.ID, upsertLayer.Description, Color.FromArgb(upsertLayer.Color), upsertLayer.State, clb, oilp, transaction);
+                    var updatedLayer = await layerModel.UpsertLayer(upsertLayer.ID, upsertLayer.Description, Color.FromArgb(upsertLayer.Color), upsertLayer.State, clb, oilp, upsertLayer.Generators, transaction);
 
                     transaction.Commit();
                     userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
@@ -401,6 +401,72 @@ namespace Omnikeeper.GraphQL
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
 
                   var deleted = await traitModel.TryToDelete(traitID, new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, transaction);
+
+                  transaction.Commit();
+                  userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
+
+                  return deleted;
+              });
+
+            FieldAsync<GeneratorType>("manage_upsertGenerator",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<UpsertGeneratorInputType>> { Name = "generator" }
+              ),
+              resolve: async context =>
+              {
+                  var generatorModel = context.RequestServices!.GetRequiredService<IGeneratorModel>();
+                  var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
+                  var changesetModel = context.RequestServices!.GetRequiredService<IChangesetModel>();
+                  var baseConfigurationModel = context.RequestServices!.GetRequiredService<IBaseConfigurationModel>();
+
+                  var generator = context.GetArgument<UpsertGeneratorInput>("generator")!;
+
+                  var userContext = (context.UserContext as OmnikeeperUserContext)!;
+
+                  using var transaction = modelContextBuilder.BuildDeferred();
+
+                  var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(transaction);
+                  if (!context.RequestServices!.GetRequiredService<IManagementAuthorizationService>().CanModifyManagement(userContext.User, baseConfiguration, out var message))
+                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify generators: {message}");
+
+                  var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+
+                  var newGenerator = await generatorModel.InsertOrUpdate(
+                      generator.ID, generator.AttributeName, generator.AttributeValueTemplate,
+                      new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                      new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+                      changesetProxy, transaction);
+
+                  transaction.Commit();
+                  userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
+
+                  return newGenerator.generator;
+              });
+            FieldAsync<BooleanGraphType>("manage_removeGenerator",
+              arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }
+              ),
+              resolve: async context =>
+              {
+                  var generatorModel = context.RequestServices!.GetRequiredService<IGeneratorModel>();
+                  var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
+                  var changesetModel = context.RequestServices!.GetRequiredService<IChangesetModel>();
+                  var baseConfigurationModel = context.RequestServices!.GetRequiredService<IBaseConfigurationModel>();
+
+                  var generatorID = context.GetArgument<string>("id")!;
+
+                  var userContext = (context.UserContext as OmnikeeperUserContext)!;
+
+                  using var transaction = modelContextBuilder.BuildDeferred();
+
+                  var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(transaction);
+                  if (!context.RequestServices!.GetRequiredService<IManagementAuthorizationService>().CanModifyManagement(userContext.User, baseConfiguration, out var message))
+                      throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to modify generators: {message}");
+
+                  var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
+
+                  var deleted = await generatorModel.TryToDelete(generatorID, new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, transaction);
 
                   transaction.Commit();

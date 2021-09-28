@@ -40,7 +40,7 @@ namespace Tasks.DBInit
             var baseRelationModel = new BaseRelationModel(partitionModel);
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(partitionModel));
-            var effectiveTraitModel = new EffectiveTraitModel(ciModel, attributeModel, relationModel, null, NullLogger<EffectiveTraitModel>.Instance);
+            var effectiveTraitModel = new EffectiveTraitModel(relationModel, NullLogger<EffectiveTraitModel>.Instance);
             var predicateModel = new PredicateModel(effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel);
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
@@ -317,7 +317,7 @@ namespace Tasks.DBInit
                 var fragments = new List<BulkRelationDataLayerScope.Fragment>();
                 if (!windowsHostCIIds.IsEmpty())
                 {
-                    var windowsHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(windowsHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, trans, TimeThreshold.BuildLatest());
+                    var windowsHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(windowsHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, AllAttributeSelection.Instance, trans, TimeThreshold.BuildLatest());
                     foreach (var ci in windowsHosts)
                     {
                         fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHost, "has_monitoring_module"));
@@ -328,7 +328,7 @@ namespace Tasks.DBInit
                 }
                 if (!linuxHostCIIds.IsEmpty())
                 {
-                    var linuxHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(linuxHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, trans, TimeThreshold.BuildLatest());
+                    var linuxHosts = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(linuxHostCIIds), await layerModel.BuildLayerSet(new[] { "CMDB" }, trans), true, AllAttributeSelection.Instance, trans, TimeThreshold.BuildLatest());
                     foreach (var ci in linuxHosts)
                     {
                         fragments.Add(new BulkRelationDataLayerScope.Fragment(ci.ID, ciMonModuleHost, "has_monitoring_module"));

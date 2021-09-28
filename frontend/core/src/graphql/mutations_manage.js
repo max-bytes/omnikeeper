@@ -85,10 +85,23 @@ export const mutations = {
   }
   ${Fragments.recursiveTrait}
   `,
-
   REMOVE_RECURSIVE_TRAIT: gql`
   mutation($id: String!) {
     manage_removeRecursiveTrait(id: $id)
+  }
+  `,
+
+  UPSERT_GENERATOR: gql`
+  mutation($generator: UpsertGeneratorInputType!) {
+    manage_upsertGenerator(generator: $generator) {
+        ...Generator
+    }
+  }
+  ${Fragments.generator}
+  `,
+  REMOVE_GENERATOR: gql`
+  mutation($id: String!) {
+    manage_removeGenerator(id: $id)
   }
   `,
 

@@ -29,6 +29,7 @@ namespace Omnikeeper.GraphQL
         public string BrainName { get; private set; }
         public string OnlineInboundAdapterName { get; private set; }
         public int Color { get; private set; }
+        public string[] Generators { get; private set; }
     }
     public class UpsertLayerInputType : InputObjectGraphType<UpsertLayerInput>
     {
@@ -40,6 +41,7 @@ namespace Omnikeeper.GraphQL
             Field(x => x.BrainName, nullable: true);
             Field(x => x.OnlineInboundAdapterName, nullable: true);
             Field(x => x.Color);
+            Field(x => x.Generators);
         }
     }
 
@@ -158,6 +160,23 @@ namespace Omnikeeper.GraphQL
             Field(x => x.RequiredRelations);
             Field(x => x.OptionalRelations);
             Field(x => x.RequiredTraits);
+        }
+    }
+
+
+    public class UpsertGeneratorInput
+    {
+        public string ID { get; private set; }
+        public string AttributeName { get; private set; }
+        public string AttributeValueTemplate { get; private set; }
+    }
+    public class UpsertGeneratorInputType : InputObjectGraphType<UpsertGeneratorInput>
+    {
+        public UpsertGeneratorInputType()
+        {
+            Field("id", x => x.ID);
+            Field(x => x.AttributeName);
+            Field(x => x.AttributeValueTemplate);
         }
     }
 

@@ -12,6 +12,7 @@ const breadcrumbNameMap = [
   { search: '^/manage/odataapicontexts', name: 'OData API Contexts' },
   { search: '^/manage/predicates', name: 'Predicates' },
   { search: '^/manage/traits', name: 'Traits' },
+  { search: '^/manage/generators', name: 'Generators' },
   { search: '^/manage/auth-roles', name: 'Auth Roles' },
   { search: '^/manage/cache', name: 'Debug Cache' },
   { search: '^/manage/version', name: 'Version' },

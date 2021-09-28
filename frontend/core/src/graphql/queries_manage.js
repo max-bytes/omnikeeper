@@ -36,6 +36,14 @@ export const queries = {
         }
         ${Fragments.recursiveTrait}
     `,
+    Generators: gql`
+        query {
+            manage_generators {
+                ...Generator
+            }
+        }
+        ${Fragments.generator}
+    `,
     AuthRoles: gql`
         query {
             manage_authRoles {

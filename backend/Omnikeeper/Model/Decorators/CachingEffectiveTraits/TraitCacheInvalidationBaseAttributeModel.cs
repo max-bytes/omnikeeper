@@ -72,39 +72,19 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return model.GetAttributesOfChangeset(changesetID, trans);
         }
 
-        public async Task<IDictionary<Guid, string>> GetCINames(ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await model.GetCINames(selection, layerID, trans, atTime);
-        }
-
-        public async Task<IDictionary<Guid, CIAttribute>> FindAttributesByFullName(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await model.FindAttributesByFullName(name, selection, layerID, trans, atTime);
-        }
-
-        public async Task<IEnumerable<Guid>> FindCIIDsWithAttribute(string name, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await model.FindCIIDsWithAttribute(name, selection, layerID, trans, atTime);
-        }
-
-        public async Task<CIAttribute?> GetAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
-        {
-            return await model.GetAttribute(name, ciid, layerID, trans, atTime);
-        }
-
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
         {
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
         {
-            return await model.GetAttributes(selection, layerIDs, returnRemoved, trans, atTime, nameRegexFilter);
+            return await model.GetAttributes(selection, attributeSelection, layerIDs, returnRemoved, trans, atTime);
         }
 
-        public async Task<IEnumerable<Guid>> FindCIIDsWithAttributeNameAndValue(string name, IAttributeValue value, ICIIDSelection selection, string layerID, IModelContext trans, TimeThreshold atTime)
+        public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
-            return await model.FindCIIDsWithAttributeNameAndValue(name, value, selection, layerID, trans, atTime);
+            return await model.GetCIIDsWithAttributes(selection, layerIDs, trans, atTime);
         }
     }
 }

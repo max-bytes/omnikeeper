@@ -9,8 +9,9 @@ namespace Omnikeeper.Base.Model
 {
     public interface IAttributeModel : IBaseAttributeModel
     {
-        Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, LayerSet layers, IModelContext trans, TimeThreshold atTime, string? nameRegexFilter = null);
+        Task<IDictionary<Guid, IDictionary<string, MergedCIAttribute>>> GetMergedAttributes(ICIIDSelection cs, IAttributeSelection attributeSelection, LayerSet layers, IModelContext trans, TimeThreshold atTime);
 
+        // NOTE: we may be able to remove this, it is just a convenience wrapper over GetMergedAttributes()
         Task<IDictionary<Guid, MergedCIAttribute>> FindMergedAttributesByFullName(string name, ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime);
 
         /**
@@ -18,10 +19,6 @@ namespace Omnikeeper.Base.Model
          */
         Task<IDictionary<Guid, string>> GetMergedCINames(ICIIDSelection selection, LayerSet layers, IModelContext trans, TimeThreshold atTime);
 
-        /**
-         * NOTE: unlike IAttributeModel.GetAttribute(), GetMergedAttribute() does NOT return removed attributes
-         */
-        Task<MergedCIAttribute?> GetMergedAttribute(string name, Guid ciid, LayerSet layerset, IModelContext trans, TimeThreshold atTime);
         Task<MergedCIAttribute?> GetFullBinaryMergedAttribute(string name, Guid ciid, LayerSet layerset, IModelContext trans, TimeThreshold atTime);
 
     }
