@@ -132,7 +132,7 @@ function App() {
                 </PrivateRoute>
 
                 <Route path="*">
-                  <Redirect to="/explorer" />
+                  <Redirect to="/" />
                 </Route>
               </Switch>
             </div>
