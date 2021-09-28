@@ -27,6 +27,9 @@ namespace Omnikeeper.Base.Generator
         public string ID { get; }
         public string AttributeName { get; }
         public GeneratorAttributeValue Value { get; }
+
+
+        public static Guid StaticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
     }
 
     public class GeneratorAttributeValue
@@ -186,8 +189,7 @@ namespace Omnikeeper.Base.Generator
                     // create a deterministic, dependent guid from the ciid, layerID, attribute values; 
                     // we need to incorporate the dependent attributes, otherwise the attribute ID does not change when any of the dependent attributes change
                     var agGuid = GuidUtility.Create(ciid, $"{generator.AttributeName}-{layerID}-{string.Join("-", generator.Value.UsedAttributeNames)}");
-                    Guid staticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
-                    var ag = new CIAttribute(agGuid, generator.AttributeName, ciid, value, AttributeState.New, staticChangesetID);
+                    var ag = new CIAttribute(agGuid, generator.AttributeName, ciid, value, GeneratorV1.StaticChangesetID);
                     return ag;
                 } else
                 {

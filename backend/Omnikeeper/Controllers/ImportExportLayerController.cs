@@ -6,6 +6,7 @@ using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
+using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
@@ -85,10 +86,11 @@ namespace Omnikeeper.Controllers
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var attributesDict = (await attributeModel.GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new string[] { layerID }, false, trans, timeThreshold)).First();
+            var attributesDict = (await attributeModel.GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new string[] { layerID }, trans, timeThreshold)).First();
             var attributesDTO = attributesDict
                 .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key)) // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
-                .SelectMany(kv => kv.Value.Select(t => CIAttributeDTO.Build(t.Value)));
+                .Select(kv => kv.Value.Where(kva => kva.Value.ChangesetID != GeneratorV1.StaticChangesetID).ToDictionary(kva => kva.Key, kva => kva.Value)) // HACK: skip generated Attributes
+                .SelectMany(kv => kv.Select(t => CIAttributeDTO.Build(t.Value)));
             var relations = (await relationModel.GetRelations(RelationSelectionAll.Instance, layerID, false, trans, timeThreshold));
             var relationsDTO = relations.Select(r => RelationDTO.BuildFromRelation(r));
             // TODO: ci authorization?
