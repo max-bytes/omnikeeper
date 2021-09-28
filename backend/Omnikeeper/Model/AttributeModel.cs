@@ -76,9 +76,6 @@ namespace Omnikeeper.Model
                 throw new Exception("Should never happen!");
 
             var ma = mergedAttributes.FirstOrDefault().Value?.Values.FirstOrDefault();
-            // if the attribute is removed, we don't return it
-            if (ma == null || ma.Attribute.State == AttributeState.Removed)
-                return null;
             return ma;
         }
 
@@ -87,7 +84,7 @@ namespace Omnikeeper.Model
             if (layers.IsEmpty)
                 return ImmutableDictionary<Guid, IDictionary<string, MergedCIAttribute>>.Empty; // return empty, an empty layer list can never produce any attributes
 
-            var attributes = await baseModel.GetAttributes(cs, attributeSelection, layers.LayerIDs, returnRemoved: false, trans: trans, atTime: atTime);
+            var attributes = await baseModel.GetAttributes(cs, attributeSelection, layers.LayerIDs, trans: trans, atTime: atTime);
 
             var ret = MergeAttributes(attributes, layers.LayerIDs);
 
@@ -99,7 +96,7 @@ namespace Omnikeeper.Model
             if (layers.IsEmpty)
                 return ImmutableDictionary<Guid, MergedCIAttribute>.Empty; // return empty, an empty layer list can never produce any attributes
 
-            var attributes = await baseModel.GetAttributes(selection, NamedAttributesSelection.Build(name), layers.LayerIDs, false, trans, atTime);
+            var attributes = await baseModel.GetAttributes(selection, NamedAttributesSelection.Build(name), layers.LayerIDs, trans, atTime);
             var mergedAttributes = MergeAttributes(attributes, layers.LayerIDs);
 
             // NOTE: because baseModel.GetAttributes() only return inner dictionaries for CIs that contain ANY attributes, we can safely access the attribute in the dictionary by []
@@ -111,7 +108,7 @@ namespace Omnikeeper.Model
             if (layers.IsEmpty)
                 return ImmutableDictionary<Guid, string>.Empty; // return empty, an empty layer list can never produce anything
 
-            var attributes = await baseModel.GetAttributes(selection, NamedAttributesSelection.Build(ICIModel.NameAttribute), layers.LayerIDs, false, trans, atTime);
+            var attributes = await baseModel.GetAttributes(selection, NamedAttributesSelection.Build(ICIModel.NameAttribute), layers.LayerIDs, trans, atTime);
             var mergedAttributes = MergeAttributes(attributes, layers.LayerIDs);
             // NOTE: because baseModel.GetAttributes() only return inner dictionaries for CIs that contain ANY attributes, we can safely access the attribute in the dictionary by []
             var ret = mergedAttributes.ToDictionary(t => t.Key, t => t.Value[ICIModel.NameAttribute].Attribute.Value.Value2String());
@@ -119,14 +116,14 @@ namespace Omnikeeper.Model
             return ret;
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
-            return await baseModel.GetAttributes(selection, attributeSelection, layerIDs, returnRemoved, trans, atTime);
+            return await baseModel.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime);
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, IModelContext trans)
+        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
-            return await baseModel.GetAttributesOfChangeset(changesetID, trans);
+            return await baseModel.GetAttributesOfChangeset(changesetID, getRemoved, trans);
         }
 
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)

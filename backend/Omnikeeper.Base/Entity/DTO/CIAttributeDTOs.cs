@@ -15,29 +15,27 @@ namespace Omnikeeper.Base.Entity.DTO
         [Required] public string Name { get; set; } = "";
         [Required] public AttributeValueDTO Value { get; set; } = default;
         [Required] public Guid CIID { get; set; } = default;
-        [Required] public AttributeState State { get; set; } = default;
 
         private CIAttributeDTO() { }
 
         public static CIAttributeDTO Build(MergedCIAttribute attribute)
         {
             var DTOValue = AttributeValueDTO.Build(attribute.Attribute.Value);
-            return Build(attribute.Attribute.ID, attribute.Attribute.Name, DTOValue, attribute.Attribute.CIID, attribute.Attribute.State);
+            return Build(attribute.Attribute.ID, attribute.Attribute.Name, DTOValue, attribute.Attribute.CIID);
         }
         public static CIAttributeDTO Build(CIAttribute attribute)
         {
             var DTOValue = AttributeValueDTO.Build(attribute.Value);
-            return Build(attribute.ID, attribute.Name, DTOValue, attribute.CIID, attribute.State);
+            return Build(attribute.ID, attribute.Name, DTOValue, attribute.CIID);
         }
-        private static CIAttributeDTO Build(Guid id, string name, AttributeValueDTO value, Guid ciid, AttributeState state)
+        private static CIAttributeDTO Build(Guid id, string name, AttributeValueDTO value, Guid ciid)
         {
             return new CIAttributeDTO
             {
                 ID = id,
                 Name = name,
                 Value = value,
-                CIID = ciid,
-                State = state
+                CIID = ciid
             };
         }
     }

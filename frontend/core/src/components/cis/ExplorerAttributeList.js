@@ -76,7 +76,6 @@ ExplorerAttributeList.propTypes = {
       PropTypes.shape({
         attribute: PropTypes.shape({
           name: PropTypes.string.isRequired,
-          state: PropTypes.string.isRequired,
           value: PropTypes.shape({
               type: PropTypes.string.isRequired,
               isArray: PropTypes.bool.isRequired,

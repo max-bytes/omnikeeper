@@ -151,6 +151,9 @@ export const queries = {
                 attributes {
                     ...FullAttribute
                 }
+                removedAttributes {
+                    ...FullAttribute
+                }
                 relations {
                     id
                     fromCIID

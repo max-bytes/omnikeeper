@@ -48,8 +48,7 @@ namespace OKPluginOIAOmnikeeper
 
             if (ciid.HasValue)
             {
-                return new CIAttribute(dto.ID, dto.Name, ciid.Value, AttributeValueBuilder.BuildFromDTO(dto.Value),
-                    AttributeState.New, staticChangesetID);
+                return new CIAttribute(dto.ID, dto.Name, ciid.Value, AttributeValueBuilder.BuildFromDTO(dto.Value), staticChangesetID);
             }
             else return null;
         }

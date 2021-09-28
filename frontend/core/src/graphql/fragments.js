@@ -21,7 +21,6 @@ export const Fragments = {
         name
         ciid
         changesetID
-        state
         value {
             type
             isArray
