@@ -1,12 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,16 +28,18 @@ namespace OKPluginNaemonConfig
         private List<string> loadcmdbcustomer = new List<string>() { "ADISSEO", "AGRANA", "AMS", "AMSINT", "ANDRITZ", "ATS", "AVESTRA", "AWS" };
 
         // this is only temporary since this should be read from configuration
-        private List<string> naemonsConfigGenerateprofiles = new List<string>(){ "svphg200mon001", "svphg200mon002", "uansvclxnaemp01", "uansvclxnaemp02", "uansvclxnaemp03", "uansvclxnaemp04", "uansvclxnaemp05", "uansvclxnaemp06" };
+        private List<string> naemonsConfigGenerateprofiles = new List<string>() { "svphg200mon001", "svphg200mon002", "uansvclxnaemp01", "uansvclxnaemp02", "uansvclxnaemp03", "uansvclxnaemp04", "uansvclxnaemp05", "uansvclxnaemp06" };
 
 
-        public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger) 
+        public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start naemonConfig");
 
             var layerset = await layerModel.BuildLayerSet(new[] { "testlayer01" }, trans);
 
-            var layerset02 = await layerModel.BuildLayerSet(new[] { "testlayer02" }, trans);
+            //var layerset02 = await layerModel.BuildLayerSet(new[] { "testlayer02" }, trans);
+
+            //var layerset05 = await layerModel.BuildLayerSet(new[] { "testlayer05" }, trans);
 
             // load naemonInstances
             var naemonInstances = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
@@ -75,130 +75,260 @@ namespace OKPluginNaemonConfig
 
             // a list with all CI from datbase
 
-            var cisData = new List<MergedCI>();
-
-            // get hosts from db
-            //traitModel.get
-            var hosts = await traitModel.GetEffectiveTraitsForTrait(Traits.HCisFlattened, layerset02, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-
-            var a = await traitModel.GetMergedCIsWithTrait(Traits.HCisFlattened, layerset02, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var ciData = new List<ConfigurationItem>();
+            var hosts1 = await traitModel.GetEffectiveTraitsForTrait(Traits.HCisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var hosts = await traitModel.GetEffectiveTraitsForTrait(Traits.HCisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
             foreach (var host in hosts)
             {
                 (MergedCI ciItem, _) = host.Value;
-    //            attribute('hostname', HOSTNAME || ''),
-				//attribute('__name', join(' - ', [HOSTID || '', HOSTNAME || ''])),
-				//attribute('cmdb.id', HOSTID || ''),
-				//attribute('cmdb.platform', HPLATFORM || ''),
-				//attribute('cmdb.status', HSTATUS || ''),
-				//attribute('cmdb.more', HMORE || ''),
-				//attribute('cmdb.customer', HCUST || ''),
-				//attribute('cmdb.cpu', HCPU || ''),
-				//attribute('cmdb.os', HOS || ''),
-				//attribute('cmdb.fsource', HFSOURCE || ''),
-				//attribute('cmdb.fkey', HFKEY || '')
-                //                $ci['TYPE'] = 'HOST';
-                //$ci['ID'] = $v['HOSTID'];
-                //$ci['NAME'] = $v['HOSTNAME'];
 
-                //$ci['CUST'] = $v['HCUST'];
-                //$ci['ENVIRONMENT'] = $v['HENVIRONMENT'];
-                //$ci['STATUS'] = $v['HSTATUS'];
-                //$ci['CRITICALITY'] = $v['HCRITICALITY'];
+                var item = new ConfigurationItem
+                {
+                    Type = "HOST"
+                };
 
-                //$ci['SUPP_OS'] = $v['HSUP'];
-                //$ci['SUPP_APP'] = $v['HSUPAPP'];
-                var attributes = new Dictionary<string, MergedCIAttribute>();
-                //attributes.Add("TYPE", new MergedCIAttribute())
                 foreach (var attribute in ciItem.MergedAttributes)
                 {
                     switch (attribute.Key)
                     {
                         case "cmdb.id":
-                            attributes["ID"] = attribute.Value;
+                            item.Id = attribute.Value.Attribute.Value.Value2String();
                             break;
                         case "hostname":
-                            attributes["NAME"] = attribute.Value;
+                            item.Name = attribute.Value.Attribute.Value.Value2String();
                             break;
                         case "cmdb.status":
-                            attributes["STATUS"] = attribute.Value;
+                            item.Status = attribute.Value.Attribute.Value.Value2String();
                             break;
                         default:
                             break;
                     }
                 }
-                ciItem.MergedAttributes.Clear();
-                foreach (var attribute in attributes)
-                {
-                    ciItem.MergedAttributes.AddOrUpdate(attribute.Key, attribute.Value);
-                }
-                // before inserting here we should define that type is host
-                cisData.Append(ciItem); // we need to define an object for CI that has type and other properties
+
+                ciData.Add(item);
             }
 
-            // select only  one host
-            var t = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(Traits.HCisFlattened, "hostname", new AttributeScalarValueText("nb11644015"), layerset02, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-
             // get services
-            var services = await traitModel.GetEffectiveTraitsForTrait(Traits.ACisFlattened, layerset02, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var services = await traitModel.GetEffectiveTraitsForTrait(Traits.ACisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
             foreach (var service in services)
             {
                 (MergedCI ciItem, _) = service.Value;
-
-                // before inserting here we should define that type is service
-                //$ci['TYPE'] = 'SERVICE';
-                //$ci['ID'] = $v['SVCID'];
-                //$ci['NAME'] = $v['SVCNAME'];
-
-                //$ci['CUST'] = $v['SVCCUSTOMER'];
-                //$ci['ENVIRONMENT'] = $v['SVCENVIRONMENT'];
-                //$ci['STATUS'] = $v['SVCSTATUS'];
-                //$ci['CRITICALITY'] = $v['SVCCRITICALITY'];
-
-                //$ci['SUPP_OS'] = $v['SVCSUP'];
-                //$ci['SUPP_APP'] = $v['SVCSUPAPP'];
-
-    //            attribute('cmdb.name', SVCNAME || ''),
-				//attribute('__name', join(' - ', [SVCID || '', SVCNAME || ''])),
-				//attribute('cmdb.id', SVCID || ''),
-				//attribute('cmdb.environment', SVCENVIRONMENT || ''),
-				//attribute('cmdb.status', SVCSTATUS || ''),
-				//attribute('cmdb.class', SVCCLASS || ''),
-				//attribute('cmdb.type', SVCTYPE || ''),
-				//attribute('cmdb.detail', SVCDETAIL || ''),
-				//attribute('cmdb.fsource', SVCFSOURCE || ''),
-				//attribute('cmdb.fkey', SVCFKEY || '')
-
-                var attributes = new Dictionary<string, MergedCIAttribute>();
-
+                var item = new ConfigurationItem
+                {
+                    Type = "SERVICE"
+                };
                 foreach (var attribute in ciItem.MergedAttributes)
                 {
                     switch (attribute.Key)
                     {
                         case "cmdb.id":
-                            attributes["ID"] = attribute.Value;
+                            item.Id = attribute.Value.Attribute.Value.Value2String();
                             break;
                         case "cmdb.name":
-                            attributes["NAME"] = attribute.Value;
+                            item.Name = attribute.Value.Attribute.Value.Value2String();
                             break;
                         case "cmdb.environment":
-                            attributes["ENVIRONMENT"] = attribute.Value;
+                            item.Environment = attribute.Value.Attribute.Value.Value2String();
                             break;
                         case "cmdb.status":
-                            attributes["STATUS"] = attribute.Value;
+                            item.Status = attribute.Value.Attribute.Value.Value2String();
                             break;
                         default:
                             break;
                     }
                 }
-                ciItem.MergedAttributes.Clear();
-                foreach (var attribute in attributes)
+
+                ciData.Add(item);
+            }
+
+            // add categories for hosts 
+            // HostsCategories
+            var hostsCategories = await traitModel.GetEffectiveTraitsForTrait(Traits.HostsCategoriesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+
+            foreach (var hostCategory in hostsCategories)
+            {
+                (MergedCI ciItem, _) = hostCategory.Value;
+                var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_category-HOSTID", out MergedCIAttribute? hostIdAttribute);
+
+                if (!success)
                 {
-                    ciItem.MergedAttributes.AddOrUpdate(attribute.Key, attribute.Value);
+                    // log error here
                 }
-                
-                //ciItem.MergedAttributes.Concat(attributes);
-                cisData.Add(ciItem); // we need to define an object for CI that has type and other properties, maybe add a new attribute here
+
+                var hostId = hostIdAttribute!.Attribute.Value.Value2String();
+
+                foreach (var item in ciData)
+                {
+                    if (item.Id == hostId)
+                    {
+                        item.Categories = new Dictionary<string, Category>();
+
+                        var obj = new Category();
+
+                        foreach (var attribute in ciItem.MergedAttributes)
+                        {
+                            switch (attribute.Key)
+                            {
+                                case "cmdb.host_category-CATEGORYID":
+                                    obj.Id = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                case "cmdb.host_category-CATTREE":
+                                    obj.Tree = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                case "cmdb.host_category-CATGROUP":
+                                    obj.Group = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                case "cmdb.host_category-CATEGORY":
+                                    obj.Name = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                case "cmdb.host_category-CATDESC":
+                                    obj.Desc = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+
+                        item.Categories[obj.Group] = obj;
+                    }
+                }
+            }
+
+            // add categories for services
+            var servicesCategories = await traitModel.GetEffectiveTraitsForTrait(Traits.ServicesCategoriesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+
+            foreach (var serviceCategory in servicesCategories)
+            {
+                (MergedCI ciItem, _) = serviceCategory.Value;
+                var success = ciItem.MergedAttributes.TryGetValue("cmdb.service_category-SVCID", out MergedCIAttribute? serviceIdAttribute);
+
+                if (!success)
+                {
+                    // log error here
+                }
+
+                var serviceId = serviceIdAttribute!.Attribute.Value.Value2String();
+
+                foreach (var item in ciData)
+                {
+                    if (item.Id == serviceId)
+                    {
+                        item.Categories = new Dictionary<string, Category>();
+
+                        var obj = new Category();
+
+                        foreach (var attribute in ciItem.MergedAttributes)
+                        {
+                            switch (attribute.Key)
+                            {
+                                case "cmdb.host_category-CATEGORYID":
+                                    obj.Id = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                case "cmdb.host_category-CATTREE":
+                                    obj.Tree = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                case "cmdb.host_category-CATGROUP":
+                                    obj.Group = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                case "cmdb.host_category-CATEGORY":
+                                    obj.Name = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                case "cmdb.host_category-CATDESC":
+                                    obj.Desc = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+
+                        item.Categories[obj.Group] = obj;
+                    }
+                }
+            }
+
+            // add host actions to cidata
+            var hostActions = await traitModel.GetEffectiveTraitsForTrait(Traits.HostActionsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+
+            foreach (var hostAction in hostActions)
+            {
+                (MergedCI ciItem, _) = hostAction.Value;
+                var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_action-HOSTID", out MergedCIAttribute? hostIdAttribute);
+
+                var hostId = hostIdAttribute!.Attribute.Value.Value2String();
+
+                foreach (var item in ciData)
+                {
+                    if (item.Id == hostId)
+                    {
+                        var obj = new Actions();
+
+                        foreach (var attribute in ciItem.MergedAttributes)
+                        {
+                            switch (attribute.Key)
+                            {
+                                case "cmdb.host_action-HOSTACTID":
+                                    obj.Id = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                case "cmdb.host_action-HOSTACTTYPE":
+                                    obj.Type = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                case "cmdb.host_action-HOSTACTCMD":
+                                    obj.Cmd = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                case "cmdb.host_action-HOSTACTCMDUSER":
+                                    obj.CmdUser = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+
+                        item.Actions = obj;
+                    }
+                }
+            }
+
+            // add service actions to ci data 
+
+            var serviceActions = await traitModel.GetEffectiveTraitsForTrait(Traits.ServiceActionsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+
+            foreach (var serviceAction in serviceActions)
+            {
+                (MergedCI ciItem, _) = serviceAction.Value;
+                var success = ciItem.MergedAttributes.TryGetValue("cmdb.service_action-SVCID", out MergedCIAttribute? serviceIdAttribute);
+
+                var serviceId = serviceIdAttribute!.Attribute.Value.Value2String();
+
+                foreach (var item in ciData)
+                {
+                    if (item.Id == serviceId)
+                    {
+                        var obj = new Actions();
+                        foreach (var attribute in ciItem.MergedAttributes)
+                        {
+                            switch (attribute.Key)
+                            {
+                                case "cmdb.service_action-SVCACTID":
+                                    obj.Id = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                case "cmdb.service_action-SVCACTTYPE":
+                                    obj.Type = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                case "cmdb.service_action-SVCACTCMD":
+                                    obj.Cmd = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                case "cmdb.service_action-SVCACTCMDUSER":
+                                    obj.CmdUser = attribute.Value.Attribute.Value.Value2String();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+
+                        item.Actions = obj;
+                    }
+                }
             }
 
             // get capability map
@@ -234,7 +364,8 @@ namespace OKPluginNaemonConfig
                     if (capMap.ContainsKey(tag))
                     {
                         capMap[tag].Add(instanceIdAttribute!.Attribute.Value.Value2String());
-                    } else
+                    }
+                    else
                     {
                         capMap.Add(tag, new List<string> { instanceIdAttribute!.Attribute.Value.Value2String() });
                     }
@@ -282,7 +413,7 @@ namespace OKPluginNaemonConfig
                 foreach (var profile in naemonProfiles)
                 {
                     (MergedCI ciItem, _) = profile.Value;
-                    
+
                     // first get profile name 
                     var s = ciItem.MergedAttributes.TryGetValue("monman-profile.name", out MergedCIAttribute? profileNameAttribute);
 
@@ -298,44 +429,92 @@ namespace OKPluginNaemonConfig
                     if (!capMap.ContainsKey(cap))
                     {
                         capMap.Add(cap, new List<string>());
-                    } else
+                    }
+                    else
                     {
                         capMap[cap] = (List<string>)profileFromDbNaemons.Concat(capMap[cap]);
                     }
                 }
             }
 
-            // create for each CI an json object so we can have more flexibility
-            foreach (var ciItem in cisData)
+            //// create for each CI an json object so we can have more flexibility
+            //foreach (var ciItem in cisData)
+            //{
+            //    // we need to add the naemonsVail to each configuration item
+            //    var naemonsVail = naemonIds;
+
+            //    // we need to check here ci tags which should be an attribute
+            //    foreach (var instanceTag in naemonInstancesTags)
+            //    {
+            //        (MergedCI item, _) = instanceTag.Value;
+
+            //        var s = item.MergedAttributes.TryGetValue("monman-instance.name", out MergedCIAttribute? instanceNameAttribute);
+
+            //        if (!s)
+            //        {
+            //            continue;
+            //        }
+
+            //        var requirement = instanceNameAttribute!.Attribute.Value.Value2String();
+
+            //        if (capMap.ContainsKey(requirement))
+            //        {
+            //            naemonsVail = naemonsVail.Intersect(capMap[requirement]).ToList();
+            //        }
+            //        else
+            //        {
+            //            naemonsVail = new List<string>();
+            //        }
+            //    }
+            //}
+
+            foreach (var item in ciData)
             {
-                // we need to add the naemonsVail to each configuration item
-                var naemonsVail = naemonIds;
+                item.NaemonsAvail = naemonIds;
 
-                // we need to check here ci tags which should be an attribute
-                foreach (var instanceTag in naemonInstancesTags)
+                if (capMap.ContainsKey(item.Name))
                 {
-                    (MergedCI item, _) = instanceTag.Value;
+                    item.NaemonsAvail = item.NaemonsAvail.Intersect(capMap[item.Name]).ToList();
+                }
+                else
+                {
+                    item.NaemonsAvail = new List<string>();
+                }
+            }
 
-                    var s = item.MergedAttributes.TryGetValue("monman-instance.name", out MergedCIAttribute? instanceNameAttribute);
+            foreach (var agent in naemonInstances)
+            {
+                (MergedCI item, _) = agent.Value;
 
-                    if (!s)
+                var s = item.MergedAttributes.TryGetValue("monman-instance.id", out MergedCIAttribute? instanceId);
+
+                if (!s)
+                {
+                    // log error here
+                }
+
+                var id = instanceId!.Attribute.Value.Value2String();
+
+                // get only configuration items for this naemon
+                var thisNaemonCis = new List<dynamic>();
+
+                foreach (var ciItem in ciData)
+                {
+                    if (ciItem.NaemonsAvail.Contains(id))
                     {
-                        continue;
-                    }
-
-                    var requirement = instanceNameAttribute!.Attribute.Value.Value2String();
-
-                    if (capMap.ContainsKey(requirement))
-                    {
-                        naemonsVail = naemonsVail.Intersect(capMap[requirement]).ToList();
-                    }
-                    else
-                    {
-                        naemonsVail = new List<string>();
+                        thisNaemonCis.Add(ciItem);
                     }
                 }
             }
 
+            foreach (var item in ciData)
+            {
+                if (item.Actions != null)
+                {
+                    break;
+                }
+
+            }
 
             var commands = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(Traits.CommandsFlattened, "monman-command.id", new AttributeScalarValueText("H12037680"), layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
             // load services ci
@@ -349,209 +528,58 @@ namespace OKPluginNaemonConfig
             return true;
         }
 
-        // Do we need this object
-        class CIItem
+        internal class ConfigurationItem
         {
-            public List<string>? NAEMONSAVAIL { get; set; }
-
+            //public ConfigurationItem(string type, string id, string name, string status, Dictionary<string, Category> categories, Actions actions)
+            //{
+            //    Type = type;
+            //    Id = id;
+            //    Name = name;
+            //    Status = status;
+            //    Categories = categories;
+            //    Actions = actions;
+            //}
+            public string Type { get; set; }
+            public string Id { get; set; }
+            public string Name { get; set; }
+            public string Status { get; set; }
+            public string Environment { get; set; }
+            public List<string> NaemonsAvail { get; set; }
+            public Dictionary<string, Category> Categories { get; set; }
+            public Actions Actions { get; set; }
         }
 
-        public async Task<bool> RunV1(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
+        internal class Category
         {
-            logger.LogDebug("Start naemonConfig");
-
-            var layerset = await layerModel.BuildLayerSet(new[] { "testlayer01" }, trans);
-
-            var layerset02 = await layerModel.BuildLayerSet(new[] { "testlayer02" }, trans);
-
-            var naemonInstances = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-
-            //foreach (var instance in naemonInstances)
+            //public Category(string id, string tree, string group, string name, string desc)
             //{
-            //    //$id = $agent['ID'];
-            //    var ci = instance.Value.ci;
-            //    var instanceIdattrName = "monman-instance.id";
-
-            //    var agent = ci.MergedAttributes;
-
-            //    MergedCIAttribute id;
-
-            //    var success = ci.MergedAttributes.TryGetValue(instanceIdattrName, out id!);
-
-            //    if (!success)
-            //    {
-            //        // log an error here
-            //        break;
-            //    }
-
-            //    var naemonInstanceId = id.Attribute.Value.Value2String();
-
-            //    var ciData = new List<TraitAttribute>();
-            //    // $generateConfig and $isSpecialNode
-
-            //    // get hosts and service traits
-
-            //    var hCis = await traitModel.GetEffectiveTraitsForTrait(Traits.HCisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-            //    var aCis = await traitModel.GetEffectiveTraitsForTrait(Traits.ACisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-
-            //    // we need to filter hCis and aCis based on loadcmdbcustomer list 
-            //    // convert these two lists to one ciData list
-            //    var hMergedCis = new List<MergedCI>();
-            //    var aMergedCis = new List<MergedCI>();
-
-            //    foreach (var el in hCis)
-            //    {
-            //        (MergedCI elCi, _) = el.Value;
-
-            //        var s = elCi.MergedAttributes.TryGetValue("cmdb.customer", out MergedCIAttribute? cmdbCustomer);
-
-            //        // check if cmd.customer is in the loadcmdbcustomer list
-            //        var v = cmdbCustomer!.Attribute.Value.Value2String();
-            //        if (s && loadcmdbcustomer.Contains(v!))
-            //        {
-            //            hMergedCis.Add(elCi); // now this list contins filtered mergedCis  based on loadcmdbcustomer list
-            //        }
-            //    }
-
-            //    foreach (var el in aCis)
-            //    {
-            //        (MergedCI elCi, _) = el.Value;
-            //        var s = elCi.MergedAttributes.TryGetValue("SVCCUSTOMER", out MergedCIAttribute? svcCustomer); // this attribute looks like is missing after the data is transformed to omnikeeper?
-            //        var v = svcCustomer!.Attribute.Value.Value2String();
-            //        if (s && loadcmdbcustomer.Contains(v!))
-            //        {
-            //            aMergedCis.Add(elCi); // now this list contins filtered mergedCis  based on loadcmdbcustomer list
-            //        }
-            //    }
-
-            //    // now we need to check what addToNormalizedCiDataFromBaseData() function returns
-
-            //    // now we have ci data that is returned by getNormalizedCiBaseData() function on php project
-
+            //    Id = id;
+            //    Tree = tree;
+            //    Group = group;
+            //    Name = name;
+            //    Desc = desc;
             //}
 
-            // select naemon instance with specific ID 'H12037680'
-            // this is for intial version of creating naemon configuration
-            // at the end we will have a loop that loops through naemoninstances list and selects th
-            var naemonH12037680 = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(Traits.NaemonInstanceFlattened, "monman-instance.id", new AttributeScalarValueText("H12037680"), layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            public string Id { get; set; }
+            public string Tree { get; set; }
+            public string Group { get; set; }
+            public string Name { get; set; }
+            public string Desc { get; set; }
+        }
 
-            // get all host data for this naemon id 'H12037680' 
-            var hCiH12037680 = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(Traits.HCisFlattened, "hostname", new AttributeScalarValueText("H12037680"), layerset02, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-            
-            
-            var hCis = await traitModel.GetEffectiveTraitsForTrait(Traits.HCisFlattened, layerset02, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-
-
-            var naemonIds = new List<string>();
-
-            var naemonModules = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonModulesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-
-            //traitModel.GetEffectiveTraitsWithTraitAttributeValue
-
-
-            //$profileFromDbNaemons = [];
-            // get db enabled naemons
-            //var profileFromDbNaemons = new List<MergedCI>();
-
-            var profileFromDbNaemons = new List<string>();
-
-            //foreach (var naemon in naemonInstances)
+        internal class Actions
+        {
+            //public Actions(string id, string type, string cmd, string cmdUser)
             //{
-            //    // we need to check here if isNaemonProfileFromDbEnabled 
-            //    (MergedCI ci, EffectiveTrait et) = naemon.Value;
-
-            //    var success = ci.MergedAttributes.TryGetValue("monman-instance.name", out MergedCIAttribute? instanceNameAttribute);
-
-            //    if (!success)
-            //    {
-            //        continue;
-            //    }
-
-            //    var instanceName = instanceNameAttribute!.Attribute.Value.Value2String();
-
-            //    if (naemonsConfigGenerateprofiles.Contains(instanceName))
-            //    {
-            //        //profileFromDbNaemons.Add(ci);
-
-            //        // monman-instance.id
-            //        var s = ci.MergedAttributes.TryGetValue("monman-instance.id", out MergedCIAttribute? instanceIdAttribute);
-
-            //        if (!s)
-            //        {
-            //            continue;
-            //        }
-
-            //        profileFromDbNaemons.Add(instanceIdAttribute!.Attribute.Value.Value2String());
-
-            //    }
+            //    Id = id;
+            //    Type = type;
+            //    Cmd = cmd;
+            //    CmdUser = cmdUser;
             //}
-
-            // getCapabilityMap - NaemonInstancesTagsFlattened
-
-            //var naemonInstancesTags = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonInstancesTagsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-
-            //var capMap = new Dictionary<string, List<string>>();
-
-            //foreach (var instanceTag in naemonInstancesTags)
-            //{
-            //    (MergedCI ci, _) = instanceTag.Value;
-
-            //    var success = ci.MergedAttributes.TryGetValue("monman-instance_tag.tag", out MergedCIAttribute? instanceTagAttribute);
-
-            //    if (!success)
-            //    {
-            //        continue;
-            //    }
-
-            //    var tag = instanceTagAttribute!.Attribute.Value.Value2String();
-
-            //    if (tag.StartsWith("cap_"))
-            //    {
-            //        var s = ci.MergedAttributes.TryGetValue("monman-instance_tag.tag", out MergedCIAttribute? instanceIdAttribute);
-            //        if (!s)
-            //        {
-            //            continue;
-            //        }
-
-            //        capMap.Add(tag, new List<string> { instanceIdAttribute!.Attribute.Value.Value2String() });
-            //    }
-            //}
-
-            //var naemonProfiles = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonProfilesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-
-            /* extend capMap */
-
-            //if (profileFromDbNaemons.Count > 0)
-            //{
-            //    foreach (var profile in naemonProfiles)
-            //    {
-            //        (MergedCI ci, _) = profile.Value;
-            //        // first get profile name 
-            //        var success = ci.MergedAttributes.TryGetValue("monman-profile.name", out MergedCIAttribute? profileNameAttribute);
-
-            //        if (!success)
-            //        {
-            //            continue;
-            //        }
-
-            //        //$cap = 'cap_lp_'.strtolower($profile['NAME']);
-
-            //        var cap = "cap_lp_" + profileNameAttribute!.Attribute.Value.Value2String();
-
-            //        if (!capMap.ContainsKey(cap))
-            //        {
-            //            capMap.Add(cap, new List<string>());
-            //        }
-
-            //        capMap[cap] = (List<string>)profileFromDbNaemons.Concat(new List<string> { cap });
-            //    }
-            //}
-
-            /* test compatibility of naemons and add NAEMONSAVAIL */
-
-
-
-            return true;
+            public string Id { get; set; }
+            public string Type { get; set; }
+            public string Cmd { get; set; }
+            public string CmdUser { get; set; }
         }
     }
 }
