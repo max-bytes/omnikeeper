@@ -57,15 +57,15 @@ namespace Omnikeeper.GraphQL
                     if (!managementAuthorizationService.HasManagementPermission(userContext.User))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to access management");
 
-                    var numActiveAttributes = await layerStatisticsModel.GetActiveAttributes(layer, userContext.Transaction);
+                    var numActiveAttributes = await layerStatisticsModel.GetActiveAttributes(layer.ID, userContext.Transaction);
 
-                    var numAttributeChangesHistory = await layerStatisticsModel.GetAttributeChangesHistory(layer, userContext.Transaction);
+                    var numAttributeChangesHistory = await layerStatisticsModel.GetAttributeChangesHistory(layer.ID, userContext.Transaction);
 
-                    var numActiveRelations = await layerStatisticsModel.GetActiveRelations(layer, userContext.Transaction);
+                    var numActiveRelations = await layerStatisticsModel.GetActiveRelations(layer.ID, userContext.Transaction);
 
-                    var numRelationChangesHistory = await layerStatisticsModel.GetRelationChangesHistory(layer, userContext.Transaction);
+                    var numRelationChangesHistory = await layerStatisticsModel.GetRelationChangesHistory(layer.ID, userContext.Transaction);
 
-                    var numLayerChangesetsHistory = await layerStatisticsModel.GetLayerChangesetsHistory(layer, userContext.Transaction);
+                    var numLayerChangesetsHistory = await layerStatisticsModel.GetLayerChangesetsHistory(layer.ID, userContext.Transaction);
 
                     return new LayerStatistics(
                         layer,

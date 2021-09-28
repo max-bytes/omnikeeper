@@ -138,14 +138,14 @@ namespace Tasks.DBInit
             string activeDirectoryLayerID;
             using (var trans = modelContextBuilder.BuildDeferred())
             {
-                var configWriteLayer = await layerModel.UpsertLayer("Config", "", Color.Blue, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
-                var cmdbLayer = await layerModel.UpsertLayer("CMDB", "", Color.Blue, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
+                var configWriteLayer = await layerModel.UpsertLayer("Config", "", Color.Blue, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), new string[0], trans);
+                var cmdbLayer = await layerModel.UpsertLayer("CMDB", "", Color.Blue, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), new string[0], trans);
                 cmdbLayerID = cmdbLayer.ID;
-                await layerModel.UpsertLayer("Inventory Scan", "", Color.Violet, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
-                var monitoringDefinitionsLayer = await layerModel.UpsertLayer("Monitoring Definitions", "", Color.Orange, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
+                await layerModel.UpsertLayer("Inventory Scan", "", Color.Violet, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), new string[0], trans);
+                var monitoringDefinitionsLayer = await layerModel.UpsertLayer("Monitoring Definitions", "", Color.Orange, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), new string[0], trans);
                 monitoringDefinitionsLayerID = monitoringDefinitionsLayer.ID;
-                await layerModel.UpsertLayer("Monitoring", "", ColorTranslator.FromHtml("#FFE6CC"), AnchorState.Active, ComputeLayerBrainLink.Build("OKPluginCLBMonitoring.CLBNaemonMonitoring"), OnlineInboundAdapterLink.Build(""), trans);
-                var automationLayer = await layerModel.UpsertLayer("Active Directory", "", Color.Cyan, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), trans);
+                await layerModel.UpsertLayer("Monitoring", "", ColorTranslator.FromHtml("#FFE6CC"), AnchorState.Active, ComputeLayerBrainLink.Build("OKPluginCLBMonitoring.CLBNaemonMonitoring"), OnlineInboundAdapterLink.Build(""), new string[0], trans);
+                var automationLayer = await layerModel.UpsertLayer("Active Directory", "", Color.Cyan, AnchorState.Active, ComputeLayerBrainLink.Build(""), OnlineInboundAdapterLink.Build(""), new string[0], trans);
                 activeDirectoryLayerID = automationLayer.ID;
                 trans.Commit();
             }

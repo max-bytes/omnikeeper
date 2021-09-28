@@ -307,6 +307,40 @@ namespace Omnikeeper.GraphQL
                     var traits = await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.TimeThreshold);
                     return traits.Values.OrderBy(t => t.ID);
                 });
+
+            FieldAsync<StatisticsType>("statistics",
+                resolve: async context =>
+                {
+                    var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
+                    var changesetModel = context.RequestServices!.GetRequiredService<IChangesetModel>();
+                    var ciidModel = context.RequestServices!.GetRequiredService<ICIIDModel>();
+                    var traitsProvider = context.RequestServices!.GetRequiredService<ITraitsProvider>();
+                    var generatorModel = context.RequestServices!.GetRequiredService<IGeneratorModel>();
+                    var predicateModel = context.RequestServices!.GetRequiredService<IPredicateModel>();
+                    var baseConfigurationModel = context.RequestServices!.GetRequiredService<IBaseConfigurationModel>();
+                    var layerStatisticsModel = context.RequestServices!.GetRequiredService<ILayerStatisticsModel>();
+                    var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
+
+                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    userContext.Transaction = modelContextBuilder.BuildImmediate();
+                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
+
+                    var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+
+                    var layers = await layerModel.GetLayers(userContext.Transaction); // TODO: we only need count, implement more efficient model method
+                    var ciids = await ciidModel.GetCIIDs(userContext.Transaction);
+                    var traits = await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.TimeThreshold);
+                    var predicates = await predicateModel.GetPredicates(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, userContext.TimeThreshold); // TODO: implement PredicateProvider
+                    var generators = await generatorModel.GetGenerators(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, userContext.TimeThreshold); // TODO: implement GeneratorProvider
+
+                    var numActiveAttributes = await layerStatisticsModel.GetActiveAttributes(null, userContext.Transaction);
+                    var numAttributeChanges = await layerStatisticsModel.GetAttributeChangesHistory(null, userContext.Transaction);
+                    var numActiveRelations = await layerStatisticsModel.GetActiveRelations(null, userContext.Transaction);
+                    var numRelationChanges = await layerStatisticsModel.GetRelationChangesHistory(null, userContext.Transaction);
+                    var numChangesets = await changesetModel.GetNumberOfChangesets(userContext.Transaction);
+
+                    return new Statistics(ciids.Count(), numActiveAttributes, numActiveRelations, numChangesets, numAttributeChanges, numRelationChanges, layers.Count(), traits.Count(), predicates.Count(), generators.Count());
+                });
         }
     }
 }

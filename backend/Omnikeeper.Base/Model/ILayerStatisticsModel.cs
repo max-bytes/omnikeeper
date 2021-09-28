@@ -6,12 +6,12 @@ namespace Omnikeeper.Base.Model
 {
     public interface ILayerStatisticsModel
     {
-        Task<long> GetActiveAttributes(Layer layer, IModelContext trans);
-        Task<long> GetAttributeChangesHistory(Layer layer, IModelContext trans);
-        Task<long> GetActiveRelations(Layer layer, IModelContext trans);
-        Task<long> GetRelationChangesHistory(Layer layer, IModelContext trans);
-        Task<long> GetLayerChangesetsHistory(Layer layer, IModelContext trans);
+        Task<long> GetActiveAttributes(string? layerID, IModelContext trans);
+        Task<long> GetAttributeChangesHistory(string? layerID, IModelContext trans);
+        Task<long> GetActiveRelations(string? layerID, IModelContext trans);
+        Task<long> GetRelationChangesHistory(string? layerID, IModelContext trans);
+        Task<long> GetLayerChangesetsHistory(string layerID, IModelContext trans);
 
-        Task<bool> IsLayerEmpty(Layer layer, IModelContext trans);
+        Task<bool> IsLayerEmpty(string layerID, IModelContext trans);
     }
 }
