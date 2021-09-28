@@ -237,5 +237,13 @@ namespace Omnikeeper.Model
 
             return numArchived;
         }
+
+        public async Task<long> GetNumberOfChangesets(IModelContext trans)
+        {
+            using var command = new NpgsqlCommand(@"SELECT count(*) FROM changeset c", trans.DBConnection, trans.DBTransaction);
+            command.Prepare();
+            var num = (long)await command.ExecuteScalarAsync();
+            return num;
+        }
     }
 }

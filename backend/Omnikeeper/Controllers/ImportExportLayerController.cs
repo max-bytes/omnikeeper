@@ -157,7 +157,7 @@ namespace Omnikeeper.Controllers
                     }
 
                     // check if layer is empty, if not -> error
-                    if (!await layerStatisticsModel.IsLayerEmpty(writeLayer, trans))
+                    if (!await layerStatisticsModel.IsLayerEmpty(writeLayer.ID, trans))
                     {
                         return BadRequest($"Cannot write to layer with ID {data.LayerID}: layer is not empty; consider truncating layer before import");
                     }

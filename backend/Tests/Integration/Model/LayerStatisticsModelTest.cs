@@ -59,11 +59,11 @@ namespace Tests.Integration.Model
 
 
             // active relation test
-            var activeRelations = await layerStatisticsModel.GetActiveRelations(layer, trans);
+            var activeRelations = await layerStatisticsModel.GetActiveRelations(layer.ID, trans);
             Assert.AreEqual(activeRelations, 1);
 
             // relation changes history
-            var relationsChangesHistory = await layerStatisticsModel.GetRelationChangesHistory(layer, trans);
+            var relationsChangesHistory = await layerStatisticsModel.GetRelationChangesHistory(layer.ID, trans);
             Assert.AreEqual(relationsChangesHistory, 3);
 
         }
@@ -107,7 +107,7 @@ namespace Tests.Integration.Model
 
             await relationModel.RemoveRelation(ciid1, ciid3, predicateID1, layer.ID, ch3, new DataOriginV1(DataOriginType.Manual), trans);
 
-            var layerChangesetsHistory = await layerStatisticsModel.GetLayerChangesetsHistory(layer, trans);
+            var layerChangesetsHistory = await layerStatisticsModel.GetLayerChangesetsHistory(layer.ID, trans);
 
             Assert.AreEqual(layerChangesetsHistory, 3);
 

@@ -24,6 +24,7 @@ import ExplorerLayers from "components/ExplorerLayers";
 import Trait from "components/traits/Trait";
 import Breadcrumbs from "utils/Breadcrumbs";
 import GraphQLPlayground from "components/GraphQLPlayground";
+import Dashboard from "components/dashboard/Dashboard";
 const { Header, Content } = Layout;
 
 const keycloak = new Keycloak({
@@ -125,6 +126,9 @@ function App() {
                 </PrivateRoute>
                 <PrivateRoute path="/traits/:traitID">
                   <Trait />
+                </PrivateRoute>
+                <PrivateRoute path="/">
+                  <Dashboard />
                 </PrivateRoute>
 
                 <Route path="*">

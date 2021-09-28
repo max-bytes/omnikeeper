@@ -178,4 +178,20 @@ export const queries = {
             visible @client
         }
     }`,
+    Statistics: gql`
+        query {
+            statistics {
+                cis
+                activeAttributes
+                activeRelations
+                attributeChanges
+                relationChanges
+                changesets
+                layers
+                predicates
+                traits
+                generators
+            }
+        }
+    `,
 };
