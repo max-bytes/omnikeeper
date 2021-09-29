@@ -35,18 +35,29 @@ namespace OKPluginNaemonConfig
         {
             logger.LogDebug("Start naemonConfig");
 
+            // monman data -> layer "monman"
+            // cmdb data -> layer "cmdb"
+            // livestatus -> layer "livestatus"
+
+            // naemon config CLB -> layer  "naemon_config"
+
             var layerset = await layerModel.BuildLayerSet(new[] { "testlayer01" }, trans);
 
-            //var layerset02 = await layerModel.BuildLayerSet(new[] { "testlayer02" }, trans);
+            var layersetCMDB = await layerModel.BuildLayerSet(new[] { "cmdb" }, trans);
+            var layersetMonman = await layerModel.BuildLayerSet(new[] { "monman" }, trans);
+            var layersetLivestatus = await layerModel.BuildLayerSet(new[] { "livestatus" }, trans);
+            var layersetNaemonConfig = await layerModel.BuildLayerSet(new[] { "naemon_config" }, trans);
 
-            //var layerset05 = await layerModel.BuildLayerSet(new[] { "testlayer05" }, trans);
+            var allCIsCMDB = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetCMDB, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
+            var allCIsMonman = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetMonman, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
+            
 
             // load naemonInstances
-            var naemonInstances = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonInstanceFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var naemonInstances = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonInstanceFlattened, layerset, trans, changesetProxy.TimeThreshold);
             var naemonIds = new List<string>();
-            foreach (var naemon in naemonInstances)
+            foreach (var ciItem in naemonInstances)
             {
-                (MergedCI ciItem, _) = naemon.Value;
+                //(MergedCI ciItem, _) = naemon.Value;
                 var success = ciItem.MergedAttributes.TryGetValue("monman-instance.id", out MergedCIAttribute? attributeNaemonId);
 
                 if (!success)
@@ -76,12 +87,13 @@ namespace OKPluginNaemonConfig
             // a list with all CI from datbase
 
             var ciData = new List<ConfigurationItem>();
-            var hosts1 = await traitModel.GetEffectiveTraitsForTrait(Traits.HCisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-            var hosts = await traitModel.GetEffectiveTraitsForTrait(Traits.HCisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            //var hosts = await traitModel.GetEffectiveTraitsForTrait(Traits.HCisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
-            foreach (var host in hosts)
+            var hosts = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HCisFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+
+            foreach (var ciItem in hosts)
             {
-                (MergedCI ciItem, _) = host.Value;
+                //(MergedCI ciItem, _) = host.Value;
 
                 var item = new ConfigurationItem
                 {
@@ -110,10 +122,11 @@ namespace OKPluginNaemonConfig
             }
 
             // get services
-            var services = await traitModel.GetEffectiveTraitsForTrait(Traits.ACisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-            foreach (var service in services)
+            var services = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ACisFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //var services = await traitModel.GetEffectiveTraitsForTrait(Traits.ACisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            foreach (var ciItem in services)
             {
-                (MergedCI ciItem, _) = service.Value;
+                //(MergedCI ciItem, _) = service.Value;
                 var item = new ConfigurationItem
                 {
                     Type = "SERVICE"
@@ -144,11 +157,12 @@ namespace OKPluginNaemonConfig
 
             // add categories for hosts 
             // HostsCategories
-            var hostsCategories = await traitModel.GetEffectiveTraitsForTrait(Traits.HostsCategoriesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var hostsCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HostsCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //var hostsCategories = await traitModel.GetEffectiveTraitsForTrait(Traits.HostsCategoriesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
-            foreach (var hostCategory in hostsCategories)
+            foreach (var ciItem in hostsCategories)
             {
-                (MergedCI ciItem, _) = hostCategory.Value;
+                //(MergedCI ciItem, _) = hostCategory.Value;
                 var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_category-HOSTID", out MergedCIAttribute? hostIdAttribute);
 
                 if (!success)
@@ -196,11 +210,12 @@ namespace OKPluginNaemonConfig
             }
 
             // add categories for services
-            var servicesCategories = await traitModel.GetEffectiveTraitsForTrait(Traits.ServicesCategoriesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var servicesCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ServicesCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+            //var servicesCategories = await traitModel.GetEffectiveTraitsForTrait(Traits.ServicesCategoriesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
-            foreach (var serviceCategory in servicesCategories)
+            foreach (var ciItem in servicesCategories)
             {
-                (MergedCI ciItem, _) = serviceCategory.Value;
+                //(MergedCI ciItem, _) = serviceCategory.Value;
                 var success = ciItem.MergedAttributes.TryGetValue("cmdb.service_category-SVCID", out MergedCIAttribute? serviceIdAttribute);
 
                 if (!success)
@@ -248,11 +263,13 @@ namespace OKPluginNaemonConfig
             }
 
             // add host actions to cidata
-            var hostActions = await traitModel.GetEffectiveTraitsForTrait(Traits.HostActionsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var hostActions = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HostActionsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
-            foreach (var hostAction in hostActions)
+            //var hostActions = await traitModel.GetEffectiveTraitsForTrait(Traits.HostActionsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+
+            foreach (var ciItem in hostActions)
             {
-                (MergedCI ciItem, _) = hostAction.Value;
+                //(MergedCI ciItem, _) = hostAction.Value;
                 var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_action-HOSTID", out MergedCIAttribute? hostIdAttribute);
 
                 var hostId = hostIdAttribute!.Attribute.Value.Value2String();
@@ -290,12 +307,13 @@ namespace OKPluginNaemonConfig
             }
 
             // add service actions to ci data 
+            var serviceActions = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ServiceActionsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
-            var serviceActions = await traitModel.GetEffectiveTraitsForTrait(Traits.ServiceActionsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            //var serviceActions = await traitModel.GetEffectiveTraitsForTrait(Traits.ServiceActionsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
-            foreach (var serviceAction in serviceActions)
+            foreach (var ciItem in serviceActions)
             {
-                (MergedCI ciItem, _) = serviceAction.Value;
+                //(MergedCI ciItem, _) = serviceAction.Value;
                 var success = ciItem.MergedAttributes.TryGetValue("cmdb.service_action-SVCID", out MergedCIAttribute? serviceIdAttribute);
 
                 var serviceId = serviceIdAttribute!.Attribute.Value.Value2String();
@@ -335,14 +353,15 @@ namespace OKPluginNaemonConfig
             // then check profiles from db
 
             //getCapabilityMap - NaemonInstancesTagsFlattened
+            var naemonInstancesTags = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonInstancesTagsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
-            var naemonInstancesTags = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonInstancesTagsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            //var naemonInstancesTags = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonInstancesTagsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
             var capMap = new Dictionary<string, List<string>>();
 
-            foreach (var instanceTag in naemonInstancesTags)
+            foreach (var ciItem in naemonInstancesTags)
             {
-                (MergedCI ciItem, _) = instanceTag.Value;
+                //(MergedCI ciItem, _) = instanceTag.Value;
 
                 var s = ciItem.MergedAttributes.TryGetValue("monman-instance_tag.tag", out MergedCIAttribute? instanceTagAttribute);
 
@@ -372,14 +391,16 @@ namespace OKPluginNaemonConfig
                 }
             }
 
-            var naemonProfiles = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonProfilesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            var naemonProfiles = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonProfilesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
+
+            //var naemonProfiles = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonProfilesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
             var profileFromDbNaemons = new List<string>();
 
-            foreach (var naemon in naemonInstances)
+            foreach (var ciItem in naemonInstances)
             {
                 // we need to check here if isNaemonProfileFromDbEnabled 
-                (MergedCI ciItem, _) = naemon.Value;
+                //(MergedCI ciItem, _) = naemon.Value;
 
                 var s = ciItem.MergedAttributes.TryGetValue("monman-instance.name", out MergedCIAttribute? instanceNameAttribute);
 
@@ -410,9 +431,9 @@ namespace OKPluginNaemonConfig
 
             if (profileFromDbNaemons.Count > 0)
             {
-                foreach (var profile in naemonProfiles)
+                foreach (var ciItem in naemonProfiles)
                 {
-                    (MergedCI ciItem, _) = profile.Value;
+                    //(MergedCI ciItem, _) = profile.Value;
 
                     // first get profile name 
                     var s = ciItem.MergedAttributes.TryGetValue("monman-profile.name", out MergedCIAttribute? profileNameAttribute);
@@ -482,9 +503,8 @@ namespace OKPluginNaemonConfig
                 }
             }
 
-            foreach (var agent in naemonInstances)
+            foreach (var item in naemonInstances)
             {
-                (MergedCI item, _) = agent.Value;
 
                 var s = item.MergedAttributes.TryGetValue("monman-instance.id", out MergedCIAttribute? instanceId);
 
@@ -516,7 +536,7 @@ namespace OKPluginNaemonConfig
 
             }
 
-            var commands = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(Traits.CommandsFlattened, "monman-command.id", new AttributeScalarValueText("H12037680"), layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
+            //var commands = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(Traits.CommandsFlattened, "monman-command.id", new AttributeScalarValueText("H12037680"), layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
             // load services ci
 
             // foreach customer from loadcmdbcustomer we need to take data for hosts and services
