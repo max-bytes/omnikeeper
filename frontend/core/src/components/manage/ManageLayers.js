@@ -28,9 +28,10 @@ export default function ManageLayers(props) {
     { headerName: "Color", field: "color", width: 70, cellEditor: 'ARGBColorCellEditor', cellRenderer: 'layerColorCellRenderer' },
     { headerName: "Compute Layer Brain", field: "brainName" },
     { headerName: "Online Inbound Adapter", field: "onlineInboundAdapterName" },
-    { headerName: "Generators", field: "generators", cellRenderer: (params) => {
-      return params.value?.join(',') ?? '';
-    }, innerValueSetter: (params) => { params.newValue = params.newValue.split(','); } },
+    { headerName: "Generators", field: "generators", 
+      valueFormatter: (params) => params.value.join(','),
+      valueParser: (params) => params.newValue.split(','),
+    },
     { headerName: "State", field: "state", cellEditor: 'agSelectCellEditor', cellEditorParams: {
         values: ['ACTIVE', 'DEPRECATED', 'INACTIVE', 'MARKED_FOR_DELETION'],
       },
@@ -49,6 +50,12 @@ export default function ManageLayers(props) {
             .then(r => { apolloClient.resetStore(); return r; })
             .then(r => ({result: r.data.manage_upsertLayer, id: row.id}))
             .catch(e => ({result: e, id: row.id }));
-      }} />
+      }} 
+      setupNewRowData={() => {
+        return {
+          generators: []
+        };
+      }}
+    />
   </>;
 }

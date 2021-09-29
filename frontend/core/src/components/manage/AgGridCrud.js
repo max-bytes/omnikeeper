@@ -13,27 +13,27 @@ import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 
 export default function AgGridCrud(props) {
+
+  const {rowData, setRowData, deleteRow, saveRow, setupNewRowData, onRefresh, columnDefs, idIsUserCreated, deletableRows, loading} = props;
+
   var [isSaving, setIsSaving] = useState(false);
 
-  const editedRowData = useMemo(() => props.rowData.filter(rd => rd.isEdited), [props.rowData]);
-  const deletedRowData = useMemo(() => props.rowData.filter(rd => rd.isDeleted), [props.rowData]);
+  const editedRowData = useMemo(() => rowData.filter(rd => rd.isEdited), [rowData]);
+  const deletedRowData = useMemo(() => rowData.filter(rd => rd.isDeleted), [rowData]);
   const hasEditedOrDeletedRowData = useMemo(() => editedRowData.length > 0 || deletedRowData.length > 0, [editedRowData, deletedRowData]);
 
-
   const getRowNodeId = data => data.id;
-  const isFrontendRowNodeOnly = data => {
-    return data.id === undefined && data.frontend_id !== undefined && !props.idIsUserCreated;
-  }
+  const isFrontendRowNodeOnly = data => data.id === undefined && data.frontend_id !== undefined && !idIsUserCreated;
 
   // TODO: replace with uuidv4 from uuid package
   const uuidv4 = () => ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ ((crypto.getRandomValues(new Uint8Array(1))[0] & 15) >> c / 4)).toString(16));
 
   let deleteColumn = [];
-  if (props.deletableRows)
+  if (deletableRows)
     deleteColumn = [{ 
       headerName: "", sortable: false, resizable: false, filter: false, colId: 'state', editable: false, valueGetter: 'data', 
         cellRenderer: 'deleteRowCellRenderer', cellRendererParams: { flipDelete: (params) => {
-          props.setRowData(oldData => {
+          setRowData(oldData => {
             var foundIndex = oldData.findIndex(x => {
                 if (isFrontendRowNodeOnly(params.data))
                     return x.frontend_id === params.data.frontend_id;
@@ -50,14 +50,14 @@ export default function AgGridCrud(props) {
         } }
       }];
 
-  const columnDefs = [
+  const finalColumnDefs = [
     { headerName: "", sortable: false, resizable: false, filter: false, width: 30, colId: 'state', editable: false, valueGetter: 'data', 
       cellRenderer: 'rowStateCellRenderer'
     },
     { headerName: "", field: "error", sortable: false, resizable: false, filter: false, width: 30, editable: false, 
       cellRenderer: 'errorModalCellRenderer'
     },
-    ...props.columnDefs,
+    ...columnDefs,
     ...deleteColumn
   ];
 
@@ -65,11 +65,11 @@ export default function AgGridCrud(props) {
     setIsSaving(true);
 
     Promise.all(
-      deletedRowData.map(async row => props.deleteRow(row))
+      deletedRowData.map(async row => deleteRow(row))
     )
     .then(results => {
       let indicesToDelete = [];
-      props.setRowData(oldRowData => {
+      setRowData(oldRowData => {
         var newRowData = [...oldRowData];
         results.forEach(result => {
           var index = newRowData.findIndex(p => {
@@ -94,9 +94,9 @@ export default function AgGridCrud(props) {
       });
     })
     .then(Promise.all(
-        editedRowData.map(async row => props.saveRow(row))
+        editedRowData.map(async row => saveRow(row))
     ).then(results => {
-      props.setRowData(oldRowData => {
+      setRowData(oldRowData => {
         var newRowData = [...oldRowData];
           results.forEach(result => {
             var index = newRowData.findIndex(p => {
@@ -122,10 +122,14 @@ export default function AgGridCrud(props) {
 
   function addRow() {
     let newItem = {isEdited: true, isNew: true, error: undefined};
-    if (!props.idIsUserCreated) {
+    if (!idIsUserCreated) {
         newItem = {...newItem, frontend_id: uuidv4() }
     }
-    props.setRowData(oldRowData => {
+    if (setupNewRowData) {
+      var d = setupNewRowData();
+      newItem = { ...newItem, ...d };
+    }
+    setRowData(oldRowData => {
       return [...oldRowData, newItem];
     });
   }
@@ -138,11 +142,7 @@ export default function AgGridCrud(props) {
     valueSetter: function (params) {
       var wasSuccessful = false;
 
-      const innerValueSetter = params.column.colDef.innerValueSetter ?? (t => {});
-
-      innerValueSetter(params);
-
-      props.setRowData(oldData => {
+      setRowData(oldData => {
         var foundIndex = oldData.findIndex(x => {
             if (isFrontendRowNodeOnly(params.data))
                 return x.frontend_id === params.data.frontend_id;
@@ -176,7 +176,7 @@ export default function AgGridCrud(props) {
             </div>
             <div style={{ display: "flex" }}>
                 <Button onClick={e => save()} disabled={!hasEditedOrDeletedRowData} loading={isSaving}>Save</Button>
-                <Button onClick={e => props.onRefresh()} loading={props.loading}>{((!hasEditedOrDeletedRowData) ? 'Refresh' :  'Reset')}</Button>
+                <Button onClick={e => onRefresh()} loading={loading}>{((!hasEditedOrDeletedRowData) ? 'Refresh' :  'Reset')}</Button>
             </div>
         </div>
     </div>
@@ -189,9 +189,9 @@ export default function AgGridCrud(props) {
           linkCellRenderer: LinkCellRenderer,
           authRolePermissionsCellEditor: AuthRolePermissionsCellEditor,
           ARGBColorCellEditor: ARGBColorCellEditor }}
-        columnDefs={columnDefs}
+        columnDefs={finalColumnDefs}
         defaultColDef={defaultColDef}
-        rowData={props.rowData}
+        rowData={rowData}
         immutableData
         getRowNodeId={data => {
             if (isFrontendRowNodeOnly(data)) return data.frontend_id; else return getRowNodeId(data);
