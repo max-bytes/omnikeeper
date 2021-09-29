@@ -180,7 +180,6 @@ namespace Omnikeeper.GraphQL
             Field("ciid", x => x.CIID);
             Field(x => x.ChangesetID);
             Field(x => x.Name);
-            //Field(x => x.State, type: typeof(AttributeStateType));
             Field("value", x => AttributeValueDTO.Build(x.Value), type: typeof(AttributeValueDTOType));
         }
     }
