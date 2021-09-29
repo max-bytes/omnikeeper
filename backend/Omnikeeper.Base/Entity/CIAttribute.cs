@@ -27,7 +27,7 @@ namespace Omnikeeper.Base.Entity
         [ProtoMember(2)] public readonly string Name;
         [ProtoMember(3)] public readonly Guid CIID;
         [ProtoMember(4)] public readonly IAttributeValue Value;
-        [ProtoMember(6)] public readonly Guid ChangesetID;
+        [ProtoMember(5)] public readonly Guid ChangesetID;
 
         // information hash: 
         public string InformationHash => CreateInformationHash(Name, CIID);

@@ -230,11 +230,6 @@ namespace Omnikeeper.Model
                 // relation does not exist
                 throw new Exception("Trying to remove relation that does not exist");
             }
-            //if (currentRelation.State == RelationState.Removed)
-            //{
-            //    // the relation is already removed, no-op(?)
-            //    return (currentRelation, false);
-            //}
 
             var changeset = await changesetProxy.GetChangeset(layerID, origin, trans);
             var partitionIndex = await partitionModel.GetLatestPartitionIndex(changesetProxy.TimeThreshold, trans);
