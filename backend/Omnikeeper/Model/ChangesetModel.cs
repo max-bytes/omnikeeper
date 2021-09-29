@@ -220,7 +220,7 @@ namespace Omnikeeper.Model
 	                INNER JOIN relation r ON r.changeset_id = c.id
 	                WHERE c.timestamp >= @delete_threshold
 	                OR r.timestamp >= @delete_threshold
-	                OR (r.state != 'removed' AND  r.id IN (
+	                OR (r.removed = false AND r.id IN (
 		                select distinct on(layer_id, from_ci_id, to_ci_id, predicate_id) id FROM relation
 				                where timestamp <= @now
 				                order by layer_id, from_ci_id, to_ci_id, predicate_id, timestamp DESC NULLS LAST

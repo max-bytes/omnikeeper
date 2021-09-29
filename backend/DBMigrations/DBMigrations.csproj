@@ -65,6 +65,7 @@
     <None Remove="Scripts\00054-remove-state-from-attribute-latest.psql" />
     <None Remove="Scripts\00055-attribute-state-to-bool.psql" />
     <None Remove="Scripts\00056-remove-state-from-relation-latest.psql" />
+    <None Remove="Scripts\00057-relation-state-to-bool.psql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -101,6 +102,7 @@
     <EmbeddedResource Include="Scripts\00010-computerlayerbrain-rework.psql" />
     <EmbeddedResource Include="Scripts\00028-create-table-gridviewconfig.psql" />
     <EmbeddedResource Include="Scripts\00033-add-speakingName-description-columns.psql" />
+    <EmbeddedResource Include="Scripts\00057-relation-state-to-bool.psql" />
     <EmbeddedResource Include="Scripts\00056-remove-state-from-relation-latest.psql" />
     <EmbeddedResource Include="Scripts\00055-attribute-state-to-bool.psql" />
     <EmbeddedResource Include="Scripts\00054-remove-state-from-attribute-latest.psql" />

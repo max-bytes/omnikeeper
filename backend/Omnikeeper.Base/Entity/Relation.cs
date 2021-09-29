@@ -5,11 +5,6 @@ using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
-    public enum RelationState // TODO: remove
-    {
-        New, Removed
-    }
-
     public class MergedRelation
     {
         public Relation Relation { get; private set; }

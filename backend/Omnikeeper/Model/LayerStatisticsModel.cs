@@ -65,12 +65,12 @@ namespace Omnikeeper.Model
             using var command = new NpgsqlCommand($@"
                 SELECT COUNT(*)
                 FROM(
-                    SELECT DISTINCT ON (R.from_ci_id, R.to_ci_id, R.predicate_id, R.layer_id) R.id, R.from_ci_id, R.to_ci_id, R.predicate_id, R.state, R.changeset_id  
+                    SELECT DISTINCT ON (R.from_ci_id, R.to_ci_id, R.predicate_id, R.layer_id) R.id, R.from_ci_id, R.to_ci_id, R.predicate_id, R.removed, R.changeset_id  
                     FROM relation R
                     WHERE R.timestamp <= @time_threshold AND {((layerID != null) ? "R.layer_id = @layer_id" : "1=1")}
                     ORDER BY R.from_ci_id, R.to_ci_id, R.predicate_id, R.layer_id, R.timestamp DESC NULLS LAST
                 ) RES
-                WHERE RES.STATE != 'removed'
+                WHERE RES.removed = false
             ", trans.DBConnection, trans.DBTransaction);
 
             if (layerID != null)

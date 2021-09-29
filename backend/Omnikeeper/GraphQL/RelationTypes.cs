@@ -106,10 +106,6 @@ namespace Omnikeeper.GraphQL
         }
     }
 
-    public class RelationStateType : EnumerationGraphType<RelationState>
-    {
-    }
-
     public class MergedRelationType : ObjectGraphType<MergedRelation>
     {
         public MergedRelationType(IDataLoaderContextAccessor dataLoaderContextAccessor, ILayerModel layerModel)
