@@ -8,11 +8,6 @@ using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
-    public enum AttributeState
-    {
-        New, Changed, Removed, Renewed
-    }
-
     public class MergedCIAttribute
     {
         public CIAttribute Attribute { get; private set; }
@@ -32,20 +27,18 @@ namespace Omnikeeper.Base.Entity
         [ProtoMember(2)] public readonly string Name;
         [ProtoMember(3)] public readonly Guid CIID;
         [ProtoMember(4)] public readonly IAttributeValue Value;
-        [ProtoMember(5)] public readonly AttributeState State;
-        [ProtoMember(6)] public readonly Guid ChangesetID;
+        [ProtoMember(5)] public readonly Guid ChangesetID;
 
         // information hash: 
         public string InformationHash => CreateInformationHash(Name, CIID);
         public static string CreateInformationHash(string name, Guid ciid) => name + ciid;
 
-        public CIAttribute(Guid id, string name, Guid CIID, IAttributeValue value, AttributeState state, Guid changesetID)
+        public CIAttribute(Guid id, string name, Guid CIID, IAttributeValue value, Guid changesetID)
         {
             ID = id;
             Name = name;
             this.CIID = CIID;
             Value = value;
-            State = state;
             ChangesetID = changesetID;
         }
     }

@@ -24,7 +24,7 @@ namespace Omnikeeper.Service
             foreach (var layer in await layerModel.GetLayers(trans))
             {
                 using var commandGetHistoric = new NpgsqlCommand($@"
-                    select distinct on(ci_id, name) state, id, name, ci_id, type, value_text, value_binary, value_control, changeset_id FROM attribute 
+                    select distinct on(ci_id, name) removed, id, name, ci_id, type, value_text, value_binary, value_control, changeset_id FROM attribute 
                     where timestamp <= @time_threshold and layer_id = @layer_id and partition_index >= @partition_index
                     order by ci_id, name, timestamp DESC NULLS LAST
                     ", trans.DBConnection, trans.DBTransaction);
@@ -40,8 +40,8 @@ namespace Omnikeeper.Service
 
                     while (dr.Read())
                     {
-                        var state = dr.GetFieldValue<AttributeState>(0);
-                        if (state != AttributeState.Removed)
+                        var removed = dr.GetBoolean(0);
+                        if (!removed)
                         {
                             var id = dr.GetGuid(1);
                             var name = dr.GetString(2);
@@ -53,14 +53,14 @@ namespace Omnikeeper.Service
                             var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
                             var changesetID = dr.GetGuid(8);
 
-                            var att = new CIAttribute(id, name, CIID, av, state, changesetID);
+                            var att = new CIAttribute(id, name, CIID, av, changesetID);
                             attributesFromHistoric.Add(att);
                         }
                     }
                 }
 
                 using var commandGetLatest = new NpgsqlCommand($@"
-                select state, id, name, ci_id, type, value_text, value_binary, value_control, changeset_id FROM attribute_latest
+                select id, name, ci_id, type, value_text, value_binary, value_control, changeset_id FROM attribute_latest
                 where layer_id = @layer_id", trans.DBConnection, trans.DBTransaction);
                 commandGetLatest.Parameters.AddWithValue("layer_id", layer.ID);
                 commandGetLatest.Prepare();
@@ -72,22 +72,18 @@ namespace Omnikeeper.Service
 
                     while (dr.Read())
                     {
-                        var state = dr.GetFieldValue<AttributeState>(0);
-                        if (state != AttributeState.Removed)
-                        {
-                            var id = dr.GetGuid(1);
-                            var name = dr.GetString(2);
-                            var CIID = dr.GetGuid(3);
-                            var type = dr.GetFieldValue<AttributeValueType>(4);
-                            var valueText = dr.GetString(5);
-                            var valueBinary = dr.GetFieldValue<byte[]>(6);
-                            var valueControl = dr.GetFieldValue<byte[]>(7);
-                            var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
-                            var changesetID = dr.GetGuid(8);
+                        var id = dr.GetGuid(0);
+                        var name = dr.GetString(1);
+                        var CIID = dr.GetGuid(2);
+                        var type = dr.GetFieldValue<AttributeValueType>(3);
+                        var valueText = dr.GetString(4);
+                        var valueBinary = dr.GetFieldValue<byte[]>(5);
+                        var valueControl = dr.GetFieldValue<byte[]>(6);
+                        var av = AttributeValueBuilder.Unmarshal(valueText, valueBinary, valueControl, type, false);
+                        var changesetID = dr.GetGuid(7);
 
-                            var att = new CIAttribute(id, name, CIID, av, state, changesetID);
-                            attributesFromLatest.Add(att);
-                        }
+                        var att = new CIAttribute(id, name, CIID, av, changesetID);
+                        attributesFromLatest.Add(att);
                     }
                 }
 
@@ -103,8 +99,6 @@ namespace Omnikeeper.Service
                     else if (ah.CIID != al.CIID)
                         Console.WriteLine($"Diff!");
                     else if (ah.Name != al.Name)
-                        Console.WriteLine($"Diff!");
-                    else if (ah.State != al.State)
                         Console.WriteLine($"Diff!");
                 }
             }
@@ -136,11 +130,12 @@ namespace Omnikeeper.Service
             foreach (var layer in await layerModel.GetLayers(trans))
             {
                 var query = @"
-                    insert into attribute_latest (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id)
+                    insert into attribute_latest (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id)
                     (
-                        select distinct on(ci_id, name) id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id FROM attribute 
+                        select id, removed, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id from (
+                        select distinct on(ci_id, name) id, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id FROM attribute 
                         where timestamp <= @time_threshold and layer_id = @layer_id and partition_index >= @partition_index
-                        order by ci_id, name, timestamp DESC NULLS LAST
+                        order by ci_id, name, timestamp DESC NULLS LAST ) i where i.removed = false
                     )
                 ";
                 using var commandBuild = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);

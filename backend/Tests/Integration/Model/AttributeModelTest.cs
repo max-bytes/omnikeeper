@@ -68,7 +68,6 @@ namespace Tests.Integration.Model
                 var aa1 = a1.First().Value;
                 Assert.AreEqual(ciid1, aa1.Attribute.CIID);
                 Assert.AreEqual("a1", aa1.Attribute.Name);
-                Assert.AreEqual(AttributeState.Changed, aa1.Attribute.State);
                 Assert.AreEqual(new AttributeScalarValueText("text2"), aa1.Attribute.Value);
                 Assert.AreEqual((await changeset.GetChangeset(layerID1, new DataOriginV1(DataOriginType.Manual), trans)).ID, aa1.Attribute.ChangesetID);
                 trans.Commit();
@@ -79,17 +78,15 @@ namespace Tests.Integration.Model
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 var r1 = await attributeModel.RemoveAttribute("a1", ciid1, layerID1, changeset, new DataOriginV1(DataOriginType.Manual), trans);
                 Assert.AreEqual("a1", r1.attribute.Name);
-                Assert.AreEqual(AttributeState.Removed, r1.attribute.State);
 
                 var a2 = (await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest())).Values;
                 Assert.AreEqual(0, a2.Count());
 
-                // compare fetching merged vs non-merged: non-merged returns the removed attribute, merged does not
+                // compare fetching merged vs non-merged
                 var ma3 = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest());
-                var a3 = await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset.LayerIDs, true, trans, TimeThreshold.BuildLatest());
+                var a3 = await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset.LayerIDs, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(0, ma3.Count);
-                Assert.AreEqual(1, a3[0][ciid1].Values.Count);
-                Assert.AreEqual(AttributeState.Removed, a3[0][ciid1].First().Value.State);
+                Assert.AreEqual(0, a3[0].Count());
 
                 trans.Commit();
             }
@@ -103,7 +100,6 @@ namespace Tests.Integration.Model
                 var a4 = (await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset, trans, TimeThreshold.BuildLatest())).Values.First();
                 Assert.AreEqual(1, a4.Count());
                 var aa4 = a4.First().Value;
-                Assert.AreEqual(AttributeState.Renewed, aa4.Attribute.State);
                 Assert.AreEqual(new AttributeScalarValueText("text3"), aa4.Attribute.Value);
             }
         }
@@ -291,7 +287,7 @@ namespace Tests.Integration.Model
 
             var a1 = (await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid1), AllAttributeSelection.Instance, layerset1, trans, TimeThreshold.BuildLatest())).Values.First();
             Assert.AreEqual(1, a1.Count());
-            Assert.AreEqual(AttributeState.New, a1.First().Value.Attribute.State); // second insertAttribute() must not have changed the current entry
+            Assert.AreEqual(aa2.ID, a1.First().Value.Attribute.ID); // second insertAttribute() must not have changed the current entry
         }
 
         [Test]
@@ -323,19 +319,19 @@ namespace Tests.Integration.Model
             await attributeModel.InsertAttribute("a1", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
             await attributeModel.InsertAttribute("a3", new AttributeScalarValueText("textL2"), ciid2, layer2.ID, changeset3, new DataOriginV1(DataOriginType.Manual), trans);
 
-            var a1 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^a"), new string[] { layer1.ID }, returnRemoved: false, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a1 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^a"), new string[] { layer1.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(2, a1.Count());
 
-            var a2 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^a2$"), new string[] { layer1.ID }, returnRemoved: false, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a2 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^a2$"), new string[] { layer1.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(1, a2.Count());
 
-            var a3 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("3$"), new string[] { layer2.ID }, returnRemoved: false, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a3 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("3$"), new string[] { layer2.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(1, a3.Count());
 
-            var a4 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^3"), new string[] { layer1.ID }, returnRemoved: false, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a4 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^3"), new string[] { layer1.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(0, a4.Count());
 
-            var a5 = (await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid2), new RegexAttributeSelection("^a1$"), new string[] { layer2.ID }, returnRemoved: false, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a5 = (await attributeModel.GetAttributes(SpecificCIIDsSelection.Build(ciid2), new RegexAttributeSelection("^a1$"), new string[] { layer2.ID }, trans: trans, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(1, a5.Count());
         }
 
@@ -377,10 +373,10 @@ namespace Tests.Integration.Model
             trans2.Commit();
 
             using var trans3 = ModelContextBuilder.BuildImmediate();
-            var a1 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^prefix1"), new string[] { layer1.ID }, returnRemoved: false, trans: trans3, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a1 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^prefix1"), new string[] { layer1.ID }, trans: trans3, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(3, a1.Count());
             Assert.AreEqual(1, a1.Where(a => a.Name == "prefix1.a2").Count());
-            var a2 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^prefix2"), new string[] { layer1.ID }, returnRemoved: false, trans: trans3, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
+            var a2 = (await attributeModel.GetAttributes(new AllCIIDsSelection(), new RegexAttributeSelection("^prefix2"), new string[] { layer1.ID }, trans: trans3, atTime: TimeThreshold.BuildLatest())).SelectMany(t => t.Values.SelectMany(t => t.Values));
             Assert.AreEqual(1, a2.Count());
         }
 

@@ -53,7 +53,6 @@ namespace Tests.Integration.Model
                 Assert.AreEqual(ciid1, rr1.Relation.FromCIID);
                 Assert.AreEqual(ciid2, rr1.Relation.ToCIID);
                 Assert.AreEqual(layerID1, rr1.LayerID);
-                Assert.AreEqual(RelationState.New, rr1.Relation.State);
                 Assert.AreEqual((await changeset.GetChangeset(layerID1, new DataOriginV1(DataOriginType.Manual), trans)).ID, rr1.Relation.ChangesetID);
 
                 // test repeated insertion
@@ -62,8 +61,6 @@ namespace Tests.Integration.Model
                 Assert.IsFalse(c2);
                 r1 = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(ciid1), layerset, trans, TimeThreshold.BuildLatest());
                 Assert.AreEqual(1, r1.Count());
-                rr1 = r1.First();
-                Assert.AreEqual(RelationState.New, rr1.Relation.State); // state must still be New
 
 
                 // test second relation
@@ -75,7 +72,6 @@ namespace Tests.Integration.Model
                 Assert.AreEqual(ciid1, rr2.Relation.FromCIID);
                 Assert.IsNotNull(rr2);
                 Assert.AreEqual(layerID1, rr2.LayerID);
-                Assert.AreEqual(RelationState.New, rr2.Relation.State);
                 Assert.AreEqual((await changeset.GetChangeset(layerID1, new DataOriginV1(DataOriginType.Manual), trans)).ID, rr2.Relation.ChangesetID);
 
                 trans.Commit();
@@ -252,12 +248,12 @@ namespace Tests.Integration.Model
 
             var r1 = await relationModel.GetMergedRelations(RelationSelectionWithPredicate.Build(predicateID1), layerset, trans2, TimeThreshold.BuildLatest());
             Assert.AreEqual(4, r1.Count());
-            r1.Select(r => (r.Relation.PredicateID, r.Relation.FromCIID, r.Relation.ToCIID, r.Relation.State)).Should().BeEquivalentTo(new (string, Guid, Guid, RelationState)[]
+            r1.Select(r => (r.Relation.PredicateID, r.Relation.FromCIID, r.Relation.ToCIID)).Should().BeEquivalentTo(new (string, Guid, Guid)[]
             {
-                (predicateID1, ciid1, ciid2, RelationState.New),
-                (predicateID1, ciid2, ciid1, RelationState.New),
-                (predicateID1, ciid3, ciid2, RelationState.New),
-                (predicateID1, ciid3, ciid1, RelationState.New),
+                (predicateID1, ciid1, ciid2),
+                (predicateID1, ciid2, ciid1),
+                (predicateID1, ciid3, ciid2),
+                (predicateID1, ciid3, ciid1),
             }, options => options.WithStrictOrdering());
         }
     }

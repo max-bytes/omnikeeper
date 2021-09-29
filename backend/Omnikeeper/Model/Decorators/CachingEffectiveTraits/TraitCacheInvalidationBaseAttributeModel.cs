@@ -67,9 +67,9 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return updatedCIIDs;
         }
 
-        public Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, IModelContext trans)
+        public Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
-            return model.GetAttributesOfChangeset(changesetID, trans);
+            return model.GetAttributesOfChangeset(changesetID, getRemoved, trans);
         }
 
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)
@@ -77,9 +77,9 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
-            return await model.GetAttributes(selection, attributeSelection, layerIDs, returnRemoved, trans, atTime);
+            return await model.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime);
         }
 
         public async Task<ISet<Guid>> GetCIIDsWithAttributes(ICIIDSelection selection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)

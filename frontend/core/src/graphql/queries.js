@@ -151,6 +151,9 @@ export const queries = {
                 attributes {
                     ...FullAttribute
                 }
+                removedAttributes {
+                    ...FullAttribute
+                }
                 relations {
                     id
                     fromCIID
@@ -159,7 +162,15 @@ export const queries = {
                     toCIName
                     predicateID
                     changesetID
-                    state
+                }
+                removedRelations {
+                    id
+                    fromCIID
+                    toCIID
+                    fromCIName
+                    toCIName
+                    predicateID
+                    changesetID
                 }
             }
         }

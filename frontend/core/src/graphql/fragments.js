@@ -21,7 +21,6 @@ export const Fragments = {
         name
         ciid
         changesetID
-        state
         value {
             type
             isArray
@@ -102,7 +101,6 @@ export const Fragments = {
           toCIName
           predicateID
           changesetID
-          state
         }
         layerStackIDs
         layerID
@@ -122,7 +120,6 @@ export const Fragments = {
         fromCIName
         predicateID
         changesetID
-        state
       }
       layerStackIDs
       layerID

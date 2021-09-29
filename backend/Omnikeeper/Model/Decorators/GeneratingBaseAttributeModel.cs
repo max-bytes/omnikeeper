@@ -38,9 +38,9 @@ namespace Omnikeeper.Model.Decorators
             return ret;
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
-            var @base = await model.GetAttributes(selection, attributeSelection, layerIDs, returnRemoved, trans, atTime);
+            var @base = await model.GetAttributes(selection, attributeSelection, layerIDs, trans, atTime);
 
             var generatorSelection = new GeneratorSelectionAll();
 
@@ -58,7 +58,7 @@ namespace Omnikeeper.Model.Decorators
                 AllAttributeSelection _ => new HashSet<string>(), // we are fetching all attributes anyway, no need to add additional attributes
                 _ => throw new Exception("Invalid attribute selection encountered"),
             };
-            var additionalAttributes = (additionalAttributeNames.Count > 0) ? await model.GetAttributes(selection, NamedAttributesSelection.Build(additionalAttributeNames), layerIDs, false, trans, atTime) : null;
+            var additionalAttributes = (additionalAttributeNames.Count > 0) ? await model.GetAttributes(selection, NamedAttributesSelection.Build(additionalAttributeNames), layerIDs, trans, atTime) : null;
 
             @base = MergeInGeneratedAttributes(@base, additionalAttributes, egis, layerIDs);
 
@@ -98,10 +98,10 @@ namespace Omnikeeper.Model.Decorators
         }
 
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, IModelContext trans)
+        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
             // NOTE: changesets never contain any generated attributes
-            return await model.GetAttributesOfChangeset(changesetID, trans);
+            return await model.GetAttributesOfChangeset(changesetID, getRemoved, trans);
         }
 
         public async Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime)

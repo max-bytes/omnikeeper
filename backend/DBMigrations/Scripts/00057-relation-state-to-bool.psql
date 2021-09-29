@@ -1,0 +1,6 @@
+ALTER TABLE public.relation ALTER COLUMN state DROP DEFAULT;
+ALTER TABLE public.relation ALTER state TYPE bool USING CASE WHEN state = 'removed'::relationstate THEN TRUE ELSE FALSE END;
+ALTER TABLE public.relation ALTER COLUMN state SET DEFAULT FALSE;
+ALTER TABLE public.relation RENAME COLUMN state TO removed;
+
+DROP TYPE public.relationstate;

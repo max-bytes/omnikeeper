@@ -25,7 +25,6 @@ namespace Omnikeeper.GraphQL
             Field(x => x.FromCIID);
             Field(x => x.ToCIID);
             Field(x => x.PredicateID);
-            Field(x => x.State, type: typeof(RelationStateType));
             Field(x => x.ChangesetID);
 
             Field<StringGraphType>("fromCIName",
@@ -105,10 +104,6 @@ namespace Omnikeeper.GraphQL
             }
             return ret.ToLookup(t => t.Item1, t => t.Item2);
         }
-    }
-
-    public class RelationStateType : EnumerationGraphType<RelationState>
-    {
     }
 
     public class MergedRelationType : ObjectGraphType<MergedRelation>

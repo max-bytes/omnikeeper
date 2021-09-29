@@ -11,7 +11,7 @@ const { Text } = Typography;
 
 function Attribute(props) {
 
-  var {attribute, layerStack, isEditable, visibleLayers, hideNameLabel, controlIdSuffix, ...rest} = props;
+  var {attribute, layerStack, isEditable, visibleLayers, hideNameLabel, controlIdSuffix, removed, ...rest} = props;
   
   const isArray = attribute.value.isArray;
 
@@ -39,8 +39,6 @@ function Attribute(props) {
 
   const layerStackIDs = layerStack.map(l => l.id);
   const layerID = layerStackIDs[0];
-
-  const removed = attribute.state === 'REMOVED';
 
   const valueInput = <EditableAttributeValue hideNameLabel={hideNameLabel} name={attribute.name} controlIdSuffix={controlIdSuffix} setHasErrors={setHasErrors} isEditable={isEditable} values={values} setValues={setValues} type={attribute.value.type} isArray={isArray} ciid={attribute.ciid} />;
 
@@ -135,7 +133,6 @@ Attribute.propTypes = {
   isEditable: PropTypes.bool.isRequired,
   attribute: PropTypes.shape({
     name: PropTypes.string.isRequired,
-    state: PropTypes.string.isRequired,
     value: PropTypes.shape({
       type: PropTypes.string.isRequired,
       isArray: PropTypes.bool.isRequired,

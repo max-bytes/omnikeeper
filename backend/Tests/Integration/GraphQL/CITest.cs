@@ -60,7 +60,6 @@ namespace Tests.Integration.GraphQL
                         mergedAttributes {
                             attribute {
                                 name
-                                state
                                 value {
                                     type
                                     isArray
@@ -84,7 +83,6 @@ namespace Tests.Integration.GraphQL
                             {
                                 ""attribute"": {
                                    ""name"":""a1"",
-                                   ""state"":""NEW"",
                                    ""value"":{
                                       ""type"":""INTEGER"",
                                       ""isArray"": false,

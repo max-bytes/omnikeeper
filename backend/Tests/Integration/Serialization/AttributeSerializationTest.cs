@@ -18,11 +18,11 @@ namespace Tests.Integration.Serialization
         public void TestAttributeSerialization()
         {
             var dataSerializer = new ProtoBufDataSerializer();
-            var aScalarText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueText("foo"), AttributeState.New, Guid.NewGuid());
+            var aScalarText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueText("foo"), Guid.NewGuid());
             var sScalarText = dataSerializer.ToByteArray(aScalarText);
             dataSerializer.FromByteArray<CIAttribute>(sScalarText).Should().BeEquivalentTo(aScalarText, options => options.WithStrictOrdering());
 
-            var aArrayText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeArrayValueText.BuildFromString(new string[] { "foo", "bar" }), AttributeState.New, Guid.NewGuid());
+            var aArrayText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeArrayValueText.BuildFromString(new string[] { "foo", "bar" }), Guid.NewGuid());
             var sArrayText = dataSerializer.ToByteArray(aArrayText);
             dataSerializer.FromByteArray<CIAttribute>(sArrayText).Should().BeEquivalentTo(aArrayText, options => options.WithStrictOrdering());
         }
@@ -49,23 +49,23 @@ namespace Tests.Integration.Serialization
 
             // TODO: test only value, not whole attribute
 
-            var aScalarText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueText("foo", true), AttributeState.New, Guid.NewGuid());
+            var aScalarText = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueText("foo", true), Guid.NewGuid());
             var sScalarText = dataSerializer.ToByteArray(aScalarText);
             dataSerializer.FromByteArray<CIAttribute>(sScalarText).Should().BeEquivalentTo(aScalarText, options => options.WithStrictOrdering());
 
-            var aScalarInteger = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueInteger(-12), AttributeState.New, Guid.NewGuid());
+            var aScalarInteger = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueInteger(-12), Guid.NewGuid());
             var sScalarInteger = dataSerializer.ToByteArray(aScalarInteger);
             dataSerializer.FromByteArray<CIAttribute>(sScalarInteger).Should().BeEquivalentTo(aScalarInteger, options => options.WithStrictOrdering());
 
-            var aScalarYAML = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeScalarValueYAML.BuildFromString(testYAML), AttributeState.New, Guid.NewGuid());
+            var aScalarYAML = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeScalarValueYAML.BuildFromString(testYAML), Guid.NewGuid());
             var sScalarYAML = dataSerializer.ToByteArray(aScalarYAML);
             dataSerializer.FromByteArray<CIAttribute>(sScalarYAML).Should().BeEquivalentTo(aScalarYAML, options => options.WithStrictOrdering());
 
-            var aScalarJSON = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeScalarValueJSON.BuildFromString(testJSON), AttributeState.New, Guid.NewGuid());
+            var aScalarJSON = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), AttributeScalarValueJSON.BuildFromString(testJSON), Guid.NewGuid());
             var sScalarJSON = dataSerializer.ToByteArray(aScalarJSON);
             dataSerializer.FromByteArray<CIAttribute>(sScalarJSON).Should().BeEquivalentTo(aScalarJSON, options => options.WithStrictOrdering());
 
-            var aScalarImage = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueImage(bvp), AttributeState.New, Guid.NewGuid());
+            var aScalarImage = new CIAttribute(Guid.NewGuid(), "test", Guid.NewGuid(), new AttributeScalarValueImage(bvp), Guid.NewGuid());
             var sScalarImage = dataSerializer.ToByteArray(aScalarImage);
             dataSerializer.FromByteArray<CIAttribute>(sScalarImage).Should().BeEquivalentTo(aScalarImage, options => options.WithStrictOrdering());
         }

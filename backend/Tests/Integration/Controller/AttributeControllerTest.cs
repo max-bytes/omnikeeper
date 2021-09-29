@@ -65,12 +65,12 @@ namespace Tests.Integration.Controller
 
             var expectedAttribute1 = CIAttributeDTO.Build(
                 new MergedCIAttribute(
-                    new CIAttribute(attribute1ID, "a1", ciid1, new AttributeScalarValueText("text1"), AttributeState.New, changesetID),
+                    new CIAttribute(attribute1ID, "a1", ciid1, new AttributeScalarValueText("text1"), changesetID),
                     new string[] { layerID1 }
                 ));
             var expectedAttribute2 = CIAttributeDTO.Build(
                 new MergedCIAttribute(
-                    new CIAttribute(attribute2ID, "a2", ciid2, new AttributeScalarValueText("text2"), AttributeState.New, changesetID),
+                    new CIAttribute(attribute2ID, "a2", ciid2, new AttributeScalarValueText("text2"), changesetID),
                     new string[] { layerID1 }
                 ));
             var r = (ma2.Result as OkObjectResult)!.Value;
