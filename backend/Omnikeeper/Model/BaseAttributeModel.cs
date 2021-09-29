@@ -50,10 +50,10 @@ namespace Omnikeeper.Model
                 command = new NpgsqlCommand(@"
                 select id, ci_id, type, value_text, value_binary, value_control, changeset_id
                 from (
-                    select id, ci_id, type, value_text, value_binary, value_control, state, changeset_id FROM attribute 
+                    select id, ci_id, type, value_text, value_binary, value_control, changeset_id FROM attribute 
                     where timestamp <= @time_threshold and ci_id = @ci_id and layer_id = @layer_id and name = @name and partition_index >= @partition_index
                     order by timestamp DESC NULLS LAST LIMIT 1
-                ) i where state != 'removed'
+                ) i where removed = false
                 ", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("ci_id", ciid);
                 command.Parameters.AddWithValue("layer_id", layerID);
@@ -207,12 +207,12 @@ namespace Omnikeeper.Model
                 command = new NpgsqlCommand($@"
                     {CIIDSelection2CTEClause(selection)}
                     select id, name, ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id from (
-                        select distinct on(a.ci_id, name, layer_id) state, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute a
+                        select distinct on(a.ci_id, name, layer_id) removed, id, name, a.ci_id, type, value_text, value_binary, value_control, changeset_id, layer_id FROM attribute a
                         {CIIDSelection2JoinClause(selection)}
                         where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and layer_id = ANY(@layer_ids) and partition_index >= @partition_index
                         and ({AttributeSelection2WhereClause(attributeSelection)})
                         order by a.ci_id, name, layer_id, timestamp DESC NULLS LAST
-                    ) i where state != 'removed'
+                    ) i where removed = false
                     ", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("layer_ids", layerIDs);
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
@@ -293,11 +293,11 @@ namespace Omnikeeper.Model
                 command = new NpgsqlCommand($@"
                     {CIIDSelection2CTEClause(selection)}
                     select distinct i.ci_id from (
-                        select distinct on(a.ci_id, name, layer_id) a.ci_id as ci_id, state FROM attribute a
+                        select distinct on(a.ci_id, name, layer_id) a.ci_id as ci_id, removed FROM attribute a
                         {CIIDSelection2JoinClause(selection)}
                         where ({CIIDSelection2WhereClause(selection)}) and timestamp <= @time_threshold and layer_id = ANY(@layer_ids) and partition_index >= @partition_index
                         order by a.ci_id, name, layer_id, timestamp DESC NULLS LAST
-                    ) i WHERE i.state != 'removed'
+                    ) i WHERE i.removed = false
                     ", trans.DBConnection, trans.DBTransaction);
                 command.Parameters.AddWithValue("layer_ids", layerIDs);
                 command.Parameters.AddWithValue("time_threshold", atTime.Time);
@@ -325,10 +325,10 @@ namespace Omnikeeper.Model
             var ret = new List<CIAttribute>();
             using var command = new NpgsqlCommand($@"
             select id, name, ci_id, type, value_text, value_binary, value_control FROM attribute 
-            where changeset_id = @changeset_id AND state = @state
+            where changeset_id = @changeset_id AND removed = @removed
             ", trans.DBConnection, trans.DBTransaction);
             command.Parameters.AddWithValue("changeset_id", changesetID);
-            command.Parameters.AddWithValue("state", (getRemoved) ? AttributeState.Removed : AttributeState.New);
+            command.Parameters.AddWithValue("removed", getRemoved);
 
             command.Prepare();
 

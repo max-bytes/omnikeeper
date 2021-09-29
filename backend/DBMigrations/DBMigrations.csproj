@@ -63,6 +63,7 @@
     <None Remove="Scripts\00052-drop-duplicate-attributes-index.psql" />
     <None Remove="Scripts\00053-latest-tables-to-ci-indices.psql" />
     <None Remove="Scripts\00054-remove-state-from-attribute-latest.psql" />
+    <None Remove="Scripts\00055-attribute-state-to-bool.psql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -99,6 +100,7 @@
     <EmbeddedResource Include="Scripts\00010-computerlayerbrain-rework.psql" />
     <EmbeddedResource Include="Scripts\00028-create-table-gridviewconfig.psql" />
     <EmbeddedResource Include="Scripts\00033-add-speakingName-description-columns.psql" />
+    <EmbeddedResource Include="Scripts\00055-attribute-state-to-bool.psql" />
     <EmbeddedResource Include="Scripts\00054-remove-state-from-attribute-latest.psql" />
     <EmbeddedResource Include="Scripts\00053-latest-tables-to-ci-indices.psql" />
     <EmbeddedResource Include="Scripts\00052-drop-duplicate-attributes-index.psql" />

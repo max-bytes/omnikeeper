@@ -1,0 +1,6 @@
+ALTER TABLE public.attribute ALTER COLUMN state DROP DEFAULT;
+ALTER TABLE public.attribute ALTER state TYPE bool USING CASE WHEN state = 'removed'::attributestate THEN TRUE ELSE FALSE END;
+ALTER TABLE public.attribute ALTER COLUMN state SET DEFAULT FALSE;
+ALTER TABLE public.attribute RENAME COLUMN state TO removed;
+
+DROP TYPE public.attributestate;

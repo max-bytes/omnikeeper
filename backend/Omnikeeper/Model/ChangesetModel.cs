@@ -203,13 +203,14 @@ namespace Omnikeeper.Model
         [Obsolete]
         public async Task<int> ArchiveUnusedChangesetsOlderThan(DateTimeOffset threshold, IModelContext trans)
         {
+            // TODO: use latest tables
             var query = @"delete from changeset where
                 id NOT in (
 	                SELECT distinct c.id FROM changeset c
 	                INNER JOIN attribute a ON a.changeset_id = c.id
 	                WHERE c.timestamp >= @delete_threshold
 	                OR a.timestamp >= @delete_threshold
-	                OR (a.state != 'removed' AND a.id IN (
+	                OR (a.removed = false AND a.id IN (
 		                select distinct on(layer_id, ci_id, name) id FROM attribute
 				                where timestamp <= @now
 				                order by layer_id, ci_id, name, timestamp DESC NULLS LAST

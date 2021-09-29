@@ -36,8 +36,8 @@ namespace Omnikeeper.Model
             var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
             var id = Guid.NewGuid();
 
-            using var commandHistoric = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, partition_index) 
-                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id, @partition_index)", trans.DBConnection, trans.DBTransaction);
+            using var commandHistoric = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, removed, ""timestamp"", changeset_id, partition_index) 
+                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @removed, @timestamp, @changeset_id, @partition_index)", trans.DBConnection, trans.DBTransaction);
             commandHistoric.Parameters.AddWithValue("id", id);
             commandHistoric.Parameters.AddWithValue("name", name);
             commandHistoric.Parameters.AddWithValue("ci_id", ciid);
@@ -46,7 +46,7 @@ namespace Omnikeeper.Model
             commandHistoric.Parameters.AddWithValue("value_binary", valueBinary);
             commandHistoric.Parameters.AddWithValue("value_control", valueControl);
             commandHistoric.Parameters.AddWithValue("layer_id", layerID);
-            commandHistoric.Parameters.AddWithValue("state", AttributeState.New);
+            commandHistoric.Parameters.AddWithValue("removed", false);
             commandHistoric.Parameters.AddWithValue("timestamp", changeset.Timestamp);
             commandHistoric.Parameters.AddWithValue("changeset_id", changeset.ID);
             commandHistoric.Parameters.AddWithValue("partition_index", partitionIndex);
@@ -88,8 +88,8 @@ namespace Omnikeeper.Model
             var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(currentAttribute.Value);
             var id = Guid.NewGuid();
 
-            using var commandHistoric = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, partition_index) 
-                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @state, @timestamp, @changeset_id, @partition_index)", trans.DBConnection, trans.DBTransaction);
+            using var commandHistoric = new NpgsqlCommand(@"INSERT INTO attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, removed, ""timestamp"", changeset_id, partition_index) 
+                VALUES (@id, @name, @ci_id, @type, @value_text, @value_binary, @value_control, @layer_id, @removed, @timestamp, @changeset_id, @partition_index)", trans.DBConnection, trans.DBTransaction);
             commandHistoric.Parameters.AddWithValue("id", id);
             commandHistoric.Parameters.AddWithValue("name", name);
             commandHistoric.Parameters.AddWithValue("ci_id", ciid);
@@ -98,7 +98,7 @@ namespace Omnikeeper.Model
             commandHistoric.Parameters.AddWithValue("value_binary", valueBinary);
             commandHistoric.Parameters.AddWithValue("value_control", valueControl);
             commandHistoric.Parameters.AddWithValue("layer_id", layerID);
-            commandHistoric.Parameters.AddWithValue("state", AttributeState.Removed);
+            commandHistoric.Parameters.AddWithValue("removed", true);
             commandHistoric.Parameters.AddWithValue("timestamp", changeset.Timestamp);
             commandHistoric.Parameters.AddWithValue("changeset_id", changeset.ID);
             commandHistoric.Parameters.AddWithValue("partition_index", partitionIndex);
@@ -171,8 +171,8 @@ namespace Omnikeeper.Model
 
                 // historic
                 // use postgres COPY feature instead of manual inserts https://www.npgsql.org/doc/copy.html
-                using var writerHistoric = trans.DBConnection.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, state, ""timestamp"", changeset_id, partition_index) FROM STDIN (FORMAT BINARY)");
-                foreach (var (ciid, fullName, value, state, newAttributeID, _) in actualInserts)
+                using var writerHistoric = trans.DBConnection.BeginBinaryImport(@"COPY attribute (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, removed, ""timestamp"", changeset_id, partition_index) FROM STDIN (FORMAT BINARY)");
+                foreach (var (ciid, fullName, value, isNew, newAttributeID, _) in actualInserts)
                 {
                     var (valueText, valueBinary, valueControl) = AttributeValueBuilder.Marshal(value);
 
@@ -185,7 +185,7 @@ namespace Omnikeeper.Model
                     writerHistoric.Write(valueBinary);
                     writerHistoric.Write(valueControl);
                     writerHistoric.Write(data.LayerID);
-                    writerHistoric.Write(AttributeState.New, "attributestate");
+                    writerHistoric.Write(false);
                     writerHistoric.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                     writerHistoric.Write(changeset.ID);
                     writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
@@ -205,7 +205,7 @@ namespace Omnikeeper.Model
                     writerHistoric.Write(valueBinary);
                     writerHistoric.Write(valueControl);
                     writerHistoric.Write(data.LayerID);
-                    writerHistoric.Write(AttributeState.Removed, "attributestate");
+                    writerHistoric.Write(true);
                     writerHistoric.Write(changeset.Timestamp, NpgsqlDbType.TimestampTz);
                     writerHistoric.Write(changeset.ID);
                     writerHistoric.Write(partitionIndex, NpgsqlDbType.TimestampTz);
@@ -216,7 +216,7 @@ namespace Omnikeeper.Model
 
                 // latest
                 // new inserts
-                // NOTE: actual new inserts are only those that have a state == new, which must be equivalent to NOT having an entry in the latest table
+                // NOTE: actual new inserts are only those that have isNew, which must be equivalent to NOT having an entry in the latest table
                 // that allows us to do COPY insertion, because we guarantee that there are no unique constraint violations
                 // should this ever throw a unique constraint violation, means there is a bug and _latest and _historic are out of sync
                 var actualNewInserts = actualInserts.Where(t => t.isNew);
@@ -261,6 +261,9 @@ namespace Omnikeeper.Model
                     commandUpdateLatest.Parameters.AddWithValue("changeset_id", changeset.ID);
                     await commandUpdateLatest.ExecuteNonQueryAsync();
                 }
+
+                // TODO: improve performance
+                // add index, use CTEs
                 foreach (var (outdatedAttribute, newAttributeID) in outdatedAttributes.Values)
                 {
                     using var commandRemoveLatest = new NpgsqlCommand(@"

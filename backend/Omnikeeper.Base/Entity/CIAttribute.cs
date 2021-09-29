@@ -8,11 +8,6 @@ using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
-    public enum AttributeState // TODO: remove, replace with boolean
-    {
-        New, Removed
-    }
-
     public class MergedCIAttribute
     {
         public CIAttribute Attribute { get; private set; }
