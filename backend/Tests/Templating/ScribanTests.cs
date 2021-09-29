@@ -40,7 +40,7 @@ namespace Tests.Templating
                 var relationModel = new Mock<IRelationModel>();
                 relationModel.Setup(x => x.GetMergedRelations(It.IsAny<IRelationSelection>(), It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
                     .ReturnsAsync(() => new MergedRelation[] {
-                        new MergedRelation(new Relation(Guid.NewGuid(), testCIA.ID, testCIB.ID, "p_a", RelationState.New, staticChangesetID), new string[0])
+                        new MergedRelation(new Relation(Guid.NewGuid(), testCIA.ID, testCIB.ID, "p_a", staticChangesetID), new string[0])
                     });
 
                 var ciModel = new Mock<ICIModel>();

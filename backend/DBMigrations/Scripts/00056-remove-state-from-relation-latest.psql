@@ -1,0 +1,2 @@
+DELETE FROM public.relation_latest WHERE state = 'removed'::relationstate;
+ALTER TABLE public.relation_latest DROP COLUMN state;

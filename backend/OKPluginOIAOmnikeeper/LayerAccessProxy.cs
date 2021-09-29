@@ -69,8 +69,7 @@ namespace OKPluginOIAOmnikeeper
 
             if (fromCIID.HasValue && toCIID.HasValue)
             {
-                return new Relation(dto.ID, fromCIID.Value, toCIID.Value, dto.PredicateID,
-                    RelationState.New, staticChangesetID);
+                return new Relation(dto.ID, fromCIID.Value, toCIID.Value, dto.PredicateID, staticChangesetID);
             }
             else return null;
         }

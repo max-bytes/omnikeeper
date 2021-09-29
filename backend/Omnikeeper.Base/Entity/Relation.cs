@@ -5,9 +5,9 @@ using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
-    public enum RelationState
+    public enum RelationState // TODO: remove
     {
-        New, Removed, Renewed
+        New, Removed
     }
 
     public class MergedRelation
@@ -30,20 +30,18 @@ namespace Omnikeeper.Base.Entity
         [ProtoMember(2)] public readonly Guid FromCIID;
         [ProtoMember(3)] public readonly Guid ToCIID;
         [ProtoMember(4)] public readonly string PredicateID;
-        [ProtoMember(5)] public readonly RelationState State;
-        [ProtoMember(6)] public readonly Guid ChangesetID;
+        [ProtoMember(5)] public readonly Guid ChangesetID;
 
         // information hash: 
         public string InformationHash => CreateInformationHash(FromCIID, ToCIID, PredicateID);
         public static string CreateInformationHash(Guid fromCIID, Guid toCIID, string predicateID) => fromCIID + "_" + toCIID + "_" + predicateID;
 
-        public Relation(Guid id, Guid fromCIID, Guid toCIID, string predicateID, RelationState state, Guid changesetID)
+        public Relation(Guid id, Guid fromCIID, Guid toCIID, string predicateID, Guid changesetID)
         {
             ID = id;
             FromCIID = fromCIID;
             ToCIID = toCIID;
             PredicateID = predicateID;
-            State = state;
             ChangesetID = changesetID;
         }
     }

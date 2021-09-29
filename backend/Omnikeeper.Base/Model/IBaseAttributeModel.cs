@@ -17,9 +17,6 @@ namespace Omnikeeper.Base.Model
 
         Task<CIAttribute?> GetFullBinaryAttribute(string name, Guid ciid, string layerID, IModelContext trans, TimeThreshold atTime);
 
-        /**
-         * NOTE: GetAttributesOfChangeset() can also return removed attributes
-         */
         Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans);
 
         // mutations

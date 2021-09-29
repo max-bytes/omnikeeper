@@ -13,7 +13,7 @@ namespace Tests.Integration.Serialization
         public void TestSerialization()
         {
             var dataSerializer = new ProtoBufDataSerializer();
-            var a = new Relation(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "id", RelationState.Removed, Guid.NewGuid());
+            var a = new Relation(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "id", Guid.NewGuid());
             var b = dataSerializer.ToByteArray(a);
             dataSerializer.FromByteArray<Relation>(b).Should().BeEquivalentTo(a, options => options.WithStrictOrdering());
         }

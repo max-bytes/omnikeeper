@@ -26,7 +26,7 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             this.cache = cache;
         }
 
-        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID, RelationState state)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
+        public async Task<IEnumerable<(Guid fromCIID, Guid toCIID, string predicateID)>> BulkReplaceRelations<F>(IBulkRelationData<F> data, IChangesetProxy changesetProxy, DataOriginV1 origin, IModelContext trans)
         {
             var changed = await model.BulkReplaceRelations(data, changesetProxy, origin, trans);
             if (!changed.IsEmpty())
@@ -70,14 +70,14 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return await model.GetRelation(fromCIID, toCIID, predicateID, layerID, trans, atTime);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, IModelContext trans)
+        public async Task<IEnumerable<Relation>> GetRelationsOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
-            return await model.GetRelationsOfChangeset(changesetID, trans);
+            return await model.GetRelationsOfChangeset(changesetID, getRemoved, trans);
         }
 
-        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, string layerID, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<Relation>> GetRelations(IRelationSelection rl, string layerID, IModelContext trans, TimeThreshold atTime)
         {
-            return await model.GetRelations(rl, layerID, returnRemoved, trans, atTime);
+            return await model.GetRelations(rl, layerID, trans, atTime);
         }
     }
 }

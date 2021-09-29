@@ -25,7 +25,6 @@ namespace Omnikeeper.GraphQL
             Field(x => x.FromCIID);
             Field(x => x.ToCIID);
             Field(x => x.PredicateID);
-            Field(x => x.State, type: typeof(RelationStateType));
             Field(x => x.ChangesetID);
 
             Field<StringGraphType>("fromCIName",

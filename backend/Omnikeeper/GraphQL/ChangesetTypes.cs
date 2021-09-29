@@ -75,7 +75,16 @@ namespace Omnikeeper.GraphQL
                 var relationModel = context.RequestServices!.GetRequiredService<IRelationModel>();
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
                 var changesetID = context.Source!.ID;
-                return await relationModel.GetRelationsOfChangeset(changesetID, userContext.Transaction);
+                return await relationModel.GetRelationsOfChangeset(changesetID, false, userContext.Transaction);
+            });
+            FieldAsync<ListGraphType<RelationType>>("removedRelations",
+            resolve: async (context) =>
+            {
+                // TODO: use dataloader
+                var relationModel = context.RequestServices!.GetRequiredService<IRelationModel>();
+                var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                var changesetID = context.Source!.ID;
+                return await relationModel.GetRelationsOfChangeset(changesetID, true, userContext.Transaction);
             });
         }
     }

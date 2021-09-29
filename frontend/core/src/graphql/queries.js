@@ -162,7 +162,15 @@ export const queries = {
                     toCIName
                     predicateID
                     changesetID
-                    state
+                }
+                removedRelations {
+                    id
+                    fromCIID
+                    toCIID
+                    fromCIName
+                    toCIName
+                    predicateID
+                    changesetID
                 }
             }
         }

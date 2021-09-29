@@ -92,7 +92,7 @@ namespace Omnikeeper.Controllers
                 .SelectMany(kv => kv.Value.Values)
                 .Where(a => a.ChangesetID != GeneratorV1.StaticChangesetID) // HACK: skip generated attributes
                 .Select(a => CIAttributeDTO.Build(a));
-            var relations = (await relationModel.GetRelations(RelationSelectionAll.Instance, layerID, false, trans, timeThreshold));
+            var relations = (await relationModel.GetRelations(RelationSelectionAll.Instance, layerID, trans, timeThreshold));
             var relationsDTO = relations.Select(r => RelationDTO.BuildFromRelation(r));
             // TODO: ci authorization?
 

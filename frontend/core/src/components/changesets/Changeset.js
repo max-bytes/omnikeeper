@@ -45,6 +45,16 @@ export default function Changeset(props) {
         const groupedAttributesByCIID = _.groupBy(data.changeset.attributes, a => a.ciid);
         const groupedRemovedAttributesByCIID = _.groupBy(data.changeset.removedAttributes, a => a.ciid);
 
+        var defaultActiveTab = undefined;
+        if (data.changeset.attributes.length > 0) 
+            defaultActiveTab = "newAttributes"; 
+        else if (data.changeset.removedAttributes.length > 0) 
+            defaultActiveTab = "removedAttributes";
+        else if (data.changeset.relations.length > 0) 
+            defaultActiveTab = "newRelations";
+        else if (data.changeset.removedRelations.length > 0) 
+            defaultActiveTab = "removedRelations";
+
         return <div style={{marginTop: '1rem'}}>
             <Descriptions title="Changeset" bordered column={2}>
                 <Descriptions.Item label="User"><UserTypeIcon userType={data.changeset.user.type} /> {data.changeset.user.displayName}</Descriptions.Item>
@@ -53,7 +63,7 @@ export default function Changeset(props) {
                 <Descriptions.Item label="Origin-Type">{data.changeset.dataOrigin.type}</Descriptions.Item>
                 <Descriptions.Item label="Changeset-ID" span={2}><ChangesetID id={data.changeset.id} link={false} /></Descriptions.Item>
             </Descriptions>
-            <Tabs defaultActiveKey={(data.changeset.attributes.length > 0) ? "newAttributes" : ((data.changeset.removedAttributes.length > 0) ? "removedAttributes" : "relations")} style={{paddingTop: "1rem"}}>
+            <Tabs defaultActiveKey={defaultActiveTab} style={{paddingTop: "1rem"}}>
                 <TabPane 
                  tab={<CountBadge count={data.changeset.attributes.length}>New Attributes</CountBadge>}
                  key="newAttributes" disabled={data.changeset.attributes.length === 0}>
@@ -79,10 +89,17 @@ export default function Changeset(props) {
                     }))}
                 </TabPane>
                 <TabPane 
-                 tab={<CountBadge count={data.changeset.relations.length}>Relations</CountBadge>}
-                 key="relations" disabled={data.changeset.relations.length === 0}>
+                 tab={<CountBadge count={data.changeset.relations.length}>New Relations</CountBadge>}
+                 key="newRelations" disabled={data.changeset.relations.length === 0}>
                     {data.changeset.relations.map(r => {
                         return <Relation predicates={dataPredicates.predicates} relation={r} layer={data.changeset.layer} key={r.id} />;
+                    })}
+                </TabPane>
+                <TabPane 
+                 tab={<CountBadge count={data.changeset.removedRelations.length}>Removed Relations</CountBadge>}
+                 key="removedRelations" disabled={data.changeset.removedRelations.length === 0}>
+                    {data.changeset.removedRelations.map(r => {
+                        return <Relation removed={true} predicates={dataPredicates.predicates} relation={r} layer={data.changeset.layer} key={r.id} />;
                     })}
                 </TabPane>
             </Tabs>
