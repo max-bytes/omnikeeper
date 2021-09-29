@@ -27,6 +27,9 @@ namespace Omnikeeper.Base.Generator
         public string ID { get; }
         public string AttributeName { get; }
         public GeneratorAttributeValue Value { get; }
+
+
+        public static Guid StaticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
     }
 
     public class GeneratorAttributeValue
@@ -125,37 +128,38 @@ namespace Omnikeeper.Base.Generator
         {
             // TODO, NOTE: we assume we get the layers back just as we queried for them, does this hold all the time?
             // TODO: rewrite GetLayers() to return array
-            var layers = await layerModel.GetLayers(layerIDs, trans); // TODO: this should actually get the layers at the correct point in time, not the latest!
+            var layers = (await layerModel.GetLayers(layerIDs, trans)).ToDictionary(l => l.ID); // TODO: this should actually get the layers at the correct point in time, not the latest!
 
             var ret = new IEnumerable<GeneratorV1>[layerIDs.Length];
             IDictionary<string, GeneratorV1>? availableGenerators = null;
             Entity.Config.BaseConfigurationV1? baseConfiguration = null;
             int i = 0;
-            foreach(var layer in layers)
+            foreach(var layerID in layerIDs)
             {
-                var layerID = layer.ID;
-
                 var l = new List<GeneratorV1>();
                 ret[i++] = l;
 
-                // check if this layer even has any active generators configured, if not -> return early
-                var activeGeneratorIDsForLayer = layer.Generators;
-                if (activeGeneratorIDsForLayer.IsEmpty())
-                    continue;
+                if (layers.TryGetValue(layerID, out var layer))
+                {
+                    // check if this layer even has any active generators configured, if not -> return early
+                    var activeGeneratorIDsForLayer = layer.Generators;
+                    if (activeGeneratorIDsForLayer.IsEmpty())
+                        continue;
 
-                // NOTE: this is an important mechanism that prevents layers in the base configuration layerset form having effective generators
-                // this is necessary, because otherwise its very easy to get infinite loops of GetGenerators() -> GetAttributes() -> GetGenerators() -> ...
-                baseConfiguration ??= await baseConfigurationModel.GetConfigOrDefault(trans); // TODO: get base configuration at the correct point in time, not the latest
-                if (baseConfiguration.ConfigLayerset.Contains(layerID))
-                    continue;
+                    // NOTE: this is an important mechanism that prevents layers in the base configuration layerset form having effective generators
+                    // this is necessary, because otherwise its very easy to get infinite loops of GetGenerators() -> GetAttributes() -> GetGenerators() -> ...
+                    baseConfiguration ??= await baseConfigurationModel.GetConfigOrDefault(trans); // TODO: get base configuration at the correct point in time, not the latest
+                    if (baseConfiguration.ConfigLayerset.Contains(layerID))
+                        continue;
 
-                availableGenerators ??= await generatorModel.GetGenerators(new LayerSet(baseConfiguration.ConfigLayerset), trans, timeThreshold);
+                    availableGenerators ??= await generatorModel.GetGenerators(new LayerSet(baseConfiguration.ConfigLayerset), trans, timeThreshold);
 
-                var applicableGenerators = activeGeneratorIDsForLayer.Select(id => availableGenerators.GetOrWithClass(id, null)).Where(g => g != null).Select(g => g!);
+                    var applicableGenerators = activeGeneratorIDsForLayer.Select(id => availableGenerators.GetOrWithClass(id, null)).Where(g => g != null).Select(g => g!);
 
-                var filteredApplicableGenerators = generatorSelection.Filter(applicableGenerators);
-                var filteredItems = FilterGeneratorsByAttributeSelection(filteredApplicableGenerators, attributeSelection);
-                l.AddRange(filteredItems);
+                    var filteredApplicableGenerators = generatorSelection.Filter(applicableGenerators);
+                    var filteredItems = FilterGeneratorsByAttributeSelection(filteredApplicableGenerators, attributeSelection);
+                    l.AddRange(filteredItems);
+                }
             }
             return ret;
         }
@@ -185,8 +189,7 @@ namespace Omnikeeper.Base.Generator
                     // create a deterministic, dependent guid from the ciid, layerID, attribute values; 
                     // we need to incorporate the dependent attributes, otherwise the attribute ID does not change when any of the dependent attributes change
                     var agGuid = GuidUtility.Create(ciid, $"{generator.AttributeName}-{layerID}-{string.Join("-", generator.Value.UsedAttributeNames)}");
-                    Guid staticChangesetID = GuidUtility.Create(new Guid("a09018d6-d302-4137-acae-a81f2aa1a243"), "generator"); // TODO
-                    var ag = new CIAttribute(agGuid, generator.AttributeName, ciid, value, AttributeState.New, staticChangesetID);
+                    var ag = new CIAttribute(agGuid, generator.AttributeName, ciid, value, GeneratorV1.StaticChangesetID);
                     return ag;
                 } else
                 {

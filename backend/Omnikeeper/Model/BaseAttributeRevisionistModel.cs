@@ -26,17 +26,14 @@ namespace Omnikeeper.Model
 
         public async Task<int> DeleteOutdatedAttributesOlderThan(string layerID, IModelContext trans, DateTimeOffset threshold, TimeThreshold atTime)
         {
-            // TODO: this fails to consider attributes with state "removed"!
-            // and it also does not affect the attribute_latest table, which it SHOULD affect in case of removed attributes
-            // TODO: use latest table
-            var query = @"DELETE FROM attribute
-	                WHERE timestamp < @delete_threshold
-                    AND layer_id = @layer_id
-                    AND id NOT IN (
-                        select distinct on(ci_id, name) id FROM attribute 
-                        where timestamp <= @now and layer_id = @layer_id
-                        order by ci_id, name, timestamp DESC NULLS LAST
-                    )";
+            // TODO: this fails to consider relations with state "removed" that are present in the *_latest table, even when they are old enough
+
+            // query inspired by https://stackoverflow.com/questions/15959061/delete-records-which-do-not-have-a-match-in-another-table
+            var query = @"DELETE FROM attribute a
+                    USING (SELECT a2.id FROM attribute a2 WHERE NOT EXISTS(SELECT * FROM attribute_latest l WHERE l.id = a2.id)) i
+	                WHERE a.timestamp < @delete_threshold
+                    AND a.layer_id = @layer_id
+                    AND i.id = a.id";
 
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
 

@@ -55,8 +55,7 @@ namespace Omnikeeper.Service
                         )
                         DELETE FROM ci c
                         USING to_delete t
-                        WHERE t.ci_id = c.id AND t.ci_id is not null;
-                    ";
+                        WHERE t.ci_id = c.id";
                     using var commandDeleteBulk = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
 
                     var d = await commandDeleteBulk.ExecuteNonQueryAsync();

@@ -26,17 +26,14 @@ namespace Omnikeeper.Model
 
         public async Task<int> DeleteOutdatedRelationsOlderThan(string layerID, IModelContext trans, DateTimeOffset threshold, TimeThreshold atTime)
         {
-            // TODO: this fails to consider relations with state "removed"!
-            // and it also does not affect the relation_latest table, which it SHOULD affect in case of removed relations
-            // TODO: use latest table
-            var query = @"DELETE FROM relation
-	                WHERE timestamp < @delete_threshold
-                    AND layer_id = @layer_id
-                    AND id NOT IN (
-                        select distinct on(from_ci_id, to_ci_id, predicate_id) id FROM relation 
-                        where timestamp <= @now and layer_id = @layer_id
-                        order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC NULLS LAST
-                    )";
+            // TODO: this fails to consider relations with state "removed" that are present in the *_latest table, even when they are old enough
+
+            // query inspired by https://stackoverflow.com/questions/15959061/delete-records-which-do-not-have-a-match-in-another-table
+            var query = @"DELETE FROM relation r
+                    USING (SELECT r2.id FROM relation r2 WHERE NOT EXISTS(SELECT * FROM relation_latest l WHERE l.id = r2.id)) i
+	                WHERE r.timestamp < @delete_threshold
+                    AND r.layer_id = @layer_id
+                    AND i.id = r.id";
 
             using var command = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
 
