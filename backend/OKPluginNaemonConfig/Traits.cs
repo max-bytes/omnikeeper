@@ -37,7 +37,7 @@ namespace OKPluginNaemonConfig
         public static readonly GenericTrait ACisFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(ACis);
 
         public static readonly RecursiveTrait NaemonModules = new RecursiveTrait("module", traitOrigin, new List<TraitAttribute>() {
-        new TraitAttribute("naemon_module.name",
+        new TraitAttribute("name",
             CIAttributeTemplate.BuildFromParams("naemon_module.name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
@@ -75,6 +75,14 @@ namespace OKPluginNaemonConfig
 
         public static readonly GenericTrait ServiceActionsFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(ServiceActions);
 
+        public static readonly RecursiveTrait Interfaces = new RecursiveTrait("interface", traitOrigin, new List<TraitAttribute>() {
+        new TraitAttribute("cmdb.ifid",
+            CIAttributeTemplate.BuildFromParams("cmdb.ifid", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+            )
+        });
+
+        public static readonly GenericTrait InterfacesFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(ServiceActions);
+
         public static readonly RecursiveTrait NaemonProfiles = new RecursiveTrait("profile", traitOrigin, new List<TraitAttribute>() {
         new TraitAttribute("naemon_profile.name",
             CIAttributeTemplate.BuildFromParams("naemon_profile.name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
@@ -92,8 +100,8 @@ namespace OKPluginNaemonConfig
         public static readonly GenericTrait NaemonInstancesTagsFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(NaemonInstancesTags);
 
         public static readonly RecursiveTrait Commands = new RecursiveTrait("command", traitOrigin, new List<TraitAttribute>() {
-        new TraitAttribute("naemon_command.id",
-            CIAttributeTemplate.BuildFromParams("naemon_command.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+        new TraitAttribute("naemon_command.name",
+            CIAttributeTemplate.BuildFromParams("naemon_command.name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
@@ -101,27 +109,55 @@ namespace OKPluginNaemonConfig
 
         // monman-timeperiod.id
         public static readonly RecursiveTrait TimePeriods = new RecursiveTrait("timeperiod", traitOrigin, new List<TraitAttribute>() {
-        new TraitAttribute("naemon_timeperiod.id",
-            CIAttributeTemplate.BuildFromParams("naemon_timeperiod.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+        new TraitAttribute("naemon_timeperiod.name",
+            CIAttributeTemplate.BuildFromParams("naemon_timeperiod.name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
         public static readonly GenericTrait TimePeriodsFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(TimePeriods);
 
+        public static readonly RecursiveTrait Variables = new RecursiveTrait("variable", traitOrigin, new List<TraitAttribute>() {
+        new TraitAttribute("naemon_variable.type",
+            CIAttributeTemplate.BuildFromParams("naemon_variable.type", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+            )
+        });
+
+        public static readonly GenericTrait VariablesFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(Variables);
+
+        public static readonly RecursiveTrait ServiceLayers = new RecursiveTrait("service_layer", traitOrigin, new List<TraitAttribute>() {
+        new TraitAttribute("name",
+            CIAttributeTemplate.BuildFromParams("naemon_service_layer.name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+            )
+        });
+
+        public static readonly GenericTrait ServiceLayersFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(ServiceLayers);
+
+        public static readonly RecursiveTrait ServicesStatic = new RecursiveTrait("service_static", traitOrigin, new List<TraitAttribute>() {
+        new TraitAttribute("name",
+            CIAttributeTemplate.BuildFromParams("naemon_services_static.servicename", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
+            )
+        });
+
+        public static readonly GenericTrait ServicesStaticFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(ServicesStatic);
+
         public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() 
         { 
-            NaemonInstance, 
             HCis, 
             ACis, 
             HostsCategories, 
             ServicesCategories, 
             HostActions,
             ServiceActions,
+            Interfaces,
+            NaemonInstance,
             NaemonModules, 
             NaemonProfiles, 
             NaemonInstancesTags, 
             Commands, 
-            TimePeriods 
+            TimePeriods,
+            Variables,
+            ServiceLayers,
+            ServicesStatic,
         };
     }
 }
