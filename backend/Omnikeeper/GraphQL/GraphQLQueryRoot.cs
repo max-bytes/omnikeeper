@@ -71,8 +71,6 @@ namespace Omnikeeper.GraphQL
                     var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
                     userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
 
-                    // TODO: implement optional sorting by CI name (like compact ci does)
-                    
                     if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, ls))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
 

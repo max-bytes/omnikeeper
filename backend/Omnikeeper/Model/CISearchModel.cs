@@ -29,6 +29,7 @@ namespace Omnikeeper.Model
 
         public async Task<IEnumerable<Guid>> FindCIIDsWithCIName(string CIName, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
+            // TODO: performance improvements
             var ciNamesFromNameAttributes = await attributeModel.GetMergedCINames(new AllCIIDsSelection(), layerSet, trans, timeThreshold);
             var foundCIIDs = ciNamesFromNameAttributes.Where(a => a.Value.Equals(CIName)).Select(a => a.Key).ToHashSet();
             return foundCIIDs;

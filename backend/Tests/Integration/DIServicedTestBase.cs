@@ -112,7 +112,6 @@ namespace Tests.Integration
             Guid? tmp;
             cibas.Setup(x => x.CanReadAllCIs(It.IsAny<IEnumerable<Guid>>(), out tmp)).Returns(true);
             services.AddSingleton((sp) => cibas.Object);
-            //services.AddSingleton<ICIBasedAuthorizationService, CIBasedAuthorizationService>(); // HACK: as long as CIBasedAuthorizationService is not implemented anyway, we can use this
         }
     }
 }
