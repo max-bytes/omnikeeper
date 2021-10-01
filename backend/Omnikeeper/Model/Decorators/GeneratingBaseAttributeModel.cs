@@ -62,6 +62,8 @@ namespace Omnikeeper.Model.Decorators
 
             @base = MergeInGeneratedAttributes(@base, additionalAttributes, egis, layerIDs);
 
+            // TODO: remove additional attributes again, to be consistent; caller did not ask for them
+
             return @base;
         }
 
