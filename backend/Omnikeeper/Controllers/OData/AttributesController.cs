@@ -182,13 +182,13 @@ namespace Omnikeeper.Controllers.OData
             }
             else if (attribute.CIName != null && attribute.CIName != "")
             { // ciid not set, try to match using ci name, which is set
-                var foundCIs = (await ciSearchModel.FindCompactCIsWithName(attribute.CIName, readLayerset, trans, timeThreshold)).ToList();
-                if (foundCIs.Count == 0)
+                var foundCIIDs = (await ciSearchModel.FindCIIDsWithCIName(attribute.CIName, readLayerset, trans, timeThreshold)).ToList();
+                if (foundCIIDs.Count == 0)
                 { // ok case, continue
                 }
-                else if (foundCIs.Count == 1)
+                else if (foundCIIDs.Count == 1)
                 { // found a single candidate that fits, set CIID to this
-                    finalCIID = foundCIs[0].ID;
+                    finalCIID = foundCIIDs[0];
                 }
                 else
                 {

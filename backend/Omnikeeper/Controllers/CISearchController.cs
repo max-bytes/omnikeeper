@@ -51,7 +51,7 @@ namespace Omnikeeper.Controllers
             var requiredTraits = await traitsProvider.GetActiveTraitsByIDs(withTraits, trans, timeThreshold);
             var requiredNonTraits = await traitsProvider.GetActiveTraitsByIDs(withoutTraits, trans, timeThreshold);
 
-            var cis = await ciSearchModel.SearchForMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, requiredTraits.Values, requiredNonTraits.Values, layerset, trans, timeThreshold);
+            var cis = await ciSearchModel.FindMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, requiredTraits.Values, requiredNonTraits.Values, layerset, trans, timeThreshold);
 
             return Ok(cis.Select(ci => CIDTO.BuildFromMergedCI(ci)));
         }

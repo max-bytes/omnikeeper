@@ -11,14 +11,16 @@ export const queries = {
         ${Fragments.fullPredicate}
     `,
 
-    AdvancedSearchCompactCIs: gql`
-        query($searchString: String!, $withEffectiveTraits: [String]!, $withoutEffectiveTraits: [String]!, $layers: [String]!) {
-            advancedSearchCompactCIs(searchString: $searchString, withEffectiveTraits: $withEffectiveTraits, withoutEffectiveTraits: $withoutEffectiveTraits, layers: $layers) {
+    AdvancedSearchFullCIs: gql`
+        query($searchString: String!, $ciids: [Guid], $withEffectiveTraits: [String]!, $withoutEffectiveTraits: [String]!, $layers: [String]!) {
+            advancedSearchFullCIs(searchString: $searchString, ciids: $ciids, sortByCIName: true,
+                withEffectiveTraits: $withEffectiveTraits, withoutEffectiveTraits: $withoutEffectiveTraits, layers: $layers) {
                 id
                 name
             }
         }
     `,
+
     ActiveTraits: gql`
         query {
             activeTraits {

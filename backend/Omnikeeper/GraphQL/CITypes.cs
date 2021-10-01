@@ -142,18 +142,6 @@ namespace Omnikeeper.GraphQL
         }
     }
 
-
-    public class CompactCIType : ObjectGraphType<CompactCI>
-    {
-        public CompactCIType()
-        {
-            Field("id", x => x.ID);
-            Field("name", x => x.Name, nullable: true);
-            Field(x => x.AtTime, type: typeof(TimeThresholdType));
-            Field("layerhash", x => x.LayerHash);
-        }
-    }
-
     public class MergedCIAttributeType : ObjectGraphType<MergedCIAttribute>
     {
         public MergedCIAttributeType(IDataLoaderContextAccessor dataLoaderContextAccessor, ILayerModel layerModel)

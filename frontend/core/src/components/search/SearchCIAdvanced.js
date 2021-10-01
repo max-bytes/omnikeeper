@@ -59,7 +59,7 @@ function SearchCIAdvanced(props) {
     // https://github.com/apollographql/apollo-client/issues/7396
     // update graphql and implement previousData as soon as bug is fixed
     // NOTE: caching big results is really slow with apollo, so we completely bypass the cache, hence fetchPolicy: "no-cache"
-    const [search, { loading, data: dataCIs }] = useLazyQuery(queries.AdvancedSearchCompactCIs, {fetchPolicy: "no-cache"});
+    const [search, { loading, data: dataCIs }] = useLazyQuery(queries.AdvancedSearchFullCIs, {fetchPolicy: "no-cache"});
 
     // debounce search, so its not called too often
     const debouncedSearch = useCallback(_.debounce(search, 500), [search]);
@@ -111,7 +111,7 @@ function SearchCIAdvanced(props) {
                 </div>
                 {/* right column - results */}
                 <div style={styles.resultsColumn}>
-                    <SearchResults advancedSearchCompactCIs={dataCIs?.advancedSearchCompactCIs} loading={loading} />
+                    <SearchResults cis={dataCIs?.advancedSearchFullCIs} loading={loading} />
                 </div>
             </Spin>
         </div>

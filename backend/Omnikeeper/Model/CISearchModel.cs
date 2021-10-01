@@ -27,74 +27,26 @@ namespace Omnikeeper.Model
             this.logger = logger;
         }
 
-        public async Task<IEnumerable<CompactCI>> FindCompactCIsWithName(string CIName, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        public async Task<IEnumerable<Guid>> FindCIIDsWithCIName(string CIName, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            // TODO: performance improvements
             var ciNamesFromNameAttributes = await attributeModel.GetMergedCINames(new AllCIIDsSelection(), layerSet, trans, timeThreshold);
             var foundCIIDs = ciNamesFromNameAttributes.Where(a => a.Value.Equals(CIName)).Select(a => a.Key).ToHashSet();
-            if (foundCIIDs.IsEmpty()) return ImmutableArray<CompactCI>.Empty;
-            var cis = await ciModel.GetCompactCIs(SpecificCIIDsSelection.Build(foundCIIDs), layerSet, trans, timeThreshold);
-            return cis;
-        }
-
-        public async Task<IEnumerable<CompactCI>> AdvancedSearchForCompactCIs(string searchString, IEnumerable<ITrait> withEffectiveTraits, IEnumerable<ITrait> withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
-        {
-            var cis = await _AdvancedSearchForCompactCIs(searchString, withEffectiveTraits, withoutEffectiveTraits, layerSet, trans, atTime);
-
-            // HACK, properly sort unnamed CIs
-            return cis.OrderBy(t => t.Name ?? "ZZZZZZZZZZZ");
-        }
-
-        private async Task<IEnumerable<CompactCI>> _AdvancedSearchForCompactCIs(string searchString, IEnumerable<ITrait> withEffectiveTraits, IEnumerable<ITrait> withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
-        {
-            var finalSS = searchString.Trim();
-            ICIIDSelection ciSelection;
-
-            if (Guid.TryParse(finalSS, out var guid))
-            {
-                if (await ciModel.CIIDExists(guid, trans))
-                    ciSelection = SpecificCIIDsSelection.Build(guid);
-                else
-                    return new CompactCI[0];
-            }
-            else if (finalSS.Length > 0)
-            {
-                var ciNames = await attributeModel.GetMergedCINames(new AllCIIDsSelection(), layerSet, trans, atTime);
-                var foundCIIDs = ciNames.Where(kv =>
-                {
-                    return CultureInfo.InvariantCulture.CompareInfo.IndexOf(kv.Value, searchString, CompareOptions.IgnoreCase) >= 0;
-                }).Select(kv => kv.Key).ToHashSet();
-                if (foundCIIDs.IsEmpty())
-                    return new CompactCI[0];
-                ciSelection = SpecificCIIDsSelection.Build(foundCIIDs);
-            }
-            else
-            {
-                ciSelection = new AllCIIDsSelection();
-            }
-
-            if (!withEffectiveTraits.IsEmpty() || !withoutEffectiveTraits.IsEmpty())
-            {
-                var mergedCIs = await SearchForMergedCIsByTraits(ciSelection, NamedAttributesSelection.Build(ICIModel.NameAttribute), withEffectiveTraits, withoutEffectiveTraits, layerSet, trans, atTime);
-
-                return mergedCIs.Select(ci => CompactCI.BuildFromMergedCI(ci));
-            }
-            else
-            {
-                var cis = await ciModel.GetCompactCIs(ciSelection, layerSet, trans, atTime);
-                return cis;
-            }
+            return foundCIIDs;
         }
 
         // NOTE: the attributeSelection is supposed to determine what gets RETURNED, not what attributes are checked against when testing for trait memberships
         // NOTE: for internal reasons, this method may return more attributes than requested (when attributeSelection != All, because it needs to check for traits it fetches more attributes)
-        public async Task<IEnumerable<MergedCI>> SearchForMergedCIsByTraits(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, IEnumerable<ITrait> withEffectiveTraits, IEnumerable<ITrait> withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
+        public async Task<IEnumerable<MergedCI>> FindMergedCIsByTraits(ICIIDSelection ciidSelection, IAttributeSelection attributeSelection, IEnumerable<ITrait> withEffectiveTraits, IEnumerable<ITrait> withoutEffectiveTraits, LayerSet layerSet, IModelContext trans, TimeThreshold atTime)
         {
             // create shallow copy, because we potentially modify these lists
             IEnumerable<ITrait> requiredTraits = new List<ITrait>(withEffectiveTraits);
             IEnumerable<ITrait> requiredNonTraits = new List<ITrait>(withoutEffectiveTraits);
             if (ReduceTraitRequirements(ref requiredTraits, ref requiredNonTraits, out var emptyTraitIsRequired, out var emptyTraitIsNonRequired))
                 return ImmutableList<MergedCI>.Empty; // bail completely
+
+            // special case: no traits selected at all
+            if (requiredTraits.IsEmpty() &&  requiredNonTraits.IsEmpty())
+                return await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: true, attributeSelection, trans, atTime);
 
             // special case: empty trait is required
             if (emptyTraitIsRequired)

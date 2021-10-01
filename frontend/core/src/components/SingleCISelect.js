@@ -8,7 +8,7 @@ function SingleCISelect(props) {
   const {layers, selectedCIID, setSelectedCIID } = props;
 
   // HACK: use useQuery+skip because useLazyQuery does not return a promise, see: https://github.com/apollographql/react-apollo/issues/3499
-  const { refetch: searchCIs } = useQuery(queries.AdvancedSearchCompactCIs, { skip: true });
+  const { refetch: searchCIs } = useQuery(queries.AdvancedSearchFullCIs, { skip: true });
 
   return <DebounceSelect
     placeholder="Search+select CI (min 3 characters)"
@@ -31,7 +31,7 @@ function SingleCISelect(props) {
           return [];
         }
 
-        const ciList = data.advancedSearchCompactCIs.map(d => {
+        const ciList = data.advancedSearchFullCIs.map(d => {
           return { value: d.id, label: `${d.name ?? `[UNNAMED] - ${d.id}`}` };
         })
         return ciList;

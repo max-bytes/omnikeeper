@@ -18,7 +18,7 @@ namespace OKPluginValidation.Validation
             },
             new List<TraitRelation>()
             {
-                new TraitRelation("has_issue", new RelationTemplate("__meta.validation.has_issue", true, 1, null)),
+                new TraitRelation("has_issue", new RelationTemplate("__meta.validation.has_issue", false, 1, null)),
             }
         );
         public static readonly GenericTrait ValidationIssueFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(ValidationIssue);
