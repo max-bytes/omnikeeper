@@ -11,9 +11,9 @@ export const queries = {
         ${Fragments.fullPredicate}
     `,
 
-    AdvancedSearchFullCIs: gql`
+    SearchCIs: gql`
         query($searchString: String!, $ciids: [Guid], $withEffectiveTraits: [String]!, $withoutEffectiveTraits: [String]!, $layers: [String]!) {
-            advancedSearchFullCIs(searchString: $searchString, ciids: $ciids, sortByCIName: true,
+            cis(searchString: $searchString, ciids: $ciids, sortByCIName: true,
                 withEffectiveTraits: $withEffectiveTraits, withoutEffectiveTraits: $withoutEffectiveTraits, layers: $layers) {
                 id
                 name
@@ -51,7 +51,7 @@ export const queries = {
 
     FullCI: gql`
         query($ciid: Guid!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
-            advancedSearchFullCIs(searchString: "", ciids: [$ciid], sortByCIName: false, withEffectiveTraits: [], withoutEffectiveTraits: [], layers: $layers, timeThreshold: $timeThreshold) {
+            cis(searchString: "", ciids: [$ciid], sortByCIName: false, withEffectiveTraits: [], withoutEffectiveTraits: [], layers: $layers, timeThreshold: $timeThreshold) {
                 ...FullCI
             }
         }
@@ -63,7 +63,7 @@ export const queries = {
     `,
     FullCIs: gql`
         query($ciids: [Guid], $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
-            advancedSearchFullCIs(searchString: "", ciids: $ciids, sortByCIName: false, withEffectiveTraits: [], withoutEffectiveTraits: [], layers: $layers, timeThreshold: $timeThreshold) {
+            cis(searchString: "", ciids: $ciids, sortByCIName: false, withEffectiveTraits: [], withoutEffectiveTraits: [], layers: $layers, timeThreshold: $timeThreshold) {
                 ...FullCI
             }
         }

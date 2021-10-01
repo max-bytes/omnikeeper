@@ -30,7 +30,7 @@ function LoadingCI(props) {
 
   if (dataCI) return (<LoadingOverlay active={loadingCI} spinner>
       <div style={{ width: "100%", padding: "0 15px" }}>
-        <CI timeThreshold={timeThreshold} ci={dataCI.advancedSearchFullCIs[0]} isEditable={isEditable} ></CI>
+        <CI timeThreshold={timeThreshold} ci={dataCI.cis[0]} isEditable={isEditable} ></CI>
       </div>
     </LoadingOverlay>);
   else if (loadingCI) return <p>Loading...</p>;

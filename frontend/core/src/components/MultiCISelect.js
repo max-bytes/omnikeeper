@@ -8,7 +8,7 @@ function MultiCISelect(props) {
   const {layers, selectedCIIDs, setSelectedCIIDs } = props;
 
   // HACK: use useQuery+skip because useLazyQuery does not return a promise, see: https://github.com/apollographql/react-apollo/issues/3499
-  const { refetch: searchCIs } = useQuery(queries.AdvancedSearchFullCIs, { skip: true });
+  const { refetch: searchCIs } = useQuery(queries.SearchCIs, { skip: true });
 
   return <DebounceSelect
     mode="multiple"
@@ -32,7 +32,7 @@ function MultiCISelect(props) {
           return [];
         }
 
-        const ciList = data.advancedSearchFullCIs.map(d => {
+        const ciList = data.cis.map(d => {
           return { value: d.id, label: `${d.name ?? `[UNNAMED] - ${d.id}`}` };
         })
         return ciList;

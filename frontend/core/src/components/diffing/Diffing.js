@@ -183,7 +183,7 @@ function Diffing(props) {
         <Row>
           <Col span={24}>
             <LoadingOverlay fadeSpeed={100} active={loadingLeftCI || loadingRightCI} spinner>
-              <DiffArea showEqual={showEqual} leftCIs={dataLeftCI?.advancedSearchFullCIs} rightCIs={dataRightCI?.advancedSearchFullCIs} />
+              <DiffArea showEqual={showEqual} leftCIs={dataLeftCI?.cis} rightCIs={dataRightCI?.cis} />
             </LoadingOverlay>
           </Col>
         </Row>

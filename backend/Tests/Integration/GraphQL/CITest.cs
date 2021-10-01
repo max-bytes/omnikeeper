@@ -50,7 +50,7 @@ namespace Tests.Integration.GraphQL
 
             string query = @"
                     query($ciids: [Guid]!, $layers: [String]!) {
-                      advancedSearchFullCIs(ciids: $ciids, layers: $layers) {
+                      cis(ciids: $ciids, layers: $layers) {
                         mergedAttributes {
                             attribute {
                                 name
@@ -72,7 +72,7 @@ namespace Tests.Integration.GraphQL
                 });
 
             var expected = @"{
-                      ""advancedSearchFullCIs"":[
+                      ""cis"":[
                           {
                              ""mergedAttributes"":[
                                 {

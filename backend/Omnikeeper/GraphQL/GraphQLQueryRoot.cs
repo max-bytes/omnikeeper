@@ -42,7 +42,7 @@ namespace Omnikeeper.GraphQL
                     return ciids;
                 });
 
-            FieldAsync<ListGraphType<MergedCIType>>("advancedSearchFullCIs",
+            FieldAsync<ListGraphType<MergedCIType>>("cis",
                 arguments: new QueryArguments(
                     new QueryArgument<ListGraphType<GuidGraphType>> { Name = "ciids" },
                     new QueryArgument<StringGraphType> { Name = "searchString" },
