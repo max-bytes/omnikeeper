@@ -22,12 +22,6 @@ namespace Tests.Integration.GraphQL
         protected override void InitServices(IServiceCollection services)
         {
             base.InitServices(services);
-
-            var cbas = new Mock<ICIBasedAuthorizationService>();
-            cbas.Setup(x => x.CanReadCI(It.IsAny<Guid>())).Returns(true);
-            Guid? tmp;
-            cbas.Setup(x => x.CanReadAllCIs(It.IsAny<IEnumerable<Guid>>(), out tmp)).Returns(true);
-            services.AddScoped((sp) => cbas.Object);
         }
 
         [Test]
@@ -55,8 +49,8 @@ namespace Tests.Integration.GraphQL
             trans.Commit();
 
             string query = @"
-                    query text($ciid: Guid!, $layers: [String]!) {
-                      ci(ciid: $ciid, layers: $layers) {
+                    query($ciids: [Guid]!, $layers: [String]!) {
+                      cis(ciids: $ciids, layers: $layers) {
                         mergedAttributes {
                             attribute {
                                 name
@@ -73,25 +67,27 @@ namespace Tests.Integration.GraphQL
 
             var inputs = new Inputs(new Dictionary<string, object>()
                 {
-                    { "ciid", ciid1 },
+                    { "ciids", new Guid[] { ciid1 } },
                     { "layers", new string[] { "layer_1", "layer_2" } }
                 });
 
             var expected = @"{
-                      ""ci"":{
-                         ""mergedAttributes"":[
-                            {
-                                ""attribute"": {
-                                   ""name"":""a1"",
-                                   ""value"":{
-                                      ""type"":""INTEGER"",
-                                      ""isArray"": false,
-                                      ""values"":[""3""]
-                                   }
+                      ""cis"":[
+                          {
+                             ""mergedAttributes"":[
+                                {
+                                    ""attribute"": {
+                                       ""name"":""a1"",
+                                       ""value"":{
+                                          ""type"":""INTEGER"",
+                                          ""isArray"": false,
+                                          ""values"":[""3""]
+                                       }
+                                    }
                                 }
-                            }
-                         ]
-                      }
+                             ]
+                          }
+                        ]
                     }";
 
             var httpContext = new DefaultHttpContext();

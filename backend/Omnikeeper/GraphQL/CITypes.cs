@@ -34,7 +34,8 @@ namespace Omnikeeper.GraphQL
                 {
                     var mergedAttributes = context.Source!.MergedAttributes.Values;
 
-                    // TODO: only fetch what attributes are requested instead of fetching all, then filtering
+                    // NOTE: the outer caller/resolver should already have filtered the attributes
+                    // but because we cannot be sure of that, we still do this filtering here too, even if its redundant
                     var attributeNames = context.GetArgument<string[]?>("attributeNames", null)?.ToHashSet();
                     if (attributeNames != null)
                         return mergedAttributes.Where(a => attributeNames.Contains(a.Attribute.Name));
@@ -138,18 +139,6 @@ namespace Omnikeeper.GraphQL
                 }
             }
             return ret.ToLookup(t => t.Item1, t => t.Item2);
-        }
-    }
-
-
-    public class CompactCIType : ObjectGraphType<CompactCI>
-    {
-        public CompactCIType()
-        {
-            Field("id", x => x.ID);
-            Field("name", x => x.Name, nullable: true);
-            Field(x => x.AtTime, type: typeof(TimeThresholdType));
-            Field("layerhash", x => x.LayerHash);
         }
     }
 

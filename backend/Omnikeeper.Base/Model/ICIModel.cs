@@ -14,7 +14,6 @@ namespace Omnikeeper.Base.Model
         // merged
         Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime);
         Task<IEnumerable<MergedCI>> GetMergedCIs(ICIIDSelection selection, LayerSet layers, bool includeEmptyCIs, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime);
-        Task<IEnumerable<CompactCI>> GetCompactCIs(ICIIDSelection selection, LayerSet visibleLayers, IModelContext trans, TimeThreshold atTime);
 
         Guid CreateCIID();
 

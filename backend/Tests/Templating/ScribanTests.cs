@@ -44,8 +44,6 @@ namespace Tests.Templating
                     });
 
                 var ciModel = new Mock<ICIModel>();
-                ciModel.Setup(x => x.GetCompactCIs(It.IsAny<ICIIDSelection>(), It.IsAny<LayerSet>(), It.IsAny<IModelContext>(), It.IsAny<TimeThreshold>()))
-                    .ReturnsAsync(new CompactCI[] { new CompactCI(testCIB.ID, testCIB.CIName, testCIB.Layers.LayerHash, testCIB.AtTime) });
                 ciModel.Setup(x => x.GetMergedCI(testCIB.ID, It.IsAny<LayerSet>(), AllAttributeSelection.Instance, It.IsAny<IModelContext>(), atTime))
                     .ReturnsAsync(() => testCIB);
 

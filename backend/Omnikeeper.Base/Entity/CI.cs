@@ -1,7 +1,6 @@
 ﻿using Omnikeeper.Base.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
@@ -20,27 +19,6 @@ namespace Omnikeeper.Base.Entity
             AtTime = atTime;
             ID = id;
             MergedAttributes = attributes;
-        }
-    }
-
-    public class CompactCI
-    {
-        public Guid ID { get; private set; }
-        public string? Name { get; private set; }
-        public TimeThreshold AtTime { get; private set; }
-        public long LayerHash { get; private set; }
-
-        public CompactCI(Guid id, string? name, long layerHash, TimeThreshold atTime)
-        {
-            Name = name;
-            AtTime = atTime;
-            ID = id;
-            LayerHash = layerHash;
-        }
-
-        public static CompactCI BuildFromMergedCI(MergedCI mergedCI)
-        {
-            return new CompactCI(mergedCI.ID, mergedCI.CIName, mergedCI.Layers.LayerHash, mergedCI.AtTime);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace OKPluginValidation.Validation
         {
             var id = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
             var message = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "message");
-            var affectedRelatedCIs = TraitConfigDataUtils.ExtractMandatoryOutgoingRelations(et, "has_issue");
+            var affectedRelatedCIs = TraitConfigDataUtils.ExtractMandatoryIncomingRelations(et, "has_issue");
             var affectedCIs = affectedRelatedCIs.Select(r => r.Relation.ToCIID).ToArray();
             return (new ValidationIssue(id, message, affectedCIs), id);
         }

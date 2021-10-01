@@ -68,11 +68,9 @@ function ApolloWrapper({ component: Component, ...rest }) {
         dataIdFromObject: object => {
             switch (object.__typename) {
             case 'MergedCIType': return `MergedCIType:${object.id}:${object.layerhash}:${((object.atTime.isLatest) ? 'latest' : object.atTime.time)}`; 
-            case 'CompactCIType': return `CompactCIType:${object.id}:${object.layerhash}:${((object.atTime.isLatest) ? 'latest' : object.atTime.time)}`; 
             case 'MergedCIAttributeType': return `MergedCIAttributeType:${object.attribute.id}:ls${object.layerStackIDs.join(',')}`;
             case 'CIAttributeType': return `CIAttributeType:${object.id}`;
             case 'RelationType': return `RelationType:${object.id}`;
-            case 'CompactRelatedCIType': return `CompactRelatedCIType:${object.relationID}:${object.isForwardRelation}:ls${object.layerStackIDs.join(',')}`;
             default: return defaultDataIdFromObject(object);
             }
         }

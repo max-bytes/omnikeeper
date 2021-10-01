@@ -24,14 +24,16 @@ namespace Omnikeeper.Controllers
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
         private readonly ICurrentUserService currentUserService;
+        private readonly ITraitsProvider traitsProvider;
 
         public CISearchController(ICISearchModel ciSearchModel,
-            IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService layerBasedAuthorizationService, ICurrentUserService currentUserService)
+            IModelContextBuilder modelContextBuilder, ILayerBasedAuthorizationService layerBasedAuthorizationService, ICurrentUserService currentUserService, ITraitsProvider traitsProvider)
         {
             this.ciSearchModel = ciSearchModel;
             this.modelContextBuilder = modelContextBuilder;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
             this.currentUserService = currentUserService;
+            this.traitsProvider = traitsProvider;
         }
 
         [HttpGet("searchCIsByTraits")]
@@ -46,7 +48,10 @@ namespace Omnikeeper.Controllers
                 return Forbid($"User \"{user.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerIDs)}");
             //TODO: ci-based authz
 
-            var cis = await ciSearchModel.SearchForMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, withTraits, withoutTraits, layerset, trans, timeThreshold);
+            var requiredTraits = await traitsProvider.GetActiveTraitsByIDs(withTraits, trans, timeThreshold);
+            var requiredNonTraits = await traitsProvider.GetActiveTraitsByIDs(withoutTraits, trans, timeThreshold);
+
+            var cis = await ciSearchModel.FindMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, requiredTraits.Values, requiredNonTraits.Values, layerset, trans, timeThreshold);
 
             return Ok(cis.Select(ci => CIDTO.BuildFromMergedCI(ci)));
         }

@@ -28,17 +28,6 @@ export const Fragments = {
         }
     }
   `,
-  compactCI: gql`
-    fragment CompactCI on CompactCIType {
-        id
-        name
-        layerhash
-        atTime {
-            time
-            isLatest
-        }
-    }
-  `,
   fullCI: gql`
     fragment FullCI on MergedCIType {
         id
