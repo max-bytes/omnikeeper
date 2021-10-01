@@ -10,5 +10,7 @@ namespace Omnikeeper.Base.Model
     {
         Task<IDictionary<string, ITrait>> GetActiveTraits(IModelContext trans, TimeThreshold timeThreshold);
         Task<ITrait?> GetActiveTrait(string traitID, IModelContext trans, TimeThreshold timeThreshold);
+
+        Task<IDictionary<string, ITrait>> GetActiveTraitsByIDs(IEnumerable<string> IDs, IModelContext trans, TimeThreshold timeThreshold);
     }
 }

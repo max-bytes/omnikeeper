@@ -63,4 +63,40 @@ namespace Omnikeeper.Base.Model
         public override bool Equals(object? obj) => Equals(obj as AllAttributeSelection);
         public bool Equals(AllAttributeSelection? other) => other != null;
     }
+
+    public static class AttributeSelectionExtensions
+    {
+        public static IAttributeSelection Union(this IAttributeSelection a, IAttributeSelection other)
+        {
+            return a switch
+            {
+                AllAttributeSelection _ => a,
+                NamedAttributesSelection n => n.Union(other),
+                RegexAttributeSelection r => r.Union(other),
+                _ => throw new NotImplementedException(),
+            };
+        }
+
+        public static IAttributeSelection Union(this NamedAttributesSelection a, IAttributeSelection other)
+        {
+            return other switch
+            {
+                AllAttributeSelection _ => other,
+                NamedAttributesSelection n => NamedAttributesSelection.Build(a.AttributeNames.Union(n.AttributeNames).ToHashSet()), // union
+                RegexAttributeSelection r => throw new NotImplementedException(),
+                _ => throw new NotImplementedException(),
+            };
+        }
+
+        public static IAttributeSelection Union(this RegexAttributeSelection a, IAttributeSelection other)
+        {
+            return other switch
+            {
+                AllAttributeSelection _ => other,
+                NamedAttributesSelection n => throw new NotImplementedException(),
+                RegexAttributeSelection r => throw new NotImplementedException(),
+                _ => throw new NotImplementedException(),
+            };
+        }
+    }
 }

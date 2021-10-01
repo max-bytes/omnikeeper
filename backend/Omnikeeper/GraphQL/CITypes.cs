@@ -34,7 +34,8 @@ namespace Omnikeeper.GraphQL
                 {
                     var mergedAttributes = context.Source!.MergedAttributes.Values;
 
-                    // TODO: only fetch what attributes are requested instead of fetching all, then filtering
+                    // NOTE: the outer caller/resolver should already have filtered the attributes
+                    // but because we cannot be sure of that, we still do this filtering here too, even if its redundant
                     var attributeNames = context.GetArgument<string[]?>("attributeNames", null)?.ToHashSet();
                     if (attributeNames != null)
                         return mergedAttributes.Where(a => attributeNames.Contains(a.Attribute.Name));

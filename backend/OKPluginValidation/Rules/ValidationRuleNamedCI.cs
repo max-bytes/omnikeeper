@@ -15,6 +15,7 @@ namespace Omnikeeper.Validation.Rules
     public class ValidationRuleNamedCI : IValidationRule
     {
         private readonly ICISearchModel ciSearchModel;
+        private readonly ITraitsProvider traitsProvider;
 
         public static string StaticName => typeof(ValidationRuleNamedCI).Name;
         public string Name => StaticName;
@@ -38,9 +39,10 @@ namespace Omnikeeper.Validation.Rules
             });
         }
 
-        public ValidationRuleNamedCI(ICISearchModel ciSearchModel)
+        public ValidationRuleNamedCI(ICISearchModel ciSearchModel, ITraitsProvider traitsProvider)
         {
             this.ciSearchModel = ciSearchModel;
+            this.traitsProvider = traitsProvider;
         }
 
         public async Task<IEnumerable<ValidationIssue>> PerformValidation(JObject config, IModelContext trans, TimeThreshold atTime)
@@ -58,7 +60,9 @@ namespace Omnikeeper.Validation.Rules
             var layerset = new LayerSet(parsedConfig.Layerset);
 
             var attributeSelection = NamedAttributesSelection.Build(ICIModel.NameAttribute); // This is weird... it seems like we need to fetch at least ONE attribute otherwise, it's all empty.. which makes sense, but still...
-            var unnamedCIs = await ciSearchModel.SearchForMergedCIsByTraits(new AllCIIDsSelection(), attributeSelection, new string[0], new string[] { CoreTraits.Named.ID, TraitEmpty.StaticID }, layerset, trans, atTime);
+
+            var traits = await traitsProvider.GetActiveTraitsByIDs(new string[] { CoreTraits.Named.ID, TraitEmpty.StaticID }, trans, atTime);
+            var unnamedCIs = await ciSearchModel.SearchForMergedCIsByTraits(new AllCIIDsSelection(), attributeSelection, Enumerable.Empty<ITrait>(), traits.Values, layerset, trans, atTime);
 
             if (unnamedCIs.IsEmpty())
                 return new ValidationIssue[0];

@@ -5,7 +5,9 @@ using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Model
@@ -68,6 +70,17 @@ namespace Omnikeeper.Model
             if (ts.TryGetValue(traitID, out var trait))
                 return trait;
             return null;
+        }
+
+        public async Task<IDictionary<string, ITrait>> GetActiveTraitsByIDs(IEnumerable<string> IDs, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            // TODO: can be done more efficiently?
+            var ts = await GetActiveTraits(trans, timeThreshold);
+
+            var foundTraits = ts.Where(t => IDs.Contains(t.Key)).ToDictionary(t => t.Key, t => t.Value);
+            if (foundTraits.Count() < IDs.Count())
+                throw new Exception($"Encountered unknown trait(s): {string.Join(",", IDs.Except(foundTraits.Select(t => t.Key)))}");
+            return foundTraits;
         }
     }
 }
