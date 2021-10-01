@@ -51,7 +51,7 @@ export const queries = {
 
     FullCI: gql`
         query($ciid: Guid!, $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
-            ci(ciid: $ciid, layers: $layers, timeThreshold: $timeThreshold) {
+            advancedSearchFullCIs(searchString: "", ciids: [$ciid], sortByCIName: false, withEffectiveTraits: [], withoutEffectiveTraits: [], layers: $layers, timeThreshold: $timeThreshold) {
                 ...FullCI
             }
         }
@@ -63,7 +63,7 @@ export const queries = {
     `,
     FullCIs: gql`
         query($ciids: [Guid], $layers: [String]!, $timeThreshold: DateTimeOffset, $includeAttributes: Boolean = true, $includeRelated: Boolean = true) {
-            cis(ciids: $ciids, layers: $layers, timeThreshold: $timeThreshold) {
+            advancedSearchFullCIs(searchString: "", ciids: $ciids, sortByCIName: false, withEffectiveTraits: [], withoutEffectiveTraits: [], layers: $layers, timeThreshold: $timeThreshold) {
                 ...FullCI
             }
         }

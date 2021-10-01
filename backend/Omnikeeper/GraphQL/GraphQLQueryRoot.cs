@@ -12,6 +12,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using static Omnikeeper.Base.Model.IChangesetModel;
+
 namespace Omnikeeper.GraphQL
 {
     public partial class GraphQLQueryRoot : ObjectGraphType
@@ -25,39 +26,6 @@ namespace Omnikeeper.GraphQL
 
         private void CreateMain()
         {
-            FieldAsync<MergedCIType>("ci",
-                   arguments: new QueryArguments(
-                       new QueryArgument<NonNullGraphType<GuidGraphType>> { Name = "ciid" },
-                       new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" },
-                       new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
-                   resolve: async context =>
-                   {
-                       var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
-                       var ciModel = context.RequestServices!.GetRequiredService<ICIModel>();
-                       var ciBasedAuthorizationService = context.RequestServices!.GetRequiredService<ICIBasedAuthorizationService>();
-                       var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
-                       var layerBasedAuthorizationService = context.RequestServices!.GetRequiredService<ILayerBasedAuthorizationService>();
-
-                       var userContext = (context.UserContext as OmnikeeperUserContext)!;
-                       userContext.Transaction = modelContextBuilder.BuildImmediate();
-                       var ciid = context.GetArgument<Guid>("ciid");
-                       var layerStrings = context.GetArgument<string[]>("layers")!;
-                       var ls = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
-                       userContext.LayerSet = ls;
-                       var ts = context.GetArgument<DateTimeOffset?>("timeThreshold", null);
-                       userContext.TimeThreshold = (ts.HasValue) ? TimeThreshold.BuildAtTime(ts.Value) : TimeThreshold.BuildLatest();
-
-                       if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(userContext.User, ls))
-                           throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read from at least one of the following layerIDs: {string.Join(',', layerStrings)}");
-                       if (!ciBasedAuthorizationService.CanReadCI(ciid))
-                           throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read CI {ciid}");
-
-                       // TODO: reduce attribute selection when mergedAttributes sub-field parameter "attributeNames" is chosen
-                       var ci = await ciModel.GetMergedCI(ciid, userContext.LayerSet, AllAttributeSelection.Instance, userContext.Transaction, userContext.TimeThreshold);
-
-                       return ci;
-                   });
-
             FieldAsync<ListGraphType<StringGraphType>>("ciids",
                 resolve: async context =>
                 {
@@ -97,7 +65,6 @@ namespace Omnikeeper.GraphQL
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
                     var withEffectiveTraits = context.GetArgument<string[]>("withEffectiveTraits", new string[0])!;
                     var withoutEffectiveTraits = context.GetArgument<string[]>("withoutEffectiveTraits", new string[0])!;
-                    var ciid = context.GetArgument<Guid>("identity");
                     var layerStrings = context.GetArgument<string[]>("layers")!;
                     var ls = await layerModel.BuildLayerSet(layerStrings, userContext.Transaction);
                     userContext.LayerSet = ls;
@@ -145,7 +112,7 @@ namespace Omnikeeper.GraphQL
                     if (context.SubFields != null && context.SubFields.TryGetValue("mergedAttributes", out var mergedAttributesField))
                     {
                         // check whether or not the attributeNames parameter was set, in which case we can reduce the attributes to query for
-                        var attributeNamesArgument = mergedAttributesField.Arguments.FirstOrDefault(a => a.Name == "attributeNames");
+                        var attributeNamesArgument = mergedAttributesField.Arguments?.FirstOrDefault(a => a.Name == "attributeNames");
                         if (attributeNamesArgument != null && attributeNamesArgument.Value is ListValue lv)
                         {
                             var attributeNames = lv.Values.Select(v =>
