@@ -746,7 +746,7 @@ namespace OKPluginNaemonConfig
 
                         var svcLayer = (service.MergedAttributes["naemon_services_static.layer"].Attribute.Value as AttributeScalarValueInteger)?.Value;
                         var layerNum = (layersById[svcLayer.ToString()].MergedAttributes["naemon_service_layer.num"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-                        var svcName = (service.MergedAttributes["naemon_services_static.name"].Attribute.Value as AttributeScalarValueInteger)?.Value;
+                        var svcName = (service.MergedAttributes["naemon_services_static.servicename"].Attribute.Value as AttributeScalarValueText)?.Value;
                         attributes["service_description"] = layerNum + " " + svcName;
 
                         var svcCheckCommand = (service.MergedAttributes["naemon_services_static.checkcommand"].Attribute.Value as AttributeScalarValueInteger)?.Value;
@@ -755,7 +755,7 @@ namespace OKPluginNaemonConfig
 
                         for (int i = 1; i <= 8; i++)
                         {
-                            var k = $"naemon_command.desc_arg{i}";
+                            var k = $"naemon_services_static.arg{i}";
 
                             if (service.MergedAttributes.TryGetValue(k, out MergedCIAttribute? attr))
                             {
@@ -777,39 +777,41 @@ namespace OKPluginNaemonConfig
 
                         /* add other attributes */
 
-                        var freshnesThreshold = (service.MergedAttributes["naemon_services_static.freshness_threshold"].Attribute.Value as AttributeScalarValueInteger)?.Value;
+                        var freshnesThreshold = GetAttributeValueInt("naemon_services_static.freshness_threshold", service.MergedAttributes);
 
-                        // TODO - should we check here if (is_numeric($service['FRESHNESS_THRESHOLD']))
-                        attributes["check_freshness"] = "1";
-                        attributes["freshness_threshold"] = freshnesThreshold.ToString();
+                        if (freshnesThreshold != null)
+                        {
+                            attributes["check_freshness"] = "1";
+                            attributes["freshness_threshold"] = freshnesThreshold.ToString();
+                        }
+                        
 
-                        var passive = (service.MergedAttributes["naemon_services_static.passive"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-                        if (passive == 1)
+                        var passive = GetAttributeValueInt("naemon_services_static.passive", service.MergedAttributes);
+                        if (passive != null && passive == 1)
                         {
                             attributes["passive_checks_enabled"] = "1";
                             attributes["active_checks_enabled"] = "0";
                         }
 
-                        var checkInterval = (service.MergedAttributes["naemon_services_static.check_interval"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-                        if (checkInterval != 0)
+                        var checkInterval = GetAttributeValueInt("naemon_services_static.check_interval", service.MergedAttributes);
+                        if (checkInterval != null && checkInterval != 0)
                         {
                             attributes["active_checks_enabled"] = checkInterval.ToString();
                         }
 
-                        var maxCheckAttempts = (service.MergedAttributes["naemon_services_static.max_check_attempts"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-                        if (maxCheckAttempts != 0)
+                        var maxCheckAttempts = GetAttributeValueInt("naemon_services_static.max_check_attempts", service.MergedAttributes);
+                        if (maxCheckAttempts != null && maxCheckAttempts != 0)
                         {
                             attributes["max_check_attempts"] = maxCheckAttempts.ToString();
                         }
 
-                        var retryInterval = (service.MergedAttributes["naemon_services_static.retry_interval"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-                        if (retryInterval != 0)
+                        var retryInterval = GetAttributeValueInt("naemon_services_static.retry_interval", service.MergedAttributes);
+                        if (retryInterval != null && retryInterval != 0)
                         {
                             attributes["retry_interval"] = retryInterval.ToString();
                         }
 
-                        var timeperiodCheck = (service.MergedAttributes["naemon_services_static.timeperiod_check"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-
+                        var timeperiodCheck = GetAttributeValueInt("naemon_services_static.timeperiod_check", service.MergedAttributes);
                         if (timeperiodCheck != null && timeperiodsById.ContainsKey(timeperiodCheck.ToString()))
                         {
                             var tName = (timeperiodsById[timeperiodCheck.ToString()].MergedAttributes["naemon_timeperiod.name"].Attribute.Value as AttributeScalarValueText)?.Value;
@@ -817,9 +819,8 @@ namespace OKPluginNaemonConfig
                             attributes["check_period"] = tName;
                         }
 
-                        var timeperiodNotify = (service.MergedAttributes["naemon_services_static.timeperiod_notify"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-
-                        if (timeperiodCheck != null && timeperiodsById.ContainsKey(timeperiodNotify.ToString()))
+                        var timeperiodNotify = GetAttributeValueInt("naemon_services_static.timeperiod_notify", service.MergedAttributes);
+                        if (timeperiodNotify != null && timeperiodsById.ContainsKey(timeperiodNotify.ToString()))
                         {
                             var tName = (timeperiodsById[timeperiodNotify.ToString()].MergedAttributes["naemon_timeperiod.name"].Attribute.Value as AttributeScalarValueText)?.Value;
 
@@ -834,23 +835,36 @@ namespace OKPluginNaemonConfig
                         vars["Fehlerart"] = checkPrio;
 
                         /* customer cockpit vars */
-                        var visibility = (service.MergedAttributes["naemon_services_static.monview_visibility"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-                        vars["Visibility"] = visibility.ToString();
+                        var visibility = GetAttributeValueInt("naemon_services_static.monview_visibility", service.MergedAttributes);
+                        if (visibility != null)
+                        {
+                            vars["Visibility"] = visibility.ToString();
+                        }
 
-                        var kpiType = (service.MergedAttributes["naemon_services_static.kpi_avail"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-                        vars["kpi_type"] = kpiType.ToString();
-
+                        var kpiType = GetAttributeValueInt("naemon_services_static.kpi_avail", service.MergedAttributes);
+                        if (kpiType != null)
+                        {
+                            vars["kpi_type"] = kpiType.ToString();
+                        }
+                        
                         var metricName = (service.MergedAttributes["naemon_services_static.metric_name"].Attribute.Value as AttributeScalarValueText)?.Value;
                         vars["metric_name"] = metricName;
 
                         var metricType = (service.MergedAttributes["naemon_services_static.metric_type"].Attribute.Value as AttributeScalarValueText)?.Value;
                         vars["metric_type"] = metricType;
 
-                        var metricMin = (service.MergedAttributes["naemon_services_static.metric_min"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-                        vars["metric_min"] = metricMin.ToString();
+                        var metricMin = GetAttributeValueInt("naemon_services_static.metric_min", service.MergedAttributes);
+                        if (metricMin != null)
+                        {
+                            vars["metric_min"] = metricMin.ToString();
+                        }
 
-                        var metricMax = (service.MergedAttributes["naemon_services_static.metric_max"].Attribute.Value as AttributeScalarValueInteger)?.Value;
-                        vars["metric_max"] = metricMax.ToString();
+                        var metricMax = GetAttributeValueInt("naemon_services_static.metric_max", service.MergedAttributes);
+                        if (metricMax != null)
+                        {
+                            vars["metric_max"] = metricMax.ToString();
+
+                        }
 
                         var metricPerfkey = (service.MergedAttributes["naemon_services_static.metric_perfkey"].Attribute.Value as AttributeScalarValueText)?.Value;
                         vars["metric_perfkey"] = metricPerfkey;
@@ -876,11 +890,11 @@ namespace OKPluginNaemonConfig
                         configObjs.Add(new ConfigObj { Type = "service", Attributes = attributes });
 
                         /* add servicedependency objects */
-                        var mastersvcCheck = (service.MergedAttributes["naemon_services_static.mastersvc_check"].Attribute.Value as AttributeScalarValueInteger)?.Value;
+                        var mastersvcCheck = GetAttributeValueInt("naemon_services_static.mastersvc_check", service.MergedAttributes);
                         if (mastersvcCheck != null && servicesStaticById.ContainsKey(mastersvcCheck.ToString()))
                         {
                             var masterService = servicesStaticById[mastersvcCheck.ToString()];
-                            var masterSvcName = (masterService.MergedAttributes["naemon_services_static.name"].Attribute.Value as AttributeScalarValueText)?.Value;
+                            var masterSvcName = (masterService.MergedAttributes["naemon_services_static.servicename"].Attribute.Value as AttributeScalarValueText)?.Value;
 
                             configObjs.Add(new ConfigObj
                             {
@@ -896,11 +910,11 @@ namespace OKPluginNaemonConfig
                             });
                         }
 
-                        var mastersvcNotify = (service.MergedAttributes["naemon_services_static.mastersvc_notify"].Attribute.Value as AttributeScalarValueInteger)?.Value;
+                        var mastersvcNotify = GetAttributeValueInt("naemon_services_static.mastersvc_notify", service.MergedAttributes);
                         if (mastersvcNotify != null && servicesStaticById.ContainsKey(mastersvcNotify.ToString()))
                         {
                             var masterService = servicesStaticById[mastersvcNotify.ToString()];
-                            var masterSvcName = (masterService.MergedAttributes["naemon_services_static.name"].Attribute.Value as AttributeScalarValueText)?.Value;
+                            var masterSvcName = (masterService.MergedAttributes["naemon_services_static.servicename"].Attribute.Value as AttributeScalarValueText)?.Value;
 
                             configObjs.Add(new ConfigObj
                             {
@@ -924,13 +938,56 @@ namespace OKPluginNaemonConfig
 
 
             // getNaemonConfigObjectsFromLegacyProfiles_commands
+            foreach (var command in commands)
+            {
+                var commandName = (command.MergedAttributes["naemon_command.name"].Attribute.Value as AttributeScalarValueText)?.Value;
+                var commandLine = (command.MergedAttributes["naemon_command.exec"].Attribute.Value as AttributeScalarValueText)?.Value;
+
+                configObjs.Add(new ConfigObj
+                {
+                    Type = "command",
+                    Attributes = new Dictionary<string, string>
+                    {
+                        ["command_name"] = commandName,
+                        ["command_line"] = commandLine,
+                    },
+                });
+            }
+
+
+
+
             // getNaemonConfigObjectsFromLegacyProfiles_hostcommands
             // getNaemonConfigObjectAttributesFromVars
             // getNaemonConfigObjectsFromLegacyProfiles_profiles
 
+            
             return true;
         }
 
+        private string? GetAttributeValueString(string key, IDictionary<string, MergedCIAttribute> attributes)
+        {
+            var success = attributes.TryGetValue(key, out MergedCIAttribute? attributeValue);
+
+            if (!success)
+            {
+                return null;
+            }
+
+            return (attributeValue.Attribute.Value as AttributeScalarValueText).Value;
+        }
+
+        private long? GetAttributeValueInt(string key, IDictionary<string, MergedCIAttribute> attributes)
+        {
+            var success = attributes.TryGetValue(key, out MergedCIAttribute? attributeValue);
+
+            if (!success)
+            {
+                return null;
+            }
+
+            return (attributeValue.Attribute.Value as AttributeScalarValueInteger).Value;
+        }
         // TODO: temporary class, maybe we need to remove this in later iteration
 
         internal class ConfigObj
