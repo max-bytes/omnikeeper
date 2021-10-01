@@ -19,6 +19,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [1.6.0] - 2021-10-01
+ 
+### Added
+- frontend: added dashboard, showing overall omnikeeper instance statistics
+- implemented Generators! See the [documentation](https://github.com/max-bytes/omnikeeper/wiki/generators) for an introduction
+- added support for selecting specific attributes when querying CIs
+ 
+### Changed
+- performance improvements when searching for CIs with traits
+- performance improvement for archiving/deleting unused and empty CIs
+- simplified (Base)AttributeModel by a lot
+- removed Attribute- and Relation-State, simplified datamodel
+ 
+### Fixed
+- layer export: generated attributes are not exported anymore
+- bugfix in CI search regarding empty trait
+- lots of small bugfixes
+
 ## [1.5.1] - 2021-09-20
 
 ### Added
