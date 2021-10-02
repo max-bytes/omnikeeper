@@ -1,6 +1,7 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
@@ -8,13 +9,26 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Omnikeeper.Model
+namespace Omnikeeper.Base.Model
 {
     // TODO: think about caching?
     public class PredicateModel : TraitDataConfigBaseModel<Predicate, string>, IPredicateModel
     {
+        public static readonly RecursiveTrait Predicate = new RecursiveTrait("__meta.config.predicate", new TraitOriginV1(TraitOriginType.Core),
+            new List<TraitAttribute>() {
+                new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("predicate.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null), new CIAttributeValueConstraintTextRegex(IDValidations.PredicateIDRegex))),
+                new TraitAttribute("wording_from", CIAttributeTemplate.BuildFromParams("predicate.wording_from", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                new TraitAttribute("wording_to", CIAttributeTemplate.BuildFromParams("predicate.wording_to", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+            },
+            new List<TraitAttribute>()
+            {
+                new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+            }
+        );
+        public static readonly GenericTrait PredicateFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(Predicate);
+
         public PredicateModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
-            : base(CoreTraits.PredicateFlattened, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
+            : base(PredicateFlattened, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
         { }
 
         public async Task<Predicate> GetPredicate(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
