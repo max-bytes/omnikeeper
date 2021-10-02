@@ -5,6 +5,7 @@ using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -16,7 +17,27 @@ namespace Omnikeeper.GraphQL
 {
     public partial class GraphQLMutation : ObjectGraphType
     {
-        public GraphQLMutation()
+        private readonly ILayerModel layerModel;
+        private readonly IPredicateModel predicateModel;
+        private readonly IChangesetModel changesetModel;
+        private readonly IGeneratorModel generatorModel;
+        private readonly IOIAContextModel oiaContextModel;
+        private readonly IODataAPIContextModel odataAPIContextModel;
+        private readonly IAuthRoleModel authRoleModel;
+        private readonly IRecursiveDataTraitModel recursiveDataTraitModel;
+        private readonly IBaseConfigurationModel baseConfigurationModel;
+        private readonly IManagementAuthorizationService managementAuthorizationService;
+        private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
+        private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
+        private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
+
+        public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
+            IPredicateModel predicateModel, IChangesetModel changesetModel, IGeneratorModel generatorModel,
+            IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, IAuthRoleModel authRoleModel,
+            IRecursiveDataTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
+            IManagementAuthorizationService managementAuthorizationService,
+            IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
+            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             FieldAsync<MutateReturnType>("mutateCIs",
                 arguments: new QueryArguments(
@@ -28,13 +49,6 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
-                    var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
-                    var ciModel = context.RequestServices!.GetRequiredService<ICIModel>();
-                    var changesetModel = context.RequestServices!.GetRequiredService<IChangesetModel>();
-                    var attributeModel = context.RequestServices!.GetRequiredService<IAttributeModel>();
-                    var relationModel = context.RequestServices!.GetRequiredService<IRelationModel>();
-                    var ciBasedAuthorizationService = context.RequestServices!.GetRequiredService<ICIBasedAuthorizationService>();
-                    var layerBasedAuthorizationService = context.RequestServices!.GetRequiredService<ILayerBasedAuthorizationService>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var layers = context.GetArgument<string[]?>("layers", null);
@@ -133,12 +147,6 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
-                    var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
-                    var ciModel = context.RequestServices!.GetRequiredService<ICIModel>();
-                    var changesetModel = context.RequestServices!.GetRequiredService<IChangesetModel>();
-                    var attributeModel = context.RequestServices!.GetRequiredService<IAttributeModel>();
-                    var relationModel = context.RequestServices!.GetRequiredService<IRelationModel>();
-                    var layerBasedAuthorizationService = context.RequestServices!.GetRequiredService<ILayerBasedAuthorizationService>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var createCIs = context.GetArgument("cis", new List<CreateCIInput>())!;
@@ -170,6 +178,19 @@ namespace Omnikeeper.GraphQL
                 });
 
             CreateManage();
+            this.layerModel = layerModel;
+            this.predicateModel = predicateModel;
+            this.changesetModel = changesetModel;
+            this.generatorModel = generatorModel;
+            this.oiaContextModel = oiaContextModel;
+            this.odataAPIContextModel = odataAPIContextModel;
+            this.authRoleModel = authRoleModel;
+            this.recursiveDataTraitModel = recursiveDataTraitModel;
+            this.baseConfigurationModel = baseConfigurationModel;
+            this.managementAuthorizationService = managementAuthorizationService;
+            this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
+            this.baseRelationRevisionistModel = baseRelationRevisionistModel;
+            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
         }
     }
 }

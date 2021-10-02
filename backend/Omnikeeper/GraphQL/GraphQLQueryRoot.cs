@@ -17,8 +17,57 @@ namespace Omnikeeper.GraphQL
 {
     public partial class GraphQLQueryRoot : ObjectGraphType
     {
-        public GraphQLQueryRoot()
+        private readonly ICIIDModel ciidModel;
+        private readonly ICIModel ciModel;
+        private readonly IAttributeModel attributeModel;
+        private readonly IRelationModel relationModel;
+        private readonly ILayerModel layerModel;
+        private readonly ICISearchModel ciSearchModel;
+        private readonly ITraitsProvider traitsProvider;
+        private readonly IBaseConfigurationModel baseConfigurationModel;
+        private readonly IPredicateModel predicateModel;
+        private readonly IChangesetModel changesetModel;
+        private readonly ILayerStatisticsModel layerStatisticsModel;
+        private readonly IGeneratorModel generatorModel;
+        private readonly IOIAContextModel oiaContextModel;
+        private readonly IODataAPIContextModel odataAPIContextModel;
+        private readonly IAuthRoleModel authRoleModel;
+        private readonly IRecursiveDataTraitModel recursiveDataTraitModel;
+        private readonly ICurrentUserService currentUserService;
+        private readonly IManagementAuthorizationService managementAuthorizationService;
+        private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
+        private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
+
+
+        public GraphQLQueryRoot(ICIIDModel ciidModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
+            ICISearchModel ciSearchModel, ITraitsProvider traitsProvider, IBaseConfigurationModel baseConfigurationModel, IPredicateModel predicateModel,
+            IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, IGeneratorModel generatorModel,
+            IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, IAuthRoleModel authRoleModel,
+            IRecursiveDataTraitModel recursiveDataTraitModel, ICurrentUserService currentUserService,
+            IManagementAuthorizationService managementAuthorizationService,
+            ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
+            this.ciidModel = ciidModel;
+            this.ciModel = ciModel;
+            this.attributeModel = attributeModel;
+            this.relationModel = relationModel;
+            this.layerModel = layerModel;
+            this.ciSearchModel = ciSearchModel;
+            this.traitsProvider = traitsProvider;
+            this.baseConfigurationModel = baseConfigurationModel;
+            this.predicateModel = predicateModel;
+            this.changesetModel = changesetModel;
+            this.layerStatisticsModel = layerStatisticsModel;
+            this.generatorModel = generatorModel;
+            this.oiaContextModel = oiaContextModel;
+            this.odataAPIContextModel = odataAPIContextModel;
+            this.authRoleModel = authRoleModel;
+            this.recursiveDataTraitModel = recursiveDataTraitModel;
+            this.currentUserService = currentUserService;
+            this.managementAuthorizationService = managementAuthorizationService;
+            this.ciBasedAuthorizationService = ciBasedAuthorizationService;
+            this.layerBasedAuthorizationService = layerBasedAuthorizationService;
+
             CreateMain();
 
             CreateManage();
@@ -29,8 +78,6 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<StringGraphType>>("ciids",
                 resolve: async context =>
                 {
-                    var ciidModel = context.RequestServices!.GetRequiredService<ICIIDModel>();
-                    var ciBasedAuthorizationService = context.RequestServices!.GetRequiredService<ICIBasedAuthorizationService>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
@@ -53,13 +100,7 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<DateTimeOffsetGraphType> { Name = "timeThreshold" }),
                 resolve: async context =>
                 {
-                    var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
-                    var ciSearchModel = context.RequestServices!.GetRequiredService<ICISearchModel>();
-                    var ciBasedAuthorizationService = context.RequestServices!.GetRequiredService<ICIBasedAuthorizationService>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
-                    var layerBasedAuthorizationService = context.RequestServices!.GetRequiredService<ILayerBasedAuthorizationService>();
-                    var traitsProvider = context.RequestServices!.GetRequiredService<ITraitsProvider>();
-                    var attributeModel = context.RequestServices!.GetRequiredService<IAttributeModel>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
@@ -150,8 +191,6 @@ namespace Omnikeeper.GraphQL
                 arguments: new QueryArguments(),
                 resolve: async context =>
                 {
-                    var baseConfigurationModel = context.RequestServices!.GetRequiredService<IBaseConfigurationModel>();
-                    var predicateModel = context.RequestServices!.GetRequiredService<IPredicateModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
@@ -167,9 +206,7 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<LayerType>>("layers",
                 resolve: async context =>
                 {
-                    var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
-                    var layerBasedAuthorizationService = context.RequestServices!.GetRequiredService<ILayerBasedAuthorizationService>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
@@ -188,9 +225,7 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<ListGraphType<StringGraphType>>> { Name = "layers" }),
                 resolve: async context =>
                 {
-                    var changesetModel = context.RequestServices!.GetRequiredService<IChangesetModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
-                    var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
@@ -210,10 +245,7 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<IntGraphType> { Name = "limit" }),
                 resolve: async context =>
                 {
-                    var changesetModel = context.RequestServices!.GetRequiredService<IChangesetModel>();
-                    var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
-                    var layerBasedAuthorizationService = context.RequestServices!.GetRequiredService<ILayerBasedAuthorizationService>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
                     userContext.Transaction = modelContextBuilder.BuildImmediate();
@@ -242,7 +274,6 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id" }),
                 resolve: async context =>
                 {
-                    var traitsProvider = context.RequestServices!.GetRequiredService<ITraitsProvider>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
@@ -258,7 +289,6 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<TraitType>>("activeTraits",
                 resolve: async context =>
                 {
-                    var traitsProvider = context.RequestServices!.GetRequiredService<ITraitsProvider>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
@@ -272,14 +302,6 @@ namespace Omnikeeper.GraphQL
             FieldAsync<StatisticsType>("statistics",
                 resolve: async context =>
                 {
-                    var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
-                    var changesetModel = context.RequestServices!.GetRequiredService<IChangesetModel>();
-                    var ciidModel = context.RequestServices!.GetRequiredService<ICIIDModel>();
-                    var traitsProvider = context.RequestServices!.GetRequiredService<ITraitsProvider>();
-                    var generatorModel = context.RequestServices!.GetRequiredService<IGeneratorModel>();
-                    var predicateModel = context.RequestServices!.GetRequiredService<IPredicateModel>();
-                    var baseConfigurationModel = context.RequestServices!.GetRequiredService<IBaseConfigurationModel>();
-                    var layerStatisticsModel = context.RequestServices!.GetRequiredService<ILayerStatisticsModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;

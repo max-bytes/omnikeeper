@@ -21,7 +21,6 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<LayerType>>("manage_layers",
                 resolve: async context =>
                 {
-                    var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
@@ -41,8 +40,6 @@ namespace Omnikeeper.GraphQL
                     new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "layerID" }),
                 resolve: async context =>
                 {
-                    var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
-                    var layerStatisticsModel = context.RequestServices!.GetRequiredService<ILayerStatisticsModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
@@ -53,7 +50,6 @@ namespace Omnikeeper.GraphQL
                     if (layer == null)
                         throw new Exception($"Could not get layer with ID {layerID}");
 
-                    var managementAuthorizationService = context.RequestServices!.GetRequiredService<IManagementAuthorizationService>();
                     if (!managementAuthorizationService.HasManagementPermission(userContext.User))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to access management");
 
@@ -79,12 +75,10 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<OIAContextType>>("manage_oiacontexts",
                 resolve: async context =>
                 {
-                    var oiaContextModel = context.RequestServices!.GetRequiredService<IOIAContextModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                    var managementAuthorizationService = context.RequestServices!.GetRequiredService<IManagementAuthorizationService>();
                     if (!managementAuthorizationService.HasManagementPermission(userContext.User))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to access management");
 
@@ -97,12 +91,10 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<ODataAPIContextType>>("manage_odataapicontexts",
                 resolve: async context =>
                 {
-                    var odataAPIContextModel = context.RequestServices!.GetRequiredService<IODataAPIContextModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                    var managementAuthorizationService = context.RequestServices!.GetRequiredService<IManagementAuthorizationService>();
                     if (!managementAuthorizationService.HasManagementPermission(userContext.User))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to access management");
 
@@ -115,12 +107,10 @@ namespace Omnikeeper.GraphQL
             FieldAsync<StringGraphType>("manage_baseConfiguration",
                 resolve: async context =>
                 {
-                    var baseConfigurationModel = context.RequestServices!.GetRequiredService<IBaseConfigurationModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                    var managementAuthorizationService = context.RequestServices!.GetRequiredService<IManagementAuthorizationService>();
                     if (!managementAuthorizationService.HasManagementPermission(userContext.User))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to access management");
 
@@ -133,8 +123,6 @@ namespace Omnikeeper.GraphQL
                 arguments: new QueryArguments(),
                 resolve: async context =>
                 {
-                    var baseConfigurationModel = context.RequestServices!.GetRequiredService<IBaseConfigurationModel>();
-                    var predicateModel = context.RequestServices!.GetRequiredService<IPredicateModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
@@ -143,7 +131,7 @@ namespace Omnikeeper.GraphQL
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
                     var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    if (!context.RequestServices!.GetRequiredService<IManagementAuthorizationService>().CanReadManagement(userContext.User, baseConfiguration, out var message))
+                    if (!managementAuthorizationService.CanReadManagement(userContext.User, baseConfiguration, out var message))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read predicates: {message}");
 
                     var predicates = (await predicateModel.GetPredicates(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, userContext.TimeThreshold)).Values;
@@ -154,8 +142,6 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<RecursiveTraitType>>("manage_recursiveTraits",
                 resolve: async context =>
                 {
-                    var baseConfigurationModel = context.RequestServices!.GetRequiredService<IBaseConfigurationModel>();
-                    var traitModel = context.RequestServices!.GetRequiredService<IRecursiveDataTraitModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
@@ -164,11 +150,11 @@ namespace Omnikeeper.GraphQL
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
                     var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    if (!context.RequestServices!.GetRequiredService<IManagementAuthorizationService>().CanReadManagement(userContext.User, baseConfiguration, out var message))
+                    if (!managementAuthorizationService.CanReadManagement(userContext.User, baseConfiguration, out var message))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read traits: {message}");
 
                     // TODO: should we not deliver non-DB traits (f.e. from CLBs) here?
-                    var traitSet = await traitModel.GetRecursiveTraits(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, TimeThreshold.BuildLatest());
+                    var traitSet = await recursiveDataTraitModel.GetRecursiveTraits(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, TimeThreshold.BuildLatest());
                     return traitSet;
                 });
 
@@ -176,8 +162,6 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<GeneratorType>>("manage_generators",
                 resolve: async context =>
                 {
-                    var baseConfigurationModel = context.RequestServices!.GetRequiredService<IBaseConfigurationModel>();
-                    var generatorModel = context.RequestServices!.GetRequiredService<IGeneratorModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
@@ -186,7 +170,7 @@ namespace Omnikeeper.GraphQL
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
                     var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    if (!context.RequestServices!.GetRequiredService<IManagementAuthorizationService>().CanReadManagement(userContext.User, baseConfiguration, out var message))
+                    if (!managementAuthorizationService.CanReadManagement(userContext.User, baseConfiguration, out var message))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read generators: {message}");
 
                     var generators = await generatorModel.GetGenerators(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, TimeThreshold.BuildLatest());
@@ -196,8 +180,6 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<AuthRoleType>>("manage_authRoles",
                 resolve: async context =>
                 {
-                    var baseConfigurationModel = context.RequestServices!.GetRequiredService<IBaseConfigurationModel>();
-                    var authRoleModel = context.RequestServices!.GetRequiredService<IAuthRoleModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
@@ -206,7 +188,7 @@ namespace Omnikeeper.GraphQL
                     userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
                     var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    if (!context.RequestServices!.GetRequiredService<IManagementAuthorizationService>().CanReadManagement(userContext.User, baseConfiguration, out var message))
+                    if (!managementAuthorizationService.CanReadManagement(userContext.User, baseConfiguration, out var message))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to read auth roles: {message}");
 
                     var authRoles = await authRoleModel.GetAuthRoles(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, TimeThreshold.BuildLatest());
@@ -216,13 +198,10 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<StringGraphType>>("manage_availablePermissions",
                 resolve: async context =>
                 {
-                    var authRoleModel = context.RequestServices!.GetRequiredService<IAuthRoleModel>();
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
-                    var layerModel = context.RequestServices!.GetRequiredService<ILayerModel>();
 
                     var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                    var managementAuthorizationService = context.RequestServices!.GetRequiredService<IManagementAuthorizationService>();
                     if (!managementAuthorizationService.HasManagementPermission(userContext.User))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to access management");
 
@@ -243,7 +222,6 @@ namespace Omnikeeper.GraphQL
             FieldAsync<ListGraphType<StringGraphType>>("manage_debugCurrentUser",
                 resolve: async context =>
                 {
-                    var currentUserService = context.RequestServices!.GetRequiredService<ICurrentUserService>();
                     var claims = currentUserService.DebugGetAllClaims();
 
                     var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
