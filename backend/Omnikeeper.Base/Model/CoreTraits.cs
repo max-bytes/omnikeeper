@@ -16,9 +16,6 @@ namespace Omnikeeper.Base.Model
             )
         });
 
-        // TODO: move these traits to their model counterpart
-
-
         // TODO: move to plugin, once that exists
         public static readonly RecursiveTrait GridviewContext = new RecursiveTrait("__meta.config.gridview_context", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {
