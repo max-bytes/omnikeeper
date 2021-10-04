@@ -25,6 +25,7 @@ import Trait from "components/traits/Trait";
 import Breadcrumbs from "utils/Breadcrumbs";
 import GraphQLPlayground from "components/GraphQLPlayground";
 import Dashboard from "components/dashboard/Dashboard";
+import setAGGridLicenseKey from "./aggridLicense";
 const { Header, Content } = Layout;
 
 const keycloak = new Keycloak({
@@ -49,6 +50,8 @@ const keycloakProviderInitOptions = {
 }
 
 function App() {
+
+  setAGGridLicenseKey();
 
   const BR = () => {
     const [layerDrawerVisible, setLayerDrawerVisible] = useState(false);
