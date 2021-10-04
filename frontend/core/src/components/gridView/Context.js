@@ -7,25 +7,17 @@ import ContextButtonToolbar from "./ContextButtonToolbar";
 import "./Context.css";
 import GridViewDataParseModel from "./GridViewDataParseModel";
 import _ from "lodash";
-// import AgGridCopyCutPasteHOC from "aggrid_copy_cut_paste";
 import { v4 as uuidv4 } from 'uuid';
 import MultilineTextCellEditor from './MultilineTextCellEditor';
 import IntegerCellEditor from './IntegerCellEditor';
 import FeedbackMsg from "components/FeedbackMsg.js";
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
+import { useAGGridEnterprise } from './../../utils/useAGGridEnterprise';
 
 import { useParams, withRouter } from "react-router-dom";
 
 const { Header, Content } = Layout;
-
-const AgGridCopyCutPaste = AgGridReact;
-
-// AgGridCopyCutPasteHOC(
-//     , // React-AgGrid component
-//     { className: "ag-theme-balham" }, // hocProps
-//     true // logging off
-// );  
 
 // status objects
 const rowStatus = {
@@ -37,6 +29,7 @@ const rowStatus = {
 };
 
 export function Context(props) {
+    const { data: aGGridEnterpriseActive, loading, error } = useAGGridEnterprise();
     const swaggerClient = props.swaggerClient;
     const apiVersion = props.apiVersion;
 
@@ -55,6 +48,9 @@ export function Context(props) {
     const [swaggerErrorJson, setSwaggerErrorJson] = useState(false);
     
     const gridViewDataParseModel = new GridViewDataParseModel(rowStatus);
+
+    if (error) return "Error:" + error;
+    if (loading) return "Loading...";
 
     return (
         <Layout
@@ -84,11 +80,14 @@ export function Context(props) {
                     autoSizeAll={autoSizeAll}
                     save={save}
                     refreshData={() => refreshData(gridApi)}
+                    excelExport={() => {
+                        aGGridEnterpriseActive && gridApi.exportDataAsExcel({fileName: 'gridview_export.xlsx'});
+                    }}
                 />
             </Header>
             <Content>
                 <div style={{height:'100%'}} className={"ag-theme-balham"}>
-                    <AgGridCopyCutPaste
+                    <AgGridReact
                         frameworkComponents={{
                             multilineTextCellEditor: MultilineTextCellEditor,
                             integerCellEditor: IntegerCellEditor
