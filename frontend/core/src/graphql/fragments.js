@@ -76,7 +76,7 @@ export const Fragments = {
     color
     state
     writable
-    brainName
+    clConfigID
     onlineInboundAdapterName
     generators
   }

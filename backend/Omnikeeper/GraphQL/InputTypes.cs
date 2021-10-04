@@ -26,7 +26,7 @@ namespace Omnikeeper.GraphQL
         public string ID { get; private set; }
         public string Description { get; private set; }
         public AnchorState State { get; private set; }
-        public string BrainName { get; private set; }
+        public string CLConfigID { get; private set; }
         public string OnlineInboundAdapterName { get; private set; }
         public int Color { get; private set; }
         public string[] Generators { get; private set; }
@@ -38,7 +38,7 @@ namespace Omnikeeper.GraphQL
             Field("id", x => x.ID);
             Field(x => x.Description);
             Field(x => x.State, type: typeof(AnchorStateType));
-            Field(x => x.BrainName, nullable: true);
+            Field("clConfigID", x => x.CLConfigID, nullable: true);
             Field(x => x.OnlineInboundAdapterName, nullable: true);
             Field(x => x.Color);
             Field(x => x.Generators);

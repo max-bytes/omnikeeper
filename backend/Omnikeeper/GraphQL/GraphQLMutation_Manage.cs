@@ -47,13 +47,13 @@ namespace Omnikeeper.GraphQL
 
                     CheckManagementPermissionThrow(userContext, "modify layers");
 
-                    string clConfig = "";
-                    if (upsertLayer.BrainName != null && upsertLayer.BrainName != "") // TODO: rename field BrainName to CLConfig
-                        clConfig = upsertLayer.BrainName;
+                    string clConfigID = "";
+                    if (upsertLayer.CLConfigID != null && upsertLayer.CLConfigID != "")
+                        clConfigID = upsertLayer.CLConfigID;
                     OnlineInboundAdapterLink oilp = LayerModel.DefaultOILP;
                     if (upsertLayer.OnlineInboundAdapterName != null && upsertLayer.OnlineInboundAdapterName != "")
                         oilp = OnlineInboundAdapterLink.Build(upsertLayer.OnlineInboundAdapterName);
-                    var updatedLayer = await layerModel.UpsertLayer(upsertLayer.ID, upsertLayer.Description, Color.FromArgb(upsertLayer.Color), upsertLayer.State, clConfig, oilp, upsertLayer.Generators, userContext.Transaction);
+                    var updatedLayer = await layerModel.UpsertLayer(upsertLayer.ID, upsertLayer.Description, Color.FromArgb(upsertLayer.Color), upsertLayer.State, clConfigID, oilp, upsertLayer.Generators, userContext.Transaction);
 
                     userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 

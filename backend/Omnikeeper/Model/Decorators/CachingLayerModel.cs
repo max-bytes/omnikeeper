@@ -98,9 +98,9 @@ namespace Omnikeeper.Model.Decorators
             return layer;
         }
 
-        public async Task<Layer> UpsertLayer(string id, string description, Color color, AnchorState state, string clConfig, OnlineInboundAdapterLink oilp, string[] generators, IModelContext trans)
+        public async Task<Layer> UpsertLayer(string id, string description, Color color, AnchorState state, string clConfigID, OnlineInboundAdapterLink oilp, string[] generators, IModelContext trans)
         {
-            var layer = await Model.UpsertLayer(id, description, color, state, clConfig, oilp, generators, trans);
+            var layer = await Model.UpsertLayer(id, description, color, state, clConfigID, oilp, generators, trans);
             trans.EvictFromCache(CacheKeyService.AllLayersByID());
             return layer;
         }

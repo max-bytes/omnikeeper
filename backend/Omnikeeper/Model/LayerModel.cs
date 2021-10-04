@@ -22,7 +22,7 @@ namespace Omnikeeper.Model
         {
             return await UpsertLayer(id, "", DefaultColor, DefaultState, "", DefaultOILP, new string[0], trans);
         }
-        public async Task<Layer> UpsertLayer(string id, string description, Color color, AnchorState state, string clConfig, OnlineInboundAdapterLink oilp, string[] generators, IModelContext trans)
+        public async Task<Layer> UpsertLayer(string id, string description, Color color, AnchorState state, string clConfigID, OnlineInboundAdapterLink oilp, string[] generators, IModelContext trans)
         {
             Debug.Assert(oilp != null);
 
@@ -59,7 +59,7 @@ namespace Omnikeeper.Model
                 using var commandCLB = new NpgsqlCommand(@"INSERT INTO layer_computelayerbrain (layer_id, brainname, ""timestamp"")
                         VALUES (@layer_id, @brainname, @timestamp)", trans.DBConnection, trans.DBTransaction);
                 commandCLB.Parameters.AddWithValue("layer_id", id);
-                commandCLB.Parameters.AddWithValue("brainname", clConfig); // TODO: renamed db field
+                commandCLB.Parameters.AddWithValue("brainname", clConfigID); // TODO: renamed db field
                 commandCLB.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandCLB.ExecuteNonQueryAsync();
 
@@ -79,7 +79,7 @@ namespace Omnikeeper.Model
                 commandOILP.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                 await commandOILP.ExecuteNonQueryAsync();
 
-                return Layer.Build(id, description, color, state, clConfig, oilp, generators);
+                return Layer.Build(id, description, color, state, clConfigID, oilp, generators);
             }
             else
             {
@@ -92,7 +92,7 @@ namespace Omnikeeper.Model
                     commandColor.Parameters.AddWithValue("color", color.ToArgb());
                     commandColor.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                     await commandColor.ExecuteNonQueryAsync();
-                    current = Layer.Build(current.ID, current.Description, color, current.State, current.CLConfig, current.OnlineInboundAdapterLink, current.Generators);
+                    current = Layer.Build(current.ID, current.Description, color, current.State, current.CLConfigID, current.OnlineInboundAdapterLink, current.Generators);
                 }
 
                 // update state
@@ -104,19 +104,19 @@ namespace Omnikeeper.Model
                     commandState.Parameters.AddWithValue("state", state);
                     commandState.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                     await commandState.ExecuteNonQueryAsync();
-                    current = Layer.Build(current.ID, current.Description, current.Color, state, current.CLConfig, current.OnlineInboundAdapterLink, current.Generators);
+                    current = Layer.Build(current.ID, current.Description, current.Color, state, current.CLConfigID, current.OnlineInboundAdapterLink, current.Generators);
                 }
 
                 // update clb
-                if (!current.CLConfig.Equals(clConfig))
+                if (!current.CLConfigID.Equals(clConfigID))
                 {
                     using var commandCLB = new NpgsqlCommand(@"INSERT INTO layer_computelayerbrain (layer_id, brainname, ""timestamp"")
                     VALUES (@layer_id, @brainname, @timestamp)", trans.DBConnection, trans.DBTransaction);
                     commandCLB.Parameters.AddWithValue("layer_id", id);
-                    commandCLB.Parameters.AddWithValue("brainname", clConfig);
+                    commandCLB.Parameters.AddWithValue("brainname", clConfigID);
                     commandCLB.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                     await commandCLB.ExecuteNonQueryAsync();
-                    current = Layer.Build(current.ID, current.Description, current.Color, current.State, clConfig, current.OnlineInboundAdapterLink, current.Generators);
+                    current = Layer.Build(current.ID, current.Description, current.Color, current.State, clConfigID, current.OnlineInboundAdapterLink, current.Generators);
                 }
 
                 // update oilp
@@ -128,7 +128,7 @@ namespace Omnikeeper.Model
                     commandOILP.Parameters.AddWithValue("pluginname", oilp.AdapterName);
                     commandOILP.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                     await commandOILP.ExecuteNonQueryAsync();
-                    current = Layer.Build(current.ID, current.Description, current.Color, current.State, current.CLConfig, oilp, current.Generators);
+                    current = Layer.Build(current.ID, current.Description, current.Color, current.State, current.CLConfigID, oilp, current.Generators);
                 }
 
                 // update generators
@@ -140,7 +140,7 @@ namespace Omnikeeper.Model
                     commandOILP.Parameters.AddWithValue("generators", generators);
                     commandOILP.Parameters.AddWithValue("timestamp", DateTimeOffset.Now);
                     await commandOILP.ExecuteNonQueryAsync();
-                    current = Layer.Build(current.ID, current.Description, current.Color, current.State, current.CLConfig, current.OnlineInboundAdapterLink, generators);
+                    current = Layer.Build(current.ID, current.Description, current.Color, current.State, current.CLConfigID, current.OnlineInboundAdapterLink, generators);
                 }
 
                 return current;

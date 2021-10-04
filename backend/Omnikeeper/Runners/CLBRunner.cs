@@ -47,7 +47,7 @@ namespace Omnikeeper.Runners
             var timeThreshold = TimeThreshold.BuildLatest();
             var trans = modelContextBuilder.BuildImmediate();
             var activeLayers = await layerModel.GetLayers(AnchorStateFilter.ActiveAndDeprecated, trans);
-            var layersWithCLBs = activeLayers.Where(l => l.CLConfig != "");
+            var layersWithCLBs = activeLayers.Where(l => l.CLConfigID != "");
 
             if (!layersWithCLBs.IsEmpty()) {
                 var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
@@ -56,9 +56,9 @@ namespace Omnikeeper.Runners
                 foreach (var l in layersWithCLBs)
                 {
                     // find clConfig for layer
-                    if (!clConfigs.TryGetValue(l.CLConfig, out var clConfig)) 
+                    if (!clConfigs.TryGetValue(l.CLConfigID, out var clConfig)) 
                     {
-                        logger.LogError($"Could not find cl config with ID {l.CLConfig}");
+                        logger.LogError($"Could not find cl config with ID {l.CLConfigID}");
                     } else {
                         if (!existingComputeLayerBrains.TryGetValue(clConfig.CLBrainReference, out var clb))
                         {
