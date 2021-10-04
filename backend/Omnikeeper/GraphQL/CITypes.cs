@@ -1,18 +1,16 @@
 ﻿using GraphQL;
 using GraphQL.DataLoader;
 using GraphQL.Types;
-using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
 using Omnikeeper.Base.Entity.DTO;
 using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.GraphQL
@@ -21,8 +19,11 @@ namespace Omnikeeper.GraphQL
     public class MergedCIType : ObjectGraphType<MergedCI>
     {
         private readonly IRelationModel relationModel;
+        private readonly IEffectiveTraitModel traitModel;
+        private readonly ITraitsProvider traitsProvider;
 
-        public MergedCIType(IDataLoaderContextAccessor dataLoaderContextAccessor, IRelationModel relationModel)
+        public MergedCIType(IDataLoaderContextAccessor dataLoaderContextAccessor, IRelationModel relationModel,
+            IEffectiveTraitModel traitModel, ITraitsProvider traitsProvider)
         {
             Field("id", x => x.ID);
             Field("name", x => x.CIName, nullable: true);
@@ -78,20 +79,53 @@ namespace Omnikeeper.GraphQL
                 });
             });
 
-            FieldAsync<ListGraphType<EffectiveTraitType>>("effectiveTraits",
-            resolve: async (context) =>
+            Field<ListGraphType<EffectiveTraitType>>("effectiveTraits",
+            resolve: (context) =>
             {
-                var traitModel = context.RequestServices!.GetRequiredService<IEffectiveTraitModel>();
-                var traitsProvider = context.RequestServices!.GetRequiredService<ITraitsProvider>();
-
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                var ci = context.Source!;
 
-                var traits = (await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.TimeThreshold)).Values;
-
-                var et = await traitModel.GetEffectiveTraitsForCI(traits, context.Source!, userContext.LayerSet!, userContext.Transaction, userContext.TimeThreshold);
-                return et;
+                var loader = dataLoaderContextAccessor.Context.GetOrAddCollectionBatchLoader("GetEffectiveTraits", (IEnumerable<MergedCI> cis) => FetchEffectiveTraits(userContext, cis));
+                return loader.LoadAsync(ci);
             });
             this.relationModel = relationModel;
+            this.traitModel = traitModel;
+            this.traitsProvider = traitsProvider;
+        }
+
+        private async Task<ILookup<MergedCI, EffectiveTrait>> FetchEffectiveTraits(OmnikeeperUserContext userContext, IEnumerable<MergedCI> cis)
+        {
+            var traits = (await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.TimeThreshold)).Values;
+
+            var tmp = new Dictionary<Guid, IList<EffectiveTrait>>();
+            var ciMap = cis.ToDictionary(ci => ci.ID);
+            foreach(var trait in traits)
+            {
+                var etsPerTrait = await traitModel.GetEffectiveTraitsForTrait(trait, cis, userContext.LayerSet!, userContext.Transaction, userContext.TimeThreshold);
+
+                foreach(var kv in etsPerTrait)
+                {
+                    tmp.AddOrUpdate(kv.Key, () => new List<EffectiveTrait>() { kv.Value }, (l) => { l.Add(kv.Value); return l; });
+                }
+            }
+
+            var t = tmp.SelectMany(kv => kv.Value.Select(v => (ciid: kv.Key, et: v)));
+            return t.ToLookup(kv => ciMap[kv.ciid], kv => kv.et, new MergedCIComparer());
+        }
+
+        private class MergedCIComparer : IEqualityComparer<MergedCI>
+        {
+            public bool Equals(MergedCI? x, MergedCI? y)
+            {
+                if (x == null && y == null) return true;
+                else if (x == null || y == null) return false;
+                else return x.ID.Equals(y.ID);
+            }
+
+            public int GetHashCode(MergedCI obj)
+            {
+                return obj.ID.GetHashCode();
+            }
         }
 
         private async Task<ILookup<IRelationSelection, MergedRelation>> FetchRelations(OmnikeeperUserContext userContext, IEnumerable<IRelationSelection> relationSelections)
