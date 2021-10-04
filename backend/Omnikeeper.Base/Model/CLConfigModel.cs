@@ -34,7 +34,7 @@ namespace Omnikeeper.Base.Model
 
         public async Task<CLConfigV1> GetCLConfig(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
-            IDValidations.ValidateGeneratorIDThrow(id);
+            IDValidations.ValidateCLConfigIDThrow(id);
 
             return await Get(id, layerSet, timeThreshold, trans);
         }

@@ -5,26 +5,6 @@ using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
-    //[ProtoContract(SkipConstructor = true)]
-    //public class ComputeLayerBrainLink : IEquatable<ComputeLayerBrainLink>
-    //{
-    //    private ComputeLayerBrainLink(string name)
-    //    {
-    //        Name = name;
-    //    }
-
-    //    [ProtoMember(1)] public readonly string Name;
-
-    //    public override int GetHashCode() => HashCode.Combine(Name);
-    //    public override bool Equals(object? obj) => Equals(obj as ComputeLayerBrainLink);
-    //    public bool Equals(ComputeLayerBrainLink? other) => other != null && Name.Equals(other.Name);
-
-    //    public static ComputeLayerBrainLink Build(string name)
-    //    {
-    //        return new ComputeLayerBrainLink(name);
-    //    }
-    //}
-
     [ProtoContract(SkipConstructor = true)]
     public class OnlineInboundAdapterLink : IEquatable<OnlineInboundAdapterLink>
     {
