@@ -32,10 +32,10 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return numDeleted;
         }
 
-        public async Task<int> DeleteOutdatedAttributesOlderThan(string layerID, IModelContext trans, System.DateTimeOffset threshold, TimeThreshold atTime)
+        public async Task<int> DeleteOutdatedAttributesOlderThan(string[] layerIDs, IModelContext trans, System.DateTimeOffset threshold, TimeThreshold atTime)
         {
             // NOTE: because this only deletes outdated (=not latest) attributes, it does not affect the cache
-            var numDeleted = await model.DeleteOutdatedAttributesOlderThan(layerID, trans, threshold, atTime);
+            var numDeleted = await model.DeleteOutdatedAttributesOlderThan(layerIDs, trans, threshold, atTime);
             return numDeleted;
         }
     }
