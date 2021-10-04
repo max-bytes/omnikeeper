@@ -19,6 +19,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [1.7.0] - 2021-10-04
+ 
+### Added
+- implemented configurable compute layers
+ 
+### Changed
+- performance improvements for querying attributes via GraphQL
+- removed CompactCI and distinction between that and FullCI; there's now only one more CI class throughout the code base
+- simplified GraphQL query schema for querying CIs
+- implemented data loader support for fetching effective traits for CIs via GraphQL
+ 
 ## [1.6.0] - 2021-10-01
  
 ### Added
