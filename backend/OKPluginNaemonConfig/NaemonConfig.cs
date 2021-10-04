@@ -558,9 +558,75 @@ namespace OKPluginNaemonConfig
 
             }
 
+            var configObjs = new List<ConfigObj>();
+
+            // apply global filter
+            // include only cis that have STATUS = to "ACTIVE" || "BASE_INSTALLED" || "READY_FOR_SERVICE"
+            // TODO: this should be configurable
+            ciData = ciData.Where(el => el.Status == "ACTIVE" || el.Status == "BASE_INSTALLED" || el.Status == "READY_FOR_SERVICE").ToList();
+
+            // getNaemonConfigObjectsFromStaticTemplates - global-commands
+            configObjs.Add(new ConfigObj
+            {
+                Type = "command",
+                Attributes = new Dictionary<string, string>
+                {
+                    ["command_name"] = "check-nrpe",
+                    ["command_line"] = "$USER1$/check_nrpe -2 -t 50 -H $HOSTADDRESS$ -K /opt2/nrpe-ssl/auth.key -C /opt2/nrpe-ssl/auth.crt $ARG1$",
+                }
+            });
+
+            // getNaemonConfigObjectsFromTimeperiods
+            var timeperiods = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.TimePeriodsFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
+            foreach (var ciItem in timeperiods)
+            {
+                var timeperiodId = ciItem.MergedAttributes["naemon_timeperiod.id"]!.Attribute.Value.Value2String();
+
+                var obj = new ConfigObj
+                {
+                    Type = "timeperiod",
+                    Attributes = new Dictionary<string, string>
+                    {
+                        //"timeperiod_name" = 
+                    },
+                };
+
+
+                foreach (var attribute in ciItem.MergedAttributes)
+                {
+                    switch (attribute.Key)
+                    {
+                        case "naemon_timeperiod.name":
+                            obj.Attributes["timeperiod_name"] = attribute.Value.Attribute.Value.Value2String();
+                            break;
+                        //case "naemon_variable.type":
+                        //    attributes["_TYPE"] = attribute.Value.Attribute.Value.Value2String();
+                        //    break;
+                        //case "naemon_variable.name":
+                        //    attributes["_NAME"] = attribute.Value.Attribute.Value.Value2String();
+                        //    break;
+                        //case "naemon_variable.value":
+                        //    attributes["_VALUE"] = attribute.Value.Attribute.Value.Value2String();
+                        //    break;
+                        //case "naemon_variable.issecret":
+                        //    attributes["_ISSECRET"] = attribute.Value.Attribute.Value.Value2String();
+                        //    break;
+                        //case "naemon_variable.reftype":
+                        //    attributes["_REFTYPE"] = attribute.Value.Attribute.Value.Value2String();
+                        //    break;
+                        //case "naemon_variable.refid":
+                        //    attributes["_REFID"] = attribute.Value.Attribute.Value.Value2String();
+                        //    break;
+                        //default:
+                        //    break;
+                    }
+                }
+            }
+
+
             // get configuration from legacy objects
 
-            var configObjs = new List<ConfigObj>();
+            // getNaemonConfigObjectsFromLegacyProfiles_globalVars
 
             var variables = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.VariablesFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
 
@@ -621,13 +687,15 @@ namespace OKPluginNaemonConfig
 
             }
 
+            // getNaemonConfigObjectsFromLegacyProfiles_profiles
 
-            // this -> ciItem.MergedAttributes["naemon_variable.id"].Attribute.Value.Value2String(); works
+            var appendBasetemplates = new List<string> { "global-variables", "tsa-generic-host" };
+
+
+
+
 
             // getNaemonConfigObjectsFromLegacyProfiles_modules
-
-            // getLayers -> SELECT ID, NAME, NUM from SERVICE_LAYERS
-            // we need only a list with layer ids here
 
             var serviceLayers = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.ServiceLayersFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
             var layersById = new Dictionary<string, MergedCI>();
@@ -652,7 +720,6 @@ namespace OKPluginNaemonConfig
 
             // getTimeperiods -> We need a list with timeperiod ids
 
-            var timeperiods = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.TimePeriodsFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
             var timeperiodsById = new Dictionary<string, MergedCI>();
             foreach (var ciItem in timeperiods)
             {
@@ -957,9 +1024,10 @@ namespace OKPluginNaemonConfig
 
 
 
-            // getNaemonConfigObjectsFromLegacyProfiles_hostcommands
-            // getNaemonConfigObjectAttributesFromVars
-            // getNaemonConfigObjectsFromLegacyProfiles_profiles
+            //TODO getNaemonConfigObjectsFromLegacyProfiles_hostcommands
+            //
+
+            
 
             
             return true;
