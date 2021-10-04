@@ -188,17 +188,17 @@ namespace Omnikeeper.Base.Generator
                     var value = new AttributeScalarValueText(templateSegment);
                     // create a deterministic, dependent guid from the ciid, layerID, attribute values; 
                     // we need to incorporate the dependent attributes, otherwise the attribute ID does not change when any of the dependent attributes change
-                    var agGuid = GuidUtility.Create(ciid, $"{generator.AttributeName}-{layerID}-{string.Join("-", generator.Value.UsedAttributeNames)}");
-                    var ag = new CIAttribute(agGuid, generator.AttributeName, ciid, value, AttributeState.New, GeneratorV1.StaticChangesetID);
+                    var agGuid = GuidUtility.Create(ciid, $"{generator.AttributeName}-{layerID}-{string.Join("-", relevantAttributes.Select(a => a.ID))}");
+                    var ag = new CIAttribute(agGuid, generator.AttributeName, ciid, value, GeneratorV1.StaticChangesetID);
                     return ag;
                 } else
                 {
-                    return null;
+                    return null; // TODO: better error handling
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return null;
+                return null; // TODO: better error handling
             }
         }
     }

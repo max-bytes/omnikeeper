@@ -30,21 +30,6 @@ namespace Omnikeeper.Model
             return null; // TODO: we assume we can convert the name to a string, is this correct?
         }
 
-        public async Task<IEnumerable<CompactCI>> GetCompactCIs(ICIIDSelection selection, LayerSet visibleLayers, IModelContext trans, TimeThreshold atTime)
-        {
-            IDictionary<Guid, string> names = await attributeModel.GetMergedCINames(selection, visibleLayers, trans, atTime);
-            var allSelectedCIIDs = await selection.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
-            var layerHash = visibleLayers.LayerHash;
-            return allSelectedCIIDs.Select(ciid =>
-            {
-                if (names.TryGetValue(ciid, out var name))
-                    return new CompactCI(ciid, name, layerHash, atTime);
-                else
-                    return new CompactCI(ciid, null, layerHash, atTime);
-            });
-            // TODO: this actually returns empty compact CIs for ANY Guid/CI-ID, even ones that don't exist, when selection = SpecificCIIDSelection. check if that's expected, I believe not
-        }
-
         public async Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime)
         {
             var tmp = await attributeModel.GetMergedAttributes(SpecificCIIDsSelection.Build(ciid), attributeSelection, layers, trans, atTime);

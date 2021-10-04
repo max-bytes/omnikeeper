@@ -4,6 +4,7 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -64,6 +65,16 @@ namespace Tests.Integration.Model.Mocks
             var t = RecursiveTraitService.FlattenRecursiveTraits(r);
             var tt = (IDictionary<string, ITrait>)t.ToDictionary(t => t.Key, t => (ITrait)t.Value);
             return Task.FromResult(tt);
+        }
+
+        public async Task<IDictionary<string, ITrait>> GetActiveTraitsByIDs(IEnumerable<string> IDs, IModelContext trans, TimeThreshold timeThreshold)
+        {
+            var ts = await GetActiveTraits(trans, timeThreshold);
+
+            var foundTraits = ts.Where(t => IDs.Contains(t.Key)).ToDictionary(t => t.Key, t => t.Value);
+            if (foundTraits.Count() < IDs.Count())
+                throw new Exception($"Encountered unknown trait(s): {string.Join(",", IDs.Except(foundTraits.Select(t => t.Key)))}");
+            return foundTraits;
         }
     }
 }

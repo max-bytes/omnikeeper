@@ -10,7 +10,7 @@ const { Text } = Typography;
 
 export default function Relation(props) {
 
-  const {predicates, relation, layer} = props;
+  const {predicates, relation, layer, removed } = props;
 
   const predicate = _.find(predicates, p => p.id === relation.predicateID);
   const predicateWording = predicate ? 
@@ -21,7 +21,6 @@ export default function Relation(props) {
   const fromCIButton = (relation.fromCIName) ? <Link to={"/explorer/" + relation.fromCIID}>{relation.fromCIName}</Link> : <CIID id={relation.fromCIID} link={true} />;
   const toCIButton = (relation.toCIName) ? <Link to={"/explorer/" + relation.toCIID}>{relation.toCIName}</Link> : <CIID id={relation.toCIID} link={true} />;
 
-  const removed = relation.state === 'REMOVED';
   const written = <span>{fromCIButton}{` `}{predicateWording}{` `}{toCIButton}</span>;
   const wrapped = (removed) ? <Text delete>{written}</Text> : written;
 

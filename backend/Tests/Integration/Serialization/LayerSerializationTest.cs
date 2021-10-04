@@ -15,7 +15,7 @@ namespace Tests.Integration.Serialization
         public void TestSerialization()
         {
             var dataSerializer = new ProtoBufDataSerializer();
-            var a = Layer.Build("name", "123", Color.Red, AnchorState.Deprecated, ComputeLayerBrainLink.Build("clbName"), OnlineInboundAdapterLink.Build("oiaName"), new string[] { "generator01", "generator02" });
+            var a = Layer.Build("name", "123", Color.Red, AnchorState.Deprecated, "clbName", OnlineInboundAdapterLink.Build("oiaName"), new string[] { "generator01", "generator02" });
             var b = dataSerializer.ToByteArray(a);
             dataSerializer.FromByteArray<Layer>(b).Should().BeEquivalentTo(a, options => options.WithStrictOrdering());
         }

@@ -78,7 +78,7 @@ namespace Omnikeeper.Controllers
                 options.Query = query.Query;
                 options.Inputs = inputs;
                 options.EnableMetrics = false;
-                options.UserContext = new OmnikeeperUserContext(user);
+                options.UserContext = new OmnikeeperUserContext(user, HttpContext.RequestServices);
                 options.ValidationRules = DocumentValidator.CoreRules.Concat(_validationRules).ToList();
                 options.RequestServices = HttpContext.RequestServices;
                 options.Listeners.Add(dataLoaderDocumentListener);

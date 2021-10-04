@@ -89,9 +89,10 @@ namespace Omnikeeper.Controllers
             var attributesDict = (await attributeModel.GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new string[] { layerID }, false, trans, timeThreshold)).First();
             var attributesDTO = attributesDict
                 .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key)) // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
-                .Select(kv => kv.Value.Where(kva => kva.Value.ChangesetID != GeneratorV1.StaticChangesetID).ToDictionary(kva => kva.Key, kva => kva.Value)) // HACK: skip generated Attributes
-                .SelectMany(kv => kv.Select(t => CIAttributeDTO.Build(t.Value)));
-            var relations = (await relationModel.GetRelations(RelationSelectionAll.Instance, layerID, false, trans, timeThreshold));
+                .SelectMany(kv => kv.Value.Values)
+                .Where(a => a.ChangesetID != GeneratorV1.StaticChangesetID) // HACK: skip generated attributes
+                .Select(a => CIAttributeDTO.Build(a));
+            var relations = (await relationModel.GetRelations(RelationSelectionAll.Instance, layerID, trans, timeThreshold));
             var relationsDTO = relations.Select(r => RelationDTO.BuildFromRelation(r));
             // TODO: ci authorization?
 

@@ -52,8 +52,8 @@ namespace Omnikeeper.Base.CLB
 
         public async Task LogError(Guid ciid, string name, string message)
         {
-            var a = await attributeModel.InsertAttribute($"{AttributeNamePrefix}.{name}", new AttributeScalarValueText(message, true), ciid, clbLayerID, changeset, new DataOriginV1(DataOriginType.ComputeLayer), trans);
-            writtenErrors.Add(a.attribute);
+            //var a = await attributeModel.InsertAttribute($"{AttributeNamePrefix}.{name}", new AttributeScalarValueText(message, true), ciid, clbLayerID, changeset, new DataOriginV1(DataOriginType.ComputeLayer), trans);
+            //writtenErrors.Add(a.attribute);
         }
     }
 }

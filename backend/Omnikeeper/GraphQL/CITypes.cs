@@ -34,7 +34,8 @@ namespace Omnikeeper.GraphQL
                 {
                     var mergedAttributes = context.Source!.MergedAttributes.Values;
 
-                    // TODO: only fetch what attributes are requested instead of fetching all, then filtering
+                    // NOTE: the outer caller/resolver should already have filtered the attributes
+                    // but because we cannot be sure of that, we still do this filtering here too, even if its redundant
                     var attributeNames = context.GetArgument<string[]?>("attributeNames", null)?.ToHashSet();
                     if (attributeNames != null)
                         return mergedAttributes.Where(a => attributeNames.Contains(a.Attribute.Name));
@@ -95,10 +96,6 @@ namespace Omnikeeper.GraphQL
 
         private async Task<ILookup<IRelationSelection, MergedRelation>> FetchRelations(OmnikeeperUserContext userContext, IEnumerable<IRelationSelection> relationSelections)
         {
-            var layerset = userContext.LayerSet;
-            if (layerset == null)
-                throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!");
-
             var combinedRelationsTo = new HashSet<Guid>();
             var combinedRelationsFrom = new HashSet<Guid>();
             foreach (var rs in relationSelections)
@@ -116,8 +113,8 @@ namespace Omnikeeper.GraphQL
                 }
             }
 
-            var relationsTo = await relationModel.GetMergedRelations(RelationSelectionTo.Build(combinedRelationsTo), layerset, userContext.Transaction, userContext.TimeThreshold);
-            var relationsFrom = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(combinedRelationsFrom), layerset, userContext.Transaction, userContext.TimeThreshold);
+            var relationsTo = await relationModel.GetMergedRelations(RelationSelectionTo.Build(combinedRelationsTo), userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
+            var relationsFrom = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(combinedRelationsFrom), userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
 
             var relationsToMap = relationsTo.ToLookup(t => t.Relation.ToCIID);
             var relationsFromMap = relationsFrom.ToLookup(t => t.Relation.FromCIID);
@@ -138,18 +135,6 @@ namespace Omnikeeper.GraphQL
                 }
             }
             return ret.ToLookup(t => t.Item1, t => t.Item2);
-        }
-    }
-
-
-    public class CompactCIType : ObjectGraphType<CompactCI>
-    {
-        public CompactCIType()
-        {
-            Field("id", x => x.ID);
-            Field("name", x => x.Name, nullable: true);
-            Field(x => x.AtTime, type: typeof(TimeThresholdType));
-            Field("layerhash", x => x.LayerHash);
         }
     }
 
@@ -180,13 +165,8 @@ namespace Omnikeeper.GraphQL
             Field("ciid", x => x.CIID);
             Field(x => x.ChangesetID);
             Field(x => x.Name);
-            Field(x => x.State, type: typeof(AttributeStateType));
             Field("value", x => AttributeValueDTO.Build(x.Value), type: typeof(AttributeValueDTOType));
         }
-    }
-
-    public class AttributeStateType : EnumerationGraphType<AttributeState>
-    {
     }
 
 

@@ -87,21 +87,21 @@ namespace Tests.Ingest
             var response = await PerformIngest(controller, hosts, insertLayer, layerSet);
             Assert.IsTrue(response is OkResult);
 
-            var cis = await ciModel.GetCompactCIs(new AllCIIDsSelection(), layerSet, mc, TimeThreshold.BuildLatest());
-            Assert.That(cis.Select(ci => ci.Name), Is.SupersetOf(hosts));
-            Assert.IsTrue(cis.Any(ci => ci.Name == "h1jmplx01.mhx.at:/"));
-            Assert.IsTrue(cis.Any(ci => ci.Name == "h1jmplx01.mhx.at:/boot"));
-            Assert.IsTrue(cis.Any(ci => ci.Name == "Network Interface lo@h1jmplx01.mhx.at"));
-            Assert.IsTrue(cis.Any(ci => ci.Name == "h1lscapet01.mhx.local:/"));
-            Assert.IsTrue(cis.Any(ci => ci.Name == "h1lscapet01.mhx.local:/boot"));
-            Assert.IsTrue(cis.Any(ci => ci.Name == "Network Interface eth0@h1lscapet01.mhx.local"));
+            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, AllAttributeSelection.Instance, mc, TimeThreshold.BuildLatest());
+            Assert.That(cis.Select(ci => ci.CIName), Is.SupersetOf(hosts));
+            Assert.IsTrue(cis.Any(ci => ci.CIName == "h1jmplx01.mhx.at:/"));
+            Assert.IsTrue(cis.Any(ci => ci.CIName == "h1jmplx01.mhx.at:/boot"));
+            Assert.IsTrue(cis.Any(ci => ci.CIName == "Network Interface lo@h1jmplx01.mhx.at"));
+            Assert.IsTrue(cis.Any(ci => ci.CIName == "h1lscapet01.mhx.local:/"));
+            Assert.IsTrue(cis.Any(ci => ci.CIName == "h1lscapet01.mhx.local:/boot"));
+            Assert.IsTrue(cis.Any(ci => ci.CIName == "Network Interface eth0@h1lscapet01.mhx.local"));
             Assert.AreEqual(34, cis.Count());
             // TODO: more asserts
 
             // perform ingest again, ci count must stay equal
             var response2 = await PerformIngest(controller, hosts, insertLayer, layerSet);
             Assert.IsTrue(response2 is OkResult);
-            var cis2 = await ciModel.GetCompactCIs(new AllCIIDsSelection(), layerSet, mc, TimeThreshold.BuildLatest());
+            var cis2 = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, AllAttributeSelection.Instance, mc, TimeThreshold.BuildLatest());
             Assert.AreEqual(34, cis2.Count());
         }
 

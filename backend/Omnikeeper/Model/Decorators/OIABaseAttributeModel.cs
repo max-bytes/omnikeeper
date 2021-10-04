@@ -33,10 +33,10 @@ namespace Omnikeeper.Model.Decorators
             return await model.GetFullBinaryAttribute(name, ciid, layerID, trans, atTime);
         }
 
-        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, bool returnRemoved, IModelContext trans, TimeThreshold atTime)
+        public async Task<IDictionary<Guid, IDictionary<string, CIAttribute>>[]> GetAttributes(ICIIDSelection selection, IAttributeSelection attributeSelection, string[] layerIDs, IModelContext trans, TimeThreshold atTime)
         {
             return await MixOnlineAndRegular(layerIDs, trans,
-                async (regularLayerIDs) => await model.GetAttributes(selection, attributeSelection, regularLayerIDs, returnRemoved, trans, atTime),
+                async (regularLayerIDs) => await model.GetAttributes(selection, attributeSelection, regularLayerIDs, trans, atTime),
                 async (onlineLayerIDs) =>
                 {
                     var onlineResults = await onlineAccessProxy.GetAttributes(selection, onlineLayerIDs, trans, atTime, attributeSelection);
@@ -120,10 +120,10 @@ namespace Omnikeeper.Model.Decorators
             return await model.BulkReplaceAttributes(data, changesetProxy, origin, trans);
         }
 
-        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, IModelContext trans)
+        public async Task<IEnumerable<CIAttribute>> GetAttributesOfChangeset(Guid changesetID, bool getRemoved, IModelContext trans)
         {
             // NOTE: OIAs do not support changesets, so an OIA can never return any
-            return await model.GetAttributesOfChangeset(changesetID, trans);
+            return await model.GetAttributesOfChangeset(changesetID, getRemoved, trans);
         }
     }
 }

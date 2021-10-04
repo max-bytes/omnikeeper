@@ -21,22 +21,10 @@ export const Fragments = {
         name
         ciid
         changesetID
-        state
         value {
             type
             isArray
             values
-        }
-    }
-  `,
-  compactCI: gql`
-    fragment CompactCI on CompactCIType {
-        id
-        name
-        layerhash
-        atTime {
-            time
-            isLatest
         }
     }
   `,
@@ -88,7 +76,7 @@ export const Fragments = {
     color
     state
     writable
-    brainName
+    clConfigID
     onlineInboundAdapterName
     generators
   }
@@ -102,7 +90,6 @@ export const Fragments = {
           toCIName
           predicateID
           changesetID
-          state
         }
         layerStackIDs
         layerID
@@ -122,7 +109,6 @@ export const Fragments = {
         fromCIName
         predicateID
         changesetID
-        state
       }
       layerStackIDs
       layerID
@@ -163,6 +149,13 @@ export const Fragments = {
   fragment AuthRole on AuthRoleType {
     id,
     permissions
+  }
+  `,
+  clConfig: gql`
+  fragment CLConfig on CLConfigType {
+    id,
+    clBrainReference,
+    clBrainConfig
   }
   `,
 };

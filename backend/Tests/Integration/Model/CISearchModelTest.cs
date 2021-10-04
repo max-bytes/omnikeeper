@@ -31,7 +31,7 @@ namespace Tests.Integration.Model
             var layerModel = new LayerModel();
             var traitsProvider = new MockedTraitsProvider();
             var traitModel = new EffectiveTraitModel(relationModel, NullLogger<EffectiveTraitModel>.Instance);
-            var searchModel = new CISearchModel(attributeModel, ciModel, traitModel, traitsProvider, NullLogger<CISearchModel>.Instance);
+            var searchModel = new CISearchModel(attributeModel, ciModel, traitModel, NullLogger<CISearchModel>.Instance);
             var user = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
             Guid ciid1;
             Guid ciid2;
@@ -72,18 +72,14 @@ namespace Tests.Integration.Model
 
             var transI = ModelContextBuilder.BuildImmediate();
 
-            var all = await ciModel.GetCompactCIs(new AllCIIDsSelection(), new LayerSet(layerID1, layerID2), transI, tt);
+            var all = await ciModel.GetMergedCIs(new AllCIIDsSelection(), new LayerSet(layerID1, layerID2), true, AllAttributeSelection.Instance, transI, tt);
 
-            //(await searchModel.SimpleSearch("ci", transI, tt)).Should().BeEquivalentTo(all);
-            //(await searchModel.SimpleSearch("i", transI, tt)).Should().BeEquivalentTo(all);
-            //(await searchModel.SimpleSearch("ci2", transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci2"));
-            //(await searchModel.SimpleSearch("i3", transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci3"));
-
-            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { }, new string[] { }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all, options => options.WithStrictOrdering());
-            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { "test_trait_3" }, new string[] { }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name == "ci1"), options => options.WithStrictOrdering());
-            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { "test_trait_3" }, new string[] { }, new LayerSet(layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty, options => options.WithStrictOrdering());
-            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { "test_trait_4" }, new string[] { }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<CompactCI>.Empty, options => options.WithStrictOrdering());
-            (await searchModel.AdvancedSearchForCompactCIs("", new string[] { }, new string[] { "test_trait_3" }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.Name != "ci1"), options => options.WithStrictOrdering());
+            var activeTraits = await traitsProvider.GetActiveTraits(transI, tt);
+            (await searchModel.FindMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, Enumerable.Empty<ITrait>(), Enumerable.Empty<ITrait>(), new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all, options => options.WithStrictOrdering());
+            (await searchModel.FindMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, new ITrait[] { activeTraits["test_trait_3"] }, Enumerable.Empty<ITrait>(), new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.CIName == "ci1"), options => options.WithStrictOrdering());
+            (await searchModel.FindMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, new ITrait[] { activeTraits["test_trait_3"] }, Enumerable.Empty<ITrait>(), new LayerSet(layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<MergedCI>.Empty, options => options.WithStrictOrdering());
+            (await searchModel.FindMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, new ITrait[] { activeTraits["test_trait_4"] }, Enumerable.Empty<ITrait>(), new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(ImmutableArray<MergedCI>.Empty, options => options.WithStrictOrdering());
+            (await searchModel.FindMergedCIsByTraits(new AllCIIDsSelection(), AllAttributeSelection.Instance, Enumerable.Empty<ITrait>(), new ITrait[] { activeTraits["test_trait_3"] }, new LayerSet(layerID1, layerID2), transI, tt)).Should().BeEquivalentTo(all.Where(ci => ci.CIName != "ci1"), options => options.WithStrictOrdering());
 
         }
     }
