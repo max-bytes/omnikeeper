@@ -25,7 +25,7 @@ export default function ManageCLConfigs(props) {
   const columnDefs = [
     { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
     { headerName: "CLBrain Reference", field: "clBrainReference" },
-    { headerName: "CLBrain Config", field: "clBrainConfig" }
+    { headerName: "CLBrain Config", field: "clBrainConfig", flex: 1, cellEditor: "agLargeTextCellEditor" }
   ];
 
   return <>
