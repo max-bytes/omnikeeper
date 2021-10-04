@@ -197,6 +197,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IGridViewContextModel, GridViewContextModel>();
             services.AddSingleton<IPartitionModel, PartitionModel>();
             services.AddSingleton<IAuthRoleModel, AuthRoleModel>();
+            services.AddSingleton<ICLConfigModel, CLConfigModel>();
 
             // these aren't real models, but we keep them here because they are closely related to models
             services.AddSingleton<ITraitsProvider, TraitsProvider>();

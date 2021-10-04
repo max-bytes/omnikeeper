@@ -66,13 +66,9 @@ namespace Omnikeeper.GraphQL
 
         private async Task<IDictionary<ICIIDSelection, string?>> FetchCINames(OmnikeeperUserContext userContext, IEnumerable<ICIIDSelection> ciidSelections)
         {
-            var layerset = userContext.LayerSet;
-            if (layerset == null)
-                throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!");
-
             var combinedCIIDSelection = CIIDSelectionExtensions.UnionAll(ciidSelections);
 
-            var combinedNames = await attributeModel.GetMergedCINames(combinedCIIDSelection, layerset, userContext.Transaction, userContext.TimeThreshold);
+            var combinedNames = await attributeModel.GetMergedCINames(combinedCIIDSelection, userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
 
             var ret = new Dictionary<ICIIDSelection, string?>(ciidSelections.Count());
             foreach(var ciidSelection in ciidSelections)
@@ -86,14 +82,10 @@ namespace Omnikeeper.GraphQL
 
         private async Task<ILookup<ICIIDSelection, MergedCI>> FetchMergedCIs(OmnikeeperUserContext userContext, IEnumerable<ICIIDSelection> ciidSelections)
         {
-            var layerset = userContext.LayerSet;
-            if (layerset == null)
-                throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!");
-
             var combinedCIIDSelection = CIIDSelectionExtensions.UnionAll(ciidSelections);
 
             // TODO: implement attribute selection possibilities?
-            var combinedCIs = (await ciModel.GetMergedCIs(combinedCIIDSelection, layerset, true, AllAttributeSelection.Instance, userContext.Transaction, userContext.TimeThreshold)).ToDictionary(ci => ci.ID);
+            var combinedCIs = (await ciModel.GetMergedCIs(combinedCIIDSelection, userContext.LayerSet, true, AllAttributeSelection.Instance, userContext.Transaction, userContext.TimeThreshold)).ToDictionary(ci => ci.ID);
 
             var ret = new List<(ICIIDSelection, MergedCI)>(); // NOTE: seems weird, cant lookup be created better?
             foreach (var ciidSelection in ciidSelections)

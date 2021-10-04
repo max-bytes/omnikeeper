@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils.ModelContext;
@@ -10,7 +11,6 @@ namespace Omnikeeper.Base.CLB
     {
         string Name { get; }
 
-        Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger);
-        Task<bool> Run(CLBSettings settings, IModelContextBuilder modelContextBuilder, ILogger logger);
+        Task<bool> Run(Layer targetLayer, JObject config, IModelContextBuilder modelContextBuilder, ILogger logger);
     }
 }

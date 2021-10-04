@@ -10,6 +10,7 @@ namespace Omnikeeper.Base.Utils
         public static Regex PredicateIDRegex = new Regex("^[a-z0-9_.]+$");
         public static Regex TraitIDRegex = new Regex("^[a-z0-9_.]+$");
         private static Regex GeneratorIDRegex = new Regex("^[a-z0-9_.]+$");
+        private static Regex CLConfigIDRegex = new Regex("^[a-z0-9_.]+$");
         public static Regex GridViewContextIDRegex = new Regex("^[a-z0-9_]+$");
 
         public static bool ValidateLayerID(string candidateID)
@@ -30,6 +31,11 @@ namespace Omnikeeper.Base.Utils
         public static bool ValidateGeneratorID(string candidateID)
         {
             return GeneratorIDRegex.IsMatch(candidateID);
+        }
+
+        public static bool ValidateCLConfigID(string candidateID)
+        {
+            return CLConfigIDRegex.IsMatch(candidateID);
         }
 
         public static bool ValidateGridViewContextID(string candidateID)
@@ -64,6 +70,12 @@ namespace Omnikeeper.Base.Utils
         {
             if (!ValidateGeneratorID(candidateID))
                 throw new Exception($"Invalid generator ID \"{candidateID}\"");
+        }
+
+        public static void ValidateCLConfigIDThrow(string candidateID)
+        {
+            if (!ValidateCLConfigID(candidateID))
+                throw new Exception($"Invalid CL Config ID \"{candidateID}\"");
         }
 
 

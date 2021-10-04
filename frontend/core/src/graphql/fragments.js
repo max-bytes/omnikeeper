@@ -151,4 +151,11 @@ export const Fragments = {
     permissions
   }
   `,
+  clConfig: gql`
+  fragment CLConfig on CLConfigType {
+    id,
+    clBrainReference,
+    clBrainConfig
+  }
+  `,
 };

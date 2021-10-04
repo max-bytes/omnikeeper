@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Utils;
@@ -24,16 +25,12 @@ namespace Omnikeeper.Base.CLB
             this.layerModel = layerModel;
         }
 
-        protected CLBSettings? Settings { get; private set; }
+        public string Name => GetType().Name!;
 
-        public string Name => GetType().FullName!;
-
-        public async Task<bool> Run(CLBSettings settings, IModelContextBuilder modelContextBuilder, ILogger logger)
+        public async Task<bool> Run(Layer targetLayer, JObject config, IModelContextBuilder modelContextBuilder, ILogger logger)
         {
             try
             {
-                Settings = settings;
-
                 using var trans = modelContextBuilder.BuildDeferred();
 
                 var timeThreshold = TimeThreshold.BuildLatest();
@@ -46,14 +43,9 @@ namespace Omnikeeper.Base.CLB
                 var user = await userModel.UpsertUser(username, displayName, guid, UserType.Robot, trans);
                 var changesetProxy = new ChangesetProxy(user, timeThreshold, changesetModel);
 
-                var layerSet = await layerModel.BuildLayerSet(new[] { Settings.LayerID }, trans);
-                var layer = await layerModel.GetLayer(Settings.LayerID, trans);
-                if (layer == null)
-                    throw new Exception($"Could not find layer with ID {Settings.LayerID}");
+                var errorHandler = new CLBErrorHandler(trans, Name, targetLayer.ID, changesetProxy, attributeModel);
 
-                var errorHandler = new CLBErrorHandler(trans, Name, layer.ID, changesetProxy, attributeModel);
-
-                var result = await Run(layer, changesetProxy, errorHandler, trans, logger);
+                var result = await Run(targetLayer, config, changesetProxy, errorHandler, trans, logger);
 
                 if (result)
                 {
@@ -71,7 +63,7 @@ namespace Omnikeeper.Base.CLB
             }
         }
 
-        public abstract Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger);
+        public abstract Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger);
 
     }
 }

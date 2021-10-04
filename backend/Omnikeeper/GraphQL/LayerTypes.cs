@@ -12,7 +12,7 @@ namespace Omnikeeper.GraphQL
         public LayerType()
         {
             Field(x => x.Description);
-            Field("brainName", x => x.ComputeLayerBrainLink.Name);
+            Field("brainName", x => x.CLConfig);
             Field("onlineInboundAdapterName", x => x.OnlineInboundAdapterLink.AdapterName);
             Field("id", x => x.ID);
             Field("color", x => x.Color.ToArgb());

@@ -119,4 +119,20 @@ export const mutations = {
     manage_removeAuthRole(id: $id)
   }
   `,
+
+  
+  UPSERT_CL_CONFIG: gql`
+  mutation($config: UpsertCLConfigInputType!) {
+    manage_upsertCLConfig(config: $config) {
+        ...CLConfig
+    }
+  }
+  ${Fragments.clConfig}
+  `,
+
+  REMOVE_CL_CONFIG: gql`
+  mutation($id: String!) {
+    manage_removeCLConfig(id: $id)
+  }
+  `,
 };

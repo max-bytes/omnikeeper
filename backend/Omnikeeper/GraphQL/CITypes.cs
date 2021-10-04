@@ -96,10 +96,6 @@ namespace Omnikeeper.GraphQL
 
         private async Task<ILookup<IRelationSelection, MergedRelation>> FetchRelations(OmnikeeperUserContext userContext, IEnumerable<IRelationSelection> relationSelections)
         {
-            var layerset = userContext.LayerSet;
-            if (layerset == null)
-                throw new Exception("Got to this resolver without getting any layer informations set... fix this bug!");
-
             var combinedRelationsTo = new HashSet<Guid>();
             var combinedRelationsFrom = new HashSet<Guid>();
             foreach (var rs in relationSelections)
@@ -117,8 +113,8 @@ namespace Omnikeeper.GraphQL
                 }
             }
 
-            var relationsTo = await relationModel.GetMergedRelations(RelationSelectionTo.Build(combinedRelationsTo), layerset, userContext.Transaction, userContext.TimeThreshold);
-            var relationsFrom = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(combinedRelationsFrom), layerset, userContext.Transaction, userContext.TimeThreshold);
+            var relationsTo = await relationModel.GetMergedRelations(RelationSelectionTo.Build(combinedRelationsTo), userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
+            var relationsFrom = await relationModel.GetMergedRelations(RelationSelectionFrom.Build(combinedRelationsFrom), userContext.LayerSet, userContext.Transaction, userContext.TimeThreshold);
 
             var relationsToMap = relationsTo.ToLookup(t => t.Relation.ToCIID);
             var relationsFromMap = relationsFrom.ToLookup(t => t.Relation.FromCIID);

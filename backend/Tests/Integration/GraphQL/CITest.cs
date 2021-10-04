@@ -91,7 +91,7 @@ namespace Tests.Integration.GraphQL
                     }";
 
             var httpContext = new DefaultHttpContext();
-            AssertQuerySuccess(query, expected, inputs, userContext: new OmnikeeperUserContext(user));
+            AssertQuerySuccess(query, expected, inputs, userContext: new OmnikeeperUserContext(user, ServiceProvider));
         }
     }
 }

@@ -194,6 +194,22 @@ namespace Omnikeeper.GraphQL
         }
     }
 
+    public class UpsertCLConfigInput
+    {
+        public string ID { get; private set; }
+        public string CLBrainReference { get; private set; }
+        public string CLBrainConfig { get; private set; }
+    }
+    public class UpsertCLConfigInputType : InputObjectGraphType<UpsertCLConfigInput>
+    {
+        public UpsertCLConfigInputType()
+        {
+            Field("id", x => x.ID);
+            Field("clBrainReference", x => x.CLBrainReference);
+            Field("clBrainConfig", x => x.CLBrainConfig);
+        }
+    }
+
     public class CreateOIAContextInput
     {
         public string Name { get; private set; }

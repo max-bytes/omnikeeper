@@ -1,12 +1,17 @@
-﻿namespace Omnikeeper.Base.CLB
-{
-    public class CLBSettings
-    {
-        public CLBSettings(string layerID)
-        {
-            LayerID = layerID;
-        }
+﻿//using Newtonsoft.Json.Linq;
 
-        public string LayerID { get; }
-    }
-}
+//namespace Omnikeeper.Base.CLB
+//{
+//    public class CLBSettings
+//    {
+//        private readonly JObject clConfig;
+
+//        public CLBSettings(string layerID, JObject clConfig)
+//        {
+//            LayerID = layerID;
+//            this.clConfig = clConfig;
+//        }
+
+//        public string LayerID { get; }
+//    }
+//}
