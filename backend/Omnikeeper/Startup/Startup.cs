@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -57,6 +58,13 @@ namespace Omnikeeper.Startup
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddResponseCompression(options =>
+            {
+                options.Providers.Add<BrotliCompressionProvider>();
+                options.Providers.Add<GzipCompressionProvider>();
+                options.EnableForHttps = true;
+            }); // reponse compression
+
             services.AddApiVersioning();
 
             services.AddMediatR(Assembly.GetExecutingAssembly());
@@ -295,6 +303,8 @@ namespace Omnikeeper.Startup
         {
             var version = VersionService.GetVersion();
             logger.LogInformation($"Running version: {version}");
+
+            app.UseResponseCompression(); // response compression
 
             app.UseCors("DefaultCORSPolicy");
 
