@@ -33,10 +33,10 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return numDeleted;
         }
 
-        public async Task<int> DeleteOutdatedRelationsOlderThan(string layerID, IModelContext trans, System.DateTimeOffset threshold, TimeThreshold atTime)
+        public async Task<int> DeleteOutdatedRelationsOlderThan(string[] layerIDs, IModelContext trans, System.DateTimeOffset threshold, TimeThreshold atTime)
         {
             // NOTE: because this only deletes outdated (=not latest) relations, it does not affect the cache
-            var numDeleted = await model.DeleteOutdatedRelationsOlderThan(layerID, trans, threshold, atTime);
+            var numDeleted = await model.DeleteOutdatedRelationsOlderThan(layerIDs, trans, threshold, atTime);
             return numDeleted;
         }
     }

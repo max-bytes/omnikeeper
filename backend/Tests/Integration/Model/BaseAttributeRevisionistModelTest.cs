@@ -43,9 +43,10 @@ namespace Tests.Integration.Model
                 layerID1 = layer1.ID;
                 trans.Commit();
             }
+            var layerIDs = new string[] { layerID1 };
 
             // nothing to delete yet
-            var d1 = await model.DeleteOutdatedAttributesOlderThan(layerID1, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
+            var d1 = await model.DeleteOutdatedAttributesOlderThan(layerIDs, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
             Assert.AreEqual(0, d1);
 
             // insert attributes
@@ -58,7 +59,7 @@ namespace Tests.Integration.Model
             }
 
             // nothing to delete yet still
-            var d2 = await model.DeleteOutdatedAttributesOlderThan(layerID1, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
+            var d2 = await model.DeleteOutdatedAttributesOlderThan(layerIDs, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
             Assert.AreEqual(0, d2);
 
             // override attribute
@@ -70,15 +71,15 @@ namespace Tests.Integration.Model
             }
 
             // nothing to delete yet still, if we choose an older time threshold
-            var d3 = await model.DeleteOutdatedAttributesOlderThan(layerID1, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now.AddSeconds(-100), TimeThreshold.BuildLatest());
+            var d3 = await model.DeleteOutdatedAttributesOlderThan(layerIDs, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now.AddSeconds(-100), TimeThreshold.BuildLatest());
             Assert.AreEqual(0, d3);
 
             // outdated attribute will be deleted, if we choose a time threshold that is recent enough
-            var d4 = await model.DeleteOutdatedAttributesOlderThan(layerID1, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
+            var d4 = await model.DeleteOutdatedAttributesOlderThan(layerIDs, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
             Assert.AreEqual(1, d4);
 
             // nothing to delete again
-            var d5 = await model.DeleteOutdatedAttributesOlderThan(layerID1, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
+            var d5 = await model.DeleteOutdatedAttributesOlderThan(layerIDs, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
             Assert.AreEqual(0, d5);
         }
     }

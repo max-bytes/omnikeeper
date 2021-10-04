@@ -9,6 +9,8 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
 using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Runners
@@ -53,15 +55,11 @@ namespace Omnikeeper.Runners
                 }
                 var threshold = DateTimeOffset.Now.Add(archiveThreshold.Negate());
 
-                logger.LogDebug($"Deleting outdated attributes and relations older than {threshold}");
-    
-                var numDeletedAttributes = 0;
-                var numDeletedRelations = 0;
-                foreach (var layer in await layerModel.GetLayers(trans))
-                {
-                    numDeletedAttributes += await baseAttributeRevisionistModel.DeleteOutdatedAttributesOlderThan(layer.ID, trans, threshold, now);
-                    numDeletedRelations += await baseRelationRevisionistModel.DeleteOutdatedRelationsOlderThan(layer.ID, trans, threshold, now);
-                }
+               logger.LogDebug($"Deleting outdated attributes and relations older than {threshold}");
+
+                var layerIDs = (await layerModel.GetLayers(trans)).Select(l => l.ID).ToArray();
+                var numDeletedAttributes = await baseAttributeRevisionistModel.DeleteOutdatedAttributesOlderThan(layerIDs, trans, threshold, now);
+                var numDeletedRelations = await baseRelationRevisionistModel.DeleteOutdatedRelationsOlderThan(layerIDs, trans, threshold, now);
                 if (numDeletedAttributes > 0)
                     logger.LogInformation($"Deleted {numDeletedAttributes} attributes because they were outdated and older than {threshold}");
                 if (numDeletedRelations > 0)
@@ -102,9 +100,16 @@ namespace Omnikeeper.Runners
         {
             using (HangfireConsoleLogger.InContext(context))
             {
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
                 logger.LogInformation("Start");
+
                 RunAsync().GetAwaiter().GetResult();
-                logger.LogInformation("Finished");
+
+                stopWatch.Stop();
+                TimeSpan ts = stopWatch.Elapsed;
+                string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                logger.LogInformation($"Finished in {elapsedTime}");
             }
         }
 
