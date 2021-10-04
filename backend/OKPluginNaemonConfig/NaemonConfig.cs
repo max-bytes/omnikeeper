@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.CLB;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
@@ -31,7 +32,7 @@ namespace OKPluginNaemonConfig
         private List<string> naemonsConfigGenerateprofiles = new List<string>() { "svphg200mon001", "svphg200mon002", "uansvclxnaemp01", "uansvclxnaemp02", "uansvclxnaemp03", "uansvclxnaemp04", "uansvclxnaemp05", "uansvclxnaemp06" };
 
 
-        public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
+        public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start naemonConfig");
 
@@ -585,12 +586,8 @@ namespace OKPluginNaemonConfig
                 var obj = new ConfigObj
                 {
                     Type = "timeperiod",
-                    Attributes = new Dictionary<string, string>
-                    {
-                        //"timeperiod_name" = 
-                    },
+                    Attributes = new Dictionary<string, string>(),
                 };
-
 
                 foreach (var attribute in ciItem.MergedAttributes)
                 {
@@ -599,28 +596,65 @@ namespace OKPluginNaemonConfig
                         case "naemon_timeperiod.name":
                             obj.Attributes["timeperiod_name"] = attribute.Value.Attribute.Value.Value2String();
                             break;
-                        //case "naemon_variable.type":
-                        //    attributes["_TYPE"] = attribute.Value.Attribute.Value.Value2String();
-                        //    break;
-                        //case "naemon_variable.name":
-                        //    attributes["_NAME"] = attribute.Value.Attribute.Value.Value2String();
-                        //    break;
-                        //case "naemon_variable.value":
-                        //    attributes["_VALUE"] = attribute.Value.Attribute.Value.Value2String();
-                        //    break;
-                        //case "naemon_variable.issecret":
-                        //    attributes["_ISSECRET"] = attribute.Value.Attribute.Value.Value2String();
-                        //    break;
-                        //case "naemon_variable.reftype":
-                        //    attributes["_REFTYPE"] = attribute.Value.Attribute.Value.Value2String();
-                        //    break;
-                        //case "naemon_variable.refid":
-                        //    attributes["_REFID"] = attribute.Value.Attribute.Value.Value2String();
-                        //    break;
-                        //default:
-                        //    break;
+                        case "naemon_timeperiod.alias":
+                            obj.Attributes["alias"] = attribute.Value.Attribute.Value.Value2String();
+                            break;
+                        case "naemon_timeperiod.span_mon":
+                            var monday = attribute.Value.Attribute.Value.Value2String();
+                            if (monday != null && monday.Length > 0)
+                            {
+                                obj.Attributes["monday"] = monday;
+                            }
+                            break;
+                        case "naemon_timeperiod.span_tue":
+                            var tuesday = attribute.Value.Attribute.Value.Value2String();
+                            if (tuesday != null && tuesday.Length > 0)
+                            {
+                                obj.Attributes["tuesday"] = tuesday;
+                            }
+                            break;
+                        case "naemon_timeperiod.span_wed":
+                            var wednesday = attribute.Value.Attribute.Value.Value2String();
+                            if (wednesday != null && wednesday.Length > 0)
+                            {
+                                obj.Attributes["wednesday"] = wednesday;
+                            }
+                            break;
+                        case "naemon_timeperiod.span_thu":
+                            obj.Attributes["thursday"] = attribute.Value.Attribute.Value.Value2String();
+                            var thursday = attribute.Value.Attribute.Value.Value2String();
+                            if (thursday != null && thursday.Length > 0)
+                            {
+                                obj.Attributes["thursday"] = thursday;
+                            }
+                            break;
+                        case "naemon_timeperiod.span_fri":
+                            var friday = attribute.Value.Attribute.Value.Value2String();
+                            if (friday != null && friday.Length > 0)
+                            {
+                                obj.Attributes["friday"] = friday;
+                            }
+                            break;
+                        case "naemon_timeperiod.span_sat":
+                            var saturday = attribute.Value.Attribute.Value.Value2String();
+                            if (saturday != null && saturday.Length > 0)
+                            {
+                                obj.Attributes["saturday"] = saturday;
+                            }
+                            break;
+                        case "naemon_timeperiod.span_sun":
+                            var sunday = attribute.Value.Attribute.Value.Value2String();
+                            if (sunday != null && sunday.Length > 0)
+                            {
+                                obj.Attributes["sunday"] = sunday;
+                            }
+                            break;
+                        default:
+                            break;
                     }
                 }
+
+                configObjs.Add(obj);
             }
 
 
