@@ -1,6 +1,7 @@
 ﻿using JsonSubTypes;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.CLB;
@@ -38,7 +39,7 @@ namespace OKPluginCLBMonitoring
         private readonly string belongsToNaemonContactgroup = "belongs_to_naemon_contactgroup";
 
         
-        public override async Task<bool> Run(Layer targetLayer, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
+        public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start clbMonitoring");
 

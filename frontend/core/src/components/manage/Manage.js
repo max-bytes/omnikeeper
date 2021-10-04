@@ -15,6 +15,7 @@ import ShowVersion from 'components/manage/ShowVersion';
 import LayerOperations from 'components/manage/LayerOperations';
 import useFrontendPluginsManager from "utils/useFrontendPluginsManager";
 import ManageGenerators from './ManageGenerators';
+import ManageCLConfigs from './ManageCLConfigs';
 
 export default function Manage(props) {
     let { path, url } = useRouteMatch();
@@ -54,6 +55,9 @@ export default function Manage(props) {
             </PrivateRoute>
             <PrivateRoute path={`${path}/auth-roles`}>
                 <ManageAuthRoles />
+            </PrivateRoute>
+            <PrivateRoute path={`${path}/cl-configs`}>
+                <ManageCLConfigs />
             </PrivateRoute>
             <PrivateRoute path={`${path}/cache`}>
                 <ManageCache />
@@ -100,6 +104,7 @@ export default function Manage(props) {
                         <li><Link to={`${url}/traits`}>Traits</Link></li>
                         <li><Link to={`${url}/auth-roles`}>Auth Roles</Link></li>
                         <li><Link to={`${url}/generators`}>Generators</Link></li>
+                        <li><Link to={`${url}/cl-configs`}>Compute Layer Configurations</Link></li>
                     </ul>
 
                     <h3>Debug</h3>

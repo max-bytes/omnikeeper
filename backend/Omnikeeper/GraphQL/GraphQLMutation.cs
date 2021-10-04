@@ -27,6 +27,7 @@ namespace Omnikeeper.GraphQL
         private readonly IRecursiveDataTraitModel recursiveDataTraitModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
+        private readonly ICLConfigModel clConfigModel;
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
@@ -35,7 +36,7 @@ namespace Omnikeeper.GraphQL
             IPredicateModel predicateModel, IChangesetModel changesetModel, IGeneratorModel generatorModel,
             IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, IAuthRoleModel authRoleModel,
             IRecursiveDataTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
-            IManagementAuthorizationService managementAuthorizationService,
+            IManagementAuthorizationService managementAuthorizationService, ICLConfigModel clConfigModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
@@ -49,15 +50,16 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
-                    var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
-
                     var layers = context.GetArgument<string[]?>("layers", null);
                     var insertAttributes = context.GetArgument("InsertAttributes", new List<InsertCIAttributeInput>());
                     var removeAttributes = context.GetArgument("RemoveAttributes", new List<RemoveCIAttributeInput>());
                     var insertRelations = context.GetArgument("InsertRelations", new List<InsertRelationInput>())!;
                     var removeRelations = context.GetArgument("RemoveRelations", new List<RemoveRelationInput>())!;
 
-                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var userContext = await context.SetupUserContext()
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                        .WithTimeThreshold(() => TimeThreshold.BuildLatest())
+                        .WithLayerset(async trans => layers != null ? await layerModel.BuildLayerSet(layers, trans) : null);
 
                     var writeLayerIDs = insertAttributes.Select(a => a.LayerID)
                     .Concat(removeAttributes.Select(a => a.LayerID))
@@ -75,10 +77,6 @@ namespace Omnikeeper.GraphQL
                     if (!ciBasedAuthorizationService.CanWriteToAllCIs(writeCIIDs, out var notAllowedCI))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to CI {notAllowedCI}");
 
-                    using var transaction = modelContextBuilder.BuildDeferred();
-                    userContext.LayerSet = layers != null ? await layerModel.BuildLayerSet(layers, transaction) : null;
-                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
-
                     var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
 
                     var groupedInsertAttributes = insertAttributes.GroupBy(a => a.CI);
@@ -91,7 +89,7 @@ namespace Omnikeeper.GraphQL
                         {
                             var nonGenericAttributeValue = AttributeValueBuilder.BuildFromDTO(attribute.Value);
 
-                            var (a, changed) = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, attribute.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), transaction);
+                            var (a, changed) = await attributeModel.InsertAttribute(attribute.Name, nonGenericAttributeValue, ciIdentity, attribute.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
                             insertedAttributes.Add(a);
                         }
                     }
@@ -104,7 +102,7 @@ namespace Omnikeeper.GraphQL
                         var ciIdentity = attributeGroup.Key;
                         foreach (var attribute in attributeGroup)
                         {
-                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, attribute.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), transaction);
+                            var (a, changed) = await attributeModel.RemoveAttribute(attribute.Name, ciIdentity, attribute.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
                             removedAttributes.Add(a);
                         }
                     }
@@ -112,14 +110,14 @@ namespace Omnikeeper.GraphQL
                     var insertedRelations = new List<Relation>();
                     foreach (var insertRelation in insertRelations)
                     {
-                        var (r, changed) = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), transaction);
+                        var (r, changed) = await relationModel.InsertRelation(insertRelation.FromCIID, insertRelation.ToCIID, insertRelation.PredicateID, insertRelation.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
                         insertedRelations.Add(r);
                     }
 
                     var removedRelations = new List<Relation>();
                     foreach (var removeRelation in removeRelations)
                     {
-                        var (r, changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, removeRelation.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), transaction);
+                        var (r, changed) = await relationModel.RemoveRelation(removeRelation.FromCIID, removeRelation.ToCIID, removeRelation.PredicateID, removeRelation.LayerID, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
                         removedRelations.Add(r);
                     }
 
@@ -132,11 +130,10 @@ namespace Omnikeeper.GraphQL
                         .Concat(removedRelations.SelectMany(i => new Guid[] { i.FromCIID, i.ToCIID }))
                         .ToHashSet();
                         if (!affectedCIIDs.IsEmpty())
-                            affectedCIs = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(affectedCIIDs), userContext.LayerSet, true, AllAttributeSelection.Instance, transaction, userContext.TimeThreshold);
+                            affectedCIs = await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(affectedCIIDs), userContext.LayerSet, true, AllAttributeSelection.Instance, userContext.Transaction, userContext.TimeThreshold);
                     }
 
-                    transaction.Commit();
-                    userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
+                    userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                     return new MutateReturn(insertedAttributes, removedAttributes, insertedRelations, affectedCIs);
                 });
@@ -147,37 +144,32 @@ namespace Omnikeeper.GraphQL
                 ),
                 resolve: async context =>
                 {
-                    var modelContextBuilder = context.RequestServices!.GetRequiredService<IModelContextBuilder>();
-
                     var createCIs = context.GetArgument("cis", new List<CreateCIInput>())!;
 
-                    var userContext = (context.UserContext as OmnikeeperUserContext)!;
+                    var userContext = context.SetupUserContext()
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildDeferred())
+                        .WithTimeThreshold(() => TimeThreshold.BuildLatest());
 
                     if (!layerBasedAuthorizationService.CanUserWriteToAllLayers(userContext.User, createCIs.Select(ci => ci.LayerIDForName)))
                         throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to write to at least one of the following layerIDs: {string.Join(',', createCIs.Select(ci => ci.LayerIDForName))}");
                     // NOTE: a newly created CI cannot be checked with CIBasedAuthorizationService yet. That's why we don't do a .CanWriteToCI() check here
-
-                    using var transaction = modelContextBuilder.BuildDeferred();
-                    userContext.TimeThreshold = TimeThreshold.BuildLatest();
 
                     var changeset = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
 
                     var createdCIIDs = new List<Guid>();
                     foreach (var ci in createCIs)
                     {
-                        Guid ciid = await ciModel.CreateCI(transaction);
+                        Guid ciid = await ciModel.CreateCI(userContext.Transaction);
 
-                        await attributeModel.InsertCINameAttribute(ci.Name, ciid, ci.LayerIDForName, changeset, new DataOriginV1(DataOriginType.Manual), transaction);
+                        await attributeModel.InsertCINameAttribute(ci.Name, ciid, ci.LayerIDForName, changeset, new DataOriginV1(DataOriginType.Manual), userContext.Transaction);
 
                         createdCIIDs.Add(ciid);
                     }
-                    transaction.Commit();
-                    userContext.Transaction = modelContextBuilder.BuildImmediate(); // HACK: so that later running parts of the graphql tree have a proper transaction object
+                    userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
                     return new CreateCIsReturn(createdCIIDs);
                 });
 
-            CreateManage();
             this.layerModel = layerModel;
             this.predicateModel = predicateModel;
             this.changesetModel = changesetModel;
@@ -188,9 +180,12 @@ namespace Omnikeeper.GraphQL
             this.recursiveDataTraitModel = recursiveDataTraitModel;
             this.baseConfigurationModel = baseConfigurationModel;
             this.managementAuthorizationService = managementAuthorizationService;
+            this.clConfigModel = clConfigModel;
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;
+
+            CreateManage();
         }
     }
 }

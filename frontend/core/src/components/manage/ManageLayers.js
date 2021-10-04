@@ -26,7 +26,7 @@ export default function ManageLayers(props) {
     { headerName: "ID", field: "id", editable: (params) => params.data.isNew },
     { headerName: "Description", field: "description", editable: (params) => params.data.isNew },
     { headerName: "Color", field: "color", width: 70, cellEditor: 'ARGBColorCellEditor', cellRenderer: 'layerColorCellRenderer' },
-    { headerName: "Compute Layer Brain", field: "brainName" },
+    { headerName: "Compute Layer Config ID", field: "clConfigID" },
     { headerName: "Online Inbound Adapter", field: "onlineInboundAdapterName" },
     { headerName: "Generators", field: "generators", 
       valueFormatter: (params) => params.value.join(','),
@@ -46,7 +46,7 @@ export default function ManageLayers(props) {
 
     <AgGridCrud idIsUserCreated={true} rowData={rowData} setRowData={setRowData} loading={loading} columnDefs={columnDefs} onRefresh={refetch} 
       saveRow={async row => {
-          return upsertLayer({variables: { layer: { id: row.id, description: row.description, state: row.state, brainName: row.brainName, onlineInboundAdapterName: row.onlineInboundAdapterName, color: row.color, generators: row.generators ?? [] }}})
+          return upsertLayer({variables: { layer: { id: row.id, description: row.description, state: row.state, clConfigID: row.clConfigID, onlineInboundAdapterName: row.onlineInboundAdapterName, color: row.color, generators: row.generators ?? [] }}})
             .then(r => { apolloClient.resetStore(); return r; })
             .then(r => ({result: r.data.manage_upsertLayer, id: row.id}))
             .catch(e => ({result: e, id: row.id }));

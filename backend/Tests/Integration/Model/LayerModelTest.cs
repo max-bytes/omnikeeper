@@ -51,8 +51,8 @@ namespace Tests.Integration.Model
             using var trans = ModelContextBuilder.BuildImmediate();
 
             var layerA = await layerModel.UpsertLayer("a", trans);
-            var layerB = await layerModel.UpsertLayer("b", "", ColorTranslator.FromHtml("#FF0000"), AnchorState.Deprecated, ComputeLayerBrainLink.Build("clbB"), OnlineInboundAdapterLink.Build("oilpX"), new string[0], trans);
-            var layerC = await layerModel.UpsertLayer("c", "", ColorTranslator.FromHtml("#00FF00"), AnchorState.Deprecated, ComputeLayerBrainLink.Build("clbC"), OnlineInboundAdapterLink.Build("oilpY"), new string[0], trans);
+            var layerB = await layerModel.UpsertLayer("b", "", ColorTranslator.FromHtml("#FF0000"), AnchorState.Deprecated, "clbB", OnlineInboundAdapterLink.Build("oilpX"), new string[0], trans);
+            var layerC = await layerModel.UpsertLayer("c", "", ColorTranslator.FromHtml("#00FF00"), AnchorState.Deprecated, "clbC", OnlineInboundAdapterLink.Build("oilpY"), new string[0], trans);
 
             var user = await userModel.UpsertUser("testuser", "testuser", Guid.NewGuid(), UserType.Human, trans);
 

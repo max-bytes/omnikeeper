@@ -52,6 +52,14 @@ export const queries = {
         }
         ${Fragments.authRole}
     `,
+    CLConfigs: gql`
+        query {
+            manage_clConfigs {
+                ...CLConfig
+            }
+        }
+        ${Fragments.clConfig}
+    `,
     AvailablePermissions: gql`
         query {
             manage_availablePermissions

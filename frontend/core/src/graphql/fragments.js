@@ -76,7 +76,7 @@ export const Fragments = {
     color
     state
     writable
-    brainName
+    clConfigID
     onlineInboundAdapterName
     generators
   }
@@ -149,6 +149,13 @@ export const Fragments = {
   fragment AuthRole on AuthRoleType {
     id,
     permissions
+  }
+  `,
+  clConfig: gql`
+  fragment CLConfig on CLConfigType {
+    id,
+    clBrainReference,
+    clBrainConfig
   }
   `,
 };
