@@ -8,6 +8,7 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OKPluginNaemonConfig
@@ -26,12 +27,19 @@ namespace OKPluginNaemonConfig
             this.traitModel = traitModel;
         }
 
+        #region configuration
+        // TODO: move code in this region into configuration
         private List<string> loadcmdbcustomer = new List<string>() { "ADISSEO", "AGRANA", "AMS", "AMSINT", "ANDRITZ", "ATS", "AVESTRA", "AWS" };
 
         // this is only temporary since this should be read from configuration
         private List<string> naemonsConfigGenerateprofiles = new List<string>() { "svphg200mon001", "svphg200mon002", "uansvclxnaemp01", "uansvclxnaemp02", "uansvclxnaemp03", "uansvclxnaemp04", "uansvclxnaemp05", "uansvclxnaemp06" };
 
+        //    cmdb-monprofile-prefix:
+        //- 'profile-'
+        //- 'profiletsc-'
 
+        private List<string> cmdbMonprofilePrefix = new List<string> { "profile-", "profiletsc-" };
+        #endregion
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start naemonConfig");
@@ -173,9 +181,9 @@ namespace OKPluginNaemonConfig
 
                 foreach (var item in ciData)
                 {
+                    item.Categories = new Dictionary<string, List<Category>>();
                     if (item.Id == hostId)
                     {
-                        item.Categories = new Dictionary<string, Category>();
 
                         var obj = new Category();
 
@@ -203,7 +211,13 @@ namespace OKPluginNaemonConfig
                             }
                         }
 
-                        item.Categories[obj.Group] = obj;
+                        if (!item.Categories.ContainsKey(obj.Group))
+                        {
+                            item.Categories.Add(obj.Group, new List<Category> { obj });
+                        } else
+                        {
+                            item.Categories[obj.Group].Add(obj);
+                        }
                     }
                 }
             }
@@ -226,9 +240,10 @@ namespace OKPluginNaemonConfig
 
                 foreach (var item in ciData)
                 {
+                    item.Categories = new Dictionary<string, List<Category>>();
                     if (item.Id == serviceId)
                     {
-                        item.Categories = new Dictionary<string, Category>();
+                        
 
                         var obj = new Category();
 
@@ -256,8 +271,17 @@ namespace OKPluginNaemonConfig
                             }
                         }
 
-                        item.Categories[obj.Group] = obj;
+                        if (!item.Categories.ContainsKey(obj.Group))
+                        {
+                            item.Categories.Add(obj.Group, new List<Category> { obj });
+                        }
+                        else
+                        {
+                            item.Categories[obj.Group].Add(obj);
+                        }
                     }
+
+                    var result = item.Categories.Keys.Select(k => k[0]).Distinct();
                 }
             }
 
@@ -559,6 +583,52 @@ namespace OKPluginNaemonConfig
 
             }
 
+            #region process core data
+            // updateNormalizedCiDataFieldProfile
+            foreach (var ciItem in ciData)
+            {
+                var profileCount = 0;
+                ciItem.Profile = "NONE";
+                ciItem.ProfileOrg = new List<string>();
+
+                if (ciItem.Categories.ContainsKey("MONITORING"))
+                {
+                    foreach (var category in ciItem.Categories["MONITORING"])
+                    {
+                        // check profile against configured scoping pattern
+                        var isMyProfileScope = false;
+                        foreach (var pattern in cmdbMonprofilePrefix)
+                        {
+                            if (Regex.IsMatch(category.Name, $"/^${pattern}/i"))
+                            {
+                                isMyProfileScope = true;
+                                break;
+                            }
+                        }
+
+                        if (isMyProfileScope)
+                        {
+                            profileCount += 1;
+                            ciItem.Profile = category.Name.ToLower();
+                            ciItem.ProfileOrg.Add(category.Name.ToLower());
+                        }
+                    }
+                }
+
+                if (profileCount > 1)
+                {
+                    ciItem.Profile = "MULTIPLE";
+                }
+
+                if (profileCount == 1 && Regex.IsMatch(ciItem.Profile, "/^profile/i"))
+                {
+                    // add legacy profile capability
+                    ciItem.Tags.Add("cap_lp_" + ciItem.Profile);
+                }
+
+            }
+            #endregion
+
             var configObjs = new List<ConfigObj>();
 
             // apply global filter
@@ -577,7 +647,7 @@ namespace OKPluginNaemonConfig
                 }
             });
 
-            // getNaemonConfigObjectsFromTimeperiods
+            #region getNaemonConfigObjectsFromTimeperiods
             var timeperiods = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.TimePeriodsFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
             foreach (var ciItem in timeperiods)
             {
@@ -656,6 +726,23 @@ namespace OKPluginNaemonConfig
 
                 configObjs.Add(obj);
             }
+            #endregion
+
+
+            #region getNaemonConfigObjectsFromNormalizedCiData
+            var deployedCis = new List<ConfigurationItem>();
+
+            foreach (var ciItem in ciData)
+            {
+                //if (Regex.IsMatch("", ciItem.))
+                //{
+
+                //}
+            }
+
+            #endregion
+
+
 
 
             // get configuration from legacy objects
@@ -835,11 +922,7 @@ namespace OKPluginNaemonConfig
                         {
                             serviceTemplates.Add("service-pnp");
                         }
-                        /*
-                           $attributes['use'] = join(',', $serviceTemplates);
-                            $attributes['hostgroup_name'] = strtolower($module['NAME']);
-                            $attributes['service_description'] = getNaemonServiceDescription($layersById, $service);
-                         */
+  
                         attributes["use"] = string.Join(",", serviceTemplates);
                         attributes["hostgroup_name"] = moduleName;
 
@@ -1113,10 +1196,12 @@ namespace OKPluginNaemonConfig
             public string Name { get; set; }
             public string Status { get; set; }
             public string Environment { get; set; }
+            public string Profile { get; set; }
+            public List<string> ProfileOrg { get; set; }
             public List<string> NaemonsAvail { get; set; }
-            public Dictionary<string, Category> Categories { get; set; }
+            public Dictionary<string, List<Category>> Categories { get; set; }
+            public List<string> Tags { get; set; }
             public Actions Actions { get; set; }
-
             public Interfaces Interfaces { get; set; }
         }
 
