@@ -44,12 +44,6 @@ namespace OKPluginNaemonConfig
         {
             logger.LogDebug("Start naemonConfig");
 
-            // monman data -> layer "monman"
-            // cmdb data -> layer "cmdb"
-            // livestatus -> layer "livestatus"
-
-            // naemon config CLB -> layer  "naemon_config"
-
             var layersetCMDB = await layerModel.BuildLayerSet(new[] { "cmdb" }, trans);
             var layersetMonman = await layerModel.BuildLayerSet(new[] { "monman" }, trans);
             var layersetLivestatus = await layerModel.BuildLayerSet(new[] { "livestatus" }, trans);
@@ -94,8 +88,6 @@ namespace OKPluginNaemonConfig
             // a list with all CI from datbase
 
             var ciData = new List<ConfigurationItem>();
-            //var hosts = await traitModel.GetEffectiveTraitsForTrait(Traits.HCisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-
             var hosts = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HCisFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
             foreach (var ciItem in hosts)
@@ -130,7 +122,6 @@ namespace OKPluginNaemonConfig
 
             // get services
             var services = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ACisFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
-            //var services = await traitModel.GetEffectiveTraitsForTrait(Traits.ACisFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
             foreach (var ciItem in services)
             {
                 //(MergedCI ciItem, _) = service.Value;
@@ -165,11 +156,9 @@ namespace OKPluginNaemonConfig
             // add categories for hosts 
             // HostsCategories
             var hostsCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HostsCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
-            //var hostsCategories = await traitModel.GetEffectiveTraitsForTrait(Traits.HostsCategoriesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
             foreach (var ciItem in hostsCategories)
             {
-                //(MergedCI ciItem, _) = hostCategory.Value;
                 var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_category_hostid", out MergedCIAttribute? hostIdAttribute);
 
                 if (!success)
@@ -181,10 +170,8 @@ namespace OKPluginNaemonConfig
 
                 foreach (var item in ciData)
                 {
-                    item.Categories = new Dictionary<string, List<Category>>();
                     if (item.Id == hostId)
                     {
-
                         var obj = new Category();
 
                         foreach (var attribute in ciItem.MergedAttributes)
@@ -199,6 +186,10 @@ namespace OKPluginNaemonConfig
                                     break;
                                 case "cmdb.host_category_catgroup":
                                     obj.Group = attribute.Value.Attribute.Value.Value2String();
+                                    if (obj.Group == "MONITORING")
+                                    {
+                                        var a = 5;
+                                    }
                                     break;
                                 case "cmdb.host_category_category":
                                     obj.Name = attribute.Value.Attribute.Value.Value2String();
@@ -218,17 +209,20 @@ namespace OKPluginNaemonConfig
                         {
                             item.Categories[obj.Group].Add(obj);
                         }
+
+                        break;
                     }
                 }
             }
 
+            var hh = ciData.Where(el => el.Id == "H02047416");
+
+
             // add categories for services
             var servicesCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ServicesCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
-            //var servicesCategories = await traitModel.GetEffectiveTraitsForTrait(Traits.ServicesCategoriesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
             foreach (var ciItem in servicesCategories)
             {
-                //(MergedCI ciItem, _) = serviceCategory.Value;
                 var success = ciItem.MergedAttributes.TryGetValue("cmdb.service_category_svcid", out MergedCIAttribute? serviceIdAttribute);
 
                 if (!success)
@@ -240,11 +234,8 @@ namespace OKPluginNaemonConfig
 
                 foreach (var item in ciData)
                 {
-                    item.Categories = new Dictionary<string, List<Category>>();
                     if (item.Id == serviceId)
                     {
-                        
-
                         var obj = new Category();
 
                         foreach (var attribute in ciItem.MergedAttributes)
@@ -279,20 +270,17 @@ namespace OKPluginNaemonConfig
                         {
                             item.Categories[obj.Group].Add(obj);
                         }
-                    }
 
-                    var result = item.Categories.Keys.Select(k => k[0]).Distinct();
+                        break;
+                    }
                 }
             }
 
             // add host actions to cidata
             var hostActions = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HostActionsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
-            //var hostActions = await traitModel.GetEffectiveTraitsForTrait(Traits.HostActionsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-
             foreach (var ciItem in hostActions)
             {
-                //(MergedCI ciItem, _) = hostAction.Value;
                 var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_action_hostid", out MergedCIAttribute? hostIdAttribute);
 
                 var hostId = hostIdAttribute!.Attribute.Value.Value2String();
@@ -332,11 +320,8 @@ namespace OKPluginNaemonConfig
             // add service actions to ci data 
             var serviceActions = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ServiceActionsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
-            //var serviceActions = await traitModel.GetEffectiveTraitsForTrait(Traits.ServiceActionsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-
             foreach (var ciItem in serviceActions)
             {
-                //(MergedCI ciItem, _) = serviceAction.Value;
                 var success = ciItem.MergedAttributes.TryGetValue("cmdb.service_action_svcid", out MergedCIAttribute? serviceIdAttribute);
 
                 var serviceId = serviceIdAttribute!.Attribute.Value.Value2String();
@@ -395,21 +380,14 @@ namespace OKPluginNaemonConfig
 
                 //}
             }
-
-            // get capability map
-            // then check profiles from db
-
+            
             //getCapabilityMap - NaemonInstancesTagsFlattened
             var naemonInstancesTags = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonInstancesTagsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
-
-            //var naemonInstancesTags = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonInstancesTagsFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
 
             var capMap = new Dictionary<string, List<string>>();
 
             foreach (var ciItem in naemonInstancesTags)
             {
-                //(MergedCI ciItem, _) = instanceTag.Value;
-
                 var s = ciItem.MergedAttributes.TryGetValue("naemon_instance_tag.tag", out MergedCIAttribute? instanceTagAttribute);
 
                 if (!s)
@@ -440,15 +418,11 @@ namespace OKPluginNaemonConfig
 
             var naemonProfiles = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonProfilesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
-            //var naemonProfiles = await traitModel.GetEffectiveTraitsForTrait(Traits.NaemonProfilesFlattened, layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-
             var profileFromDbNaemons = new List<string>();
 
             foreach (var ciItem in naemonInstances)
             {
                 // we need to check here if isNaemonProfileFromDbEnabled 
-                //(MergedCI ciItem, _) = naemon.Value;
-
                 var s = ciItem.MergedAttributes.TryGetValue("naemon_instance.name", out MergedCIAttribute? instanceNameAttribute);
 
                 if (!s)
@@ -460,8 +434,6 @@ namespace OKPluginNaemonConfig
 
                 if (naemonsConfigGenerateprofiles.Contains(instanceName))
                 {
-                    //profileFromDbNaemons.Add(ci);
-
                     // monman-instance.id
                     var ss = ciItem.MergedAttributes.TryGetValue("naemon_instance.id", out MergedCIAttribute? instanceIdAttribute);
 
@@ -480,17 +452,12 @@ namespace OKPluginNaemonConfig
             {
                 foreach (var ciItem in naemonProfiles)
                 {
-                    //(MergedCI ciItem, _) = profile.Value;
-
-                    // first get profile name 
                     var s = ciItem.MergedAttributes.TryGetValue("naemon_profile.name", out MergedCIAttribute? profileNameAttribute);
 
                     if (!s)
                     {
                         continue;
                     }
-
-                    //$cap = 'cap_lp_'.strtolower($profile['NAME']);
 
                     var cap = "cap_lp_" + profileNameAttribute!.Attribute.Value.Value2String();
 
@@ -504,37 +471,6 @@ namespace OKPluginNaemonConfig
                     }
                 }
             }
-
-            //// create for each CI an json object so we can have more flexibility
-            //foreach (var ciItem in cisData)
-            //{
-            //    // we need to add the naemonsVail to each configuration item
-            //    var naemonsVail = naemonIds;
-
-            //    // we need to check here ci tags which should be an attribute
-            //    foreach (var instanceTag in naemonInstancesTags)
-            //    {
-            //        (MergedCI item, _) = instanceTag.Value;
-
-            //        var s = item.MergedAttributes.TryGetValue("monman-instance.name", out MergedCIAttribute? instanceNameAttribute);
-
-            //        if (!s)
-            //        {
-            //            continue;
-            //        }
-
-            //        var requirement = instanceNameAttribute!.Attribute.Value.Value2String();
-
-            //        if (capMap.ContainsKey(requirement))
-            //        {
-            //            naemonsVail = naemonsVail.Intersect(capMap[requirement]).ToList();
-            //        }
-            //        else
-            //        {
-            //            naemonsVail = new List<string>();
-            //        }
-            //    }
-            //}
 
             foreach (var item in ciData)
             {
@@ -574,14 +510,14 @@ namespace OKPluginNaemonConfig
                 }
             }
 
-            foreach (var item in ciData)
-            {
-                if (item.Actions != null)
-                {
-                    break;
-                }
+            //foreach (var item in ciData)
+            //{
+            //    if (item.Actions != null)
+            //    {
+            //        break;
+            //    }
 
-            }
+            //}
 
             #region process core data
             // updateNormalizedCiDataFieldProfile
@@ -1191,6 +1127,11 @@ namespace OKPluginNaemonConfig
             //    Categories = categories;
             //    Actions = actions;
             //}
+
+            public ConfigurationItem()
+            {
+                Categories = new Dictionary<string, List<Category>>();
+            }
             public string Type { get; set; }
             public string Id { get; set; }
             public string Name { get; set; }
