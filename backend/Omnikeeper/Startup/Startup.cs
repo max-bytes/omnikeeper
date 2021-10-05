@@ -306,8 +306,7 @@ namespace Omnikeeper.Startup
                 {
                     inputFormatter.BaseAddressFactory = (m) => ModifyBaseAddress(m);
                 }
-            })
-                .AddFluentValidation();
+            }).AddFluentValidation();
         }
 
         private IWebHostEnvironment CurrentEnvironment { get; set; }
