@@ -1,6 +1,5 @@
 ﻿using GraphQL;
 using GraphQL.DataLoader;
-using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +9,6 @@ using Microsoft.Extensions.Hosting;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL;
-using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;

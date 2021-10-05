@@ -34,7 +34,7 @@ namespace Omnikeeper.GraphQL
                 return JsonSerializer.Generic.Utf8.SerializeAsync<ExecutionResult, Resolver<byte>>((value as ExecutionResult)!, stream, cancellationToken).AsTask();
             } catch (Exception e)
             {
-                return Task.CompletedTask;
+                throw e;
             }
         }
     }
@@ -49,10 +49,10 @@ namespace Omnikeeper.GraphQL
 
         public void Serialize(ref JsonWriter<byte> writer, ExecutionResult value)
         {
-            writer.WriteBeginObject();
+            writer.WriteUtf8BeginObject();
             var shouldWriteData = (value.Errors == null || value.Errors.Count == 0) && value.Data != null;
             var shouldWriteErrors = value.Errors != null && value.Errors.Count > 0;
-            var shouldWriteExtensions = value.Data != null && value.Extensions != null && value.Extensions.Count > 0;
+            //var shouldWriteExtensions = value.Data != null && value.Extensions != null && value.Extensions.Count > 0;
             var separated = false;
             if (shouldWriteData)
             {
@@ -62,7 +62,7 @@ namespace Omnikeeper.GraphQL
 
             if (shouldWriteErrors)
             {
-                if (separated) writer.WriteValueSeparator(); 
+                if (separated) writer.WriteUtf8ValueSeparator(); 
                 WriteErrors(ref writer, value.Errors!);
                 separated = true;
             }
@@ -71,19 +71,19 @@ namespace Omnikeeper.GraphQL
             //{
             //    if (separated)
             //    {
-            //        writer.WriteValueSeparator();
+            //        writer.WriteUtf8ValueSeparator();
             //    }
             //    WriteExtensions(ref writer, value);
             //}
 
-            writer.WriteEndObject();
+            writer.WriteUtf8EndObject();
         }
 
         private void WriteData(ref JsonWriter<byte> writer, ExecutionResult result)
         {
             if (result.Executed)
             {
-                writer.WriteName("data");
+                writer.WriteUtf8Name("data");
                 if (result.Data is ExecutionNode executionNode)
                 {
                     WriteExecutionNode(ref writer, executionNode);
@@ -125,20 +125,20 @@ namespace Omnikeeper.GraphQL
             {
                 if (objectExecutionNode.SubFields == null)
                 {
-                    writer.WriteNull();
+                    writer.WriteUtf8Null();
                 }
                 else
                 {
                     var separated = false;
-                    writer.WriteBeginObject();
+                    writer.WriteUtf8BeginObject();
                     foreach (var childNode in objectExecutionNode.SubFields)
                     {
-                        if (separated) writer.WriteValueSeparator();
-                        writer.WriteName(childNode.Name);
+                        if (separated) writer.WriteUtf8ValueSeparator();
+                        writer.WriteUtf8Name(childNode.Name);
                         WriteExecutionNode(ref writer, childNode);
                         separated = true;
                     }
-                    writer.WriteEndObject();
+                    writer.WriteUtf8EndObject();
                 }
             }
             else if (node is ArrayExecutionNode arrayExecutionNode)
@@ -146,24 +146,24 @@ namespace Omnikeeper.GraphQL
                 var items = arrayExecutionNode.Items;
                 if (items == null)
                 {
-                    writer.WriteNull();
+                    writer.WriteUtf8Null();
                 }
                 else
                 {
                     var separated = false;
-                    writer.WriteBeginArray();
+                    writer.WriteUtf8BeginArray();
                     foreach (var childNode in items)
                     {
-                        if (separated) writer.WriteValueSeparator();
+                        if (separated) writer.WriteUtf8ValueSeparator();
                         WriteExecutionNode(ref writer, childNode);
                         separated = true;
                     }
-                    writer.WriteEndArray();
+                    writer.WriteUtf8EndArray();
                 }
             }
             else if (node == null || node is NullExecutionNode)
             {
-                writer.WriteNull();
+                writer.WriteUtf8Null();
             }
             else
             {
@@ -178,58 +178,54 @@ namespace Omnikeeper.GraphQL
                 return;
             }
 
-            writer.WriteName("errors");
+            writer.WriteUtf8Name("errors");
 
-            writer.WriteBeginArray();
-
+            writer.WriteUtf8BeginArray();
             foreach (var error in errors)
             {
                 var info = errorInfoProvider.GetInfo(error);
 
-                writer.WriteBeginObject();
+                writer.WriteUtf8BeginObject();
 
-                writer.WriteName("message");
-
+                writer.WriteUtf8Name("message");
                 writer.WriteUtf8String(info.Message);
 
                 if (error.Locations != null)
                 {
-                    writer.WriteName("locations");
-                    writer.WriteBeginArray();
+                    writer.WriteUtf8Name("locations");
+                    writer.WriteUtf8BeginArray();
                     foreach (var location in error.Locations)
                     {
-                        writer.WriteBeginObject();
-                        writer.WriteName("line");
+                        writer.WriteUtf8BeginObject();
+                        writer.WriteUtf8Name("line");
                         writer.WriteUtf8Int32(location.Line);
-                        writer.WriteName("column");
+                        writer.WriteUtf8Name("column");
                         writer.WriteUtf8Int32(location.Column);
-                        writer.WriteEndObject();
+                        writer.WriteUtf8EndObject();
                     }
-                    writer.WriteEndArray();
+                    writer.WriteUtf8EndArray();
                 }
 
                 if (error.Path != null && error.Path.Any())
                 {
-                    writer.WriteName("path");
+                    writer.WriteUtf8Name("path");
                     if (error.Path == null)
                         writer.WriteUtf8Null();
                     else
                         ListFormatter<IList<object>, object, byte, IncludeNullsCamelCaseResolver<byte>>.Default.Serialize(ref writer, error.Path.ToList());
-                    //serializer.Serialize(writer, error.Path);
                 }
 
                 if (info.Extensions?.Count > 0)
                 {
-                    // TODO
-                    //writer.WriteName("extensions");
+                    //writer.WriteUtf8Name("extensions");
                     //writer.WriteUtf8String(info.Extensions);
                     //serializer.Serialize(writer, info.Extensions);
                 }
 
-                writer.WriteEndObject();
+                writer.WriteUtf8EndObject();
             }
 
-            writer.WriteEndArray();
+            writer.WriteUtf8EndArray();
         }
 
         public ExecutionResult Deserialize(ref JsonReader<byte> reader)
