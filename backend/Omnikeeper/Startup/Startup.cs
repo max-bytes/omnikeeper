@@ -37,7 +37,6 @@ using Omnikeeper.Base.Service;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
 using SpanJson.AspNetCore.Formatter;
-using SpanJson.Resolvers;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Buffers;
@@ -49,17 +48,6 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Startup
 {
-    public class SpanJsonDefaultResolver<TSymbol> : ResolverBase<TSymbol, SpanJsonDefaultResolver<TSymbol>> where TSymbol : struct
-    {
-        public SpanJsonDefaultResolver() : base(new SpanJsonOptions
-        {
-            NullOption = NullOptions.IncludeNulls,
-            NamingConvention = NamingConventions.CamelCase,
-            EnumOption = EnumOptions.String
-        })
-        {
-        }
-    }
 
     public partial class Startup
     {
@@ -133,55 +121,11 @@ namespace Omnikeeper.Startup
                     config.OutputFormatters.Add(new SpanJsonOutputFormatter<SpanJsonDefaultResolver<byte>>());
                 });
 
-            //  var json = @"{""variables"":{},""query"":""{
-            //cis(withEffectiveTraits: [""tsa_cmdb.service""], layers:[""tsa_cmdb""]) {
-            //              name
-            //  outgoingMergedRelations(requiredPredicateID: ""runs_on"") {
-            //                  relation {
-            //                      toCIName
-            //                      toCI {
-            //                          outgoingMergedRelations(requiredPredicateID: ""runs_on"") {
-            //                              relation {
-            //                                  toCIName
-            //                              }
-            //                          }
-            //                      }
-            //                  }
-            //              }
-            //          }
-            //      }\n
-            //  }\n""}
-            //  ";
-
-            //  try
-            //  {
-            //      var model = JsonSerializer.NonGeneric.Utf16.Deserialize<IncludeNullsOriginalCaseResolver<char>>(json.AsSpan(), typeof(GraphQLQuery));
-            //  }
-            //  catch (Exception e)
-            //  {
-            //      Console.WriteLine(e);
-            //  }
-
-            //try
-            //{
-            //    var data = new Context("test", new ExtractConfigPassiveRESTFiles(), new TransformConfigJMESPath("[]"), new LoadConfig(new string[] { "foo" }, "bar"));
-            //    var m = JsonSerializer.NonGeneric.Utf8.Serialize<IncludeNullsCamelCaseResolver<byte>>(data);
-            //}
-            //catch (Exception e)
-            //{
-            //    Console.WriteLine(e);
-            //}
-
             // load controllers from plugins
             foreach (var assembly in assemblies)
             {
                 mvcBuilder.AddApplicationPart(assembly);
             }
-
-            services.Configure<IISServerOptions>(options =>
-            {
-                options.AllowSynchronousIO = true; // TODO: remove, only needed for NewtonSoftJSON GraphQL Serializer
-            });
 
             services.AddGraphQL(x => { })
                 .AddErrorInfoProvider(opt => opt.ExposeExceptionStackTrace = CurrentEnvironment.IsDevelopment() || CurrentEnvironment.IsStaging())
