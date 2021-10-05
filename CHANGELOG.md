@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [1.7.1] - 2021-10-05
+ 
+### Changed
+- performance improvements to archiving data runner
+ 
 ## [1.7.0] - 2021-10-04
  
 ### Added
