@@ -1,4 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
+using Omnikeeper.Base.Utils;
+using SpanJson;
+using System.Collections.Generic;
 
 namespace Omnikeeper.Base.Entity
 {
@@ -15,6 +18,8 @@ namespace Omnikeeper.Base.Entity
         public string? OperationName { get; set; }
         public string? NamedQuery { get; set; }
         public string? Query { get; set; }
-        public JObject? Variables { get; set; }
+
+        [JsonCustomSerializer(typeof(InputsFormatter))]
+        public Dictionary<string, object>? Variables { get; set; }
     }
 }

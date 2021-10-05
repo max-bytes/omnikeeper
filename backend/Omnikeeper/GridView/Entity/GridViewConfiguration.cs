@@ -23,6 +23,8 @@ namespace Omnikeeper.GridView.Entity
             this.Trait = Trait;
         }
 
+        private GridViewConfiguration() { }
+
         public static MyJSONSerializer<GridViewConfiguration> Serializer = new MyJSONSerializer<GridViewConfiguration>(new JsonSerializerSettings()
         {
             TypeNameHandling = TypeNameHandling.Objects,
@@ -37,6 +39,10 @@ namespace Omnikeeper.GridView.Entity
         public string ColumnDescription { get; set; }
         public AttributeValueType? ValueType { get; set; }
         public string? WriteLayer { get; set; }
+
+        private GridViewColumn()
+        {
+        }
 
         public GridViewColumn(string SourceAttributeName, string[]? SourceAttributePath, string ColumnDescription, string? WriteLayer, AttributeValueType? valueType)
         {

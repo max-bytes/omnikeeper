@@ -12,7 +12,9 @@ namespace Omnikeeper.GridView.Response
         {
             this.Rows = Rows;
         }
+        private GetDataResponse() { }
     }
+
 
     public class Row
     {
@@ -24,6 +26,7 @@ namespace Omnikeeper.GridView.Response
             this.Ciid = Ciid;
             this.Cells = Cells;
         }
+        private Row() { }
     }
 
     public class Cell
@@ -38,5 +41,6 @@ namespace Omnikeeper.GridView.Response
             this.Value = Value;
             this.Changeable = Changeable;
         }
+        private Cell() { }
     }
 }

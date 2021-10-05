@@ -1,7 +1,10 @@
-﻿namespace Omnikeeper.GridView.Entity
+﻿using System.Runtime.Serialization;
+
+namespace Omnikeeper.GridView.Entity
 {
     public class FullContext
     {
+        [DataMember(Name = "id")]
         public string ID { get; set; }
         public string SpeakingName { get; set; }
         public string Description { get; set; }
@@ -14,5 +17,7 @@
             this.Description = Description;
             this.Configuration = Configuration;
         }
+
+        private FullContext() { }
     }
 }

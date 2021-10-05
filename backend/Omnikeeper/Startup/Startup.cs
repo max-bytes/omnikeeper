@@ -1,4 +1,5 @@
 using FluentValidation.AspNetCore;
+using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using Hangfire;
@@ -29,12 +30,17 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using Npgsql.Logging;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
+using Omnikeeper.GraphQL;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
+using SpanJson;
+using SpanJson.AspNetCore.Formatter;
+using SpanJson.Resolvers;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
@@ -45,6 +51,18 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Startup
 {
+    public class AspNetCoreDefaultResolver<TSymbol> : ResolverBase<TSymbol, AspNetCoreDefaultResolver<TSymbol>> where TSymbol : struct
+    {
+        public AspNetCoreDefaultResolver() : base(new SpanJsonOptions
+        {
+            NullOption = NullOptions.IncludeNulls,
+            NamingConvention = NamingConventions.CamelCase,
+            EnumOption = EnumOptions.String
+        })
+        {
+        }
+    }
+
     public partial class Startup
     {
         public Startup(IConfiguration configuration, IWebHostEnvironment env)
@@ -96,12 +114,28 @@ namespace Omnikeeper.Startup
             ServiceRegistration.RegisterGraphQL(services);
             var assemblies = ServiceRegistration.RegisterOKPlugins(services, pluginFolder);
 
-            var mvcBuilder = services.AddControllers()
-                .AddNewtonsoftJson(options =>
-                {
-                    // enums to string conversion
-                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-                });
+            var mvcBuilder = services.AddControllers(
+            //    config =>
+            //{
+            //    config.AllowEmptyInputInBodyModelBinding = true;
+            //}
+            )
+                .AddSpanJsonCustom<AspNetCoreDefaultResolver<byte>>();
+            //.AddNewtonsoftJson(options =>
+            //{
+            //    // enums to string conversion
+            //    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+            //});
+
+            //var json = "{\"variables\":{},\"query\":\"{\n statistics {\n cis\n activeAttributes\n activeRelations\n attributeChanges\n relationChanges\n changesets\n layers\n predicates\n traits\n generators\n __typename\n  }\n}\n\"}";
+            //try
+            //{
+            //    var model = JsonSerializer.NonGeneric.Utf16.Deserialize<IncludeNullsOriginalCaseResolver<char>>(json.AsSpan(), typeof(GraphQLQuery));
+            //} catch (Exception e)
+            //{
+            //    Console.WriteLine(e);
+            //}
+
             // load controllers from plugins
             foreach (var assembly in assemblies)
             {
@@ -110,7 +144,7 @@ namespace Omnikeeper.Startup
 
             services.Configure<IISServerOptions>(options =>
             {
-                options.AllowSynchronousIO = true;
+                options.AllowSynchronousIO = true; // TODO: remove, only needed for NewtonSoftJSON GraphQL Serializer
             });
 
             services.AddGraphQL(x => { })
@@ -292,7 +326,8 @@ namespace Omnikeeper.Startup
                 {
                     inputFormatter.BaseAddressFactory = (m) => ModifyBaseAddress(m);
                 }
-            }).AddFluentValidation();
+            })
+                .AddFluentValidation();
         }
 
         private IWebHostEnvironment CurrentEnvironment { get; set; }
