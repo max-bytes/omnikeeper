@@ -31,7 +31,7 @@ namespace Omnikeeper.GraphQL
         {
             try
             {
-                return JsonSerializer.Generic.Utf8.SerializeAsync<ExecutionResult, Resolver<byte>>(value as ExecutionResult, stream, cancellationToken).AsTask();
+                return JsonSerializer.Generic.Utf8.SerializeAsync<ExecutionResult, Resolver<byte>>((value as ExecutionResult)!, stream, cancellationToken).AsTask();
             } catch (Exception e)
             {
                 return Task.CompletedTask;
@@ -43,7 +43,7 @@ namespace Omnikeeper.GraphQL
     {
         public static readonly ExecutionResultFormatter Default = new ExecutionResultFormatter();
 
-        public object Arguments { get; set; } // the Argument from the attribute will be assigned
+        public object? Arguments { get; set; }
 
         private ErrorInfoProvider errorInfoProvider = new ErrorInfoProvider(); // TODO: make configurable?
 

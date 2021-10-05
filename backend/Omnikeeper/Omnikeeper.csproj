@@ -52,7 +52,6 @@
     <PackageReference Include="NuGet.Frameworks" Version="5.8.0" />
     <PackageReference Include="Scrutor" Version="3.2.1" />
 	<PackageReference Include="Serilog.Extensions.Logging.File" Version="2.0.0" />
-	<PackageReference Include="SpanJson" Version="3.1.0" />
 	<PackageReference Include="SpanJson.AspNetCore.Formatter" Version="3.1.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.2" />
     <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.1.2" />

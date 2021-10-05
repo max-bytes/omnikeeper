@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using Omnikeeper.Base.Utils;
+﻿using Omnikeeper.Base.Utils;
 using SpanJson;
 using System.Collections.Generic;
 

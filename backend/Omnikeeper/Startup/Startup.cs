@@ -25,24 +25,22 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.ObjectPool;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
-using Npgsql.Logging;
-using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils;
-using Omnikeeper.GraphQL;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
-using SpanJson;
 using SpanJson.AspNetCore.Formatter;
 using SpanJson.Resolvers;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -51,9 +49,9 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Startup
 {
-    public class AspNetCoreDefaultResolver<TSymbol> : ResolverBase<TSymbol, AspNetCoreDefaultResolver<TSymbol>> where TSymbol : struct
+    public class SpanJsonDefaultResolver<TSymbol> : ResolverBase<TSymbol, SpanJsonDefaultResolver<TSymbol>> where TSymbol : struct
     {
-        public AspNetCoreDefaultResolver() : base(new SpanJsonOptions
+        public SpanJsonDefaultResolver() : base(new SpanJsonOptions
         {
             NullOption = NullOptions.IncludeNulls,
             NamingConvention = NamingConventions.CamelCase,
@@ -114,47 +112,65 @@ namespace Omnikeeper.Startup
             ServiceRegistration.RegisterGraphQL(services);
             var assemblies = ServiceRegistration.RegisterOKPlugins(services, pluginFolder);
 
-            var mvcBuilder = services.AddControllers(
-            //    config =>
+            var mvcBuilder = services.AddControllers();
+
+            // add input and output formatters
+            services.AddOptions<MvcOptions>()
+                .PostConfigure<IOptions<JsonOptions>, IOptions<MvcNewtonsoftJsonOptions>, ArrayPool<char>, ObjectPoolProvider, ILoggerFactory>((config, jsonOpts, newtonJsonOpts, charPool, objectPoolProvider, loggerFactory) => {
+
+                    config.InputFormatters.Clear();
+                    config.InputFormatters.Add(new MySuperJsonInputFormatter());
+                    config.InputFormatters.Add(new NewtonsoftJsonInputFormatter(
+                        loggerFactory.CreateLogger<NewtonsoftJsonInputFormatter>(), newtonJsonOpts.Value.SerializerSettings, charPool, objectPoolProvider, config, newtonJsonOpts.Value
+                    ));
+                    config.InputFormatters.Add(new SpanJsonInputFormatter<SpanJsonDefaultResolver<byte>>());
+
+                    config.OutputFormatters.Clear();
+                    config.OutputFormatters.Add(new MySuperJsonOutputFormatter());
+                    config.OutputFormatters.Add(new NewtonsoftJsonOutputFormatter(
+                        newtonJsonOpts.Value.SerializerSettings, charPool, config
+                    ));
+                    config.OutputFormatters.Add(new SpanJsonOutputFormatter<SpanJsonDefaultResolver<byte>>());
+                });
+
+            //  var json = @"{""variables"":{},""query"":""{
+            //cis(withEffectiveTraits: [""tsa_cmdb.service""], layers:[""tsa_cmdb""]) {
+            //              name
+            //  outgoingMergedRelations(requiredPredicateID: ""runs_on"") {
+            //                  relation {
+            //                      toCIName
+            //                      toCI {
+            //                          outgoingMergedRelations(requiredPredicateID: ""runs_on"") {
+            //                              relation {
+            //                                  toCIName
+            //                              }
+            //                          }
+            //                      }
+            //                  }
+            //              }
+            //          }
+            //      }\n
+            //  }\n""}
+            //  ";
+
+            //  try
+            //  {
+            //      var model = JsonSerializer.NonGeneric.Utf16.Deserialize<IncludeNullsOriginalCaseResolver<char>>(json.AsSpan(), typeof(GraphQLQuery));
+            //  }
+            //  catch (Exception e)
+            //  {
+            //      Console.WriteLine(e);
+            //  }
+
+            //try
             //{
-            //    config.AllowEmptyInputInBodyModelBinding = true;
+            //    var data = new Context("test", new ExtractConfigPassiveRESTFiles(), new TransformConfigJMESPath("[]"), new LoadConfig(new string[] { "foo" }, "bar"));
+            //    var m = JsonSerializer.NonGeneric.Utf8.Serialize<IncludeNullsCamelCaseResolver<byte>>(data);
             //}
-            )
-                .AddSpanJsonCustom<AspNetCoreDefaultResolver<byte>>();
-            //.AddNewtonsoftJson(options =>
+            //catch (Exception e)
             //{
-            //    // enums to string conversion
-            //    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-            //});
-
-          //  var json = @"{""variables"":{},""query"":""{
-          //cis(withEffectiveTraits: [""tsa_cmdb.service""], layers:[""tsa_cmdb""]) {
-          //              name
-          //  outgoingMergedRelations(requiredPredicateID: ""runs_on"") {
-          //                  relation {
-          //                      toCIName
-          //                      toCI {
-          //                          outgoingMergedRelations(requiredPredicateID: ""runs_on"") {
-          //                              relation {
-          //                                  toCIName
-          //                              }
-          //                          }
-          //                      }
-          //                  }
-          //              }
-          //          }
-          //      }\n
-          //  }\n""}
-          //  ";
-
-          //  try
-          //  {
-          //      var model = JsonSerializer.NonGeneric.Utf16.Deserialize<IncludeNullsOriginalCaseResolver<char>>(json.AsSpan(), typeof(GraphQLQuery));
-          //  }
-          //  catch (Exception e)
-          //  {
-          //      Console.WriteLine(e);
-          //  }
+            //    Console.WriteLine(e);
+            //}
 
             // load controllers from plugins
             foreach (var assembly in assemblies)

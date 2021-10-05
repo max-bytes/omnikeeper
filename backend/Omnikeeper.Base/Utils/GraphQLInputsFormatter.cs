@@ -10,7 +10,7 @@ namespace Omnikeeper.Base.Utils
     {
         public static readonly GraphQLInputsFormatter Default = new GraphQLInputsFormatter();
 
-        public object Arguments { get; set; }
+        public object? Arguments { get; set; }
 
         public Dictionary<string, object> Deserialize(ref JsonReader<byte> reader)
         {

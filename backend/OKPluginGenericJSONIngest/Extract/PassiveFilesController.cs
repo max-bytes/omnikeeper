@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.DotNet.PlatformAbstractions;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -12,7 +11,6 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -103,6 +101,8 @@ namespace Omnikeeper.Controllers.Ingest
                     case TransformConfigJMESPath jmesPathConfig:
                         var transformer = TransformerJMESPath.Build(jmesPathConfig);
 
+                        // TODO: implement alternative way to build the single JSON document
+                        // by just concating the strings together, not actually parsing the JSON at all (at this step)
                         var documents = new Dictionary<string, JToken>();
                         foreach(var (streamF, filename) in fileStreams)
                         {
@@ -115,8 +115,8 @@ namespace Omnikeeper.Controllers.Ingest
                             var data = JToken.ReadFrom(jsonReader);
                             documents.Add(filename, data);
                         }
-
                         var inputJSON = transformer.Documents2JSON(documents);
+
                         JToken genericInboundDataJson;
                         try
                         {
