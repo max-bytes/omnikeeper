@@ -6,27 +6,30 @@ using System.Text;
 
 namespace Omnikeeper.Base.Utils
 {
-    public sealed class InputsFormatter : ICustomJsonFormatter<Dictionary<string, object>>
+    public sealed class GraphQLInputsFormatter : ICustomJsonFormatter<Dictionary<string, object>>
     {
-        public static readonly InputsFormatter Default = new InputsFormatter();
+        public static readonly GraphQLInputsFormatter Default = new GraphQLInputsFormatter();
 
         public object Arguments { get; set; }
 
         public Dictionary<string, object> Deserialize(ref JsonReader<byte> reader)
         {
-            return ReadDictionary(ref reader, null);
+            return ReadDictionary(ref reader);
         }
 
-        private Dictionary<string, object> ReadDictionary(ref JsonReader<byte> reader, JsonToken? nextToken)
+        private Dictionary<string, object> ReadDictionary(ref JsonReader<byte> reader)
         {
             JsonToken token = reader.ReadUtf8NextToken();
 
+            var result = new Dictionary<string, object>();
+
             if (token == JsonToken.Null)
-                return null;
+            {
+                reader.ReadUtf8Null();
+                return result;
+            }
 
             reader.ReadBeginObjectOrThrow();
-
-            var result = new Dictionary<string, object>();
 
             var separated = false;
             while (reader.ReadUtf8NextToken() != JsonToken.EndObject)
@@ -54,7 +57,7 @@ namespace Omnikeeper.Base.Utils
                 case JsonToken.BeginArray:
                     return ReadArray(ref reader);
                 case JsonToken.BeginObject:
-                    return ReadDictionary(ref reader, null);
+                    return ReadDictionary(ref reader);
                 case JsonToken.String:
                     return reader.ReadUtf8String();
                 case JsonToken.True:
@@ -62,25 +65,28 @@ namespace Omnikeeper.Base.Utils
                     return reader.ReadUtf8Boolean();
                 case JsonToken.Null:
                     reader.ReadUtf8Null();
-                    return null;
+                    return null!;
                 case JsonToken.Number:
-                    return new SpanJsonDynamicUtf8Number(reader.ReadNumberSpan());
+                    var span = reader.ReadNumberSpan();
+                    var dynamicNumber = new SpanJsonDynamicUtf8Number(span);
+                    if (dynamicNumber.TryConvert(typeof(int), out var i))
+                    {
+                        return i;
+                    } 
+                    else if (dynamicNumber.TryConvert(typeof(float), out var f))
+                    {
+                        return f;
+                    }
+                    else if (dynamicNumber.TryConvert(typeof(double), out var d))
+                    {
+                        return d;
+                    } else
+                    {
+                        throw new NotImplementedException();
+                    }
                 default:
                     throw new NotImplementedException();
             }
-
-            //return token switch
-            //   {
-            //       JsonToken.BeginArray => ReadArray(ref reader),
-            //       JsonToken.BeginObject => ReadDictionary(ref reader, null),
-            //       JsonToken.String => reader.ReadUtf8String(),
-            //       JsonToken.True => reader.ReadUtf8Boolean(),
-            //       JsonToken.False => reader.ReadUtf8Boolean(),
-            //       JsonToken.Null => reader.ReadUtf8Null(),
-            //       JsonToken.Number => new SpanJsonDynamicUtf8Number(reader.ReadNumberSpan()),
-            //       //_ => reader.ReadUtf8Dynamic()
-            //       _ => throw new NotImplementedException()
-            //   };
         }
 
         private List<object> ReadArray(ref JsonReader<byte> reader)

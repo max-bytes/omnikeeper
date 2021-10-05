@@ -127,14 +127,34 @@ namespace Omnikeeper.Startup
             //    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
             //});
 
-            //var json = "{\"variables\":{},\"query\":\"{\n statistics {\n cis\n activeAttributes\n activeRelations\n attributeChanges\n relationChanges\n changesets\n layers\n predicates\n traits\n generators\n __typename\n  }\n}\n\"}";
-            //try
-            //{
-            //    var model = JsonSerializer.NonGeneric.Utf16.Deserialize<IncludeNullsOriginalCaseResolver<char>>(json.AsSpan(), typeof(GraphQLQuery));
-            //} catch (Exception e)
-            //{
-            //    Console.WriteLine(e);
-            //}
+          //  var json = @"{""variables"":{},""query"":""{
+          //cis(withEffectiveTraits: [""tsa_cmdb.service""], layers:[""tsa_cmdb""]) {
+          //              name
+          //  outgoingMergedRelations(requiredPredicateID: ""runs_on"") {
+          //                  relation {
+          //                      toCIName
+          //                      toCI {
+          //                          outgoingMergedRelations(requiredPredicateID: ""runs_on"") {
+          //                              relation {
+          //                                  toCIName
+          //                              }
+          //                          }
+          //                      }
+          //                  }
+          //              }
+          //          }
+          //      }\n
+          //  }\n""}
+          //  ";
+
+          //  try
+          //  {
+          //      var model = JsonSerializer.NonGeneric.Utf16.Deserialize<IncludeNullsOriginalCaseResolver<char>>(json.AsSpan(), typeof(GraphQLQuery));
+          //  }
+          //  catch (Exception e)
+          //  {
+          //      Console.WriteLine(e);
+          //  }
 
             // load controllers from plugins
             foreach (var assembly in assemblies)

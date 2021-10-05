@@ -19,7 +19,7 @@ namespace Omnikeeper.Base.Entity
         public string? NamedQuery { get; set; }
         public string? Query { get; set; }
 
-        [JsonCustomSerializer(typeof(InputsFormatter))]
+        [JsonCustomSerializer(typeof(GraphQLInputsFormatter))]
         public Dictionary<string, object>? Variables { get; set; }
     }
 }
