@@ -181,9 +181,12 @@ namespace Omnikeeper.GraphQL
             writer.WriteUtf8Name("errors");
 
             writer.WriteUtf8BeginArray();
+            var separated = false;
             foreach (var error in errors)
             {
                 var info = errorInfoProvider.GetInfo(error);
+
+                if (separated) writer.WriteUtf8ValueSeparator();
 
                 writer.WriteUtf8BeginObject();
 
@@ -192,22 +195,28 @@ namespace Omnikeeper.GraphQL
 
                 if (error.Locations != null)
                 {
+                    writer.WriteUtf8ValueSeparator();
                     writer.WriteUtf8Name("locations");
                     writer.WriteUtf8BeginArray();
+                    var separatedInner = false;
                     foreach (var location in error.Locations)
                     {
+                        if (separatedInner) writer.WriteUtf8ValueSeparator();
                         writer.WriteUtf8BeginObject();
                         writer.WriteUtf8Name("line");
                         writer.WriteUtf8Int32(location.Line);
+                        writer.WriteUtf8ValueSeparator();
                         writer.WriteUtf8Name("column");
                         writer.WriteUtf8Int32(location.Column);
                         writer.WriteUtf8EndObject();
+                        separatedInner = true;
                     }
                     writer.WriteUtf8EndArray();
                 }
 
                 if (error.Path != null && error.Path.Any())
                 {
+                    writer.WriteUtf8ValueSeparator();
                     writer.WriteUtf8Name("path");
                     if (error.Path == null)
                         writer.WriteUtf8Null();
@@ -223,6 +232,8 @@ namespace Omnikeeper.GraphQL
                 }
 
                 writer.WriteUtf8EndObject();
+
+                separated = true;
             }
 
             writer.WriteUtf8EndArray();
