@@ -563,6 +563,33 @@ namespace OKPluginNaemonConfig
                 }
 
             }
+
+            // updateNormalizedCiDataFieldAddress
+            foreach (var ciItem in ciData)
+            {
+                if (ciItem.Type == "HOST")
+                {
+
+                }
+            }
+
+            // updateNormalizedCiData_addGenericCmdbCapTags
+
+            foreach (var ciItem in ciData)
+            {
+                if (ciItem.Categories.ContainsKey("MONITORING_CAP"))
+                {
+                    foreach (var category in ciItem.Categories["MONITORING_CAP"])
+                    {
+                        ciItem.Tags.Add($"cap_{category.Tree}_{category.Name}".ToLower());
+                    }
+                } else
+                {
+                    // TODO check if we should add this
+                    //ciItem.Tags.Add("cap_default");
+                }
+            }
+
             #endregion
 
             var configObjs = new List<ConfigObj>();
@@ -1131,6 +1158,9 @@ namespace OKPluginNaemonConfig
             public ConfigurationItem()
             {
                 Categories = new Dictionary<string, List<Category>>();
+                Tags = new List<string>();
+                ProfileOrg = new List<string>();
+                NaemonsAvail = new List<string>();
             }
             public string Type { get; set; }
             public string Id { get; set; }
@@ -1138,6 +1168,7 @@ namespace OKPluginNaemonConfig
             public string Status { get; set; }
             public string Environment { get; set; }
             public string Profile { get; set; }
+            public string Address { get; set; }
             public List<string> ProfileOrg { get; set; }
             public List<string> NaemonsAvail { get; set; }
             public Dictionary<string, List<Category>> Categories { get; set; }
