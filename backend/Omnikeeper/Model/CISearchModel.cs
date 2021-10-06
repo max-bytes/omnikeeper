@@ -80,7 +80,7 @@ namespace Omnikeeper.Model
                 }
             }
 
-            var workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: !emptyTraitIsNonRequired || requiredTraits.IsEmpty(), finalAttributeSelection, trans, atTime);
+            var workCIs = await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: !emptyTraitIsNonRequired && requiredTraits.IsEmpty(), finalAttributeSelection, trans, atTime);
             foreach (var requiredTrait in requiredTraits)
             {
                 workCIs = await traitModel.FilterCIsWithTrait(workCIs, requiredTrait, layerSet, trans, atTime);
