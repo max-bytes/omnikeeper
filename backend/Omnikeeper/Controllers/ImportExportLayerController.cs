@@ -74,7 +74,7 @@ namespace Omnikeeper.Controllers
         }
 
         [HttpGet("exportLayer")]
-        public async Task<ActionResult> ExportLayer([FromQuery, Required] string layerID)
+        public async Task<ActionResult> ExportLayer([FromQuery, Required] string layerID, [FromQuery] Guid[] ciids)
         {
             // TODO: support for historic data
 
@@ -86,13 +86,25 @@ namespace Omnikeeper.Controllers
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var attributesDict = (await attributeModel.GetAttributes(new AllCIIDsSelection(), AllAttributeSelection.Instance, new string[] { layerID }, trans, timeThreshold)).First();
+            ICIIDSelection ciidSelection = new AllCIIDsSelection();
+            if (ciids != null && ciids.Length > 0)
+                ciidSelection = SpecificCIIDsSelection.Build(ciids);
+
+            var attributesDict = (await attributeModel.GetAttributes(ciidSelection, AllAttributeSelection.Instance, new string[] { layerID }, trans, timeThreshold)).First();
             var attributesDTO = attributesDict
                 .Where(kv => ciBasedAuthorizationService.CanReadCI(kv.Key)) // TODO: refactor to use a method that queries all ciids at once, returning those that are readable
                 .SelectMany(kv => kv.Value.Values)
                 .Where(a => a.ChangesetID != GeneratorV1.StaticChangesetID) // HACK: skip generated attributes
                 .Select(a => CIAttributeDTO.Build(a));
+
             var relations = (await relationModel.GetRelations(RelationSelectionAll.Instance, layerID, trans, timeThreshold));
+
+            // TODO: because there is no proper "RelationSelectionFromAndToInList", we fetch all and select manually afterwards
+            if (ciidSelection is SpecificCIIDsSelection specificCIIDsSelection)
+            {
+                relations = relations.Where(r => specificCIIDsSelection.Contains(r.FromCIID) && specificCIIDsSelection.Contains(r.ToCIID));
+            }
+
             var relationsDTO = relations.Select(r => RelationDTO.BuildFromRelation(r));
             // TODO: ci authorization?
 
