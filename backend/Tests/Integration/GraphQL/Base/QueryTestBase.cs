@@ -1,6 +1,4 @@
-﻿
-using GraphQL;
-using GraphQL.Conversion;
+﻿using GraphQL;
 using GraphQL.Execution;
 using GraphQL.NewtonsoftJson;
 using GraphQL.Server;

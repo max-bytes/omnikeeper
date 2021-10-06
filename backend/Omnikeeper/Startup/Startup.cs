@@ -1,4 +1,5 @@
 using FluentValidation.AspNetCore;
+using GraphQL;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using Hangfire;
@@ -24,19 +25,21 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.ObjectPool;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
-using Npgsql.Logging;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Base.Service;
-using Omnikeeper.Base.Utils;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
+using SpanJson.AspNetCore.Formatter;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -45,6 +48,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Startup
 {
+
     public partial class Startup
     {
         public Startup(IConfiguration configuration, IWebHostEnvironment env)
@@ -96,22 +100,32 @@ namespace Omnikeeper.Startup
             ServiceRegistration.RegisterGraphQL(services);
             var assemblies = ServiceRegistration.RegisterOKPlugins(services, pluginFolder);
 
-            var mvcBuilder = services.AddControllers()
-                .AddNewtonsoftJson(options =>
-                {
-                    // enums to string conversion
-                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+            var mvcBuilder = services.AddControllers();
+
+            // add input and output formatters
+            services.AddOptions<MvcOptions>()
+                .PostConfigure<IOptions<JsonOptions>, IOptions<MvcNewtonsoftJsonOptions>, ArrayPool<char>, ObjectPoolProvider, ILoggerFactory>((config, jsonOpts, newtonJsonOpts, charPool, objectPoolProvider, loggerFactory) => {
+
+                    config.InputFormatters.Clear();
+                    config.InputFormatters.Add(new MySuperJsonInputFormatter());
+                    config.InputFormatters.Add(new NewtonsoftJsonInputFormatter(
+                        loggerFactory.CreateLogger<NewtonsoftJsonInputFormatter>(), newtonJsonOpts.Value.SerializerSettings, charPool, objectPoolProvider, config, newtonJsonOpts.Value
+                    ));
+                    config.InputFormatters.Add(new SpanJsonInputFormatter<SpanJsonDefaultResolver<byte>>());
+
+                    config.OutputFormatters.Clear();
+                    config.OutputFormatters.Add(new MySuperJsonOutputFormatter());
+                    config.OutputFormatters.Add(new NewtonsoftJsonOutputFormatter(
+                        newtonJsonOpts.Value.SerializerSettings, charPool, config
+                    ));
+                    config.OutputFormatters.Add(new SpanJsonOutputFormatter<SpanJsonDefaultResolver<byte>>());
                 });
+
             // load controllers from plugins
             foreach (var assembly in assemblies)
             {
                 mvcBuilder.AddApplicationPart(assembly);
             }
-
-            services.Configure<IISServerOptions>(options =>
-            {
-                options.AllowSynchronousIO = true;
-            });
 
             services.AddGraphQL(x => { })
                 .AddErrorInfoProvider(opt => opt.ExposeExceptionStackTrace = CurrentEnvironment.IsDevelopment() || CurrentEnvironment.IsStaging())
