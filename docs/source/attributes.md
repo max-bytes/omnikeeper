@@ -16,6 +16,10 @@ The following diagram shows how attributes appear over time:
 
  ![Attributes over time](assets/drawio/overview-attributes-time-Seite-1.svg)
 
+Depending on what timestamp is used for querying, a different set of attributes would be returned. When querying for the latest timestamp, the returned attribute values would be "1", "3", "7" and "5" (in order of diagram columns, left-to-right). But when querying for an earlier point in time, attributes added later would not appear in the result anymore and older attributes would show instead.
+
+Note how in the third column, the attribute with value "7" is not eligible for deletion even though it is older than the threshold. This is because it is also the latest version of this attribute, making it a currently active attribute and hence, not eligible for deletion.
+
 ## Attributes and Changesets
 Each attribute is part of exactly one changeset. Because changes to attributes are done by inserting new ("versions" of) attributes, changes can only occur through a changeset (exception: online layers, generators). 
 
