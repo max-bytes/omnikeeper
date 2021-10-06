@@ -27,11 +27,11 @@ namespace Omnikeeper.GraphQL
 
     public class SpanJSONDocumentWriter : IDocumentWriter
     {
-        public Task WriteAsync<T>(Stream stream, T value, CancellationToken cancellationToken = default)
+        public async Task WriteAsync<T>(Stream stream, T value, CancellationToken cancellationToken = default)
         {
             try
             {
-                return JsonSerializer.Generic.Utf8.SerializeAsync<ExecutionResult, Resolver<byte>>((value as ExecutionResult)!, stream, cancellationToken).AsTask();
+                await JsonSerializer.Generic.Utf8.SerializeAsync<ExecutionResult, Resolver<byte>>((value as ExecutionResult)!, stream, cancellationToken);
             } catch (Exception e)
             {
                 throw e;
