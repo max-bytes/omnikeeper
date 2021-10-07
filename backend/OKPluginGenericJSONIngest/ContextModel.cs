@@ -23,7 +23,7 @@ namespace OKPluginGenericJSONIngest
         Task<bool> TryToDelete(string id, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans);
     }
 
-    public class ContextModel : TraitDataConfigBaseModel<Context, string>, IContextModel
+    public class ContextModel : IDBasedTraitDataConfigBaseModel<Context, string>, IContextModel
     {
         public ContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
             : base(Traits.ContextFlattenedTrait, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)

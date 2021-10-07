@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace Omnikeeper.Base.Model
 {
     // TODO: think about caching?
-    public class RecursiveDataTraitModel : TraitDataConfigBaseModel<RecursiveTrait, string>, IRecursiveDataTraitModel
+    public class RecursiveDataTraitModel : IDBasedTraitDataConfigBaseModel<RecursiveTrait, string>, IRecursiveDataTraitModel
     {
         public static readonly RecursiveTrait Trait = new RecursiveTrait("__meta.config.trait", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {
