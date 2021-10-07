@@ -1,7 +1,10 @@
 import React from "react";
 import { Button } from "antd";
+import { useAGGridEnterprise } from 'utils/useAGGridEnterprise';
 
 export default function ContextButtonToolbar(props) {
+    const aGGridEnterpriseActive = useAGGridEnterprise();
+
     return (
         <div className="button-toolbar">
             <div
@@ -82,6 +85,14 @@ export default function ContextButtonToolbar(props) {
                     {/* Refresh */}
                     <Button onClick={() => props.refreshData()}>Refresh</Button>
                 </div>
+
+                {/* ######################################## Export ######################################## */}
+                {aGGridEnterpriseActive &&
+                <div style={{ display: "flex", alignItems: "center" }}>
+                    <Button type="text" style={{ cursor: "default" }}>Export:</Button>
+                    <Button size="small" style={{ marginRight: "8px" }} onClick={props.excelExport}>Excel</Button>
+                </div>
+                }
             </div>
         </div>
     );
