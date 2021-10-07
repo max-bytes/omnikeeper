@@ -45,10 +45,6 @@ namespace Omnikeeper.Model
             if (ReduceTraitRequirements(ref requiredTraits, ref requiredNonTraits, out var emptyTraitIsRequired, out var emptyTraitIsNonRequired))
                 return ImmutableList<MergedCI>.Empty; // bail completely
 
-            // special case: no traits selected at all
-            if (requiredTraits.IsEmpty() &&  requiredNonTraits.IsEmpty())
-                return await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: true, attributeSelection, trans, atTime);
-
             // special case: empty trait is required
             if (emptyTraitIsRequired)
             {
@@ -71,9 +67,7 @@ namespace Omnikeeper.Model
             {
                 if (emptyTraitIsNonRequired)
                 {
-                    // TODO: better performance possible if we get empty CIIDs and exclude those?
-                    var nonEmptyCIIDs = await attributeModel.GetCIIDsWithAttributes(ciidSelection, layerSet.LayerIDs, trans, atTime);
-                    return await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(nonEmptyCIIDs), layerSet, includeEmptyCIs: true, finalAttributeSelection, trans, atTime);
+                    return await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: false, finalAttributeSelection, trans, atTime);
                 } else
                 {
                     return await ciModel.GetMergedCIs(ciidSelection, layerSet, includeEmptyCIs: true, finalAttributeSelection, trans, atTime);
