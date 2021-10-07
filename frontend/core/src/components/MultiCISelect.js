@@ -15,6 +15,7 @@ function MultiCISelect(props) {
     placeholder="Search+select CIs (min 3 characters)"
     value={selectedCIIDs}
     onChange={(value) => { setSelectedCIIDs(value); }}
+    // tokenSeparators={[',']} // TODO: unfortunately, tokenSeparator feature does not seem to work with mode=multiple: https://github.com/ant-design/ant-design/issues/10001
     fetchOptions={async searchString => {
 
       if (searchString.length < 3) {

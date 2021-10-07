@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Omnikeeper.GridView.Commands;
 using Omnikeeper.GridView.Queries;
 using Omnikeeper.GridView.Request;
+using Omnikeeper.Utils;
 using System.Threading.Tasks;
 
 namespace LandscapeRegistry.GridView
@@ -147,6 +148,7 @@ namespace LandscapeRegistry.GridView
         /// <response code="400">If trait is not found</response>
         [HttpGet("contexts/{context}/data")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [UseSpanJson]
         public async Task<IActionResult> GetData([FromRoute] string context)
         {
             var (result, exception) = await _mediatr.Send(new GetDataQuery.Query(context));

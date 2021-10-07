@@ -10,5 +10,7 @@ namespace Omnikeeper.GridView.Response
         {
             this.Context = Context;
         }
+
+        private GetContextResponse() { }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Omnikeeper.Entity.AttributeValues;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace Omnikeeper.GridView.Response
 {
@@ -13,10 +14,13 @@ namespace Omnikeeper.GridView.Response
             this.ShowCIIDColumn = ShowCIIDColumn;
             this.Columns = Columns;
         }
+
+        private GetSchemaResponse() { }
     }
 
     public class Column
     {
+        [DataMember(Name = "id")]
         public string ID { get; set; }
         public string Description { get; set; }
         public AttributeValueType ValueType { get; set; }
@@ -29,5 +33,7 @@ namespace Omnikeeper.GridView.Response
             ValueType = attributeValueType;
             this.Writable = writable;
         }
+
+        private Column() { }
     }
 }

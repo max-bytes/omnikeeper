@@ -1,6 +1,5 @@
 ﻿using GraphQL;
 using GraphQL.DataLoader;
-using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Authorization;
@@ -10,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.GraphQL;
+using Omnikeeper.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,6 +49,7 @@ namespace Omnikeeper.Controllers
         [HttpPost]
         [Route("/graphql")]
         [Authorize]
+        [UseSpanJson]
         public async Task<IActionResult> Index([FromBody] Omnikeeper.Base.Entity.GraphQLQuery query)
         {
             return await ProcessQuery(query);
@@ -56,6 +57,7 @@ namespace Omnikeeper.Controllers
 
         [HttpPost]
         [Route("/graphql-debug")]
+        [UseSpanJson]
         public async Task<IActionResult> Debug([FromBody] Omnikeeper.Base.Entity.GraphQLQuery query)
         {
             if (_env.IsProduction())

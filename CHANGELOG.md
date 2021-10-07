@@ -19,6 +19,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [1.8.0] - 2021-10-07
+ 
+### Added
+- support for exporting specific layers in layer export feature
+ 
+### Changed
+- switched to SpanJson for performance intense JSON (de-)serializations: GraphQL and Gridview data query
+- performance improvements to LayerStatisticsModel
+ 
+### Fixed
+- bugfixes for CI search regarding empty trait
+- bugfix when building latest tables in omnikeeper ramp-up
+
+## [1.7.1] - 2021-10-05
+ 
+### Changed
+- performance improvements to archiving data runner
+ 
 ## [1.7.0] - 2021-10-04
  
 ### Added
