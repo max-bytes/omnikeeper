@@ -13,7 +13,7 @@ import IntegerCellEditor from './IntegerCellEditor';
 import FeedbackMsg from "components/FeedbackMsg.js";
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
-import { useAGGridEnterprise } from './../../utils/useAGGridEnterprise';
+import { useAGGridEnterprise } from 'utils/useAGGridEnterprise';
 
 import { useParams, withRouter } from "react-router-dom";
 
@@ -29,7 +29,7 @@ const rowStatus = {
 };
 
 export function Context(props) {
-    const { data: aGGridEnterpriseActive, loading, error } = useAGGridEnterprise();
+    const aGGridEnterpriseActive = useAGGridEnterprise();
     const swaggerClient = props.swaggerClient;
     const apiVersion = props.apiVersion;
 
@@ -48,9 +48,6 @@ export function Context(props) {
     const [swaggerErrorJson, setSwaggerErrorJson] = useState(false);
     
     const gridViewDataParseModel = new GridViewDataParseModel(rowStatus);
-
-    if (error) return "Error:" + error;
-    if (loading) return "Loading...";
 
     return (
         <Layout

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import env from "@beam-australia/react-env";
 
 /*
@@ -17,26 +17,16 @@ This leads to the following possibilities:
 */
 
 export function useAGGridEnterprise() {
-    const [aGGridEnterpriseActive, setAGGridEnterpriseActive] = useState(null);
+    const [aGGridEnterpriseActive, setAGGridEnterpriseActive] = useState(false);
 
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        try {
-            setLoading(true);
-            setAGGridEnterpriseActive(false);
-            const license = env('AGGRID_LICENCE_KEY');
-            if (license) {
-                const licenseManager = require("ag-grid-enterprise").LicenseManager;    // Only 'require', if license provided, to ensure, watermark doesn't appear, when enterprise is not in use.
-                licenseManager.setLicenseKey(license);
-                setAGGridEnterpriseActive(true);
-            }
-            setLoading(false);
-        } catch (e) {
-            setError(e);
+    useMemo(() => {
+        const license = env('AGGRID_LICENCE_KEY');
+        if (license) {
+            const licenseManager = require("ag-grid-enterprise").LicenseManager;    // Only 'require', if license provided, to ensure, watermark doesn't appear, when enterprise is not in use.
+            licenseManager.setLicenseKey(license);
+            setAGGridEnterpriseActive(true);
         }
     }, []);
 
-    return { data: aGGridEnterpriseActive, loading: loading, error: error };
+    return aGGridEnterpriseActive;
 }

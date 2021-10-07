@@ -1,12 +1,9 @@
 import React from "react";
 import { Button } from "antd";
-import { useAGGridEnterprise } from './../../utils/useAGGridEnterprise';
+import { useAGGridEnterprise } from 'utils/useAGGridEnterprise';
 
 export default function ContextButtonToolbar(props) {
-    const { data: aGGridEnterpriseActive, loading, error } = useAGGridEnterprise();
-
-    if (error) return "Error:" + error;
-    if (loading) return "Loading...";
+    const aGGridEnterpriseActive = useAGGridEnterprise();
 
     return (
         <div className="button-toolbar">
