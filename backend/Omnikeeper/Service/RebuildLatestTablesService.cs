@@ -132,10 +132,11 @@ namespace Omnikeeper.Service
                 var query = @"
                     insert into attribute_latest (id, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id)
                     (
-                        select id, removed, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id from (
-                        select distinct on(ci_id, name) id, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id FROM attribute 
-                        where timestamp <= @time_threshold and layer_id = @layer_id and partition_index >= @partition_index
-                        order by ci_id, name, timestamp DESC NULLS LAST ) i where i.removed = false
+                        select id, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id from (
+                            select distinct on(ci_id, name, layer_id) removed, id, name, ci_id, type, value_text, value_binary, value_control, layer_id, ""timestamp"", changeset_id FROM attribute 
+                            where timestamp <= @time_threshold and layer_id = @layer_id and partition_index >= @partition_index
+                            order by ci_id, name, layer_id, timestamp DESC NULLS LAST
+                        ) i where i.removed = false
                     )
                 ";
                 using var commandBuild = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
@@ -172,12 +173,14 @@ namespace Omnikeeper.Service
             foreach (var layer in await layerModel.GetLayers(trans))
             {
                 var query = @"
-                    insert into relation_latest (id, from_ci_id, to_ci_id, predicate_id, state, changeset_id, timestamp, layer_id)
+                    insert into relation_latest (id, from_ci_id, to_ci_id, predicate_id, changeset_id, timestamp, layer_id)
                     (
-                        select distinct on(from_ci_id, to_ci_id, predicate_id) id, from_ci_id, to_ci_id, predicate_id, state, changeset_id, timestamp, layer_id from relation
-                        where timestamp <= @time_threshold and layer_id = @layer_id
-                        and partition_index >= @partition_index
-                        order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC NULLS LAST
+                        select id, from_ci_id, to_ci_id, predicate_id, changeset_id, timestamp, layer_id from (
+                            select distinct on(from_ci_id, to_ci_id, predicate_id, layer_id) removed, id, from_ci_id, to_ci_id, predicate_id, changeset_id, timestamp, layer_id from relation
+                            where timestamp <= @time_threshold and layer_id = @layer_id
+                            and partition_index >= @partition_index
+                            order by from_ci_id, to_ci_id, predicate_id, layer_id, timestamp DESC NULLS LAST
+                        ) i where i.removed = false
                     )
                 ";
                 using var commandBuild = new NpgsqlCommand(query, trans.DBConnection, trans.DBTransaction);
