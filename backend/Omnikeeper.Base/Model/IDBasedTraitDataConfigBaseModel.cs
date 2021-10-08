@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model
 {
-    public abstract class TraitDataConfigBaseModel<T, ID> where ID: notnull
+    public abstract class IDBasedTraitDataConfigBaseModel<T, ID> where ID: notnull
     {
         private readonly IEffectiveTraitModel effectiveTraitModel;
         protected readonly ICIModel ciModel;
@@ -18,7 +18,7 @@ namespace Omnikeeper.Base.Model
         protected readonly IBaseRelationModel baseRelationModel;
         private readonly GenericTrait trait;
 
-        public TraitDataConfigBaseModel(GenericTrait trait, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
+        public IDBasedTraitDataConfigBaseModel(GenericTrait trait, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
         {
             this.trait = trait;
             this.effectiveTraitModel = effectiveTraitModel;

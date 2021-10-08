@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace Omnikeeper.Base.Model
 {
     // TODO: think about caching?
-    public class GeneratorModel : TraitDataConfigBaseModel<GeneratorV1, string>, IGeneratorModel
+    public class GeneratorModel : IDBasedTraitDataConfigBaseModel<GeneratorV1, string>, IGeneratorModel
     {
         public static readonly RecursiveTrait Generator = new RecursiveTrait("__meta.config.generator", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {

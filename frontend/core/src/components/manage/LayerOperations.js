@@ -171,7 +171,7 @@ function ExportLayer(props) {
         setExportingLayer(false);
       }
     }
-  }, [swaggerClient, selectedCIIDs]);
+  }, [swaggerClient, selectedCIIDs, layerID]);
 
 
   return <>
