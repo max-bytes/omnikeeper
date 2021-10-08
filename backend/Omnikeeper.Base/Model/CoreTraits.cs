@@ -1,5 +1,6 @@
 ﻿using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
@@ -33,6 +34,7 @@ namespace Omnikeeper.Base.Model
 
         public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() { 
             Named,
+            BaseConfigurationModel.Trait,
             RecursiveDataTraitModel.Trait, PredicateModel.Predicate, AuthRoleModel.AuthRole, GeneratorModel.Generator,
             GridviewContext,
         };

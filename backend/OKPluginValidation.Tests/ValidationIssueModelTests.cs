@@ -45,9 +45,9 @@ namespace OKPluginValidation.Tests
                 });
             currentUserServiceMock.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
 
-            var baseConfigurationModel = ServiceProvider.GetRequiredService<IBaseConfigurationModel>();
+            var metaConfigurationModel = ServiceProvider.GetRequiredService<IMetaConfigurationModel>();
 
-            var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(ModelContextBuilder.BuildImmediate());
+            var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(ModelContextBuilder.BuildImmediate());
 
             var validationIssueModel = ServiceProvider.GetRequiredService<IValidationIssueModel>();
 
@@ -61,7 +61,7 @@ namespace OKPluginValidation.Tests
                 trans.Commit();
             }
 
-            var vi1 = await validationIssueModel.GetValidationIssues(new LayerSet(baseConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            var vi1 = await validationIssueModel.GetValidationIssues(new LayerSet(metaConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.IsEmpty(vi1);
 
             var changesetProxy1 = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
@@ -71,7 +71,7 @@ namespace OKPluginValidation.Tests
             {
                 bool changed;
                 (validationIssue, changed) = await validationIssueModel.InsertOrUpdate("test-ID", "test-message", new Guid[] { otherCIID },
-                    new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                    new LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer,
                     new DataOriginV1(DataOriginType.Manual), changesetProxy1, trans);
 
                 Assert.IsNotNull(validationIssue);
@@ -80,7 +80,7 @@ namespace OKPluginValidation.Tests
                 trans.Commit();
             }
 
-            var vi2 = await validationIssueModel.GetValidationIssues(new LayerSet(baseConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            var vi2 = await validationIssueModel.GetValidationIssues(new LayerSet(metaConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.AreEqual(1, vi2.Count());
             var tmp = vi2.First().Value;
             validationIssue.Should().BeEquivalentTo(tmp, options => options.WithStrictOrdering());
@@ -90,13 +90,13 @@ namespace OKPluginValidation.Tests
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 bool deleted = await validationIssueModel.TryToDelete(validationIssue.ID,
-                    new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer, 
+                    new LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer, 
                     new DataOriginV1(DataOriginType.Manual), changesetProxy2, trans);
                 Assert.IsTrue(deleted);
                 trans.Commit();
             }
 
-            var vi3 = await validationIssueModel.GetValidationIssues(new LayerSet(baseConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            var vi3 = await validationIssueModel.GetValidationIssues(new LayerSet(metaConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.IsEmpty(vi3);
         }
     }

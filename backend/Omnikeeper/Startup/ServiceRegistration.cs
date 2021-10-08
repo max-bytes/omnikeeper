@@ -192,6 +192,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IGeneratorModel, GeneratorModel>();
             services.AddSingleton<IEffectiveTraitModel, EffectiveTraitModel>();
             services.AddSingleton<IBaseConfigurationModel, BaseConfigurationModel>();
+            services.AddSingleton<IMetaConfigurationModel, MetaConfigurationModel>();
             services.AddSingleton<IOIAContextModel, OIAContextModel>();
             services.AddSingleton<IGridViewContextModel, GridViewContextModel>();
             services.AddSingleton<IPartitionModel, PartitionModel>();

@@ -1,4 +1,5 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.Config;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Templating;
@@ -114,13 +115,13 @@ namespace Omnikeeper.Base.Generator
     public class EffectiveGeneratorProvider : IEffectiveGeneratorProvider
     {
         private readonly IGeneratorModel generatorModel;
-        private readonly IBaseConfigurationModel baseConfigurationModel;
+        private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly ILayerModel layerModel;
 
-        public EffectiveGeneratorProvider(IGeneratorModel generatorModel, IBaseConfigurationModel baseConfigurationModel, ILayerModel layerModel)
+        public EffectiveGeneratorProvider(IGeneratorModel generatorModel, IMetaConfigurationModel metaConfigurationModel, ILayerModel layerModel)
         {
             this.generatorModel = generatorModel;
-            this.baseConfigurationModel = baseConfigurationModel;
+            this.metaConfigurationModel = metaConfigurationModel;
             this.layerModel = layerModel;
         }
 
@@ -132,7 +133,7 @@ namespace Omnikeeper.Base.Generator
 
             var ret = new IEnumerable<GeneratorV1>[layerIDs.Length];
             IDictionary<string, GeneratorV1>? availableGenerators = null;
-            Entity.Config.BaseConfigurationV1? baseConfiguration = null;
+            MetaConfiguration? metaConfiguration = null;
             int i = 0;
             foreach(var layerID in layerIDs)
             {
@@ -148,11 +149,11 @@ namespace Omnikeeper.Base.Generator
 
                     // NOTE: this is an important mechanism that prevents layers in the base configuration layerset form having effective generators
                     // this is necessary, because otherwise its very easy to get infinite loops of GetGenerators() -> GetAttributes() -> GetGenerators() -> ...
-                    baseConfiguration ??= await baseConfigurationModel.GetConfigOrDefault(trans); // TODO: get base configuration at the correct point in time, not the latest
-                    if (baseConfiguration.ConfigLayerset.Contains(layerID))
+                    metaConfiguration ??= await metaConfigurationModel.GetConfigOrDefault(trans); // TODO: get base configuration at the correct point in time, not the latest
+                    if (metaConfiguration.ConfigLayerset.Contains(layerID))
                         continue;
 
-                    availableGenerators ??= await generatorModel.GetGenerators(new LayerSet(baseConfiguration.ConfigLayerset), trans, timeThreshold);
+                    availableGenerators ??= await generatorModel.GetGenerators(new LayerSet(metaConfiguration.ConfigLayerset), trans, timeThreshold);
 
                     var applicableGenerators = activeGeneratorIDsForLayer.Select(id => availableGenerators.GetOrWithClass(id, null)).Where(g => g != null).Select(g => g!);
 

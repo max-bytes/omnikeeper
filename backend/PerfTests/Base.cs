@@ -75,7 +75,7 @@ namespace PerfTests
 
             // TODO: add generic?
             services.AddSingleton<ILogger<EffectiveTraitModel>>((sp) => NullLogger<EffectiveTraitModel>.Instance);
-            services.AddSingleton<ILogger<BaseConfigurationModel>>((sp) => NullLogger<BaseConfigurationModel>.Instance);
+            services.AddSingleton<ILogger<MetaConfigurationModel>>((sp) => NullLogger<MetaConfigurationModel>.Instance);
             services.AddSingleton<ILogger<OIAContextModel>>((sp) => NullLogger<OIAContextModel>.Instance);
             services.AddSingleton<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance);
             services.AddSingleton<ILogger<RecursiveDataTraitModel>>((sp) => NullLogger<RecursiveDataTraitModel>.Instance);

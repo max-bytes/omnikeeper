@@ -18,13 +18,13 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
     public class TraitCacheInvalidationBaseAttributeModel : IBaseAttributeModel
     {
         private readonly IBaseAttributeModel model;
-        private readonly IBaseConfigurationModel baseConfigurationModel;
+        private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly EffectiveTraitCache cache;
 
-        public TraitCacheInvalidationBaseAttributeModel(IBaseAttributeModel model, IBaseConfigurationModel baseConfigurationModel, EffectiveTraitCache cache)
+        public TraitCacheInvalidationBaseAttributeModel(IBaseAttributeModel model, IMetaConfigurationModel metaConfigurationModel, EffectiveTraitCache cache)
         {
             this.model = model;
-            this.baseConfigurationModel = baseConfigurationModel;
+            this.metaConfigurationModel = metaConfigurationModel;
             this.cache = cache;
         }
 
@@ -33,7 +33,7 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             var t = await model.InsertAttribute(name, value, ciid, layerID, changesetProxy, origin, trans);
             if (t.changed)
             {
-                if (await baseConfigurationModel.IsLayerPartOfBaseConfiguration(layerID, trans))
+                if (await metaConfigurationModel.IsLayerPartOfMetaConfiguration(layerID, trans))
                     cache.PurgeAll();
                 else
                     cache.AddCIID(ciid, layerID);
@@ -46,7 +46,7 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             var t = await model.RemoveAttribute(name, ciid, layerID, changesetProxy, origin, trans);
             if (t.changed)
             {
-                if (await baseConfigurationModel.IsLayerPartOfBaseConfiguration(layerID, trans))
+                if (await metaConfigurationModel.IsLayerPartOfMetaConfiguration(layerID, trans))
                     cache.PurgeAll();
                 else
                     cache.AddCIID(ciid, layerID);
@@ -59,7 +59,7 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             var updatedCIIDs = await model.BulkReplaceAttributes(data, changesetProxy, origin, trans);
             if (!updatedCIIDs.IsEmpty())
             {
-                if (await baseConfigurationModel.IsLayerPartOfBaseConfiguration(data.LayerID, trans))
+                if (await metaConfigurationModel.IsLayerPartOfMetaConfiguration(data.LayerID, trans))
                     cache.PurgeAll();
                 else
                     cache.AddCIIDs(updatedCIIDs.Select(t => t.ciid), data.LayerID);

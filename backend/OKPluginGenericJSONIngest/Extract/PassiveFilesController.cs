@@ -36,11 +36,11 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly ICurrentUserService currentUserService;
         private readonly IContextModel contextModel;
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly IBaseConfigurationModel baseConfigurationModel;
+        private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
         public PassiveFilesController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService,
-            IContextModel contextModel, IModelContextBuilder modelContextBuilder, IBaseConfigurationModel baseConfigurationModel,
+            IContextModel contextModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
             ILayerBasedAuthorizationService authorizationService, ILogger<PassiveFilesController> logger)
         {
             this.ingestDataService = ingestDataService;
@@ -49,7 +49,7 @@ namespace Omnikeeper.Controllers.Ingest
             this.currentUserService = currentUserService;
             this.contextModel = contextModel;
             this.modelContextBuilder = modelContextBuilder;
-            this.baseConfigurationModel = baseConfigurationModel;
+            this.metaConfigurationModel = metaConfigurationModel;
             this.authorizationService = authorizationService;
         }
 
@@ -62,8 +62,8 @@ namespace Omnikeeper.Controllers.Ingest
             {
                 using var mc = modelContextBuilder.BuildImmediate();
 
-                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(mc);
-                var ctx = await contextModel.GetContext(context, new LayerSet(baseConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), mc);
+                var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(mc);
+                var ctx = await contextModel.GetContext(context, new LayerSet(metaConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), mc);
                 if (ctx == null)
                     return BadRequest($"Context with name \"{context}\" not found");
                 if (!(ctx.ExtractConfig is ExtractConfigPassiveRESTFiles f))

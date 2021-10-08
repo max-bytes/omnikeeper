@@ -34,7 +34,7 @@ namespace Tasks.DBInit
             using var conn = dbcb.BuildFromUserSecrets(GetType().Assembly, true);
 
             var partitionModel = new PartitionModel();
-            var baseConfigurationModel = new BaseConfigurationModel(NullLogger<BaseConfigurationModel>.Instance);
+            var metaConfigurationModel = new MetaConfigurationModel(NullLogger<MetaConfigurationModel>.Instance);
             var baseAttributeModel = new BaseAttributeModel(partitionModel, new CIIDModel());
             var attributeModel = new AttributeModel(baseAttributeModel);
             var baseRelationModel = new BaseRelationModel(partitionModel);
@@ -57,7 +57,7 @@ namespace Tasks.DBInit
             var user = await DBSetup.SetupUser(userModel, mc, "init-user", new Guid("3544f9a7-cc17-4cba-8052-f88656cf1ef1"));
             var authenticatedUser = new AuthenticatedUser(user, new HashSet<string>() { });
 
-            var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(mc);
+            var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(mc);
 
             using (var trans = modelContextBuilder.BuildDeferred())
             {
@@ -65,7 +65,7 @@ namespace Tasks.DBInit
                 foreach (var rt in DefaultTraits.Get())
                 {
                     await traitModel.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.OptionalRelations, rt.RequiredTraits, 
-                        new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                        new LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer,
                         new DataOriginV1(DataOriginType.Manual), changeset, mc);
                 }
                 trans.Commit();
@@ -210,7 +210,7 @@ namespace Tasks.DBInit
                 foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates).Concat(baseDataPredicates))
                 {
                     await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo,
-                        new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                        new LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer,
                         new DataOriginV1(DataOriginType.Manual), changeset, trans);
                 }
 

@@ -24,16 +24,16 @@ namespace Omnikeeper.GridView.Queries
         {
             private readonly IGridViewContextModel gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
-            private readonly IBaseConfigurationModel baseConfigurationModel;
+            private readonly IMetaConfigurationModel metaConfigurationModel;
             private readonly ICurrentUserService currentUserService;
             private readonly IManagementAuthorizationService managementAuthorizationService;
 
             public GetContextsQueryHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder,
-                IBaseConfigurationModel baseConfigurationModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService)
+                IMetaConfigurationModel metaConfigurationModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService)
             {
                 this.gridViewContextModel = gridViewContextModel;
                 this.modelContextBuilder = modelContextBuilder;
-                this.baseConfigurationModel = baseConfigurationModel;
+                this.metaConfigurationModel = metaConfigurationModel;
                 this.currentUserService = currentUserService;
                 this.managementAuthorizationService = managementAuthorizationService;
             }
@@ -41,10 +41,10 @@ namespace Omnikeeper.GridView.Queries
             async Task<(GetContextsResponse?, Exception?)> IRequestHandler<Query, (GetContextsResponse?, Exception?)>.Handle(Query request, CancellationToken cancellationToken)
             {
                 var trans = modelContextBuilder.BuildImmediate();
-                
-                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
-                
-                var contexts = await gridViewContextModel.GetFullContexts(new LayerSet(baseConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
+
+                var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
+
+                var contexts = await gridViewContextModel.GetFullContexts(new LayerSet(metaConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
 
                 return (new GetContextsResponse(contexts.Values.ToList()), null); // TODO: why not return dictionary?
             }

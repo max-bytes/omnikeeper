@@ -19,18 +19,18 @@ namespace OKPluginValidation.Validation
         private readonly IValidationModel validationModel;
         private readonly IChangesetModel changesetModel;
         private readonly IUserInDatabaseModel userInDatabaseModel;
-        private readonly IBaseConfigurationModel baseConfigurationModel;
+        private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IDictionary<string, IValidationRule> availableValidationRules;
 
         public ValidationEngine(IModelContextBuilder modelContextBuilder, IValidationIssueModel validationIssueModel, IValidationModel validationModel,
-            IChangesetModel changesetModel, IUserInDatabaseModel userInDatabaseModel, IEnumerable<IValidationRule> availableValidationRules, IBaseConfigurationModel baseConfigurationModel)
+            IChangesetModel changesetModel, IUserInDatabaseModel userInDatabaseModel, IEnumerable<IValidationRule> availableValidationRules, IMetaConfigurationModel metaConfigurationModel)
         {
             this.modelContextBuilder = modelContextBuilder;
             this.validationIssueModel = validationIssueModel;
             this.validationModel = validationModel;
             this.changesetModel = changesetModel;
             this.userInDatabaseModel = userInDatabaseModel;
-            this.baseConfigurationModel = baseConfigurationModel;
+            this.metaConfigurationModel = metaConfigurationModel;
             this.availableValidationRules = availableValidationRules.ToDictionary(r => r.Name);
         }
 
@@ -39,11 +39,11 @@ namespace OKPluginValidation.Validation
             var validationWriteLayerID = "__okvalidation"; // TODO
             var validationWriteLayerset = new LayerSet(validationWriteLayerID);
 
-            var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(modelContextBuilder.BuildImmediate());
+            var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(modelContextBuilder.BuildImmediate());
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var validations = await validationModel.GetValidations(new LayerSet(baseConfiguration.ConfigLayerset), modelContextBuilder.BuildImmediate(), timeThreshold);
+            var validations = await validationModel.GetValidations(new LayerSet(metaConfiguration.ConfigLayerset), modelContextBuilder.BuildImmediate(), timeThreshold);
 
             // user handling: get or create
             // TODO: generalize, offer method for upserting a special process user (consolidate with CLB users)

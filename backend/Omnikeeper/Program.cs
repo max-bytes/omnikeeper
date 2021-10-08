@@ -34,6 +34,32 @@ namespace Omnikeeper
                 await RebuildLatestTablesIfNonEmpty(scope);
             }
 
+            // TODO: migration of old DB-table based base-configuration into meta-configuration and new trait-based base configuration
+            // then deletion of the old DB based base-configuration
+            //public async Task<BaseConfigurationV1> GetConfig(IModelContext trans)
+            //{
+            //    using var command = new NpgsqlCommand(@"
+            //    SELECT config FROM config.general WHERE key = 'base' LIMIT 1
+            //", trans.DBConnection, trans.DBTransaction);
+            //    using var s = await command.ExecuteReaderAsync();
+
+            //    if (!await s.ReadAsync())
+            //        throw new Exception("Could not find base config");
+
+            //    var configJO = s.GetFieldValue<JObject>(0);
+            //    try
+            //    {
+            //        // NOTE: as soon as BaseConfigurationV2 comes along, we can first try to parse V2 here, then V1, and only then return null
+            //        // we can also migrate from V1 to V2
+            //        return BaseConfigurationV1.Serializer.Deserialize(configJO);
+            //    }
+            //    catch (Exception e)
+            //    {
+            //        logger.LogError(e, $"Could not deserialize application configuration");
+            //        throw new Exception("Could not find base config", e);
+            //    }
+            //}
+
             host.Run();
         }
 

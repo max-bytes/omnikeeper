@@ -58,13 +58,13 @@ namespace Omnikeeper.GridView.Commands
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
             private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
-            private readonly IBaseConfigurationModel baseConfigurationModel;
+            private readonly IMetaConfigurationModel metaConfigurationModel;
 
             public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, 
                 IChangesetModel changesetModel, ICurrentUserService currentUserService, IGridViewContextModel gridViewContextModel,
                 IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
                 ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService,
-                IBaseConfigurationModel baseConfigurationModel)
+                IMetaConfigurationModel metaConfigurationModel)
             {
                 this.ciModel = ciModel;
                 this.attributeModel = attributeModel;
@@ -77,7 +77,7 @@ namespace Omnikeeper.GridView.Commands
                 this.modelContextBuilder = modelContextBuilder;
                 this.layerBasedAuthorizationService = layerBasedAuthorizationService;
                 this.ciBasedAuthorizationService = ciBasedAuthorizationService;
-                this.baseConfigurationModel = baseConfigurationModel;
+                this.metaConfigurationModel = metaConfigurationModel;
             }
             public async Task<(ChangeDataResponse?, Exception?)> Handle(Command request, CancellationToken cancellationToken)
             {
@@ -96,9 +96,9 @@ namespace Omnikeeper.GridView.Commands
                 var user = await currentUserService.GetCurrentUser(trans);
                 var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
-                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
+                var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
 
-                var context = await gridViewContextModel.GetFullContext(request.Context, new LayerSet(baseConfiguration.ConfigLayerset), timeThreshold, trans);
+                var context = await gridViewContextModel.GetFullContext(request.Context, new LayerSet(metaConfiguration.ConfigLayerset), timeThreshold, trans);
                 var config = context.Configuration;
 
                 if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, config.WriteLayer))
