@@ -39,7 +39,7 @@ namespace Tests.Integration.Model
 
             var recursiveTraitModel = ServiceProvider.GetRequiredService<IRecursiveDataTraitModel>();
 
-            var rt1 = await recursiveTraitModel.GetRecursiveTraits(new LayerSet(metaConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            var rt1 = await recursiveTraitModel.GetRecursiveTraits(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.IsEmpty(rt1);
 
             var changesetProxy1 = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
@@ -54,7 +54,7 @@ namespace Tests.Integration.Model
                     new List<TraitRelation>() { },
                     new List<TraitRelation>() { },
                     new List<string>() { },
-                    new LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer,
+                    metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                     new DataOriginV1(DataOriginType.Manual), changesetProxy1, trans);
 
                 Assert.IsNotNull(trait);
@@ -63,7 +63,7 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
 
-            var rt2 = await recursiveTraitModel.GetRecursiveTraits(new LayerSet(metaConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            var rt2 = await recursiveTraitModel.GetRecursiveTraits(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             rt2.Should().BeEquivalentTo(new List<RecursiveTrait>() { trait }, options => options.WithStrictOrdering());
 
             var changesetProxy2 = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
@@ -71,13 +71,13 @@ namespace Tests.Integration.Model
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
                 bool deleted = await recursiveTraitModel.TryToDelete(trait.ID,
-                    new LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer, 
+                    metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, 
                     new DataOriginV1(DataOriginType.Manual), changesetProxy2, trans);
                 Assert.IsTrue(deleted);
                 trans.Commit();
             }
 
-            var rt3 = await recursiveTraitModel.GetRecursiveTraits(new LayerSet(metaConfiguration.ConfigLayerset), ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            var rt3 = await recursiveTraitModel.GetRecursiveTraits(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.IsEmpty(rt3);
         }
     }

@@ -43,7 +43,7 @@ namespace OKPluginValidation.Validation
 
             var timeThreshold = TimeThreshold.BuildLatest();
 
-            var validations = await validationModel.GetValidations(new LayerSet(metaConfiguration.ConfigLayerset), modelContextBuilder.BuildImmediate(), timeThreshold);
+            var validations = await validationModel.GetValidations(metaConfiguration.ConfigLayerset, modelContextBuilder.BuildImmediate(), timeThreshold);
 
             // user handling: get or create
             // TODO: generalize, offer method for upserting a special process user (consolidate with CLB users)

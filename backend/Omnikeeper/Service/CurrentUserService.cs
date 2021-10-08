@@ -125,7 +125,7 @@ namespace Omnikeeper.Service
                 {
                     var metaConfiguration = await MetaConfigurationModel.GetConfigOrDefault(trans);
 
-                    var authRoles = await AuthRoleModel.GetAuthRoles(new LayerSet(metaConfiguration.ConfigLayerset), trans, TimeThreshold.BuildLatest());
+                    var authRoles = await AuthRoleModel.GetAuthRoles(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
                     foreach (var role in clientRoles)
                     {
                         if (authRoles.TryGetValue(role, out var authRole))

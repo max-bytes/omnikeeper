@@ -98,7 +98,7 @@ namespace Omnikeeper.GridView.Commands
 
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
 
-                var context = await gridViewContextModel.GetFullContext(request.Context, new LayerSet(metaConfiguration.ConfigLayerset), timeThreshold, trans);
+                var context = await gridViewContextModel.GetFullContext(request.Context, metaConfiguration.ConfigLayerset, timeThreshold, trans);
                 var config = context.Configuration;
 
                 if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, config.WriteLayer))

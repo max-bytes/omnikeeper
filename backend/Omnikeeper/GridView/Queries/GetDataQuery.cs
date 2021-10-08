@@ -81,7 +81,7 @@ namespace Omnikeeper.GridView.Queries
                 var atTime = TimeThreshold.BuildLatest();
 
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-                var context = await gridViewContextModel.GetFullContext(request.Context, new LayerSet(metaConfiguration.ConfigLayerset), atTime, trans);
+                var context = await gridViewContextModel.GetFullContext(request.Context, metaConfiguration.ConfigLayerset, atTime, trans);
                 var config = context.Configuration;
 
                 if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, config.ReadLayerset))

@@ -53,7 +53,7 @@ namespace Omnikeeper.GridView.Queries
                     if (!managementAuthorizationService.CanReadManagement(user, metaConfiguration, out var message))
                         return (null, new Exception($"User \"{user.Username}\" does not have permission to read gridview context: {message}"));
 
-                    var context = await gridViewContextModel.GetFullContext(request.ContextName, new LayerSet(metaConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
+                    var context = await gridViewContextModel.GetFullContext(request.ContextName, metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
                     var result = new GetContextResponse(context);
 
                     return (result, null);

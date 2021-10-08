@@ -153,7 +153,7 @@ namespace Omnikeeper.Base.Generator
                     if (metaConfiguration.ConfigLayerset.Contains(layerID))
                         continue;
 
-                    availableGenerators ??= await generatorModel.GetGenerators(new LayerSet(metaConfiguration.ConfigLayerset), trans, timeThreshold);
+                    availableGenerators ??= await generatorModel.GetGenerators(metaConfiguration.ConfigLayerset, trans, timeThreshold);
 
                     var applicableGenerators = activeGeneratorIDsForLayer.Select(id => availableGenerators.GetOrWithClass(id, null)).Where(g => g != null).Select(g => g!);
 

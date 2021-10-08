@@ -194,7 +194,7 @@ namespace Omnikeeper.GraphQL
                         .WithTimeThreshold(() => context.GetArgument("timeThreshold", TimeThreshold.BuildLatest()));
 
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    var predicates = (await predicateModel.GetPredicates(new LayerSet(metaConfiguration.ConfigLayerset), userContext.Transaction, userContext.TimeThreshold)).Values;
+                    var predicates = (await predicateModel.GetPredicates(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold)).Values;
 
                     return predicates;
                 });
@@ -300,8 +300,8 @@ namespace Omnikeeper.GraphQL
                     var layers = await layerModel.GetLayers(userContext.Transaction); // TODO: we only need count, implement more efficient model method
                     var ciids = await ciidModel.GetCIIDs(userContext.Transaction);
                     var traits = await traitsProvider.GetActiveTraits(userContext.Transaction, userContext.TimeThreshold);
-                    var predicates = await predicateModel.GetPredicates(new LayerSet(metaConfiguration.ConfigLayerset), userContext.Transaction, userContext.TimeThreshold); // TODO: implement PredicateProvider
-                    var generators = await generatorModel.GetGenerators(new LayerSet(metaConfiguration.ConfigLayerset), userContext.Transaction, userContext.TimeThreshold); // TODO: implement GeneratorProvider
+                    var predicates = await predicateModel.GetPredicates(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold); // TODO: implement PredicateProvider
+                    var generators = await generatorModel.GetGenerators(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold); // TODO: implement GeneratorProvider
 
                     var numActiveAttributes = await layerStatisticsModel.GetActiveAttributes(null, userContext.Transaction);
                     var numAttributeChanges = await layerStatisticsModel.GetAttributeChangesHistory(null, userContext.Transaction);

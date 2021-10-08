@@ -44,7 +44,7 @@ namespace Omnikeeper.GridView.Queries
 
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
 
-                var contexts = await gridViewContextModel.GetFullContexts(new LayerSet(metaConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
+                var contexts = await gridViewContextModel.GetFullContexts(metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
 
                 return (new GetContextsResponse(contexts.Values.ToList()), null); // TODO: why not return dictionary?
             }

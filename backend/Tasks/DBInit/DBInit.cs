@@ -65,7 +65,7 @@ namespace Tasks.DBInit
                 foreach (var rt in DefaultTraits.Get())
                 {
                     await traitModel.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.OptionalRelations, rt.RequiredTraits, 
-                        new LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer,
+                        metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                         new DataOriginV1(DataOriginType.Manual), changeset, mc);
                 }
                 trans.Commit();
@@ -210,7 +210,7 @@ namespace Tasks.DBInit
                 foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates).Concat(baseDataPredicates))
                 {
                     await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo,
-                        new LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer,
+                        metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                         new DataOriginV1(DataOriginType.Manual), changeset, trans);
                 }
 

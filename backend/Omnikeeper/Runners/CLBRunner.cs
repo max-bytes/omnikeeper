@@ -51,7 +51,7 @@ namespace Omnikeeper.Runners
 
             if (!layersWithCLBs.IsEmpty()) {
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-                var clConfigs = await clConfigModel.GetCLConfigs(new LayerSet(metaConfiguration.ConfigLayerset), trans, timeThreshold);
+                var clConfigs = await clConfigModel.GetCLConfigs(metaConfiguration.ConfigLayerset, trans, timeThreshold);
 
                 foreach (var l in layersWithCLBs)
                 {

@@ -51,7 +51,7 @@ namespace Omnikeeper.Controllers.Ingest
             if (!managementAuthorizationService.CanReadManagement(user, metaConfiguration, out var message))
                 return Forbid($"User \"{user.Username}\" does not have permission to read contexts: {message}");
 
-            var contexts = await contextModel.GetContexts(new LayerSet(metaConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
+            var contexts = await contextModel.GetContexts(metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
             return Ok(contexts.Values);
         }
 
@@ -65,7 +65,7 @@ namespace Omnikeeper.Controllers.Ingest
             if (!managementAuthorizationService.CanReadManagement(user, metaConfiguration, out var message))
                 return Forbid($"User \"{user.Username}\" does not have permission to read contexts: {message}");
 
-            var context = await contextModel.GetContext(id, new LayerSet(metaConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
+            var context = await contextModel.GetContext(id, metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
             if (context != null)
                 return Ok(context);
             else
@@ -103,7 +103,7 @@ namespace Omnikeeper.Controllers.Ingest
                 var mc = modelContextBuilder.BuildDeferred();
                 var (context, _) = await contextModel.InsertOrUpdate(contextCandidate.ID, 
                     contextCandidate.ExtractConfig, contextCandidate.TransformConfig, contextCandidate.LoadConfig, 
-                    new LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer,
+                    metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                     new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), 
                     changesetProxy, mc);
                 mc.Commit();
@@ -129,7 +129,7 @@ namespace Omnikeeper.Controllers.Ingest
                 var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
                 var mc = modelContextBuilder.BuildDeferred();
                 var deleted = await contextModel.TryToDelete(id,
-                    new LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer,
+                    metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                     new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), 
                     changesetProxy,  mc);
                 mc.Commit();
