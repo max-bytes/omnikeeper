@@ -96,6 +96,9 @@ export function Context(props) {
                         defaultColDef={defaultColDef}
                         animateRows={true}
                         rowSelection="multiple"
+                        enableRangeSelection={true}
+                        suppressMultiRangeSelection={true}
+                        suppressRowClickSelection={true}
                         onCellValueChanged={updateCellValue}
                         suppressFieldDotNotation={true}
                         getRowNodeId={function (data) {
@@ -179,8 +182,7 @@ export function Context(props) {
                 const editableCell = focusedCell.column.colDef.editable(params);
                 const editableCol = focusedCell.column.colDef.editable;
                 if (editableCol && editableCell) {
-                    const currentValue = rowNode.data[focusedCell.column.colId];
-                    rowNode.setDataValue(focusedCell.column.colId, {...currentValue, values: []});
+                    rowNode.setDataValue(focusedCell.column.colId, undefined);
                 }
             }
         }
