@@ -26,7 +26,7 @@ namespace Omnikeeper.GraphQL
                 var isWritable = lbas.CanUserWriteToLayer(userContext.User, context.Source!.ID);
                 return isWritable;
             });
-            FieldAsync<BooleanGraphType>("isBaseConfigurationLayer", // TODO: rename to Meta*
+            FieldAsync<BooleanGraphType>("isMetaConfigurationLayer",
             resolve: async (context) =>
             {
                 var metaConfigurationModel = context.RequestServices!.GetRequiredService<IMetaConfigurationModel>();

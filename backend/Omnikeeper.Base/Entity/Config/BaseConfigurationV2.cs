@@ -27,7 +27,6 @@ namespace Omnikeeper.Base.Entity.Config
         [JsonProperty(Required = Required.Always)]
         public string ArchiveOldDataRunnerInterval => archiveOldDataRunnerInterval;
 
-        // TODO: remove?
         public static MyJSONSerializer<BaseConfigurationV2> Serializer = new MyJSONSerializer<BaseConfigurationV2>(new JsonSerializerSettings()
         {
             TypeNameHandling = TypeNameHandling.Objects,
