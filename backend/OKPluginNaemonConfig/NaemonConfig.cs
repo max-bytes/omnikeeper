@@ -29,27 +29,25 @@ namespace OKPluginNaemonConfig
             this.traitModel = traitModel;
         }
 
-        #region configuration
-        // TODO: move code in this region into configuration
-        private readonly List<string> loadcmdbcustomer = new List<string>() { "ADISSEO", "AGRANA", "AMS", "AMSINT", "ANDRITZ", "ATS", "AVESTRA", "AWS" };
-
-        // this is only temporary since this should be read from configuration
-        private readonly List<string> naemonsConfigGenerateprofiles = new List<string>() { "svphg200mon001", "svphg200mon002", "uansvclxnaemp01", "uansvclxnaemp02", "uansvclxnaemp03", "uansvclxnaemp04", "uansvclxnaemp05", "uansvclxnaemp06" };
-
-        //    cmdb-monprofile-prefix:
-        //- 'profile-'
-        //- 'profiletsc-'
-
-        private readonly List<string> cmdbMonprofilePrefix = new List<string> { "profile-", "profiletsc-" };
-        #endregion
         public override async Task<bool> Run(Layer targetLayer, JObject config, IChangesetProxy changesetProxy, CLBErrorHandler errorHandler, IModelContext trans, ILogger logger)
         {
             logger.LogDebug("Start naemonConfig");
 
-            var layersetCMDB = await layerModel.BuildLayerSet(new[] { "cmdb" }, trans);
-            var layersetMonman = await layerModel.BuildLayerSet(new[] { "monman" }, trans);
-            var layersetLivestatus = await layerModel.BuildLayerSet(new[] { "livestatus" }, trans);
-            var layersetNaemonConfig = await layerModel.BuildLayerSet(new[] { "naemon_config" }, trans);
+            var cfg = new Configuration();
+
+            try
+            {
+                cfg = config.ToObject<Configuration>();
+            }
+            catch (System.Exception)
+            {
+                //TODO throw an error here
+                throw;
+            }
+
+            var layersetCMDB = await layerModel.BuildLayerSet(new[] { cfg!.CMDBLayerId }, trans);
+            var layersetMonman = await layerModel.BuildLayerSet(new[] { cfg!.MonmanLayerId }, trans);
+            var layersetNaemonConfig = await layerModel.BuildLayerSet(new[] { cfg!.NaemonConfigLayerId }, trans);
 
             var allCIsCMDB = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetCMDB, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
             var allCIsMonman = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetMonman, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
@@ -431,7 +429,7 @@ namespace OKPluginNaemonConfig
 
                 var instanceName = instanceNameAttribute!.Attribute.Value.Value2String();
 
-                if (naemonsConfigGenerateprofiles.Contains(instanceName))
+                if (cfg!.NaemonsConfigGenerateprofiles.Contains(instanceName))
                 {
                     // monman-instance.id
                     var ss = ciItem.MergedAttributes.TryGetValue("naemon_instance.id", out MergedCIAttribute? instanceIdAttribute);
@@ -533,7 +531,7 @@ namespace OKPluginNaemonConfig
                     {
                         // check profile against configured scoping pattern
                         var isMyProfileScope = false;
-                        foreach (var pattern in cmdbMonprofilePrefix)
+                        foreach (var pattern in cfg!.CMDBMonprofilePrefix)
                         {
                             if (Regex.IsMatch(category.Name, $"^{pattern}", RegexOptions.IgnoreCase))
                             {
@@ -1326,6 +1324,27 @@ namespace OKPluginNaemonConfig
             public int IP { get; set; }
             public int DSNName { get; set; }
             public int Vlan { get; set; }
+        }
+
+        internal class Configuration
+        {
+            [JsonProperty("monman_layer_id")]
+            public string MonmanLayerId { get; set; }
+            
+            [JsonProperty("cmdb_layer_id")]
+            public string CMDBLayerId { get; set; }
+
+            [JsonProperty("naemon_config_layer_id")]
+            public string NaemonConfigLayerId { get; set; }
+            
+            [JsonProperty("load-cmdb-customer")]
+            public List<string> LoadCMDBCustomer { get; set; }
+            
+            [JsonProperty("cmdb-monprofile-prefix")]
+            public List<string> CMDBMonprofilePrefix { get; set; }
+            
+            [JsonProperty("naemons-config-generateprofiles")]
+            public List<string> NaemonsConfigGenerateprofiles { get; set; }
         }
     }
 }
