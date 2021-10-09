@@ -1,4 +1,5 @@
   * [Home](./Home)
+  * [attributes](./attributes)
   * [authorization](./authorization)
   * [build and packaging](./build-and-packaging)
   * [comparisons](./comparisons)

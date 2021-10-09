@@ -28,17 +28,17 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly IChangesetModel changesetModel;
         private readonly IModelContextBuilder modelContextBuilder;
-        private readonly IBaseConfigurationModel baseConfigurationModel;
+        private readonly IMetaConfigurationModel metaConfigurationModel;
 
         public ManageContextController(IContextModel contextModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService,
-            IChangesetModel changesetModel, IModelContextBuilder modelContextBuilder, IBaseConfigurationModel baseConfigurationModel)
+            IChangesetModel changesetModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel)
         {
             this.contextModel = contextModel;
             this.currentUserService = currentUserService;
             this.managementAuthorizationService = managementAuthorizationService;
             this.changesetModel = changesetModel;
             this.modelContextBuilder = modelContextBuilder;
-            this.baseConfigurationModel = baseConfigurationModel;
+            this.metaConfigurationModel = metaConfigurationModel;
         }
 
         [HttpGet()]
@@ -47,11 +47,11 @@ namespace Omnikeeper.Controllers.Ingest
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
 
-            var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
-            if (!managementAuthorizationService.CanReadManagement(user, baseConfiguration, out var message))
+            var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
+            if (!managementAuthorizationService.CanReadManagement(user, metaConfiguration, out var message))
                 return Forbid($"User \"{user.Username}\" does not have permission to read contexts: {message}");
 
-            var contexts = await contextModel.GetContexts(new LayerSet(baseConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
+            var contexts = await contextModel.GetContexts(metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
             return Ok(contexts.Values);
         }
 
@@ -61,11 +61,11 @@ namespace Omnikeeper.Controllers.Ingest
             var trans = modelContextBuilder.BuildImmediate();
             var user = await currentUserService.GetCurrentUser(trans);
 
-            var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
-            if (!managementAuthorizationService.CanReadManagement(user, baseConfiguration, out var message))
+            var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
+            if (!managementAuthorizationService.CanReadManagement(user, metaConfiguration, out var message))
                 return Forbid($"User \"{user.Username}\" does not have permission to read contexts: {message}");
 
-            var context = await contextModel.GetContext(id, new LayerSet(baseConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
+            var context = await contextModel.GetContext(id, metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
             if (context != null)
                 return Ok(context);
             else
@@ -80,8 +80,8 @@ namespace Omnikeeper.Controllers.Ingest
                 var trans = modelContextBuilder.BuildImmediate();
                 var user = await currentUserService.GetCurrentUser(trans);
 
-                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
-                if (!managementAuthorizationService.CanModifyManagement(user, baseConfiguration, out var message))
+                var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
+                if (!managementAuthorizationService.CanModifyManagement(user, metaConfiguration, out var message))
                     return Forbid($"User \"{user.Username}\" does not have permission to modify contexts: {message}");
 
                 // validation
@@ -103,7 +103,7 @@ namespace Omnikeeper.Controllers.Ingest
                 var mc = modelContextBuilder.BuildDeferred();
                 var (context, _) = await contextModel.InsertOrUpdate(contextCandidate.ID, 
                     contextCandidate.ExtractConfig, contextCandidate.TransformConfig, contextCandidate.LoadConfig, 
-                    new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                    metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                     new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), 
                     changesetProxy, mc);
                 mc.Commit();
@@ -122,14 +122,14 @@ namespace Omnikeeper.Controllers.Ingest
                 var trans = modelContextBuilder.BuildImmediate();
                 var user = await currentUserService.GetCurrentUser(trans);
 
-                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
-                if (!managementAuthorizationService.CanModifyManagement(user, baseConfiguration, out var message))
+                var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
+                if (!managementAuthorizationService.CanModifyManagement(user, metaConfiguration, out var message))
                     return Forbid($"User \"{user.Username}\" does not have permission to modify contexts: {message}");
 
                 var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
                 var mc = modelContextBuilder.BuildDeferred();
                 var deleted = await contextModel.TryToDelete(id,
-                    new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                    metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                     new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), 
                     changesetProxy,  mc);
                 mc.Commit();

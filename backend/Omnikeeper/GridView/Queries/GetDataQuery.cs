@@ -49,13 +49,13 @@ namespace Omnikeeper.GridView.Queries
             private readonly ICIModel ciModel;
             private readonly ITraitsProvider traitsProvider;
             private readonly IModelContextBuilder modelContextBuilder;
-            private readonly IBaseConfigurationModel baseConfigurationModel;
+            private readonly IMetaConfigurationModel metaConfigurationModel;
             private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
             private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
             private readonly ICurrentUserService currentUserService;
 
             public GetDataQueryHandler(IGridViewContextModel gridViewContextModel, IEffectiveTraitModel effectiveTraitModel, IRelationModel relationModel, ICIModel ciModel,
-                ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder, IBaseConfigurationModel baseConfigurationModel,
+                ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
                 ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService, ICurrentUserService currentUserService)
             {
                 this.gridViewContextModel = gridViewContextModel;
@@ -64,7 +64,7 @@ namespace Omnikeeper.GridView.Queries
                 this.ciModel = ciModel;
                 this.traitsProvider = traitsProvider;
                 this.modelContextBuilder = modelContextBuilder;
-                this.baseConfigurationModel = baseConfigurationModel;
+                this.metaConfigurationModel = metaConfigurationModel;
                 this.layerBasedAuthorizationService = layerBasedAuthorizationService;
                 this.ciBasedAuthorizationService = ciBasedAuthorizationService;
                 this.currentUserService = currentUserService;
@@ -80,8 +80,8 @@ namespace Omnikeeper.GridView.Queries
 
                 var atTime = TimeThreshold.BuildLatest();
 
-                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
-                var context = await gridViewContextModel.GetFullContext(request.Context, new LayerSet(baseConfiguration.ConfigLayerset), atTime, trans);
+                var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
+                var context = await gridViewContextModel.GetFullContext(request.Context, metaConfiguration.ConfigLayerset, atTime, trans);
                 var config = context.Configuration;
 
                 if (!layerBasedAuthorizationService.CanUserReadFromAllLayers(user, config.ReadLayerset))

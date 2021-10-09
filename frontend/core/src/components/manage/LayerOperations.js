@@ -2,13 +2,14 @@ import React, {useCallback, useState} from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { queries } from '../../graphql/queries_manage'
 import { mutations } from '../../graphql/mutations_manage'
-import { Button, Card, Col, Divider, Popconfirm, Row, Statistic, Typography, Upload, Space, Alert } from "antd";
+import { Button, Card, Col, Divider, Popconfirm, Row, Statistic, Typography, Upload, Space, Alert, Radio, Form } from "antd";
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import { useParams } from 'react-router-dom'
 import useSwaggerClient from 'utils/useSwaggerClient';
 import download from 'downloadjs';
 import { UploadOutlined } from '@ant-design/icons';
+import MultiCISelect from 'components/MultiCISelect';
 const { Text } = Typography;
 
 export default function LayerOperations(props) {
@@ -33,23 +34,6 @@ export default function LayerOperations(props) {
       setTruncatingLayer(false);
     });
   }
-
-  var [exportingLayer, setExportingLayer] = useState(false);
-  const exportLayer = useCallback(async () => {
-    if (data && swaggerClient) {
-      setExportingLayer(true);
-      try {
-        await swaggerClient.apis.ImportExportLayer.ExportLayer({ version: 1, layerID: data.manage_layerStatistics.layer.id })
-          .then(response => {
-            const contentDisposition = response.headers["content-disposition"];
-            const filename = contentDisposition.split('filename=')[1].split(';')[0]; // taken from https://stackoverflow.com/questions/40939380/how-to-get-file-name-from-content-disposition
-            download(response.data, filename);
-          });
-      } finally {
-        setExportingLayer(false);
-      }
-    }
-  }, [swaggerClient, data]);
 
   
   var [importingLayers, setImportingLayers] = useState(false);
@@ -117,16 +101,7 @@ export default function LayerOperations(props) {
       <Row gutter={16}>
         <Col span={8}>
           <Card title="Export Layer">
-            <p><Text>Export the currently active attributes and relations of this layer into an .okl1 file and download it</Text></p>
-            <p><Text>Note: this export only exports the currently active attributes and relations; it does NOT export any historic data.</Text></p>
-            <Popconfirm
-                title={`Are you sure you want to export layer ${data.manage_layerStatistics.layer.id}?`}
-                onConfirm={exportLayer}
-                okText="Yes, export!"
-                cancelText="No, cancel"
-            >
-              <Button disabled={exportingLayer} loading={exportingLayer}>{exportingLayer ? 'Running...' : 'Export Layer'}</Button>
-            </Popconfirm>
+            <ExportLayer layerID={layerID} swaggerClient={swaggerClient} />
           </Card>
         </Col><Col span={8}>
           <Card title="Import Layer">
@@ -174,4 +149,70 @@ export default function LayerOperations(props) {
   } else {
     return "Error";
   }
+}
+
+function ExportLayer(props) {
+  const {layerID, swaggerClient, } = props;
+  
+  var [exportingLayer, setExportingLayer] = useState(false);
+  const [selectedCIIDs, setSelectedCIIDs] = useState(null);
+
+  const exportLayer = useCallback(async () => {
+    if (swaggerClient) {
+      setExportingLayer(true);
+      try {
+        await swaggerClient.apis.ImportExportLayer.ExportLayer({ version: 1, layerID: layerID, ciids: selectedCIIDs })
+          .then(response => {
+            const contentDisposition = response.headers["content-disposition"];
+            const filename = contentDisposition.split('filename=')[1].split(';')[0]; // taken from https://stackoverflow.com/questions/40939380/how-to-get-file-name-from-content-disposition
+            download(response.data, filename);
+          });
+      } finally {
+        setExportingLayer(false);
+      }
+    }
+  }, [swaggerClient, selectedCIIDs, layerID]);
+
+
+  return <>
+      <p><Text>Export the currently active attributes and relations of this layer into an .okl1 file and download it</Text></p>
+      <p><Text>Note: this export only exports the currently active attributes and relations; it does NOT export any historic data</Text></p>
+      <p><Text>Note: when selecting specific CIs, only relations where BOTH ends are part of the selection get exported</Text></p>
+      <Form>
+        <ExportLayerSelectCIs layerID={layerID} selectedCIIDs={selectedCIIDs} setSelectedCIIDs={setSelectedCIIDs} />
+        <Form.Item>
+          <Popconfirm 
+              title={`Are you sure you want to export layer ${layerID}?`}
+              onConfirm={exportLayer}
+              okText="Yes, export!"
+              cancelText="No, cancel"
+          >
+            <Button disabled={exportingLayer} loading={exportingLayer}>{exportingLayer ? 'Running...' : 'Export Layer'}</Button>
+          </Popconfirm>
+        </Form.Item>
+      </Form>
+    </>;
+}
+
+function ExportLayerSelectCIs(props) {
+    
+  const { layerID, selectedCIIDs, setSelectedCIIDs } = props;
+
+  const type = (selectedCIIDs === null) ? 0 : 1;
+
+  const layerIDs = [layerID];
+
+  return <>
+    <Form.Item>
+      <Radio.Group onChange={(e) => setSelectedCIIDs((ts) => e.target.value === 0 ? null : [])} defaultValue={type}>
+        <Radio id={`ci-select-all`} value={0} checked={type === 0}>All CIs</Radio>
+        <Radio id={`ci-select-specific`} value={1} checked={type === 1}>Specific CIs</Radio>
+      </Radio.Group>
+    </Form.Item>
+    {type === 1 && 
+        <Form.Item>
+          <MultiCISelect layers={layerIDs} selectedCIIDs={selectedCIIDs} setSelectedCIIDs={setSelectedCIIDs} />
+        </Form.Item>
+    }
+  </>;
 }

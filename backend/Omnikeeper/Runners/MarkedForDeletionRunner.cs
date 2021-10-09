@@ -5,6 +5,8 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
 using Omnikeeper.Utils;
+using System;
+using System.Diagnostics;
 
 namespace Omnikeeper.Runners
 {
@@ -27,9 +29,16 @@ namespace Omnikeeper.Runners
         {
             using (HangfireConsoleLogger.InContext(context))
             {
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
                 logger.LogInformation("Start");
+
                 service.Run(modelContextBuilder, logger).GetAwaiter().GetResult();
-                logger.LogInformation("Finished");
+
+                stopWatch.Stop();
+                TimeSpan ts = stopWatch.Elapsed;
+                string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                logger.LogInformation($"Finished in {elapsedTime}");
             }
         }
     }

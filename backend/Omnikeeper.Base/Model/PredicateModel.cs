@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace Omnikeeper.Base.Model
 {
     // TODO: think about caching?
-    public class PredicateModel : TraitDataConfigBaseModel<Predicate, string>, IPredicateModel
+    public class PredicateModel : IDBasedTraitDataConfigBaseModel<Predicate, string>, IPredicateModel
     {
         public static readonly RecursiveTrait Predicate = new RecursiveTrait("__meta.config.predicate", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {

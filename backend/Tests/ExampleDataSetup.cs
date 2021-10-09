@@ -27,7 +27,7 @@ namespace Tests
             var userModel = serviceProvider.GetRequiredService<IUserInDatabaseModel>();
             var traitModel = serviceProvider.GetRequiredService<IRecursiveDataTraitModel>();
             var user = await DBSetup.SetupUser(userModel, modelContextBuilder.BuildImmediate());
-            var baseConfigurationModel = serviceProvider.GetRequiredService<IBaseConfigurationModel>();
+            var metaConfigurationModel = serviceProvider.GetRequiredService<IMetaConfigurationModel>();
 
             var random = new Random(3);
 
@@ -62,7 +62,7 @@ namespace Tests
             }).ToList();
 
 
-            var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(modelContextBuilder.BuildImmediate());
+            var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(modelContextBuilder.BuildImmediate());
 
             List<Layer> layers;
             using (var mc = modelContextBuilder.BuildDeferred())
@@ -81,7 +81,7 @@ namespace Tests
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var rt in rts)
                     await traitModel.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.OptionalRelations, rt.RequiredTraits,
-                        new LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                        metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                         new DataOriginV1(DataOriginType.Manual), changeset, mc);
                 mc.Commit();
             }

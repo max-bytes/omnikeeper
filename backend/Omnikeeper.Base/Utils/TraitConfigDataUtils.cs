@@ -113,6 +113,18 @@ namespace Omnikeeper.Base.Utils
         }
 
 
+        public static long ExtractMandatoryScalarIntegerAttribute(EffectiveTrait et, string traitAttributeName)
+        {
+            if (!et.TraitAttributes.TryGetValue(traitAttributeName, out var a))
+                throw new Exception("Invalid trait configuration");
+
+            if (a.Attribute.Value is AttributeScalarValueInteger asvi)
+                return asvi.Value;
+
+            throw new Exception("Invalid trait configuration");
+        }
+
+
         public static IEnumerable<MergedRelation> ExtractMandatoryOutgoingRelations(EffectiveTrait et, string traitRelationName)
         {
             if (!et.OutgoingTraitRelations.TryGetValue(traitRelationName, out var relatedCIs))

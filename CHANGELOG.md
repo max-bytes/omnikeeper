@@ -19,6 +19,44 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [2.0.0] - 2021-10-09
+ 
+### Added
+- Breaking change: split meta- and base-configuration; made base-configuration a CI inside of ok-config layer(s)
+- Option (via environment variable) to add AgGrid enterprise license, which enabled enterprise-only features in the gridview
+ 
+### Changed
+- An __okconfig layer is now automatically created on startup if it does not exist AND is set as meta-config layer
+
+## [1.8.0] - 2021-10-07
+ 
+### Added
+- support for exporting specific layers in layer export feature
+ 
+### Changed
+- switched to SpanJson for performance intense JSON (de-)serializations: GraphQL and Gridview data query
+- performance improvements to LayerStatisticsModel
+ 
+### Fixed
+- bugfixes for CI search regarding empty trait
+- bugfix when building latest tables in omnikeeper ramp-up
+
+## [1.7.1] - 2021-10-05
+ 
+### Changed
+- performance improvements to archiving data runner
+ 
+## [1.7.0] - 2021-10-04
+ 
+### Added
+- implemented configurable compute layers
+ 
+### Changed
+- performance improvements for querying attributes via GraphQL
+- removed CompactCI and distinction between that and FullCI; there's now only one more CI class throughout the code base
+- simplified GraphQL query schema for querying CIs
+- implemented data loader support for fetching effective traits for CIs via GraphQL
+ 
 ## [1.6.0] - 2021-10-01
  
 ### Added

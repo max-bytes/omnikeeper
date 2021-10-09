@@ -9,13 +9,13 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
     public class TraitCacheInvalidationBaseAttributeRevisionistModel : IBaseAttributeRevisionistModel
     {
         private readonly IBaseAttributeRevisionistModel model;
-        private readonly IBaseConfigurationModel baseConfigurationModel;
+        private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly EffectiveTraitCache cache;
 
-        public TraitCacheInvalidationBaseAttributeRevisionistModel(IBaseAttributeRevisionistModel model, IBaseConfigurationModel baseConfigurationModel, EffectiveTraitCache cache)
+        public TraitCacheInvalidationBaseAttributeRevisionistModel(IBaseAttributeRevisionistModel model, IMetaConfigurationModel metaConfigurationModel, EffectiveTraitCache cache)
         {
             this.model = model;
-            this.baseConfigurationModel = baseConfigurationModel;
+            this.metaConfigurationModel = metaConfigurationModel;
             this.cache = cache;
         }
 
@@ -24,7 +24,7 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             var numDeleted = await model.DeleteAllAttributes(layerID, trans);
             if (numDeleted > 0)
             {
-                if (await baseConfigurationModel.IsLayerPartOfBaseConfiguration(layerID, trans))
+                if (await metaConfigurationModel.IsLayerPartOfMetaConfiguration(layerID, trans))
                     cache.PurgeAll();
                 else
                     cache.PurgeLayer(layerID);
@@ -32,10 +32,10 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return numDeleted;
         }
 
-        public async Task<int> DeleteOutdatedAttributesOlderThan(string layerID, IModelContext trans, System.DateTimeOffset threshold, TimeThreshold atTime)
+        public async Task<int> DeleteOutdatedAttributesOlderThan(string[] layerIDs, IModelContext trans, System.DateTimeOffset threshold, TimeThreshold atTime)
         {
             // NOTE: because this only deletes outdated (=not latest) attributes, it does not affect the cache
-            var numDeleted = await model.DeleteOutdatedAttributesOlderThan(layerID, trans, threshold, atTime);
+            var numDeleted = await model.DeleteOutdatedAttributesOlderThan(layerIDs, trans, threshold, atTime);
             return numDeleted;
         }
     }

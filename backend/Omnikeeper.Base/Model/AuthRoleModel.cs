@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace Omnikeeper.Base.Model
 {
     // TODO: think about caching?
-    public class AuthRoleModel : TraitDataConfigBaseModel<AuthRole, string>, IAuthRoleModel
+    public class AuthRoleModel : IDBasedTraitDataConfigBaseModel<AuthRole, string>, IAuthRoleModel
     {
         public static readonly RecursiveTrait AuthRole = new RecursiveTrait("__meta.config.auth_role", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {

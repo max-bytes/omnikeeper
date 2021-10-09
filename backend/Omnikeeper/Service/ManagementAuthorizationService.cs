@@ -23,7 +23,7 @@ namespace Omnikeeper.Service
             return debugAllowAll || user.Permissions.Contains(PermissionUtils.GetManagementPermission());
         }
 
-        public bool CanReadManagement(AuthenticatedUser user, BaseConfigurationV1 baseConfiguration, out string message)
+        public bool CanReadManagement(AuthenticatedUser user, MetaConfiguration metaConfiguration, out string message)
         {
             if (!HasManagementPermission(user))
             {
@@ -31,9 +31,9 @@ namespace Omnikeeper.Service
                 return false;
             }
 
-            if (!lbas.CanUserReadFromAllLayers(user, baseConfiguration.ConfigLayerset))
+            if (!lbas.CanUserReadFromAllLayers(user, metaConfiguration.ConfigLayerset))
             {
-                message = $"User \"{user.Username}\" does not have permission to read from at least one of the configuration layers {string.Join(", ", baseConfiguration.ConfigLayerset)}";
+                message = $"User \"{user.Username}\" does not have permission to read from at least one of the configuration layers {string.Join(", ", metaConfiguration.ConfigLayerset)}";
                 return false;
             }
 
@@ -41,7 +41,7 @@ namespace Omnikeeper.Service
             return true;
         }
 
-        public bool CanModifyManagement(AuthenticatedUser user, BaseConfigurationV1 baseConfiguration, out string message)
+        public bool CanModifyManagement(AuthenticatedUser user, MetaConfiguration metaConfiguration, out string message)
         {
             if (!HasManagementPermission(user))
             {
@@ -49,15 +49,15 @@ namespace Omnikeeper.Service
                 return false;
             }
 
-            if (!lbas.CanUserWriteToLayer(user, baseConfiguration.ConfigWriteLayer))
+            if (!lbas.CanUserWriteToLayer(user, metaConfiguration.ConfigWriteLayer))
             {
-                message = $"User \"{user.Username}\" does not have permission to write to layer {baseConfiguration.ConfigWriteLayer}";
+                message = $"User \"{user.Username}\" does not have permission to write to layer {metaConfiguration.ConfigWriteLayer}";
                 return false;
             }
 
-            if (!lbas.CanUserReadFromAllLayers(user, baseConfiguration.ConfigLayerset))
+            if (!lbas.CanUserReadFromAllLayers(user, metaConfiguration.ConfigLayerset))
             {
-                message = $"User \"{user.Username}\" does not have permission to read from at least one of the configuration layers {string.Join(", ", baseConfiguration.ConfigLayerset)}";
+                message = $"User \"{user.Username}\" does not have permission to read from at least one of the configuration layers {string.Join(", ", metaConfiguration.ConfigLayerset)}";
                 return false;
             }
 

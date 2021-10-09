@@ -64,6 +64,9 @@ The frontend docker image exposes port 80, over which all communication is done.
     - Optional base URL, to run the frontend in non-root URLs
     - default: `/`
     - example: `/frontend`
+- REACT_APP_AGGRID_LICENCE_KEY
+    - Optional, license key for AgGrid Enterprise; if set and valid, enables AgGrid Enterprise features
+    - default: ``
 
 ### Logs
 Frontend application logs can be found inside the container at `/var/log/nginx`. You might want to map this directory to a directory on the docker host.

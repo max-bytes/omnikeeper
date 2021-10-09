@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace OKPluginValidation.Validation
 {
-    public class ValidationModel : TraitDataConfigBaseModel<Validation, string>, IValidationModel
+    public class ValidationModel : IDBasedTraitDataConfigBaseModel<Validation, string>, IValidationModel
     {
         public ValidationModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
             : base(ValidationTraits.ValidationFlattened, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)

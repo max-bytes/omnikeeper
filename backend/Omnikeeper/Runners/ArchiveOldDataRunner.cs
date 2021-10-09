@@ -9,6 +9,8 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
 using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Runners
@@ -20,19 +22,21 @@ namespace Omnikeeper.Runners
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
         private readonly IChangesetModel changesetModel;
+        private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly ILayerModel layerModel;
         private readonly IModelContextBuilder modelContextBuilder;
 
         public ArchiveOldDataRunner(ILogger<ArchiveOldDataRunner> logger, IExternalIDMapPersister externalIDMapPersister, 
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
-            IChangesetModel changesetModel, IBaseConfigurationModel baseConfigurationModel, ILayerModel layerModel, IModelContextBuilder modelContextBuilder)
+            IChangesetModel changesetModel, IMetaConfigurationModel metaConfigurationModel, IBaseConfigurationModel baseConfigurationModel, ILayerModel layerModel, IModelContextBuilder modelContextBuilder)
         {
             this.logger = logger;
             this.externalIDMapPersister = externalIDMapPersister;
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
             this.changesetModel = changesetModel;
+            this.metaConfigurationModel = metaConfigurationModel;
             this.baseConfigurationModel = baseConfigurationModel;
             this.layerModel = layerModel;
             this.modelContextBuilder = modelContextBuilder;
@@ -44,24 +48,21 @@ namespace Omnikeeper.Runners
             // delete outdated attributes and relations (empty changesets are deleted afterwards)
             using (var trans = modelContextBuilder.BuildDeferred())
             {
-                var cfg = await baseConfigurationModel.GetConfigOrDefault(trans);
-                var archiveThreshold = cfg.ArchiveChangesetThreshold; // TODO: rename to something better fitting
+                var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
+                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(new Base.Entity.LayerSet(metaConfiguration.ConfigLayerset), now, trans);
+                var archiveThreshold = baseConfiguration.ArchiveDataThreshold;
 
-                if (archiveThreshold == BaseConfigurationV1.InfiniteArchiveChangesetThreshold)
+                if (archiveThreshold == BaseConfigurationV2.InfiniteArchiveDataThreshold)
                 {
                     return;
                 }
                 var threshold = DateTimeOffset.Now.Add(archiveThreshold.Negate());
 
-                logger.LogDebug($"Deleting outdated attributes and relations older than {threshold}");
-    
-                var numDeletedAttributes = 0;
-                var numDeletedRelations = 0;
-                foreach (var layer in await layerModel.GetLayers(trans))
-                {
-                    numDeletedAttributes += await baseAttributeRevisionistModel.DeleteOutdatedAttributesOlderThan(layer.ID, trans, threshold, now);
-                    numDeletedRelations += await baseRelationRevisionistModel.DeleteOutdatedRelationsOlderThan(layer.ID, trans, threshold, now);
-                }
+               logger.LogDebug($"Deleting outdated attributes and relations older than {threshold}");
+
+                var layerIDs = (await layerModel.GetLayers(trans)).Select(l => l.ID).ToArray();
+                var numDeletedAttributes = await baseAttributeRevisionistModel.DeleteOutdatedAttributesOlderThan(layerIDs, trans, threshold, now);
+                var numDeletedRelations = await baseRelationRevisionistModel.DeleteOutdatedRelationsOlderThan(layerIDs, trans, threshold, now);
                 if (numDeletedAttributes > 0)
                     logger.LogInformation($"Deleted {numDeletedAttributes} attributes because they were outdated and older than {threshold}");
                 if (numDeletedRelations > 0)
@@ -102,9 +103,16 @@ namespace Omnikeeper.Runners
         {
             using (HangfireConsoleLogger.InContext(context))
             {
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
                 logger.LogInformation("Start");
+
                 RunAsync().GetAwaiter().GetResult();
-                logger.LogInformation("Finished");
+
+                stopWatch.Stop();
+                TimeSpan ts = stopWatch.Elapsed;
+                string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+                logger.LogInformation($"Finished in {elapsedTime}");
             }
         }
 

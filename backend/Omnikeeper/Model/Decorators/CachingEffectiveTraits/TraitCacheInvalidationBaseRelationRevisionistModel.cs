@@ -10,13 +10,13 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
     public class TraitCacheInvalidationBaseRelationRevisionistModel : IBaseRelationRevisionistModel
     {
         private readonly IBaseRelationRevisionistModel model;
-        private readonly IBaseConfigurationModel baseConfigurationModel;
+        private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly EffectiveTraitCache cache;
 
-        public TraitCacheInvalidationBaseRelationRevisionistModel(IBaseRelationRevisionistModel model, IBaseConfigurationModel baseConfigurationModel, EffectiveTraitCache cache)
+        public TraitCacheInvalidationBaseRelationRevisionistModel(IBaseRelationRevisionistModel model, IMetaConfigurationModel metaConfigurationModel, EffectiveTraitCache cache)
         {
             this.model = model;
-            this.baseConfigurationModel = baseConfigurationModel;
+            this.metaConfigurationModel = metaConfigurationModel;
             this.cache = cache;
         }
 
@@ -25,7 +25,7 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             var numDeleted = await model.DeleteAllRelations(layerID, trans);
             if (numDeleted > 0)
             {
-                if (await baseConfigurationModel.IsLayerPartOfBaseConfiguration(layerID, trans))
+                if (await metaConfigurationModel.IsLayerPartOfMetaConfiguration(layerID, trans))
                     cache.PurgeAll();
                 else
                     cache.PurgeLayer(layerID);
@@ -33,10 +33,10 @@ namespace Omnikeeper.Model.Decorators.CachingEffectiveTraits
             return numDeleted;
         }
 
-        public async Task<int> DeleteOutdatedRelationsOlderThan(string layerID, IModelContext trans, System.DateTimeOffset threshold, TimeThreshold atTime)
+        public async Task<int> DeleteOutdatedRelationsOlderThan(string[] layerIDs, IModelContext trans, System.DateTimeOffset threshold, TimeThreshold atTime)
         {
             // NOTE: because this only deletes outdated (=not latest) relations, it does not affect the cache
-            var numDeleted = await model.DeleteOutdatedRelationsOlderThan(layerID, trans, threshold, atTime);
+            var numDeleted = await model.DeleteOutdatedRelationsOlderThan(layerIDs, trans, threshold, atTime);
             return numDeleted;
         }
     }
