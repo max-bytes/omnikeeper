@@ -28,16 +28,16 @@ namespace Omnikeeper.GridView.Queries
         {
             private readonly IGridViewContextModel gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
-            private readonly IBaseConfigurationModel baseConfigurationModel;
+            private readonly IMetaConfigurationModel metaConfigurationModel;
             private readonly ICurrentUserService currentUserService;
             private readonly IManagementAuthorizationService managementAuthorizationService;
 
             public GetContextQueryHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder,
-                IBaseConfigurationModel baseConfigurationModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService)
+                IMetaConfigurationModel metaConfigurationModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService)
             {
                 this.gridViewContextModel = gridViewContextModel;
                 this.modelContextBuilder = modelContextBuilder;
-                this.baseConfigurationModel = baseConfigurationModel;
+                this.metaConfigurationModel = metaConfigurationModel;
                 this.currentUserService = currentUserService;
                 this.managementAuthorizationService = managementAuthorizationService;
             }
@@ -49,11 +49,11 @@ namespace Omnikeeper.GridView.Queries
                     var trans = modelContextBuilder.BuildImmediate();
                     var user = await currentUserService.GetCurrentUser(trans);
 
-                    var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
-                    if (!managementAuthorizationService.CanReadManagement(user, baseConfiguration, out var message))
+                    var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
+                    if (!managementAuthorizationService.CanReadManagement(user, metaConfiguration, out var message))
                         return (null, new Exception($"User \"{user.Username}\" does not have permission to read gridview context: {message}"));
 
-                    var context = await gridViewContextModel.GetFullContext(request.ContextName, new LayerSet(baseConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
+                    var context = await gridViewContextModel.GetFullContext(request.ContextName, metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
                     var result = new GetContextResponse(context);
 
                     return (result, null);

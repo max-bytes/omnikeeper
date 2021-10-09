@@ -1,8 +1,10 @@
 ﻿using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Plugins;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Runners;
 using System.Threading;
@@ -20,10 +22,12 @@ namespace Omnikeeper.Startup
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             using var scope = _serviceScopeFactory.CreateScope();
+            var metaConfigurationModel = scope.ServiceProvider.GetRequiredService<IMetaConfigurationModel>();
             var baseConfigurationModel = scope.ServiceProvider.GetRequiredService<IBaseConfigurationModel>();
             var modelContextBuilder = scope.ServiceProvider.GetRequiredService<IModelContextBuilder>();
             var trans = modelContextBuilder.BuildImmediate();
-            var config = await baseConfigurationModel.GetConfigOrDefault(trans);
+            var metaConfig = await metaConfigurationModel.GetConfigOrDefault(trans);
+            var config = await baseConfigurationModel.GetConfigOrDefault(new LayerSet(metaConfig.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
 
             var plugins = scope.ServiceProvider.GetServices<IPluginRegistration>();
 
