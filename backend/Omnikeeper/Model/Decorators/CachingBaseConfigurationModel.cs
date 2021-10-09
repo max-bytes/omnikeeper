@@ -19,15 +19,6 @@ namespace Omnikeeper.Model.Decorators
             Model = model;
         }
 
-        public async Task<BaseConfigurationV2> GetConfig(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
-        {
-            var (item, hit) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.BaseConfiguration(), async () =>
-            {
-                return await Model.GetConfig(layerSet, timeThreshold, trans);
-            });
-            return item;
-        }
-
         public async Task<BaseConfigurationV2> GetConfigOrDefault(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var (item, hit) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.BaseConfiguration(), async () =>

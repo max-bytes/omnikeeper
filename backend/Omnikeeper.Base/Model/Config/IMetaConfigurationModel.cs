@@ -6,7 +6,6 @@ namespace Omnikeeper.Base.Model.Config
 {
     public interface IMetaConfigurationModel
     {
-        Task<MetaConfiguration> GetConfig(IModelContext trans);
         Task<MetaConfiguration> GetConfigOrDefault(IModelContext trans);
         Task<MetaConfiguration> SetConfig(MetaConfiguration config, IModelContext trans);
 

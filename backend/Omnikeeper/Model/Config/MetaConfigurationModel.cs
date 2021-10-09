@@ -19,42 +19,30 @@ namespace Omnikeeper.Model
             this.logger = logger;
         }
 
-        public async Task<MetaConfiguration> GetConfig(IModelContext trans)
-        {
-            using var command = new NpgsqlCommand(@"
-                SELECT config FROM config.general WHERE key = 'meta' LIMIT 1
-            ", trans.DBConnection, trans.DBTransaction);
-            using var s = await command.ExecuteReaderAsync();
-
-            if (!await s.ReadAsync())
-                throw new Exception("Could not find meta config");
-
-            var configJO = s.GetFieldValue<JObject>(0);
-            try
-            {
-                return MetaConfiguration.Serializer.Deserialize(configJO);
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, $"Could not deserialize meta configuration");
-                throw new Exception("Could not find meta config", e);
-            }
-        }
-
         public async Task<MetaConfiguration> GetConfigOrDefault(IModelContext trans)
         {
-            try
+            using var command = new NpgsqlCommand(@"
+                SELECT config FROM config.general WHERE key = 'meta' LIMIT 1", 
+            trans.DBConnection, trans.DBTransaction);
+            using var s = await command.ExecuteReaderAsync();
+
+            if (await s.ReadAsync())
             {
-                var fromDB = await GetConfig(trans);
-                return fromDB;
+                var configJO = s.GetFieldValue<JObject>(0);
+                try
+                {
+                    return MetaConfiguration.Serializer.Deserialize(configJO);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, $"Could not deserialize meta configuration");
+                }
             }
-            catch (Exception)
-            {
-                return new MetaConfiguration(
-                    new string[] { "__okconfig" },
-                    "__okconfig"
-                );
-            }
+
+            return new MetaConfiguration(
+                new string[] { "__okconfig" },
+                "__okconfig"
+            );
         }
 
         public async Task<bool> IsLayerPartOfMetaConfiguration(string layerID, IModelContext trans)

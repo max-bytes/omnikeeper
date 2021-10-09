@@ -209,6 +209,7 @@ namespace Omnikeeper.Startup
                 services.Decorate<ILayerModel, CachingLayerModel>();
                 services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
                 services.Decorate<IBaseConfigurationModel, CachingBaseConfigurationModel>();
+                services.Decorate<IMetaConfigurationModel, CachingMetaConfigurationModel>();
                 services.Decorate<IPartitionModel, CachingPartitionModel>();
             }
 

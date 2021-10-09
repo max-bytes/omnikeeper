@@ -34,11 +34,6 @@ namespace Omnikeeper.Base.Model.Config
         {
         }
 
-        public async Task<BaseConfigurationV2> GetConfig(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
-        {
-            return await Get(layerSet, timeThreshold, trans);
-        }
-
         public async Task<BaseConfigurationV2> GetConfigOrDefault(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var baseConfig = await TryToGet(layerSet, timeThreshold, trans);
