@@ -22,9 +22,9 @@ namespace Omnikeeper.GraphQL
                 throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to {reasonForCheck}");
         }
 
-        private void CheckReadManagementThrow(OmnikeeperUserContext userContext, BaseConfigurationV1 baseConfiguration, string reasonForCheck)
+        private void CheckReadManagementThrow(OmnikeeperUserContext userContext, MetaConfiguration metaConfiguration, string reasonForCheck)
         {
-            if (!managementAuthorizationService.CanReadManagement(userContext.User, baseConfiguration, out var message))
+            if (!managementAuthorizationService.CanReadManagement(userContext.User, metaConfiguration, out var message))
                 throw new ExecutionError($"User \"{userContext.User.Username}\" does not have permission to {reasonForCheck}: {message}");
         }
 
@@ -104,12 +104,15 @@ namespace Omnikeeper.GraphQL
                 resolve: async context =>
                 {
                     var userContext = context.SetupUserContext()
-                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
+                        .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
+                        .WithTimeThreshold(() => TimeThreshold.BuildLatest());
 
                     CheckManagementPermissionThrow(userContext);
 
-                    var cfg = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    return BaseConfigurationV1.Serializer.SerializeToString(cfg);
+                    var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+
+                    var cfg = await baseConfigurationModel.GetConfigOrDefault(metaConfiguration.ConfigLayerset, userContext.TimeThreshold, userContext.Transaction);
+                    return BaseConfigurationV2.Serializer.SerializeToString(cfg);
                 });
 
             FieldAsync<ListGraphType<PredicateType>>("manage_predicates",
@@ -120,10 +123,10 @@ namespace Omnikeeper.GraphQL
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
                         .WithTimeThreshold(() => TimeThreshold.BuildLatest());
 
-                    var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    CheckReadManagementThrow(userContext, baseConfiguration, "read predicates");
+                    var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                    CheckReadManagementThrow(userContext, metaConfiguration, "read predicates");
 
-                    var predicates = (await predicateModel.GetPredicates(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, userContext.TimeThreshold)).Values;
+                    var predicates = (await predicateModel.GetPredicates(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold)).Values;
 
                     return predicates;
                 });
@@ -135,11 +138,11 @@ namespace Omnikeeper.GraphQL
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
                         .WithTimeThreshold(() => TimeThreshold.BuildLatest());
 
-                    var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    CheckReadManagementThrow(userContext, baseConfiguration, "read traits");
+                    var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                    CheckReadManagementThrow(userContext, metaConfiguration, "read traits");
 
                     // TODO: should we not deliver non-DB traits (f.e. from CLBs) here?
-                    var traitSet = await recursiveDataTraitModel.GetRecursiveTraits(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, TimeThreshold.BuildLatest());
+                    var traitSet = await recursiveDataTraitModel.GetRecursiveTraits(metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
                     return traitSet;
                 });
 
@@ -151,10 +154,10 @@ namespace Omnikeeper.GraphQL
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
                         .WithTimeThreshold(() => TimeThreshold.BuildLatest());
 
-                    var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    CheckReadManagementThrow(userContext, baseConfiguration, "read generators");
+                    var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                    CheckReadManagementThrow(userContext, metaConfiguration, "read generators");
 
-                    var generators = await generatorModel.GetGenerators(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, TimeThreshold.BuildLatest());
+                    var generators = await generatorModel.GetGenerators(metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
                     return generators.Values;
                 });
 
@@ -165,10 +168,10 @@ namespace Omnikeeper.GraphQL
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
                         .WithTimeThreshold(() => TimeThreshold.BuildLatest());
 
-                    var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    CheckReadManagementThrow(userContext, baseConfiguration, "read auth roles");
+                    var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                    CheckReadManagementThrow(userContext, metaConfiguration, "read auth roles");
 
-                    var authRoles = await authRoleModel.GetAuthRoles(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, TimeThreshold.BuildLatest());
+                    var authRoles = await authRoleModel.GetAuthRoles(metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
                     return authRoles.Values;
                 });
 
@@ -179,10 +182,10 @@ namespace Omnikeeper.GraphQL
                         .WithTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate())
                         .WithTimeThreshold(() => TimeThreshold.BuildLatest());
 
-                    var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(userContext.Transaction);
-                    CheckReadManagementThrow(userContext, baseConfiguration, "read CL configs");
+                    var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
+                    CheckReadManagementThrow(userContext, metaConfiguration, "read CL configs");
 
-                    var clConfigs = await clConfigModel.GetCLConfigs(new LayerSet(baseConfiguration.ConfigLayerset), userContext.Transaction, TimeThreshold.BuildLatest());
+                    var clConfigs = await clConfigModel.GetCLConfigs(metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
                     return clConfigs.Values;
                 });
 

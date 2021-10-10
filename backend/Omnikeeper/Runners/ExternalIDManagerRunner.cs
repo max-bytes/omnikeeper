@@ -55,8 +55,6 @@ namespace Omnikeeper.Runners
 
         public async Task RunAsync()
         {
-            logger.LogInformation("Start");
-
             var trans = modelContextBuilder.BuildImmediate();
             var activeLayers = await layerModel.GetLayers(Omnikeeper.Base.Entity.AnchorStateFilter.ActiveAndDeprecated, trans);
             var layersWithOILPs = activeLayers.Where(l => l.OnlineInboundAdapterLink.AdapterName != ""); // TODO: better check for set oilp than name != ""

@@ -28,6 +28,7 @@ namespace Omnikeeper.GraphQL
         private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly ICLConfigModel clConfigModel;
+        private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
@@ -36,7 +37,7 @@ namespace Omnikeeper.GraphQL
             IPredicateModel predicateModel, IChangesetModel changesetModel, IGeneratorModel generatorModel,
             IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, IAuthRoleModel authRoleModel,
             IRecursiveDataTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
-            IManagementAuthorizationService managementAuthorizationService, ICLConfigModel clConfigModel,
+            IManagementAuthorizationService managementAuthorizationService, ICLConfigModel clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
@@ -181,6 +182,7 @@ namespace Omnikeeper.GraphQL
             this.baseConfigurationModel = baseConfigurationModel;
             this.managementAuthorizationService = managementAuthorizationService;
             this.clConfigModel = clConfigModel;
+            this.metaConfigurationModel = metaConfigurationModel;
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
             this.layerBasedAuthorizationService = layerBasedAuthorizationService;

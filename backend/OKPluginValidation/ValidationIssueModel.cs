@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace OKPluginValidation.Validation
 {
-    public class ValidationIssueModel : TraitDataConfigBaseModel<ValidationIssue, string>, IValidationIssueModel
+    public class ValidationIssueModel : IDBasedTraitDataConfigBaseModel<ValidationIssue, string>, IValidationIssueModel
     {
         public ValidationIssueModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
             : base(ValidationTraits.ValidationIssueFlattened, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)

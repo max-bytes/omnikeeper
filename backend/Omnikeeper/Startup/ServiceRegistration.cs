@@ -1,5 +1,4 @@
 ﻿using GraphQL;
-using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
 using NuGet.Frameworks;
@@ -195,6 +194,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IGeneratorModel, GeneratorModel>();
             services.AddSingleton<IEffectiveTraitModel, EffectiveTraitModel>();
             services.AddSingleton<IBaseConfigurationModel, BaseConfigurationModel>();
+            services.AddSingleton<IMetaConfigurationModel, MetaConfigurationModel>();
             services.AddSingleton<IOIAContextModel, OIAContextModel>();
             services.AddSingleton<IGridViewContextModel, GridViewContextModel>();
             services.AddSingleton<IPartitionModel, PartitionModel>();
@@ -211,6 +211,7 @@ namespace Omnikeeper.Startup
                 services.Decorate<ILayerModel, CachingLayerModel>();
                 services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
                 services.Decorate<IBaseConfigurationModel, CachingBaseConfigurationModel>();
+                services.Decorate<IMetaConfigurationModel, CachingMetaConfigurationModel>();
                 services.Decorate<IPartitionModel, CachingPartitionModel>();
             }
 
@@ -241,7 +242,7 @@ namespace Omnikeeper.Startup
         {
             services.AddSingleton<ISchema, GraphQLSchema>();
             services.AddSingleton<IDocumentExecuter, MyDocumentExecutor>(); // custom document executor that does serial queries, required by postgres
-            services.AddSingleton<IDocumentWriter, DocumentWriter>();
+            services.AddSingleton<IDocumentWriter, SpanJSONDocumentWriter>();
             services.AddSingleton<IDataLoaderContextAccessor, DataLoaderContextAccessor>();
             services.AddSingleton<DataLoaderDocumentListener>();
         }

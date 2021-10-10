@@ -37,13 +37,13 @@ export default function ManageBaseConfiguration() {
                 <Form.Item name="$type" label="$type" rules={[{ required: true }]} hidden>
                     <Input />
                 </Form.Item>
-                <Form.Item name="ConfigLayerset" label="Config Layerset" rules={[{ required: true }]}>
+                {/* <Form.Item name="ConfigLayerset" label="Config Layerset" rules={[{ required: true }]}>
                     <Input />
                 </Form.Item>
                 <Form.Item name="ConfigWriteLayer" label="Config Write Layer" rules={[{ required: true }]}>
                     <Input />
-                </Form.Item>
-                <Form.Item name="ArchiveChangesetThreshold" label="Archive Changeset Threshold" rules={[{ required: true }]}>
+                </Form.Item> */}
+                <Form.Item name="ArchiveDataThreshold" label="Archive Data Threshold" rules={[{ required: true }]}>
                     <Input />
                 </Form.Item>
                 <Form.Item name="CLBRunnerInterval" label="CLB Runner Interval" rules={[{ required: true }]}>

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.GridView.Model
 {
-    public class GridViewContextModel : TraitDataConfigBaseModel<FullContext, string>, IGridViewContextModel
+    public class GridViewContextModel : IDBasedTraitDataConfigBaseModel<FullContext, string>, IGridViewContextModel
     {
         public GridViewContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
             : base(CoreTraits.GridviewContextFlattened, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)

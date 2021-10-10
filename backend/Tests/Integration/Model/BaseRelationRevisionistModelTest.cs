@@ -50,8 +50,10 @@ namespace Tests.Integration.Model
                 trans.Commit();
             }
 
+            var layerIDs = new string[] { layerID1 };
+
             // nothing to delete yet
-            var d1 = await model.DeleteOutdatedRelationsOlderThan(layerID1, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
+            var d1 = await model.DeleteOutdatedRelationsOlderThan(layerIDs, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
             Assert.AreEqual(0, d1);
 
             // insert relations
@@ -64,7 +66,7 @@ namespace Tests.Integration.Model
             }
 
             // nothing to delete yet still
-            var d2 = await model.DeleteOutdatedRelationsOlderThan(layerID1, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
+            var d2 = await model.DeleteOutdatedRelationsOlderThan(layerIDs, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
             Assert.AreEqual(0, d2);
 
             // override relation by deleting, then adding again
@@ -82,15 +84,15 @@ namespace Tests.Integration.Model
             }
 
             // nothing to delete yet still, if we choose an older time threshold
-            var d3 = await model.DeleteOutdatedRelationsOlderThan(layerID1, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now.AddSeconds(-100), TimeThreshold.BuildLatest());
+            var d3 = await model.DeleteOutdatedRelationsOlderThan(layerIDs, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now.AddSeconds(-100), TimeThreshold.BuildLatest());
             Assert.AreEqual(0, d3);
 
             // outdated relations will be deleted, if we choose a time threshold that is recent enough
-            var d4 = await model.DeleteOutdatedRelationsOlderThan(layerID1, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
+            var d4 = await model.DeleteOutdatedRelationsOlderThan(layerIDs, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
             Assert.AreEqual(2, d4);
 
             // nothing to delete again
-            var d5 = await model.DeleteOutdatedRelationsOlderThan(layerID1, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
+            var d5 = await model.DeleteOutdatedRelationsOlderThan(layerIDs, ModelContextBuilder.BuildImmediate(), DateTimeOffset.Now, TimeThreshold.BuildLatest());
             Assert.AreEqual(0, d5);
         }
     }

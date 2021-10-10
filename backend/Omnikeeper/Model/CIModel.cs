@@ -42,14 +42,6 @@ namespace Omnikeeper.Model
         {
             var attributes = await attributeModel.GetMergedAttributes(selection, attributeSelection, layers, trans, atTime);
 
-            if (includeEmptyCIs)
-            {
-                // check which ciids we already got and which are empty, add the empty ones
-                var allSelectedCIIDs = await selection.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans)); // TODO: performance improvement possible by first reducing the selection, then getting the ciids
-                IDictionary<Guid, IDictionary<string, MergedCIAttribute>> emptyCIs = allSelectedCIIDs.Except(attributes.Keys).ToDictionary(a => a, a => (IDictionary<string, MergedCIAttribute>)ImmutableDictionary<string, MergedCIAttribute>.Empty);
-                attributes = attributes.Concat(emptyCIs).ToDictionary(a => a.Key, a => a.Value);
-            }
-
             var ret = new List<MergedCI>();
             foreach (var ga in attributes)
             {
@@ -57,6 +49,18 @@ namespace Omnikeeper.Model
                 var name = GetNameFromAttributes(att);
                 ret.Add(new MergedCI(ga.Key, name, layers, atTime, att));
             }
+
+            if (includeEmptyCIs)
+            {
+                // check which ci we already got and which are empty, add the empty ones
+                var allSelectedCIIDs = await selection.GetCIIDsAsync(async () => await ciidModel.GetCIIDs(trans));
+                var emptyCIIDs = allSelectedCIIDs.Except(attributes.Keys);
+                foreach(var emptyCIID in emptyCIIDs)
+                {
+                    ret.Add(new MergedCI(emptyCIID, null, layers, atTime, ImmutableDictionary<string, MergedCIAttribute>.Empty));
+                }
+            }
+
             return ret;
         }
 

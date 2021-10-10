@@ -39,13 +39,13 @@ namespace Omnikeeper.GridView.Queries
         {
             private readonly IGridViewContextModel gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
-            private readonly IBaseConfigurationModel baseConfigurationModel;
+            private readonly IMetaConfigurationModel metaConfigurationModel;
 
-            public GetSchemaQueryHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder, IBaseConfigurationModel baseConfigurationModel)
+            public GetSchemaQueryHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel)
             {
                 this.gridViewContextModel = gridViewContextModel;
                 this.modelContextBuilder = modelContextBuilder;
-                this.baseConfigurationModel = baseConfigurationModel;
+                this.metaConfigurationModel = metaConfigurationModel;
             }
             public async Task<(GetSchemaResponse?, Exception?)> Handle(Query request, CancellationToken cancellationToken)
             {
@@ -59,8 +59,8 @@ namespace Omnikeeper.GridView.Queries
 
                 var trans = modelContextBuilder.BuildImmediate();
 
-                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
-                var context = await gridViewContextModel.GetFullContext(request.Context, new LayerSet(baseConfiguration.ConfigLayerset), TimeThreshold.BuildLatest(), trans);
+                var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
+                var context = await gridViewContextModel.GetFullContext(request.Context, metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
                 var config = context.Configuration;
 
                 var result = new GetSchemaResponse(config.ShowCIIDColumn, new List<Column>());
