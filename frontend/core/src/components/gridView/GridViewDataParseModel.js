@@ -54,7 +54,7 @@ export default function GridViewDataParseModel(rowStatus) {
                 },
                 valueSetter: (params) => {
                     let value = params.data[params.column.colId];
-                    value.values = [params.newValue];
+                    value.values = params.newValue ? [params.newValue] : [];
                     return value;
                 },
                 cellEditorSelector: function(params) {
