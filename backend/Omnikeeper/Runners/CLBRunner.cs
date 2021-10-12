@@ -19,12 +19,12 @@ namespace Omnikeeper.Runners
     public class CLBRunner
     {
         public CLBRunner(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, ICLConfigModel clConfigModel,
-            IBaseConfigurationModel baseConfigurationModel,
+            IMetaConfigurationModel metaConfigurationModel,
             ILayerModel layerModel, ILogger<CLBRunner> logger, IModelContextBuilder modelContextBuilder)
         {
             this.existingComputeLayerBrains = existingComputeLayerBrains.ToDictionary(l => l.Name);
             this.clConfigModel = clConfigModel;
-            this.baseConfigurationModel = baseConfigurationModel;
+            this.metaConfigurationModel = metaConfigurationModel;
             this.layerModel = layerModel;
             this.logger = logger;
             this.modelContextBuilder = modelContextBuilder;
@@ -50,8 +50,8 @@ namespace Omnikeeper.Runners
             var layersWithCLBs = activeLayers.Where(l => l.CLConfigID != "");
 
             if (!layersWithCLBs.IsEmpty()) {
-                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
-                var clConfigs = await clConfigModel.GetCLConfigs(new LayerSet(baseConfiguration.ConfigLayerset), trans, timeThreshold);
+                var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
+                var clConfigs = await clConfigModel.GetCLConfigs(metaConfiguration.ConfigLayerset, trans, timeThreshold);
 
                 foreach (var l in layersWithCLBs)
                 {
@@ -85,7 +85,7 @@ namespace Omnikeeper.Runners
 
         private readonly IDictionary<string, IComputeLayerBrain> existingComputeLayerBrains;
         private readonly ICLConfigModel clConfigModel;
-        private readonly IBaseConfigurationModel baseConfigurationModel;
+        private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly ILayerModel layerModel;
         private readonly ILogger<CLBRunner> logger;
         private readonly IModelContextBuilder modelContextBuilder;

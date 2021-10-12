@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql.Logging;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Service;
@@ -32,9 +33,32 @@ namespace Omnikeeper
 
                 // migration/rebuild of *-latest tables in database to be backward compatible
                 await RebuildLatestTablesIfNonEmpty(scope);
+
+                // create a default __okconfig layer if it does not exist and meta config has this set
+                await CreateOKConfigLayerIfNotExists(scope);
             }
 
             host.Run();
+        }
+
+        private static async Task CreateOKConfigLayerIfNotExists(IServiceScope scope)
+        {
+            var modelContextBuilder = scope.ServiceProvider.GetRequiredService<IModelContextBuilder>();
+            var metaConfigurationModel = scope.ServiceProvider.GetRequiredService<IMetaConfigurationModel>();
+            var layerModel = scope.ServiceProvider.GetRequiredService<ILayerModel>();
+            using (var mc = modelContextBuilder.BuildDeferred())
+            {
+                var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(mc);
+                if (metaConfiguration.ConfigLayers.Contains("__okconfig") || metaConfiguration.ConfigWriteLayer == "__okconfig")
+                {
+                    var okConfigLayer = await layerModel.GetLayer("__okconfig", mc);
+                    if (okConfigLayer == null)
+                    {
+                        await layerModel.UpsertLayer("__okconfig", mc);
+                    }
+                    mc.Commit();
+                }
+            }
         }
 
         private static async Task RebuildLatestTablesIfNonEmpty(IServiceScope scope)

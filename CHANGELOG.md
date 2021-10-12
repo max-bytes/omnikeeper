@@ -19,6 +19,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 -->
 
+## [2.0.0] - 2021-10-09
+ 
+### Added
+- Breaking change: split meta- and base-configuration; made base-configuration a CI inside of ok-config layer(s)
+- Option (via environment variable) to add AgGrid enterprise license, which enabled enterprise-only features in the gridview
+ 
+### Changed
+- An __okconfig layer is now automatically created on startup if it does not exist AND is set as meta-config layer
+
 ## [1.8.0] - 2021-10-07
  
 ### Added

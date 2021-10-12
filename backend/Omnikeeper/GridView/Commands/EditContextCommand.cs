@@ -49,17 +49,17 @@ namespace Omnikeeper.GridView.Commands
             private readonly IGridViewContextModel gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly ICurrentUserService currentUserService;
-            private readonly IBaseConfigurationModel baseConfigurationModel;
+            private readonly IMetaConfigurationModel metaConfigurationModel;
             private readonly IChangesetModel changesetModel;
             private readonly IManagementAuthorizationService managementAuthorizationService;
 
             public EditContextCommandHandler(IModelContextBuilder modelContextBuilder, IGridViewContextModel gridViewContextModel, ICurrentUserService currentUserService,
-                IBaseConfigurationModel baseConfigurationModel, IChangesetModel changesetModel, IManagementAuthorizationService managementAuthorizationService)
+                IMetaConfigurationModel metaConfigurationModel, IChangesetModel changesetModel, IManagementAuthorizationService managementAuthorizationService)
             {
                 this.modelContextBuilder = modelContextBuilder;
                 this.gridViewContextModel = gridViewContextModel;
                 this.currentUserService = currentUserService;
-                this.baseConfigurationModel = baseConfigurationModel;
+                this.metaConfigurationModel = metaConfigurationModel;
                 this.changesetModel = changesetModel;
                 this.managementAuthorizationService = managementAuthorizationService;
             }
@@ -80,8 +80,8 @@ namespace Omnikeeper.GridView.Commands
                 var user = await currentUserService.GetCurrentUser(trans);
                 var changesetProxy = new ChangesetProxy(user.InDatabase, timeThreshold, changesetModel);
 
-                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(trans);
-                if (!managementAuthorizationService.CanModifyManagement(user, baseConfiguration, out var message))
+                var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
+                if (!managementAuthorizationService.CanModifyManagement(user, metaConfiguration, out var message))
                     return new Exception($"User \"{user.Username}\" does not have permission to modify gridview contexts: {message}");
 
                 try
@@ -91,7 +91,7 @@ namespace Omnikeeper.GridView.Commands
                         request.SpeakingName,
                         request.Description,
                         request.Configuration,
-                        new Base.Entity.LayerSet(baseConfiguration.ConfigLayerset), baseConfiguration.ConfigWriteLayer,
+                        new Base.Entity.LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer,
                         new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                         changesetProxy,
                         trans);

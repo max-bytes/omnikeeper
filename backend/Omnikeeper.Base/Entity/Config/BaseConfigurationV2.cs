@@ -6,20 +6,18 @@ using System;
 namespace Omnikeeper.Base.Entity.Config
 {
     [ProtoContract(SkipConstructor = true)]
-    public class BaseConfigurationV1
+    public class BaseConfigurationV2
     {
-        public readonly static TimeSpan InfiniteArchiveChangesetThreshold = TimeSpan.FromTicks(long.MaxValue);
+        public readonly static TimeSpan InfiniteArchiveDataThreshold = TimeSpan.FromTicks(long.MaxValue);
 
-        [ProtoMember(1)] private readonly TimeSpan archiveChangesetThreshold;
+        [ProtoMember(1)] private readonly TimeSpan archiveDataThreshold;
         [ProtoMember(2)] private readonly string clbRunnerInterval;
         [ProtoMember(3)] private readonly string markedForDeletionRunnerInterval;
         [ProtoMember(4)] private readonly string externalIDManagerRunnerInterval;
         [ProtoMember(5)] private readonly string archiveOldDataRunnerInterval;
-        [ProtoMember(6)] private readonly string[] configLayerset;
-        [ProtoMember(7)] private readonly string configWriteLayer;
 
         [JsonProperty(Required = Required.Always)]
-        public TimeSpan ArchiveChangesetThreshold => archiveChangesetThreshold;
+        public TimeSpan ArchiveDataThreshold => archiveDataThreshold;
         [JsonProperty(Required = Required.Always)]
         public string CLBRunnerInterval => clbRunnerInterval;
         [JsonProperty(Required = Required.Always)]
@@ -28,28 +26,20 @@ namespace Omnikeeper.Base.Entity.Config
         public string ExternalIDManagerRunnerInterval => externalIDManagerRunnerInterval;
         [JsonProperty(Required = Required.Always)]
         public string ArchiveOldDataRunnerInterval => archiveOldDataRunnerInterval;
-        [JsonProperty(Required = Required.Always)]
-        public string[] ConfigLayerset => configLayerset;
-        [JsonProperty(Required = Required.Always)]
-        public string ConfigWriteLayer => configWriteLayer;
 
-        public static MyJSONSerializer<BaseConfigurationV1> Serializer = new MyJSONSerializer<BaseConfigurationV1>(new JsonSerializerSettings()
+        public static MyJSONSerializer<BaseConfigurationV2> Serializer = new MyJSONSerializer<BaseConfigurationV2>(new JsonSerializerSettings()
         {
             TypeNameHandling = TypeNameHandling.Objects,
             MissingMemberHandling = MissingMemberHandling.Error
         });
 
-
-
-        public BaseConfigurationV1(TimeSpan archiveChangesetThreshold, string clbRunnerInterval, string markedForDeletionRunnerInterval, string externalIDManagerRunnerInterval, string archiveOldDataRunnerInterval, string[] configLayerset, string configWriteLayer)
+        public BaseConfigurationV2(TimeSpan archiveDataThreshold, string clbRunnerInterval, string markedForDeletionRunnerInterval, string externalIDManagerRunnerInterval, string archiveOldDataRunnerInterval)
         {
-            this.archiveChangesetThreshold = archiveChangesetThreshold;
+            this.archiveDataThreshold = archiveDataThreshold;
             this.clbRunnerInterval = clbRunnerInterval;
             this.markedForDeletionRunnerInterval = markedForDeletionRunnerInterval;
             this.externalIDManagerRunnerInterval = externalIDManagerRunnerInterval;
             this.archiveOldDataRunnerInterval = archiveOldDataRunnerInterval;
-            this.configLayerset = configLayerset;
-            this.configWriteLayer = configWriteLayer;
         }
     }
 }

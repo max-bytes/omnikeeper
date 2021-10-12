@@ -26,14 +26,14 @@ namespace Omnikeeper.GraphQL
                 var isWritable = lbas.CanUserWriteToLayer(userContext.User, context.Source!.ID);
                 return isWritable;
             });
-            FieldAsync<BooleanGraphType>("isBaseConfigurationLayer",
+            FieldAsync<BooleanGraphType>("isMetaConfigurationLayer",
             resolve: async (context) =>
             {
-                var baseConfigurationModel = context.RequestServices!.GetRequiredService<IBaseConfigurationModel>();
+                var metaConfigurationModel = context.RequestServices!.GetRequiredService<IMetaConfigurationModel>();
 
                 var userContext = (context.UserContext as OmnikeeperUserContext)!;
 
-                return await baseConfigurationModel.IsLayerPartOfBaseConfiguration(context.Source!.ID, userContext.Transaction);
+                return await metaConfigurationModel.IsLayerPartOfMetaConfiguration(context.Source!.ID, userContext.Transaction);
             });
 
         }

@@ -22,19 +22,21 @@ namespace Omnikeeper.Runners
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
         private readonly IChangesetModel changesetModel;
+        private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly ILayerModel layerModel;
         private readonly IModelContextBuilder modelContextBuilder;
 
         public ArchiveOldDataRunner(ILogger<ArchiveOldDataRunner> logger, IExternalIDMapPersister externalIDMapPersister, 
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
-            IChangesetModel changesetModel, IBaseConfigurationModel baseConfigurationModel, ILayerModel layerModel, IModelContextBuilder modelContextBuilder)
+            IChangesetModel changesetModel, IMetaConfigurationModel metaConfigurationModel, IBaseConfigurationModel baseConfigurationModel, ILayerModel layerModel, IModelContextBuilder modelContextBuilder)
         {
             this.logger = logger;
             this.externalIDMapPersister = externalIDMapPersister;
             this.baseAttributeRevisionistModel = baseAttributeRevisionistModel;
             this.baseRelationRevisionistModel = baseRelationRevisionistModel;
             this.changesetModel = changesetModel;
+            this.metaConfigurationModel = metaConfigurationModel;
             this.baseConfigurationModel = baseConfigurationModel;
             this.layerModel = layerModel;
             this.modelContextBuilder = modelContextBuilder;
@@ -46,10 +48,11 @@ namespace Omnikeeper.Runners
             // delete outdated attributes and relations (empty changesets are deleted afterwards)
             using (var trans = modelContextBuilder.BuildDeferred())
             {
-                var cfg = await baseConfigurationModel.GetConfigOrDefault(trans);
-                var archiveThreshold = cfg.ArchiveChangesetThreshold; // TODO: rename to something better fitting
+                var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
+                var baseConfiguration = await baseConfigurationModel.GetConfigOrDefault(new Base.Entity.LayerSet(metaConfiguration.ConfigLayerset), now, trans);
+                var archiveThreshold = baseConfiguration.ArchiveDataThreshold;
 
-                if (archiveThreshold == BaseConfigurationV1.InfiniteArchiveChangesetThreshold)
+                if (archiveThreshold == BaseConfigurationV2.InfiniteArchiveDataThreshold)
                 {
                     return;
                 }

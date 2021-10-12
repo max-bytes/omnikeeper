@@ -1,6 +1,10 @@
-﻿using Omnikeeper.Base.Entity.Config;
+﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.Config;
+using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using System.Threading.Tasks;
 
@@ -15,33 +19,19 @@ namespace Omnikeeper.Model.Decorators
             Model = model;
         }
 
-        public async Task<BaseConfigurationV1> GetConfig(IModelContext trans)
+        public async Task<BaseConfigurationV2> GetConfigOrDefault(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             var (item, hit) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.BaseConfiguration(), async () =>
             {
-                return await Model.GetConfig(trans);
+                return await Model.GetConfigOrDefault(layerSet, timeThreshold, trans);
             });
             return item;
         }
 
-        public async Task<BaseConfigurationV1> GetConfigOrDefault(IModelContext trans)
-        {
-            var (item, hit) = await trans.GetOrCreateCachedValueAsync(CacheKeyService.BaseConfiguration(), async () =>
-            {
-                return await Model.GetConfigOrDefault(trans);
-            });
-            return item;
-        }
-
-        public async Task<BaseConfigurationV1> SetConfig(BaseConfigurationV1 config, IModelContext trans)
+        public async Task<BaseConfigurationV2> SetConfig(BaseConfigurationV2 config, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             trans.EvictFromCache(CacheKeyService.BaseConfiguration());
-            return await Model.SetConfig(config, trans);
-        }
-
-        public async Task<bool> IsLayerPartOfBaseConfiguration(string layerID, IModelContext trans)
-        {
-            return await Model.IsLayerPartOfBaseConfiguration(layerID, trans);
+            return await Model.SetConfig(config, layerSet, writeLayerID, dataOrigin, changesetProxy, trans);
         }
     }
 }

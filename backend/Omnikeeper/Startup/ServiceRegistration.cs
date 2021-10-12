@@ -192,6 +192,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IGeneratorModel, GeneratorModel>();
             services.AddSingleton<IEffectiveTraitModel, EffectiveTraitModel>();
             services.AddSingleton<IBaseConfigurationModel, BaseConfigurationModel>();
+            services.AddSingleton<IMetaConfigurationModel, MetaConfigurationModel>();
             services.AddSingleton<IOIAContextModel, OIAContextModel>();
             services.AddSingleton<IGridViewContextModel, GridViewContextModel>();
             services.AddSingleton<IPartitionModel, PartitionModel>();
@@ -208,6 +209,7 @@ namespace Omnikeeper.Startup
                 services.Decorate<ILayerModel, CachingLayerModel>();
                 services.Decorate<IODataAPIContextModel, CachingODataAPIContextModel>();
                 services.Decorate<IBaseConfigurationModel, CachingBaseConfigurationModel>();
+                services.Decorate<IMetaConfigurationModel, CachingMetaConfigurationModel>();
                 services.Decorate<IPartitionModel, CachingPartitionModel>();
             }
 

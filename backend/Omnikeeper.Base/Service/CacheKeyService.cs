@@ -6,6 +6,8 @@ namespace Omnikeeper.Base.Service
 {
     public static class CacheKeyService
     {
+        public static string MetaConfiguration() => $"metaConfiguration";
+
         public static string BaseConfiguration() => $"baseConfiguration";
 
         public static string OIAConfig(string name) => $"oiaconfig_${name}";
