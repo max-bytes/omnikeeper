@@ -48,13 +48,21 @@ export default function GridViewDataParseModel(rowStatus) {
                 },
                 valueGetter: (params) => {
                     const value = params.data[params.column.colId]?.values?.[0];
+                    return value;
+                },
+                valueFormatter: (params) => {
+                    const value = params.data[params.column.colId]?.values?.[0];
                     if (value === undefined)
                         return "[not set]";
                     return value;
                 },
                 valueSetter: (params) => {
                     let value = params.data[params.column.colId];
-                    value.values = params.newValue ? [params.newValue] : [];
+                    
+                    // when a user edits a not-set cell and ends editing while keeping the empty string, the cell is NOT converted to an empty attribute.
+                    if(params.newValue === "" && params.oldValue === undefined ) return;
+
+                    value.values = params.newValue === undefined ? [] : [params.newValue]; // Note: "" !== [not set]
                     return value;
                 },
                 cellEditorSelector: function(params) {
