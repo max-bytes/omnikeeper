@@ -134,8 +134,13 @@ namespace OKPluginNaemonConfig
 
             // add categories for hosts 
             // HostsCategories
+
             var hostsCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HostsCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
+            // NOTE mcsuk: this part is cumbersome because of the way the data is set up; it would by much cleaner if there was a proper relation between the host and its categories
+            // in the original CMDB, there is a relation like that, so I believe we should also add a proper relation in omnikeeper
+            // if we have that, we can make use of the relations and find links between categories and hosts through that instead of having to read the cmdb.host_category_hostid 
+            // and doing a search in the hosts
             foreach (var ciItem in hostsCategories)
             {
                 var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_category_hostid", out MergedCIAttribute? hostIdAttribute);
@@ -194,6 +199,7 @@ namespace OKPluginNaemonConfig
             // add categories for services
             var servicesCategories = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ServicesCategoriesFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
+            // NOTE mcsuk: the same as above for hosts+categories goes here for services+categories
             foreach (var ciItem in servicesCategories)
             {
                 var success = ciItem.MergedAttributes.TryGetValue("cmdb.service_category_svcid", out MergedCIAttribute? serviceIdAttribute);
@@ -252,6 +258,7 @@ namespace OKPluginNaemonConfig
             // add host actions to cidata
             var hostActions = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HostActionsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
+            // NOTE mcsuk: the same as above for hosts+categories goes here
             foreach (var ciItem in hostActions)
             {
                 var success = ciItem.MergedAttributes.TryGetValue("cmdb.host_action_hostid", out MergedCIAttribute? hostIdAttribute);
@@ -293,6 +300,7 @@ namespace OKPluginNaemonConfig
             // add service actions to ci data 
             var serviceActions = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ServiceActionsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
+            // NOTE mcsuk: the same as above for hosts+categories goes here
             foreach (var ciItem in serviceActions)
             {
                 var success = ciItem.MergedAttributes.TryGetValue("cmdb.service_action_svcid", out MergedCIAttribute? serviceIdAttribute);
