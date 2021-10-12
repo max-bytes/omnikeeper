@@ -51,14 +51,13 @@ namespace OKPluginNaemonConfig
 
             var allCIsCMDB = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetCMDB, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
             var allCIsMonman = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layersetMonman, false, AllAttributeSelection.Instance, trans, changesetProxy.TimeThreshold);
-            
+
 
             // load naemonInstances
             var naemonInstances = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonInstanceFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
             var naemonIds = new List<string>();
             foreach (var ciItem in naemonInstances)
             {
-                //(MergedCI ciItem, _) = naemon.Value;
                 var success = ciItem.MergedAttributes.TryGetValue("naemon_instance.id", out MergedCIAttribute? attributeNaemonId);
 
                 if (!success)
@@ -69,31 +68,12 @@ namespace OKPluginNaemonConfig
                 naemonIds.Add(attributeNaemonId!.Attribute.Value.Value2String());
             }
 
-            // select naemon instance with specific ID 'H12037680'
-            // this is for intial version of creating naemon configuration
-            // at the end we will have a loop that loops through naemoninstances list and selects th
-            //var naemonH12037680 = await traitModel.GetEffectiveTraitsWithTraitAttributeValue(Traits.NaemonInstanceFlattened, "monman-instance.id", new AttributeScalarValueText("H12037680"), layerset, new AllCIIDsSelection(), trans, changesetProxy.TimeThreshold);
-
-            //(_, (MergedCI ci, EffectiveTrait et)) = naemonH12037680.FirstOrDefault();
-
-            //var success = ci.MergedAttributes.TryGetValue("monman-instance.id", out MergedCIAttribute? attributeNaemonId);
-
-            //if (!success)
-            //{
-            //    // log error here
-            //}
-
-            //var naemonId = attributeNaemonId!.Attribute.Value.Value2String();
-
-            // a list with all CI from datbase
-
+            // a list with all CI from database
             var ciData = new List<ConfigurationItem>();
             var hosts = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.HCisFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
             foreach (var ciItem in hosts)
             {
-                //(MergedCI ciItem, _) = host.Value;
-
                 var item = new ConfigurationItem
                 {
                     Type = "HOST"
@@ -124,7 +104,6 @@ namespace OKPluginNaemonConfig
             var services = await traitModel.FilterCIsWithTrait(allCIsCMDB, Traits.ACisFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
             foreach (var ciItem in services)
             {
-                //(MergedCI ciItem, _) = service.Value;
                 var item = new ConfigurationItem
                 {
                     Type = "SERVICE"
@@ -186,10 +165,6 @@ namespace OKPluginNaemonConfig
                                     break;
                                 case "cmdb.host_category_catgroup":
                                     obj.Group = attribute.Value.Attribute.Value.Value2String();
-                                    if (obj.Group == "MONITORING")
-                                    {
-                                        var a = 5;
-                                    }
                                     break;
                                 case "cmdb.host_category_category":
                                     obj.Name = attribute.Value.Attribute.Value.Value2String();
@@ -205,7 +180,8 @@ namespace OKPluginNaemonConfig
                         if (!item.Categories.ContainsKey(obj.Group))
                         {
                             item.Categories.Add(obj.Group, new List<Category> { obj });
-                        } else
+                        }
+                        else
                         {
                             item.Categories[obj.Group].Add(obj);
                         }
@@ -377,7 +353,7 @@ namespace OKPluginNaemonConfig
 
                 //}
             }
-            
+
             //getCapabilityMap - NaemonInstancesTagsFlattened
             var naemonInstancesTags = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.NaemonInstancesTagsFlattened, layersetCMDB, trans, changesetProxy.TimeThreshold);
 
@@ -460,7 +436,7 @@ namespace OKPluginNaemonConfig
 
                     if (!capMap.ContainsKey(cap))
                     {
-                        capMap.Add(cap, new List<string>());
+                        capMap.Add(cap, profileFromDbNaemons);
                     }
                     else
                     {
@@ -468,54 +444,6 @@ namespace OKPluginNaemonConfig
                     }
                 }
             }
-
-            /* test compatibility of naemons and add NAEMONSAVAIL */
-            //foreach ($ciDataRef as $id => $ci) {
-
-            // check requirements vs capablities
-            //$ciDataRef[$id]['NAEMONSAVAIL'] = $naemonIds;
-            //        foreach ($ci['TAGS'] as $requirement) {
-            //            if (preg_match('/^cap_/', $requirement))
-            //            {
-            //                if (array_key_exists($requirement, $capMap))
-            //                {
-            //            $ciDataRef[$id]['NAEMONSAVAIL'] = array_intersect($ciDataRef[$id]['NAEMONSAVAIL'], $capMap[$requirement]);
-            //                }
-            //                else
-            //                {
-            //            $ciDataRef[$id]['NAEMONSAVAIL'] = [];
-            //                }
-            //            }
-            //    $ciDataRef[$id]['NAEMONSAVAIL'] = array_values($ciDataRef[$id]['NAEMONSAVAIL']);
-            //        }
-            //}
-
-            foreach (var item in ciData)
-            {
-                item.NaemonsAvail = naemonIds;
-
-                foreach (var requirement in item.Tags)
-                {
-                    if (capMap.ContainsKey(requirement))
-                    {
-                        item.NaemonsAvail = item.NaemonsAvail.Intersect(capMap[requirement]).ToList();
-                    }
-                    else
-                    {
-                        item.NaemonsAvail = new List<string>();
-                    }
-                }
-            }
-
-
-            //foreach (var item in ciData)
-            //{
-            //    if (item.Actions != null)
-            //    {
-            //        break;
-            //    }
-
-            //}
 
             #region process core data
             // updateNormalizedCiDataFieldProfile
@@ -554,7 +482,7 @@ namespace OKPluginNaemonConfig
                     ciItem.Profile = "MULTIPLE";
                 }
 
-                if (profileCount == 1 && Regex.IsMatch(ciItem.Profile, "/^profile/i"))
+                if (profileCount == 1 && Regex.IsMatch(ciItem.Profile, "^profile", RegexOptions.IgnoreCase))
                 {
                     // add legacy profile capability
                     ciItem.Tags.Add("cap_lp_" + ciItem.Profile);
@@ -581,7 +509,8 @@ namespace OKPluginNaemonConfig
                     {
                         ciItem.Tags.Add($"cap_{category.Tree}_{category.Name}".ToLower());
                     }
-                } else
+                }
+                else
                 {
                     // TODO check if we should add this
                     //ciItem.Tags.Add("cap_default");
@@ -598,7 +527,24 @@ namespace OKPluginNaemonConfig
             }
             #endregion
 
+            /* test compatibility of naemons and add NAEMONSAVAIL */
+            foreach (var item in ciData)
+            {
+                // TODO how to handle cases that dont have tags should NaemonsAvail include all naemon ids
+                item.NaemonsAvail = naemonIds;
 
+                foreach (var requirement in item.Tags)
+                {
+                    if (capMap.ContainsKey(requirement))
+                    {
+                        item.NaemonsAvail = item.NaemonsAvail.Intersect(capMap[requirement]).ToList();
+                    }
+                    else
+                    {
+                        item.NaemonsAvail = new List<string>();
+                    }
+                }
+            }
 
             var configObjs = new List<ConfigObj>();
 
@@ -721,7 +667,7 @@ namespace OKPluginNaemonConfig
             // getNaemonConfigObjectsFromLegacyProfiles_globalVars
 
             var variables = await traitModel.FilterCIsWithTrait(allCIsMonman, Traits.VariablesFlattened, layersetMonman, trans, changesetProxy.TimeThreshold);
-
+            var tmpVariablesObjs = new List<ConfigObj>();
             foreach (var ciItem in variables)
             {
                 ciItem.MergedAttributes.TryGetValue("naemon_variable.reftype", out MergedCIAttribute? refTypeAttribute);
@@ -777,6 +723,12 @@ namespace OKPluginNaemonConfig
                     Attributes = attributes,
                 });
 
+                // for debugging 
+                tmpVariablesObjs.Add(new ConfigObj
+                {
+                    Type = "host",
+                    Attributes = attributes,
+                });
             }
 
             // getNaemonConfigObjectsFromLegacyProfiles_profiles
@@ -893,7 +845,7 @@ namespace OKPluginNaemonConfig
                         {
                             serviceTemplates.Add("service-pnp");
                         }
-  
+
                         attributes["use"] = string.Join(",", serviceTemplates);
                         attributes["hostgroup_name"] = moduleName;
 
@@ -906,7 +858,7 @@ namespace OKPluginNaemonConfig
 
                         var svcCheckCommand = (service.MergedAttributes["naemon_services_static.checkcommand"].Attribute.Value as AttributeScalarValueInteger)?.Value;
                         var commandName = (commandsById[svcCheckCommand.ToString()].MergedAttributes["naemon_command.name"].Attribute.Value as AttributeScalarValueText)?.Value;
-                        var commandParts = new List<string>{ commandName };
+                        var commandParts = new List<string> { commandName };
 
                         for (int i = 1; i <= 8; i++)
                         {
@@ -918,7 +870,7 @@ namespace OKPluginNaemonConfig
 
                                 if (arg.Length > 0)
                                 {
-                                    if (arg.Substring(0,1) == "$")
+                                    if (arg.Substring(0, 1) == "$")
                                     {
                                         arg = "$HOST" + arg.Substring(1, arg.Length - 1) + "$";
                                     }
@@ -939,7 +891,7 @@ namespace OKPluginNaemonConfig
                             attributes["check_freshness"] = "1";
                             attributes["freshness_threshold"] = freshnesThreshold.ToString();
                         }
-                        
+
 
                         var passive = GetAttributeValueInt("naemon_services_static.passive", service.MergedAttributes);
                         if (passive != null && passive == 1)
@@ -1001,7 +953,7 @@ namespace OKPluginNaemonConfig
                         {
                             vars["kpi_type"] = kpiType.ToString();
                         }
-                        
+
                         var metricName = (service.MergedAttributes["naemon_services_static.metric_name"].Attribute.Value as AttributeScalarValueText)?.Value;
                         vars["metric_name"] = metricName;
 
@@ -1149,10 +1101,6 @@ namespace OKPluginNaemonConfig
             var naemonConfigObjs = new Dictionary<string, List<ConfigObj>>();
             foreach (var item in naemonsCis)
             {
-                //var ciid = await this.ciModel.CreateCI(trans);
-
-                //this.attributeModel.InsertAttribute()
-
                 // deployed cis for this profile
                 var naemonDeployedCIs = new List<ConfigurationItem>();
                 var naemonObjs = new List<ConfigObj>();
@@ -1183,7 +1131,7 @@ namespace OKPluginNaemonConfig
                             uses.Add("global-variables");
                             uses.Add("tsa-generic-host");
                         }
-                        else 
+                        else
                         {
                             uses.Add(ciItem.Profile);
                         }
@@ -1197,6 +1145,9 @@ namespace OKPluginNaemonConfig
                 }
 
                 naemonConfigObjs.Add(item.Key, naemonObjs.Concat(configObjs).ToList());
+
+                // TODO: we also need to process deployed cis for this naemon, check applib-confgen-ci.php#74
+
             }
             #endregion
 
@@ -1206,11 +1157,11 @@ namespace OKPluginNaemonConfig
 
             foreach (var item in naemonConfigObjs)
             {
-                //var ci = await ciModel.CreateCI(trans);
+                var ci = await ciModel.CreateCI(trans);
 
-                //var ss = JsonConvert.SerializeObject(item.Value);
+                var ss = JsonConvert.SerializeObject(item.Value);
 
-                //var (attribute, changed) = await attributeModel.InsertAttribute("config", AttributeScalarValueJSON.BuildFromString(ss), ci, "naemon_config", changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
+                var (attribute, changed) = await attributeModel.InsertAttribute("config", AttributeScalarValueJSON.BuildFromString(ss), ci, "naemon_config", changesetProxy, new DataOriginV1(DataOriginType.Manual), trans);
 
             }
 
@@ -1240,13 +1191,16 @@ namespace OKPluginNaemonConfig
 
             return (attributeValue.Attribute.Value as AttributeScalarValueInteger).Value;
         }
-        // TODO: temporary class, maybe we need to remove this in later iteration
 
         internal class ConfigObj
         {
+            [JsonProperty("type")]
             public string Type { get; set; }
+
+            [JsonProperty("attributes")]
             public Dictionary<string, string> Attributes { get; set; }
         }
+
         internal class ConfigurationItem
         {
             //public ConfigurationItem(string type, string id, string name, string status, Dictionary<string, Category> categories, Actions actions)
@@ -1328,22 +1282,22 @@ namespace OKPluginNaemonConfig
 
         internal class Configuration
         {
-            [JsonProperty("monman_layer_id")]
+            [JsonProperty("monman_layer_id", Required = Required.Always)]
             public string MonmanLayerId { get; set; }
-            
-            [JsonProperty("cmdb_layer_id")]
+
+            [JsonProperty("cmdb_layer_id", Required = Required.Always)]
             public string CMDBLayerId { get; set; }
 
-            [JsonProperty("naemon_config_layer_id")]
+            [JsonProperty("naemon_config_layer_id", Required = Required.Always)]
             public string NaemonConfigLayerId { get; set; }
-            
-            [JsonProperty("load-cmdb-customer")]
+
+            [JsonProperty("load-cmdb-customer", Required = Required.Always)]
             public List<string> LoadCMDBCustomer { get; set; }
-            
-            [JsonProperty("cmdb-monprofile-prefix")]
+
+            [JsonProperty("cmdb-monprofile-prefix", Required = Required.Always)]
             public List<string> CMDBMonprofilePrefix { get; set; }
-            
-            [JsonProperty("naemons-config-generateprofiles")]
+
+            [JsonProperty("naemons-config-generateprofiles", Required = Required.Always)]
             public List<string> NaemonsConfigGenerateprofiles { get; set; }
         }
     }
