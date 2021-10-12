@@ -78,7 +78,23 @@ export function Context(props) {
                     save={save}
                     refreshData={() => refreshData(gridApi)}
                     excelExport={() => {
-                        aGGridEnterpriseActive && gridApi.exportDataAsExcel({fileName: 'gridview_export.xlsx'});
+                        aGGridEnterpriseActive &&
+                        gridApi.exportDataAsExcel({
+                            fileName: 'gridview_export.xlsx',
+                            // process cell to use valueFormatter with Excel Export
+                            processCellCallback: (params) => {
+                                const colDef = params.column.getColDef();
+                                if (colDef.valueFormatter) {
+                                    const valueFormatterParams = {
+                                        ...params,
+                                        data: params.node.data,
+                                        colDef: params.column.getColDef()
+                                    };
+                                    return colDef.valueFormatter(valueFormatterParams);
+                                }
+                                return params.value;
+                            }
+                        });
                     }}
                 />
             </Header>
