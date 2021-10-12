@@ -26,6 +26,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
 using GraphQL.DataLoader;
+using Omnikeeper.Base.Entity;
 
 namespace Omnikeeper.Startup
 {
@@ -185,10 +186,8 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IRelationModel, RelationModel>();
             services.AddSingleton<IBaseRelationModel, BaseRelationModel>();
             services.AddSingleton<IChangesetModel, ChangesetModel>();
-            services.AddSingleton<IPredicateModel, PredicateModel>();
             services.AddSingleton<ICacheModel, CacheModel>();
             services.AddSingleton<IODataAPIContextModel, ODataAPIContextModel>();
-            services.AddSingleton<IRecursiveDataTraitModel, RecursiveDataTraitModel>();
             services.AddSingleton<IGeneratorModel, GeneratorModel>();
             services.AddSingleton<IEffectiveTraitModel, EffectiveTraitModel>();
             services.AddSingleton<IBaseConfigurationModel, BaseConfigurationModel>();
@@ -196,8 +195,10 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IOIAContextModel, OIAContextModel>();
             services.AddSingleton<IGridViewContextModel, GridViewContextModel>();
             services.AddSingleton<IPartitionModel, PartitionModel>();
-            services.AddSingleton<IAuthRoleModel, AuthRoleModel>();
             services.AddSingleton<ICLConfigModel, CLConfigModel>();
+            services.AddSingleton<GenericTraitEntityModel<AuthRole>>(); // TODO: ok this way?
+            services.AddSingleton<GenericTraitEntityModel<Predicate>>(); // TODO: ok this way?
+            services.AddSingleton<GenericTraitEntityModel<RecursiveTrait>>(); // TODO: ok this way?
 
             // these aren't real models, but we keep them here because they are closely related to models
             services.AddSingleton<ITraitsProvider, TraitsProvider>();

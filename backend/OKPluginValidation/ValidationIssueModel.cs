@@ -31,11 +31,6 @@ namespace OKPluginValidation.Validation
             return (new ValidationIssue(id, message, affectedCIs), id);
         }
 
-        //protected override string EffectiveTrait2ID(EffectiveTrait et, MergedCI ci)
-        //{
-        //    var id = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
-        //    return id;
-        //}
         protected override IAttributeValue ID2AttributeValue(string id) => new AttributeScalarValueText(id);
 
         public async Task<(ValidationIssue validationIssue, bool changed)> InsertOrUpdate(string id, string message, IEnumerable<Guid> affectedCIs, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)

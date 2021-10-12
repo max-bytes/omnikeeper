@@ -15,7 +15,6 @@ namespace OKPluginGenericJSONIngest
 {
     public interface IContextModel
     {
-        Task<Context> GetContext(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
         Task<(Guid, Context)> TryToGetContext(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
         Task<IDictionary<string, Context>> GetContexts(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
 
@@ -28,13 +27,6 @@ namespace OKPluginGenericJSONIngest
         public ContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
             : base(Traits.ContextFlattenedTrait, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
         { }
-
-        public async Task<Context> GetContext(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
-        {
-            Context.ValidateContextIDThrow(id);
-
-            return await Get(id, layerSet, timeThreshold, trans);
-        }
 
         public async Task<(Guid, Context)> TryToGetContext(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {

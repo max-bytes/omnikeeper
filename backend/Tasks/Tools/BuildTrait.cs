@@ -12,7 +12,7 @@ namespace Tasks.Tools
         [Test]
         public void Build()
         {
-            var trait = new RecursiveTrait("host", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
+            var trait = new RecursiveTrait(null, "host", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                         new TraitAttribute("hostname",
                             CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                         )

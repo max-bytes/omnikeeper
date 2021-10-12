@@ -12,45 +12,40 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.GridView.Model
 {
-    public class GridViewContextModel : IDBasedTraitDataConfigBaseModel<FullContext, string>, IGridViewContextModel
+    // TODO: remove, replace with Generic*Model
+
+    public class GridViewContextModel : IDBasedTraitDataConfigBaseModel<GridViewContext, string>, IGridViewContextModel
     {
         public GridViewContextModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
             : base(CoreTraits.GridviewContextFlattened, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
         {
         }
 
-        public async Task<IDictionary<string, FullContext>> GetFullContexts(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        public async Task<IDictionary<string, GridViewContext>> GetFullContexts(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             return await GetAll(layerSet, trans, timeThreshold);
         }
 
-        public async Task<FullContext> GetFullContext(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
+        public async Task<GridViewContext> GetFullContext(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
             IDValidations.ValidateGridViewContextIDThrow(id);
 
             return await Get(id, layerSet, timeThreshold, trans);
         }
 
-        public async Task<(Guid, FullContext)> TryToGetFullContext(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
-        {
-            IDValidations.ValidateGridViewContextIDThrow(id);
-
-            return await TryToGet(id, layerSet, timeThreshold, trans);
-        }
-
-        protected override (FullContext dc, string id) EffectiveTrait2DC(EffectiveTrait et)
+        protected override (GridViewContext dc, string id) EffectiveTrait2DC(EffectiveTrait et)
         {
             var contextID = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "id");
             var speakingName = TraitConfigDataUtils.ExtractOptionalScalarTextAttribute(et, "speaking_name");
             var description = TraitConfigDataUtils.ExtractOptionalScalarTextAttribute(et, "description");
             var config = TraitConfigDataUtils.ExtractMandatoryScalarJSONAttribute(et, "config", GridViewConfiguration.Serializer);
 
-            return (new FullContext(contextID, speakingName, description, config), contextID);
+            return (new GridViewContext(null, contextID, speakingName, description, config), contextID);
         }
 
         protected override IAttributeValue ID2AttributeValue(string id) => new AttributeScalarValueText(id);
 
-        public async Task<(FullContext fullContext, bool changed)> InsertOrUpdate(string id, string speakingName, string description, GridViewConfiguration configuration, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        public async Task<(GridViewContext fullContext, bool changed)> InsertOrUpdate(string id, string speakingName, string description, GridViewConfiguration configuration, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
             IDValidations.ValidateGridViewContextIDThrow(id);
 

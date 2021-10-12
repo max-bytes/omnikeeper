@@ -12,8 +12,6 @@ namespace Omnikeeper.Base.Model
     public interface IGeneratorModel
     {
         Task<IDictionary<string, GeneratorV1>> GetGenerators(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold);
-        Task<GeneratorV1> GetGenerator(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
-        Task<(Guid, GeneratorV1)> TryToGetGenerator(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans);
 
         Task<(GeneratorV1 generator, bool changed)> InsertOrUpdate(string id, string attributeName, string attributeValueTemplate, 
             LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans);

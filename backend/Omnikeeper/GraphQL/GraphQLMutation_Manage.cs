@@ -256,11 +256,15 @@ namespace Omnikeeper.GraphQL
                   CheckModifyManagementThrow(userContext, metaConfiguration, "modify predicates");
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
-                  var newPredicate = await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
+
+                  var current = await predicateModel.GetSingleByDataID(predicate.ID, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold);
+                  var @new = (current == null) ? new Predicate(null, predicate.ID, predicate.WordingFrom, predicate.WordingTo) : new Predicate(current.CIID, current.ID, predicate.WordingFrom, predicate.WordingTo);
+
+                  var newPredicate = await predicateModel.InsertOrUpdate(@new, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       changesetProxy, userContext.Transaction);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                  return newPredicate.predicate;
+                  return newPredicate.dc;
               });
 
 
@@ -281,7 +285,10 @@ namespace Omnikeeper.GraphQL
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
 
-                  var deleted = await predicateModel.TryToDelete(predicateID, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
+                  var current = await predicateModel.GetSingleByDataID(predicateID, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold);
+                  if (current == null) return false;
+
+                  var deleted = await predicateModel.TryToDelete(current.CIID!.Value, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.Transaction);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
@@ -308,16 +315,21 @@ namespace Omnikeeper.GraphQL
                   var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                   CheckModifyManagementThrow(userContext, metaConfiguration, "modify traits");
 
+                  var current = await recursiveDataTraitModel.GetSingleByDataID(trait.ID, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold);
+                  var @new = (current == null) ? 
+                    new RecursiveTrait(null, trait.ID, new TraitOriginV1(TraitOriginType.Data), requiredAttributes, optionalAttributes, requiredRelations, optionalRelations, trait.RequiredTraits) : 
+                    new RecursiveTrait(current.CIID, trait.ID, new TraitOriginV1(TraitOriginType.Data), requiredAttributes, optionalAttributes, requiredRelations, optionalRelations, trait.RequiredTraits);
+
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
 
                   var newTrait = await recursiveDataTraitModel.InsertOrUpdate(
-                      trait.ID, requiredAttributes, optionalAttributes, requiredRelations, optionalRelations, trait.RequiredTraits,
+                      @new,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       changesetProxy, userContext.Transaction);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                  return newTrait.recursiveTrait;
+                  return newTrait.dc;
               });
 
             FieldAsync<BooleanGraphType>("manage_removeRecursiveTrait",
@@ -335,9 +347,12 @@ namespace Omnikeeper.GraphQL
                   var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                   CheckModifyManagementThrow(userContext, metaConfiguration, "modify traits");
 
+                  var current = await recursiveDataTraitModel.GetSingleByDataID(traitID, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold);
+                  if (current == null) return false;
+
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
 
-                  var deleted = await recursiveDataTraitModel.TryToDelete(traitID, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
+                  var deleted = await recursiveDataTraitModel.TryToDelete(current.CIID!.Value, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.Transaction);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
@@ -411,14 +426,16 @@ namespace Omnikeeper.GraphQL
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
 
-                  var newAuthRole = await authRoleModel.InsertOrUpdate(
-                      authRole.ID, authRole.Permissions,
+                  var current = await authRoleModel.GetSingleByDataID(authRole.ID, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold);
+                  var @new = (current == null) ? new AuthRole(null, authRole.ID, authRole.Permissions) : new AuthRole(current.CIID, current.ID, authRole.Permissions);
+
+                  var updated = await authRoleModel.InsertOrUpdate(@new,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       changesetProxy, userContext.Transaction);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                  return newAuthRole.authRole;
+                  return updated.dc;
               });
 
             FieldAsync<BooleanGraphType>("manage_removeAuthRole",
@@ -438,7 +455,10 @@ namespace Omnikeeper.GraphQL
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
 
-                  var deleted = await authRoleModel.TryToDelete(authRoleID,
+                  var current = await authRoleModel.GetSingleByDataID(authRoleID, metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold);
+                  if (current == null) return false;
+
+                  var deleted = await authRoleModel.TryToDelete(current.CIID!.Value,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), changesetProxy, userContext.Transaction);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());

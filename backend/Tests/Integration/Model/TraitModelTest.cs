@@ -13,25 +13,25 @@ namespace Tests.Integration.Model
         public void TestTraitSerialization()
         {
             var traits = new List<RecursiveTrait>() {
-                new RecursiveTrait("host", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
+                new RecursiveTrait(null, "host", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     new TraitAttribute("hostname",
                         CIAttributeTemplate.BuildFromParams("hostname", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     )
                 }),
-                new RecursiveTrait("host_windows", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
+                new RecursiveTrait(null, "host_windows", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     new TraitAttribute("os_family",
                         CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                             new CIAttributeValueConstraintTextRegex(new Regex(@"Windows", RegexOptions.IgnoreCase)))
                     )
                 }, requiredTraits: new string[] { "host" }),
 
-                new RecursiveTrait("host_linux", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
+                new RecursiveTrait(null, "host_linux", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     new TraitAttribute("os_family",
                         CIAttributeTemplate.BuildFromParams("os_family", AttributeValueType.Text, false,
                             new CIAttributeValueConstraintTextRegex(new Regex(@"(RedHat|CentOS|Debian|Suse|Gentoo|Archlinux|Mandrake)", RegexOptions.IgnoreCase)))
                     )
                 }, requiredTraits: new string[] { "host" }),
-                new RecursiveTrait("linux_block_device", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
+                new RecursiveTrait(null, "linux_block_device", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     new TraitAttribute("device",
                         CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     ),
@@ -39,7 +39,7 @@ namespace Tests.Integration.Model
                         CIAttributeTemplate.BuildFromParams("mount", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     )
                 }),
-                new RecursiveTrait("linux_network_interface", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
+                new RecursiveTrait(null, "linux_network_interface", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>() {
                     new TraitAttribute("device",
                         CIAttributeTemplate.BuildFromParams("device", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     ),
@@ -50,7 +50,7 @@ namespace Tests.Integration.Model
                         CIAttributeTemplate.BuildFromParams("active", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
                     )
                 }),
-                new RecursiveTrait("ansible_can_deploy_to_it", new TraitOriginV1(TraitOriginType.Data),
+                new RecursiveTrait(null, "ansible_can_deploy_to_it", new TraitOriginV1(TraitOriginType.Data),
                     new List<TraitAttribute>() {
                         new TraitAttribute("hostname",
                             CIAttributeTemplate.BuildFromParams("ipAddress", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))

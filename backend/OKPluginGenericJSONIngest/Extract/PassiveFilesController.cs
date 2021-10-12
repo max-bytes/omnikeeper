@@ -63,7 +63,7 @@ namespace Omnikeeper.Controllers.Ingest
                 using var mc = modelContextBuilder.BuildImmediate();
 
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(mc);
-                var ctx = await contextModel.GetContext(context, metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), mc);
+                var (_, ctx) = await contextModel.TryToGetContext(context, metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), mc);
                 if (ctx == null)
                     return BadRequest($"Context with name \"{context}\" not found");
                 if (!(ctx.ExtractConfig is ExtractConfigPassiveRESTFiles f))

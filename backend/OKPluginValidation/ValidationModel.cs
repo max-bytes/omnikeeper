@@ -16,16 +16,6 @@ namespace OKPluginValidation.Validation
             : base(ValidationTraits.ValidationFlattened, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
         { }
 
-        //public async Task<Validation> GetValidation(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
-        //{
-        //    return await Get(id, layerSet, timeThreshold, trans);
-        //}
-
-        //public async Task<(Guid, Validation)> TryToGetValidation(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
-        //{
-        //    return await TryToGet(id, layerSet, timeThreshold, trans);
-        //}
-
         public async Task<IDictionary<string, Validation>> GetValidations(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             return await GetAll(layerSet, trans, timeThreshold);

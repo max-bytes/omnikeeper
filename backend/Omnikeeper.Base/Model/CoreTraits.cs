@@ -11,14 +11,14 @@ namespace Omnikeeper.Base.Model
 {
     public static class CoreTraits
     {
-        public static readonly RecursiveTrait Named = new RecursiveTrait("named", new TraitOriginV1(TraitOriginType.Core), new List<TraitAttribute>() {
+        public static readonly RecursiveTrait Named = new RecursiveTrait(null, "named", new TraitOriginV1(TraitOriginType.Core), new List<TraitAttribute>() {
             new TraitAttribute("name",
                 CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
 
         // TODO: move to plugin, once that exists
-        public static readonly RecursiveTrait GridviewContext = new RecursiveTrait("__meta.config.gridview_context", new TraitOriginV1(TraitOriginType.Core),
+        public static readonly RecursiveTrait GridviewContext = new RecursiveTrait(null, "__meta.config.gridview_context", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {
                 new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("gridview_context.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null), new CIAttributeValueConstraintTextRegex(IDValidations.GridViewContextIDRegex))),
                 new TraitAttribute("config", CIAttributeTemplate.BuildFromParams("gridview_context.config", AttributeValueType.JSON, false)),
@@ -35,7 +35,9 @@ namespace Omnikeeper.Base.Model
         public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() { 
             Named,
             BaseConfigurationModel.Trait,
-            RecursiveDataTraitModel.Trait, PredicateModel.Predicate, AuthRoleModel.AuthRole, GeneratorModel.Generator,
+            TraitBuilderFromClass.Class2RecursiveTrait<RecursiveTrait>(),
+            TraitBuilderFromClass.Class2RecursiveTrait<Predicate>(), 
+            TraitBuilderFromClass.Class2RecursiveTrait<AuthRole>(), GeneratorModel.Generator,
             GridviewContext,
         };
     }

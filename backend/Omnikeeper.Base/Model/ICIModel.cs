@@ -9,7 +9,7 @@ namespace Omnikeeper.Base.Model
 {
     public interface ICIModel : ICIIDModel
     {
-        public static readonly string NameAttribute = "__name";
+        public const string NameAttribute = "__name";
 
         // merged
         Task<MergedCI> GetMergedCI(Guid ciid, LayerSet layers, IAttributeSelection attributeSelection, IModelContext trans, TimeThreshold atTime);

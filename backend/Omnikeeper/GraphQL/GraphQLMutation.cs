@@ -18,13 +18,13 @@ namespace Omnikeeper.GraphQL
     public partial class GraphQLMutation : ObjectGraphType
     {
         private readonly ILayerModel layerModel;
-        private readonly IPredicateModel predicateModel;
+        private readonly GenericTraitEntityModel<Predicate> predicateModel;
         private readonly IChangesetModel changesetModel;
         private readonly IGeneratorModel generatorModel;
         private readonly IOIAContextModel oiaContextModel;
         private readonly IODataAPIContextModel odataAPIContextModel;
-        private readonly IAuthRoleModel authRoleModel;
-        private readonly IRecursiveDataTraitModel recursiveDataTraitModel;
+        private readonly GenericTraitEntityModel<AuthRole> authRoleModel;
+        private readonly GenericTraitEntityModel<RecursiveTrait> recursiveDataTraitModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly ICLConfigModel clConfigModel;
@@ -34,9 +34,9 @@ namespace Omnikeeper.GraphQL
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
-            IPredicateModel predicateModel, IChangesetModel changesetModel, IGeneratorModel generatorModel,
-            IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, IAuthRoleModel authRoleModel,
-            IRecursiveDataTraitModel recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
+            GenericTraitEntityModel<Predicate> predicateModel, IChangesetModel changesetModel, IGeneratorModel generatorModel,
+            IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole> authRoleModel,
+            GenericTraitEntityModel<RecursiveTrait> recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
             IManagementAuthorizationService managementAuthorizationService, ICLConfigModel clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)

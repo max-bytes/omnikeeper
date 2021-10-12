@@ -65,7 +65,7 @@ namespace Omnikeeper.Controllers.Ingest
             if (!managementAuthorizationService.CanReadManagement(user, metaConfiguration, out var message))
                 return Forbid($"User \"{user.Username}\" does not have permission to read contexts: {message}");
 
-            var context = await contextModel.GetContext(id, metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
+            var (_, context) = await contextModel.TryToGetContext(id, metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
             if (context != null)
                 return Ok(context);
             else

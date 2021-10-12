@@ -16,7 +16,7 @@ namespace Omnikeeper.Base.Model
     // TODO: think about caching?
     public class GeneratorModel : IDBasedTraitDataConfigBaseModel<GeneratorV1, string>, IGeneratorModel
     {
-        public static readonly RecursiveTrait Generator = new RecursiveTrait("__meta.config.generator", new TraitOriginV1(TraitOriginType.Core),
+        public static readonly RecursiveTrait Generator = new RecursiveTrait(null, "__meta.config.generator", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {
                 new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("generator.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                 new TraitAttribute("attribute_name", CIAttributeTemplate.BuildFromParams("generator.attribute_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
@@ -32,20 +32,6 @@ namespace Omnikeeper.Base.Model
         public GeneratorModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
             : base(GeneratorFlattened, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
         {
-        }
-
-        public async Task<GeneratorV1> GetGenerator(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
-        {
-            IDValidations.ValidateGeneratorIDThrow(id);
-
-            return await Get(id, layerSet, timeThreshold, trans);
-        }
-
-        public async Task<(Guid, GeneratorV1)> TryToGetGenerator(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
-        {
-            IDValidations.ValidateGeneratorIDThrow(id);
-
-            return await TryToGet(id, layerSet, timeThreshold, trans);
         }
 
         public async Task<IDictionary<string, GeneratorV1>> GetGenerators(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)

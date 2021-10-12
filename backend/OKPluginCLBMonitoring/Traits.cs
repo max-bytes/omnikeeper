@@ -12,14 +12,14 @@ namespace OKPluginCLBMonitoring
     {
         private static readonly TraitOriginV1 traitOrigin = PluginRegistrationBase.GetTraitOrigin(typeof(Traits).Assembly);
 
-        public static readonly RecursiveTrait Module = new RecursiveTrait("naemon_service_module", traitOrigin, new List<TraitAttribute>() {
+        public static readonly RecursiveTrait Module = new RecursiveTrait(null, "naemon_service_module", traitOrigin, new List<TraitAttribute>() {
             new TraitAttribute("template",
                 CIAttributeTemplate.BuildFromParams("naemon.config_template", AttributeValueType.MultilineText, null, CIAttributeValueConstraintTextLength.Build(1, null))
             )
         });
         public static readonly GenericTrait ModuleFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(Module);
 
-        public static readonly RecursiveTrait NaemonInstance = new RecursiveTrait("naemon_instance", traitOrigin, new List<TraitAttribute>() {
+        public static readonly RecursiveTrait NaemonInstance = new RecursiveTrait(null, "naemon_instance", traitOrigin, new List<TraitAttribute>() {
             new TraitAttribute("name",
                 CIAttributeTemplate.BuildFromParams("naemon.instance_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )
@@ -37,7 +37,7 @@ namespace OKPluginCLBMonitoring
         });
         public static readonly GenericTrait NaemonInstanceFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(NaemonInstance);
 
-        public static readonly RecursiveTrait Contactgroup = new RecursiveTrait("naemon_contactgroup", traitOrigin, new List<TraitAttribute>() {
+        public static readonly RecursiveTrait Contactgroup = new RecursiveTrait(null, "naemon_contactgroup", traitOrigin, new List<TraitAttribute>() {
             new TraitAttribute("name",
                 CIAttributeTemplate.BuildFromParams("naemon.contactgroup_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))
             )

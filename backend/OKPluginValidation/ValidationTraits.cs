@@ -8,7 +8,7 @@ namespace OKPluginValidation.Validation
 {
     public static class ValidationTraits
     {
-        public static readonly RecursiveTrait ValidationIssue = new RecursiveTrait("__meta.validation.validation_issue", new TraitOriginV1(TraitOriginType.Core),
+        public static readonly RecursiveTrait ValidationIssue = new RecursiveTrait(null, "__meta.validation.validation_issue", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {
                 new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("validation_issue.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                 new TraitAttribute("message", CIAttributeTemplate.BuildFromParams("validation_issue.message", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
@@ -24,7 +24,7 @@ namespace OKPluginValidation.Validation
         public static readonly GenericTrait ValidationIssueFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(ValidationIssue);
 
 
-        public static readonly RecursiveTrait Validation = new RecursiveTrait("__meta.validation.validation", new TraitOriginV1(TraitOriginType.Core),
+        public static readonly RecursiveTrait Validation = new RecursiveTrait(null, "__meta.validation.validation", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {
                 new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("validation.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                 new TraitAttribute("rule_name", CIAttributeTemplate.BuildFromParams("validation.rule_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),

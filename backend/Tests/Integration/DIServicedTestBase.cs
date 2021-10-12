@@ -83,7 +83,6 @@ namespace Tests.Integration
             services.AddSingleton<ILogger<MetaConfigurationModel>>((sp) => NullLogger<MetaConfigurationModel>.Instance);
             services.AddSingleton<ILogger<OIAContextModel>>((sp) => NullLogger<OIAContextModel>.Instance);
             services.AddSingleton<ILogger<ODataAPIContextModel>>((sp) => NullLogger<ODataAPIContextModel>.Instance);
-            services.AddSingleton<ILogger<RecursiveDataTraitModel>>((sp) => NullLogger<RecursiveDataTraitModel>.Instance);
             services.AddSingleton<ILogger<CISearchModel>>((sp) => NullLogger<CISearchModel>.Instance);
             services.AddSingleton<ILogger<IModelContext>>((sp) => NullLogger<IModelContext>.Instance);
             services.AddSingleton<ILogger<CachingLayerModel>>((sp) => NullLogger<CachingLayerModel>.Instance);

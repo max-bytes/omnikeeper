@@ -14,7 +14,7 @@ namespace Omnikeeper.Base.Model
     // TODO: think about caching?
     public class CLConfigModel : IDBasedTraitDataConfigBaseModel<CLConfigV1, string>, ICLConfigModel
     {
-        public static readonly RecursiveTrait CLConfig = new RecursiveTrait("__meta.config.cl_config", new TraitOriginV1(TraitOriginType.Core),
+        public static readonly RecursiveTrait CLConfig = new RecursiveTrait(null, "__meta.config.cl_config", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {
                 new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("cl_config.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                 new TraitAttribute("cl_brain_reference", CIAttributeTemplate.BuildFromParams("cl_config.cl_brain_reference", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
@@ -30,20 +30,6 @@ namespace Omnikeeper.Base.Model
         public CLConfigModel(IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
             : base(CLConfigFlattened, effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel)
         {
-        }
-
-        public async Task<CLConfigV1> GetCLConfig(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
-        {
-            IDValidations.ValidateCLConfigIDThrow(id);
-
-            return await Get(id, layerSet, timeThreshold, trans);
-        }
-
-        public async Task<(Guid, CLConfigV1)> TryToGetCLConfig(string id, LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
-        {
-            IDValidations.ValidateCLConfigIDThrow(id);
-
-            return await TryToGet(id, layerSet, timeThreshold, trans);
         }
 
         public async Task<IDictionary<string, CLConfigV1>> GetCLConfigs(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)

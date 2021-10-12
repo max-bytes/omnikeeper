@@ -1,19 +1,17 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Omnikeeper.Base.Utils;
-using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Omnikeeper.Base.Entity
 {
-    [ProtoContract(SkipConstructor = true)]
     public class TraitRelation
     {
-        [ProtoMember(1)] public readonly RelationTemplate RelationTemplate;
+        public readonly RelationTemplate RelationTemplate;
         // TODO: implement anyOf(RelationTemplate[])
-        [ProtoMember(2)] public readonly string Identifier;
+        public readonly string Identifier;
 
         public TraitRelation(string identifier, RelationTemplate relationTemplate)
         {
@@ -31,11 +29,11 @@ namespace Omnikeeper.Base.Entity
             return s;
         });
     }
-    [ProtoContract(SkipConstructor = true)]
+
     public class TraitAttribute
     {
-        [ProtoMember(1)] public readonly CIAttributeTemplate AttributeTemplate;
-        [ProtoMember(2)] public readonly string Identifier;
+        public readonly CIAttributeTemplate AttributeTemplate;
+        public readonly string Identifier;
 
         // TODO: implement anyOf(CIAttributeTemplate[])
 
@@ -63,7 +61,6 @@ namespace Omnikeeper.Base.Entity
         Data
     }
 
-    [ProtoContract(SkipConstructor = true)]
     public class TraitOriginV1
     {
         public TraitOriginV1(TraitOriginType type, string? info = null)
@@ -72,35 +69,57 @@ namespace Omnikeeper.Base.Entity
             Info = info;
         }
 
-        [ProtoMember(1)]
         public readonly TraitOriginType Type;
-        [ProtoMember(2)]
         public readonly string? Info;
     } // TODO: equality/hash/...?
 
-    [ProtoContract] // NOTE: cannot skip constructor, because then initializations are not done either, leaving arrays at null
-    public class RecursiveTrait
+    [TraitEntity("__meta.config.trait", TraitOriginType.Core)]
+    public class RecursiveTrait : TraitEntity
     {
-        [ProtoMember(1)] public readonly string ID;
-        [ProtoMember(2)] public readonly TraitOriginV1 Origin;
-        [ProtoMember(3)] public readonly TraitAttribute[] RequiredAttributes = Array.Empty<TraitAttribute>();
-        [ProtoMember(4)] public readonly TraitAttribute[] OptionalAttributes = Array.Empty<TraitAttribute>();
-        [ProtoMember(5)] public readonly string[] RequiredTraits = Array.Empty<string>();
-        [ProtoMember(6)] public readonly TraitRelation[] RequiredRelations = Array.Empty<TraitRelation>();
-        [ProtoMember(7)] public readonly TraitRelation[] OptionalRelations = Array.Empty<TraitRelation>();
+        [TraitAttribute("id", "trait.id")]
+        [TraitAttributeValueConstraintTextLength(1, -1)]
+        [TraitAttributeValueConstraintTextRegex(IDValidations.TraitIDRegexString, IDValidations.TraitIDRegexOptions)]
+        [TraitEntityID]
+        public readonly string ID;
 
-#pragma warning disable CS8618
-        private RecursiveTrait() { }
-#pragma warning restore CS8618
+        public TraitOriginV1 Origin { get; }
 
-        public RecursiveTrait(string id, TraitOriginV1 origin,
+        [TraitAttribute("name", "__name", optional: true)]
+        [TraitAttributeValueConstraintTextLength(1, -1)]
+        public readonly string Name;
+
+        [TraitAttribute("required_attributes", "trait.required_attributes", isJSONSerialized: true)]
+        [TraitAttributeValueConstraintArrayLength(1, -1)]
+        public readonly TraitAttribute[] RequiredAttributes = Array.Empty<TraitAttribute>();
+
+        [TraitAttribute("optional_attributes", "trait.optional_attributes", isJSONSerialized: true, optional: true)]
+        public readonly TraitAttribute[] OptionalAttributes = Array.Empty<TraitAttribute>();
+
+        [TraitAttribute("required_relations", "trait.required_relations", isJSONSerialized: true, optional: true)]
+        public readonly TraitRelation[] RequiredRelations = Array.Empty<TraitRelation>();
+
+        [TraitAttribute("optional_relations", "trait.optional_relations", isJSONSerialized: true, optional: true)]
+        public readonly TraitRelation[] OptionalRelations = Array.Empty<TraitRelation>();
+
+        [TraitAttribute("required_traits", "trait.required_traits", optional: true)]
+        public readonly string[] RequiredTraits = Array.Empty<string>();
+
+        public RecursiveTrait() : base(null) {
+            ID = "";
+            Name = "";
+            Origin = new TraitOriginV1(TraitOriginType.Data);
+        }
+
+        [JsonConstructor]
+        public RecursiveTrait(Guid? ciid, string id, TraitOriginV1 origin,
             IEnumerable<TraitAttribute>? requiredAttributes = null,
             IEnumerable<TraitAttribute>? optionalAttributes = null,
             IEnumerable<TraitRelation>? requiredRelations = null,
             IEnumerable<TraitRelation>? optionalRelations = null,
-            IEnumerable<string>? requiredTraits = null)
+            IEnumerable<string>? requiredTraits = null) : base(ciid)
         {
             ID = id;
+            Name = $"Trait - {ID}";
             Origin = origin ?? new TraitOriginV1(TraitOriginType.Data);
             RequiredAttributes = requiredAttributes?.ToArray() ?? new TraitAttribute[0];
             OptionalAttributes = optionalAttributes?.ToArray() ?? new TraitAttribute[0];
@@ -109,6 +128,7 @@ namespace Omnikeeper.Base.Entity
             RequiredTraits = requiredTraits?.ToArray() ?? new string[0];
         }
 
+        // TODO: still needed?
         public static readonly MyJSONSerializer<RecursiveTrait> Serializer = new MyJSONSerializer<RecursiveTrait>(() =>
         {
             var s = new JsonSerializerSettings()
