@@ -18,21 +18,6 @@ namespace Omnikeeper.Base.Model
             )
         });
 
-        // TODO: move to plugin, once that exists
-        //public static readonly RecursiveTrait GridviewContext = new RecursiveTrait("__meta.config.gridview_context", new TraitOriginV1(TraitOriginType.Core),
-        //    new List<TraitAttribute>() {
-        //        new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("gridview_context.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null), new CIAttributeValueConstraintTextRegex(IDValidations.GridViewContextIDRegex))),
-        //        new TraitAttribute("config", CIAttributeTemplate.BuildFromParams("gridview_context.config", AttributeValueType.JSON, false)),
-        //    },
-        //    new List<TraitAttribute>()
-        //    {
-        //        new TraitAttribute("speaking_name", CIAttributeTemplate.BuildFromParams("gridview_context.speaking_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-        //        new TraitAttribute("description", CIAttributeTemplate.BuildFromParams("gridview_context.description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-        //        new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-        //    }
-        //);
-        //public static readonly GenericTrait GridviewContextFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(GridviewContext);
-
         public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() { 
             Named,
             BaseConfigurationModel.Trait,
