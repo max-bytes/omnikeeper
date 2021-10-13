@@ -14,11 +14,11 @@ namespace Omnikeeper.Model
 {
     public class TraitsProvider : ITraitsProvider
     {
-        private readonly GenericTraitEntityModel<RecursiveTrait> dataTraitModel;
+        private readonly GenericTraitEntityModel<RecursiveTrait, string> dataTraitModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IEnumerable<IPluginRegistration> loadedPlugins;
 
-        public TraitsProvider(GenericTraitEntityModel<RecursiveTrait> dataTraitModel, IMetaConfigurationModel metaConfigurationModel, IEnumerable<IPluginRegistration> loadedPlugins)
+        public TraitsProvider(GenericTraitEntityModel<RecursiveTrait, string> dataTraitModel, IMetaConfigurationModel metaConfigurationModel, IEnumerable<IPluginRegistration> loadedPlugins)
         {
             this.dataTraitModel = dataTraitModel;
             this.metaConfigurationModel = metaConfigurationModel;
@@ -38,7 +38,7 @@ namespace Omnikeeper.Model
             var configuredRecursiveDataTraitSet = await dataTraitModel.GetAll(metaConfiguration.ConfigLayerset, trans, timeThreshold);
             var allTraitSets = new Dictionary<string, IEnumerable<RecursiveTrait>>() {
                 { "core", CoreTraits.RecursiveTraits },
-                { "data", configuredRecursiveDataTraitSet }
+                { "data", configuredRecursiveDataTraitSet.Select(t => t.entity) }
             };
             foreach (var kv in pluginTraitSets)
                 allTraitSets.Add(kv.Key, kv.Value);

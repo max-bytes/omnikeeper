@@ -12,7 +12,6 @@ using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Base.Utils.Serialization;
 using Omnikeeper.GraphQL;
-using Omnikeeper.GridView.Model;
 using Omnikeeper.Model;
 using Omnikeeper.Model.Config;
 using Omnikeeper.Model.Decorators;
@@ -27,6 +26,7 @@ using System.Reflection;
 using System.Runtime.Versioning;
 using GraphQL.DataLoader;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.GridView.Entity;
 
 namespace Omnikeeper.Startup
 {
@@ -193,12 +193,12 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IBaseConfigurationModel, BaseConfigurationModel>();
             services.AddSingleton<IMetaConfigurationModel, MetaConfigurationModel>();
             services.AddSingleton<IOIAContextModel, OIAContextModel>();
-            services.AddSingleton<IGridViewContextModel, GridViewContextModel>();
             services.AddSingleton<IPartitionModel, PartitionModel>();
             services.AddSingleton<ICLConfigModel, CLConfigModel>();
-            services.AddSingleton<GenericTraitEntityModel<AuthRole>>(); // TODO: ok this way?
-            services.AddSingleton<GenericTraitEntityModel<Predicate>>(); // TODO: ok this way?
-            services.AddSingleton<GenericTraitEntityModel<RecursiveTrait>>(); // TODO: ok this way?
+            services.AddSingleton<GenericTraitEntityModel<AuthRole, string>>(); // TODO: ok this way?
+            services.AddSingleton<GenericTraitEntityModel<Predicate, string>>(); // TODO: ok this way?
+            services.AddSingleton<GenericTraitEntityModel<RecursiveTrait, string>>(); // TODO: ok this way?
+            services.AddSingleton<GenericTraitEntityModel<GridViewContext, string>>(); // TODO: ok this way?
 
             // these aren't real models, but we keep them here because they are closely related to models
             services.AddSingleton<ITraitsProvider, TraitsProvider>();

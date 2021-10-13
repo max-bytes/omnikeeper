@@ -14,7 +14,7 @@ namespace Omnikeeper.Base.Model
     // TODO: think about caching?
     public class CLConfigModel : IDBasedTraitDataConfigBaseModel<CLConfigV1, string>, ICLConfigModel
     {
-        public static readonly RecursiveTrait CLConfig = new RecursiveTrait(null, "__meta.config.cl_config", new TraitOriginV1(TraitOriginType.Core),
+        public static readonly RecursiveTrait CLConfig = new RecursiveTrait("__meta.config.cl_config", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {
                 new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("cl_config.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                 new TraitAttribute("cl_brain_reference", CIAttributeTemplate.BuildFromParams("cl_config.cl_brain_reference", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),

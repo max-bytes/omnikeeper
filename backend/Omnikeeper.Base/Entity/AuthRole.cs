@@ -19,9 +19,9 @@ namespace Omnikeeper.Base.Entity
     [TraitEntity("__meta.config.auth_role", TraitOriginType.Core)]
     public class AuthRole : TraitEntity, IEquatable<AuthRole>
     {
-        public AuthRole() : base(null) { ID = ""; Permissions = new string[0]; Name = ""; }
+        public AuthRole() { ID = ""; Permissions = new string[0]; Name = ""; }
 
-        public AuthRole(Guid? ciid, string iD, string[] permissions) : base(ciid)
+        public AuthRole(string iD, string[] permissions)
         {
             ID = iD;
             Permissions = permissions;

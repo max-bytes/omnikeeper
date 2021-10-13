@@ -26,7 +26,7 @@ namespace Tests.Integration.Model
             var et = TraitBuilderFromClass.Class2RecursiveTrait<Predicate>();
 
             et.Should().BeEquivalentTo(
-                new RecursiveTrait(null, "__meta.config.predicate", new TraitOriginV1(TraitOriginType.Core),
+                new RecursiveTrait("__meta.config.predicate", new TraitOriginV1(TraitOriginType.Core),
                     new List<TraitAttribute>() {
                         new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("predicate.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null), new CIAttributeValueConstraintTextRegex(IDValidations.PredicateIDRegex))),
                         new TraitAttribute("wording_from", CIAttributeTemplate.BuildFromParams("predicate.wording_from", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
@@ -44,8 +44,9 @@ namespace Tests.Integration.Model
         public async Task TestGenericOperations()
         {
             await TestGenericModelOperations(
-                (Guid? ciid) => new Predicate(ciid, "p1", "wording_from_1", "wording_to_1"),
-                (Guid? ciid) => new Predicate(ciid, "p2", "wording_from_2", "wording_to_2")
+                () => new Predicate("p1", "wording_from_1", "wording_to_1"),
+                () => new Predicate("p2", "wording_from_2", "wording_to_2"),
+                "p1", "non_existant_id"
                 );
         }
     }

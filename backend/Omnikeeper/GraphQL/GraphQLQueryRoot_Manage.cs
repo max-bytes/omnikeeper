@@ -128,7 +128,7 @@ namespace Omnikeeper.GraphQL
 
                     var predicates = await predicateModel.GetAll(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold);
 
-                    return predicates;
+                    return predicates.Select(t => t.entity);
                 });
 
             FieldAsync<ListGraphType<RecursiveTraitType>>("manage_recursiveTraits",
@@ -143,7 +143,7 @@ namespace Omnikeeper.GraphQL
 
                     // TODO: should we not deliver non-DB traits (f.e. from CLBs) here?
                     var traitSet = await recursiveDataTraitModel.GetAll(metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
-                    return traitSet;
+                    return traitSet.Select(t => t.entity);
                 });
 
 
@@ -172,7 +172,7 @@ namespace Omnikeeper.GraphQL
                     CheckReadManagementThrow(userContext, metaConfiguration, "read auth roles");
 
                     var authRoles = await authRoleModel.GetAll(metaConfiguration.ConfigLayerset, userContext.Transaction, TimeThreshold.BuildLatest());
-                    return authRoles;
+                    return authRoles.Select(t => t.entity);
                 });
 
             FieldAsync<ListGraphType<CLConfigType>>("manage_clConfigs",

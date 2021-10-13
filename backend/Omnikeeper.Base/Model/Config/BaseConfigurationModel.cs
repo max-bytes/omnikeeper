@@ -13,7 +13,7 @@ namespace Omnikeeper.Base.Model.Config
 {
     public class BaseConfigurationModel : SingletonTraitDataConfigBaseModel<BaseConfigurationV2>, IBaseConfigurationModel
     {
-        public static readonly RecursiveTrait Trait = new RecursiveTrait(null, "__meta.config.base", new TraitOriginV1(TraitOriginType.Core),
+        public static readonly RecursiveTrait Trait = new RecursiveTrait("__meta.config.base", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {
                 new TraitAttribute("archive_data_threshold", CIAttributeTemplate.BuildFromParams("base_config.archive_data_threshold", AttributeValueType.Integer, false)),
                 // TODO: add regex or other check for hangfire compatible cronjob syntax

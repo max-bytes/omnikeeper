@@ -26,25 +26,25 @@ namespace Omnikeeper.GraphQL
         private readonly ITraitsProvider traitsProvider;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
-        private readonly GenericTraitEntityModel<Predicate> predicateModel;
+        private readonly GenericTraitEntityModel<Predicate, string> predicateModel;
         private readonly IChangesetModel changesetModel;
         private readonly ILayerStatisticsModel layerStatisticsModel;
         private readonly IGeneratorModel generatorModel;
         private readonly IOIAContextModel oiaContextModel;
         private readonly IODataAPIContextModel odataAPIContextModel;
-        private readonly GenericTraitEntityModel<AuthRole> authRoleModel;
+        private readonly GenericTraitEntityModel<AuthRole, string> authRoleModel;
         private readonly ICLConfigModel clConfigModel;
-        private readonly GenericTraitEntityModel<RecursiveTrait> recursiveDataTraitModel;
+        private readonly GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly ICIBasedAuthorizationService ciBasedAuthorizationService;
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
 
         public GraphQLQueryRoot(ICIIDModel ciidModel, ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
-            ICISearchModel ciSearchModel, ITraitsProvider traitsProvider, IMetaConfigurationModel metaConfigurationModel, GenericTraitEntityModel<Predicate> predicateModel,
+            ICISearchModel ciSearchModel, ITraitsProvider traitsProvider, IMetaConfigurationModel metaConfigurationModel, GenericTraitEntityModel<Predicate, string> predicateModel,
             IChangesetModel changesetModel, ILayerStatisticsModel layerStatisticsModel, IGeneratorModel generatorModel, IBaseConfigurationModel baseConfigurationModel,
-            IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole> authRoleModel, ICLConfigModel clConfigModel,
-            GenericTraitEntityModel<RecursiveTrait> recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
+            IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole, string> authRoleModel, ICLConfigModel clConfigModel,
+            GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel, IManagementAuthorizationService managementAuthorizationService,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {
             this.ciidModel = ciidModel;
@@ -196,7 +196,7 @@ namespace Omnikeeper.GraphQL
                     var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(userContext.Transaction);
                     var predicates = await predicateModel.GetAll(metaConfiguration.ConfigLayerset, userContext.Transaction, userContext.TimeThreshold);
 
-                    return predicates;
+                    return predicates.Select(t => t.entity);
                 });
 
             FieldAsync<ListGraphType<LayerType>>("layers",

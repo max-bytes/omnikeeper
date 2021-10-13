@@ -99,7 +99,7 @@ namespace Tests.Integration.Controller
             r2.Should().BeOfType<OkObjectResult>();
             var ctxData = ((r2 as OkObjectResult)!.Value as GetContextResponse);
             ctxData.Should().NotBeNull();
-            ctxData!.Context.Should().BeEquivalentTo(new GridViewContext(null, "ctx1", "Context 1", "Description", cfg1), options => options.WithStrictOrdering());
+            ctxData!.Context.Should().BeEquivalentTo(new GridViewContext("ctx1", "Context 1", "Description", cfg1), options => options.WithStrictOrdering());
 
             // test getting data
             var r3 = await controller.GetData("ctx1");
@@ -141,7 +141,7 @@ namespace Tests.Integration.Controller
             public Task<IDictionary<string, ITrait>> GetActiveTraits(IModelContext trans, TimeThreshold timeThreshold)
             {
                 var r = new List<RecursiveTrait>() {
-                new RecursiveTrait(null, "test_trait_1", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
+                new RecursiveTrait("test_trait_1", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
                 {
                     new TraitAttribute("a1",
                         CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false)

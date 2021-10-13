@@ -5,8 +5,8 @@ using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.GridView.Entity;
 using Omnikeeper.GridView.Helper;
-using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Request;
 using System;
 using System.Threading;
@@ -40,14 +40,14 @@ namespace Omnikeeper.GridView.Commands
 
         public class AddContextHandler : IRequestHandler<Command, Exception?>
         {
-            private readonly IGridViewContextModel gridViewContextModel;
+            private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly ICurrentUserService currentUserService;
             private readonly IMetaConfigurationModel metaConfigurationModel;
             private readonly IChangesetModel changesetModel;
             private readonly IManagementAuthorizationService managementAuthorizationService;
 
-            public AddContextHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder, ICurrentUserService currentUserService,
+            public AddContextHandler(GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, IModelContextBuilder modelContextBuilder, ICurrentUserService currentUserService,
                 IMetaConfigurationModel metaConfigurationModel, IChangesetModel changesetModel, IManagementAuthorizationService managementAuthorizationService)
             {
                 this.gridViewContextModel = gridViewContextModel;
@@ -77,13 +77,10 @@ namespace Omnikeeper.GridView.Commands
                 if (!managementAuthorizationService.CanModifyManagement(user, metaConfiguration, out var message))
                     return new Exception($"User \"{user.Username}\" does not have permission to modify gridview contexts: {message}");
 
+                var @new = new GridViewContext(request.Context.ID, request.Context.SpeakingName, request.Context.Description, request.Context.Configuration);
                 try
                 {
-                    await gridViewContextModel.InsertOrUpdate(
-                        request.Context.ID,
-                        request.Context.SpeakingName,
-                        request.Context.Description,
-                        request.Context.Configuration,
+                    await gridViewContextModel.InsertOrUpdate(@new,
                         new Base.Entity.LayerSet(metaConfiguration.ConfigLayerset), metaConfiguration.ConfigWriteLayer,
                         new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                         changesetProxy,

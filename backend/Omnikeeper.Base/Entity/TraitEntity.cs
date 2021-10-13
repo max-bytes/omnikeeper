@@ -8,12 +8,6 @@ namespace Omnikeeper.Base.Entity
 {
     public abstract class TraitEntity
     {
-        public readonly Guid? CIID;
-
-        protected TraitEntity(Guid? cIID)
-        {
-            CIID = cIID;
-        }
     }
 
     [AttributeUsage(AttributeTargets.Class)]

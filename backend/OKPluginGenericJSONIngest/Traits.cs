@@ -11,7 +11,7 @@ namespace OKPluginGenericJSONIngest
     {
         private static readonly TraitOriginV1 traitOrigin = PluginRegistrationBase.GetTraitOrigin(typeof(Traits).Assembly);
 
-        public static readonly RecursiveTrait Context = new RecursiveTrait(null, "__meta.config.gji_context", traitOrigin, 
+        public static readonly RecursiveTrait Context = new RecursiveTrait("__meta.config.gji_context", traitOrigin, 
             new List<TraitAttribute>() {
                 new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("gji_context.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null), new CIAttributeValueConstraintTextRegex(OKPluginGenericJSONIngest.Context.ContextIDRegex))),
                 new TraitAttribute("extract_config", CIAttributeTemplate.BuildFromParams("gji_context.extract_config", AttributeValueType.JSON, false)),

@@ -26,13 +26,13 @@ namespace Tests.Integration.Model.Mocks
         public Task<IDictionary<string, ITrait>> GetActiveTraits(IModelContext trans, TimeThreshold timeThreshold)
         {
             var r = new List<RecursiveTrait>() {
-                new RecursiveTrait(null, "test_trait_1", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
+                new RecursiveTrait("test_trait_1", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
                 {
                     new TraitAttribute("a4",
                         CIAttributeTemplate.BuildFromParams("a4", AttributeValueType.Text, false)
                     )
                 }, requiredTraits: new List<string>() { "test_trait_2" }),
-                new RecursiveTrait(null, "test_trait_2", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
+                new RecursiveTrait("test_trait_2", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
                 {
                     new TraitAttribute("a4",
                         CIAttributeTemplate.BuildFromParams("a4", AttributeValueType.Text, false)
@@ -41,7 +41,7 @@ namespace Tests.Integration.Model.Mocks
                         CIAttributeTemplate.BuildFromParams("a2", AttributeValueType.Text, false)
                     )
                 }, requiredTraits: new List<string>() { "test_trait_3" }),
-                new RecursiveTrait(null, "test_trait_3", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
+                new RecursiveTrait("test_trait_3", new TraitOriginV1(TraitOriginType.Data), new List<TraitAttribute>()
                 {
                     new TraitAttribute("a1",
                         CIAttributeTemplate.BuildFromParams("a1", AttributeValueType.Text, false)

@@ -1,13 +1,13 @@
 ﻿using FluentValidation;
 using MediatR;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GridView.Entity;
 using Omnikeeper.GridView.Helper;
-using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Response;
 using System;
 using System.Collections.Generic;
@@ -37,11 +37,11 @@ namespace Omnikeeper.GridView.Queries
 
         public class GetSchemaQueryHandler : IRequestHandler<Query, (GetSchemaResponse?, Exception?)>
         {
-            private readonly IGridViewContextModel gridViewContextModel;
+            private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly IMetaConfigurationModel metaConfigurationModel;
 
-            public GetSchemaQueryHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel)
+            public GetSchemaQueryHandler(GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel)
             {
                 this.gridViewContextModel = gridViewContextModel;
                 this.modelContextBuilder = modelContextBuilder;
@@ -60,8 +60,9 @@ namespace Omnikeeper.GridView.Queries
                 var trans = modelContextBuilder.BuildImmediate();
 
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-                var context = await gridViewContextModel.GetFullContext(request.Context, metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
-                var config = context.Configuration;
+                var context = await gridViewContextModel.GetSingleByDataID(request.Context, metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
+                if (context == default) return (null, new Exception($"Could not find context with ID {request.Context}"));
+                var config = context.entity.Configuration;
 
                 var result = new GetSchemaResponse(config.ShowCIIDColumn, new List<Column>());
 

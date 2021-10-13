@@ -21,7 +21,7 @@ namespace Tests.Integration.Model
         {
         }
 
-        protected async Task TestGenericModelGetByDataID<T, ID>(Func<Guid?, T> creator1, Func<Guid?, T> creator2, ID id1, ID id2, ID nonExistentID) where T : TraitEntity, new() where ID : notnull
+        protected async Task TestGenericModelGetByDataID<T, ID>(Func<T> creator1, Func<T> creator2, ID id1, ID id2, ID nonExistentID) where T : TraitEntity, new() where ID : notnull
         {
             var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
             var layerOKConfig = await ServiceProvider.GetRequiredService<ILayerModel>().UpsertLayer("__okconfig", ModelContextBuilder.BuildImmediate());
@@ -40,7 +40,7 @@ namespace Tests.Integration.Model
 
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(ModelContextBuilder.BuildImmediate());
 
-            var model = new GenericTraitEntityModel<T>(effectiveTraitModel, ciModel, attributeModel, baseRelationModel);
+            var model = new GenericTraitEntityModel<T, ID>(effectiveTraitModel, ciModel, attributeModel, baseRelationModel);
 
             var changesetProxy1 = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
 
@@ -57,26 +57,26 @@ namespace Tests.Integration.Model
                 return entityOut;
             }
 
-            var entity1 = await Insert(creator1(null));
-            var entity2 = await Insert(creator2(null));
+            var entity1 = await Insert(creator1());
+            var entity2 = await Insert(creator2());
 
             var byDataID1 = await model.GetSingleByDataID(id1, metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            byDataID1.Should().BeEquivalentTo(entity1);
+            byDataID1.entity.Should().BeEquivalentTo(entity1);
             var byDataID2 = await model.GetSingleByDataID(id2, metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            byDataID2.Should().BeEquivalentTo(entity2);
+            byDataID2.entity.Should().BeEquivalentTo(entity2);
             var byNonExistentID = await model.GetSingleByDataID(nonExistentID, metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            Assert.AreEqual(null, byNonExistentID);
+            Assert.AreEqual(ValueTuple.Create<T?, Guid>(null, default), byNonExistentID);
 
-            var getAllByDataID = await model.GetAllByDataID<ID>(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
+            var getAllByDataID = await model.GetAllByDataID(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             getAllByDataID.Should().BeEquivalentTo(new Dictionary<ID, T>()
             {
-                { id1, byDataID1! },
-                { id2, byDataID2! },
+                { id1, byDataID1.entity },
+                { id2, byDataID2.entity },
             });
 
         }
 
-        protected async Task TestGenericModelOperations<T>(Func<Guid?, T> creator1, Func<Guid?, T> creator2) where T : TraitEntity, new()
+        protected async Task TestGenericModelOperations<T, ID>(Func<T> creator1, Func<T> creator2, ID entity1ID, ID nonExistantID) where T : TraitEntity, new() where ID : notnull
         {
             var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
             var layerOKConfig = await ServiceProvider.GetRequiredService<ILayerModel>().UpsertLayer("__okconfig", ModelContextBuilder.BuildImmediate());
@@ -95,7 +95,7 @@ namespace Tests.Integration.Model
 
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(ModelContextBuilder.BuildImmediate());
 
-            var model = new GenericTraitEntityModel<T>(effectiveTraitModel, ciModel, attributeModel, baseRelationModel);
+            var model = new GenericTraitEntityModel<T, ID>(effectiveTraitModel, ciModel, attributeModel, baseRelationModel);
 
             var rt1 = await model.GetAll(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.IsEmpty(rt1);
@@ -113,7 +113,6 @@ namespace Tests.Integration.Model
                         new DataOriginV1(DataOriginType.Manual), changesetProxy1, trans);
 
                     Assert.IsNotNull(entityOut);
-                    Assert.IsNotNull(entityOut.CIID);
                     Assert.IsTrue(changed);
 
                     trans.Commit();
@@ -121,25 +120,24 @@ namespace Tests.Integration.Model
                 return entityOut;
             }
 
-            var entity1 = await Insert(creator1(null));
-            entity1.Should().BeEquivalentTo(creator1(entity1.CIID));
+            var entity1 = await Insert(creator1());
+            entity1.Should().BeEquivalentTo(creator1());
 
             var rt2 = await model.GetAll(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.AreEqual(1, rt2.Count());
-            rt2.Should().BeEquivalentTo(new List<T>() { entity1 }, options => options.WithoutStrictOrdering());
+            rt2.Select(t => t.entity).Should().BeEquivalentTo(new List<T>() { entity1 }, options => options.WithoutStrictOrdering());
 
-            var entity2 = await Insert(creator2(null));
-            entity2.Should().BeEquivalentTo(creator2(entity2.CIID));
+            var entity2 = await Insert(creator2());
+            entity2.Should().BeEquivalentTo(creator2());
 
             var rt3 = await model.GetAll(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.AreEqual(2, rt3.Count());
-            rt3.Should().BeEquivalentTo(new List<T>() { entity1, entity2 }, options => options.WithoutStrictOrdering());
+            rt3.Select(t => t.entity).Should().BeEquivalentTo(new List<T>() { entity1, entity2 }, options => options.WithoutStrictOrdering());
 
             // delete using non existant CIID
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var nonExistantCIID = Guid.NewGuid();
-                var result = await model.TryToDelete(nonExistantCIID, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
+                var result = await model.TryToDelete(nonExistantID, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                         new DataOriginV1(DataOriginType.Manual), changesetProxy1, trans);
                 Assert.IsFalse(result);
             }
@@ -147,7 +145,7 @@ namespace Tests.Integration.Model
             // delete one of the existing ones
             using (var trans = ModelContextBuilder.BuildDeferred())
             {
-                var result = await model.TryToDelete(entity1.CIID!.Value, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
+                var result = await model.TryToDelete(entity1ID, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                         new DataOriginV1(DataOriginType.Manual), changesetProxy1, trans);
                 Assert.IsTrue(result);
 
@@ -156,7 +154,7 @@ namespace Tests.Integration.Model
 
             var rt4 = await model.GetAll(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
             Assert.AreEqual(1, rt4.Count());
-            rt4.Should().BeEquivalentTo(new List<T>() { entity2 }, options => options.WithoutStrictOrdering());
+            rt4.Select(t => t.entity).Should().BeEquivalentTo(new List<T>() { entity2 }, options => options.WithoutStrictOrdering());
         }
     }
 }

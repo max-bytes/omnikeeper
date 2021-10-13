@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model
 {
+    // TODO: remove
     public abstract class IDBasedTraitDataConfigBaseModel<T, ID> where ID: notnull
     {
         private readonly IEffectiveTraitModel effectiveTraitModel;

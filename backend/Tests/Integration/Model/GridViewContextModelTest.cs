@@ -25,7 +25,7 @@ namespace Tests.Integration.Model
         {
             var et = TraitBuilderFromClass.Class2RecursiveTrait<GridViewContext>();
                 
-            et.Should().BeEquivalentTo(new RecursiveTrait(null, "__meta.config.gridview_context", new TraitOriginV1(TraitOriginType.Core),
+            et.Should().BeEquivalentTo(new RecursiveTrait("__meta.config.gridview_context", new TraitOriginV1(TraitOriginType.Core),
                     new List<TraitAttribute>() {
                         new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("gridview_context.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null), new CIAttributeValueConstraintTextRegex(IDValidations.GridViewContextIDRegex))),
                         new TraitAttribute("config", CIAttributeTemplate.BuildFromParams("gridview_context.config", AttributeValueType.JSON, false)),
@@ -44,19 +44,20 @@ namespace Tests.Integration.Model
         public async Task TestGenericOperations()
         {
             await TestGenericModelOperations(
-                (Guid? ciid) => new GridViewContext(ciid, "context1", "Context 1", "Description 1", 
+                () => new GridViewContext("context1", "Context 1", "Description 1", 
                     new GridViewConfiguration(true, "write_layer1", new List<string> { "read_layer1" }, new List<GridViewColumn>() { }, "trait1")),
-                (Guid? ciid) => new GridViewContext(ciid, "context2", "Context 2", "Description 2",
-                    new GridViewConfiguration(true, "write_layer2", new List<string> { "read_layer2" }, new List<GridViewColumn>() { }, "trait2"))
+                () => new GridViewContext("context2", "Context 2", "Description 2",
+                    new GridViewConfiguration(true, "write_layer2", new List<string> { "read_layer2" }, new List<GridViewColumn>() { }, "trait2")),
+                "context1", "non_existant_id"
                 );
         }
         [Test]
         public async Task TestGetByDataID()
         {
             await TestGenericModelGetByDataID(
-                (Guid? ciid) => new GridViewContext(ciid, "context1", "Context 1", "Description 1",
+                () => new GridViewContext( "context1", "Context 1", "Description 1",
                     new GridViewConfiguration(true, "write_layer1", new List<string> { "read_layer1" }, new List<GridViewColumn>() { }, "trait1")),
-                (Guid? ciid) => new GridViewContext(ciid, "context2", "Context 2", "Description 2",
+                () => new GridViewContext("context2", "Context 2", "Description 2",
                     new GridViewConfiguration(true, "write_layer2", new List<string> { "read_layer2" }, new List<GridViewColumn>() { }, "trait2")),
                 "context1", "context2", "nonExistingID"
                 );

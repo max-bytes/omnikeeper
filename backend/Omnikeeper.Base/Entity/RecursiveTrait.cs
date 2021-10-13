@@ -104,19 +104,19 @@ namespace Omnikeeper.Base.Entity
         [TraitAttribute("required_traits", "trait.required_traits", optional: true)]
         public readonly string[] RequiredTraits = Array.Empty<string>();
 
-        public RecursiveTrait() : base(null) {
+        public RecursiveTrait() {
             ID = "";
             Name = "";
             Origin = new TraitOriginV1(TraitOriginType.Data);
         }
 
         [JsonConstructor]
-        public RecursiveTrait(Guid? ciid, string id, TraitOriginV1 origin,
+        public RecursiveTrait(string id, TraitOriginV1 origin,
             IEnumerable<TraitAttribute>? requiredAttributes = null,
             IEnumerable<TraitAttribute>? optionalAttributes = null,
             IEnumerable<TraitRelation>? requiredRelations = null,
             IEnumerable<TraitRelation>? optionalRelations = null,
-            IEnumerable<string>? requiredTraits = null) : base(ciid)
+            IEnumerable<string>? requiredTraits = null)
         {
             ID = id;
             Name = $"Trait - {ID}";

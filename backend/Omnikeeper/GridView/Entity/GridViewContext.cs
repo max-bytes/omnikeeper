@@ -32,7 +32,7 @@ namespace Omnikeeper.GridView.Entity
         [TraitAttribute("config", "gridview_context.config", isJSONSerialized: true)]
         public readonly GridViewConfiguration Configuration;
 
-        public GridViewContext(Guid? ciid, string id, string speakingName, string description, GridViewConfiguration configuration) : base(ciid)
+        public GridViewContext(string id, string speakingName, string description, GridViewConfiguration configuration)
         {
             ID = id;
             SpeakingName = speakingName;
@@ -41,7 +41,7 @@ namespace Omnikeeper.GridView.Entity
             Name = $"Gridview-Context {ID}";
         }
 
-        public GridViewContext() : base(null) {
+        public GridViewContext() {
             ID = "";
             SpeakingName = "";
             Description = "";

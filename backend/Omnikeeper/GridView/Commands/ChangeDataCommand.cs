@@ -12,7 +12,6 @@ using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using Omnikeeper.GridView.Entity;
 using Omnikeeper.GridView.Helper;
-using Omnikeeper.GridView.Model;
 using Omnikeeper.GridView.Request;
 using Omnikeeper.GridView.Response;
 using System;
@@ -52,7 +51,7 @@ namespace Omnikeeper.GridView.Commands
             private readonly IRelationModel relationModel;
             private readonly IChangesetModel changesetModel;
             private readonly ICurrentUserService currentUserService;
-            private readonly IGridViewContextModel gridViewContextModel;
+            private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
             private readonly IEffectiveTraitModel effectiveTraitModel;
             private readonly ITraitsProvider traitsProvider;
             private readonly IModelContextBuilder modelContextBuilder;
@@ -61,7 +60,7 @@ namespace Omnikeeper.GridView.Commands
             private readonly IMetaConfigurationModel metaConfigurationModel;
 
             public ChangeDataCommandHandler(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, 
-                IChangesetModel changesetModel, ICurrentUserService currentUserService, IGridViewContextModel gridViewContextModel,
+                IChangesetModel changesetModel, ICurrentUserService currentUserService, GenericTraitEntityModel<GridViewContext, string> gridViewContextModel,
                 IEffectiveTraitModel effectiveTraitModel, ITraitsProvider traitsProvider, IModelContextBuilder modelContextBuilder,
                 ILayerBasedAuthorizationService layerBasedAuthorizationService, ICIBasedAuthorizationService ciBasedAuthorizationService,
                 IMetaConfigurationModel metaConfigurationModel)
@@ -98,8 +97,9 @@ namespace Omnikeeper.GridView.Commands
 
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
 
-                var context = await gridViewContextModel.GetFullContext(request.Context, metaConfiguration.ConfigLayerset, timeThreshold, trans);
-                var config = context.Configuration;
+                var context = await gridViewContextModel.GetSingleByDataID(request.Context, metaConfiguration.ConfigLayerset, trans, timeThreshold);
+                if (context == default) return (null, new Exception($"Could not find context with ID {request.Context}"));
+                var config = context.entity.Configuration;
 
                 if (!layerBasedAuthorizationService.CanUserWriteToLayer(user, config.WriteLayer))
                     return (null, new Exception($"User \"{user.Username}\" does not have permission to write to layer ID {config.WriteLayer}"));

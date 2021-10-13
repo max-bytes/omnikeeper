@@ -16,7 +16,7 @@ namespace Omnikeeper.Base.Model
     // TODO: think about caching?
     public class GeneratorModel : IDBasedTraitDataConfigBaseModel<GeneratorV1, string>, IGeneratorModel
     {
-        public static readonly RecursiveTrait Generator = new RecursiveTrait(null, "__meta.config.generator", new TraitOriginV1(TraitOriginType.Core),
+        public static readonly RecursiveTrait Generator = new RecursiveTrait("__meta.config.generator", new TraitOriginV1(TraitOriginType.Core),
             new List<TraitAttribute>() {
                 new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("generator.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                 new TraitAttribute("attribute_name", CIAttributeTemplate.BuildFromParams("generator.attribute_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),

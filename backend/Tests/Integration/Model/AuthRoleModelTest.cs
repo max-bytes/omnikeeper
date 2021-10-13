@@ -17,7 +17,7 @@ namespace Tests.Integration.Model
             var et = TraitBuilderFromClass.Class2RecursiveTrait<AuthRole>();
 
             et.Should().BeEquivalentTo(
-                new RecursiveTrait(null, "__meta.config.auth_role", new TraitOriginV1(TraitOriginType.Core),
+                new RecursiveTrait("__meta.config.auth_role", new TraitOriginV1(TraitOriginType.Core),
                     new List<TraitAttribute>() {
                         new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("auth_role.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                     },
@@ -34,16 +34,17 @@ namespace Tests.Integration.Model
         public async Task TestGenericOperations()
         {
             await TestGenericModelOperations(
-                (Guid? ciid) => new AuthRole(ciid, "test_auth_role01", new string[] { "p1", "p2" }),
-                (Guid? ciid) => new AuthRole(ciid, "test_auth_role02", new string[] { "p3" })
+                () => new AuthRole("test_auth_role01", new string[] { "p1", "p2" }),
+                () => new AuthRole("test_auth_role02", new string[] { "p3" }),
+                "test_auth_role01", "non_existant"
                 );
         }
         [Test]
         public async Task TestGetByDataID()
         {
             await TestGenericModelGetByDataID(
-                (Guid? ciid) => new AuthRole(ciid, "test_auth_role01", new string[] { "p1", "p2" }),
-                (Guid? ciid) => new AuthRole(ciid, "test_auth_role02", new string[] { "p3" }),
+                () => new AuthRole("test_auth_role01", new string[] { "p1", "p2" }),
+                () => new AuthRole("test_auth_role02", new string[] { "p3" }),
                 "test_auth_role01", "test_auth_role02", "non_existant_id"
                 );
         }

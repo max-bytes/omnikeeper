@@ -7,7 +7,7 @@ namespace Omnikeeper.Base.Entity
     [TraitEntity("__meta.config.predicate", TraitOriginType.Core)]
     public class Predicate : TraitEntity, IEquatable<Predicate>
     {
-        public Predicate() : base(null)
+        public Predicate()
         {
             ID = "";
             WordingFrom = "";
@@ -15,7 +15,7 @@ namespace Omnikeeper.Base.Entity
             Name = "";
         }
 
-        public Predicate(Guid? ciid, string iD, string wordingFrom, string wordingTo) : base(ciid)
+        public Predicate(string iD, string wordingFrom, string wordingTo)
         {
             ID = iD;
             WordingFrom = wordingFrom;
