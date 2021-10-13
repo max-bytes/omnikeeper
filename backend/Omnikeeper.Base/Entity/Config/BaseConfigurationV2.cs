@@ -5,19 +5,37 @@ using System;
 
 namespace Omnikeeper.Base.Entity.Config
 {
-    [ProtoContract(SkipConstructor = true)]
-    public class BaseConfigurationV2
+    [TraitEntity("__meta.config.base", TraitOriginType.Core)]
+    public class BaseConfigurationV2 : TraitEntity
     {
         public readonly static TimeSpan InfiniteArchiveDataThreshold = TimeSpan.FromTicks(long.MaxValue);
 
-        [ProtoMember(1)] private readonly TimeSpan archiveDataThreshold;
-        [ProtoMember(2)] private readonly string clbRunnerInterval;
-        [ProtoMember(3)] private readonly string markedForDeletionRunnerInterval;
-        [ProtoMember(4)] private readonly string externalIDManagerRunnerInterval;
-        [ProtoMember(5)] private readonly string archiveOldDataRunnerInterval;
+        [TraitAttribute("archive_data_threshold", "base_config.archive_data_threshold")]
+        public readonly long archiveDataThresholdTicks;
+
+        // TODO: add regex or other check for hangfire compatible cronjob syntax
+        [TraitAttribute("clb_runner_interval", "base_config.clb_runner_interval")]
+        [TraitAttributeValueConstraintTextLength(1, -1)]
+        public readonly string clbRunnerInterval;
+
+        [TraitAttribute("marked_for_deletion_runner_interval", "base_config.marked_for_deletion_runner_interval")]
+        [TraitAttributeValueConstraintTextLength(1, -1)]
+        public readonly string markedForDeletionRunnerInterval;
+
+        [TraitAttribute("external_id_manager_runner_interval", "base_config.external_id_manager_runner_interval")]
+        [TraitAttributeValueConstraintTextLength(1, -1)]
+        public readonly string externalIDManagerRunnerInterval;
+
+        [TraitAttribute("archive_old_data_runner_interval", "base_config.archive_old_data_runner_interval")]
+        [TraitAttributeValueConstraintTextLength(1, -1)]
+        public readonly string archiveOldDataRunnerInterval;
+
+        [TraitAttribute("name", "__name", optional: true)]
+        [TraitAttributeValueConstraintTextLength(1, -1)]
+        public readonly string Name;
 
         [JsonProperty(Required = Required.Always)]
-        public TimeSpan ArchiveDataThreshold => archiveDataThreshold;
+        public TimeSpan ArchiveDataThreshold { get; }
         [JsonProperty(Required = Required.Always)]
         public string CLBRunnerInterval => clbRunnerInterval;
         [JsonProperty(Required = Required.Always)]
@@ -33,13 +51,26 @@ namespace Omnikeeper.Base.Entity.Config
             MissingMemberHandling = MissingMemberHandling.Error
         });
 
+        public BaseConfigurationV2()
+        {
+            this.archiveDataThresholdTicks = 0L;
+            this.ArchiveDataThreshold = TimeSpan.FromTicks(archiveDataThresholdTicks);
+            this.clbRunnerInterval = "";
+            this.markedForDeletionRunnerInterval = "";
+            this.externalIDManagerRunnerInterval = "";
+            this.archiveOldDataRunnerInterval = "";
+            this.Name = "";
+        }
+
         public BaseConfigurationV2(TimeSpan archiveDataThreshold, string clbRunnerInterval, string markedForDeletionRunnerInterval, string externalIDManagerRunnerInterval, string archiveOldDataRunnerInterval)
         {
-            this.archiveDataThreshold = archiveDataThreshold;
+            this.archiveDataThresholdTicks = archiveDataThreshold.Ticks;
+            this.ArchiveDataThreshold = archiveDataThreshold;
             this.clbRunnerInterval = clbRunnerInterval;
             this.markedForDeletionRunnerInterval = markedForDeletionRunnerInterval;
             this.externalIDManagerRunnerInterval = externalIDManagerRunnerInterval;
             this.archiveOldDataRunnerInterval = archiveOldDataRunnerInterval;
+            this.Name = "Base-Configuration";
         }
     }
 }
