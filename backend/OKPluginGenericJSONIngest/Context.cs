@@ -2,21 +2,44 @@
 using OKPluginGenericJSONIngest.Extract;
 using OKPluginGenericJSONIngest.Load;
 using OKPluginGenericJSONIngest.Transform;
+using OKPluginGenericJSONIngest.Transform.JMESPath;
+using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Utils;
 using System;
 using System.Text.RegularExpressions;
 
 namespace OKPluginGenericJSONIngest
 {
-    public class Context
+    [TraitEntity("__meta.config.gji_context", TraitOriginType.Plugin)]
+    public class Context : TraitEntity
     {
+        [TraitAttribute("id", "gji_context.id")]
+        [TraitAttributeValueConstraintTextLength(1, -1)]
+        [TraitAttributeValueConstraintTextRegex(ContextIDRegexString, ContextIDRegexOptions)]
+        [TraitEntityID]
         public readonly string ID;
-        [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
+
+        [TraitAttribute("extract_config", "gji_context.extract_config", isJSONSerialized: true)]
         public readonly IExtractConfig ExtractConfig;
-        [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
+
+        [TraitAttribute("transform_config", "gji_context.transform_config", isJSONSerialized: true)]
         public readonly ITransformConfig TransformConfig;
-        [JsonProperty(TypeNameHandling = TypeNameHandling.Objects)]
+
+        [TraitAttribute("load_config", "gji_context.load_config", isJSONSerialized: true)]
         public readonly ILoadConfig LoadConfig;
+
+        [TraitAttribute("name", "__name", optional: true)]
+        [TraitAttributeValueConstraintTextLength(1, -1)]
+        public readonly string Name;
+
+        public Context()
+        {
+            ID = "";
+            ExtractConfig = new ExtractConfigPassiveRESTFiles();
+            TransformConfig = new TransformConfigJMESPath("");
+            LoadConfig = new LoadConfig(new string[0], "");
+            Name = "";
+        }
 
         public Context(string id, IExtractConfig extractConfig, ITransformConfig transformConfig, ILoadConfig loadConfig)
         {
@@ -24,30 +47,11 @@ namespace OKPluginGenericJSONIngest
             ExtractConfig = extractConfig;
             TransformConfig = transformConfig;
             LoadConfig = loadConfig;
+            Name = $"GridView-Context {ID}";
         }
 
-        public static MyJSONSerializer<IExtractConfig> ExtractConfigSerializer = new MyJSONSerializer<IExtractConfig>(new JsonSerializerSettings()
-        {
-            TypeNameHandling = TypeNameHandling.Objects
-        });
-        public static MyJSONSerializer<ITransformConfig> TransformConfigSerializer = new MyJSONSerializer<ITransformConfig>(new JsonSerializerSettings()
-        {
-            TypeNameHandling = TypeNameHandling.Objects
-        });
-        public static MyJSONSerializer<ILoadConfig> LoadConfigSerializer = new MyJSONSerializer<ILoadConfig>(new JsonSerializerSettings()
-        {
-            TypeNameHandling = TypeNameHandling.Objects
-        });
-
-        public static Regex ContextIDRegex = new Regex("^[a-z0-9_]+$");
-        public static void ValidateContextIDThrow(string candidateID)
-        {
-            if (!ValidateContextID(candidateID))
-                throw new Exception($"Invalid context ID \"{candidateID}\"");
-        }
-        public static bool ValidateContextID(string candidateID)
-        {
-            return ContextIDRegex.IsMatch(candidateID);
-        }
+        public const string ContextIDRegexString = "^[a-z0-9_]+$";
+        public const RegexOptions ContextIDRegexOptions = RegexOptions.None;
+        public static Regex ContextIDRegex = new Regex(ContextIDRegexString, ContextIDRegexOptions);
     }
 }

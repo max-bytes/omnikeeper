@@ -1,4 +1,6 @@
 ﻿using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Entity.Config;
+using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
@@ -17,26 +19,14 @@ namespace Omnikeeper.Base.Model
             )
         });
 
-        // TODO: move to plugin, once that exists
-        public static readonly RecursiveTrait GridviewContext = new RecursiveTrait("__meta.config.gridview_context", new TraitOriginV1(TraitOriginType.Core),
-            new List<TraitAttribute>() {
-                new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("gridview_context.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null), new CIAttributeValueConstraintTextRegex(IDValidations.GridViewContextIDRegex))),
-                new TraitAttribute("config", CIAttributeTemplate.BuildFromParams("gridview_context.config", AttributeValueType.JSON, false)),
-            },
-            new List<TraitAttribute>()
-            {
-                new TraitAttribute("speaking_name", CIAttributeTemplate.BuildFromParams("gridview_context.speaking_name", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-                new TraitAttribute("description", CIAttributeTemplate.BuildFromParams("gridview_context.description", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-                new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
-            }
-        );
-        public static readonly GenericTrait GridviewContextFlattened = RecursiveTraitService.FlattenSingleRecursiveTrait(GridviewContext);
-
         public static readonly IEnumerable<RecursiveTrait> RecursiveTraits = new List<RecursiveTrait>() { 
             Named,
-            BaseConfigurationModel.Trait,
-            RecursiveDataTraitModel.Trait, PredicateModel.Predicate, AuthRoleModel.AuthRole, GeneratorModel.Generator,
-            GridviewContext,
+            TraitBuilderFromClass.Class2RecursiveTrait<BaseConfigurationV2>(),
+            TraitBuilderFromClass.Class2RecursiveTrait<RecursiveTrait>(),
+            TraitBuilderFromClass.Class2RecursiveTrait<Predicate>(),
+            TraitBuilderFromClass.Class2RecursiveTrait<AuthRole>(),
+            TraitBuilderFromClass.Class2RecursiveTrait<GeneratorV1>(),
+            //TraitBuilderFromClass.Class2RecursiveTrait<GridViewContext>(), // TODO: add?
         };
     }
 

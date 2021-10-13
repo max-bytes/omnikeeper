@@ -34,13 +34,13 @@ namespace Omnikeeper.Controllers.Ingest
         private readonly ILayerModel layerModel;
         private readonly ILogger<PassiveFilesController> logger;
         private readonly ICurrentUserService currentUserService;
-        private readonly IContextModel contextModel;
+        private readonly GenericTraitEntityModel<Context, string> contextModel;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly ILayerBasedAuthorizationService authorizationService;
 
         public PassiveFilesController(IngestDataService ingestDataService, ILayerModel layerModel, ICurrentUserService currentUserService,
-            IContextModel contextModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
+            GenericTraitEntityModel<Context, string> contextModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel,
             ILayerBasedAuthorizationService authorizationService, ILogger<PassiveFilesController> logger)
         {
             this.ingestDataService = ingestDataService;
@@ -63,7 +63,7 @@ namespace Omnikeeper.Controllers.Ingest
                 using var mc = modelContextBuilder.BuildImmediate();
 
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(mc);
-                var ctx = await contextModel.GetContext(context, metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), mc);
+                var (ctx, _) = await contextModel.GetSingleByDataID(context, metaConfiguration.ConfigLayerset, mc, TimeThreshold.BuildLatest());
                 if (ctx == null)
                     return BadRequest($"Context with name \"{context}\" not found");
                 if (!(ctx.ExtractConfig is ExtractConfigPassiveRESTFiles f))

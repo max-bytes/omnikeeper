@@ -12,6 +12,7 @@ using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Omnikeeper.Controllers.Ingest
@@ -23,14 +24,14 @@ namespace Omnikeeper.Controllers.Ingest
     [ApiExplorerSettings(GroupName = "OKPluginGenericJSONIngest")]
     public class ManageContextController : ControllerBase
     {
-        private readonly IContextModel contextModel;
+        private readonly GenericTraitEntityModel<Context, string> contextModel;
         private readonly ICurrentUserService currentUserService;
         private readonly IManagementAuthorizationService managementAuthorizationService;
         private readonly IChangesetModel changesetModel;
         private readonly IModelContextBuilder modelContextBuilder;
         private readonly IMetaConfigurationModel metaConfigurationModel;
 
-        public ManageContextController(IContextModel contextModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService,
+        public ManageContextController(GenericTraitEntityModel<Context, string> contextModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService,
             IChangesetModel changesetModel, IModelContextBuilder modelContextBuilder, IMetaConfigurationModel metaConfigurationModel)
         {
             this.contextModel = contextModel;
@@ -51,7 +52,7 @@ namespace Omnikeeper.Controllers.Ingest
             if (!managementAuthorizationService.CanReadManagement(user, metaConfiguration, out var message))
                 return Forbid($"User \"{user.Username}\" does not have permission to read contexts: {message}");
 
-            var contexts = await contextModel.GetContexts(metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
+            var contexts = await contextModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
             return Ok(contexts.Values);
         }
 
@@ -65,7 +66,7 @@ namespace Omnikeeper.Controllers.Ingest
             if (!managementAuthorizationService.CanReadManagement(user, metaConfiguration, out var message))
                 return Forbid($"User \"{user.Username}\" does not have permission to read contexts: {message}");
 
-            var context = await contextModel.GetContext(id, metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
+            var (context, _) = await contextModel.GetSingleByDataID(id, metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
             if (context != null)
                 return Ok(context);
             else
@@ -101,9 +102,8 @@ namespace Omnikeeper.Controllers.Ingest
                 }
                 var changesetProxy = new ChangesetProxy(user.InDatabase, TimeThreshold.BuildLatest(), changesetModel);
                 var mc = modelContextBuilder.BuildDeferred();
-                var (context, _) = await contextModel.InsertOrUpdate(contextCandidate.ID, 
-                    contextCandidate.ExtractConfig, contextCandidate.TransformConfig, contextCandidate.LoadConfig, 
-                    metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
+                var updated = new Context(contextCandidate.ID, contextCandidate.ExtractConfig, contextCandidate.TransformConfig, contextCandidate.LoadConfig);
+                var (context, _) = await contextModel.InsertOrUpdate(updated, metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                     new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual), 
                     changesetProxy, mc);
                 mc.Commit();

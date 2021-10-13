@@ -1,10 +1,11 @@
 ﻿using MediatR;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
-using Omnikeeper.GridView.Model;
+using Omnikeeper.GridView.Entity;
 using Omnikeeper.GridView.Response;
 using System;
 using System.Threading;
@@ -26,13 +27,13 @@ namespace Omnikeeper.GridView.Queries
 
         public class GetContextQueryHandler : IRequestHandler<Query, (GetContextResponse?, Exception?)>
         {
-            private readonly IGridViewContextModel gridViewContextModel;
+            private readonly GenericTraitEntityModel<GridViewContext, string> gridViewContextModel;
             private readonly IModelContextBuilder modelContextBuilder;
             private readonly IMetaConfigurationModel metaConfigurationModel;
             private readonly ICurrentUserService currentUserService;
             private readonly IManagementAuthorizationService managementAuthorizationService;
 
-            public GetContextQueryHandler(IGridViewContextModel gridViewContextModel, IModelContextBuilder modelContextBuilder,
+            public GetContextQueryHandler(GenericTraitEntityModel<GridViewContext, string> gridViewContextModel, IModelContextBuilder modelContextBuilder,
                 IMetaConfigurationModel metaConfigurationModel, ICurrentUserService currentUserService, IManagementAuthorizationService managementAuthorizationService)
             {
                 this.gridViewContextModel = gridViewContextModel;
@@ -53,8 +54,8 @@ namespace Omnikeeper.GridView.Queries
                     if (!managementAuthorizationService.CanReadManagement(user, metaConfiguration, out var message))
                         return (null, new Exception($"User \"{user.Username}\" does not have permission to read gridview context: {message}"));
 
-                    var context = await gridViewContextModel.GetFullContext(request.ContextName, metaConfiguration.ConfigLayerset, TimeThreshold.BuildLatest(), trans);
-                    var result = new GetContextResponse(context);
+                    var context = await gridViewContextModel.GetSingleByDataID(request.ContextName, metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
+                    var result = new GetContextResponse(context.entity);
 
                     return (result, null);
                 }

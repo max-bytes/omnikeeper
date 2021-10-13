@@ -41,11 +41,11 @@ namespace Tasks.DBInit
             var ciModel = new CIModel(attributeModel, new CIIDModel());
             var relationModel = new RelationModel(new BaseRelationModel(partitionModel));
             var effectiveTraitModel = new EffectiveTraitModel(relationModel, NullLogger<EffectiveTraitModel>.Instance);
-            var predicateModel = new PredicateModel(effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel);
+            var predicateModel = new GenericTraitEntityModel<Predicate, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var userModel = new UserInDatabaseModel();
             var changesetModel = new ChangesetModel(userModel);
             var layerModel = new LayerModel();
-            var traitModel = new RecursiveDataTraitModel(effectiveTraitModel, ciModel, baseAttributeModel, baseRelationModel);
+            var traitModel = new GenericTraitEntityModel<RecursiveTrait, string>(effectiveTraitModel, ciModel, attributeModel, relationModel);
             var lbas = new Mock<ILayerBasedAuthorizationService>();
             lbas.Setup(x => x.CanUserWriteToLayer(It.IsAny<AuthenticatedUser>(), It.IsAny<Layer>())).Returns(true);
             var modelContextBuilder = new ModelContextBuilder(null, conn, NullLogger<IModelContext>.Instance, new ProtoBufDataSerializer());
@@ -64,7 +64,7 @@ namespace Tasks.DBInit
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var rt in DefaultTraits.Get())
                 {
-                    await traitModel.InsertOrUpdate(rt.ID, rt.RequiredAttributes, rt.OptionalAttributes, rt.RequiredRelations, rt.OptionalRelations, rt.RequiredTraits, 
+                    await traitModel.InsertOrUpdate(rt, 
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                         new DataOriginV1(DataOriginType.Manual), changeset, mc);
                 }
@@ -209,7 +209,7 @@ namespace Tasks.DBInit
                 var changeset = new ChangesetProxy(user, TimeThreshold.BuildLatest(), changesetModel);
                 foreach (var predicate in new Predicate[] { predicateRunsOn }.Concat(monitoringPredicates).Concat(baseDataPredicates))
                 {
-                    await predicateModel.InsertOrUpdate(predicate.ID, predicate.WordingFrom, predicate.WordingTo,
+                    await predicateModel.InsertOrUpdate(new Predicate(predicate.ID, predicate.WordingFrom, predicate.WordingTo),
                         metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                         new DataOriginV1(DataOriginType.Manual), changeset, trans);
                 }

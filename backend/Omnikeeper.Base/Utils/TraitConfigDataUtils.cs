@@ -1,13 +1,9 @@
 ﻿using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
-using Omnikeeper.Base.Entity.DataOrigin;
-using Omnikeeper.Base.Model;
-using Omnikeeper.Base.Utils.ModelContext;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Utils
 {

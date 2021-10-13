@@ -14,11 +14,11 @@ namespace Omnikeeper.Model
 {
     public class TraitsProvider : ITraitsProvider
     {
-        private readonly IRecursiveDataTraitModel dataTraitModel;
+        private readonly GenericTraitEntityModel<RecursiveTrait, string> dataTraitModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IEnumerable<IPluginRegistration> loadedPlugins;
 
-        public TraitsProvider(IRecursiveDataTraitModel dataTraitModel, IMetaConfigurationModel metaConfigurationModel, IEnumerable<IPluginRegistration> loadedPlugins)
+        public TraitsProvider(GenericTraitEntityModel<RecursiveTrait, string> dataTraitModel, IMetaConfigurationModel metaConfigurationModel, IEnumerable<IPluginRegistration> loadedPlugins)
         {
             this.dataTraitModel = dataTraitModel;
             this.metaConfigurationModel = metaConfigurationModel;
@@ -35,10 +35,10 @@ namespace Omnikeeper.Model
 
             // TODO, NOTE: this merges non-DB trait sets, that are not historic and DB traits sets that are... what should we do here?
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-            var configuredRecursiveDataTraitSet = await dataTraitModel.GetRecursiveTraits(metaConfiguration.ConfigLayerset, trans, timeThreshold);
+            var configuredRecursiveDataTraitSet = await dataTraitModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, timeThreshold);
             var allTraitSets = new Dictionary<string, IEnumerable<RecursiveTrait>>() {
                 { "core", CoreTraits.RecursiveTraits },
-                { "data", configuredRecursiveDataTraitSet }
+                { "data", configuredRecursiveDataTraitSet.Values }
             };
             foreach (var kv in pluginTraitSets)
                 allTraitSets.Add(kv.Key, kv.Value);

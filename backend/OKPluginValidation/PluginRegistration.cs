@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using OKPluginValidation.Validation;
 using Omnikeeper.Base.Entity;
+using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Plugins;
 using Omnikeeper.Validation.Rules;
 using System.Collections.Generic;
@@ -12,16 +13,16 @@ namespace OKPluginValidation
     {
         public override void RegisterServices(IServiceCollection sc)
         {
-            sc.AddSingleton<IValidationIssueModel, ValidationIssueModel>();
-            sc.AddSingleton<IValidationModel, ValidationModel>();
+            sc.AddSingleton<GenericTraitEntityModel<ValidationIssue, string>>();
+            sc.AddSingleton<GenericTraitEntityModel<Validation.Validation, string>>();
             sc.AddSingleton<IValidationRule, ValidationRuleNamedCI>();
             sc.AddScoped<IValidationEngine, ValidationEngine>();
             sc.AddScoped<ValidationEngineRunner>();
         }
 
         public override IEnumerable<RecursiveTrait> DefinedTraits => new RecursiveTrait[] {
-            ValidationTraits.Validation,
-            ValidationTraits.ValidationIssue,
+            TraitBuilderFromClass.Class2RecursiveTrait<Validation.Validation>(),
+            TraitBuilderFromClass.Class2RecursiveTrait<ValidationIssue>(),
         };
 
         public override void RegisterHangfireJobRunners()

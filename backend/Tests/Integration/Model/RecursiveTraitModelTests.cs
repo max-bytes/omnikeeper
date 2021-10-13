@@ -8,6 +8,7 @@ using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Utils;
 using Omnikeeper.Base.Utils.ModelContext;
+using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,70 +16,73 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {
-    class RecursiveTraitModelTests : DIServicedTestBase
+    class RecursiveTraitModelTests : GenericTraitEntityModelTestBase
     {
-        public RecursiveTraitModelTests() : base(true)
+        [Test]
+        public void TestTraitGeneration()
         {
+            var et = TraitBuilderFromClass.Class2RecursiveTrait<RecursiveTrait>();
+
+            et.Should().BeEquivalentTo(
+                new RecursiveTrait("__meta.config.trait", new TraitOriginV1(TraitOriginType.Core),
+                    new List<TraitAttribute>() {
+                        new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("trait.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null), new CIAttributeValueConstraintTextRegex(IDValidations.TraitIDRegex))),
+                        new TraitAttribute("required_attributes", CIAttributeTemplate.BuildFromParams("trait.required_attributes", AttributeValueType.JSON, true, new CIAttributeValueConstraintArrayLength(1, null)))
+                    },
+                    new List<TraitAttribute>()
+                    {
+                        new TraitAttribute("optional_attributes", CIAttributeTemplate.BuildFromParams("trait.optional_attributes", AttributeValueType.JSON, true)),
+                        new TraitAttribute("required_relations", CIAttributeTemplate.BuildFromParams("trait.required_relations", AttributeValueType.JSON, true)),
+                        new TraitAttribute("optional_relations", CIAttributeTemplate.BuildFromParams("trait.optional_relations", AttributeValueType.JSON, true)),
+                        new TraitAttribute("required_traits", CIAttributeTemplate.BuildFromParams("trait.required_traits", AttributeValueType.Text, true)),
+                        new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                    }
+                )
+            );
         }
 
         [Test]
-        public async Task TestBasic()
+        public async Task TestGenericOperations()
         {
-            var userModel = ServiceProvider.GetRequiredService<IUserInDatabaseModel>();
-            var layerOKConfig = await ServiceProvider.GetRequiredService<ILayerModel>().UpsertLayer("__okconfig", ModelContextBuilder.BuildImmediate());
-            var userInDatabase = await DBSetup.SetupUser(userModel, ModelContextBuilder.BuildImmediate());
-            var user = new AuthenticatedUser(userInDatabase,
-                new HashSet<string>() {
-                    PermissionUtils.GetLayerReadPermission(layerOKConfig), PermissionUtils.GetLayerWritePermission(layerOKConfig),
-                });
-            currentUserServiceMock.Setup(_ => _.GetCurrentUser(It.IsAny<IModelContext>())).ReturnsAsync(user);
-
-            var metaConfigurationModel = ServiceProvider.GetRequiredService<IMetaConfigurationModel>();
-
-            var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(ModelContextBuilder.BuildImmediate());
-
-            var recursiveTraitModel = ServiceProvider.GetRequiredService<IRecursiveDataTraitModel>();
-
-            var rt1 = await recursiveTraitModel.GetRecursiveTraits(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            Assert.IsEmpty(rt1);
-
-            var changesetProxy1 = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
-
-            RecursiveTrait trait;
-            using (var trans = ModelContextBuilder.BuildDeferred())
-            {
-                bool changed;
-                (trait, changed) = await recursiveTraitModel.InsertOrUpdate("test_trait",
-                    new List<TraitAttribute>() { new TraitAttribute("test_ta", CIAttributeTemplate.BuildFromParams("test_a", Omnikeeper.Entity.AttributeValues.AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))) },
-                    new List<TraitAttribute>() { },
+            await TestGenericModelOperations(
+                () => new RecursiveTrait("trait1", new TraitOriginV1(TraitOriginType.Data),
+                    new List<TraitAttribute>() { new TraitAttribute("test_ta1", CIAttributeTemplate.BuildFromParams("test_a", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))) },
+                    new List<TraitAttribute>() { new TraitAttribute("test_tb1", CIAttributeTemplate.BuildFromParams("test_b", AttributeValueType.JSON, true, CIAttributeValueConstraintTextLength.Build(1, null))) },
                     new List<TraitRelation>() { },
                     new List<TraitRelation>() { },
-                    new List<string>() { },
-                    metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
-                    new DataOriginV1(DataOriginType.Manual), changesetProxy1, trans);
+                    new List<string>() { "dependent_trait1" }
+                    ),
+                () => new RecursiveTrait("trait2", new TraitOriginV1(TraitOriginType.Data),
+                    new List<TraitAttribute>() { new TraitAttribute("test_ta2", CIAttributeTemplate.BuildFromParams("test_a", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))) },
+                    new List<TraitAttribute>() { new TraitAttribute("test_tb2", CIAttributeTemplate.BuildFromParams("test_b", AttributeValueType.JSON, true, CIAttributeValueConstraintTextLength.Build(1, null))) },
+                    new List<TraitRelation>() { },
+                    new List<TraitRelation>() { },
+                    new List<string>() { "dependent_trait2" }
+                    ),
+                    "trait1", "trait2", "non_existant_id"
+                );
+        }
 
-                Assert.IsNotNull(trait);
-                Assert.IsTrue(changed);
-
-                trans.Commit();
-            }
-
-            var rt2 = await recursiveTraitModel.GetRecursiveTraits(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            rt2.Should().BeEquivalentTo(new List<RecursiveTrait>() { trait }, options => options.WithStrictOrdering());
-
-            var changesetProxy2 = new ChangesetProxy(userInDatabase, TimeThreshold.BuildLatest(), ServiceProvider.GetRequiredService<IChangesetModel>());
-
-            using (var trans = ModelContextBuilder.BuildDeferred())
-            {
-                bool deleted = await recursiveTraitModel.TryToDelete(trait.ID,
-                    metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer, 
-                    new DataOriginV1(DataOriginType.Manual), changesetProxy2, trans);
-                Assert.IsTrue(deleted);
-                trans.Commit();
-            }
-
-            var rt3 = await recursiveTraitModel.GetRecursiveTraits(metaConfiguration.ConfigLayerset, ModelContextBuilder.BuildImmediate(), TimeThreshold.BuildLatest());
-            Assert.IsEmpty(rt3);
+        [Test]
+        public async Task TestGetByDataID()
+        {
+            await TestGenericModelGetByDataID(
+                () => new RecursiveTrait("trait1", new TraitOriginV1(TraitOriginType.Data),
+                    new List<TraitAttribute>() { new TraitAttribute("test_ta1", CIAttributeTemplate.BuildFromParams("test_a", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))) },
+                    new List<TraitAttribute>() { new TraitAttribute("test_tb1", CIAttributeTemplate.BuildFromParams("test_b", AttributeValueType.JSON, true, CIAttributeValueConstraintTextLength.Build(1, null))) },
+                    new List<TraitRelation>() { },
+                    new List<TraitRelation>() { },
+                    new List<string>() { "dependent_trait1" }
+                    ),
+                () => new RecursiveTrait("trait2", new TraitOriginV1(TraitOriginType.Data),
+                    new List<TraitAttribute>() { new TraitAttribute("test_ta2", CIAttributeTemplate.BuildFromParams("test_a", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))) },
+                    new List<TraitAttribute>() { new TraitAttribute("test_tb2", CIAttributeTemplate.BuildFromParams("test_b", AttributeValueType.JSON, true, CIAttributeValueConstraintTextLength.Build(1, null))) },
+                    new List<TraitRelation>() { },
+                    new List<TraitRelation>() { },
+                    new List<string>() { "dependent_trait2" }
+                    ),
+                "trait1", "trait2", "non_existant_id"
+            );
         }
     }
 }

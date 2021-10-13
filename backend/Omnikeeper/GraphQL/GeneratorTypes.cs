@@ -9,7 +9,7 @@ namespace Omnikeeper.GraphQL
         {
             Field("id", x => x.ID);
             Field("attributeName", x => x.AttributeName);
-            Field("attributeValueTemplate", x => x.Value.TemplateStr);
+            Field("attributeValueTemplate", x => x.TemplateString);
         }
     }
 }
