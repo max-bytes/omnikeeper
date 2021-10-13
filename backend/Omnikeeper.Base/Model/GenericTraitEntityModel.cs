@@ -23,7 +23,7 @@ namespace Omnikeeper.Base.Model
         protected readonly IAttributeModel attributeModel;
         protected readonly IRelationModel relationModel;
         private readonly GenericTrait trait;
-
+        private readonly HashSet<string> relevantAttributesForTrait;
         private readonly IEnumerable<TraitAttributeFieldInfo> attributeFieldInfos;
         private readonly IEnumerable<TraitRelationFieldInfo> relationFieldInfos;
 
@@ -45,6 +45,7 @@ namespace Omnikeeper.Base.Model
             this.relationModel = relationModel;
 
             trait = RecursiveTraitService.FlattenSingleRecursiveTrait(TraitBuilderFromClass.Class2RecursiveTrait<T>());
+            relevantAttributesForTrait = trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Concat(trait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet();
 
             (_, attributeFieldInfos, relationFieldInfos) = TraitBuilderFromClass.ExtractFieldInfos<T>();
 
@@ -53,7 +54,7 @@ namespace Omnikeeper.Base.Model
 
         private async Task<(T entity, Guid ciid)> GetSingleByCIID(Guid ciid, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
-            var ci = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(ciid), layerSet, false, AllAttributeSelection.Instance, trans, timeThreshold)).FirstOrDefault(); // TODO: reduce attribute via selection, only fetch trait relevant
+            var ci = (await ciModel.GetMergedCIs(SpecificCIIDsSelection.Build(ciid), layerSet, false, NamedAttributesSelection.Build(relevantAttributesForTrait), trans, timeThreshold)).FirstOrDefault();
             if (ci == null) return default;
             var ciWithTrait = await effectiveTraitModel.GetEffectiveTraitForCI(ci, trait, layerSet, trans, timeThreshold);
             if (ciWithTrait == null) return default;
@@ -83,10 +84,23 @@ namespace Omnikeeper.Base.Model
 
         public async Task<IDictionary<ID, T>> GetAllByDataID(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
+            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, NamedAttributesSelection.Build(relevantAttributesForTrait), trans, timeThreshold);
+            return await GetAllByDataID(cis, layerSet, trans, timeThreshold);
+        }
+
+        public async Task<IDictionary<ID, T>> GetAllByDataID(IEnumerable<MergedCI> withinCIs, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        {
             var (idField, idAttributeName, attributeValueType) = TraitBuilderFromClass.ExtractIDAttributeInfos<T>();
 
-            var all = await GetAll(layerSet, trans, timeThreshold);
+            var cisWithTrait = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, withinCIs, layerSet, trans, timeThreshold);
+            var all = new List<(T entity, Guid ciid)>();
+            foreach (var (ciid, et) in cisWithTrait.Select(kv => (kv.Key, kv.Value)))
+            {
+                var dc = TraitBuilderFromClass.EffectiveTrait2Object<T>(et, DefaultSerializer);
+                all.Add((dc, ciid));
+            }
             all.OrderBy(dc => dc.ciid); // we order by GUID to stay consistent even when multiple CIs would match
+
             var ret = new Dictionary<ID, T>();
             foreach (var dc in all)
             {
@@ -101,18 +115,10 @@ namespace Omnikeeper.Base.Model
             return ret;
         }
 
-        private async Task<IEnumerable<(T entity, Guid ciid)>> GetAll(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
-        {
-            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, AllAttributeSelection.Instance, trans, timeThreshold); // TODO: reduce attribute via selection, only fetch trait relevant
-            var cisWithTrait = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, cis, layerSet, trans, timeThreshold);
-            var ret = new List<(T entity, Guid ciid)>();
-            foreach (var (ciid, et) in cisWithTrait.Select(kv => (kv.Key, kv.Value)))
-            {
-                var dc = TraitBuilderFromClass.EffectiveTrait2Object<T>(et, DefaultSerializer);
-                ret.Add((dc, ciid));
-            }
-            return ret;
-        }
+        //private async Task<IEnumerable<(T entity, Guid ciid)>> GetAll(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        //{
+        //    return ret;
+        //}
 
         public async Task<(T dc, bool changed)> InsertOrUpdate(T t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, ChangesetProxy changesetProxy, IModelContext trans)
         {
