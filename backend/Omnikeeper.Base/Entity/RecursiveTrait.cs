@@ -127,16 +127,5 @@ namespace Omnikeeper.Base.Entity
             OptionalRelations = optionalRelations?.ToArray() ?? new TraitRelation[0];
             RequiredTraits = requiredTraits?.ToArray() ?? new string[0];
         }
-
-        // TODO: still needed?
-        public static readonly MyJSONSerializer<RecursiveTrait> Serializer = new MyJSONSerializer<RecursiveTrait>(() =>
-        {
-            var s = new JsonSerializerSettings()
-            {
-                TypeNameHandling = TypeNameHandling.Objects
-            };
-            s.Converters.Add(new StringEnumConverter());
-            return s;
-        });
     }
 }
