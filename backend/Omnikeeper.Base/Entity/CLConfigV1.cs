@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using Omnikeeper.Base.Utils;
 using ProtoBuf;
 using System;
 
@@ -25,6 +26,7 @@ namespace Omnikeeper.Base.Entity
 
         [TraitAttribute("id", "cl_config.id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
+        [TraitAttributeValueConstraintTextRegex(IDValidations.CLConfigIDRegexString, IDValidations.CLConfigIDRegexOptions)]
         [TraitEntityID] 
         public readonly string ID;
 

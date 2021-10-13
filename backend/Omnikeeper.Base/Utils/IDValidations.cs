@@ -16,8 +16,13 @@ namespace Omnikeeper.Base.Utils
         public const RegexOptions TraitIDRegexOptions = RegexOptions.None;
         public static Regex TraitIDRegex = new Regex(TraitIDRegexString, TraitIDRegexOptions);
 
-        private static Regex GeneratorIDRegex = new Regex("^[a-z0-9_.]+$");
-        private static Regex CLConfigIDRegex = new Regex("^[a-z0-9_.]+$");
+        public const string GeneratorIDRegexString = "^[a-z0-9_.]+$";
+        public const RegexOptions GeneratorIDRegexOptions = RegexOptions.None;
+        //private static Regex GeneratorIDRegex = new Regex(GeneratorIDRegexString, GeneratorIDRegexOptions);
+
+        public const string CLConfigIDRegexString = "^[a-z0-9_.]+$";
+        public const RegexOptions CLConfigIDRegexOptions = RegexOptions.None;
+        //private static Regex CLConfigIDRegex = new Regex(CLConfigIDRegexString, CLConfigIDRegexOptions);
 
 
         public const string GridViewContextIDRegexString = "^[a-z0-9_]+$";
@@ -32,16 +37,6 @@ namespace Omnikeeper.Base.Utils
         public static bool ValidatePredicateID(string candidateID)
         {
             return PredicateIDRegex.IsMatch(candidateID);
-        }
-
-        public static bool ValidateGeneratorID(string candidateID)
-        {
-            return GeneratorIDRegex.IsMatch(candidateID);
-        }
-
-        public static bool ValidateCLConfigID(string candidateID)
-        {
-            return CLConfigIDRegex.IsMatch(candidateID);
         }
 
         public static void ValidateLayerIDThrow(string candidateID)
@@ -59,18 +54,6 @@ namespace Omnikeeper.Base.Utils
         {
             if (!ValidatePredicateID(candidateID))
                 throw new Exception($"Invalid predicate ID \"{candidateID}\"");
-        }
-
-        public static void ValidateGeneratorIDThrow(string candidateID)
-        {
-            if (!ValidateGeneratorID(candidateID))
-                throw new Exception($"Invalid generator ID \"{candidateID}\"");
-        }
-
-        public static void ValidateCLConfigIDThrow(string candidateID)
-        {
-            if (!ValidateCLConfigID(candidateID))
-                throw new Exception($"Invalid CL Config ID \"{candidateID}\"");
         }
     }
 }

@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Model;
+using Omnikeeper.Base.Utils;
 using Omnikeeper.Entity.AttributeValues;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ namespace Tests.Integration.Model
             et.Should().BeEquivalentTo(
                 new RecursiveTrait("__meta.config.cl_config", new TraitOriginV1(TraitOriginType.Core),
                     new List<TraitAttribute>() {
-                        new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("cl_config.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                        new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("cl_config.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null), new CIAttributeValueConstraintTextRegex(IDValidations.CLConfigIDRegexString, IDValidations.CLConfigIDRegexOptions))),
                         new TraitAttribute("cl_brain_reference", CIAttributeTemplate.BuildFromParams("cl_config.cl_brain_reference", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                         new TraitAttribute("cl_brain_config", CIAttributeTemplate.BuildFromParams("cl_config.cl_brain_config", AttributeValueType.JSON, false)),
                     },

@@ -31,6 +31,7 @@ namespace Omnikeeper.Base.Generator
 
         [TraitAttribute("id", "generator.id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
+        [TraitAttributeValueConstraintTextRegex(IDValidations.GeneratorIDRegexString, IDValidations.GeneratorIDRegexOptions)]
         [TraitEntityID]
         public readonly string ID;
 
