@@ -10,17 +10,20 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Model
 {
-    public abstract class SingletonTraitDataConfigBaseModel<T>
+    // TODO: refactor to be more like GenericTraitEntityModel
+    public abstract class SingletonTraitDataConfigBaseModel<T> where T : TraitEntity, new()
     {
         private readonly IEffectiveTraitModel effectiveTraitModel;
         protected readonly ICIModel ciModel;
         protected readonly IBaseAttributeModel baseAttributeModel;
         protected readonly IBaseRelationModel baseRelationModel;
         private readonly GenericTrait trait;
+        private readonly HashSet<string> relevantAttributesForTrait;
 
         public SingletonTraitDataConfigBaseModel(GenericTrait trait, IEffectiveTraitModel effectiveTraitModel, ICIModel ciModel, IBaseAttributeModel baseAttributeModel, IBaseRelationModel baseRelationModel)
         {
             this.trait = trait;
+            relevantAttributesForTrait = trait.RequiredAttributes.Select(ra => ra.AttributeTemplate.Name).Concat(trait.OptionalAttributes.Select(oa => oa.AttributeTemplate.Name)).ToHashSet();
             this.effectiveTraitModel = effectiveTraitModel;
             this.ciModel = ciModel;
             this.baseAttributeModel = baseAttributeModel;
@@ -42,23 +45,17 @@ namespace Omnikeeper.Base.Model
 
         public async Task<(Guid, T)> TryToGet(LayerSet layerSet, TimeThreshold timeThreshold, IModelContext trans)
         {
-            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, AllAttributeSelection.Instance, trans, timeThreshold); // TODO: reduce attribute via selection, only fetch trait relevant
+            var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, NamedAttributesSelection.Build(relevantAttributesForTrait), trans, timeThreshold);
             var foundCIs = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, cis, layerSet, trans, timeThreshold);
-
             var sortedCIs = foundCIs.OrderBy(t => t.Key); // we order by GUID to stay consistent even when multiple CIs would match
-
             var foundCI = sortedCIs.FirstOrDefault();
             if (!foundCI.Equals(default(KeyValuePair<Guid, EffectiveTrait>)))
             {
-                var dc = EffectiveTrait2DC(foundCI.Value);
+                var dc = TraitBuilderFromClass.EffectiveTrait2Object<T>(foundCI.Value, null!);
                 return (foundCI.Key, dc);
             }
             return default;
         }
-
-        protected abstract T EffectiveTrait2DC(EffectiveTrait et);
-
-        protected virtual async Task<Guid> CreateNewCI(IModelContext trans) => await ciModel.CreateCI(trans);
 
         protected async Task<(T dc, bool changed)> InsertOrUpdateAttributes(LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans, params (string attributeName, IAttributeValue value)[] attributes)
         {
@@ -70,7 +67,7 @@ namespace Omnikeeper.Base.Model
         {
             var t = await TryToGet(layerSet, changesetProxy.TimeThreshold, trans);
 
-            Guid ciid = (t.Equals(default)) ? await CreateNewCI(trans) : t.Item1;
+            Guid ciid = (t.Equals(default)) ? await ciModel.CreateCI(trans) : t.Item1;
 
             var changed = false;
             foreach (var (attributeName, value) in attributes)

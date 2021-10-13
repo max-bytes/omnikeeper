@@ -41,7 +41,7 @@ namespace Omnikeeper.Base.Entity.Config
         public readonly string Name;
 
         [JsonProperty(Required = Required.Always)]
-        public TimeSpan ArchiveDataThreshold { get; }
+        public TimeSpan ArchiveDataThreshold => TimeSpan.FromTicks(archiveDataThresholdTicks);
         [JsonProperty(Required = Required.Always)]
         public string CLBRunnerInterval => clbRunnerInterval;
         [JsonProperty(Required = Required.Always)]
@@ -60,7 +60,6 @@ namespace Omnikeeper.Base.Entity.Config
         public BaseConfigurationV2()
         {
             this.archiveDataThresholdTicks = 0L;
-            this.ArchiveDataThreshold = TimeSpan.FromTicks(archiveDataThresholdTicks);
             this.clbRunnerInterval = "";
             this.markedForDeletionRunnerInterval = "";
             this.externalIDManagerRunnerInterval = "";
@@ -72,7 +71,6 @@ namespace Omnikeeper.Base.Entity.Config
         public BaseConfigurationV2(TimeSpan archiveDataThreshold, string clbRunnerInterval, string markedForDeletionRunnerInterval, string externalIDManagerRunnerInterval, string archiveOldDataRunnerInterval)
         {
             this.archiveDataThresholdTicks = archiveDataThreshold.Ticks;
-            this.ArchiveDataThreshold = archiveDataThreshold;
             this.clbRunnerInterval = clbRunnerInterval;
             this.markedForDeletionRunnerInterval = markedForDeletionRunnerInterval;
             this.externalIDManagerRunnerInterval = externalIDManagerRunnerInterval;

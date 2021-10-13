@@ -115,11 +115,6 @@ namespace Omnikeeper.Base.Model
             return ret;
         }
 
-        //private async Task<IEnumerable<(T entity, Guid ciid)>> GetAll(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
-        //{
-        //    return ret;
-        //}
-
         public async Task<(T dc, bool changed)> InsertOrUpdate(T t, LayerSet layerSet, string writeLayer, DataOriginV1 dataOrigin, ChangesetProxy changesetProxy, IModelContext trans)
         {
             var (idField, _, _) = TraitBuilderFromClass.ExtractIDAttributeInfos<T>();
@@ -132,8 +127,17 @@ namespace Omnikeeper.Base.Model
 
             var ciid = (current != default) ? current.ciid : await ciModel.CreateCI(trans);
 
-            var changed = false;
+            var changed = await WriteAttributesAndRelations(t, ciid, writeLayer, dataOrigin, changesetProxy, trans);
 
+            var dc = await GetSingleByCIID(ciid, layerSet, trans, changesetProxy.TimeThreshold);
+            if (dc == default)
+                throw new Exception("DC does not conform to trait requirements");
+            return (dc.entity, changed);
+        }
+
+        private async Task<bool> WriteAttributesAndRelations(T t, Guid ciid, string writeLayer, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        {
+            var changed = false;
             foreach (var taFieldInfo in attributeFieldInfos)
             {
                 var entityValue = taFieldInfo.FieldInfo.GetValue(t);
@@ -187,7 +191,8 @@ namespace Omnikeeper.Base.Model
                         throw new Exception(); // invalid type
                     var predicateID = trFieldInfo.TraitRelationAttribute.predicateID;
 
-                    foreach (var otherCIID in otherCIIDs) {
+                    foreach (var otherCIID in otherCIIDs)
+                    {
                         var fromCIID = (trFieldInfo.TraitRelationAttribute.directionForward) ? ciid : otherCIID;
                         var toCIID = (trFieldInfo.TraitRelationAttribute.directionForward) ? otherCIID : ciid;
 
@@ -204,12 +209,8 @@ namespace Omnikeeper.Base.Model
                 }
             }
 
-            var dc = await GetSingleByCIID(ciid, layerSet, trans, changesetProxy.TimeThreshold);
-            if (dc == default)
-                throw new Exception("DC does not conform to trait requirements");
-            return (dc.entity, changed);
+            return changed;
         }
-
 
         public async Task<bool> TryToDelete(ID id, LayerSet layerSet, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
         {
@@ -219,15 +220,23 @@ namespace Omnikeeper.Base.Model
                 return false; // no dc with this ID exists
             }
 
+            await RemoveAttributeAndRelations(id, dc.ciid, writeLayerID, dataOrigin, changesetProxy, trans);
+
+            var dcAfterDeletion = await GetSingleByCIID(dc.ciid, layerSet, trans, changesetProxy.TimeThreshold);
+            return (dcAfterDeletion == default); // return successful if dc does not exist anymore afterwards
+        }
+
+        private async Task RemoveAttributeAndRelations(ID id, Guid ciid, string writeLayerID, DataOriginV1 dataOrigin, IChangesetProxy changesetProxy, IModelContext trans)
+        {
             foreach (var traitAttributeField in attributeFieldInfos)
             {
-                var (_, _) = await attributeModel.RemoveAttribute(traitAttributeField.TraitAttributeAttribute.aName, dc.ciid, writeLayerID, changesetProxy, dataOrigin, trans);
+                var (_, _) = await attributeModel.RemoveAttribute(traitAttributeField.TraitAttributeAttribute.aName, ciid, writeLayerID, changesetProxy, dataOrigin, trans);
             }
 
             if (!relationFieldInfos.IsEmpty())
             {
-                var allRelationsForward = await relationModel.GetRelations(RelationSelectionFrom.Build(dc.ciid), writeLayerID, trans, TimeThreshold.BuildLatest());
-                var allRelationsBackward = await relationModel.GetRelations(RelationSelectionTo.Build(dc.ciid), writeLayerID, trans, TimeThreshold.BuildLatest());
+                var allRelationsForward = await relationModel.GetRelations(RelationSelectionFrom.Build(ciid), writeLayerID, trans, TimeThreshold.BuildLatest());
+                var allRelationsBackward = await relationModel.GetRelations(RelationSelectionTo.Build(ciid), writeLayerID, trans, TimeThreshold.BuildLatest());
                 foreach (var traitRelationField in relationFieldInfos)
                 {
                     var predicateID = traitRelationField.TraitRelationAttribute.predicateID;
@@ -241,9 +250,6 @@ namespace Omnikeeper.Base.Model
                     }
                 }
             }
-
-            var dcAfterDeletion = await GetSingleByCIID(dc.ciid, layerSet, trans, changesetProxy.TimeThreshold);
-            return (dcAfterDeletion == default); // return successful if dc does not exist anymore afterwards
         }
     }
 

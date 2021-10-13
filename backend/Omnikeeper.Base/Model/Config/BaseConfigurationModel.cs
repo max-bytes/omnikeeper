@@ -50,16 +50,5 @@ namespace Omnikeeper.Base.Model.Config
 
             return dc;
         }
-
-        protected override BaseConfigurationV2 EffectiveTrait2DC(EffectiveTrait et)
-        {
-            var archiveDataThresholdTicks = TraitConfigDataUtils.ExtractMandatoryScalarIntegerAttribute(et, "archive_data_threshold");
-            var archiveDataThreshold = TimeSpan.FromTicks(archiveDataThresholdTicks);
-            var clbRunnerInterval = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "clb_runner_interval");
-            var markedForDeletionRunnerInterval = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "marked_for_deletion_runner_interval");
-            var externalIDManagerRunnerInterval = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "external_id_manager_runner_interval");
-            var archiveOldDataRunnerInterval = TraitConfigDataUtils.ExtractMandatoryScalarTextAttribute(et, "archive_old_data_runner_interval");
-            return new BaseConfigurationV2(archiveDataThreshold, clbRunnerInterval, markedForDeletionRunnerInterval, externalIDManagerRunnerInterval, archiveOldDataRunnerInterval);
-        }
     }
 }
