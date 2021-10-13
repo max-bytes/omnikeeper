@@ -4,11 +4,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Omnikeeper.Base.AttributeValues;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.DataOrigin;
+using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
 using Omnikeeper.Base.Service;
 using Omnikeeper.Base.Utils;
-using Omnikeeper.Base.Utils.ModelContext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +20,7 @@ namespace Omnikeeper.GraphQL
         private readonly ILayerModel layerModel;
         private readonly GenericTraitEntityModel<Predicate, string> predicateModel;
         private readonly IChangesetModel changesetModel;
-        private readonly IGeneratorModel generatorModel;
+        private readonly GenericTraitEntityModel<GeneratorV1, string> generatorModel;
         private readonly IOIAContextModel oiaContextModel;
         private readonly IODataAPIContextModel odataAPIContextModel;
         private readonly GenericTraitEntityModel<AuthRole, string> authRoleModel;
@@ -34,7 +34,7 @@ namespace Omnikeeper.GraphQL
         private readonly ILayerBasedAuthorizationService layerBasedAuthorizationService;
 
         public GraphQLMutation(ICIModel ciModel, IAttributeModel attributeModel, IRelationModel relationModel, ILayerModel layerModel,
-            GenericTraitEntityModel<Predicate, string> predicateModel, IChangesetModel changesetModel, IGeneratorModel generatorModel,
+            GenericTraitEntityModel<Predicate, string> predicateModel, IChangesetModel changesetModel, GenericTraitEntityModel<GeneratorV1, string> generatorModel,
             IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole, string> authRoleModel,
             GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
             IManagementAuthorizationService managementAuthorizationService, GenericTraitEntityModel<CLConfigV1, string> clConfigModel, IMetaConfigurationModel metaConfigurationModel,

@@ -30,13 +30,15 @@ namespace Omnikeeper.Base.Entity
         public readonly string aName;
         public readonly bool optional;
         public readonly bool isJSONSerialized;
+        public readonly bool multilineTextHint;
 
-        public TraitAttributeAttribute(string taName, string aName, bool optional = false, bool isJSONSerialized = false)
+        public TraitAttributeAttribute(string taName, string aName, bool optional = false, bool isJSONSerialized = false, bool multilineTextHint = false)
         {
             this.taName = taName;
             this.aName = aName;
             this.optional = optional;
             this.isJSONSerialized = isJSONSerialized;
+            this.multilineTextHint = multilineTextHint;
         }
     }
 

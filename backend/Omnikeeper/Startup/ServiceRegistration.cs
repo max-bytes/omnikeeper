@@ -188,12 +188,12 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IChangesetModel, ChangesetModel>();
             services.AddSingleton<ICacheModel, CacheModel>();
             services.AddSingleton<IODataAPIContextModel, ODataAPIContextModel>();
-            services.AddSingleton<IGeneratorModel, GeneratorModel>();
             services.AddSingleton<IEffectiveTraitModel, EffectiveTraitModel>();
             services.AddSingleton<IBaseConfigurationModel, BaseConfigurationModel>();
             services.AddSingleton<IMetaConfigurationModel, MetaConfigurationModel>();
             services.AddSingleton<IOIAContextModel, OIAContextModel>();
             services.AddSingleton<IPartitionModel, PartitionModel>();
+            services.AddSingleton<GenericTraitEntityModel<GeneratorV1, string>>(); // TODO: ok this way?
             services.AddSingleton<GenericTraitEntityModel<CLConfigV1, string>>(); // TODO: ok this way?
             services.AddSingleton<GenericTraitEntityModel<AuthRole, string>>(); // TODO: ok this way?
             services.AddSingleton<GenericTraitEntityModel<Predicate, string>>(); // TODO: ok this way?

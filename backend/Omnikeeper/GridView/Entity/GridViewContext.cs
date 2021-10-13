@@ -10,7 +10,6 @@ namespace Omnikeeper.GridView.Entity
     [TraitEntity("__meta.config.gridview_context", TraitOriginType.Core)]
     public class GridViewContext : TraitEntity
     {
-        [DataMember(Name = "id")]
         [TraitAttribute("id", "gridview_context.id")]
         [TraitAttributeValueConstraintTextLength(1, -1)]
         [TraitAttributeValueConstraintTextRegex(IDValidations.GridViewContextIDRegexString, IDValidations.GridViewContextIDRegexOptions)]

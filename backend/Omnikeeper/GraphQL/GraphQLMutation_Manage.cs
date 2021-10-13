@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using Omnikeeper.Base.Entity;
 using Omnikeeper.Base.Entity.Config;
+using Omnikeeper.Base.Generator;
 using Omnikeeper.Base.Inbound;
 using Omnikeeper.Base.Model;
 using Omnikeeper.Base.Model.Config;
@@ -366,14 +367,16 @@ namespace Omnikeeper.GraphQL
 
                   var changesetProxy = new ChangesetProxy(userContext.User.InDatabase, userContext.TimeThreshold, changesetModel);
 
+                  var changed = new GeneratorV1(generator.ID, generator.AttributeName, generator.AttributeValueTemplate);
+
                   var newGenerator = await generatorModel.InsertOrUpdate(
-                      generator.ID, generator.AttributeName, generator.AttributeValueTemplate,
+                      changed,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       changesetProxy, userContext.Transaction);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                  return newGenerator.generator;
+                  return newGenerator.dc;
               });
             FieldAsync<BooleanGraphType>("manage_removeGenerator",
               arguments: new QueryArguments(

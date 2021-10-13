@@ -466,7 +466,12 @@ namespace Omnikeeper.Base.Model
             {
                 var elementType = (isArray) ? fieldType.GetElementType() : fieldType;
                 if (elementType == typeof(string))
-                    avt = AttributeValueType.Text;
+                {
+                    if (taa.multilineTextHint)
+                        avt = AttributeValueType.MultilineText;
+                    else
+                        avt = AttributeValueType.Text;
+                }
                 else if (elementType == typeof(long))
                     avt = AttributeValueType.Integer;
                 else if (elementType == typeof(JObject))
