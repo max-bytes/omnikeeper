@@ -194,7 +194,7 @@ namespace Omnikeeper.Startup
             services.AddSingleton<IMetaConfigurationModel, MetaConfigurationModel>();
             services.AddSingleton<IOIAContextModel, OIAContextModel>();
             services.AddSingleton<IPartitionModel, PartitionModel>();
-            services.AddSingleton<ICLConfigModel, CLConfigModel>();
+            services.AddSingleton<GenericTraitEntityModel<CLConfigV1, string>>(); // TODO: ok this way?
             services.AddSingleton<GenericTraitEntityModel<AuthRole, string>>(); // TODO: ok this way?
             services.AddSingleton<GenericTraitEntityModel<Predicate, string>>(); // TODO: ok this way?
             services.AddSingleton<GenericTraitEntityModel<RecursiveTrait, string>>(); // TODO: ok this way?

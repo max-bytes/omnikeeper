@@ -35,10 +35,10 @@ namespace Omnikeeper.Model
 
             // TODO, NOTE: this merges non-DB trait sets, that are not historic and DB traits sets that are... what should we do here?
             var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-            var configuredRecursiveDataTraitSet = await dataTraitModel.GetAll(metaConfiguration.ConfigLayerset, trans, timeThreshold);
+            var configuredRecursiveDataTraitSet = await dataTraitModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, timeThreshold);
             var allTraitSets = new Dictionary<string, IEnumerable<RecursiveTrait>>() {
                 { "core", CoreTraits.RecursiveTraits },
-                { "data", configuredRecursiveDataTraitSet.Select(t => t.entity) }
+                { "data", configuredRecursiveDataTraitSet.Values }
             };
             foreach (var kv in pluginTraitSets)
                 allTraitSets.Add(kv.Key, kv.Value);

@@ -27,7 +27,7 @@ namespace Omnikeeper.GraphQL
         private readonly GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel;
         private readonly IBaseConfigurationModel baseConfigurationModel;
         private readonly IManagementAuthorizationService managementAuthorizationService;
-        private readonly ICLConfigModel clConfigModel;
+        private readonly GenericTraitEntityModel<CLConfigV1, string> clConfigModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly IBaseAttributeRevisionistModel baseAttributeRevisionistModel;
         private readonly IBaseRelationRevisionistModel baseRelationRevisionistModel;
@@ -37,7 +37,7 @@ namespace Omnikeeper.GraphQL
             GenericTraitEntityModel<Predicate, string> predicateModel, IChangesetModel changesetModel, IGeneratorModel generatorModel,
             IOIAContextModel oiaContextModel, IODataAPIContextModel odataAPIContextModel, GenericTraitEntityModel<AuthRole, string> authRoleModel,
             GenericTraitEntityModel<RecursiveTrait, string> recursiveDataTraitModel, IBaseConfigurationModel baseConfigurationModel,
-            IManagementAuthorizationService managementAuthorizationService, ICLConfigModel clConfigModel, IMetaConfigurationModel metaConfigurationModel,
+            IManagementAuthorizationService managementAuthorizationService, GenericTraitEntityModel<CLConfigV1, string> clConfigModel, IMetaConfigurationModel metaConfigurationModel,
             IBaseAttributeRevisionistModel baseAttributeRevisionistModel, IBaseRelationRevisionistModel baseRelationRevisionistModel,
             ICIBasedAuthorizationService ciBasedAuthorizationService, ILayerBasedAuthorizationService layerBasedAuthorizationService)
         {

@@ -50,7 +50,7 @@ namespace OKPluginValidation.Tests
             await TestGenericModelOperations(
                 () => new Validation.Validation("validation1", "rule1", JObject.Parse(@"{""foo"": ""bar""}")),
                 () => new Validation.Validation("validation2", "rule2", JObject.Parse(@"{""blub"": true}")),
-                "validation1", "non_existant_id"
+                "validation1", "validation2", "non_existant_id"
                 );
         }
         [Test]

@@ -34,11 +34,6 @@ namespace Omnikeeper.Base.Utils
             return PredicateIDRegex.IsMatch(candidateID);
         }
 
-        public static bool ValidateTraitID(string candidateID)
-        {
-            return TraitIDRegex.IsMatch(candidateID);
-        }
-
         public static bool ValidateGeneratorID(string candidateID)
         {
             return GeneratorIDRegex.IsMatch(candidateID);
@@ -47,11 +42,6 @@ namespace Omnikeeper.Base.Utils
         public static bool ValidateCLConfigID(string candidateID)
         {
             return CLConfigIDRegex.IsMatch(candidateID);
-        }
-
-        public static bool ValidateGridViewContextID(string candidateID)
-        {
-            return GridViewContextIDRegex.IsMatch(candidateID);
         }
 
         public static void ValidateLayerIDThrow(string candidateID)
@@ -71,12 +61,6 @@ namespace Omnikeeper.Base.Utils
                 throw new Exception($"Invalid predicate ID \"{candidateID}\"");
         }
 
-        public static void ValidateTraitIDThrow(string candidateID)
-        {
-            if (!ValidateTraitID(candidateID))
-                throw new Exception($"Invalid trait ID \"{candidateID}\"");
-        }
-
         public static void ValidateGeneratorIDThrow(string candidateID)
         {
             if (!ValidateGeneratorID(candidateID))
@@ -87,13 +71,6 @@ namespace Omnikeeper.Base.Utils
         {
             if (!ValidateCLConfigID(candidateID))
                 throw new Exception($"Invalid CL Config ID \"{candidateID}\"");
-        }
-
-
-        public static void ValidateGridViewContextIDThrow(string candidateID)
-        {
-            if (!ValidateGridViewContextID(candidateID))
-                throw new Exception($"Invalid gridview context ID \"{candidateID}\"");
         }
     }
 }

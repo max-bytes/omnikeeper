@@ -18,7 +18,7 @@ namespace Omnikeeper.Runners
 {
     public class CLBRunner
     {
-        public CLBRunner(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, ICLConfigModel clConfigModel,
+        public CLBRunner(IEnumerable<IComputeLayerBrain> existingComputeLayerBrains, GenericTraitEntityModel<CLConfigV1, string> clConfigModel,
             IMetaConfigurationModel metaConfigurationModel,
             ILayerModel layerModel, ILogger<CLBRunner> logger, IModelContextBuilder modelContextBuilder)
         {
@@ -51,7 +51,7 @@ namespace Omnikeeper.Runners
 
             if (!layersWithCLBs.IsEmpty()) {
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
-                var clConfigs = await clConfigModel.GetCLConfigs(metaConfiguration.ConfigLayerset, trans, timeThreshold);
+                var clConfigs = await clConfigModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, timeThreshold);
 
                 foreach (var l in layersWithCLBs)
                 {
@@ -84,7 +84,7 @@ namespace Omnikeeper.Runners
         }
 
         private readonly IDictionary<string, IComputeLayerBrain> existingComputeLayerBrains;
-        private readonly ICLConfigModel clConfigModel;
+        private readonly GenericTraitEntityModel<CLConfigV1, string> clConfigModel;
         private readonly IMetaConfigurationModel metaConfigurationModel;
         private readonly ILayerModel layerModel;
         private readonly ILogger<CLBRunner> logger;

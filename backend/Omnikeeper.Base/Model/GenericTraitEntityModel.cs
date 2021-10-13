@@ -24,8 +24,6 @@ namespace Omnikeeper.Base.Model
         protected readonly IRelationModel relationModel;
         private readonly GenericTrait trait;
 
-        //private readonly FieldInfo ciidFieldInfo;
-        //private readonly TraitEntityAttribute traitEntityAttribute;
         private readonly IEnumerable<TraitAttributeFieldInfo> attributeFieldInfos;
         private readonly IEnumerable<TraitRelationFieldInfo> relationFieldInfos;
 
@@ -104,7 +102,7 @@ namespace Omnikeeper.Base.Model
             return ret;
         }
 
-        public async Task<IEnumerable<(T entity, Guid ciid)>> GetAll(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
+        private async Task<IEnumerable<(T entity, Guid ciid)>> GetAll(LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             var cis = await ciModel.GetMergedCIs(new AllCIIDsSelection(), layerSet, false, AllAttributeSelection.Instance, trans, timeThreshold); // TODO: reduce attribute via selection, only fetch trait relevant
             var cisWithTrait = await effectiveTraitModel.GetEffectiveTraitsForTrait(trait, cis, layerSet, trans, timeThreshold);
@@ -155,7 +153,7 @@ namespace Omnikeeper.Base.Model
                         }
                         else
                         {
-                            entityValue = JObject.FromObject(entityValue);
+                            entityValue = DefaultSerializer.SerializeToJObject(entityValue);
                         }
                     }
 

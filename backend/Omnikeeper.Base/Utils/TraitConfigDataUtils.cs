@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace Omnikeeper.Base.Utils
 {
+    // TODO: remove?
     public static class TraitConfigDataUtils
     {
         public static T ExtractMandatoryScalarJSONAttribute<T>(EffectiveTrait et, string traitAttributeName, MyJSONSerializer<T> serializer) where T : class

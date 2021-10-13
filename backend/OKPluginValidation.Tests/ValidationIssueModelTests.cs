@@ -58,7 +58,7 @@ namespace OKPluginValidation.Tests
             await TestGenericModelOperations(
                 () => new ValidationIssue("validation_issue1", "msg1", new Guid[] { affectedCIIDs[0], affectedCIIDs[1] }),
                 () => new ValidationIssue("validation_issue2", "msg2", new Guid[] { affectedCIIDs[2] }),
-                "validation_issue1", "non_existant_id"
+                "validation_issue1", "validation_issue2", "non_existant_id"
                 );
         }
         [Test]

@@ -59,7 +59,7 @@ namespace Tests.Integration.Model
                     new List<TraitRelation>() { },
                     new List<string>() { "dependent_trait2" }
                     ),
-                    "trait1", "non_existant_id"
+                    "trait1", "trait2", "non_existant_id"
                 );
         }
 

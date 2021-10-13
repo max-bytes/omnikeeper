@@ -45,9 +45,9 @@ namespace Omnikeeper.GridView.Queries
 
                 var metaConfiguration = await metaConfigurationModel.GetConfigOrDefault(trans);
 
-                var contexts = await gridViewContextModel.GetAll(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
+                var contexts = await gridViewContextModel.GetAllByDataID(metaConfiguration.ConfigLayerset, trans, TimeThreshold.BuildLatest());
 
-                return (new GetContextsResponse(contexts.Select(t => t.entity).ToList()), null);
+                return (new GetContextsResponse(contexts.Values.ToList()), null);
             }
         }
     }

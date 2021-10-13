@@ -48,7 +48,7 @@ namespace Tests.Integration.Model
                     new GridViewConfiguration(true, "write_layer1", new List<string> { "read_layer1" }, new List<GridViewColumn>() { }, "trait1")),
                 () => new GridViewContext("context2", "Context 2", "Description 2",
                     new GridViewConfiguration(true, "write_layer2", new List<string> { "read_layer2" }, new List<GridViewColumn>() { }, "trait2")),
-                "context1", "non_existant_id"
+                "context1", "context2", "non_existant_id"
                 );
         }
         [Test]

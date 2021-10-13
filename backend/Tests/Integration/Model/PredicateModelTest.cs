@@ -46,7 +46,7 @@ namespace Tests.Integration.Model
             await TestGenericModelOperations(
                 () => new Predicate("p1", "wording_from_1", "wording_to_1"),
                 () => new Predicate("p2", "wording_from_2", "wording_to_2"),
-                "p1", "non_existant_id"
+                "p1", "p2", "non_existant_id"
                 );
         }
     }

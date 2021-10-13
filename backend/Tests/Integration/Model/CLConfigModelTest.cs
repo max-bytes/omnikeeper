@@ -9,21 +9,22 @@ using System.Threading.Tasks;
 
 namespace Tests.Integration.Model
 {
-    class AuthRoleModelTest : GenericTraitEntityModelTestBase
+    class CLConfigModelTest : GenericTraitEntityModelTestBase
     {
         [Test]
         public void TestTraitGeneration()
         {
-            var et = TraitBuilderFromClass.Class2RecursiveTrait<AuthRole>();
+            var et = TraitBuilderFromClass.Class2RecursiveTrait<CLConfigV1>();
 
             et.Should().BeEquivalentTo(
-                new RecursiveTrait("__meta.config.auth_role", new TraitOriginV1(TraitOriginType.Core),
+                new RecursiveTrait("__meta.config.cl_config", new TraitOriginV1(TraitOriginType.Core),
                     new List<TraitAttribute>() {
-                        new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("auth_role.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                        new TraitAttribute("id", CIAttributeTemplate.BuildFromParams("cl_config.id", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                        new TraitAttribute("cl_brain_reference", CIAttributeTemplate.BuildFromParams("cl_config.cl_brain_reference", AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
+                        new TraitAttribute("cl_brain_config", CIAttributeTemplate.BuildFromParams("cl_config.cl_brain_config", AttributeValueType.JSON, false)),
                     },
                     new List<TraitAttribute>()
                     {
-                        new TraitAttribute("permissions", CIAttributeTemplate.BuildFromParams("auth_role.permissions", AttributeValueType.Text, true)),
                         new TraitAttribute("name", CIAttributeTemplate.BuildFromParams(ICIModel.NameAttribute, AttributeValueType.Text, false, CIAttributeValueConstraintTextLength.Build(1, null))),
                     }
                 )

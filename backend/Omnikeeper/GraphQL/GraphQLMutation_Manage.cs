@@ -471,14 +471,15 @@ namespace Omnikeeper.GraphQL
 
                   var config = JObject.Parse(clConfig.CLBrainConfig);
 
-                  var newCLConfig = await clConfigModel.InsertOrUpdate(
-                      clConfig.ID, clConfig.CLBrainReference, config,
+                  var updated = new CLConfigV1(clConfig.ID, clConfig.CLBrainReference, config);
+
+                  var newCLConfig = await clConfigModel.InsertOrUpdate(updated,
                       metaConfiguration.ConfigLayerset, metaConfiguration.ConfigWriteLayer,
                       new Base.Entity.DataOrigin.DataOriginV1(Base.Entity.DataOrigin.DataOriginType.Manual),
                       changesetProxy, userContext.Transaction);
                   userContext.CommitAndStartNewTransaction(modelContextBuilder => modelContextBuilder.BuildImmediate());
 
-                  return newCLConfig.config;
+                  return newCLConfig.dc;
               });
 
             FieldAsync<BooleanGraphType>("manage_removeCLConfig",
