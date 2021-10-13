@@ -61,7 +61,6 @@ namespace Omnikeeper.Base.Model
             return (dc, ciid);
         }
 
-        // TODO: move ciid out of traitentity, return tuple instead
         public async Task<(T entity, Guid ciid)> GetSingleByDataID(ID id, LayerSet layerSet, IModelContext trans, TimeThreshold timeThreshold)
         {
             var (_, idAttributeName, attributeValueType) = TraitBuilderFromClass.ExtractIDAttributeInfos<T>();
